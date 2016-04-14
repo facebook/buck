@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY c9ba4197c30d6847e958fc8751667539c466ab5b #@#
+#@# GENERATED FILE: DO NOT MODIFY 0081dc2b3fd917398998a84f71233d4d49326e78 #@#
 {
   "benchmarks" : {
     "deps" : [
@@ -45,6 +45,7 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:config",
       "//src/com/facebook/buck/parser:parser",
+      "//src/com/facebook/buck/rules:action_graph_cache",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:types",
       "//src/com/facebook/buck/rules/coercer:coercer",

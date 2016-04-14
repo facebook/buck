@@ -40,7 +40,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -55,14 +55,12 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -71,7 +69,6 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -1595,15 +1592,9 @@ public class WorkspaceAndProjectGeneratorTest {
     return new Function<TargetNode<?>, SourcePathResolver>() {
       @Override
       public SourcePathResolver apply(TargetNode<?> input) {
-        TargetGraphToActionGraph targetGraphToActionGraph = new TargetGraphToActionGraph(
+        return new SourcePathResolver(ActionGraphCache.getFreshActionGraph(
             BuckEventBusFactory.newInstance(),
-            new DefaultTargetNodeToBuildRuleTransformer());
-        TargetGraph subgraph = targetGraph.getSubgraph(
-            ImmutableSet.of(
-                input));
-        BuildRuleResolver ruleResolver =
-            Preconditions.checkNotNull(targetGraphToActionGraph.apply(subgraph)).getResolver();
-        return new SourcePathResolver(ruleResolver);
+            targetGraph.getSubgraph(ImmutableSet.of(input))).getResolver());
       }
     };
   }

@@ -56,15 +56,14 @@ import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphAndResolver;
+import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.AssociatedTargetNodePredicate;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
-import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
@@ -80,8 +79,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -540,11 +537,10 @@ public class ProjectCommand extends BuildCommand {
   int runExperimentalIntellijProjectGenerator(
       CommandRunnerParams params,
       final TargetGraphAndTargets targetGraphAndTargets) throws IOException, InterruptedException {
-    TargetGraphToActionGraph targetGraphToActionGraph = new TargetGraphToActionGraph(
-        params.getBuckEventBus(),
-        new DefaultTargetNodeToBuildRuleTransformer());
     ActionGraphAndResolver result = Preconditions.checkNotNull(
-        targetGraphToActionGraph.apply(targetGraphAndTargets.getTargetGraph()));
+        ActionGraphCache.getFreshActionGraph(
+            params.getBuckEventBus(),
+            targetGraphAndTargets.getTargetGraph()));
     BuildRuleResolver ruleResolver = result.getResolver();
     SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleResolver);
 
@@ -664,10 +660,9 @@ public class ProjectCommand extends BuildCommand {
     // Create an ActionGraph that only contains targets that can be represented as IDE
     // configuration files.
     ActionGraphAndResolver result = Preconditions.checkNotNull(
-        new TargetGraphToActionGraph(
+        ActionGraphCache.getFreshActionGraph(
             params.getBuckEventBus(),
-            new DefaultTargetNodeToBuildRuleTransformer())
-            .apply(targetGraphAndTargets.getTargetGraph()));
+            targetGraphAndTargets.getTargetGraph()));
     ActionGraph actionGraph = result.getActionGraph();
 
     try (ExecutionContext executionContext = createExecutionContext(params)) {
@@ -850,16 +845,6 @@ public class ProjectCommand extends BuildCommand {
       targets = passedInTargetsSet;
     }
 
-    final Supplier<TargetGraphToActionGraph> targetGraphToActionGraphSupplier = Suppliers.memoize(
-        new Supplier<TargetGraphToActionGraph>() {
-          @Override
-          public TargetGraphToActionGraph get() {
-            return new TargetGraphToActionGraph(
-                params.getBuckEventBus(),
-                new DefaultTargetNodeToBuildRuleTransformer());
-          }
-        });
-
     LOG.debug("Generating workspace for config targets %s", targets);
     ImmutableSet<TargetNode<?>> testTargetNodes = targetGraphAndTargets.getAssociatedTests();
     ImmutableSet<TargetNode<AppleTestDescription.Arg>> groupableTests = combineTestBundles
@@ -908,13 +893,10 @@ public class ProjectCommand extends BuildCommand {
           new Function<TargetNode<?>, SourcePathResolver>() {
             @Override
             public SourcePathResolver apply(TargetNode<?> input) {
-              TargetGraphToActionGraph targetGraphToActionGraph =
-                  targetGraphToActionGraphSupplier.get();
-              TargetGraph subgraph = targetGraphAndTargets.getTargetGraph().getSubgraph(
-                  ImmutableSet.of(input));
-              BuildRuleResolver buildRuleResolver =
-                  targetGraphToActionGraph.apply(subgraph).getResolver();
-              return new SourcePathResolver(buildRuleResolver);
+              return new SourcePathResolver(
+                  ActionGraphCache.getFreshActionGraph(params.getBuckEventBus(),
+                      targetGraphAndTargets.getTargetGraph().getSubgraph(
+                      ImmutableSet.of(input))).getResolver());
             }
           },
           params.getBuckEventBus(),

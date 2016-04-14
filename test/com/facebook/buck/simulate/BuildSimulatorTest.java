@@ -22,10 +22,8 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ActionGraphAndResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetGraphToActionGraph;
-import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Preconditions;
@@ -52,10 +50,8 @@ public class BuildSimulatorTest {
   public void testOneNodeActionGraph() throws IOException {
     SimulateTimes times = SimulateTimes.createEmpty(DEFAULT_MILLIS);
     TargetGraph oneNodeGraph = createOneNodeGraph();
-    TargetGraphTransformer transformer =
-        new TargetGraphToActionGraph(eventBus, new DefaultTargetNodeToBuildRuleTransformer());
-    ActionGraphAndResolver result =
-        Preconditions.checkNotNull(transformer.apply(oneNodeGraph));
+    ActionGraphAndResolver result = Preconditions.checkNotNull(
+        ActionGraphCache.getFreshActionGraph(eventBus, oneNodeGraph));
     BuildSimulator sim = newBuildSimulator(times, result);
     SimulateReport report = sim.simulateBuild(
         0,
@@ -70,10 +66,9 @@ public class BuildSimulatorTest {
   public void testMultipleTimeAggregates() throws IOException {
     SimulateTimes times = SimulateTimesTest.createDefaultTestInstance();
     TargetGraph oneNodeGraph = createOneNodeGraph();
-    TargetGraphTransformer transformer =
-        new TargetGraphToActionGraph(eventBus, new DefaultTargetNodeToBuildRuleTransformer());
-    ActionGraphAndResolver result =
-        Preconditions.checkNotNull(transformer.apply(oneNodeGraph));
+
+    ActionGraphAndResolver result = Preconditions.checkNotNull(
+        ActionGraphCache.getFreshActionGraph(eventBus, oneNodeGraph));
     BuildSimulator sim = newBuildSimulator(times, result);
     SimulateReport report = sim.simulateBuild(
         0,
@@ -178,10 +173,8 @@ public class BuildSimulatorTest {
       int numberThreads,
       long expectedDurationMillis) throws IOException {
     SimulateTimes times = SimulateTimes.createEmpty(DEFAULT_MILLIS);
-    TargetGraphTransformer transformer =
-        new TargetGraphToActionGraph(eventBus, new DefaultTargetNodeToBuildRuleTransformer());
-    ActionGraphAndResolver result =
-        Preconditions.checkNotNull(transformer.apply(targetGraph));
+    ActionGraphAndResolver result = Preconditions.checkNotNull(
+        ActionGraphCache.getFreshActionGraph(eventBus, targetGraph));
     BuildSimulator sim = newBuildSimulator(times, result, numberThreads);
     SimulateReport report = sim.simulateBuild(
         0,

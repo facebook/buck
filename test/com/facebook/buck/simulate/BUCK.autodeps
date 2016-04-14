@@ -1,9 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY c126bf2a0922b45c6f36b1c6ecd0f8d7bf955ad7 #@#
+#@# GENERATED FILE: DO NOT MODIFY 0ffb986c01c765a78248777d53e77be3afc44cd0 #@#
 {
   "simulate" : {
     "deps" : [
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:action_graph_cache",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/simulate:simulate",
       "//src/com/facebook/buck/util:object_mapper",

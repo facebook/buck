@@ -149,6 +149,30 @@ public class ActionGraphCacheTest {
     assertThat(resultRun1RuleKeys, Matchers.equalTo(resultRun3RuleKeys));
   }
 
+  // If this breaks it probably means the ActionGraphCache checking also breaks.
+  @Test
+  public void compareActionGraphsBasedOnRuleKeys() {
+    ActionGraphAndResolver resultRun1 = ActionGraphCache.getFreshActionGraph(
+        eventBus,
+        new DefaultTargetNodeToBuildRuleTransformer(),
+        targetGraph);
+
+    ActionGraphAndResolver resultRun2 = ActionGraphCache.getFreshActionGraph(
+        eventBus,
+        new DefaultTargetNodeToBuildRuleTransformer(),
+        targetGraph);
+
+    // Check all the RuleKeys are the same between the 2 ActionGraphs.
+    Map<BuildRule, RuleKey> resultRun1RuleKeys = getRuleKeysFromBuildRules(
+        resultRun1.getActionGraph().getNodes(),
+        resultRun1.getResolver());
+    Map<BuildRule, RuleKey> resultRun2RuleKeys = getRuleKeysFromBuildRules(
+        resultRun2.getActionGraph().getNodes(),
+        resultRun2.getResolver());
+
+    assertThat(resultRun1RuleKeys, Matchers.equalTo(resultRun2RuleKeys));
+  }
+
   @Test
   public void cacheInvalidationBasedOnEvents() throws IOException, InterruptedException {
     ActionGraphCache cache = new ActionGraphCache();

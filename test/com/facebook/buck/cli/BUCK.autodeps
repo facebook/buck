@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 68e98b4a9118b598fbd65de45472a46443ed5e33 #@#
+#@# GENERATED FILE: DO NOT MODIFY ef931b922f3f8fa0e1502586f4721e3d5edcd740 #@#
 {
   "FakeBuckConfig" : {
     "deps" : [
@@ -103,6 +103,7 @@
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/parser:config",
       "//src/com/facebook/buck/parser:parser",
+      "//src/com/facebook/buck/rules:action_graph_cache",
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/timing:timing",

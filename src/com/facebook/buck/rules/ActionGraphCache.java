@@ -19,7 +19,10 @@ package com.facebook.buck.rules;
 import com.facebook.buck.counters.Counter;
 import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -27,6 +30,7 @@ import com.google.common.eventbus.Subscribe;
 
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
 
@@ -63,16 +67,26 @@ public class ActionGraphCache {
         ImmutableMap.<String, String>of());
   }
 
+  /**
+   * It returns an {@link ActionGraphAndResolver}. If the {@code targetGraph} exists in the cache
+   * it returns a cached version of the {@link ActionGraphAndResolver}, else creates one and
+   * updates the cache.
+   * @param eventBus the {@link BuckEventBus} to post the events of the processing.
+   * @param targetGraph the target graph that the action graph will be based on.
+   * @return a {@link ActionGraphAndResolver}
+   */
   public ActionGraphAndResolver getActionGraph(
       BuckEventBus eventBus,
       final TargetGraph targetGraph) {
-    TargetNodeToBuildRuleTransformer transformer = new DefaultTargetNodeToBuildRuleTransformer();
-    TargetGraphToActionGraph targetGraphToActionGraph =
-        new TargetGraphToActionGraph(eventBus, transformer);
+    ActionGraphEvent.Started started = ActionGraphEvent.started();
+    eventBus.post(started);
 
     Pair<TargetGraph, ActionGraphAndResolver> newActionGraph =
         new Pair<TargetGraph, ActionGraphAndResolver>(
-            targetGraph, targetGraphToActionGraph.apply(targetGraph));
+            targetGraph,
+            createActionGraph(eventBus,
+                new DefaultTargetNodeToBuildRuleTransformer(),
+                targetGraph));
 
     if (lastActionGraph != null && lastActionGraph.getFirst().equals(targetGraph)) {
       cacheHitCounter.inc();
@@ -81,7 +95,76 @@ public class ActionGraphCache {
     }
 
     lastActionGraph = newActionGraph;
+    eventBus.post(ActionGraphEvent.finished(started));
     return lastActionGraph.getSecond();
+  }
+
+  /**
+   * * It returns a new {@link ActionGraphAndResolver} based on the targetGraph without checking
+   * the cache. It uses a {@link DefaultTargetNodeToBuildRuleTransformer}.
+   * @param eventBus the {@link BuckEventBus} to post the events of the processing.
+   * @param targetGraph the target graph that the action graph will be based on.
+   * @return a {@link ActionGraphAndResolver}
+   */
+  public static ActionGraphAndResolver getFreshActionGraph(
+      final BuckEventBus eventBus,
+      final TargetGraph targetGraph) {
+    TargetNodeToBuildRuleTransformer transformer = new DefaultTargetNodeToBuildRuleTransformer();
+    return getFreshActionGraph(eventBus, transformer, targetGraph);
+  }
+
+  /**
+   * It returns a new {@link ActionGraphAndResolver} based on the targetGraph without checking the
+   * cache. It uses a custom {@link TargetNodeToBuildRuleTransformer}.
+   * @param eventBus The {@link BuckEventBus} to post the events of the processing.
+   * @param transformer Custom {@link TargetNodeToBuildRuleTransformer} that the transformation will
+   *                    be based on.
+   * @param targetGraph The target graph that the action graph will be based on.
+   * @return It returns a {@link ActionGraphAndResolver}
+   */
+  public static ActionGraphAndResolver getFreshActionGraph(
+      final BuckEventBus eventBus,
+      final TargetNodeToBuildRuleTransformer transformer,
+      final TargetGraph targetGraph) {
+    ActionGraphEvent.Started started = ActionGraphEvent.started();
+    eventBus.post(started);
+
+    ActionGraphAndResolver actionGraph = createActionGraph(eventBus, transformer, targetGraph);
+
+    eventBus.post(ActionGraphEvent.finished(started));
+    return actionGraph;
+  }
+
+  private static ActionGraphAndResolver createActionGraph(
+      final BuckEventBus eventBus,
+      TargetNodeToBuildRuleTransformer transformer,
+      TargetGraph targetGraph) {
+    final BuildRuleResolver resolver = new BuildRuleResolver(targetGraph, transformer);
+
+    final int numberOfNodes = targetGraph.getNodes().size();
+    final AtomicInteger processedNodes = new AtomicInteger(0);
+
+    AbstractBottomUpTraversal<TargetNode<?>, ActionGraph> bottomUpTraversal =
+        new AbstractBottomUpTraversal<TargetNode<?>, ActionGraph>(targetGraph) {
+
+          @Override
+          public void visit(TargetNode<?> node) {
+            try {
+              resolver.requireRule(node.getBuildTarget());
+            } catch (NoSuchBuildTargetException e) {
+              throw new HumanReadableException(e);
+            }
+            eventBus.post(ActionGraphEvent.processed(
+                processedNodes.incrementAndGet(),
+                numberOfNodes));
+          }
+        };
+    bottomUpTraversal.traverse();
+
+    return ActionGraphAndResolver.builder()
+        .setActionGraph(new ActionGraph(resolver.getBuildRules()))
+        .setResolver(resolver)
+        .build();
   }
 
   public ImmutableList<Counter> getCounters() {

@@ -40,10 +40,10 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphAndResolver;
+import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -51,8 +51,6 @@ import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetGraphAndTargetNodes;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetGraphHashing;
-import com.facebook.buck.rules.TargetGraphToActionGraph;
-import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
@@ -716,11 +714,10 @@ public class TargetsCommand extends AbstractCommand {
     Optional<BuildRuleResolver> buildRuleResolver = Optional.absent();
     Optional<RuleKeyBuilderFactory> ruleKeyBuilderFactory = Optional.absent();
     if (isShowRuleKey() || isShowOutput()) {
-      TargetGraphTransformer targetGraphTransformer = new TargetGraphToActionGraph(
-          params.getBuckEventBus(),
-          new DefaultTargetNodeToBuildRuleTransformer());
       ActionGraphAndResolver result = Preconditions.checkNotNull(
-          targetGraphTransformer.apply(targetGraphAndTargetNodes.getTargetGraph()));
+          ActionGraphCache.getFreshActionGraph(
+              params.getBuckEventBus(),
+              targetGraphAndTargetNodes.getTargetGraph()));
       actionGraph = Optional.of(result.getActionGraph());
       buildRuleResolver = Optional.of(result.getResolver());
       if (isShowRuleKey()) {

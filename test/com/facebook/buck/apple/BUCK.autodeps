@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY c6c441c720436e1b4aebaa65441be6e80f7d4eb2 #@#
+#@# GENERATED FILE: DO NOT MODIFY 9c2cb41ad201791f3dcabe8a78c043bd46cb0212 #@#
 {
   "apple" : {
     "deps" : [
@@ -17,6 +17,7 @@
       "//src/com/facebook/buck/js:js",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
+      "//src/com/facebook/buck/rules:action_graph_cache",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules:rules",
