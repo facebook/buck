@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -259,6 +260,25 @@ public class ParsePipelineTest {
       fixture.getParsePipeline().getTargetNode(
           cell,
           BuildTargetFactory.newInstance(cell.getFilesystem(), "//a:lib"));
+    }
+  }
+
+  @Test
+  public void recoversAfterSyntaxError() throws Exception {
+    try (Fixture fixture = createSynchronousExecutionFixture("syntax_error")) {
+      final Cell cell = fixture.getCell();
+      try {
+        fixture.getParsePipeline().getTargetNode(
+            cell,
+            BuildTargetFactory.newInstance(cell.getFilesystem(), "//error:error"));
+        Assert.fail("Expected BuildFileParseException");
+      } catch (BuildFileParseException e) {
+        assertThat(e.getMessage(), Matchers.containsString("crash!"));
+      }
+
+      fixture.getParsePipeline().getTargetNode(
+          cell,
+          BuildTargetFactory.newInstance(cell.getFilesystem(), "//correct:correct"));
     }
   }
 
