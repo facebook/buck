@@ -43,6 +43,7 @@ java_immutables_library(
     'DiagnosticPrettyPrinter.java',
     'ExternalJavaRuntimeLauncher.java',
     'ExternalJavac.java',
+    'ForwardingStandardJavaFileManager.java',
     'HasClasspathEntries.java',
     'HasJavaAbi.java',
     'HasMavenCoordinates.java',
