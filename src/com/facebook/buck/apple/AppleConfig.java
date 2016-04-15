@@ -20,8 +20,10 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
@@ -30,6 +32,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
+
+import org.immutables.value.Value;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -333,5 +337,37 @@ public class AppleConfig {
         "apple",
         "default_debug_info_format",
         AppleDebugFormat.class).or(AppleDebugFormat.DWARF_AND_DSYM);
+  }
+
+  /**
+   * Returns the custom packager command specified in the config, if defined.
+   *
+   * This is translated into the config value of {@code apple.PLATFORMNAME_packager_command}.
+   *
+   * @param platform the platform to query.
+   * @return the custom packager command specified in the config, if defined.
+   */
+  public Optional<ApplePackageConfig> getPackageConfigForPlatform(ApplePlatform platform) {
+    String command =
+        delegate.getValue("apple", platform.getName() + "_package_command").or("");
+    String extension =
+        delegate.getValue("apple", platform.getName() + "_package_extension").or("");
+    if (command.isEmpty() ^ extension.isEmpty()) {
+      throw new HumanReadableException(
+          "Config option %s and %s should be both specified, or be both omitted.",
+          "apple." + platform.getName() + "_package_command",
+          "apple." + platform.getName() + "_package_extension");
+    } else if (command.isEmpty() && extension.isEmpty()) {
+      return Optional.absent();
+    } else {
+      return Optional.of(ApplePackageConfig.of(command, extension));
+    }
+  }
+
+  @Value.Immutable
+  @BuckStyleTuple
+  interface AbstractApplePackageConfig {
+    String getCommand();
+    String getExtension();
   }
 }

@@ -47,6 +47,7 @@ java_immutables_library(
   name = 'rules',
   srcs = glob(['*.java',], excludes=PLATFORM_SRCS+GENERATOR_SRCS),
   immutable_types = [
+    'ApplePackageConfig',
     'AppleBundleDestinations',
     'AppleTestBundleParamsKey',
     'CodeSignIdentity',

@@ -18,12 +18,14 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -34,14 +36,29 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
+import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
+import java.util.Set;
 
 public class ApplePackageDescription implements
     Description<ApplePackageDescription.Arg>,
     Flavored,
     ImplicitDepsInferringDescription<ApplePackageDescription.Arg> {
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_package");
+
+  AppleConfig config;
+  FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
+
+  public ApplePackageDescription(
+      AppleConfig config,
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain) {
+    this.config = config;
+    this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
+  }
 
   @Override
   public <A extends Arg> BuildRule createBuildRule(
@@ -59,12 +76,22 @@ public class ApplePackageDescription implements
           bundle.getType());
     }
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
-    return new ApplePackage(
-        params,
-        sourcePathResolver,
-        ((BuildRuleWithAppleBundle) bundle).getAppleBundle());
-  }
 
+    Optional<ApplePackageConfigAndPlatformInfo> applePackageConfigAndPlatformInfo =
+        getApplePackageConfig(params.getBuildTarget());
+    if (applePackageConfigAndPlatformInfo.isPresent()) {
+      return new ExternallyBuiltApplePackage(
+          params,
+          sourcePathResolver,
+          applePackageConfigAndPlatformInfo.get(),
+          new BuildTargetSourcePath(bundle.getBuildTarget()));
+    } else {
+      return new BuiltinApplePackage(
+          params,
+          sourcePathResolver,
+          ((BuildRuleWithAppleBundle) bundle).getAppleBundle());
+    }
+  }
   @Override
   public BuildRuleType getBuildRuleType() {
     return TYPE;
@@ -101,5 +128,45 @@ public class ApplePackageDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     @Hint(isDep = false) public BuildTarget bundle;
+  }
+
+  /**
+   * Get the correct package configuration based on the platform flavors of this build target.
+   *
+   * Validates that all named platforms yields the identical package config.
+   *
+   * @return If found, a package config for this target.
+   * @throws HumanReadableException if there are multiple possible package configs.
+   */
+  private Optional<ApplePackageConfigAndPlatformInfo> getApplePackageConfig(BuildTarget target) {
+    Set<Flavor> platformFlavors = Sets.intersection(
+        appleCxxPlatformFlavorDomain.getFlavors(),
+        target.getFlavors());
+
+    // Ensure that different platforms generate the same config.
+    // The value of this map is just for error reporting.
+    Multimap<Optional<ApplePackageConfigAndPlatformInfo>, Flavor> packageConfigs =
+        MultimapBuilder.hashKeys().arrayListValues().build();
+    for (Flavor flavor : platformFlavors) {
+      AppleCxxPlatform platform = appleCxxPlatformFlavorDomain.getValue(flavor);
+      Optional<ApplePackageConfig> packageConfig =
+          config.getPackageConfigForPlatform(platform.getAppleSdk().getApplePlatform());
+      packageConfigs.put(
+          packageConfig.isPresent()
+              ? Optional.of(ApplePackageConfigAndPlatformInfo.of(packageConfig.get(), platform))
+              : Optional.<ApplePackageConfigAndPlatformInfo>absent(),
+          flavor);
+    }
+
+    if (packageConfigs.isEmpty()) {
+      return Optional.absent();
+    } else if (packageConfigs.keySet().size() == 1) {
+      return Iterables.getOnlyElement(packageConfigs.keySet());
+    } else {
+      throw new HumanReadableException(
+          "In target %s: Multi-architecture package has different package configs for targets: %s",
+          target.getFullyQualifiedName(),
+          packageConfigs.asMap().values());
+    }
   }
 }

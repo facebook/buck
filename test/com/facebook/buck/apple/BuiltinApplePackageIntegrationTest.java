@@ -47,7 +47,7 @@ import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Set;
 
-public class ApplePackageIntegrationTest {
+public class BuiltinApplePackageIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 

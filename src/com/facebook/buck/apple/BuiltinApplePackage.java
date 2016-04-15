@@ -39,13 +39,13 @@ import com.google.common.io.ByteSource;
 
 import java.nio.file.Path;
 
-public class ApplePackage extends AbstractBuildRule {
+public class BuiltinApplePackage extends AbstractBuildRule {
 
   private final Path pathToOutputFile;
   private final Path temp;
   private final AppleBundle bundle;
 
-  public ApplePackage(
+  public BuiltinApplePackage(
       BuildRuleParams params,
       SourcePathResolver resolver,
       AppleBundle bundle) {
