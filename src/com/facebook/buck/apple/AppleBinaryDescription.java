@@ -119,7 +119,11 @@ public class AppleBinaryDescription implements
       return true;
     }
     final ImmutableSet<Flavor> delegateFlavors = ImmutableSet.copyOf(
-        Sets.difference(flavors, AppleDebugFormat.FLAVOR_DOMAIN.getFlavors()));
+        Sets.difference(
+            flavors,
+            Sets.union(
+                AppleDebugFormat.FLAVOR_DOMAIN.getFlavors(),
+                ImmutableSet.of(APP_FLAVOR))));
     Collection<ImmutableSortedSet<Flavor>> thinFlavorSets =
         FatBinaryInfos.generateThinFlavors(
             platformFlavorsToAppleCxxPlatforms.getFlavors(),
