@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
@@ -35,7 +36,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -57,7 +57,7 @@ public class TargetGraphHashingTest {
             cellBuilder.build(),
             targetGraph,
             new NullFileHashCache(),
-            ImmutableList.<TargetNode<?>>of())
+            ImmutableList.<BuildTarget>of())
             .entrySet(),
         empty());
   }
@@ -82,25 +82,25 @@ public class TargetGraphHashingTest {
         ImmutableMap.of(
             projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abc1ef")));
 
-    Map<TargetNode<?>, HashCode> baseResult = TargetGraphHashing.hashTargetGraph(
+    Map<BuildTarget, HashCode> baseResult = TargetGraphHashing.hashTargetGraph(
         cellBuilder.build(),
         targetGraph,
         baseCache,
-        ImmutableList.<TargetNode<?>>of(node));
+        ImmutableList.of(node.getBuildTarget()));
 
-    Map<TargetNode<?>, HashCode> modifiedResult = TargetGraphHashing.hashTargetGraph(
+    Map<BuildTarget, HashCode> modifiedResult = TargetGraphHashing.hashTargetGraph(
         cellBuilder.build(),
         targetGraph,
         modifiedCache,
-        ImmutableList.<TargetNode<?>>of(node));
+        ImmutableList.of(node.getBuildTarget()));
 
     assertThat(baseResult, aMapWithSize(1));
-    assertThat(baseResult, Matchers.<TargetNode<?>>hasKey(node));
+    assertThat(baseResult, hasKey(node.getBuildTarget()));
     assertThat(modifiedResult, aMapWithSize(1));
-    assertThat(modifiedResult, Matchers.<TargetNode<?>>hasKey(node));
+    assertThat(modifiedResult, hasKey(node.getBuildTarget()));
     assertThat(
-        modifiedResult.get(node),
-        not(equalTo(baseResult.get(node))));
+        modifiedResult.get(node.getBuildTarget()),
+        not(equalTo(baseResult.get(node.getBuildTarget()))));
   }
 
   @Test
@@ -127,37 +127,37 @@ public class TargetGraphHashingTest {
             projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abcdef"),
             projectFilesystem.resolve("bar/BarLib.java"), HashCode.fromString("123456")));
 
-    Map<TargetNode<?>, HashCode> resultsA = TargetGraphHashing.hashTargetGraph(
+    Map<BuildTarget, HashCode> resultsA = TargetGraphHashing.hashTargetGraph(
         cellBuilder.build(),
         targetGraphA,
         fileHashCache,
-        ImmutableList.<TargetNode<?>>of(nodeA));
+        ImmutableList.of(nodeA.getBuildTarget()));
 
-    Map<TargetNode<?>, HashCode> resultsB = TargetGraphHashing.hashTargetGraph(
+    Map<BuildTarget, HashCode> resultsB = TargetGraphHashing.hashTargetGraph(
         cellBuilder.build(),
         targetGraphB,
         fileHashCache,
-        ImmutableList.<TargetNode<?>>of(nodeB));
+        ImmutableList.of(nodeB.getBuildTarget()));
 
-    Map<TargetNode<?>, HashCode> commonResults = TargetGraphHashing.hashTargetGraph(
+    Map<BuildTarget, HashCode> commonResults = TargetGraphHashing.hashTargetGraph(
         cellBuilder.build(),
         commonTargetGraph,
         fileHashCache,
-        ImmutableList.of(nodeA, nodeB));
+        ImmutableList.of(nodeA.getBuildTarget(), nodeB.getBuildTarget()));
 
     assertThat(resultsA, aMapWithSize(1));
-    assertThat(resultsA, Matchers.<TargetNode<?>>hasKey(nodeA));
+    assertThat(resultsA, hasKey(nodeA.getBuildTarget()));
     assertThat(resultsB, aMapWithSize(1));
-    assertThat(resultsB, Matchers.<TargetNode<?>>hasKey(nodeB));
+    assertThat(resultsB, hasKey(nodeB.getBuildTarget()));
     assertThat(commonResults, aMapWithSize(2));
-    assertThat(commonResults, Matchers.<TargetNode<?>>hasKey(nodeA));
-    assertThat(commonResults, Matchers.<TargetNode<?>>hasKey(nodeB));
+    assertThat(commonResults, hasKey(nodeA.getBuildTarget()));
+    assertThat(commonResults, hasKey(nodeB.getBuildTarget()));
     assertThat(
-        resultsA.get(nodeA),
-        equalTo(commonResults.get(nodeA)));
+        resultsA.get(nodeA.getBuildTarget()),
+        equalTo(commonResults.get(nodeA.getBuildTarget())));
     assertThat(
-        resultsB.get(nodeB),
-        equalTo(commonResults.get(nodeB)));
+        resultsB.get(nodeB.getBuildTarget()),
+        equalTo(commonResults.get(nodeB.getBuildTarget())));
   }
 
   private TargetGraph createGraphWithANodeAndADep(
@@ -203,35 +203,30 @@ public class TargetGraphHashingTest {
             projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abcdef"),
             projectFilesystem.resolve("dep/DepLib.java"), HashCode.fromString("123456")));
 
-    TargetNode<?> nodeA = targetGraphA.get(nodeTarget);
-    Map<TargetNode<?>, HashCode> resultA = TargetGraphHashing.hashTargetGraph(
+    Map<BuildTarget, HashCode> resultA = TargetGraphHashing.hashTargetGraph(
         cellBuilder.build(),
         targetGraphA,
         fileHashCache,
-        ImmutableList.<TargetNode<?>>of(nodeA));
+        ImmutableList.of(nodeTarget));
 
-    TargetNode<?> nodeB = targetGraphB.get(nodeTarget);
-    Map<TargetNode<?>, HashCode> resultB = TargetGraphHashing.hashTargetGraph(
+    Map<BuildTarget, HashCode> resultB = TargetGraphHashing.hashTargetGraph(
         cellBuilder.build(),
         targetGraphB,
         fileHashCache,
-        ImmutableList.<TargetNode<?>>of(nodeB));
-
-    TargetNode<?> depNodeA = targetGraphA.get(depTarget);
-    TargetNode<?> depNodeB = targetGraphB.get(depTarget);
+        ImmutableList.of(nodeTarget));
 
     assertThat(resultA, aMapWithSize(2));
-    assertThat(resultA, Matchers.<TargetNode<?>>hasKey(nodeA));
-    assertThat(resultA, Matchers.<TargetNode<?>>hasKey(depNodeA));
+    assertThat(resultA, hasKey(nodeTarget));
+    assertThat(resultA, hasKey(depTarget));
     assertThat(resultB, aMapWithSize(2));
-    assertThat(resultB, Matchers.<TargetNode<?>>hasKey(nodeB));
-    assertThat(resultB, Matchers.<TargetNode<?>>hasKey(depNodeB));
+    assertThat(resultB, hasKey(nodeTarget));
+    assertThat(resultB, hasKey(depTarget));
     assertThat(
-        resultA.get(nodeA),
-        not(equalTo(resultB.get(nodeB))));
+        resultA.get(nodeTarget),
+        not(equalTo(resultB.get(nodeTarget))));
     assertThat(
-        resultA.get(depNodeA),
-        not(equalTo(resultB.get(depNodeB))));
+        resultA.get(depTarget),
+        not(equalTo(resultB.get(depTarget))));
   }
 
   private static TargetNode<?> createJavaLibraryTargetNodeWithSrcs(

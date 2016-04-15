@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 2554e93b6e963224fe363c67410f52d681148074 #@#
+#@# GENERATED FILE: DO NOT MODIFY 06b00572a607792e6398d9964c51339bba471985 #@#
 {
   "action_graph_cache" : {
     "deps" : [
@@ -112,11 +112,11 @@
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/util:exceptions"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/hashing:hashing",
+      "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:types",
       "//third-party/java/guava:guava"
