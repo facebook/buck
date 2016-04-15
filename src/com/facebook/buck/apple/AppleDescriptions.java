@@ -569,7 +569,7 @@ public class AppleDescriptions {
           appleCxxPlatforms);
       appleDsym = createAppleDsymForDebugFormat(
           debugFormat,
-          params,
+          binaryParams,
           resolver,
           (ProvidesStaticLibraryDeps) unstrippedBinaryRule,
           cxxPlatformFlavorDomain,
