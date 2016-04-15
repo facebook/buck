@@ -30,6 +30,7 @@ import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -68,7 +69,7 @@ public class ReactNativeDeps extends AbstractBuildRule
   private final Optional<String> packagerFlags;
 
   @AddToRuleKey
-  private final SourcePath jsPackager;
+  private final Tool jsPackager;
 
   private final Path outputDir;
   private final Path inputsHashFile;
@@ -78,7 +79,7 @@ public class ReactNativeDeps extends AbstractBuildRule
   public ReactNativeDeps(
       BuildRuleParams ruleParams,
       SourcePathResolver resolver,
-      SourcePath jsPackager,
+      Tool jsPackager,
       ImmutableSortedSet<SourcePath> srcs,
       SourcePath entryPath,
       ReactNativePlatform platform,
@@ -160,7 +161,7 @@ public class ReactNativeDeps extends AbstractBuildRule
     ReactNativeDepsWorkerStep workerStep = new ReactNativeDepsWorkerStep(
         getProjectFilesystem(),
         tmpDir,
-        getResolver().getAbsolutePath(jsPackager),
+        jsPackager.getCommandPrefix(getResolver()),
         packagerFlags,
         platform,
         getProjectFilesystem().resolve(getResolver().getAbsolutePath(entryPath)),

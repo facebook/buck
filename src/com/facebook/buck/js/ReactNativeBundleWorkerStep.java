@@ -29,7 +29,7 @@ public class ReactNativeBundleWorkerStep extends WorkerShellStep {
   public ReactNativeBundleWorkerStep(
       ProjectFilesystem filesystem,
       Path tmpDir,
-      Path jsPackager,
+      ImmutableList<String> jsPackagerCommand,
       Optional<String> additionalPackagerFlags,
       ReactNativePlatform platform,
       boolean isUnbundle,
@@ -44,7 +44,7 @@ public class ReactNativeBundleWorkerStep extends WorkerShellStep {
         filesystem.getRootPath(),
         Optional.of(
             WorkerJobParams.of(
-                ImmutableList.of(jsPackager.toString()),
+                jsPackagerCommand,
                 String.format(
                     "--platform %s%s",
                     platform.toString(),

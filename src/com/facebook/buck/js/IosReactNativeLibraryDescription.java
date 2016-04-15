@@ -51,7 +51,7 @@ public class IosReactNativeLibraryDescription
     this.packager = new Supplier<SourcePath>() {
       @Override
       public SourcePath get() {
-        return buckConfig.getPackager();
+        return buckConfig.getPackagerSourcePath();
       }
     };
   }

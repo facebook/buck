@@ -19,6 +19,7 @@ package com.facebook.buck.js;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -54,7 +55,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
   private final boolean isDevMode;
 
   @AddToRuleKey
-  private final SourcePath jsPackager;
+  private final Tool jsPackager;
 
   @AddToRuleKey
   private final ReactNativePlatform platform;
@@ -77,7 +78,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
       boolean isDevMode,
       String bundleName,
       Optional<String> packagerFlags,
-      SourcePath jsPackager,
+      Tool jsPackager,
       ReactNativePlatform platform,
       ReactNativeDeps depsFinder) {
     super(ruleParams, resolver);
@@ -122,7 +123,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
     ReactNativeBundleWorkerStep workerStep = new ReactNativeBundleWorkerStep(
         getProjectFilesystem(),
         tmpDir,
-        getResolver().getAbsolutePath(jsPackager),
+        jsPackager.getCommandPrefix(getResolver()),
         packagerFlags,
         platform,
         isUnbundle,

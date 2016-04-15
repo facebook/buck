@@ -17,7 +17,9 @@
 package com.facebook.buck.js;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 
@@ -35,11 +37,17 @@ public class ReactNativeBuckConfig {
   }
 
   /**
-   * TODO(natthu): return a Tool instead.
+   * The JavaScript packager tool to use for React Native rules.  Note that callers need to add the
+   * result of {@link #getPackagerSourcePath()} to the list of deps on the build rule otherwise
+   * parsing will fail.
    *
-   * @return Path to the react native javascript packager.
+   * @return Tool for the react native javascript packager.
    */
-  public SourcePath getPackager() {
+  public Tool getPackager(BuildRuleResolver resolver) {
+    return delegate.getRequiredTool("react-native", "packager_worker", resolver);
+  }
+
+  public SourcePath getPackagerSourcePath() {
     Optional<SourcePath> packagerWorker =
         delegate.getSourcePath("react-native", "packager_worker");
     if (!packagerWorker.isPresent()) {
