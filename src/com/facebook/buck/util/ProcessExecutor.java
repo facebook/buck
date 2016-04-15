@@ -29,12 +29,13 @@ import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Executes a {@link Process} and blocks until it is finished.
@@ -239,11 +240,14 @@ public class ProcessExecutor {
 
   /**
    * Waits up to {@code millis} milliseconds for the given process to finish.
+   *
+   * @return whether the wait has timed out.
    */
-  private void waitForTimeout(
+  private boolean waitForTimeout(
       final Process process,
       long millis,
       final Optional<Function<Process, Void>> timeOutHandler) throws InterruptedException {
+    final AtomicBoolean timedOut = new AtomicBoolean(false);
     Thread waiter =
         new Thread(
             new Runnable() {
@@ -252,6 +256,7 @@ public class ProcessExecutor {
                 try {
                   process.waitFor();
                 } catch (InterruptedException e) {
+                  timedOut.set(true);
                   if (timeOutHandler.isPresent()) {
                     try {
                       timeOutHandler.get().apply(process);
@@ -266,6 +271,7 @@ public class ProcessExecutor {
     waiter.join(millis);
     waiter.interrupt();
     waiter.join();
+    return timedOut.get();
   }
 
   /**
@@ -340,9 +346,8 @@ public class ProcessExecutor {
       // for it to finish then force kill it.  If no timeout was given, just wait for it using
       // the regular `waitFor` method.
       if (timeOutMs.isPresent()) {
-        waitForTimeout(process, timeOutMs.get(), timeOutHandler);
+        timedOut = waitForTimeout(process, timeOutMs.get(), timeOutHandler);
         if (!finished(process)) {
-          timedOut = true;
           process.destroy();
         }
       } else {
