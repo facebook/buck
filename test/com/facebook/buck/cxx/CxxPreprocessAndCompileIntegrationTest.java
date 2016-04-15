@@ -658,7 +658,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckBuild(
             "-c", "cxx.untracked_headers=error",
-            "-c", "cxx.untracked_headers_whitelist=something",
+            "-c", "cxx.untracked_headers_whitelist=/usr/include/stdc-predef\\.h",
             "//:untracked_header");
     result.assertFailure();
     assertThat(
@@ -672,7 +672,8 @@ public class CxxPreprocessAndCompileIntegrationTest {
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckBuild(
             "-c", "cxx.untracked_headers=error",
-            "-c", "cxx.untracked_headers_whitelist=/usr/local/.*, untracked_.*.h",
+            "-c", "cxx.untracked_headers_whitelist=" +
+                "/usr/include/stdc-predef\\.h, /usr/local/.*, untracked_.*.h",
             "//:untracked_header");
     result.assertSuccess();
   }
