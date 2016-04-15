@@ -3,4 +3,4 @@ Git repo to clone: https://github.com/benhoyt/scandir
 Git revision: 03d8b14b9c25543cbf26e0351935c83f658f701d
 License: BSD
 Local modifications:
-  - None
+  - Added BUCK build file to export python source
