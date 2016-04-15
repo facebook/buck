@@ -87,7 +87,10 @@ class ClassUsageTracker {
 
     Matcher classFileMatcher = CLASS_FILE_PATTERN.matcher(javaFileObject.toUri().toString());
     boolean matches = classFileMatcher.matches();
-    Preconditions.checkState(matches);
+    if (!matches) {
+      // Not in a jar; must not have been built with java_library
+      return;
+    }
 
     resultBuilder.put(
         Paths.get(classFileMatcher.group("jar")),

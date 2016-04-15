@@ -1228,8 +1228,8 @@ public class DefaultJavaLibraryTest {
         FakeBuildContext.NOOP_CONTEXT,
         new FakeBuildableContext());
 
-    assertEquals(11, steps.size());
-    assertTrue(((JavacStep) steps.get(6)).getJavac() instanceof Jsr199Javac);
+    assertEquals(12, steps.size());
+    assertTrue(((JavacStep) steps.get(7)).getJavac() instanceof Jsr199Javac);
   }
 
   @Test
@@ -1250,8 +1250,8 @@ public class DefaultJavaLibraryTest {
     DefaultJavaLibrary buildable = (DefaultJavaLibrary) rule;
     ImmutableList<Step> steps =
         buildable.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
-    assertEquals(11, steps.size());
-    Javac javacStep = ((JavacStep) steps.get(6)).getJavac();
+    assertEquals(12, steps.size());
+    Javac javacStep = ((JavacStep) steps.get(7)).getJavac();
     assertTrue(javacStep instanceof Jsr199Javac);
     JarBackedJavac jsrJavac = ((JarBackedJavac) javacStep);
     assertEquals(

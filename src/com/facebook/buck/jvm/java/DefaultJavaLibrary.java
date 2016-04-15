@@ -105,6 +105,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @AddToRuleKey
   private final Optional<String> mavenCoords;
   private final Optional<Path> outputJar;
+  private final Optional<Path> usedClassesFile;
   @AddToRuleKey
   private final Optional<SourcePath> proguardConfig;
   @AddToRuleKey
@@ -263,8 +264,10 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
     if (!srcs.isEmpty() || !resources.isEmpty()) {
       this.outputJar = Optional.of(getOutputJarPath(getBuildTarget()));
+      this.usedClassesFile = Optional.of(getUsedClassesFilePath(getBuildTarget()));
     } else {
       this.outputJar = Optional.absent();
+      this.usedClassesFile = Optional.absent();
     }
 
     this.outputClasspathEntriesSupplier =
@@ -331,6 +334,14 @@ public class DefaultJavaLibrary extends AbstractBuildRule
             "%s/%s.jar",
             getOutputJarDirPath(target),
             target.getShortNameAndFlavorPostfix()));
+  }
+
+  static Path getUsedClassesFileDirPath(BuildTarget target) {
+    return BuildTargets.getGenPath(target, "lib__%s__used_classes");
+  }
+
+  static Path getUsedClassesFilePath(BuildTarget target) {
+    return getUsedClassesFileDirPath(target).resolve("used-classes.json");
   }
 
   /**
@@ -470,6 +481,11 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), getOutputJarDirPath(target)));
 
+    final Path usedClassesFileDirPath = getUsedClassesFileDirPath(target);
+    steps.add(
+        new MakeCleanDirectoryStep(getProjectFilesystem(), usedClassesFileDirPath));
+    buildableContext.recordArtifact(usedClassesFileDirPath);
+
     // Only run javac if there are .java files to compile.
     if (!getJavaSrcs().isEmpty()) {
       // This adds the javac command, along with any supporting commands.
@@ -496,6 +512,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           /* mainClass */ Optional.<String>absent(),
           /* manifestFile */ Optional.<Path>absent(),
           outputJar.get(),
+          usedClassesFile,
           /* output params */
           steps,
           buildableContext);

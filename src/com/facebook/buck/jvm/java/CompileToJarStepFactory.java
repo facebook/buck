@@ -47,6 +47,7 @@ public interface CompileToJarStepFactory extends RuleKeyAppendable {
       Optional<Path> workingDirectory,
       Path pathToSrcsList,
       Optional<SuggestBuildRules> suggestBuildRules,
+      Optional<Path> usedClassesFile,
       /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext);
@@ -68,6 +69,7 @@ public interface CompileToJarStepFactory extends RuleKeyAppendable {
       Optional<Path> manifestFile,
       Path outputJar,
       /* output params */
+      Optional<Path> usedClassesFile,
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext);
 }

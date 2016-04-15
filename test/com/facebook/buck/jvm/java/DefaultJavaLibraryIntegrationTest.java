@@ -341,6 +341,33 @@ public class DefaultJavaLibraryIntegrationTest {
   }
 
   @Test
+  public void testClassUsageFileOutputProperly() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "class_usage_file", tmp);
+    workspace.setUp();
+
+    // Run `buck build`.
+    BuildTarget bizTarget = BuildTargetFactory.newInstance("//:biz");
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", bizTarget.getFullyQualifiedName());
+    buildResult.assertSuccess("Successful build should exit with 0.");
+
+    Path bizClassUsageFilePath = BuildTargets.getGenPath(
+        bizTarget,
+        "lib__%s__used_classes/used-classes.json");
+
+    final List<String> lines = Files.readAllLines(
+        workspace.getPath(bizClassUsageFilePath), UTF_8);
+
+    assertEquals("Expected just one line of JSON", 1, lines.size());
+
+    final String expected =
+        "{\"buck-out/gen/lib__util__output/util.jar\":[\"com/example/Util.class\"]}";
+    final String actual = lines.get(0);
+
+    assertEquals(expected, actual);
+  }
+
+  @Test
   public void updatingAResourceWhichIsJavaLibraryCausesAJavaLibraryToBeRepacked()
       throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
