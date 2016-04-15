@@ -21,6 +21,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.hash.Hashing;
+import com.google.common.io.ByteSource;
+import com.google.common.io.ByteStreams;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -28,8 +31,13 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Enumeration;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 
 public class StubJarIntegrationTest {
 
@@ -89,5 +97,37 @@ public class StubJarIntegrationTest {
 
     assertTrue(filesystem.getFileSize(out) > 0);
     assertTrue(filesystem.getFileSize(out) < filesystem.getFileSize(source));
+  }
+
+  @Test
+  public void abiJarManifestShouldContainHashesOfItsFiles() throws IOException {
+    Path out = Paths.get("junit-abi.jar");
+    Path regularJar = testDataDir.resolve("junit.jar");
+    new StubJar(regularJar).writeTo(filesystem, out);
+
+    try (JarFile stubJar = new JarFile(filesystem.resolve(out).toFile())) {
+      Manifest manifest = stubJar.getManifest();
+
+      Enumeration<JarEntry> entries = stubJar.entries();
+      while (entries.hasMoreElements()) {
+        JarEntry entry = entries.nextElement();
+        if (JarFile.MANIFEST_NAME.equals(entry.getName())) {
+          continue;
+        }
+
+        String seenDigest = manifest.getAttributes(entry.getName()).getValue("Murmur3-128-Digest");
+
+        String expectedDigest;
+        try (InputStream inputStream = stubJar.getInputStream(entry)) {
+          ByteSource byteSource = ByteSource.wrap(ByteStreams.toByteArray(inputStream));
+          expectedDigest = byteSource.hash(Hashing.murmur3_128()).toString();
+        }
+
+        assertEquals(
+            String.format("Digest mismatch for %s", entry.getName()),
+            expectedDigest,
+            seenDigest);
+      }
+    }
   }
 }

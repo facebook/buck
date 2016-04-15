@@ -23,6 +23,9 @@ import static org.objectweb.asm.ClassReader.SKIP_FRAMES;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.zip.ZipConstants;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 
 import org.objectweb.asm.ClassReader;
@@ -30,8 +33,12 @@ import org.objectweb.asm.ClassReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 
 public class StubJar {
@@ -55,11 +62,14 @@ public class StubJar {
         JarOutputStream jar = new JarOutputStream(fos)) {
       final CreateStubAction createStubAction = new CreateStubAction(jar);
       walker.walk(createStubAction);
+      createStubAction.finish();
     }
   }
 
   private static class CreateStubAction implements FileAction {
     private final JarOutputStream jar;
+    private final ImmutableSortedMap.Builder<String, HashCode> entriesMapBuilder =
+        ImmutableSortedMap.naturalOrder();
 
     public CreateStubAction(JarOutputStream jar) {
       this.jar = jar;
@@ -74,6 +84,36 @@ public class StubJar {
 
       ByteSource stubClassBytes = getStubClassBytes(stream, fileName);
       writeToJar(fileName, stubClassBytes);
+      recordHash(fileName, stubClassBytes);
+    }
+
+    public void finish() throws IOException {
+      final ImmutableSortedMap<String, HashCode> entriesMap = entriesMapBuilder.build();
+      if (entriesMap.isEmpty()) {
+        return;
+      }
+
+      putEntry(jar, JarFile.MANIFEST_NAME);
+      writeManifest(entriesMap, jar);
+      jar.closeEntry();
+    }
+
+    private void writeManifest(
+        ImmutableSortedMap<String, HashCode> entriesMap,
+        OutputStream jar) throws IOException {
+      JarManifestWriter writer =
+          new JarManifestWriter(new OutputStreamWriter(jar, StandardCharsets.UTF_8));
+      writer.writeLine();
+      for (Map.Entry<String, HashCode> fileHashCode : entriesMap.entrySet()) {
+        String file = fileHashCode.getKey();
+        String hashCode = fileHashCode.getValue().toString();
+
+        writer.writeEntry("Name", file);
+        writer.writeEntry("Murmur3-128-Digest", hashCode);
+        writer.writeLine();
+      }
+
+      writer.flush();
     }
 
     private ByteSource getStubClassBytes(InputStream stream,
@@ -85,12 +125,25 @@ public class StubJar {
     }
 
     private void writeToJar(String fileName, ByteSource stubClassBytes) throws IOException {
+      putEntry(jar, fileName);
+      stubClassBytes.copyTo(jar);
+      jar.closeEntry();
+    }
+
+    private void putEntry(JarOutputStream jar, String fileName) throws IOException {
       JarEntry entry = new JarEntry(fileName);
       // We want deterministic JARs, so avoid mtimes.
       entry.setTime(ZipConstants.getFakeTime());
       jar.putNextEntry(entry);
-      stubClassBytes.copyTo(jar);
-      jar.closeEntry();
+    }
+
+    private void recordHash(
+        String fileName,
+        ByteSource stubClassBytes) throws IOException {
+      // We don't need a cryptographic hash, just a good one with super-low collision probability
+      HashCode hashCode = stubClassBytes.hash(Hashing.murmur3_128());
+
+      entriesMapBuilder.put(fileName, hashCode);
     }
   }
 }
