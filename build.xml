@@ -6,6 +6,7 @@
   <property name="test.dir" value="${basedir}/test" />
   <property name="third-party.dir" value="${basedir}/third-party" />
   <property name="build.dir" value="${basedir}/build" />
+  <property name="build.successful.file" value="${build.dir}/successful-build" />
   <property name="aosp.classes.dir" value="${build.dir}/aosp/classes" />
   <property name="testrunner.classes.dir" value="${build.dir}/testrunner/classes" />
   <property name="bootstrapper.src.dir" value="com/facebook/buck/cli/bootstrapper/" />
@@ -180,13 +181,23 @@
     <pathelement location="${third-party.dir}/java/ddmlib/ddmlib-22.5.3.jar" />
   </path>
 
-  <target name="clean" description="remove all generated files">
+  <target name="clean" description="remove all generated files" depends="clear-successful-build">
     <delete dir="${build.dir}" />
   </target>
 
+  <target name="clear-successful-build">
+    <delete file="${build.successful.file}"/>
+  </target>
+
+  <target name="mark-successful-build">
+    <touch file="${build.successful.file}"/>
+  </target>
+
   <!-- Default target so that a command line build can
-       do more than one thing. -->
-  <target name="default" depends="compile, dx, javac-tracing, report-generator-jar" />
+       do more than one thing. 
+
+       clear-successful-build must be first, and mark-successful-build last, in the list of dependencies.-->
+  <target name="default" depends="clear-successful-build, compile, dx, javac-tracing, report-generator-jar, mark-successful-build" />
 
   <target name="checkversion">
     <!-- The nio Files class was only introduced in Java 7. -->
