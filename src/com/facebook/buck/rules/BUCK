@@ -45,6 +45,7 @@ java_immutables_library(
     'AbstractSourcePath.java',
     'AbstractSourceWithFlags.java',
     'AbstractTargetGraphAndBuildTargets.java',
+    'AbstractTargetGraphAndTargetNodes.java',
     'ActionGraph.java',
     'ActionGraphEvent.java',
     'AddToRuleKey.java',

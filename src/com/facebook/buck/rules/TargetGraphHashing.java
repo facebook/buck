@@ -60,7 +60,7 @@ public class TargetGraphHashing {
       Cell rootCell,
       final TargetGraph targetGraph,
       FileHashLoader fileHashLoader,
-      Iterable<BuildTarget> roots) throws IOException {
+      Iterable<TargetNode<?>> roots) throws IOException {
     try {
       Map<BuildTarget, HashCode> buildTargetHashes = new HashMap<>();
       AcyclicDepthFirstPostOrderTraversal<TargetNode<?>> traversal =
@@ -71,7 +71,7 @@ public class TargetGraphHashing {
                   return targetGraph.getAll(node.getDeps()).iterator();
                 }
               });
-      for (TargetNode<?> node : traversal.traverse(targetGraph.getAll(roots))) {
+      for (TargetNode<?> node : traversal.traverse(roots)) {
         if (buildTargetHashes.containsKey(node.getBuildTarget())) {
           LOG.verbose("Already hashed node %s, not hashing again.", node);
           continue;

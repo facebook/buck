@@ -71,6 +71,24 @@ public class TargetGraphAndTargets {
   }
 
   /**
+   * @param targetGraphAndTargetNodes target graph and the set of target nodes for which we would
+   * like to find tests
+   * @param shouldIncludeDependenciesTests Should or not include tests
+   * that test dependencies
+   * @return A set of all test targets that test any of {@code buildTargets} or their dependencies.
+   */
+  public static ImmutableSet<BuildTarget> getExplicitTestTargets(
+      TargetGraphAndTargetNodes targetGraphAndTargetNodes,
+      boolean shouldIncludeDependenciesTests) {
+    Iterable<TargetNode<?>> nodes = targetGraphAndTargetNodes.getTargetNodes();
+    if (shouldIncludeDependenciesTests) {
+      return getExplicitTestTargets(
+          targetGraphAndTargetNodes.getTargetGraph().getSubgraph(nodes).getNodes());
+    }
+    return getExplicitTestTargets(nodes);
+  }
+
+  /**
    * @param nodes Nodes whose test targets we would like to find
    * @return A set of all test targets that test the targets in {@code nodes}.
    */
