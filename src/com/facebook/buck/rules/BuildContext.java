@@ -29,6 +29,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.immutables.DeprecatedBuckStyleImmutable;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -82,6 +83,7 @@ public abstract class BuildContext {
   }
 
   protected abstract BuildId getBuildId();
+  protected abstract ObjectMapper getObjectMapper();
   protected abstract Map<String, String> getEnvironment();
 
   @Value.Default
@@ -101,7 +103,7 @@ public abstract class BuildContext {
    * in general.
    */
   OnDiskBuildInfo createOnDiskBuildInfoFor(BuildTarget target, ProjectFilesystem filesystem) {
-    return new DefaultOnDiskBuildInfo(target, filesystem);
+    return new DefaultOnDiskBuildInfo(target, filesystem, getObjectMapper());
   }
 
   /**
@@ -116,6 +118,7 @@ public abstract class BuildContext {
         filesystem,
         getClock(),
         getBuildId(),
+        getObjectMapper(),
         ImmutableMap.copyOf(getEnvironment()));
   }
 

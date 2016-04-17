@@ -65,6 +65,7 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -166,6 +167,7 @@ public class ApkGenruleTest {
         .setStepRunner(EasyMock.createNiceMock(StepRunner.class))
         .setClock(EasyMock.createMock(Clock.class))
         .setBuildId(EasyMock.createMock(BuildId.class))
+        .setObjectMapper(ObjectMappers.newDefaultInstance())
         .setArtifactCache(EasyMock.createMock(ArtifactCache.class))
         .setJavaPackageFinder(EasyMock.createNiceMock(JavaPackageFinder.class))
         .setEventBus(BuckEventBusFactory.newInstance())

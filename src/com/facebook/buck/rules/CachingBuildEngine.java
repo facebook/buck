@@ -681,7 +681,8 @@ public class CachingBuildEngine implements BuildEngine {
             buildInfoRecorder.addMetadata(
                 BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS,
                 FluentIterable.from(buildInfoRecorder.getRecordedPaths())
-                    .transform(Functions.toStringFunction()));
+                    .transform(Functions.toStringFunction())
+                    .toList());
             if (success.shouldWriteRecordedMetadataToDiskAfterBuilding()) {
               try {
                 boolean clearExistingMetadata = success.shouldClearAndOverwriteMetadataOnDisk();

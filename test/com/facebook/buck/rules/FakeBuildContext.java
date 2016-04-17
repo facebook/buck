@@ -24,6 +24,7 @@ import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -39,6 +40,7 @@ public class FakeBuildContext {
       .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
       .setJavaPackageFinder(new FakeJavaPackageFinder())
       .setArtifactCache(new NoopArtifactCache())
+      .setObjectMapper(ObjectMappers.newDefaultInstance())
       .build();
 
   /**
@@ -56,6 +58,7 @@ public class FakeBuildContext {
         .setStepRunner(new DefaultStepRunner(executionContext))
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())
+        .setObjectMapper(ObjectMappers.newDefaultInstance())
         .setArtifactCache(new NoopArtifactCache())
         .setEventBus(BuckEventBusFactory.newInstance());
   }

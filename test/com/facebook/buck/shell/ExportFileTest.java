@@ -51,6 +51,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Optional;
@@ -241,6 +242,7 @@ public class ExportFileTest {
         .setEventBus(BuckEventBusFactory.newInstance())
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())
+        .setObjectMapper(ObjectMappers.newDefaultInstance())
         .setJavaPackageFinder(
             new JavaPackageFinder() {
               @Override

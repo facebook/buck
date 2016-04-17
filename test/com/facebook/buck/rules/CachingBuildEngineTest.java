@@ -403,6 +403,7 @@ public class CachingBuildEngineTest {
           .setArtifactCache(artifactCache)
           .setJavaPackageFinder(createMock(JavaPackageFinder.class))
           .setEventBus(buckEventBus)
+          .setObjectMapper(ObjectMappers.newDefaultInstance())
           .build();
 
       filesystem.writeContentsToPath(
@@ -483,6 +484,7 @@ public class CachingBuildEngineTest {
           .setArtifactCache(artifactCache)
           .setJavaPackageFinder(createMock(JavaPackageFinder.class))
           .setEventBus(buckEventBus)
+          .setObjectMapper(ObjectMappers.newDefaultInstance())
           .build();
 
       filesystem.writeContentsToPath(

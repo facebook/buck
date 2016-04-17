@@ -29,6 +29,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -82,6 +83,7 @@ public class BuildInfoRecorderIntegrationTest {
         filesystem,
         new DefaultClock(),
         new BuildId(),
+        ObjectMappers.newDefaultInstance(),
         ImmutableMap.<String, String>of());
   }
 }

@@ -188,7 +188,9 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
 
     buildableContext.addMetadata(
         SECONDARY_DEX_DIRECTORIES_KEY,
-        Iterables.transform(secondaryDexDirectories, Functions.toStringFunction()));
+        FluentIterable.from(secondaryDexDirectories)
+            .transform(Functions.toStringFunction())
+            .toList());
 
     buildableContext.recordArtifact(primaryDexPath);
     buildableContext.recordArtifact(paths.jarfilesSubdir);
@@ -299,7 +301,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
 
     buildableContext.addMetadata(
         SECONDARY_DEX_DIRECTORIES_KEY,
-        ImmutableSet.<String>of());
+        ImmutableList.<String>of());
   }
 
   public Path getMetadataTxtPath() {

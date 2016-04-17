@@ -52,8 +52,8 @@ public class FakeBuildableContext implements BuildableContext {
   }
 
   @Override
-  public void addMetadata(String key, Iterable<String> values) {
-    metadata.put(key, ImmutableList.copyOf(values));
+  public void addMetadata(String key, ImmutableList<String> values) {
+    metadata.put(key, values);
   }
 
   @Override

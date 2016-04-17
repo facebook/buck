@@ -73,6 +73,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.google.common.base.Charsets;
@@ -1286,6 +1287,7 @@ public class DefaultJavaLibraryTest {
         .setStepRunner(EasyMock.createMock(StepRunner.class))
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())
+        .setObjectMapper(ObjectMappers.newDefaultInstance())
         .setArtifactCache(new NoopArtifactCache())
         .setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class))
         .setAndroidBootclasspathSupplier(

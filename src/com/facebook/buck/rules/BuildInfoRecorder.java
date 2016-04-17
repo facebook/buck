@@ -32,12 +32,14 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -49,8 +51,6 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonPrimitive;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -83,6 +83,7 @@ public class BuildInfoRecorder {
   private final ProjectFilesystem projectFilesystem;
   private final Clock clock;
   private final BuildId buildId;
+  private final ObjectMapper objectMapper;
   private final ImmutableMap<String, String> artifactExtraData;
   private final Map<String, String> metadataToWrite;
   private final Map<String, String> buildMetadata;
@@ -96,12 +97,14 @@ public class BuildInfoRecorder {
       ProjectFilesystem projectFilesystem,
       Clock clock,
       BuildId buildId,
+      ObjectMapper objectMapper,
       ImmutableMap<String, String> environment) {
     this.buildTarget = buildTarget;
     this.pathToMetadataDirectory = BuildInfo.getPathToMetadataDirectory(buildTarget);
     this.projectFilesystem = projectFilesystem;
     this.clock = clock;
     this.buildId = buildId;
+    this.objectMapper = objectMapper;
 
     this.artifactExtraData =
         ImmutableMap.<String, String>builder()
@@ -115,12 +118,12 @@ public class BuildInfoRecorder {
     this.pathsToOutputs = Sets.newHashSet();
   }
 
-  private String toJson(Iterable<String> values) {
-    JsonArray out = new JsonArray();
-    for (String str : values) {
-      out.add(new JsonPrimitive(str));
+  private String toJson(Object value) {
+    try {
+      return objectMapper.writeValueAsString(value);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
-    return out.toString();
   }
 
   private String formatAdditionalArtifactInfo(Map<String, String> entries) {
@@ -177,7 +180,7 @@ public class BuildInfoRecorder {
     return this;
   }
 
-  public BuildInfoRecorder addBuildMetadata(String key, Iterable<String> value) {
+  public BuildInfoRecorder addBuildMetadata(String key, ImmutableList<String> value) {
     return addBuildMetadata(key, toJson(value));
   }
 
@@ -188,7 +191,7 @@ public class BuildInfoRecorder {
     metadataToWrite.put(key, value);
   }
 
-  public void addMetadata(String key, Iterable<String> value) {
+  public void addMetadata(String key, ImmutableList<String> value) {
     addMetadata(key, toJson(value));
   }
 

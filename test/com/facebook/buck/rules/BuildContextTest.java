@@ -36,6 +36,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -61,6 +62,7 @@ public class BuildContextTest {
     builder.setEventBus(BuckEventBusFactory.newInstance());
     builder.setClock(createMock(Clock.class));
     builder.setBuildId(createMock(BuildId.class));
+    builder.setObjectMapper(ObjectMappers.newDefaultInstance());
 
     AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
     List<Path> entries = ImmutableList.of(
@@ -104,6 +106,7 @@ public class BuildContextTest {
     builder.setEventBus(BuckEventBusFactory.newInstance());
     builder.setClock(createMock(Clock.class));
     builder.setBuildId(createMock(BuildId.class));
+    builder.setObjectMapper(ObjectMappers.newDefaultInstance());
 
     BuildContext context = builder.build();
     Supplier<String> androidBootclasspathSupplier = context.getAndroidBootclasspathSupplier();
@@ -125,6 +128,7 @@ public class BuildContextTest {
     builder.setEventBus(BuckEventBusFactory.newInstance());
     builder.setClock(createMock(Clock.class));
     builder.setBuildId(createMock(BuildId.class));
+    builder.setObjectMapper(ObjectMappers.newDefaultInstance());
 
     // Set to value that throws if executed.
     builder.setAndroidBootclasspathSupplier(
@@ -152,6 +156,7 @@ public class BuildContextTest {
         .setClock(createMock(Clock.class))
         .setBuildId(createMock(BuildId.class))
         .setEventBus(eventBus)
+        .setObjectMapper(ObjectMappers.newDefaultInstance())
         .build();
 
     buildContext.logError(new RuntimeException(), "Error detail: %s", "BUILD_ID");

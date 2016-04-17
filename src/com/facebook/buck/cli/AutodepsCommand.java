@@ -143,6 +143,7 @@ public class AutodepsCommand extends AbstractCommand {
           .setJavaPackageFinder(executionContext.getJavaPackageFinder())
           .setEventBus(eventBus)
           .setBuildId(eventBus.getBuildId())
+          .setObjectMapper(params.getObjectMapper())
           .putAllEnvironment(executionContext.getEnvironment())
           .setKeepGoing(false)
           .setShouldReportAbsolutePaths(false)
