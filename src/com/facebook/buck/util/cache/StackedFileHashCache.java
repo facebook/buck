@@ -18,6 +18,7 @@ package com.facebook.buck.util.cache;
 
 import com.facebook.buck.model.Pair;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 
@@ -38,6 +39,7 @@ public class StackedFileHashCache implements FileHashCache {
   }
 
   private Optional<Pair<FileHashCache, Path>> lookup(Path path) {
+    Preconditions.checkArgument(path.isAbsolute());
     for (FileHashCache cache : caches) {
       if (cache.willGet(path)) {
         return Optional.of(new Pair<>(cache, path));

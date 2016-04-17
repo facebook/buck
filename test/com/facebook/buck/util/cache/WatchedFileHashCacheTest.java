@@ -93,22 +93,20 @@ public class WatchedFileHashCacheTest {
 
   @Test
   public void directoryHashChangesWhenFileInsideDirectoryChanges() throws IOException {
-    WatchedFileHashCache cache =
-        new WatchedFileHashCache(
-            new ProjectFilesystem(
-                tmp.getRoot().toPath()));
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRootPath());
+    WatchedFileHashCache cache = new WatchedFileHashCache(filesystem);
     tmp.newFolder("foo", "bar");
     File inputFile = tmp.newFile("foo/bar/baz");
     Files.write("Hello world".getBytes(Charsets.UTF_8), inputFile);
 
     Path dir = Paths.get("foo/bar");
-    HashCode dirHash = cache.get(dir);
+    HashCode dirHash = cache.get(filesystem.resolve(dir));
     Files.write("Goodbye world".getBytes(Charsets.UTF_8), inputFile);
     cache.onFileSystemChange(
         createPathEvent(
             dir.resolve("baz"),
             StandardWatchEventKinds.ENTRY_MODIFY));
-    HashCode dirHash2 = cache.get(dir);
+    HashCode dirHash2 = cache.get(filesystem.resolve(dir));
     assertNotEquals(dirHash, dirHash2);
   }
 

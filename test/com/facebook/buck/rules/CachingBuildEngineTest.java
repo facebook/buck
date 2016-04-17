@@ -887,7 +887,7 @@ public class CachingBuildEngineTest {
       Path output = Paths.get("output/path");
       filesystem.mkdirs(output.getParent());
       filesystem.writeContentsToPath("something", output);
-      HashCode originalHashCode = fileHashCache.get(output);
+      HashCode originalHashCode = fileHashCache.get(filesystem.resolve(output));
       assertTrue(fileHashCache.willGet(output));
 
       // Create a simple rule which just writes something new to the output file.
@@ -915,7 +915,7 @@ public class CachingBuildEngineTest {
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
 
       // Verify that we have a new hash.
-      HashCode newHashCode = fileHashCache.get(output);
+      HashCode newHashCode = fileHashCache.get(filesystem.resolve(output));
       assertThat(newHashCode, Matchers.not(equalTo(originalHashCode)));
     }
 
@@ -1579,7 +1579,7 @@ public class CachingBuildEngineTest {
 
       // Now modify the input file and invalidate it in the cache.
       filesystem.writeContentsToPath("something else", input);
-      fileHashCache.invalidate(input);
+      fileHashCache.invalidate(filesystem.resolve(input));
 
       // Run the build.
       CachingBuildEngine cachingBuildEngine = engineWithDepFileFactory(depFileFactory);
@@ -1649,7 +1649,7 @@ public class CachingBuildEngineTest {
 
       // Now delete the input and invalidate it in the cache.
       filesystem.deleteFileAtPath(input);
-      fileHashCache.invalidate(input);
+      fileHashCache.invalidate(filesystem.resolve(input));
 
       // Run the build.
       CachingBuildEngine cachingBuildEngine = engineWithDepFileFactory(depFileFactory);
@@ -1763,7 +1763,9 @@ public class CachingBuildEngineTest {
           equalTo(
               ImmutableMap.of(
                   depFileRuleKey,
-                  ImmutableMap.of(input.toString(), fileHashCache.get(input)))));
+                  ImmutableMap.of(
+                      input.toString(),
+                      fileHashCache.get(filesystem.resolve(input))))));
 
       // Verify that the artifact is also cached via the dep file rule key.
       Path fetchedArtifact = tmp.newFile("artifact").toPath();
@@ -1876,7 +1878,7 @@ public class CachingBuildEngineTest {
           equalTo(
               ImmutableMap.of(
                   depFileRuleKey,
-                  ImmutableMap.of(input.toString(), fileHashCache.get(input)),
+                  ImmutableMap.of(input.toString(), fileHashCache.get(filesystem.resolve(input))),
                   new RuleKey("abcd"),
                   ImmutableMap.of("some/path.h", HashCode.fromInt(12)))));
 
@@ -1992,7 +1994,9 @@ public class CachingBuildEngineTest {
           equalTo(
               ImmutableMap.of(
                   depFileRuleKey,
-                  ImmutableMap.of(input.toString(), fileHashCache.get(input)))));
+                  ImmutableMap.of(
+                      input.toString(),
+                      fileHashCache.get(filesystem.resolve(input))))));
     }
 
     @Test

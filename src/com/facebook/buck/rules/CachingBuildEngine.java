@@ -627,7 +627,7 @@ public class CachingBuildEngine implements BuildEngine {
               // Invalidate any cached hashes for the output paths, since we've updated them.
               FileHashCache fileHashCache = fileHashCaches.get(rule.getProjectFilesystem());
               for (Path path : buildInfoRecorder.getRecordedPaths()) {
-                fileHashCache.invalidate(path);
+                fileHashCache.invalidate(rule.getProjectFilesystem().resolve(path));
               }
             }
 

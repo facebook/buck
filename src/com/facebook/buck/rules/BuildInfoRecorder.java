@@ -253,7 +253,7 @@ public class BuildInfoRecorder {
   public HashCode getOutputHash(FileHashCache fileHashCache) throws IOException {
     Hasher hasher = Hashing.md5().newHasher();
     for (Path path : getRecordedPaths()) {
-      hasher.putBytes(fileHashCache.get(path).asBytes());
+      hasher.putBytes(fileHashCache.get(projectFilesystem.resolve(path)).asBytes());
     }
     return hasher.hash();
   }
