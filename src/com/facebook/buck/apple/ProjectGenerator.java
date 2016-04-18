@@ -735,7 +735,8 @@ public class ProjectGenerator {
   }
 
   private static Path getHalideOutputPath(BuildTarget target) {
-    return Paths.get("buck-out/halide")
+    return  BuckConstant.getBuckOutputPath()
+        .resolve("halide")
         .resolve(target.getBasePath())
         .resolve(target.getShortName());
   }
