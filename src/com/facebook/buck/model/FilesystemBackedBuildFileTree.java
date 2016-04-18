@@ -16,10 +16,8 @@
 
 package com.facebook.buck.model;
 
-import static com.facebook.buck.util.BuckConstant.BUCK_OUTPUT_DIRECTORY;
-import static com.facebook.buck.util.BuckConstant.DEFAULT_CACHE_DIR;
-
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -140,8 +138,8 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
    * the world's best heuristic, but it works in every existing code base we have access to.
    */
   private boolean isBuckOutput(Path path) {
-    Path sameFsBuckOut = path.getFileSystem().getPath(BUCK_OUTPUT_DIRECTORY);
-    Path sameFsBuckCache = path.getFileSystem().getPath(DEFAULT_CACHE_DIR);
+    Path sameFsBuckOut = path.getFileSystem().getPath(BuckConstant.BUCK_OUTPUT_DIRECTORY);
+    Path sameFsBuckCache = path.getFileSystem().getPath(BuckConstant.DEFAULT_CACHE_DIR);
 
     for (Path segment : path) {
       if (sameFsBuckOut.equals(segment) ||

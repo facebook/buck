@@ -16,8 +16,6 @@
 
 package com.facebook.buck.shell;
 
-import static com.facebook.buck.util.BuckConstant.GEN_DIR;
-import static com.facebook.buck.util.BuckConstant.GEN_PATH;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -57,6 +55,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
@@ -133,11 +132,14 @@ public class GenruleTest {
         .build(ruleResolver, filesystem);
 
     // Verify all of the observers of the Genrule.
-    assertEquals(GEN_PATH.resolve("src/com/facebook/katana/katana_manifest/AndroidManifest.xml"),
+    assertEquals(
+        BuckConstant.GEN_PATH.resolve(
+            "src/com/facebook/katana/katana_manifest/AndroidManifest.xml"),
         genrule.getPathToOutput());
     assertEquals(
         filesystem.resolve(
-            GEN_DIR + "/src/com/facebook/katana/katana_manifest/AndroidManifest.xml").toString(),
+            BuckConstant.GEN_DIR + "/src/com/facebook/katana/katana_manifest/AndroidManifest.xml")
+            .toString(),
         ((Genrule) genrule).getAbsoluteOutputFilePath());
     BuildContext buildContext = null; // unused since there are no deps
     ImmutableList<Path> inputsToCompareToOutputs = ImmutableList.of(
@@ -163,7 +165,7 @@ public class GenruleTest {
             "rm",
             "-r",
             "-f",
-            "/opt/src/buck/" + GEN_DIR +
+            "/opt/src/buck/" + BuckConstant.GEN_DIR +
             "/src/com/facebook/katana/katana_manifest/AndroidManifest.xml"),
         rmCommand.getShellCommand());
 
@@ -172,13 +174,14 @@ public class GenruleTest {
     MkdirStep mkdirCommand = (MkdirStep) secondStep;
     assertEquals(
         "Second command should make sure the output directory exists.",
-        filesystem.resolve(GEN_DIR + "/src/com/facebook/katana/katana_manifest"),
+        filesystem.resolve(BuckConstant.GEN_DIR + "/src/com/facebook/katana/katana_manifest"),
         mkdirCommand.getPath());
 
     Step mkTmpDir = steps.get(2);
     assertTrue(mkTmpDir instanceof MakeCleanDirectoryStep);
     MakeCleanDirectoryStep secondMkdirCommand = (MakeCleanDirectoryStep) mkTmpDir;
-    Path pathToTmpDir = GEN_PATH.resolve("src/com/facebook/katana/katana_manifest__tmp");
+    Path pathToTmpDir = BuckConstant.GEN_PATH.resolve(
+        "src/com/facebook/katana/katana_manifest__tmp");
     assertEquals(
         "Third command should create the temp directory to be written by the genrule.",
         pathToTmpDir,
@@ -187,7 +190,8 @@ public class GenruleTest {
     Step mkSrcDir = steps.get(3);
     assertTrue(mkSrcDir instanceof MakeCleanDirectoryStep);
     MakeCleanDirectoryStep thirdMkdirCommand = (MakeCleanDirectoryStep) mkTmpDir;
-    Path pathToSrcDir = GEN_PATH.resolve("src/com/facebook/katana/katana_manifest__srcs");
+    Path pathToSrcDir = BuckConstant.GEN_PATH.resolve(
+        "src/com/facebook/katana/katana_manifest__srcs");
     assertEquals(
         "Fourth command should create the temp source directory to be written by the genrule.",
         pathToTmpDir,
@@ -210,7 +214,8 @@ public class GenruleTest {
     assertEquals(ImmutableMap.<String, String>builder()
         .put("OUT",
             filesystem.resolve(
-                GEN_DIR + "/src/com/facebook/katana/katana_manifest/AndroidManifest.xml")
+                BuckConstant.GEN_DIR +
+                    "/src/com/facebook/katana/katana_manifest/AndroidManifest.xml")
                 .toString())
         .build(),
         genruleCommand.getEnvironmentVariables(executionContext));
@@ -284,7 +289,7 @@ public class GenruleTest {
         Matchers.hasEntry(
             "OUT",
             new FakeProjectFilesystem()
-                .resolve(GEN_DIR + "/genrule_with_worker/output.txt")
+                .resolve(BuckConstant.GEN_DIR + "/genrule_with_worker/output.txt")
                 .toString()));
   }
 
@@ -397,7 +402,7 @@ public class GenruleTest {
     ((Genrule) rule).addSymlinkCommands(builder);
     ImmutableList<Step> commands = builder.build();
 
-    String baseTmpPath = GEN_DIR + "/example__srcs/";
+    String baseTmpPath = BuckConstant.GEN_DIR + "/example__srcs/";
 
     assertEquals(3, commands.size());
     MkdirAndSymlinkFileStep linkCmd = (MkdirAndSymlinkFileStep) commands.get(0);

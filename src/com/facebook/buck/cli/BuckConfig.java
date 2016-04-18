@@ -16,8 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.util.BuckConstant.DEFAULT_CACHE_DIR;
-
 import com.facebook.buck.config.Config;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -39,6 +37,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.SampleRate;
 import com.facebook.buck.util.environment.Architecture;
@@ -725,7 +724,7 @@ public class BuckConfig {
    * @return the local cache directory
    */
   public String getLocalCacheDirectory() {
-    return getValue("cache", "dir").or(DEFAULT_CACHE_DIR);
+    return getValue("cache", "dir").or(BuckConstant.DEFAULT_CACHE_DIR);
   }
 
   /**

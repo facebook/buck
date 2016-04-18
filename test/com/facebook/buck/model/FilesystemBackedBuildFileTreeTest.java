@@ -16,8 +16,6 @@
 
 package com.facebook.buck.model;
 
-import static com.facebook.buck.util.BuckConstant.BUCK_OUTPUT_PATH;
-import static com.facebook.buck.util.BuckConstant.DEFAULT_CACHE_DIR;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -26,6 +24,7 @@ import com.facebook.buck.config.Config;
 import com.facebook.buck.config.ConfigBuilder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
@@ -169,7 +168,7 @@ public class FilesystemBackedBuildFileTreeTest {
   public void shouldIgnoreBuckOutputDirectoriesByDefault() throws IOException {
     Path root = tmp.getRoot();
 
-    Path buckOut = root.resolve(BUCK_OUTPUT_PATH);
+    Path buckOut = root.resolve(BuckConstant.BUCK_OUTPUT_PATH);
     Files.createDirectories(buckOut);
     touch(buckOut.resolve("BUCK"));
     Path sibling = buckOut.resolve("someFile");
@@ -180,7 +179,7 @@ public class FilesystemBackedBuildFileTreeTest {
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
 
     Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(
-        BUCK_OUTPUT_PATH.resolve("someFile"));
+        BuckConstant.BUCK_OUTPUT_PATH.resolve("someFile"));
     assertFalse(ancestor.isPresent());
   }
 
@@ -188,7 +187,7 @@ public class FilesystemBackedBuildFileTreeTest {
   public void shouldIgnoreBuckCacheDirectoriesByDefault() throws IOException {
     Path root = tmp.getRoot();
 
-    Path cacheDir = root.resolve(DEFAULT_CACHE_DIR);
+    Path cacheDir = root.resolve(BuckConstant.DEFAULT_CACHE_DIR);
     Files.createDirectories(cacheDir);
     touch(cacheDir.resolve("BUCK"));
     Path sibling = cacheDir.resolve("someFile");

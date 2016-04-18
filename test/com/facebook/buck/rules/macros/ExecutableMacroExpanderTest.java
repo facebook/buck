@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.macros;
 
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
-import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -41,6 +40,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -91,7 +91,8 @@ public class ExecutableMacroExpanderTest {
         originalCmd);
 
     // Verify that the correct cmd was created.
-    Path expectedClasspath = Paths.get(GEN_DIR + "/java/com/facebook/util/ManifestGenerator.jar")
+    Path expectedClasspath =
+        Paths.get(BuckConstant.GEN_DIR + "/java/com/facebook/util/ManifestGenerator.jar")
         .toAbsolutePath();
 
     String expectedCmd = String.format(
@@ -120,7 +121,8 @@ public class ExecutableMacroExpanderTest {
         originalCmd);
 
     // Verify that the correct cmd was created.
-    Path expectedClasspath = Paths.get(GEN_DIR + "/java/com/facebook/util/ManifestGenerator.jar")
+    Path expectedClasspath =
+        Paths.get(BuckConstant.GEN_DIR + "/java/com/facebook/util/ManifestGenerator.jar")
         .toAbsolutePath();
     String expectedCmd = String.format(
         "java -jar %s $OUT",
@@ -149,7 +151,8 @@ public class ExecutableMacroExpanderTest {
         originalCmd);
 
     // Verify that the correct cmd was created.
-    Path expectedClasspath = Paths.get(GEN_DIR + "/java/com/facebook/util/ManifestGenerator.jar")
+    Path expectedClasspath =
+        Paths.get(BuckConstant.GEN_DIR + "/java/com/facebook/util/ManifestGenerator.jar")
         .toAbsolutePath();
     String expectedCmd = String.format(
         "java -jar %s $OUT",
