@@ -289,6 +289,9 @@ public class BuckEventsConsumer implements
 
     private void displayErrors() {
         if (mErrors.size() > 0) {
+            if (!BuckToolWindowFactory.isToolWindowVisible(mProject)) {
+                BuckToolWindowFactory.showToolWindow(mProject);
+            }
             Set<String> targetsWithErrors = mErrors.keySet();
             for (String target: targetsWithErrors) {
                 List<String> errorMessages = mErrors.get(target);
@@ -479,6 +482,9 @@ public class BuckEventsConsumer implements
     }
 
     public void showTestResults() {
+        if (!mTestResultsList.isEmpty() && !BuckToolWindowFactory.isToolWindowVisible(mProject)) {
+                BuckToolWindowFactory.showToolWindow(mProject);
+        }
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -560,6 +566,10 @@ public class BuckEventsConsumer implements
 
     @Override
     public void consumeConsoleEvent(final String message) {
+        if (!BuckToolWindowFactory.isToolWindowVisible(mProject)) {
+            BuckToolWindowFactory.showToolWindow(mProject);
+        }
+
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {

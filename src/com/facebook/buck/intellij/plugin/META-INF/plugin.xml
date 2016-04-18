@@ -22,6 +22,21 @@
 
   <ul>
       <li>
+        <b>2.4</b>
+          Added the plugin to the toolbar.
+          Show successful/failed notification on action finished.
+          Automatically find buck executable.
+          Added install debugging.
+          Minor bug fixes
+      </li>
+
+       <li>
+        <b>2.3</b>
+          Updated with the new buck API.
+          Fixed old commands to work with Buck.
+      </li>
+
+      <li>
         <b>2.2</b>
         Fetch build status via websocket.
         Publish build status notifications.
