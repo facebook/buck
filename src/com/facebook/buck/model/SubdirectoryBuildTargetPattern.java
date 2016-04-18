@@ -80,7 +80,7 @@ public class SubdirectoryBuildTargetPattern implements BuildTargetPattern {
 
   @Override
   public String toString() {
-    return "+" + cellPath.getFileName().toString() + "//" + pathWithinCell.toString() + "/...";
+    return cellPath.getFileName().toString() + "//" + pathWithinCell.toString() + "/...";
   }
 
 }

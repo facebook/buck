@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Optional;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 
@@ -87,5 +88,31 @@ public class CellTest {
     Cell other = cell1.getCell(target);
 
     assertEquals(cell2Root, other.getFilesystem().getRootPath());
+  }
+
+  @Test
+  public void shouldResolveFallbackCell()
+      throws IOException, InterruptedException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+
+    Path root = vfs.getPath("/opt/local/");
+    Path cell1Root = root.resolve("repo1");
+    Files.createDirectories(cell1Root);
+    Path cell2Root = root.resolve("repo2");
+    Files.createDirectories(cell2Root);
+
+    ProjectFilesystem filesystem1 = new ProjectFilesystem(cell1Root.toAbsolutePath());
+    ProjectFilesystem filesystem2 = new ProjectFilesystem(cell2Root.toAbsolutePath());
+    BuckConfig config = FakeBuckConfig.builder()
+        .setFilesystem(filesystem1)
+        .setSections(
+            "[repositories]",
+            "example = " + filesystem2.getRootPath().toString())
+        .build();
+
+    Cell cell1 = new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem1).build();
+    Path path = cell1.getCellRoots().apply(Optional.of("@example"));
+
+    assertEquals(path, cell2Root);
   }
 }

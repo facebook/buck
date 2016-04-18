@@ -149,7 +149,7 @@ public class SourcePathTypeCoercerTest {
         cellRoots,
         projectFilesystem,
         pathRelativeToProjectRoot,
-        "+hello//:hello");
+        "hello//:hello");
 
     // Note that the important thing is that the root of the target has been set to `helloRoot` so
     // the cell name should be absent (otherwise, we'd look for a cell named `@hello` from the

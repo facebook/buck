@@ -75,10 +75,8 @@ public class TargetPatternEvaluator {
       targets = resolveBuildTargetPattern(alias.getFullyQualifiedName(), executor);
     } else {
       // Check if the pattern corresponds to a build target or a path.
-      if (pattern.startsWith("//") ||
-          pattern.startsWith(":") ||
-          pattern.startsWith("+") ||
-          pattern.startsWith("@")) {
+      if (pattern.contains("//") ||
+          pattern.startsWith(":")) {
         targets = resolveBuildTargetPattern(pattern, executor);
       } else {
         targets = resolveFilePattern(pattern);

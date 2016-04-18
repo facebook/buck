@@ -131,7 +131,7 @@ public class TestCellBuilder {
     return new Function<Optional<String>, Path>() {
       @Override
       public Path apply(Optional<String> cellName) {
-        if (cellName.isPresent()) {
+        if (cellName.isPresent() && !cellName.get().equals("@")) {
           throw new RuntimeException("No known cell with the name: " + cellName);
         }
         return toUse.getRootPath();

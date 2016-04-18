@@ -16,7 +16,7 @@ cxx_binary(
   ],
   deps = [
     # Transitively pulls in :lib above
-    '+parent//xplat:xplat-lib',
+    '@parent//xplat:xplat-lib',
   ],
 )
 
