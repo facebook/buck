@@ -108,7 +108,7 @@ public class Project {
    * from the IntelliJ project because it causes IntelliJ to try and index temporary files
    * that buck creates whilst a build it taking place.
    */
-  public static final Path TMP_PATH = BuckConstant.BUCK_OUTPUT_PATH.resolve("tmp");
+  public static final Path TMP_PATH = BuckConstant.getBuckOutputPath().resolve("tmp");
 
   /**
    * This directory is analogous to the gen/ directory that IntelliJ would produce when building an
@@ -118,9 +118,9 @@ public class Project {
    * mess with the user's use of {@code glob(['**&#x2f;*.java'])}. For this reason, we encourage
    * users to target
    */
-  public static final String ANDROID_GEN_DIR = BuckConstant.BUCK_OUTPUT_DIRECTORY + "/android";
-  public static final Path ANDROID_GEN_PATH = BuckConstant.BUCK_OUTPUT_PATH.resolve("android");
-  public static final String ANDROID_APK_DIR = BuckConstant.BUCK_OUTPUT_DIRECTORY + "/gen";
+  public static final String ANDROID_GEN_DIR = BuckConstant.getBuckOutputDirectory() + "/android";
+  public static final Path ANDROID_GEN_PATH = BuckConstant.getBuckOutputPath().resolve("android");
+  public static final String ANDROID_APK_DIR = BuckConstant.getBuckOutputDirectory() + "/gen";
 
   private static final Logger LOG = Logger.get(Project.class);
 
@@ -703,9 +703,9 @@ public class Project {
         // cannot find them. Therefore, if "buck-out" is listed in the default list of paths to
         // ignore (which makes sense for other parts of Buck, such as Watchman), then we will ignore
         // only the appropriate subfolders of buck-out instead.
-        if (BuckConstant.BUCK_OUTPUT_PATH.equals(path)) {
-          addRootExclude(module, BuckConstant.SCRATCH_PATH);
-          addRootExclude(module, BuckConstant.LOG_PATH);
+        if (BuckConstant.getBuckOutputPath().equals(path)) {
+          addRootExclude(module, BuckConstant.getScratchPath());
+          addRootExclude(module, BuckConstant.getLogPath());
           addRootExclude(module, TMP_PATH);
         } else {
           addRootExclude(module, path);

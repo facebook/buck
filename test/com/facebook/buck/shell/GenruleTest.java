@@ -133,12 +133,12 @@ public class GenruleTest {
 
     // Verify all of the observers of the Genrule.
     assertEquals(
-        BuckConstant.GEN_PATH.resolve(
+        BuckConstant.getGenPath().resolve(
             "src/com/facebook/katana/katana_manifest/AndroidManifest.xml"),
         genrule.getPathToOutput());
     assertEquals(
-        filesystem.resolve(
-            BuckConstant.GEN_DIR + "/src/com/facebook/katana/katana_manifest/AndroidManifest.xml")
+        filesystem.resolve(BuckConstant.getGenDir() +
+            "/src/com/facebook/katana/katana_manifest/AndroidManifest.xml")
             .toString(),
         ((Genrule) genrule).getAbsoluteOutputFilePath());
     BuildContext buildContext = null; // unused since there are no deps
@@ -165,7 +165,7 @@ public class GenruleTest {
             "rm",
             "-r",
             "-f",
-            "/opt/src/buck/" + BuckConstant.GEN_DIR +
+            "/opt/src/buck/" + BuckConstant.getGenDir() +
             "/src/com/facebook/katana/katana_manifest/AndroidManifest.xml"),
         rmCommand.getShellCommand());
 
@@ -174,13 +174,13 @@ public class GenruleTest {
     MkdirStep mkdirCommand = (MkdirStep) secondStep;
     assertEquals(
         "Second command should make sure the output directory exists.",
-        filesystem.resolve(BuckConstant.GEN_DIR + "/src/com/facebook/katana/katana_manifest"),
+        filesystem.resolve(BuckConstant.getGenDir() + "/src/com/facebook/katana/katana_manifest"),
         mkdirCommand.getPath());
 
     Step mkTmpDir = steps.get(2);
     assertTrue(mkTmpDir instanceof MakeCleanDirectoryStep);
     MakeCleanDirectoryStep secondMkdirCommand = (MakeCleanDirectoryStep) mkTmpDir;
-    Path pathToTmpDir = BuckConstant.GEN_PATH.resolve(
+    Path pathToTmpDir = BuckConstant.getGenPath().resolve(
         "src/com/facebook/katana/katana_manifest__tmp");
     assertEquals(
         "Third command should create the temp directory to be written by the genrule.",
@@ -190,7 +190,7 @@ public class GenruleTest {
     Step mkSrcDir = steps.get(3);
     assertTrue(mkSrcDir instanceof MakeCleanDirectoryStep);
     MakeCleanDirectoryStep thirdMkdirCommand = (MakeCleanDirectoryStep) mkTmpDir;
-    Path pathToSrcDir = BuckConstant.GEN_PATH.resolve(
+    Path pathToSrcDir = BuckConstant.getGenPath().resolve(
         "src/com/facebook/katana/katana_manifest__srcs");
     assertEquals(
         "Fourth command should create the temp source directory to be written by the genrule.",
@@ -214,7 +214,7 @@ public class GenruleTest {
     assertEquals(ImmutableMap.<String, String>builder()
         .put("OUT",
             filesystem.resolve(
-                BuckConstant.GEN_DIR +
+                BuckConstant.getGenDir() +
                     "/src/com/facebook/katana/katana_manifest/AndroidManifest.xml")
                 .toString())
         .build(),
@@ -289,7 +289,7 @@ public class GenruleTest {
         Matchers.hasEntry(
             "OUT",
             new FakeProjectFilesystem()
-                .resolve(BuckConstant.GEN_DIR + "/genrule_with_worker/output.txt")
+                .resolve(BuckConstant.getGenDir() + "/genrule_with_worker/output.txt")
                 .toString()));
   }
 
@@ -402,7 +402,7 @@ public class GenruleTest {
     ((Genrule) rule).addSymlinkCommands(builder);
     ImmutableList<Step> commands = builder.build();
 
-    String baseTmpPath = BuckConstant.GEN_DIR + "/example__srcs/";
+    String baseTmpPath = BuckConstant.getGenDir() + "/example__srcs/";
 
     assertEquals(3, commands.size());
     MkdirAndSymlinkFileStep linkCmd = (MkdirAndSymlinkFileStep) commands.get(0);

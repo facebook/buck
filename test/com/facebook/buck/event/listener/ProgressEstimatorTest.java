@@ -254,7 +254,7 @@ public class ProgressEstimatorTest {
   private Path getStorageForTest() throws IOException {
     return tmp.getRoot().toPath()
         .resolve("estimatortests/")
-        .resolve(BuckConstant.BUCK_OUTPUT_PATH)
+        .resolve(BuckConstant.getBuckOutputPath())
         .resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON);
   }
 

@@ -375,7 +375,7 @@ public class AppleTestIntegrationTest {
         containsString("1 Passed   0 Skipped   0 Failed   AppTest"));
 
     Path appTestDsym = tmp.getRootPath()
-        .resolve(BuckConstant.GEN_DIR)
+        .resolve(BuckConstant.getGenDir())
         .resolve("AppTest#apple-test-bundle,dwarf-and-dsym,no-include-frameworks")
         .resolve("AppTest.xctest.dSYM");
     AppleDsymTestUtil.checkDsymFileHasDebugSymbol(
@@ -384,7 +384,7 @@ public class AppleTestIntegrationTest {
         appTestDsym);
 
     Path hostAppDsym = tmp.getRootPath()
-        .resolve(BuckConstant.GEN_DIR)
+        .resolve(BuckConstant.getGenDir())
         .resolve("TestHostApp#dwarf-and-dsym,no-include-frameworks")
         .resolve("TestHostApp.app.dSYM");
     AppleDsymTestUtil.checkDsymFileHasDebugSymbol(

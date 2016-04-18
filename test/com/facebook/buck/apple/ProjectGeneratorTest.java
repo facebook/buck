@@ -3265,7 +3265,7 @@ public class ProjectGeneratorTest {
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target,
         ImmutableMap.of(
-            BuckConstant.GEN_PATH.resolve("xcode-scripts/emptyFile.c").toString(),
+            BuckConstant.getGenPath().resolve("xcode-scripts/emptyFile.c").toString(),
             Optional.<String>absent()));
     assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,

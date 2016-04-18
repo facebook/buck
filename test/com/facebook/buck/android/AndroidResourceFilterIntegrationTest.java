@@ -202,7 +202,7 @@ public class AndroidResourceFilterIntegrationTest {
 
     ArtifactCache cache = TestArtifactCaches.createDirCacheForTest(
         workspace.getPath("."),
-        workspace.getPath(BuckConstant.DEFAULT_CACHE_DIR));
+        workspace.getPath(BuckConstant.getDefaultCacheDir()));
     Path cachedFile = DirArtifactCacheTestUtil.getPathForRuleKey(
         cache,
         new RuleKey(androidBinaryRuleKey.getHash()),

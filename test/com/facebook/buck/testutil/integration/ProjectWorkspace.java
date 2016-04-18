@@ -178,7 +178,7 @@ public class ProjectWorkspace {
              new BufferedOutputStream(
                  Channels.newOutputStream(
                      Files.newByteChannel(
-                         destPath.resolve(BuckConstant.CURRENT_VERSION_FILE),
+                         destPath.resolve(BuckConstant.getCurrentVersionFile()),
                          ImmutableSet.<OpenOption>of(
                              StandardOpenOption.CREATE_NEW,
                              StandardOpenOption.WRITE))))) {

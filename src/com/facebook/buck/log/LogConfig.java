@@ -68,7 +68,7 @@ public class LogConfig {
   public static synchronized void setupLogging() throws IOException {
     // Bug JDK-6244047: The default FileHandler does not handle the directory not existing,
     // so we have to create it before any log statements actually run.
-    Files.createDirectories(BuckConstant.LOG_PATH);
+    Files.createDirectories(BuckConstant.getLogPath());
 
     try {
       deleteOldLogFiles();
@@ -132,7 +132,7 @@ public class LogConfig {
 
   private static void deleteOldLogFiles() throws IOException {
     for (Path path : PathListing.listMatchingPathsWithFilters(
-             BuckConstant.LOG_PATH,
+        BuckConstant.getLogPath(),
              "buck-*.log*",
              PathListing.GET_PATH_MODIFIED_TIME,
              PathListing.FilterMode.EXCLUDE,

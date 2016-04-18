@@ -88,9 +88,9 @@ public class DefectReporter {
           .setReportSubmitMessage(response)
           .build();
     } else {
-      filesystem.mkdirs(BuckConstant.BUCK_OUTPUT_PATH);
+      filesystem.mkdirs(BuckConstant.getBuckOutputPath());
       Path defectReportPath = filesystem.createTempFile(
-          BuckConstant.BUCK_OUTPUT_PATH,
+          BuckConstant.getBuckOutputPath(),
           "defect_report",
           ".zip");
       try (OutputStream outputStream = filesystem.newFileOutputStream(defectReportPath)) {

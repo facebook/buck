@@ -114,7 +114,7 @@ public class DefaultJavaLibraryTest {
   private static final String ANNOTATION_SCENARIO_TARGET =
       "//android/java/src/com/facebook:fb";
   private static final String ANNOTATION_SCENARIO_GEN_PATH_POSTIX =
-      BuckConstant.ANNOTATION_DIR + "/android/java/src/com/facebook/__fb_gen__";
+      BuckConstant.getAnnotationDir() + "/android/java/src/com/facebook/__fb_gen__";
 
   @Rule
   public TemporaryFolder tmp = new TemporaryFolder();

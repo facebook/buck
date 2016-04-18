@@ -150,7 +150,7 @@ public class ApkGenruleTest {
     String expectedApkOutput =
         MorePathsForTests.rootRelativePath(
             "/opt/src/buck/" +
-            BuckConstant.GEN_DIR +
+                BuckConstant.getGenDir() +
             "/src/com/facebook/sign_fb4a/sign_fb4a.apk").toString();
     assertEquals(expectedApkOutput,
         apkGenrule.getAbsoluteOutputFilePath());
@@ -198,7 +198,8 @@ public class ApkGenruleTest {
     Step secondStep = steps.get(1);
     assertTrue(secondStep instanceof MkdirStep);
     MkdirStep mkdirCommand = (MkdirStep) secondStep;
-    Path mkdirDir = projectFilesystem.resolve(BuckConstant.GEN_DIR + "/src/com/facebook/sign_fb4a");
+    Path mkdirDir = projectFilesystem.resolve(BuckConstant.getGenDir() +
+        "/src/com/facebook/sign_fb4a");
     assertEquals(
         "Second command should make sure the output directory exists.",
         mkdirDir,
@@ -207,7 +208,8 @@ public class ApkGenruleTest {
     Step thirdStep = steps.get(2);
     assertTrue(thirdStep instanceof MakeCleanDirectoryStep);
     MakeCleanDirectoryStep secondMkdirCommand = (MakeCleanDirectoryStep) thirdStep;
-    Path relativePathToTmpDir = BuckConstant.GEN_PATH.resolve("src/com/facebook/sign_fb4a__tmp");
+    Path relativePathToTmpDir = BuckConstant.getGenPath().resolve(
+        "src/com/facebook/sign_fb4a__tmp");
     assertEquals(
         "Third command should make sure the temp directory exists.",
         relativePathToTmpDir,
@@ -216,7 +218,8 @@ public class ApkGenruleTest {
     Step fourthStep = steps.get(3);
     assertTrue(fourthStep instanceof MakeCleanDirectoryStep);
     MakeCleanDirectoryStep thirdMkdirCommand = (MakeCleanDirectoryStep) fourthStep;
-    Path relativePathToSrcDir = BuckConstant.GEN_PATH.resolve("src/com/facebook/sign_fb4a__srcs");
+    Path relativePathToSrcDir = BuckConstant.getGenPath().resolve(
+        "src/com/facebook/sign_fb4a__srcs");
     assertEquals(
         "Fourth command should make sure the temp directory exists.",
         relativePathToSrcDir,

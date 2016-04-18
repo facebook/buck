@@ -83,8 +83,8 @@ public class CleanCommandTest extends EasyMockSupport {
     CleanCommand cleanCommand = createCommandFromArgs();
     int exitCode = cleanCommand.run(params);
     assertEquals(0, exitCode);
-    assertEquals(BuckConstant.SCRATCH_PATH, binDir.getValue());
-    assertEquals(BuckConstant.GEN_PATH, genDir.getValue());
+    assertEquals(BuckConstant.getScratchPath(), binDir.getValue());
+    assertEquals(BuckConstant.getGenPath(), genDir.getValue());
 
     verifyAll();
   }
@@ -106,7 +106,7 @@ public class CleanCommandTest extends EasyMockSupport {
     int exitCode = cleanCommand.run(params);
     assertEquals(0, exitCode);
     assertEquals(Project.ANDROID_GEN_PATH, androidGenDir.getValue());
-    assertEquals(BuckConstant.ANNOTATION_PATH, annotationDir.getValue());
+    assertEquals(BuckConstant.getAnnotationPath(), annotationDir.getValue());
 
     verifyAll();
   }

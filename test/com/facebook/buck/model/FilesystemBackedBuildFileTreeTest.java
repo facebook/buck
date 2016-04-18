@@ -168,7 +168,7 @@ public class FilesystemBackedBuildFileTreeTest {
   public void shouldIgnoreBuckOutputDirectoriesByDefault() throws IOException {
     Path root = tmp.getRoot();
 
-    Path buckOut = root.resolve(BuckConstant.BUCK_OUTPUT_PATH);
+    Path buckOut = root.resolve(BuckConstant.getBuckOutputPath());
     Files.createDirectories(buckOut);
     touch(buckOut.resolve("BUCK"));
     Path sibling = buckOut.resolve("someFile");
@@ -179,7 +179,7 @@ public class FilesystemBackedBuildFileTreeTest {
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
 
     Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(
-        BuckConstant.BUCK_OUTPUT_PATH.resolve("someFile"));
+        BuckConstant.getBuckOutputPath().resolve("someFile"));
     assertFalse(ancestor.isPresent());
   }
 
@@ -187,7 +187,7 @@ public class FilesystemBackedBuildFileTreeTest {
   public void shouldIgnoreBuckCacheDirectoriesByDefault() throws IOException {
     Path root = tmp.getRoot();
 
-    Path cacheDir = root.resolve(BuckConstant.DEFAULT_CACHE_DIR);
+    Path cacheDir = root.resolve(BuckConstant.getDefaultCacheDir());
     Files.createDirectories(cacheDir);
     touch(cacheDir.resolve("BUCK"));
     Path sibling = cacheDir.resolve("someFile");

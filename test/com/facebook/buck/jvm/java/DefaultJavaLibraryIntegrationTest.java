@@ -109,7 +109,7 @@ public class DefaultJavaLibraryIntegrationTest {
     workspace.verify();
 
     // Verify the build cache.
-    Path buildCache = workspace.getPath(BuckConstant.DEFAULT_CACHE_DIR);
+    Path buildCache = workspace.getPath(BuckConstant.getDefaultCacheDir());
     assertTrue(Files.isDirectory(buildCache));
 
     ArtifactCache dirCache = TestArtifactCaches.createDirCacheForTest(

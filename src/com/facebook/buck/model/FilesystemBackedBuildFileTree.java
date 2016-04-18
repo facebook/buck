@@ -138,8 +138,8 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
    * the world's best heuristic, but it works in every existing code base we have access to.
    */
   private boolean isBuckOutput(Path path) {
-    Path sameFsBuckOut = path.getFileSystem().getPath(BuckConstant.BUCK_OUTPUT_DIRECTORY);
-    Path sameFsBuckCache = path.getFileSystem().getPath(BuckConstant.DEFAULT_CACHE_DIR);
+    Path sameFsBuckOut = path.getFileSystem().getPath(BuckConstant.getBuckOutputDirectory());
+    Path sameFsBuckCache = path.getFileSystem().getPath(BuckConstant.getDefaultCacheDir());
 
     for (Path segment : path) {
       if (sameFsBuckOut.equals(segment) ||

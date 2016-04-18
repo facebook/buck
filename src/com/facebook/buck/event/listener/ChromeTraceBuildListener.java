@@ -164,11 +164,11 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @VisibleForTesting
   void deleteOldTraces() {
-    if (!projectFilesystem.exists(BuckConstant.BUCK_TRACE_DIR)) {
+    if (!projectFilesystem.exists(BuckConstant.getBuckTraceDir())) {
       return;
     }
 
-    Path traceDirectory = projectFilesystem.getPathForRelativePath(BuckConstant.BUCK_TRACE_DIR);
+    Path traceDirectory = projectFilesystem.getPathForRelativePath(BuckConstant.getBuckTraceDir());
 
     try {
       for (Path path : PathListing.listMatchingPathsWithFilters(
@@ -191,7 +191,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     if (compressTraces) {
       traceName = traceName + ".gz";
     }
-    Path tracePath = BuckConstant.BUCK_TRACE_DIR.resolve(traceName);
+    Path tracePath = BuckConstant.getBuckTraceDir().resolve(traceName);
     try {
       projectFilesystem.createParentDirs(tracePath);
       OutputStream stream = projectFilesystem.newFileOutputStream(tracePath);
@@ -221,7 +221,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       jsonGenerator.close();
       traceStream.close();
       String symlinkName = compressTraces ? "build.trace.gz" : "build.trace";
-      Path symlinkPath = BuckConstant.BUCK_TRACE_DIR.resolve(symlinkName);
+      Path symlinkPath = BuckConstant.getBuckTraceDir().resolve(symlinkName);
       projectFilesystem.createSymLink(
           projectFilesystem.resolve(symlinkPath),
           projectFilesystem.resolve(tracePath),

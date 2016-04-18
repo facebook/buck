@@ -94,12 +94,12 @@ public class NdkLibraryTest {
 
     assertTrue(ndkLibrary.getProperties().is(ANDROID));
     assertTrue(ndkLibrary.isAsset());
-    assertEquals(Paths.get(BuckConstant.GEN_DIR, basePath, "__libbase"),
+    assertEquals(Paths.get(BuckConstant.getGenDir(), basePath, "__libbase"),
         ndkLibrary.getLibraryPath());
 
     List<Step> steps = ndkLibrary.getBuildSteps(context, new FakeBuildableContext());
 
-    String libbase = Paths.get(BuckConstant.SCRATCH_DIR, basePath, "__libbase").toString();
+    String libbase = Paths.get(BuckConstant.getScratchDir(), basePath, "__libbase").toString();
     MoreAsserts.assertShellCommands(
         "ndk_library() should invoke ndk-build on the given path with some -j value",
         ImmutableList.of(

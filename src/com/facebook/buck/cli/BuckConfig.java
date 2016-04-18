@@ -724,7 +724,7 @@ public class BuckConfig {
    * @return the local cache directory
    */
   public String getLocalCacheDirectory() {
-    return getValue("cache", "dir").or(BuckConstant.DEFAULT_CACHE_DIR);
+    return getValue("cache", "dir").or(BuckConstant.getDefaultCacheDir());
   }
 
   /**

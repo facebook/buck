@@ -1276,7 +1276,7 @@ public class ProjectGenerator {
     ImmutableSet<Path> recursiveHeaderSearchPaths = collectRecursiveHeaderSearchPaths(targetNode);
     ImmutableSet<Path> headerMapBases = recursiveHeaderSearchPaths.isEmpty() ?
         ImmutableSet.<Path>of() :
-        ImmutableSet.of(pathRelativizer.outputDirToRootRelative(BuckConstant.BUCK_OUTPUT_PATH));
+        ImmutableSet.of(pathRelativizer.outputDirToRootRelative(BuckConstant.getBuckOutputPath()));
 
     appendConfigsBuilder
         .put(
@@ -2557,7 +2557,7 @@ public class ProjectGenerator {
   }
 
   private Path emptyFileWithExtension(String extension) {
-    Path path = BuckConstant.GEN_PATH.resolve("xcode-scripts/emptyFile." + extension);
+    Path path = BuckConstant.getGenPath().resolve("xcode-scripts/emptyFile." + extension);
     if (!projectFilesystem.exists(path)) {
       try {
         projectFilesystem.createParentDirs(path);

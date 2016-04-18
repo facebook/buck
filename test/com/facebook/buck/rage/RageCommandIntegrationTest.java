@@ -123,8 +123,8 @@ public class RageCommandIntegrationTest {
           requestPath.get(),
           Matchers.equalTo("/rage"));
 
-      filesystem.mkdirs(BuckConstant.BUCK_OUTPUT_PATH);
-      Path report = filesystem.createTempFile(BuckConstant.BUCK_OUTPUT_PATH, "report", "zip");
+      filesystem.mkdirs(BuckConstant.getBuckOutputPath());
+      Path report = filesystem.createTempFile(BuckConstant.getBuckOutputPath(), "report", "zip");
       filesystem.writeBytesToPath(requestBody.get(), report);
       ZipInspector zipInspector = new ZipInspector(filesystem.resolve(report));
       zipInspector.assertFileExists("report.json");

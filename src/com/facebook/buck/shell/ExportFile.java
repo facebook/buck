@@ -100,7 +100,7 @@ public class ExportFile extends AbstractBuildRule implements HasOutputName {
           target.getBasePath().resolve(target.getShortNameAndFlavorPostfix()));
     }
 
-    this.out = BuckConstant.GEN_PATH.resolve(target.getBasePath()).resolve(this.name);
+    this.out = BuckConstant.getGenPath().resolve(target.getBasePath()).resolve(this.name);
   }
 
   @VisibleForTesting

@@ -389,7 +389,7 @@ public class JavaTest
     }
 
     String[] pathsArray = pathsList.toArray(new String[pathsList.size()]);
-    return Paths.get(BuckConstant.GEN_DIR, pathsArray);
+    return Paths.get(BuckConstant.getGenDir(), pathsArray);
   }
 
   private Path getPathToTmpDirectory() {

@@ -151,7 +151,7 @@ public class Genrule extends AbstractBuildRule
 
     this.out = out;
     BuildTarget target = params.getBuildTarget();
-    this.pathToOutDirectory = BuckConstant.GEN_PATH
+    this.pathToOutDirectory = BuckConstant.getGenPath()
         .resolve(target.getBasePath())
         .resolve(target.getShortName());
     this.pathToOutFile = this.pathToOutDirectory.resolve(out);
@@ -163,13 +163,13 @@ public class Genrule extends AbstractBuildRule
     }
 
     this.pathToTmpDirectory = Paths.get(
-        BuckConstant.GEN_DIR,
+        BuckConstant.getGenDir(),
         target.getBasePathWithSlash(),
         String.format("%s__tmp", target.getShortNameAndFlavorPostfix()));
     this.absolutePathToTmpDirectory = getProjectFilesystem().resolve(pathToTmpDirectory);
 
     this.pathToSrcDirectory = Paths.get(
-        BuckConstant.GEN_DIR,
+        BuckConstant.getGenDir(),
         target.getBasePathWithSlash(),
         String.format("%s__srcs", target.getShortNameAndFlavorPostfix()));
     this.absolutePathToSrcDirectory = getProjectFilesystem().resolve(pathToSrcDirectory);
@@ -208,7 +208,7 @@ public class Genrule extends AbstractBuildRule
     }
 
     environmentVariablesBuilder.put(
-        "GEN_DIR", getProjectFilesystem().resolve(BuckConstant.GEN_PATH).toString());
+        "GEN_DIR", getProjectFilesystem().resolve(BuckConstant.getGenPath()).toString());
     environmentVariablesBuilder.put("DEPS", Joiner.on(' ').skipNulls().join(depFiles));
     environmentVariablesBuilder.put("SRCDIR", absolutePathToSrcDirectory.toString());
     environmentVariablesBuilder.put("TMP", absolutePathToTmpDirectory.toString());
@@ -257,9 +257,9 @@ public class Genrule extends AbstractBuildRule
       // it with a shell variable. This way the character count is much lower when run
       // from the shell but anyone reading the environment variable will get the
       // full paths due to variable interpolation
-      if (output.startsWith(BuckConstant.GEN_PATH)) {
+      if (output.startsWith(BuckConstant.getGenPath())) {
         Path relativePath =
-            output.subpath(BuckConstant.GEN_PATH.getNameCount(), output.getNameCount());
+            output.subpath(BuckConstant.getGenPath().getNameCount(), output.getNameCount());
         appendTo.add("$GEN_DIR/" + relativePath);
       } else {
         appendTo.add(getProjectFilesystem().resolve(output).toString());

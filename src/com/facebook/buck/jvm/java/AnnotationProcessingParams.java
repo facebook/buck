@@ -92,7 +92,7 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
     return Paths.get(
         String.format(
             "%s/%s__%s_gen__",
-            BuckConstant.ANNOTATION_DIR,
+            BuckConstant.getAnnotationDir(),
             Preconditions.checkNotNull(ownerTarget).getBasePathWithSlash(),
             ownerTarget.getShortNameAndFlavorPostfix()));
   }

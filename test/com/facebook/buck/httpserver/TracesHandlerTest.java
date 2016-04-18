@@ -35,22 +35,26 @@ public class TracesHandlerTest extends EasyMockSupport {
   @Test
   public void testHandleGet() throws IOException {
     TracesHelper tracesHelper = createMock(TracesHelper.class);
-    expect(tracesHelper.getTraceAttributesFor(BuckConstant.BUCK_TRACE_DIR.resolve("build.a.trace")))
+    expect(tracesHelper.getTraceAttributesFor(BuckConstant.getBuckTraceDir().resolve(
+        "build.a.trace")))
         .andReturn(new TraceAttributes(Optional.of("buck build buck"), 1000L));
-    expect(tracesHelper.getTraceAttributesFor(BuckConstant.BUCK_TRACE_DIR.resolve("build.b.trace")))
+    expect(tracesHelper.getTraceAttributesFor(BuckConstant.getBuckTraceDir().resolve(
+        "build.b.trace")))
         .andReturn(new TraceAttributes(Optional.of("buck test --all --code-coverage"), 4000L));
-    expect(tracesHelper.getTraceAttributesFor(BuckConstant.BUCK_TRACE_DIR.resolve("build.c.trace")))
+    expect(tracesHelper.getTraceAttributesFor(BuckConstant.getBuckTraceDir().resolve(
+        "build.c.trace")))
         .andReturn(new TraceAttributes(Optional.<String>absent(), 2000L));
-    expect(tracesHelper.getTraceAttributesFor(BuckConstant.BUCK_TRACE_DIR.resolve("build.d.trace")))
+    expect(tracesHelper.getTraceAttributesFor(BuckConstant.getBuckTraceDir().resolve(
+        "build.d.trace")))
         .andReturn(
             new TraceAttributes(Optional.of("buck test //test/com/facebook/buck/cli:cli"), 3000L));
 
     expect(tracesHelper.listTraceFilesByLastModified()).andReturn(
         ImmutableList.of(
-            BuckConstant.BUCK_TRACE_DIR.resolve("build.b.trace"),
-            BuckConstant.BUCK_TRACE_DIR.resolve("build.d.trace"),
-            BuckConstant.BUCK_TRACE_DIR.resolve("build.c.trace"),
-            BuckConstant.BUCK_TRACE_DIR.resolve("build.a.trace")
+            BuckConstant.getBuckTraceDir().resolve("build.b.trace"),
+            BuckConstant.getBuckTraceDir().resolve("build.d.trace"),
+            BuckConstant.getBuckTraceDir().resolve("build.c.trace"),
+            BuckConstant.getBuckTraceDir().resolve("build.a.trace")
         ));
     Request baseRequest = createMock(Request.class);
 

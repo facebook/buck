@@ -161,7 +161,7 @@ public class ProgressEstimator {
 
   private Path getStorageFilePath() {
     return rootRepositoryPath
-        .resolve(BuckConstant.BUCK_OUTPUT_PATH)
+        .resolve(BuckConstant.getBuckOutputPath())
         .resolve(PROGRESS_ESTIMATIONS_JSON);
   }
 

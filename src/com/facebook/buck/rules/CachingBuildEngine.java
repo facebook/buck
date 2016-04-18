@@ -220,7 +220,7 @@ public class CachingBuildEngine implements BuildEngine {
             FileHashCache buckOutCache = new DefaultFileHashCache(
                 new ProjectFilesystem(
                     filesystem.getRootPath(),
-                    Optional.of(ImmutableSet.of(BuckConstant.BUCK_OUTPUT_PATH)),
+                    Optional.of(ImmutableSet.of(BuckConstant.getBuckOutputPath())),
                     ImmutableSet.<ProjectFilesystem.PathOrGlobMatcher>of()));
             return new StackedFileHashCache(
                 ImmutableList.of(defaultCache, cellCache, buckOutCache));

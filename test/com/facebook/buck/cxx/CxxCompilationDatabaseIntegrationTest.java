@@ -464,7 +464,7 @@ public class CxxCompilationDatabaseIntegrationTest {
   private ImmutableList<String> getExtraFlagsForHeaderMaps() throws IOException {
     // This works around OS X being amusing about the location of temp directories.
     return PREPROCESSOR_SUPPORTS_HEADER_MAPS ?
-        ImmutableList.of("-I", BuckConstant.BUCK_OUTPUT_DIRECTORY) :
+        ImmutableList.of("-I", BuckConstant.getBuckOutputDirectory()) :
         ImmutableList.<String>of();
   }
 }

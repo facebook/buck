@@ -25,41 +25,35 @@ import javax.annotation.Nullable;
 
 public class BuckConstant {
 
-  /**
-   * The relative path to the directory where Buck will generate its files.
-   */
-  public static final String BUCK_OUTPUT_DIRECTORY = "buck-out";
-  public static final Path BUCK_OUTPUT_PATH = Paths.get("buck-out");
-  /**
-   * The version the buck output directory was created for
-   */
-  public static final Path CURRENT_VERSION_FILE =
-      BUCK_OUTPUT_PATH.resolve(".currentversion");
+  private static final String BUCK_OUTPUT_DIRECTORY = "buck-out";
+  private static final Path BUCK_OUTPUT_PATH = Paths.get("buck-out");
+  private static final Path CURRENT_VERSION_FILE =
+      getBuckOutputPath().resolve(".currentversion");
 
   // TODO(bolinfest): The constants GEN_DIR, BIN_DIR, and ANNOTATION_DIR should be
   // package-private to the com.facebook.buck.rules directory. Currently, they are also used in the
   // com.facebook.buck.shell package, but these values should be injected into shell commands rather
   // than hardcoded therein. This ensures that shell commands stay build-rule-agnostic.
 
-  public static final String GEN_DIR = BUCK_OUTPUT_DIRECTORY + "/gen";
-  public static final Path GEN_PATH = BUCK_OUTPUT_PATH.resolve("gen");
+  private static final String GEN_DIR = getBuckOutputDirectory() + "/gen";
+  private static final Path GEN_PATH = getBuckOutputPath().resolve("gen");
 
-  public static final Path RES_PATH = BUCK_OUTPUT_PATH.resolve("res");
+  private static final Path RES_PATH = getBuckOutputPath().resolve("res");
 
-  public static final String SCRATCH_DIR = BUCK_OUTPUT_DIRECTORY + "/bin";
-  public static final Path SCRATCH_PATH = BUCK_OUTPUT_PATH.resolve("bin");
+  private static final String SCRATCH_DIR = getBuckOutputDirectory() + "/bin";
+  private static final Path SCRATCH_PATH = getBuckOutputPath().resolve("bin");
 
-  public static final String ANNOTATION_DIR = BUCK_OUTPUT_DIRECTORY + "/annotation";
-  public static final Path ANNOTATION_PATH = BUCK_OUTPUT_PATH.resolve("annotation");
+  private static final String ANNOTATION_DIR = getBuckOutputDirectory() + "/annotation";
+  private static final Path ANNOTATION_PATH = getBuckOutputPath().resolve("annotation");
 
-  public static final Path LOG_PATH = BUCK_OUTPUT_PATH.resolve("log");
+  private static final Path LOG_PATH = getBuckOutputPath().resolve("log");
 
-  public static final Path BUCK_TRACE_DIR = BUCK_OUTPUT_PATH.resolve("log/traces");
-  public static final String DEFAULT_CACHE_DIR = BUCK_OUTPUT_DIRECTORY + "/cache";
+  private static final Path BUCK_TRACE_DIR = getBuckOutputPath().resolve("log/traces");
+  private static final String DEFAULT_CACHE_DIR = getBuckOutputDirectory() + "/cache";
 
   // We put a . at the front of the name so Spotlight doesn't try to index the contents on OS X.
-  public static final String TRASH_DIR = BUCK_OUTPUT_DIRECTORY + "/.trash";
-  public static final Path TRASH_PATH = BUCK_OUTPUT_PATH.resolve(".trash");
+  private static final String TRASH_DIR = getBuckOutputDirectory() + "/.trash";
+  private static final Path TRASH_PATH = getBuckOutputPath().resolve(".trash");
 
   private BuckConstant() {}
 
@@ -80,4 +74,69 @@ public class BuckConstant {
     BuckConstant.oneTimeTestSubdirectory = oneTimeTestSubdirectory;
   }
 
+  /**
+   * The relative path to the directory where Buck will generate its files.
+   */
+  public static String getBuckOutputDirectory() {
+    return BUCK_OUTPUT_DIRECTORY;
+  }
+
+  public static Path getBuckOutputPath() {
+    return BUCK_OUTPUT_PATH;
+  }
+
+  /**
+   * The version the buck output directory was created for
+   */
+  public static Path getCurrentVersionFile() {
+    return CURRENT_VERSION_FILE;
+  }
+
+  public static String getGenDir() {
+    return GEN_DIR;
+  }
+
+  public static Path getGenPath() {
+    return GEN_PATH;
+  }
+
+  public static Path getResPath() {
+    return RES_PATH;
+  }
+
+  public static String getScratchDir() {
+    return SCRATCH_DIR;
+  }
+
+  public static Path getScratchPath() {
+    return SCRATCH_PATH;
+  }
+
+  public static String getAnnotationDir() {
+    return ANNOTATION_DIR;
+  }
+
+  public static Path getAnnotationPath() {
+    return ANNOTATION_PATH;
+  }
+
+  public static Path getLogPath() {
+    return LOG_PATH;
+  }
+
+  public static Path getBuckTraceDir() {
+    return BUCK_TRACE_DIR;
+  }
+
+  public static String getDefaultCacheDir() {
+    return DEFAULT_CACHE_DIR;
+  }
+
+  public static String getTrashDir() {
+    return TRASH_DIR;
+  }
+
+  public static Path getTrashPath() {
+    return TRASH_PATH;
+  }
 }

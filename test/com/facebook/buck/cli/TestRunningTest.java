@@ -115,7 +115,7 @@ public class TestRunningTest {
    */
   @Test
   public void testGeneratedSourceFile() {
-    Path pathToGenFile = BuckConstant.GEN_PATH.resolve("GeneratedFile.java");
+    Path pathToGenFile = BuckConstant.getGenPath().resolve("GeneratedFile.java");
     assertTrue(MorePaths.isGeneratedFile(pathToGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToGenFile);
@@ -240,7 +240,7 @@ public class TestRunningTest {
    */
   @Test
   public void testMixedSourceFile() {
-    Path pathToGenFile = BuckConstant.GEN_PATH.resolve("com/facebook/GeneratedFile.java");
+    Path pathToGenFile = BuckConstant.getGenPath().resolve("com/facebook/GeneratedFile.java");
     Path pathToNonGenFile1 = Paths.get("package/src/SourceFile1.java");
     Path pathToNonGenFile2 = Paths.get("package/src-gen/SourceFile2.java");
 

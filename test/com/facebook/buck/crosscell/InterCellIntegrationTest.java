@@ -219,7 +219,7 @@ public class InterCellIntegrationTest {
 
   private ImmutableMap<String, HashCode> findObjectFiles(final ProjectWorkspace workspace)
       throws IOException {
-    final Path buckOut = workspace.getPath(BuckConstant.BUCK_OUTPUT_DIRECTORY);
+    final Path buckOut = workspace.getPath(BuckConstant.getBuckOutputDirectory());
 
     final ImmutableMap.Builder<String, HashCode> objectHashCodes = ImmutableMap.builder();
     Files.walkFileTree(buckOut, new SimpleFileVisitor<Path>() {

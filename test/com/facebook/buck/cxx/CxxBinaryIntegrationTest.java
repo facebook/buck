@@ -1447,8 +1447,8 @@ public class CxxBinaryIntegrationTest {
             CxxSource.Type.CXX,
             "bin.cpp");
     String contents = workspace.getFileContents(output.toString());
-    assertThat(contents, Matchers.not(Matchers.containsString(BuckConstant.SCRATCH_DIR)));
-    assertThat(contents, Matchers.not(Matchers.containsString(BuckConstant.GEN_DIR)));
+    assertThat(contents, Matchers.not(Matchers.containsString(BuckConstant.getScratchDir())));
+    assertThat(contents, Matchers.not(Matchers.containsString(BuckConstant.getGenDir())));
     assertThat(contents, Matchers.containsString("# 1 \"bin.h"));
     assertThat(contents, Matchers.containsString("# 1 \"lib1.h"));
     assertThat(contents, Matchers.containsString("# 1 \"lib2.h"));
@@ -1469,8 +1469,8 @@ public class CxxBinaryIntegrationTest {
     // Verify that the preprocessed source contains no references to the symlink tree used to
     // setup the headers.
     String error = result.getStderr();
-    assertThat(error, Matchers.not(Matchers.containsString(BuckConstant.SCRATCH_DIR)));
-    assertThat(error, Matchers.not(Matchers.containsString(BuckConstant.GEN_DIR)));
+    assertThat(error, Matchers.not(Matchers.containsString(BuckConstant.getScratchDir())));
+    assertThat(error, Matchers.not(Matchers.containsString(BuckConstant.getGenDir())));
     assertThat(error, Matchers.containsString("In file included from lib1.h:1"));
     assertThat(error, Matchers.containsString("from bin.h:1"));
     assertThat(error, Matchers.containsString("from bin.cpp:1:"));

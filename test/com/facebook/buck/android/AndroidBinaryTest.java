@@ -288,7 +288,7 @@ public class AndroidBinaryTest {
     Set<Path> classpath = Sets.newHashSet();
     ImmutableSet.Builder<Path> secondaryDexDirectories = ImmutableSet.builder();
     ImmutableList.Builder<Step> commandsBuilder = ImmutableList.builder();
-    Path primaryDexPath = BuckConstant.SCRATCH_PATH.resolve(".dex/classes.dex");
+    Path primaryDexPath = BuckConstant.getScratchPath().resolve(".dex/classes.dex");
     splitDexRule.addDexingSteps(
         classpath,
         Suppliers.<Map<String, HashCode>>ofInstance(ImmutableMap.<String, HashCode>of()),
@@ -330,7 +330,7 @@ public class AndroidBinaryTest {
     Set<Path> classpath = Sets.newHashSet();
     ImmutableSet.Builder<Path> secondaryDexDirectories = ImmutableSet.builder();
     ImmutableList.Builder<Step> commandsBuilder = ImmutableList.builder();
-    Path primaryDexPath = BuckConstant.SCRATCH_PATH.resolve(".dex/classes.dex");
+    Path primaryDexPath = BuckConstant.getScratchPath().resolve(".dex/classes.dex");
     splitDexRule.addDexingSteps(
         classpath,
         Suppliers.<Map<String, HashCode>>ofInstance(ImmutableMap.<String, HashCode>of()),

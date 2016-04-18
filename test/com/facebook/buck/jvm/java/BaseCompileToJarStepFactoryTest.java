@@ -39,7 +39,7 @@ public class BaseCompileToJarStepFactoryTest {
   @Test
   public void testAddPostprocessClassesCommands() {
     ImmutableList<String> postprocessClassesCommands = ImmutableList.of("tool arg1", "tool2");
-    Path outputDirectory = BuckConstant.SCRATCH_PATH.resolve("android/java/lib__java__classes");
+    Path outputDirectory = BuckConstant.getScratchPath().resolve("android/java/lib__java__classes");
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     commands.addAll(

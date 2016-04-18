@@ -60,13 +60,13 @@ public class CleanCommand extends AbstractCommand {
       // TODO(bolinfest): Unify these two directories under a single buck-ide directory,
       // which is distinct from the buck-out directory.
       projectFilesystem.deleteRecursivelyIfExists(Project.ANDROID_GEN_PATH);
-      projectFilesystem.deleteRecursivelyIfExists(BuckConstant.ANNOTATION_PATH);
+      projectFilesystem.deleteRecursivelyIfExists(BuckConstant.getAnnotationPath());
     } else {
       // On Windows, you have to close all files that will be deleted.
       // Because buck clean will delete build.log, you must close it first.
       JavaUtilsLoggingBuildListener.closeLogFile();
-      projectFilesystem.deleteRecursivelyIfExists(BuckConstant.SCRATCH_PATH);
-      projectFilesystem.deleteRecursivelyIfExists(BuckConstant.GEN_PATH);
+      projectFilesystem.deleteRecursivelyIfExists(BuckConstant.getScratchPath());
+      projectFilesystem.deleteRecursivelyIfExists(BuckConstant.getGenPath());
     }
 
     return 0;

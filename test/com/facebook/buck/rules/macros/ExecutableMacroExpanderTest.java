@@ -92,7 +92,7 @@ public class ExecutableMacroExpanderTest {
 
     // Verify that the correct cmd was created.
     Path expectedClasspath =
-        Paths.get(BuckConstant.GEN_DIR + "/java/com/facebook/util/ManifestGenerator.jar")
+        Paths.get(BuckConstant.getGenDir() + "/java/com/facebook/util/ManifestGenerator.jar")
         .toAbsolutePath();
 
     String expectedCmd = String.format(
@@ -122,7 +122,7 @@ public class ExecutableMacroExpanderTest {
 
     // Verify that the correct cmd was created.
     Path expectedClasspath =
-        Paths.get(BuckConstant.GEN_DIR + "/java/com/facebook/util/ManifestGenerator.jar")
+        Paths.get(BuckConstant.getGenDir() + "/java/com/facebook/util/ManifestGenerator.jar")
         .toAbsolutePath();
     String expectedCmd = String.format(
         "java -jar %s $OUT",
@@ -152,7 +152,7 @@ public class ExecutableMacroExpanderTest {
 
     // Verify that the correct cmd was created.
     Path expectedClasspath =
-        Paths.get(BuckConstant.GEN_DIR + "/java/com/facebook/util/ManifestGenerator.jar")
+        Paths.get(BuckConstant.getGenDir() + "/java/com/facebook/util/ManifestGenerator.jar")
         .toAbsolutePath();
     String expectedCmd = String.format(
         "java -jar %s $OUT",

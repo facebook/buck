@@ -151,11 +151,11 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
                 headerMapPath,
                 ImmutableMap.of(
                     Paths.get("file"),
-                    filesystem.resolve(BuckConstant.BUCK_OUTPUT_PATH)
+                    filesystem.resolve(BuckConstant.getBuckOutputPath())
                         .relativize(symlinkTreeRoot)
                         .resolve("file"),
                     Paths.get("directory/then/file"),
-                    filesystem.resolve(BuckConstant.BUCK_OUTPUT_PATH)
+                    filesystem.resolve(BuckConstant.getBuckOutputPath())
                         .relativize(symlinkTreeRoot)
                         .resolve("directory/then/file"))));
     ImmutableList<Step> actualBuildSteps =

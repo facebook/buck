@@ -109,7 +109,7 @@ public class IJProjectCleaner {
     final Set<File> buckDirectories = new HashSet<>();
     buckDirectories.add(
         convertPathToFile(
-            projectFilesystem.resolve(BuckConstant.BUCK_OUTPUT_PATH)));
+            projectFilesystem.resolve(BuckConstant.getBuckOutputPath())));
     buckDirectories.add(
         convertPathToFile(
             projectFilesystem.resolve(

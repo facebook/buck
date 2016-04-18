@@ -60,7 +60,7 @@ public class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
       BuildContext context,
       BuildableContext buildableContext) {
     LOG.debug("Generating post-build steps to write header map to %s", headerMapPath);
-    Path buckOut = getProjectFilesystem().resolve(BuckConstant.BUCK_OUTPUT_PATH);
+    Path buckOut = getProjectFilesystem().resolve(BuckConstant.getBuckOutputPath());
     ImmutableMap.Builder<Path, Path> headerMapEntries = ImmutableMap.builder();
     for (Path key : getLinks().keySet()) {
       // The key is the path that will be referred to in headers. It can be anything. However, the
@@ -78,7 +78,7 @@ public class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
 
   @Override
   public Path getIncludePath() {
-    return getProjectFilesystem().resolve(BuckConstant.BUCK_OUTPUT_PATH);
+    return getProjectFilesystem().resolve(BuckConstant.getBuckOutputPath());
   }
 
   @Override

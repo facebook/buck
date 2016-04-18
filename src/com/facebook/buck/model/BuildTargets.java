@@ -51,7 +51,7 @@ public class BuildTargets {
     return Paths.get(
         String.format(
             "%s/%s" + format,
-            BuckConstant.SCRATCH_DIR,
+            BuckConstant.getScratchDir(),
             target.getBasePathWithSlash(),
             target.getShortNameAndFlavorPostfix()));
   }
@@ -69,7 +69,7 @@ public class BuildTargets {
    */
   public static Path getGenPath(BuildTarget target, String format) {
     return Paths.get(String.format("%s/%s" + format,
-        BuckConstant.GEN_DIR,
+        BuckConstant.getGenDir(),
         target.getBasePathWithSlash(),
         target.getShortNameAndFlavorPostfix()));
   }

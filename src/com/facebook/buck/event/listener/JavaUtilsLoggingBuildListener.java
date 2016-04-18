@@ -46,16 +46,16 @@ public class JavaUtilsLoggingBuildListener implements BuckEventListener {
 
   public static void ensureLogFileIsWritten(ProjectFilesystem filesystem) {
     try {
-      filesystem.mkdirs(BuckConstant.SCRATCH_PATH);
+      filesystem.mkdirs(BuckConstant.getScratchPath());
     } catch (IOException e) {
       throw new HumanReadableException(e,
           "Unable to create output directory: %s",
-          BuckConstant.SCRATCH_DIR);
+          BuckConstant.getScratchDir());
     }
 
     try {
       FileHandler handler = new FileHandler(
-          filesystem.resolve(BuckConstant.SCRATCH_PATH.resolve("build.log")).toString(),
+          filesystem.resolve(BuckConstant.getScratchPath().resolve("build.log")).toString(),
           /* append */ false);
       Formatter formatter = new BuildEventFormatter();
       handler.setFormatter(formatter);

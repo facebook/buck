@@ -1978,7 +1978,7 @@ public class SuperConsoleEventBusListenerTest {
     tmp.create();
     return tmp.getRootPath()
         .resolve("/tmp/estimatortests/")
-        .resolve(BuckConstant.BUCK_OUTPUT_PATH)
+        .resolve(BuckConstant.getBuckOutputPath())
         .resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON);
   }
 

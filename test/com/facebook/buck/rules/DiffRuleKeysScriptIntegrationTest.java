@@ -43,7 +43,7 @@ import java.util.logging.Logger;
 
 public class DiffRuleKeysScriptIntegrationTest {
 
-  private static final Path LOG_FILE_PATH = BuckConstant.LOG_PATH.resolve("buck.log");
+  private static final Path LOG_FILE_PATH = BuckConstant.getLogPath().resolve("buck.log");
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();

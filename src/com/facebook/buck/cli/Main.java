@@ -212,7 +212,7 @@ public final class Main {
   // Ensure we only have one instance of this, so multiple trash cleaning
   // operations are serialized on one queue.
   private static final AsynchronousDirectoryContentsCleaner TRASH_CLEANER =
-      new AsynchronousDirectoryContentsCleaner(BuckConstant.TRASH_PATH);
+      new AsynchronousDirectoryContentsCleaner(BuckConstant.getTrashPath());
 
   private final Platform platform;
 
@@ -270,7 +270,7 @@ public final class Main {
           new DefaultFileHashCache(
               new ProjectFilesystem(
                   cell.getFilesystem().getRootPath(),
-                  Optional.of(ImmutableSet.of(BuckConstant.BUCK_OUTPUT_PATH)),
+                  Optional.of(ImmutableSet.of(BuckConstant.getBuckOutputPath())),
                   ImmutableSet.<ProjectFilesystem.PathOrGlobMatcher>of()));
       this.fileEventBus = new EventBus("file-change-events");
 
@@ -581,7 +581,7 @@ public final class Main {
       Console console,
       BuildId buildId,
       Path... pathsToMove) throws IOException {
-    Path trashPath = BuckConstant.TRASH_PATH.resolve(buildId.toString());
+    Path trashPath = BuckConstant.getTrashPath().resolve(buildId.toString());
     filesystem.mkdirs(trashPath);
     for (Path pathToMove : pathsToMove) {
       try {
@@ -712,7 +712,7 @@ public final class Main {
       if (!command.isReadOnly()) {
 
         Optional<String> currentVersion =
-            filesystem.readFileIfItExists(BuckConstant.CURRENT_VERSION_FILE);
+            filesystem.readFileIfItExists(BuckConstant.getCurrentVersionFile());
         if (!currentVersion.isPresent() || !currentVersion.get().equals(BuckVersion.getVersion())) {
           // Migrate any version-dependent directories (which might be
           // huge) to a trash directory so we can delete it
@@ -721,15 +721,15 @@ public final class Main {
               filesystem,
               console,
               buildId,
-              BuckConstant.ANNOTATION_PATH,
-              BuckConstant.GEN_PATH,
-              BuckConstant.SCRATCH_PATH,
-              BuckConstant.RES_PATH);
+              BuckConstant.getAnnotationPath(),
+              BuckConstant.getGenPath(),
+              BuckConstant.getScratchPath(),
+              BuckConstant.getResPath());
           shouldCleanUpTrash = true;
-          filesystem.mkdirs(BuckConstant.CURRENT_VERSION_FILE.getParent());
+          filesystem.mkdirs(BuckConstant.getCurrentVersionFile().getParent());
           filesystem.writeContentsToPath(
               BuckVersion.getVersion(),
-              BuckConstant.CURRENT_VERSION_FILE);
+              BuckConstant.getCurrentVersionFile());
         }
       }
 
@@ -809,7 +809,7 @@ public final class Main {
               new DefaultFileHashCache(
                   new ProjectFilesystem(
                       rootCell.getFilesystem().getRootPath(),
-                      Optional.of(ImmutableSet.of(BuckConstant.BUCK_OUTPUT_PATH)),
+                      Optional.of(ImmutableSet.of(BuckConstant.getBuckOutputPath())),
                       ImmutableSet.<ProjectFilesystem.PathOrGlobMatcher>of()));
         }
 
@@ -868,12 +868,12 @@ public final class Main {
         // to the other resources before they are closed.
         try (ConsoleLogLevelOverrider consoleLogLevelOverrider =
             new ConsoleLogLevelOverrider(buildId.toString(), verbosity);
-            ConsoleHandlerRedirector consoleHandlerRedirector =
+             ConsoleHandlerRedirector consoleHandlerRedirector =
             new ConsoleHandlerRedirector(
                 buildId.toString(),
                 console.getStdErr(),
                 Optional.<OutputStream>of(stdErr));
-            AbstractConsoleEventBusListener consoleListener =
+             AbstractConsoleEventBusListener consoleListener =
             createConsoleEventListener(
                 clock,
                 new SuperConsoleConfig(buckConfig),
@@ -882,13 +882,13 @@ public final class Main {
                 executionEnvironment,
                 webServer,
                 locale,
-                BuckConstant.LOG_PATH.resolve("test.log"));
-            TempDirectoryCreator tempDirectoryCreator =
+                BuckConstant.getLogPath().resolve("test.log"));
+             TempDirectoryCreator tempDirectoryCreator =
             new TempDirectoryCreator(testTempDirOverride);
-            AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
-            BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
-            // NOTE: This will only run during the lifetime of the process and will flush on close.
-            CounterRegistry counterRegistry = new CounterRegistryImpl(
+             AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
+             BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
+             // NOTE: This will only run during the lifetime of the process and will flush on close.
+             CounterRegistry counterRegistry = new CounterRegistryImpl(
                 MoreExecutors.newSingleThreadScheduledExecutor("CounterAggregatorThread"),
                 buildEventBus,
                 buckConfig.getCountersFirstFlushIntervalMillis(),
