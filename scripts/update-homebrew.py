@@ -81,7 +81,7 @@ def get_release(version_tag):
     for data in releases:
         if 'tag_name' in data and data['tag_name'] == version_tag:
             return data
-    raise RuntimeException(
+    raise RuntimeError(
         'Unable to find release for version {version_tag}!'.format(
             version_tag=version_tag))
 
