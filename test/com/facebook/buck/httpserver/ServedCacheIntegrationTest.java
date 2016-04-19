@@ -17,6 +17,8 @@
 package com.facebook.buck.httpserver;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
@@ -536,5 +538,77 @@ public class ServedCacheIntegrationTest {
 
     cacheResult = serverBackedCache.fetch(ruleKey, fetchedContents);
     assertThat(cacheResult.getType().isSuccess(), Matchers.is(false));
+  }
+
+  @Test
+  public void fullStackIntegrationTest() throws Exception {
+    webServer = new WebServer(
+        /* port */ 0,
+        projectFilesystem,
+        "/static/",
+        MAPPER);
+    webServer.updateAndStartIfNeeded(ArtifactCaches.newServedCache(
+        createMockLocalConfig(
+            "[cache]",
+            "dir = test-cache",
+            "serve_local_cache = true",
+            "served_local_cache_mode = readonly"),
+        projectFilesystem));
+
+    ArtifactCache serverBackedCache = ArtifactCaches.newInstance(
+        createMockLocalConfig(
+            "[cache]",
+            "mode = dir,http",
+            "two_level_cache_enabled=true",
+            "two_level_cache_minimum_size=0b",
+            "dir = server-backed-dir-cache",
+            String.format("http_url = http://127.0.0.1:%d/", webServer.getPort().get())),
+        buckEventBus,
+        projectFilesystem,
+        Optional.<String>absent(),
+        DIRECT_EXECUTOR_SERVICE);
+
+    ArtifactCache serverBackedDirCache = ArtifactCaches.newInstance(
+        createMockLocalConfig(
+            "[cache]",
+            "mode = dir",
+            "dir = server-backed-dir-cache"),
+        buckEventBus,
+        projectFilesystem,
+        Optional.<String>absent(),
+        DIRECT_EXECUTOR_SERVICE);
+
+    assertFalse(containsKey(serverBackedDirCache, A_FILE_RULE_KEY));
+    assertTrue(containsKey(serverBackedCache, A_FILE_RULE_KEY));
+    // The previous call should have propagated the key into the dir-cache.
+    assertTrue(containsKey(serverBackedDirCache, A_FILE_RULE_KEY));
+
+
+    RuleKey ruleKey = new RuleKey("00111222333444");
+    ImmutableMap<String, String> metadata = ImmutableMap.of(
+        "some key",
+        "some value");
+    Path originalDataPath = tmpDir.newFile();
+    String data = "you won't believe this!";
+    projectFilesystem.writeContentsToPath(data, originalDataPath);
+
+    assertFalse(containsKey(serverBackedCache, ruleKey));
+
+    serverBackedCache.store(
+        ImmutableSet.of(ruleKey),
+        metadata,
+        BorrowablePath.borrowablePath(originalDataPath)).get();
+
+    assertTrue(containsKey(serverBackedCache, ruleKey));
+    assertTrue(containsKey(serverBackedDirCache, ruleKey));
+  }
+
+  private boolean containsKey(ArtifactCache cache, RuleKey ruleKey) throws Exception {
+    Path fetchedContents = tmpDir.newFile();
+    CacheResult cacheResult = cache.fetch(
+        ruleKey,
+        LazyPath.ofInstance(fetchedContents));
+    assertThat(cacheResult.getType(), Matchers.oneOf(CacheResultType.HIT, CacheResultType.MISS));
+    return cacheResult.getType().isSuccess();
   }
 }

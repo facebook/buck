@@ -16,8 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
-
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.event.ArtifactCompressionEvent;
@@ -28,6 +26,7 @@ import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.timing.Clock;
@@ -50,6 +49,8 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
@@ -61,6 +62,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
@@ -71,6 +73,8 @@ import javax.annotation.Nullable;
  * build by an {@link OnDiskBuildInfo}.
  */
 public class BuildInfoRecorder {
+
+  private static final Logger LOG = Logger.get(BuildRuleResolver.class);
 
   @VisibleForTesting
   static final String ABSOLUTE_PATH_ERROR_FORMAT =
@@ -87,6 +91,7 @@ public class BuildInfoRecorder {
   private final ImmutableMap<String, String> artifactExtraData;
   private final Map<String, String> metadataToWrite;
   private final Map<String, String> buildMetadata;
+  private final AtomicBoolean warnedUserOfCacheStoreFailure;
 
   /**
    * Every value in this set is a path relative to the project root.
@@ -116,6 +121,7 @@ public class BuildInfoRecorder {
     this.metadataToWrite = Maps.newLinkedHashMap();
     this.buildMetadata = Maps.newLinkedHashMap();
     this.pathsToOutputs = Sets.newHashSet();
+    this.warnedUserOfCacheStoreFailure = new AtomicBoolean(false);
   }
 
   private String toJson(Object value) {
@@ -275,9 +281,9 @@ public class BuildInfoRecorder {
    * Creates a zip file of the metadata and recorded artifacts and stores it in the artifact cache.
    */
   public void performUploadToArtifactCache(
-      ImmutableSet<RuleKey> ruleKeys,
+      final ImmutableSet<RuleKey> ruleKeys,
       ArtifactCache artifactCache,
-      BuckEventBus eventBus)
+      final BuckEventBus eventBus)
       throws InterruptedException {
 
     // Skip all of this if caching is disabled. Although artifactCache.store() will be a noop,
@@ -316,18 +322,33 @@ public class BuildInfoRecorder {
         ruleKeys,
         buildMetadata,
         BorrowablePath.notBorrowablePath(zip));
-    storeFuture.addListener(
-        new Runnable() {
+    Futures.addCallback(
+        storeFuture,
+        new FutureCallback<Void>() {
           @Override
-          public void run() {
+          public void onSuccess(Void result) {
+            onCompletion();
+          }
+
+          @Override
+          public void onFailure(Throwable t) {
+            onCompletion();
+            LOG.info(t, "Failed storing RuleKeys %s to the cache.", ruleKeys);
+            if (warnedUserOfCacheStoreFailure.compareAndSet(false, true)) {
+              eventBus.post(
+                  ConsoleEvent.severe("Failed storing an artifact to the cache," +
+                      "see log for details."));
+            }
+          }
+
+          private void onCompletion() {
             try {
               Files.deleteIfExists(zip);
             } catch (IOException e) {
               throw new RuntimeException(e);
             }
           }
-        },
-        directExecutor());
+        });
   }
 
   /**

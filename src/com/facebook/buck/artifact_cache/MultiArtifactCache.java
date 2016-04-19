@@ -19,6 +19,7 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -26,13 +27,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.List;
-
-import javax.annotation.Nullable;
 
 /**
  * MultiArtifactCache encapsulates a set of ArtifactCache instances such that fetch() succeeds if
@@ -106,7 +104,8 @@ public class MultiArtifactCache implements ArtifactCache {
 
     for (ArtifactCache artifactCache : writableArtifactCaches) {
       // allow borrowing the path if no other caches are expected to use it
-      if (artifactCache.equals(writableArtifactCaches.get(writableArtifactCaches.size() - 1))) {
+      if (output.canBorrow() &&
+          artifactCache.equals(writableArtifactCaches.get(writableArtifactCaches.size() - 1))) {
         output = BorrowablePath.borrowablePath(output.getPath());
       } else {
         output = BorrowablePath.notBorrowablePath(output.getPath());
@@ -115,15 +114,9 @@ public class MultiArtifactCache implements ArtifactCache {
     }
 
     // Aggregate future to ensure all store operations have completed.
-    return Futures.transformAsync(
+    return Futures.transform(
         Futures.allAsList(storeFutures),
-        new AsyncFunction<List<Void>, Void>() {
-          @Override
-          @Nullable
-          public ListenableFuture<Void> apply(List<Void> input) throws Exception {
-            return null;
-          }
-        });
+        Functions.<Void>constant(null));
   }
 
   /** @return {@code true} if there is at least one ArtifactCache that supports storing. */
