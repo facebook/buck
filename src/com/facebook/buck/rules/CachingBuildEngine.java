@@ -532,6 +532,9 @@ public class CachingBuildEngine implements BuildEngine {
                 new Callable<BuildResult>() {
                   @Override
                   public BuildResult call() throws Exception {
+                    if (!context.isKeepGoing() && firstFailure != null) {
+                      return BuildResult.canceled(rule, firstFailure);
+                    }
                     try (BuildRuleEvent.Scope scope =
                              BuildRuleEvent.resumeSuspendScope(
                                  context.getEventBus(),
