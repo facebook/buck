@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSetMultimap;
 
 import java.io.IOException;
@@ -26,15 +27,30 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 
-public final class ClassUsageFile {
-  public static void writeFromTrackerData(
-      ProjectFilesystem filesystem,
-      Path absolutePath,
-      ClassUsageTracker tracker,
-      ObjectMapper mapper) {
+import javax.tools.StandardJavaFileManager;
+
+public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
+
+  private final Path relativePath;
+  private final ClassUsageTracker tracker;
+
+  public DefaultClassUsageFileWriter(final Path relativePath, ClassUsageTracker tracker) {
+    this.relativePath = relativePath;
+    this.tracker = tracker;
+  }
+
+  @Override
+  public StandardJavaFileManager wrapFileManager(StandardJavaFileManager inner) {
+    return tracker.wrapFileManager(inner);
+  }
+
+  @Override
+  public void writeFile(ProjectFilesystem filesystem, ObjectMapper objectMapper) {
     ImmutableSetMultimap<Path, Path> classUsageMap = tracker.getClassUsageMap();
     try {
-      mapper.writeValue(absolutePath.toFile(), relativizeMap(classUsageMap, filesystem));
+      objectMapper.writeValue(
+          filesystem.getAbsolutifier().apply(relativePath).toFile(),
+          relativizeMap(classUsageMap, filesystem));
     } catch (IOException e) {
       throw new HumanReadableException(e, "Unable to write used classes file.");
     }
@@ -47,19 +63,21 @@ public final class ClassUsageFile {
 
     for (Map.Entry<Path, Collection<Path>> jarClassesEntry : classUsageMap.asMap().entrySet()) {
       Path jarAbsolutePath = jarClassesEntry.getKey();
-      Path jarRelativePath = filesystem.getRelativizer().apply(jarAbsolutePath);
+      Optional<Path> jarRelativePath = filesystem.getPathRelativeToProjectRoot(jarAbsolutePath);
 
       // Don't include jars that are outside of the filesystem
-      if (jarRelativePath.startsWith("..")) {
+      if (!jarRelativePath.isPresent()) {
+        // Paths outside the project would make these class usage files problematic for caching.
+        // Fortunately, such paths are also not interesting for the main use cases that these files
+        // address, namely understanding the dependencies one java rule has on others. Jar files
+        // outside the project are coming from a build tool (e.g. JDK or Android SDK).
         continue;
       }
 
-      builder.putAll(jarRelativePath, jarClassesEntry.getValue());
+
+      builder.putAll(jarRelativePath.get(), jarClassesEntry.getValue());
     }
 
     return builder.build();
-  }
-
-  private ClassUsageFile() {
   }
 }

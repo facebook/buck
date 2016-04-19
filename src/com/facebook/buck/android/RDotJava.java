@@ -21,6 +21,7 @@ import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacStep;
+import com.facebook.buck.jvm.java.NoOpClassUsageFileWriter;
 import com.facebook.buck.jvm.java.StandardJavaFileManagerFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -72,7 +73,7 @@ public class RDotJava {
 
     return new JavacStep(
         outputDirectory,
-        Optional.<Path>absent(),
+        NoOpClassUsageFileWriter.instance(),
         Optional.<StandardJavaFileManagerFactory>absent(),
         Optional.<Path>absent(),
         javaSourceFilePaths,

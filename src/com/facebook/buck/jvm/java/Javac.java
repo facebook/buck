@@ -56,7 +56,7 @@ public interface Javac extends RuleKeyAppendable, Tool {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
-      Optional<Path> usedClassesFile,
+      ClassUsageFileWriter usedClassesFileWriter,
       Optional<StandardJavaFileManagerFactory> fileManagerFactory) throws InterruptedException;
 
   String getDescription(

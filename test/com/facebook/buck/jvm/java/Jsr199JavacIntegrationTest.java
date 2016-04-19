@@ -127,7 +127,7 @@ public class Jsr199JavacIntegrationTest {
         SOURCE_PATHS,
         pathToSrcsList,
         Optional.<Path>absent(),
-        Optional.<Path>absent(),
+        NoOpClassUsageFileWriter.instance(),
         Optional.<StandardJavaFileManagerFactory>absent());
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
@@ -163,7 +163,7 @@ public class Jsr199JavacIntegrationTest {
         SOURCE_PATHS,
         pathToSrcsList,
         Optional.<Path>absent(),
-        Optional.<Path>absent(),
+        NoOpClassUsageFileWriter.instance(),
         Optional.<StandardJavaFileManagerFactory>absent());
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
@@ -255,7 +255,7 @@ public class Jsr199JavacIntegrationTest {
           SOURCE_PATHS,
           pathToSrcsList,
           Optional.<Path>absent(),
-          Optional.<Path>absent(),
+          NoOpClassUsageFileWriter.instance(),
           Optional.<StandardJavaFileManagerFactory>absent());
       fail("Did not expect compilation to succeed");
     } catch (UnsupportedOperationException ex) {

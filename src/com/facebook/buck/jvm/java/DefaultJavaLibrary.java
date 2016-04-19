@@ -481,10 +481,17 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
     // Only run javac if there are .java files to compile.
     if (!getJavaSrcs().isEmpty()) {
-      Optional<Path> usedClassesFilePath = Optional.absent();
+      ClassUsageFileWriter usedClassesFileWriter;
       if (trackClassUsage) {
-        usedClassesFilePath = Optional.of(getUsedClassesFilePath(target));
-        buildableContext.recordArtifact(usedClassesFilePath.get());
+        final Path usedClassesFilePath = getUsedClassesFilePath(getBuildTarget());
+        ClassUsageTracker classUsageTracker = new ClassUsageTracker();
+        usedClassesFileWriter = new DefaultClassUsageFileWriter(
+            usedClassesFilePath,
+            classUsageTracker);
+
+        buildableContext.recordArtifact(usedClassesFilePath);
+      } else {
+        usedClassesFileWriter = NoOpClassUsageFileWriter.instance();
       }
 
       // This adds the javac command, along with any supporting commands.
@@ -511,7 +518,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           /* mainClass */ Optional.<String>absent(),
           /* manifestFile */ Optional.<Path>absent(),
           outputJar.get(),
-          usedClassesFilePath,
+          usedClassesFileWriter,
           /* output params */
           steps,
           buildableContext);

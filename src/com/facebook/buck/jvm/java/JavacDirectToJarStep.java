@@ -58,7 +58,7 @@ public class JavacDirectToJarStep implements Step {
   private final Optional<String> mainClass;
   private final Optional<Path> manifestFile;
   private final Path outputJar;
-  private final Optional<Path> usedClassesFile;
+  private final ClassUsageFileWriter usedClassesFileWriter;
 
   @Nullable
   private JavaInMemoryFileManager inMemoryFileManager;
@@ -78,7 +78,7 @@ public class JavacDirectToJarStep implements Step {
       Optional<String> mainClass,
       Optional<Path> manifestFile,
       Path outputJar,
-      Optional<Path> usedClassesFile) {
+      ClassUsageFileWriter usedClassesFileWriter) {
     this.sourceFilePaths = sourceFilePaths;
     this.invokingRule = invokingRule;
     this.resolver = resolver;
@@ -93,7 +93,7 @@ public class JavacDirectToJarStep implements Step {
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
     this.outputJar = outputJar;
-    this.usedClassesFile = usedClassesFile;
+    this.usedClassesFileWriter = usedClassesFileWriter;
   }
 
   @Override
@@ -178,7 +178,7 @@ public class JavacDirectToJarStep implements Step {
   private JavacStep createJavacStep(CustomZipOutputStream jarOutputStream) {
     return new JavacStep(
         outputDirectory,
-        usedClassesFile,
+        usedClassesFileWriter,
         Optional.of(createFileManagerFactory(jarOutputStream)),
         workingDirectory,
         sourceFilePaths,

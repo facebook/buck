@@ -133,7 +133,7 @@ public abstract class Jsr199Javac implements Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
-      Optional<Path> usedClassesFile,
+      ClassUsageFileWriter usedClassesFileWriter,
       Optional<StandardJavaFileManagerFactory> fileManagerFactory) {
     JavaCompiler compiler = createCompiler(context, resolver);
 
@@ -161,7 +161,7 @@ public abstract class Jsr199Javac implements Javac {
             javaSourceFilePaths,
             pathToSrcsList,
             compiler,
-            usedClassesFile,
+            usedClassesFileWriter,
             fileManager,
             compilationUnits);
       } finally {
@@ -185,7 +185,7 @@ public abstract class Jsr199Javac implements Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       JavaCompiler compiler,
-      Optional<Path> usedClassesFile,
+      ClassUsageFileWriter usedClassesFileWriter,
       StandardJavaFileManager fileManager,
       Iterable<? extends JavaFileObject> compilationUnits) {
     // write javaSourceFilePaths to classes file
@@ -209,14 +209,9 @@ public abstract class Jsr199Javac implements Javac {
     DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
     List<String> classNamesForAnnotationProcessing = ImmutableList.of();
     Writer compilerOutputWriter = new PrintWriter(context.getStdErr());
-    ClassUsageTracker classTracker = new ClassUsageTracker();
-    final StandardJavaFileManager maybeWrappedFileManager =
-        usedClassesFile.isPresent() ?
-        classTracker.wrapFileManager(fileManager) :
-        fileManager;
     JavaCompiler.CompilationTask compilationTask = compiler.getTask(
         compilerOutputWriter,
-        maybeWrappedFileManager,
+        usedClassesFileWriter.wrapFileManager(fileManager),
         diagnostics,
         options,
         classNamesForAnnotationProcessing,
@@ -264,12 +259,10 @@ public abstract class Jsr199Javac implements Javac {
     }
 
     if (isSuccess) {
-      if (usedClassesFile.isPresent()) {
-        ClassUsageFile.writeFromTrackerData(
-            filesystem,
-            filesystem.resolve(usedClassesFile.get()),
-            classTracker,
-            context.getObjectMapper());
+      try {
+        usedClassesFileWriter.writeFile(filesystem, context.getObjectMapper());
+      } catch (IOException e) {
+        throw new HumanReadableException(e, "Failed to write the used classes file.");
       }
       return 0;
     } else {
