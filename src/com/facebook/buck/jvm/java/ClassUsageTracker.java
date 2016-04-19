@@ -43,8 +43,9 @@ import javax.tools.StandardJavaFileManager;
  * {@link JavaFileManager}.
  */
 class ClassUsageTracker {
-  private static final String JAR_SCHEME = "jar";
   private static final String FILE_SCHEME = "file";
+  private static final String JAR_SCHEME = "jar";
+  private static final String JIMFS_SCHEME = "jimfs";  // Used in tests
 
   private final ImmutableSetMultimap.Builder<Path, Path> resultBuilder =
       ImmutableSetMultimap.builder();
@@ -98,7 +99,8 @@ class ClassUsageTracker {
     Preconditions.checkState(split.length == 2);
 
     URI jarFileUri = URI.create(split[0]);
-    Preconditions.checkState(jarFileUri.getScheme().equals(FILE_SCHEME));
+    Preconditions.checkState(jarFileUri.getScheme().equals(FILE_SCHEME) ||
+        jarFileUri.getScheme().equals(JIMFS_SCHEME));  // jimfs is used in tests
     Path jarFilePath = Paths.get(jarFileUri);
 
     // Using URI.create here for de-escaping
@@ -145,23 +147,23 @@ class ClassUsageTracker {
     @Override
     public Iterable<? extends JavaFileObject> getJavaFileObjectsFromFiles(
         Iterable<? extends File> files) {
-      return new TrackingIterable(fileManager.getJavaFileObjectsFromFiles(files));
+      return fileManager.getJavaFileObjectsFromFiles(files);
     }
 
     @Override
     public Iterable<? extends JavaFileObject> getJavaFileObjects(File... files) {
-      return new TrackingIterable(fileManager.getJavaFileObjects(files));
+      return fileManager.getJavaFileObjects(files);
     }
 
     @Override
     public Iterable<? extends JavaFileObject> getJavaFileObjectsFromStrings(
         Iterable<String> names) {
-      return new TrackingIterable(fileManager.getJavaFileObjectsFromStrings(names));
+      return fileManager.getJavaFileObjectsFromStrings(names);
     }
 
     @Override
     public Iterable<? extends JavaFileObject> getJavaFileObjects(String... names) {
-      return new TrackingIterable(fileManager.getJavaFileObjects(names));
+      return fileManager.getJavaFileObjects(names);
     }
 
     @Override

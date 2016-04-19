@@ -25,7 +25,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -38,9 +39,12 @@ import java.io.Reader;
 import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -52,12 +56,22 @@ import javax.tools.StandardJavaFileManager;
 
 public class ClassUsageTrackerTest {
 
+  private static final FileSystem WINDOWS_FILE_SYSTEM =
+      Jimfs.newFileSystem(Configuration.windows());
+  private static final FileSystem UNIX_FILE_SYSTEM =
+      Jimfs.newFileSystem(Configuration.unix());
+
+  private static final String OTHER_FILE_NAME = JavaFileObject.Kind.OTHER.toString();
+  private static final String SOURCE_FILE_NAME = JavaFileObject.Kind.SOURCE.toString();
+  private static final String HTML_FILE_NAME = JavaFileObject.Kind.HTML.toString();
+  private static final String WINDOWS_FILE_NAME = "Windows";
+
   private static final String[] FILE_NAMES = { "A", "B", "C", "D", "E", "F" };
-  private static final Set<String> FILE_NAMES_SET = Sets.newHashSet(FILE_NAMES);
   private static final String SINGLE_FILE_NAME = "C";
   private static final String SINGLE_NON_JAVA_FILE_NAME = "NonJava";
   private static final File SINGLE_FILE = new File("C");
-  private static final String TEST_JAR_NAME = "/test.jar";
+  private static final Path TEST_JAR_PATH = UNIX_FILE_SYSTEM.getPath("/test.jar");
+  private static final Path WINDOWS_JAR_PATH = WINDOWS_FILE_SYSTEM.getPath("C:\\test.jar");
 
   private ClassUsageTracker tracker;
   private StandardJavaFileManager fileManager;
@@ -65,7 +79,33 @@ public class ClassUsageTrackerTest {
   @Before
   public void setUp() {
     tracker = new ClassUsageTracker();
-    fileManager = tracker.wrapFileManager(new FakeStandardJavaFileManager());
+    FakeStandardJavaFileManager fakeFileManager = new FakeStandardJavaFileManager();
+    fileManager = tracker.wrapFileManager(fakeFileManager);
+
+    fakeFileManager.addFile(TEST_JAR_PATH, OTHER_FILE_NAME, JavaFileObject.Kind.OTHER);
+    fakeFileManager.addFile(TEST_JAR_PATH, SOURCE_FILE_NAME, JavaFileObject.Kind.SOURCE);
+    fakeFileManager.addFile(TEST_JAR_PATH, HTML_FILE_NAME, JavaFileObject.Kind.HTML);
+    fakeFileManager.addFile(TEST_JAR_PATH, SINGLE_NON_JAVA_FILE_NAME, JavaFileObject.Kind.OTHER);
+
+    fakeFileManager.addFile(
+        WINDOWS_JAR_PATH,
+        WINDOWS_FILE_NAME,
+        JavaFileObject.Kind.CLASS);
+
+    for (String fileName : FILE_NAMES) {
+      fakeFileManager.addFile(TEST_JAR_PATH, fileName, JavaFileObject.Kind.CLASS);
+    }
+  }
+
+  @Test
+  public void testWindowsPathsDontBlowUp() throws IOException {
+    final JavaFileObject javaFileObject = fileManager.getJavaFileForInput(
+        null,
+        WINDOWS_FILE_NAME,
+        JavaFileObject.Kind.CLASS);
+
+    javaFileObject.openInputStream();
+    assertFilesRead(WINDOWS_JAR_PATH, WINDOWS_FILE_NAME);
   }
 
   @Test
@@ -74,7 +114,7 @@ public class ClassUsageTrackerTest {
       javaFileObject.openInputStream();
     }
 
-    assertFilesRead(FILE_NAMES);
+    assertFilesRead(TEST_JAR_PATH, FILE_NAMES);
   }
 
   @Test
@@ -83,7 +123,7 @@ public class ClassUsageTrackerTest {
         fileManager.getJavaFileForInput(null, SINGLE_FILE_NAME, JavaFileObject.Kind.CLASS);
 
     javaFileObject.openInputStream();
-    assertFilesRead(SINGLE_FILE_NAME);
+    assertFilesRead(TEST_JAR_PATH, SINGLE_FILE_NAME);
   }
 
   @Test
@@ -92,7 +132,7 @@ public class ClassUsageTrackerTest {
         fileManager.getJavaFileForOutput(null, SINGLE_FILE_NAME, JavaFileObject.Kind.CLASS, null);
 
     javaFileObject.openInputStream();
-    assertFilesRead(SINGLE_FILE_NAME);
+    assertFilesRead(TEST_JAR_PATH, SINGLE_FILE_NAME);
   }
 
   @Test
@@ -101,7 +141,7 @@ public class ClassUsageTrackerTest {
         fileManager.getFileForInput(null, null, SINGLE_FILE_NAME);
 
     fileObject.openInputStream();
-    assertFilesRead(SINGLE_FILE_NAME);
+    assertFilesRead(TEST_JAR_PATH, SINGLE_FILE_NAME);
   }
 
   @Test
@@ -110,7 +150,7 @@ public class ClassUsageTrackerTest {
         fileManager.getFileForOutput(null, null, SINGLE_FILE_NAME, null);
 
     fileObject.openInputStream();
-    assertFilesRead(SINGLE_FILE_NAME);
+    assertFilesRead(TEST_JAR_PATH, SINGLE_FILE_NAME);
   }
 
   @Test
@@ -119,7 +159,7 @@ public class ClassUsageTrackerTest {
         fileManager.getFileForInput(null, null, SINGLE_NON_JAVA_FILE_NAME);
 
     fileObject.openInputStream();
-    assertFalse(fileWasRead(SINGLE_NON_JAVA_FILE_NAME));
+    assertFalse(fileWasRead(TEST_JAR_PATH, SINGLE_NON_JAVA_FILE_NAME));
   }
 
   @Test
@@ -128,11 +168,11 @@ public class ClassUsageTrackerTest {
         fileManager.getFileForOutput(null, null, SINGLE_NON_JAVA_FILE_NAME, null);
 
     fileObject.openInputStream();
-    assertFalse(fileWasRead(SINGLE_NON_JAVA_FILE_NAME));
+    assertFalse(fileWasRead(TEST_JAR_PATH, SINGLE_NON_JAVA_FILE_NAME));
   }
 
   @Test
-  public void readingFileFromGetJavaFileObjectsFromFilesShouldBeTracked() throws IOException {
+  public void readingFileFromGetJavaFileObjectsFromFilesShouldNotBeTracked() throws IOException {
     final Iterable<? extends JavaFileObject> javaFileObjects =
         fileManager.getJavaFileObjectsFromFiles(Lists.newArrayList(SINGLE_FILE));
 
@@ -140,11 +180,11 @@ public class ClassUsageTrackerTest {
       javaFileObject.openInputStream();
     }
 
-    assertFilesRead(SINGLE_FILE_NAME);
+    assertNoFilesRead();
   }
 
   @Test
-  public void readingFileFromGetJavaFileObjectsFileOverloadShouldBeTracked() throws IOException {
+  public void readingFileFromGetJavaFileObjectsFileOverloadShouldNotBeTracked() throws IOException {
     final Iterable<? extends JavaFileObject> javaFileObjects =
         fileManager.getJavaFileObjects(SINGLE_FILE);
 
@@ -152,11 +192,11 @@ public class ClassUsageTrackerTest {
       javaFileObject.openInputStream();
     }
 
-    assertFilesRead(SINGLE_FILE_NAME);
+    assertNoFilesRead();
   }
 
   @Test
-  public void readingFileFromGetJavaFileObjectsFromStringsShouldBeTracked() throws IOException {
+  public void readingFileFromGetJavaFileObjectsFromStringsShouldNotBeTracked() throws IOException {
     final Iterable<? extends JavaFileObject> javaFileObjects =
         fileManager.getJavaFileObjectsFromStrings(Lists.newArrayList(SINGLE_FILE_NAME));
 
@@ -164,11 +204,12 @@ public class ClassUsageTrackerTest {
       javaFileObject.openInputStream();
     }
 
-    assertFilesRead(SINGLE_FILE_NAME);
+    assertNoFilesRead();
   }
 
   @Test
-  public void readingFileFromGetJavaFileObjectsStringsOverloadShouldBeTracked() throws IOException {
+  public void readingFileFromGetJavaFileObjectsStringsOverloadShouldNotBeTracked()
+      throws IOException {
     final Iterable<? extends JavaFileObject> javaFileObjects =
         fileManager.getJavaFileObjects(SINGLE_FILE_NAME);
 
@@ -176,7 +217,7 @@ public class ClassUsageTrackerTest {
       javaFileObject.openInputStream();
     }
 
-    assertFilesRead(SINGLE_FILE_NAME);
+    assertNoFilesRead();
   }
 
   @Test
@@ -185,7 +226,7 @@ public class ClassUsageTrackerTest {
         fileManager.getJavaFileForInput(null, SINGLE_FILE_NAME, JavaFileObject.Kind.CLASS);
 
     javaFileObject.openInputStream();
-    assertFilesRead(SINGLE_FILE_NAME);
+    assertFilesRead(TEST_JAR_PATH, SINGLE_FILE_NAME);
   }
 
   @Test
@@ -194,7 +235,7 @@ public class ClassUsageTrackerTest {
         fileManager.getJavaFileForInput(null, SINGLE_FILE_NAME, JavaFileObject.Kind.CLASS);
 
     javaFileObject.openReader(false);
-    assertFilesRead(SINGLE_FILE_NAME);
+    assertFilesRead(TEST_JAR_PATH, SINGLE_FILE_NAME);
   }
 
   @Test
@@ -203,7 +244,7 @@ public class ClassUsageTrackerTest {
         fileManager.getJavaFileForInput(null, SINGLE_FILE_NAME, JavaFileObject.Kind.CLASS);
 
     javaFileObject.getCharContent(false);
-    assertFilesRead(SINGLE_FILE_NAME);
+    assertFilesRead(TEST_JAR_PATH, SINGLE_FILE_NAME);
   }
 
   @Test
@@ -223,34 +264,38 @@ public class ClassUsageTrackerTest {
 
   private boolean fileTypeIsTracked(JavaFileObject.Kind kind) throws IOException {
     final JavaFileObject javaFileObject =
-        fileManager.getJavaFileForInput(null, SINGLE_FILE_NAME, kind);
+        fileManager.getJavaFileForInput(null, kind.toString(), kind);
 
     javaFileObject.openInputStream();
 
-    return fileWasRead(SINGLE_FILE_NAME);
+    return fileWasRead(TEST_JAR_PATH, SINGLE_FILE_NAME);
   }
 
-  private boolean fileWasRead(String fileName) {
+  private boolean fileWasRead(Path jarPath, String fileName) {
     final ImmutableSetMultimap<Path, Path> classUsageMap = tracker.getClassUsageMap();
-    final ImmutableSet<Path> paths = classUsageMap.get(Paths.get(TEST_JAR_NAME));
+    final ImmutableSet<Path> paths = classUsageMap.get(jarPath);
 
     return paths.contains(Paths.get(fileName));
   }
 
-  private void assertFilesRead(String... files) {
+  private void assertFilesRead(Path jarPath, String... files) {
     final ImmutableSetMultimap<Path, Path> classUsageMap = tracker.getClassUsageMap();
 
-    final ImmutableSet<Path> paths = classUsageMap.get(Paths.get(TEST_JAR_NAME));
+    final ImmutableSet<Path> paths = classUsageMap.get(jarPath);
 
     assertEquals(files.length, paths.size());
 
     for (String file : files) {
-      assertTrue(fileWasRead(file));
+      assertTrue(fileWasRead(jarPath, file));
     }
   }
 
-  private static String getJarPath(String filePath) {
-    return String.format("jar:file:%s!/%s", TEST_JAR_NAME, filePath);
+  private void assertNoFilesRead() {
+    assertEquals(0, tracker.getClassUsageMap().size());
+  }
+
+  private static String getJarPath(Path jarPath, String filePath) {
+    return String.format("jar:%s!/%s", jarPath.toUri().toString(), filePath);
   }
 
   private static class FakeStandardJavaFileManager implements StandardJavaFileManager {
@@ -260,7 +305,7 @@ public class ClassUsageTrackerTest {
           @Nullable
           @Override
           public JavaFileObject apply(@Nullable File input) {
-            return new FakeJavaFileObject(input.getName(), JavaFileObject.Kind.CLASS);
+            return new FakeJavaFileObject(null, input.getName(), JavaFileObject.Kind.CLASS);
           }
         };
 
@@ -269,9 +314,25 @@ public class ClassUsageTrackerTest {
           @Nullable
           @Override
           public JavaFileObject apply(@Nullable String input) {
-            return new FakeJavaFileObject(input, JavaFileObject.Kind.CLASS);
+            return new FakeJavaFileObject(null, input, JavaFileObject.Kind.CLASS);
           }
         };
+
+    private List<JavaFileObject> files = new ArrayList<>();
+
+    public void addFile(Path jarPath, String fileName, JavaFileObject.Kind kind) {
+      files.add(new FakeJavaFileObject(jarPath, fileName, kind));
+    }
+
+    private JavaFileObject getFile(String fileName) {
+      for (JavaFileObject file : files) {
+        if (file.getName().equals(fileName)) {
+          return file;
+        }
+      }
+
+      return null;
+    }
 
     @Override
     public Iterable<JavaFileObject> list(
@@ -279,7 +340,7 @@ public class ClassUsageTrackerTest {
         String packageName,
         Set<JavaFileObject.Kind> kinds,
         boolean recurse) throws IOException {
-      return Lists.newArrayList(getJavaFileObjects(FILE_NAMES));
+      return files;
     }
 
     @Override
@@ -287,7 +348,7 @@ public class ClassUsageTrackerTest {
         Location location,
         String className,
         JavaFileObject.Kind kind) throws IOException {
-      return new FakeJavaFileObject(className, kind);
+      return getFile(className);
     }
 
     @Override
@@ -296,7 +357,7 @@ public class ClassUsageTrackerTest {
         String className,
         JavaFileObject.Kind kind,
         FileObject sibling) throws IOException {
-      return new FakeJavaFileObject(className, kind);
+      return getFile(className);
     }
 
     @Override
@@ -304,11 +365,7 @@ public class ClassUsageTrackerTest {
         Location location,
         String packageName,
         String relativeName) throws IOException {
-      if (FILE_NAMES_SET.contains(relativeName)) {
-        return getJavaFileForInput(location, relativeName, JavaFileObject.Kind.CLASS);
-      }
-
-      return new FakeFileObject(relativeName);
+      return getFile(relativeName);
     }
 
     @Override
@@ -317,11 +374,7 @@ public class ClassUsageTrackerTest {
         String packageName,
         String relativeName,
         FileObject sibling) throws IOException {
-      if (FILE_NAMES_SET.contains(relativeName)) {
-        return getJavaFileForOutput(location, relativeName, JavaFileObject.Kind.CLASS, null);
-      }
-
-      return new FakeFileObject(relativeName);
+      return getFile(relativeName);
     }
 
     @Override
@@ -410,8 +463,8 @@ public class ClassUsageTrackerTest {
 
     private final Kind kind;
 
-    private FakeJavaFileObject(String name, Kind kind) {
-      super(name);
+    private FakeJavaFileObject(@Nullable Path jarPath, String name, Kind kind) {
+      super(jarPath, name);
       this.kind = kind;
     }
 
@@ -438,9 +491,11 @@ public class ClassUsageTrackerTest {
 
   private static class FakeFileObject implements FileObject {
 
+    @Nullable protected final Path jarPath;
     protected final String name;
 
-    private FakeFileObject(String name) {
+    private FakeFileObject(@Nullable Path jarPath, String name) {
+      this.jarPath = jarPath;
       this.name = name;
     }
 
@@ -452,7 +507,11 @@ public class ClassUsageTrackerTest {
     @Override
     public URI toUri() {
       try {
-        return new URI(getJarPath(name));
+        if (jarPath == null) {
+          return Paths.get(name).toUri();
+        } else {
+          return new URI(getJarPath(jarPath, name));
+        }
       } catch (URISyntaxException e) {
         throw new AssertionError(e);
       }

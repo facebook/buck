@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY a7ae4a001cf475c01d0bb3278b4c477e3bf4a71b #@#
+#@# GENERATED FILE: DO NOT MODIFY cef25da0f2b30713c69ad3113127d7990d656d10 #@#
 {
   "fakepackagefinder" : {
     "deps" : [ ],
@@ -82,6 +82,7 @@
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:hamcrest-junit",
       "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/jimfs:jimfs",
       "//third-party/java/jsr:jsr305",
       "//third-party/java/junit:junit"
     ],
