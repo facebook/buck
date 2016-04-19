@@ -16,11 +16,19 @@ def foo_rule(name, srcs=[], visibility=[], build_env=None):
     }, build_env)
 
 
-def get_config_from_results(results):
+def extract_from_results(name, results):
     for result in results:
-        if result.keys() == ['__configs']:
-            return result['__configs']
+        if result.keys() == [name]:
+            return result[name]
     raise ValueError(str(results))
+
+
+def get_includes_from_results(results):
+    return extract_from_results('__includes', results)
+
+
+def get_config_from_results(results):
+    return extract_from_results('__configs', results)
 
 
 class ProjectFile(object):
@@ -365,3 +373,28 @@ class BuckTest(unittest.TestCase):
         self.assertEquals(
             get_config_from_results(result),
             {'hello': {'world': 'foo', 'bar': None, 'goo': None}})
+
+    def test_add_build_file_dep(self):
+        """
+        Test simple use of `add_build_file_dep`.
+        """
+
+        # Setup the build file and dependency.
+        dep = ProjectFile(path='dep', contents=('',))
+        build_file = (
+            ProjectFile(
+                path='BUCK',
+                contents=(
+                    'add_build_file_dep("//dep")',
+                ),
+            ))
+        self.write_files(dep, build_file)
+
+        # Create a process and run it.
+        build_file_processor = self.create_build_file_processor()
+        results = build_file_processor.process(build_file.path, set())
+
+        # Verify that the dep was recorded.
+        self.assertTrue(
+            os.path.join(self.project_root, dep.path) in
+            get_includes_from_results(results))

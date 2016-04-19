@@ -597,6 +597,21 @@ class BuildFileProcessor(object):
         # Pull in any config settings used by the include.
         build_env.used_configs.update(inner_env.used_configs)
 
+    def _add_build_file_dep(self, name):
+        """
+        Explicitly specify a dependency on an external file.
+
+        For instance, this can be used to specify a dependency on an external
+        executable that will be invoked, or some other external configuration
+        file.
+        """
+
+        # Grab the current build context from the top of the stack.
+        build_env = self._build_env_stack[-1]
+
+        path = self._get_include_path(name)
+        build_env.includes.add(path)
+
     def _push_build_env(self, build_env):
         """
         Set the given build context as the current context.
@@ -634,6 +649,9 @@ class BuildFileProcessor(object):
         default_globals['include_defs'] = functools.partial(
             self._include_defs,
             implicit_includes=implicit_includes)
+
+        # Install the 'add_dependency' function into our global object.
+        default_globals['add_build_file_dep'] = self._add_build_file_dep
 
         # Install the 'read_config' function into our global object.
         default_globals['read_config'] = self._read_config

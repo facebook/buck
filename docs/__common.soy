@@ -330,6 +330,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   <h3>Functions</h3>
   <ul>
     {foreach $function in [
+        'add_build_file_dep',
         'glob',
         'include_defs',
         'read_config',
@@ -750,6 +751,11 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 /***/
 {template .cxx_library}
 {call .ruleLink}{param name : 'cxx_library' /}{/call}
+{/template}
+
+/***/
+{template .fn_add_build_file_dep}
+<a href="{ROOT}function/add_build_file_dep.html"><code>add_build_file_dep()</code></a>
 {/template}
 
 /***/
