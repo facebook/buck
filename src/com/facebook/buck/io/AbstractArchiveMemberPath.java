@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,18 +13,30 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.facebook.buck.io;
 
-package com.facebook.buck.hashing;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
-import com.facebook.buck.io.ArchiveMemberPath;
-import com.google.common.hash.HashCode;
+import org.immutables.value.Value;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
-public interface FileHashLoader {
+@BuckStyleImmutable
+@Value.Immutable(builder = false)
+public abstract class AbstractArchiveMemberPath {
+  @Value.Parameter
+  public abstract Path getArchivePath();
 
-  HashCode get(Path path) throws IOException;
+  @Value.Parameter
+  public abstract Path getMemberPath();
 
-  HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException;
+  @Value.Auxiliary
+  public boolean isAbsolute() {
+    return getArchivePath().isAbsolute();
+  }
+
+  @Override
+  public String toString() {
+    return getArchivePath() + "!/" + getMemberPath();
+  }
 }

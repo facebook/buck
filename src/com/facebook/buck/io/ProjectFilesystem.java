@@ -82,6 +82,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -1017,6 +1019,13 @@ public class ProjectFilesystem {
         }
         zip.closeEntry();
       }
+    }
+  }
+
+  public Manifest getJarManifest(Path path) throws IOException {
+    Path absolutePath = resolve(path);
+    try (JarFile jarFile = new JarFile(absolutePath.toFile())) {
+      return jarFile.getManifest();
     }
   }
 

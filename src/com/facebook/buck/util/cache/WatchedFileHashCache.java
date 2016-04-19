@@ -54,6 +54,7 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
                   @Override
                   public boolean apply(Map.Entry<Path, HashCodeAndFileType> entry) {
                     switch (entry.getValue().getType()) {
+                      case ARCHIVE:
                       case FILE:
                         return path.equals(entry.getKey());
                       case DIRECTORY:

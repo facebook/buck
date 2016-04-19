@@ -76,6 +76,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.jar.JarInputStream;
+import java.util.jar.Manifest;
 
 import javax.annotation.Nullable;
 
@@ -635,6 +639,30 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     String content = contents.get();
     content = content.endsWith("\n") ? content.substring(0, content.length() - 1) : content;
     return Splitter.on('\n').splitToList(content);
+  }
+
+  @Override
+  public Manifest getJarManifest(Path path) throws IOException {
+    try (JarInputStream jar = new JarInputStream(newFileInputStream(path))) {
+
+      Manifest result = jar.getManifest();
+      if (result != null) {
+        return result;
+      }
+
+      // JarInputStream will only find the manifest if it's the first entry, but we have code that
+      // puts it elsewhere. We must search. Fortunately, this is test code! So we can be slow!
+      JarEntry entry;
+      while ((entry = jar.getNextJarEntry()) != null) {
+        if (JarFile.MANIFEST_NAME.equals(entry.getName())) {
+          result = new Manifest();
+          result.read(jar);
+          return result;
+        }
+      }
+    }
+
+    return null;
   }
 
   /**

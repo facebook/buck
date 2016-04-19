@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.cache;
 
+import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.model.Pair;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -48,9 +49,24 @@ public class StackedFileHashCache implements FileHashCache {
     return Optional.absent();
   }
 
+  private Optional<Pair<FileHashCache, ArchiveMemberPath>> lookup(ArchiveMemberPath path) {
+    Preconditions.checkArgument(path.isAbsolute());
+    for (FileHashCache cache : caches) {
+      if (cache.willGet(path)) {
+        return Optional.of(new Pair<>(cache, path));
+      }
+    }
+    return Optional.absent();
+  }
+
   @Override
   public boolean willGet(Path path) {
     return lookup(path).isPresent();
+  }
+
+  @Override
+  public boolean willGet(ArchiveMemberPath archiveMemberPath) {
+    return lookup(archiveMemberPath).isPresent();
   }
 
   @Override
@@ -73,6 +89,15 @@ public class StackedFileHashCache implements FileHashCache {
     Optional<Pair<FileHashCache, Path>> found = lookup(path);
     if (!found.isPresent()) {
       throw new NoSuchFileException(path.toString());
+    }
+    return found.get().getFirst().get(found.get().getSecond());
+  }
+
+  @Override
+  public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
+    Optional<Pair<FileHashCache, ArchiveMemberPath>> found = lookup(archiveMemberPath);
+    if (!found.isPresent()) {
+      throw new NoSuchFileException(archiveMemberPath.toString());
     }
     return found.get().getFirst().get(found.get().getSecond());
   }

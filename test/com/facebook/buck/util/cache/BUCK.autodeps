@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY a4dbd3fb50326144db4bec17bb601c1ce013011e #@#
+#@# GENERATED FILE: DO NOT MODIFY 998403493c9484a4b9cd66f77717e90483ed3417 #@#
 {
   "cache" : {
     "deps" : [
@@ -6,6 +6,7 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/util/cache:cache",
       "//test/com/facebook/buck/config:testutil",
+      "//test/com/facebook/buck/jvm/java/abi:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
       "//third-party/java/guava:guava",

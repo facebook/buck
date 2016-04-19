@@ -16,13 +16,18 @@
 
 package com.facebook.buck.util.cache;
 
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 
 import org.immutables.value.Value;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 @Value.Immutable
@@ -35,9 +40,34 @@ abstract class AbstractHashCodeAndFileType {
 
   public abstract ImmutableSet<Path> getChildren();
 
+  @Value.Auxiliary
+  abstract Optional<JarContentHasher> getJarContentHasher();
+
+  @Value.Lazy
+  ImmutableMap<Path, HashCodeAndFileType> getContents() {
+    try {
+      return getJarContentHasher().get().getContentHashes();
+    } catch (IOException e) {
+      throw new HumanReadableException(
+          "Failed to load hashes from jar: " + getJarContentHasher().get().getJarRelativePath());
+    }
+  }
+
   @Value.Check
   void check() {
     Preconditions.checkState(getType() == Type.DIRECTORY || getChildren().isEmpty());
+    Preconditions.checkState(getType() == Type.ARCHIVE || !getJarContentHasher().isPresent());
+  }
+
+  public static HashCodeAndFileType ofArchive(
+      HashCode hashCode,
+      ProjectFilesystem projectFilesystem,
+      Path archiveRelativePath) {
+    return HashCodeAndFileType.builder()
+        .setType(Type.ARCHIVE)
+        .setGetHashCode(hashCode)
+        .setJarContentHasher(new JarContentHasher(projectFilesystem, archiveRelativePath))
+        .build();
   }
 
   public static HashCodeAndFileType ofDirectory(HashCode hashCode, ImmutableSet<Path> children) {
@@ -56,6 +86,7 @@ abstract class AbstractHashCodeAndFileType {
   }
 
   enum Type {
+    ARCHIVE,
     FILE,
     DIRECTORY
   };

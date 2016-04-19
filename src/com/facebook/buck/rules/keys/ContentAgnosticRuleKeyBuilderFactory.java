@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
@@ -66,7 +67,17 @@ public class ContentAgnosticRuleKeyBuilderFactory
       }
 
       @Override
+      public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
+        throw new AssertionError();
+      }
+
+      @Override
       public boolean willGet(Path path) {
+        return true;
+      }
+
+      @Override
+      public boolean willGet(ArchiveMemberPath archiveMemberPath) {
         return true;
       }
 

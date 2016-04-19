@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
@@ -154,6 +155,11 @@ public class DefaultRuleKeyLoggerTest {
         }
 
         @Override
+        public boolean willGet(ArchiveMemberPath archiveMemberPath) {
+          return true;
+        }
+
+        @Override
         public void invalidate(Path path) {
         }
 
@@ -164,6 +170,11 @@ public class DefaultRuleKeyLoggerTest {
         @Override
         public HashCode get(Path path) throws IOException {
           return HashCode.fromString("f1134a34c0de");
+        }
+
+        @Override
+        public HashCode get(ArchiveMemberPath archiveMemberPath) {
+          throw new AssertionError();
         }
 
         @Override

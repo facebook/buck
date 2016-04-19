@@ -21,10 +21,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.HashingDeterministicJarWriter;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
+import com.google.common.io.ByteSource;
 
 import org.hamcrest.junit.ExpectedException;
 import org.junit.Rule;
@@ -32,9 +36,13 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
 
 public class DefaultFileHashCacheTest {
 
@@ -143,4 +151,87 @@ public class DefaultFileHashCacheTest {
     assertNull(cache.loadingCache.getIfPresent(child2));
   }
 
+  @Test
+  public void whenJarMemberWithHashInManifestIsQueriedThenCacheCorrectlyObtainsIt()
+      throws IOException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    DefaultFileHashCache cache = new DefaultFileHashCache(filesystem);
+
+    Path abiJarPath = Paths.get("test-abi.jar");
+    Path memberPath = Paths.get("SomeClass.class");
+    String memberContents = "Some contents";
+    try (HashingDeterministicJarWriter jar = new HashingDeterministicJarWriter(
+        new JarOutputStream(filesystem.newFileOutputStream(abiJarPath)))) {
+      jar.writeEntry(
+          memberPath.toString(),
+          ByteSource.wrap(memberContents.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    HashCode actual = cache.get(ArchiveMemberPath.of(filesystem.resolve(abiJarPath), memberPath));
+    HashCode expected = Hashing.murmur3_128().hashString(memberContents, StandardCharsets.UTF_8);
+
+    assertEquals(expected, actual);
+  }
+
+  @Test(expected = NoSuchFileException.class)
+  public void whenJarMemberWithoutHashInManifestIsQueriedThenThrow()
+      throws IOException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    DefaultFileHashCache cache = new DefaultFileHashCache(filesystem);
+
+    Path abiJarPath = Paths.get("test-abi.jar");
+    Path memberPath = Paths.get("Unhashed.txt");
+    String memberContents = "Some contents";
+    try (HashingDeterministicJarWriter jar = new HashingDeterministicJarWriter(
+        new JarOutputStream(filesystem.newFileOutputStream(abiJarPath)))) {
+      jar
+          .writeEntry(
+              "SomeClass.class",
+              ByteSource.wrap(memberContents.getBytes(StandardCharsets.UTF_8)))
+          .writeUnhashedEntry(
+              memberPath.toString(),
+              ByteSource.wrap(memberContents.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    cache.get(ArchiveMemberPath.of(filesystem.resolve(abiJarPath), memberPath));
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void whenJarMemberWithoutManifestIsQueriedThenThrow() throws IOException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    DefaultFileHashCache cache = new DefaultFileHashCache(filesystem);
+
+    Path abiJarPath = Paths.get("no-manifest.jar");
+    Path memberPath = Paths.get("Empty.class");
+
+    try (JarOutputStream jar = new JarOutputStream(filesystem.newFileOutputStream(abiJarPath))) {
+      jar.putNextEntry(new JarEntry(memberPath.toString()));
+      jar.write("Contents".getBytes(StandardCharsets.UTF_8));
+      jar.closeEntry();
+    }
+
+    cache.get(ArchiveMemberPath.of(filesystem.resolve(abiJarPath), memberPath));
+  }
+
+  @Test(expected = NoSuchFileException.class)
+  public void whenJarMemberWithEmptyManifestIsQueriedThenThrow() throws IOException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    DefaultFileHashCache cache = new DefaultFileHashCache(filesystem);
+
+    Path abiJarPath = Paths.get("empty-manifest.jar");
+    Path memberPath = Paths.get("Empty.class");
+
+    try (HashingDeterministicJarWriter jar = new HashingDeterministicJarWriter(
+        new JarOutputStream(filesystem.newFileOutputStream(abiJarPath)))) {
+      jar
+          .writeUnhashedEntry(
+              JarFile.MANIFEST_NAME,
+              ByteSource.wrap(new byte[0]))
+          .writeUnhashedEntry(
+              memberPath.toString(),
+              ByteSource.wrap("Contents".getBytes(StandardCharsets.UTF_8)));
+    }
+
+    cache.get(ArchiveMemberPath.of(filesystem.resolve(abiJarPath), memberPath));
+  }
 }

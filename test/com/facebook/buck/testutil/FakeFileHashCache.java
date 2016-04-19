@@ -16,6 +16,7 @@
 
 package com.facebook.buck.testutil;
 
+import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.collect.Maps;
@@ -65,6 +66,11 @@ public class FakeFileHashCache implements FileHashCache {
   }
 
   @Override
+  public boolean willGet(ArchiveMemberPath archiveMemberPath) {
+    throw new UnsupportedOperationException("Not yet implemented");
+  }
+
+  @Override
   public void invalidate(Path path) {
     pathsToHashes.remove(path);
   }
@@ -81,6 +87,11 @@ public class FakeFileHashCache implements FileHashCache {
       throw new NoSuchFileException(path.toString());
     }
     return hashCode;
+  }
+
+  @Override
+  public HashCode get(ArchiveMemberPath archiveMemberPath) {
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   @Override

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.cache;
 
+import com.facebook.buck.io.ArchiveMemberPath;
 import com.google.common.hash.HashCode;
 
 import java.io.IOException;
@@ -32,6 +33,11 @@ public class NullFileHashCache implements FileHashCache {
   }
 
   @Override
+  public boolean willGet(ArchiveMemberPath archiveMemberPath) {
+    return false;
+  }
+
+  @Override
   public void invalidate(Path path) {
   }
 
@@ -42,6 +48,11 @@ public class NullFileHashCache implements FileHashCache {
   @Override
   public HashCode get(Path path) throws IOException {
     throw new NoSuchFileException(path.toString());
+  }
+
+  @Override
+  public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
+    throw new NoSuchFileException(archiveMemberPath.toString());
   }
 
   @Override

@@ -28,6 +28,8 @@ import java.util.zip.ZipOutputStream;
  * Writes a deterministic jar with precomputed hash codes in its MANIFEST.MF.
  */
 public class HashingDeterministicJarWriter implements AutoCloseable {
+  public static final String DIGEST_ATTRIBUTE_NAME = "Murmur3-128-Digest";
+
   private final ZipOutputStream jar;
   private final DeterministicJarManifestWriter manifestWriter;
 
@@ -42,7 +44,7 @@ public class HashingDeterministicJarWriter implements AutoCloseable {
     writeToJar(name, contents);
     manifestWriter.setEntryAttribute(
         name,
-        "Murmur3-128-Digest",
+        DIGEST_ATTRIBUTE_NAME,
         contents.hash(Hashing.murmur3_128()).toString());
     return this;
   }

@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
@@ -756,6 +757,11 @@ public class RuleKeyTest {
           }
 
           @Override
+          public boolean willGet(ArchiveMemberPath archiveMemberPath) {
+            return true;
+          }
+
+          @Override
           public void invalidate(Path path) {
           }
 
@@ -766,6 +772,11 @@ public class RuleKeyTest {
           @Override
           public HashCode get(Path path) {
             return HashCode.fromString("deadbeef");
+          }
+
+          @Override
+          public HashCode get(ArchiveMemberPath archiveMemberPath) {
+            throw new AssertionError();
           }
 
           @Override
