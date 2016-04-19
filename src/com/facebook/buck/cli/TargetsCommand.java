@@ -274,7 +274,7 @@ public class TargetsCommand extends AbstractCommand {
   private int runWithExecutor(
       CommandRunnerParams params,
       ListeningExecutorService executor) throws IOException, InterruptedException {
-    ImmutableMap<String, ShowOptions> showRulesResult =
+    ImmutableMap<BuildTarget, ShowOptions> showRulesResult =
         ImmutableMap.of();
 
     if (isShowOutput() || isShowRuleKey() || isShowTargetHash()) {
@@ -349,7 +349,8 @@ public class TargetsCommand extends AbstractCommand {
       CommandRunnerParams params,
       ListeningExecutorService executor,
       SortedMap<String, TargetNode<?>> matchingNodes,
-      ImmutableMap<String, ShowOptions> showRulesResult) throws IOException, InterruptedException {
+      ImmutableMap<BuildTarget, ShowOptions> showRulesResult)
+      throws IOException, InterruptedException {
     if (getPrintJson()) {
       try {
         printJsonForTargets(params, executor, matchingNodes, showRulesResult);
@@ -458,11 +459,11 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   private void printShowRules(
-      Map<String, ShowOptions> showRulesResult,
+      Map<BuildTarget, ShowOptions> showRulesResult,
       CommandRunnerParams params) {
-    for (Entry<String, ShowOptions> entry : showRulesResult.entrySet()) {
+    for (Entry<BuildTarget, ShowOptions> entry : showRulesResult.entrySet()) {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
-      builder.add(entry.getKey());
+      builder.add(entry.getKey().getFullyQualifiedName());
       ShowOptions showOptions = entry.getValue();
       if (showOptions.getRuleKey().isPresent()) {
         builder.add(showOptions.getRuleKey().get());
@@ -618,7 +619,7 @@ public class TargetsCommand extends AbstractCommand {
       CommandRunnerParams params,
       ListeningExecutorService executor,
       SortedMap<String, TargetNode<?>> buildIndex,
-      ImmutableMap<String, ShowOptions> showRulesResult)
+      ImmutableMap<BuildTarget, ShowOptions> showRulesResult)
       throws BuildFileParseException, IOException, InterruptedException {
     // Print the JSON representation of the build node for the specified target(s).
     params.getConsole().getStdOut().println("[");
@@ -628,7 +629,6 @@ public class TargetsCommand extends AbstractCommand {
 
     while (mapIterator.hasNext()) {
       Entry<String, TargetNode<?>> current = mapIterator.next();
-      String target = current.getKey();
       TargetNode<?> targetNode = current.getValue();
       SortedMap<String, Object> sortedTargetRule;
       sortedTargetRule = params.getParser().getRawTargetNode(
@@ -643,7 +643,7 @@ public class TargetsCommand extends AbstractCommand {
                 targetNode.getBuildTarget().getFullyQualifiedName());
         continue;
       }
-      ShowOptions showOptions = showRulesResult.get(target);
+      ShowOptions showOptions = showRulesResult.get(targetNode.getBuildTarget());
       if (showOptions != null) {
         putIfValuePresent(
             ShowOptionsName.RULE_KEY.getName(),
@@ -700,14 +700,14 @@ public class TargetsCommand extends AbstractCommand {
    * @return  An immutable map consisting of result of show options
    * for to each target rule
    */
-  private ImmutableMap<String, ShowOptions> computeShowRules(
+  private ImmutableMap<BuildTarget, ShowOptions> computeShowRules(
       CommandRunnerParams params,
       ListeningExecutorService executor,
       TargetGraphAndTargetNodes targetGraphAndTargetNodes)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
         CycleException {
 
-    Map<String, ShowOptions.Builder> showOptionBuilderMap = new HashMap<>();
+    Map<BuildTarget, ShowOptions.Builder> showOptionBuilderMap = new HashMap<>();
     if (isShowTargetHash()) {
       computeShowTargetHash(
           params,
@@ -739,7 +739,7 @@ public class TargetsCommand extends AbstractCommand {
     for (TargetNode<?> targetNode :
         ImmutableSortedSet.copyOf(targetGraphAndTargetNodes.getTargetNodes())) {
       ShowOptions.Builder showOptionsBuilder =
-          getShowOptionBuilder(showOptionBuilderMap, targetNode);
+          getShowOptionBuilder(showOptionBuilderMap, targetNode.getBuildTarget());
       Preconditions.checkNotNull(showOptionsBuilder);
       if (actionGraph.isPresent()) {
         BuildRule rule = buildRuleResolver.get().requireRule(targetNode.getBuildTarget());
@@ -755,8 +755,8 @@ public class TargetsCommand extends AbstractCommand {
       }
     }
 
-    ImmutableMap.Builder<String, ShowOptions> builder =  new ImmutableMap.Builder<>();
-    for (Entry<String, ShowOptions.Builder> entry : showOptionBuilderMap.entrySet()) {
+    ImmutableMap.Builder<BuildTarget, ShowOptions> builder =  new ImmutableMap.Builder<>();
+    for (Entry<BuildTarget, ShowOptions.Builder> entry : showOptionBuilderMap.entrySet()) {
       builder.put(entry.getKey(), entry.getValue().build());
     }
     return builder.build();
@@ -835,7 +835,7 @@ public class TargetsCommand extends AbstractCommand {
       CommandRunnerParams params,
       ListeningExecutorService executor,
       TargetGraphAndTargetNodes targetGraphAndTargetNodes,
-      Map<String, ShowOptions.Builder> showRulesResult)
+      Map<BuildTarget, ShowOptions.Builder> showRulesResult)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
       CycleException {
     LOG.debug("Getting target hash for %s", targetGraphAndTargetNodes.getTargetNodes());
@@ -864,7 +864,7 @@ public class TargetsCommand extends AbstractCommand {
         buildTargetHashes);
 
     for (TargetNode<?> targetNode : targetGraphAndTargetNodes.getTargetNodes()) {
-      processTargetHash(targetNode, showRulesResult, finalHashes);
+      processTargetHash(targetNode.getBuildTarget(), showRulesResult, finalHashes);
     }
   }
 
@@ -924,11 +924,11 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   private void processTargetHash(
-      TargetNode<?> targetNode,
-      Map<String, ShowOptions.Builder> showRulesResult,
+      BuildTarget buildTarget,
+      Map<BuildTarget, ShowOptions.Builder> showRulesResult,
       ImmutableMap<BuildTarget, HashCode> finalHashes) {
-    ShowOptions.Builder showOptionsBuilder = getShowOptionBuilder(showRulesResult, targetNode);
-    HashCode hashCode = getHashCodeOrThrow(finalHashes, targetNode.getBuildTarget());
+    ShowOptions.Builder showOptionsBuilder = getShowOptionBuilder(showRulesResult, buildTarget);
+    HashCode hashCode = getHashCodeOrThrow(finalHashes, buildTarget);
     showOptionsBuilder.setTargetHash(hashCode.toString());
   }
 
@@ -988,15 +988,14 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   private ShowOptions.Builder getShowOptionBuilder(
-      Map<String, ShowOptions.Builder> showRulesBuilderMap,
-      TargetNode<?> targetNode) {
-    String targetFullyQualifiedName = targetNode.getBuildTarget().getFullyQualifiedName();
-    if (!showRulesBuilderMap.containsKey(targetFullyQualifiedName)) {
+      Map<BuildTarget, ShowOptions.Builder> showRulesBuilderMap,
+      BuildTarget buildTarget) {
+    if (!showRulesBuilderMap.containsKey(buildTarget)) {
       ShowOptions.Builder builder = ShowOptions.builder();
-      showRulesBuilderMap.put(targetFullyQualifiedName, builder);
+      showRulesBuilderMap.put(buildTarget, builder);
       return builder;
     }
-    return showRulesBuilderMap.get(targetFullyQualifiedName);
+    return showRulesBuilderMap.get(buildTarget);
   }
 
   @Value.Immutable
