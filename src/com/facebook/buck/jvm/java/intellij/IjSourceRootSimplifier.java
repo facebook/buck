@@ -33,6 +33,7 @@ import org.immutables.value.Value;
 
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -178,7 +179,7 @@ public class IjSourceRootSimplifier {
       if (currentFolder != null) {
         myFolder = currentFolder;
       } else {
-        IjFolder aChild = presentChildren.iterator().next();
+        IjFolder aChild = findBestChildToAggregateTo(presentChildren);
         myFolder = aChild.createCopyWith(currentPath);
       }
       boolean allChildrenCanBeMerged = FluentIterable.from(presentChildren)
@@ -201,7 +202,32 @@ public class IjSourceRootSimplifier {
 
       return Optional.of(mergedFolder);
     }
+  }
 
+  /**
+   * Find a child which can be used as the aggregation point for the other folders.
+   * The order of preference is;
+   * - AndroidResource - because there should be only one
+   * - SourceFolder - because most things should merge into it
+   * - First Child - because no other folders significantly affect aggregation.
+   */
+  private static IjFolder findBestChildToAggregateTo(ImmutableSet<IjFolder> children) {
+    Iterator<IjFolder> childIterator = children.iterator();
+
+    IjFolder bestCandidate = childIterator.next();
+    while (childIterator.hasNext()) {
+      IjFolder candidate = childIterator.next();
+
+      if (candidate instanceof AndroidResourceFolder) {
+        return candidate;
+      }
+
+      if (candidate instanceof SourceFolder) {
+        bestCandidate = candidate;
+      }
+    }
+
+    return bestCandidate;
   }
 
   private static boolean canMerge(
