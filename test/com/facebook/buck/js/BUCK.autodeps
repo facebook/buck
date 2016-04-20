@@ -1,12 +1,14 @@
-#@# GENERATED FILE: DO NOT MODIFY 688d7e69589098ca5d47e1229d91865020547bfa #@#
+#@# GENERATED FILE: DO NOT MODIFY d51577c38f86365b0f279ef96daee4e61ac2956c #@#
 {
   "js" : {
     "deps" : [
+      "//src/com/facebook/buck/js:js",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/android:testutil",
       "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]
