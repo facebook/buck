@@ -34,6 +34,8 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.shell.ShellStep;
@@ -60,6 +62,12 @@ public class ExternallyBuiltApplePackageTest {
   private ApplePackageConfigAndPlatformInfo config =
       ApplePackageConfigAndPlatformInfo.of(
           ApplePackageConfig.of("echo $PLATFORM_DIR $OUT", "api"),
+          new Function<String, Arg>() {
+            @Override
+            public Arg apply(String input) {
+              return new StringArg(input);
+            }
+          },
           DEFAULT_IPHONEOS_I386_PLATFORM);
 
 

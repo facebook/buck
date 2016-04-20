@@ -23,10 +23,10 @@ import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -51,7 +51,7 @@ public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppen
         params,
         resolver,
         ImmutableList.of(bundle),
-        Optional.<Arg>of(new StringArg(packageConfigAndPlatformInfo.getConfig().getCommand())),
+        Optional.of(packageConfigAndPlatformInfo.getExpandedArg()),
         Optional.<Arg>absent(),
         Optional.<Arg>absent(),
         params.getBuildTarget().getShortName() + "." +
@@ -84,6 +84,9 @@ public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppen
   @BuckStyleTuple
   abstract static class AbstractApplePackageConfigAndPlatformInfo {
     public abstract ApplePackageConfig getConfig();
+
+    @Value.Auxiliary
+    protected abstract Function<String, Arg> getMacroExpander();
 
     /**
      * The apple cxx platform in question.
@@ -123,6 +126,15 @@ public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppen
     @Value.Derived
     public Optional<String> getPlatformBuildVersion() {
       return getPlatform().getBuildVersion();
+    }
+
+    /**
+     * Command after passing through argument expansion.
+     */
+    @Value.Derived
+    @Value.Auxiliary
+    public Arg getExpandedArg() {
+      return getMacroExpander().apply(getConfig().getCommand());
     }
   }
 
