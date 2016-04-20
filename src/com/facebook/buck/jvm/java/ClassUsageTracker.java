@@ -23,14 +23,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 import javax.tools.FileObject;
@@ -44,8 +43,9 @@ import javax.tools.StandardJavaFileManager;
  * {@link JavaFileManager}.
  */
 class ClassUsageTracker {
-  private static final Pattern CLASS_FILE_PATTERN =
-      Pattern.compile("^jar:file:(?<jar>[^!]+)!/(?<file>.+)$");
+  private static final String JAR_SCHEME = "jar";
+  private static final String FILE_SCHEME = "file";
+
   private final ImmutableSetMultimap.Builder<Path, Path> resultBuilder =
       ImmutableSetMultimap.builder();
 
@@ -85,16 +85,28 @@ class ClassUsageTracker {
       return;
     }
 
-    Matcher classFileMatcher = CLASS_FILE_PATTERN.matcher(javaFileObject.toUri().toString());
-    boolean matches = classFileMatcher.matches();
-    if (!matches) {
+    URI classFileJarUri = javaFileObject.toUri();
+    if (!classFileJarUri.getScheme().equals(JAR_SCHEME)) {
       // Not in a jar; must not have been built with java_library
       return;
     }
 
-    resultBuilder.put(
-        Paths.get(classFileMatcher.group("jar")),
-        Paths.get(classFileMatcher.group("file")));
+    // The jar: scheme is somewhat underspecified. See the JarURLConnection docs
+    // for the closest thing it has to documentation.
+    String jarUriSchemeSpecificPart = classFileJarUri.getRawSchemeSpecificPart();
+    final String[] split = jarUriSchemeSpecificPart.split("!/");
+    Preconditions.checkState(split.length == 2);
+
+    URI jarFileUri = URI.create(split[0]);
+    Preconditions.checkState(jarFileUri.getScheme().equals(FILE_SCHEME));
+    Path jarFilePath = Paths.get(jarFileUri);
+
+    // Using URI.create here for de-escaping
+    Path classPath = Paths.get(URI.create(split[1]).toString());
+
+    Preconditions.checkState(jarFilePath.isAbsolute());
+    Preconditions.checkState(!classPath.isAbsolute());
+    resultBuilder.put(jarFilePath, classPath);
   }
 
   private class UsageTrackingFileManager extends ForwardingStandardJavaFileManager {

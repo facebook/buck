@@ -57,7 +57,7 @@ public class ClassUsageTrackerTest {
   private static final String SINGLE_FILE_NAME = "C";
   private static final String SINGLE_NON_JAVA_FILE_NAME = "NonJava";
   private static final File SINGLE_FILE = new File("C");
-  private static final String TEST_JAR_NAME = "test.jar";
+  private static final String TEST_JAR_NAME = "/test.jar";
 
   private ClassUsageTracker tracker;
   private StandardJavaFileManager fileManager;
