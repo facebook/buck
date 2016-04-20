@@ -184,7 +184,7 @@ class BuckTool(object):
                                     print('Daemon is busy, waiting for it to become free...',
                                           file=sys.stderr)
                                     last_diagnostic_time = now
-                                time.sleep(0.1)
+                                time.sleep(1)
                     return exit_code
 
 
