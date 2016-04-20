@@ -61,7 +61,7 @@ public class ExternallyBuiltApplePackageTest {
       new DefaultTargetNodeToBuildRuleTransformer());
   private ApplePackageConfigAndPlatformInfo config =
       ApplePackageConfigAndPlatformInfo.of(
-          ApplePackageConfig.of("echo $PLATFORM_DIR $OUT", "api"),
+          ApplePackageConfig.of("echo $SDKROOT $OUT", "api"),
           new Function<String, Arg>() {
             @Override
             public Arg apply(String input) {
@@ -72,7 +72,7 @@ public class ExternallyBuiltApplePackageTest {
 
 
   @Test
-  public void platformDirEnvironmentVariableIsSet() {
+  public void sdkrootEnvironmentVariableIsSet() {
     ExternallyBuiltApplePackage rule = new ExternallyBuiltApplePackage(
         params,
         new SourcePathResolver(resolver),
@@ -85,8 +85,8 @@ public class ExternallyBuiltApplePackageTest {
     assertThat(
         step.getEnvironmentVariables(TestExecutionContext.newInstance()),
         hasEntry(
-            "PLATFORM_DIR",
-            DEFAULT_IPHONEOS_I386_PLATFORM.getAppleSdkPaths().getPlatformPath().toString()));
+            "SDKROOT",
+            DEFAULT_IPHONEOS_I386_PLATFORM.getAppleSdkPaths().getSdkPath().toString()));
   }
 
   @Test
@@ -112,7 +112,7 @@ public class ExternallyBuiltApplePackageTest {
             AbstractGenruleStep.class));
     assertThat(
         step.getShellCommand(TestExecutionContext.newInstance()),
-        hasItem("echo $PLATFORM_DIR $OUT"));
+        hasItem("echo $SDKROOT $OUT"));
   }
 
   @Test

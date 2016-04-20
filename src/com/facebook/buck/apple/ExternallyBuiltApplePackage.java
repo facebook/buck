@@ -66,8 +66,8 @@ public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppen
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
     super.addEnvironmentVariables(context, environmentVariablesBuilder);
     environmentVariablesBuilder.put(
-        "PLATFORM_DIR",
-        packageConfigAndPlatformInfo.getPlatformPath().toString());
+        "SDKROOT",
+        packageConfigAndPlatformInfo.getSdkPath().toString());
   }
 
   @Override
@@ -99,16 +99,6 @@ public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppen
     protected abstract AppleCxxPlatform getPlatform();
 
     /**
-     * Path to the platform directory, where the external packager script might be located.
-     *
-     * This value should be omitted from rule key generation as it may vary across machines.
-     */
-    @Value.Derived
-    public Path getPlatformPath() {
-      return getPlatform().getAppleSdkPaths().getPlatformPath();
-    }
-
-    /**
      * The sdk version of the platform.
      *
      * This is used as a proxy for the version of the external packager.
@@ -126,6 +116,14 @@ public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppen
     @Value.Derived
     public Optional<String> getPlatformBuildVersion() {
       return getPlatform().getBuildVersion();
+    }
+
+    /**
+     * Returns the Apple SDK path.
+     */
+    @Value.Derived
+    public Path getSdkPath() {
+      return getPlatform().getAppleSdkPaths().getSdkPath();
     }
 
     /**
