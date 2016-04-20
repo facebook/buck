@@ -808,14 +808,6 @@ public class AppleBundle
     return this;
   }
 
-  public Path getBundleRoot() {
-    return bundleRoot;
-  }
-
-  public Path getBundleBinaryPath() {
-    return bundleBinaryPath;
-  }
-
   @Override
   public BuildRule getBinaryBuildRule() {
     return binary.get();

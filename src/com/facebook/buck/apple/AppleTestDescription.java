@@ -50,7 +50,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.HumanReadableException;
@@ -102,7 +101,6 @@ public class AppleTestDescription implements
       AppleDebugFormat.NONE.getFlavor());
 
   private final AppleConfig appleConfig;
-  private final AppleBundleDescription appleBundleDescription;
   private final AppleLibraryDescription appleLibraryDescription;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
@@ -114,7 +112,6 @@ public class AppleTestDescription implements
 
   public AppleTestDescription(
       AppleConfig appleConfig,
-      AppleBundleDescription appleBundleDescription,
       AppleLibraryDescription appleLibraryDescription,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
@@ -124,7 +121,6 @@ public class AppleTestDescription implements
       Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier,
       AppleDebugFormat defaultDebugFormat) {
     this.appleConfig = appleConfig;
-    this.appleBundleDescription = appleBundleDescription;
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
@@ -199,44 +195,24 @@ public class AppleTestDescription implements
     Optional<SourcePath> testHostAppBinarySourcePath;
     ImmutableSet<BuildTarget> blacklist;
     if (args.testHostApp.isPresent()) {
-      TargetNode<?> testHostAppNode = targetGraph.get(args.testHostApp.get());
+      BuildRule rule = resolver.requireRule(
+          BuildTarget.builder(args.testHostApp.get())
+              .addAllFlavors(nonLibraryFlavors)
+              .addFlavors(debugFormat.getFlavor())
+              .addFlavors(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor())
+              .build());
 
-      if (testHostAppNode.getType() != AppleBundleDescription.TYPE) {
+      if (!(rule instanceof AppleBundle)) {
         throw new HumanReadableException(
-            "Apple test rule %s has unrecognized test_host_app %s type %s (should be %s)",
+            "Apple test rule '%s' has test_host_app '%s' not of type '%s'.",
             params.getBuildTarget(),
             args.testHostApp.get(),
-            testHostAppNode.getType(),
             AppleBundleDescription.TYPE);
       }
 
-      AppleBundleDescription.Arg testHostAppDescription = (AppleBundleDescription.Arg)
-          testHostAppNode.getConstructorArg();
-
-      testHostApp = Optional.of(
-          appleBundleDescription
-              .createBuildRule(
-                  targetGraph,
-                  params.copyWithChanges(
-                      BuildTarget.builder(args.testHostApp.get())
-                          .addAllFlavors(nonLibraryFlavors)
-                          .addFlavors(debugFormat.getFlavor())
-                          .addFlavors(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor())
-                          .build(),
-                      Suppliers.ofInstance(
-                          BuildRules.toBuildRulesFor(
-                              args.testHostApp.get(),
-                              resolver,
-                              testHostAppNode.getDeclaredDeps())),
-                      Suppliers.ofInstance(
-                          BuildRules.toBuildRulesFor(
-                              args.testHostApp.get(),
-                              resolver,
-                              testHostAppNode.getExtraDeps()))),
-                  resolver,
-                  testHostAppDescription).getAppleBundle());
+      testHostApp = Optional.of((AppleBundle) rule);
       testHostAppBinarySourcePath = Optional.<SourcePath>of(
-          new BuildTargetSourcePath(testHostAppDescription.binary));
+          new BuildTargetSourcePath(testHostApp.get().getBinaryBuildRule().getBuildTarget()));
 
       ImmutableMap<BuildTarget, NativeLinkable> roots =
           NativeLinkables.getNativeLinkableRoots(

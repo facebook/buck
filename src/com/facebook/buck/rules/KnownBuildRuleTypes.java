@@ -574,7 +574,6 @@ public class KnownBuildRuleTypes {
     builder.register(
         new AppleTestDescription(
             appleConfig,
-            appleBundleDescription,
             appleLibraryDescription,
             cxxPlatforms,
             platformFlavorsToAppleCxxPlatforms,

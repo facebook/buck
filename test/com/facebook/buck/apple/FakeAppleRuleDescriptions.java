@@ -28,8 +28,8 @@ import com.facebook.buck.cxx.InferBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -205,7 +205,6 @@ public class FakeAppleRuleDescriptions {
   public static final AppleTestDescription TEST_DESCRIPTION =
       new AppleTestDescription(
           new FakeAppleConfig(),
-          BUNDLE_DESCRIPTION,
           LIBRARY_DESCRIPTION,
           DEFAULT_APPLE_FLAVOR_DOMAIN,
           DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
