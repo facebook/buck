@@ -30,8 +30,6 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
-import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -149,20 +147,11 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
             FluentIterable.from(inputs)
                 .transform(getResolver().getRelativePathFunction())
                 .toList()),
-        new ShellStep(getProjectFilesystem().getRootPath()) {
-          @Override
-          protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-            return ImmutableList.<String>builder()
-                .addAll(ranlib.getCommandPrefix(getResolver()))
-                .add(output.toString())
-                .build();
-          }
-
-          @Override
-          public String getShortName() {
-            return "ranlib";
-          }
-        },
+        new RanlibStep(
+            getProjectFilesystem(),
+            ranlib.getEnvironment(getResolver()),
+            ranlib.getCommandPrefix(getResolver()),
+            output),
         new FileScrubberStep(getProjectFilesystem(), output, archiver.getScrubbers()));
   }
 

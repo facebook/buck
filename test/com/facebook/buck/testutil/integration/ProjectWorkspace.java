@@ -430,6 +430,9 @@ public class ProjectWorkspace {
         "ProgramW6432",
         "ProgramFiles(x86)",
 
+        // The haskell integration tests call into GHC, which needs HOME to be set.
+        "HOME",
+
         // TODO(#6586154): set TMP variable for ShellSteps
         "TMP");
     ImmutableMap.Builder<String, String> envBuilder = ImmutableMap.builder();
