@@ -41,6 +41,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -510,6 +511,39 @@ public class DefaultJavaLibraryIntegrationTest {
     assertThat(zip.getNextEntry().getName(), is("A.class"));
     assertThat(zip.getNextEntry().getName(), is("B.class"));
     zip.close();
+  }
+
+  @Test
+  public void testSpoolClassFilesDirectlyToJarWithAnnotationProcessor() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "spool_class_files_directly_to_jar_with_annotation_processor",
+        tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:a");
+    ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
+
+    result.assertSuccess();
+
+    Path classesDir = workspace.getPath(BuildTargets.getScratchPath(target, "lib__%s__classes"));
+    assertThat(Files.exists(classesDir), is(Boolean.TRUE));
+    assertThat(
+        "There should be no class files in disk",
+        ImmutableList.copyOf(classesDir.toFile().listFiles()), hasSize(0));
+
+    Path sourcesDir = workspace.getPath(BuildTargets.getAnnotationPath(target, "__%s_gen__"));
+    assertThat(Files.exists(sourcesDir), is(Boolean.TRUE));
+    assertThat(
+        "There should one source file in disk, from the Immutable class.",
+        ImmutableList.copyOf(sourcesDir.toFile().listFiles()), hasSize(1));
+
+    Path jarPath = workspace.getPath(BuildTargets.getGenPath(target, "lib__%s__output/a.jar"));
+    assertTrue(Files.exists(jarPath));
+
+    ZipInspector zipInspector = new ZipInspector(jarPath);
+    zipInspector.assertFileDoesNotExist("ImmutableC.java");
+    zipInspector.assertFileExists("ImmutableC.class");
   }
 
   /**

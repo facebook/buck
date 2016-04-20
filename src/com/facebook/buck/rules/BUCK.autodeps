@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 06b00572a607792e6398d9964c51339bba471985 #@#
+#@# GENERATED FILE: DO NOT MODIFY 5e2031bfcd05cb3afc6b0f7eb76191f7f0939787 #@#
 {
   "action_graph_cache" : {
     "deps" : [
@@ -29,7 +29,6 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util/hash:hash",
-      "//third-party/java/gson:gson",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [

@@ -94,6 +94,10 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
         directoryPaths.add(directoryPath);
       }
     }
+
+    if (kind.equals(JavaFileObject.Kind.SOURCE)) {
+      return delegate.getJavaFileForOutput(location, className, kind, sibling);
+    }
     JavaFileObject fileObject = createJavaMemoryFileObject(getPath(className, kind), kind);
     javaFileForOutputPaths.add(fileObject.getName());
     return fileObject;

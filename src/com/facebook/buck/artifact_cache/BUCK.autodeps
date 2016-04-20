@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 7b0a701ba90e80c57455f0efb694c6b892142174 #@#
+#@# GENERATED FILE: DO NOT MODIFY a419cc7436768fb622f408c2bd52a55f25d907a8 #@#
 {
   "artifact_cache" : {
     "deps" : [
@@ -61,7 +61,6 @@
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/slb:slb",
       "//third-party/java/guava:guava",
-      "//third-party/java/jsr:jsr305",
       "//third-party/java/okhttp:okhttp",
       "//third-party/java/okio:okio"
     ]
