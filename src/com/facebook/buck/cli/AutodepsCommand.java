@@ -115,6 +115,7 @@ public class AutodepsCommand extends AbstractCommand {
           params.getBuckConfig().getDependencySchedulingOrder(),
           params.getBuckConfig().getBuildDepFiles(),
           params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
+          params.getBuckConfig().getBuildArtifactCacheSizeLimit(),
           buildRuleResolver);
 
       // Create a BuildEngine because we store symbol information as build artifacts.

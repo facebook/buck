@@ -135,6 +135,7 @@ public class CachingBuildEngine implements BuildEngine {
   private final DepFiles depFiles;
   private final long maxDepFileCacheEntries;
   private final SourcePathResolver pathResolver;
+  private final Optional<Long> artifactCacheSizeLimit;
   private final LoadingCache<ProjectFilesystem, FileHashCache> fileHashCaches;
   private final LoadingCache<ProjectFilesystem, RuleKeyFactories> ruleKeyFactories;
 
@@ -145,6 +146,7 @@ public class CachingBuildEngine implements BuildEngine {
       DependencySchedulingOrder dependencySchedulingOrder,
       DepFiles depFiles,
       long maxDepFileCacheEntries,
+      Optional<Long> artifactCacheSizeLimit,
       final BuildRuleResolver resolver) {
     this.ruleDeps = new RuleDepsCache(service);
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, service);
@@ -154,6 +156,7 @@ public class CachingBuildEngine implements BuildEngine {
     this.dependencySchedulingOrder = dependencySchedulingOrder;
     this.depFiles = depFiles;
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
+    this.artifactCacheSizeLimit = artifactCacheSizeLimit;
     this.pathResolver = new SourcePathResolver(resolver);
 
     this.fileHashCaches = createFileHashCacheLoader(fileHashCache);
@@ -177,6 +180,7 @@ public class CachingBuildEngine implements BuildEngine {
       DependencySchedulingOrder dependencySchedulingOrder,
       DepFiles depFiles,
       long maxDepFileCacheEntries,
+      Optional<Long> artifactCacheSizeLimit,
       SourcePathResolver pathResolver,
       final Function<? super ProjectFilesystem, RuleKeyFactories> ruleKeyFactoriesFunction) {
     this.ruleDeps = new RuleDepsCache(service);
@@ -187,6 +191,7 @@ public class CachingBuildEngine implements BuildEngine {
     this.dependencySchedulingOrder = dependencySchedulingOrder;
     this.depFiles = depFiles;
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
+    this.artifactCacheSizeLimit = artifactCacheSizeLimit;
     this.pathResolver = pathResolver;
 
     this.fileHashCaches = createFileHashCacheLoader(fileHashCache);
@@ -733,10 +738,18 @@ public class CachingBuildEngine implements BuildEngine {
                 }
               }
 
-              private void uploadToCache(BuildRuleSuccessType success) {
+              private boolean shouldUploadToCache(long outputSize) {
                 if (!rule.isCacheable()) {
-                  return;
+                  return false;
                 }
+                if (artifactCacheSizeLimit.isPresent() &&
+                    outputSize > artifactCacheSizeLimit.get()) {
+                  return false;
+                }
+                return true;
+              }
+
+              private void uploadToCache(BuildRuleSuccessType success) {
 
                 // Collect up all the rule keys we have index the artifact in the cache with.
                 Set<RuleKey> ruleKeys = Sets.newHashSet();
@@ -808,19 +821,21 @@ public class CachingBuildEngine implements BuildEngine {
                 if (input.getStatus() == BuildRuleStatus.SUCCESS) {
                   BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
                   successType = Optional.of(success);
-                  uploadToCache(success);
 
-                  // Get the size of outputs when they've changed.
-                  if (success.outputsHaveChanged()) {
-                    try {
-                      outputSize = Optional.of(buildInfoRecorder.getOutputSize());
-                    } catch (IOException e) {
-                      context.getEventBus().post(
-                          ThrowableConsoleEvent.create(
-                              e,
-                              "Error getting output size for %s.",
-                              rule));
-                    }
+                  // Try get the output size.
+                  try {
+                    outputSize = Optional.of(buildInfoRecorder.getOutputSize());
+                  } catch (IOException e) {
+                    context.getEventBus().post(
+                        ThrowableConsoleEvent.create(
+                            e,
+                            "Error getting output size for %s.",
+                            rule));
+                  }
+
+                  // If this rule is cacheable, upload it to the cache.
+                  if (outputSize.isPresent() && shouldUploadToCache(outputSize.get())) {
+                    uploadToCache(success);
                   }
 
                   // Calculate the hash of outputs that were built locally and are cacheable.

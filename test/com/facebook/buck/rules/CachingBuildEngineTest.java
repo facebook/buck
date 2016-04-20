@@ -245,6 +245,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
 
       // Add a build step so we can verify that the steps are executed.
@@ -340,6 +341,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
 
@@ -421,6 +423,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
       buckEventBus.post(
@@ -502,6 +505,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
       buckEventBus.post(
@@ -557,6 +561,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
 
       // Run the build.
@@ -633,6 +638,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
 
       // Run the build.
@@ -741,6 +747,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
 
       // Run the build.
@@ -836,6 +843,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
 
       // Run the build.
@@ -876,6 +884,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
 
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -910,6 +919,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
 
       // Run the build.
@@ -985,6 +995,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
 
       // Run the build.
@@ -1078,6 +1089,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
 
       // Run the build.
@@ -1135,12 +1147,46 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
 
       assertThat(
           cachingBuildEngine.getNumRulesToBuild(ImmutableList.of(rule1)),
           equalTo(3));
     }
+
+    @Test
+    public void artifactCacheSizeLimit() throws Exception {
+      // Create a simple rule which just writes something new to the output file.
+      BuildRule rule =
+          new WriteFile(
+              new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule"))
+                  .setProjectFilesystem(filesystem)
+                  .build(),
+              pathResolver,
+              "data",
+              Paths.get("output/path"),
+              /* executable */ false);
+
+      // Create the build engine with low cache artifact limit which prevents caching the above\
+      // rule.
+      CachingBuildEngine cachingBuildEngine =
+          new CachingBuildEngine(
+              toWeighted(MoreExecutors.newDirectExecutorService()),
+              new NullFileHashCache(),
+              CachingBuildEngine.BuildMode.SHALLOW,
+              CachingBuildEngine.DependencySchedulingOrder.RANDOM,
+              CachingBuildEngine.DepFiles.ENABLED,
+              256L,
+              Optional.of(2L),
+              resolver);
+
+      // Verify that after building successfully, nothing is cached.
+      BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
+      assertThat(result.getSuccess(), equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
+      assertTrue(cache.isEmpty());
+    }
+
   }
 
   public static class InputBasedRuleKeyTests extends CommonFixture {
@@ -1178,6 +1224,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -1237,6 +1284,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -1309,6 +1357,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -1668,6 +1717,7 @@ public class CachingBuildEngineTest {
           CachingBuildEngine.DependencySchedulingOrder.RANDOM,
           CachingBuildEngine.DepFiles.ENABLED,
           256L,
+          Optional.<Long>absent(),
           pathResolver,
           Functions.constant(
               new CachingBuildEngine.RuleKeyFactories(
@@ -1732,6 +1782,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.CACHE,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -1833,6 +1884,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.CACHE,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -1948,6 +2000,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.CACHE,
               1L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -2054,6 +2107,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.CACHE,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -2118,6 +2172,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -2169,6 +2224,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -2214,6 +2270,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -2263,6 +2320,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -2338,6 +2396,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -2446,6 +2505,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -2504,6 +2564,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -2561,6 +2622,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(

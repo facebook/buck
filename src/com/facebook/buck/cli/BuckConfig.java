@@ -721,6 +721,13 @@ public class BuckConfig {
   }
 
   /**
+   * @return the maximum size an artifact can be for the build engine to cache it.
+   */
+  public Optional<Long> getBuildArtifactCacheSizeLimit() {
+    return getLong("build", "artifact_cache_size_limit");
+  }
+
+  /**
    * @return the local cache directory
    */
   public String getLocalCacheDirectory() {
