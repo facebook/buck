@@ -4,9 +4,9 @@ PLATFORM_SRCS = [
   'AbstractAppleSdk.java',
   'AbstractAppleSdkPaths.java',
   'AbstractAppleToolchain.java',
-  'AbstractFatBinaryInfo.java',
+  'AbstractMultiarchFileInfo.java',
   'ApplePlatforms.java',
-  'FatBinaryInfos.java',
+  'MultiarchFileInfos.java',
 ]
 java_immutables_library(
   name = 'platform',
@@ -17,7 +17,7 @@ java_immutables_library(
     'AppleSdk',
     'AppleSdkPaths',
     'AppleToolchain',
-    'FatBinaryInfo',
+    'MultiarchFileInfo',
   ],
   autodeps = True,
   visibility = ['PUBLIC'],

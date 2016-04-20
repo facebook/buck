@@ -430,7 +430,7 @@ public class AppleDescriptions {
         defaultCxxPlatform,
         appleCxxPlatforms,
         unstrippedBinaryBuildRule.getBuildTarget(),
-        FatBinaryInfos.create(appleCxxPlatforms, unstrippedBinaryBuildRule.getBuildTarget()));
+        MultiarchFileInfos.create(appleCxxPlatforms, unstrippedBinaryBuildRule.getBuildTarget()));
 
     AppleDsym appleDsym = new AppleDsym(
         params.copyWithDeps(
@@ -472,7 +472,7 @@ public class AppleDescriptions {
         defaultCxxPlatform,
         appleCxxPlatforms,
         params.getBuildTarget(),
-        FatBinaryInfos.create(appleCxxPlatforms, params.getBuildTarget()));
+        MultiarchFileInfos.create(appleCxxPlatforms, params.getBuildTarget()));
 
     AppleBundleDestinations destinations =
         AppleBundleDestinations.platformDestinations(

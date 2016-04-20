@@ -37,9 +37,9 @@ import java.nio.file.Path;
 import java.util.SortedSet;
 
 /**
- * Puts together multiple thin binaries into a fat binary.
+ * Puts together multiple thin library/binaries into a multi-arch file.
  */
-public class FatBinary extends AbstractBuildRule implements ProvidesStaticLibraryDeps {
+public class MultiarchFile extends AbstractBuildRule implements ProvidesStaticLibraryDeps {
 
   @AddToRuleKey
   private final Tool lipo;
@@ -50,7 +50,7 @@ public class FatBinary extends AbstractBuildRule implements ProvidesStaticLibrar
   @AddToRuleKey(stringify = true)
   private final Path output;
 
-  public FatBinary(
+  public MultiarchFile(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       Tool lipo,

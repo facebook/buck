@@ -50,7 +50,7 @@ import com.google.common.collect.Iterables;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-public class FatBinaryTest {
+public class MultiarchFileTest {
   @Test
   public void appleBinaryDescriptionShouldAllowMultiplePlatformFlavors() {
     assertTrue(
@@ -72,7 +72,7 @@ public class FatBinaryTest {
             BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386,iphoneos-x86_64"))
         .build(resolver, filesystem);
 
-    assertThat(fatBinaryRule, instanceOf(FatBinary.class));
+    assertThat(fatBinaryRule, instanceOf(MultiarchFile.class));
 
     ImmutableList<Step> steps = fatBinaryRule.getBuildSteps(
         FakeBuildContext.NOOP_CONTEXT,

@@ -29,7 +29,7 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractFatBinaryInfo {
+abstract class AbstractMultiarchFileInfo {
   public abstract BuildTarget getFatTarget();
   public abstract ImmutableList<BuildTarget> getThinTargets();
 

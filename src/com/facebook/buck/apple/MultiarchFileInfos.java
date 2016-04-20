@@ -32,10 +32,10 @@ import com.google.common.collect.Sets;
 import java.util.Set;
 import java.util.SortedSet;
 
-public class FatBinaryInfos {
+public class MultiarchFileInfos {
 
   // Utility class, do not instantiate.
-  private FatBinaryInfos() { }
+  private MultiarchFileInfos() { }
 
   /**
    * Inspect the given build target and return information about it if its a fat binary.
@@ -44,7 +44,7 @@ public class FatBinaryInfos {
    * @throws com.facebook.buck.util.HumanReadableException
    *    when the target is a fat binary but has incompatible flavors.
    */
-  public static Optional<FatBinaryInfo> create(
+  public static Optional<MultiarchFileInfo> create(
       final FlavorDomain<AppleCxxPlatform> appleCxxPlatforms,
       BuildTarget target) {
     ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
@@ -74,8 +74,8 @@ public class FatBinaryInfos {
       }
     }
 
-    FatBinaryInfo.Builder builder =
-        FatBinaryInfo.builder()
+    MultiarchFileInfo.Builder builder =
+        MultiarchFileInfo.builder()
             .setFatTarget(target)
             .setRepresentativePlatform(Preconditions.checkNotNull(representativePlatform));
 
