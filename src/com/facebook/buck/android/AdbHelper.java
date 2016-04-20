@@ -820,7 +820,14 @@ public class AdbHelper {
         }
       };
       device.executeShellCommand(
-          String.format("am start -n %s", activityToRun),
+          //  0x10200000 is FLAG_ACTIVITY_RESET_TASK_IF_NEEDED | FLAG_ACTIVITY_NEW_TASK; the
+          // constant values are public ABI.  This way of invoking "am start" makes buck install -r
+          // act just like the launcher, avoiding activity duplication on subsequent
+          // launcher starts.
+          String.format(
+              "am start -f 0x10200000 -a android.intent.action.MAIN " +
+              "-c android.intent.category.LAUNCHER -n %s",
+              activityToRun),
           receiver,
           AdbHelper.INSTALL_TIMEOUT,
           TimeUnit.MILLISECONDS);
