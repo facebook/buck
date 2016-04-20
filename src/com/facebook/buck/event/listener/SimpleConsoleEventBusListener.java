@@ -207,7 +207,8 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     }
     String line = String.format(
         locale,
-        "BUILT %s",
+        "%s %s",
+        finished.getResultString(),
         finished.getBuildRule().getFullyQualifiedName());
     if (ruleCount.isPresent()) {
       line += String.format(

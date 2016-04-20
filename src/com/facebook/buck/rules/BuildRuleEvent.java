@@ -158,6 +158,20 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     public String getEventName() {
       return "BuildRuleFinished";
     }
+
+    @JsonIgnore
+    public String getResultString() {
+      switch (getStatus()) {
+        case SUCCESS:
+          return getSuccessType().get().getShortDescription();
+        case FAIL:
+          return "FAILED";
+        case CANCELED:
+          return "CANCEL";
+        default:
+          return getStatus().toString();
+      }
+    }
   }
 
   public static class Suspended extends BuildRuleEvent {
