@@ -14,13 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.apple.project_generator;
 
-import static com.facebook.buck.apple.ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries;
-import static com.facebook.buck.apple.ProjectGeneratorTestUtils.assertHasSingletonPhaseWithEntries;
-import static com.facebook.buck.apple.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
-import static com.facebook.buck.apple.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
-import static com.facebook.buck.apple.ProjectGeneratorTestUtils.getSingletonPhaseByType;
+import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries;
+import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.assertHasSingletonPhaseWithEntries;
+import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
+import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
+import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.getSingletonPhaseByType;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
@@ -32,6 +32,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.apple.AppleAssetCatalogDescription;
+import com.facebook.buck.apple.AppleResourceDescription;
+import com.facebook.buck.apple.XcodePostbuildScriptBuilder;
+import com.facebook.buck.apple.XcodePrebuildScriptBuilder;
 import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;

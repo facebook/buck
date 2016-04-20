@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.apple.project_generator;
 
 import javax.annotation.Nullable;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -32,7 +32,7 @@ import java.util.Map;
 /**
  * Generates a set of Xcode build configurations from given cxxPlatform
  */
-public class CxxPlatformXcodeConfigGenerator {
+class CxxPlatformXcodeConfigGenerator {
 
   public static final String SDKROOT = "SDKROOT";
   public static final String CLANG_CXX_LANGUAGE_STANDARD = "CLANG_CXX_LANGUAGE_STANDARD";

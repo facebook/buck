@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 467b15523cca081b6c867d7377f57a10663f56f0 #@#
+#@# GENERATED FILE: DO NOT MODIFY c0b7b64f9f1e458f594767adc32132ba917c312a #@#
 {
   "cli" : {
     "deps" : [
@@ -63,7 +63,7 @@
     "exported_deps" : [
       "//src/com/facebook/buck/android:rules",
       "//src/com/facebook/buck/android:utils",
-      "//src/com/facebook/buck/apple:generators",
+      "//src/com/facebook/buck/apple/project_generator:project_generator",
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/command:command",

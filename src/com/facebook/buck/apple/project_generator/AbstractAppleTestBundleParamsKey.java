@@ -14,8 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.apple.project_generator;
 
+import com.facebook.buck.apple.AppleBundleExtension;
+import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -31,7 +33,7 @@ import org.immutables.value.Value;
  *
  * Tests with the same parameters should be able to be linked and bundled into a single executable.
  */
-@Value.Immutable(prehash = true)
+@Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractAppleTestBundleParamsKey {
   public abstract Optional<SourcePath> getInfoPlist();

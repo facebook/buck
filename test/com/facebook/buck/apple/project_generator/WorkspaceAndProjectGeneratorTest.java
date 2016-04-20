@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.apple.project_generator;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -34,6 +34,16 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.apple.AppleBinaryBuilder;
+import com.facebook.buck.apple.AppleBuildRules;
+import com.facebook.buck.apple.AppleBundleBuilder;
+import com.facebook.buck.apple.AppleBundleExtension;
+import com.facebook.buck.apple.AppleLibraryBuilder;
+import com.facebook.buck.apple.AppleLibraryDescription;
+import com.facebook.buck.apple.AppleTestBuilder;
+import com.facebook.buck.apple.AppleTestDescription;
+import com.facebook.buck.apple.XcodeWorkspaceConfigBuilder;
+import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;

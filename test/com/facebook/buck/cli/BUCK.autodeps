@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY ef931b922f3f8fa0e1502586f4721e3d5edcd740 #@#
+#@# GENERATED FILE: DO NOT MODIFY c550646e1a0eedc60e0b589134ac4d6a4efcf313 #@#
 {
   "FakeBuckConfig" : {
     "deps" : [
@@ -16,8 +16,8 @@
   "cli" : {
     "deps" : [
       "//src/com/facebook/buck/android:utils",
-      "//src/com/facebook/buck/apple:generators",
       "//src/com/facebook/buck/apple:rules",
+      "//src/com/facebook/buck/apple/project_generator:project_generator",
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
       "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cli:config",
@@ -59,6 +59,7 @@
       "//test/com/facebook/buck/android:testutil",
       "//test/com/facebook/buck/android:utils",
       "//test/com/facebook/buck/apple:testutil",
+      "//test/com/facebook/buck/apple/project_generator:testutil",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/cli:testutil",
       "//test/com/facebook/buck/event:testutil",
@@ -121,7 +122,7 @@
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/android:utils",
-      "//src/com/facebook/buck/apple:generators",
+      "//src/com/facebook/buck/apple/project_generator:project_generator",
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
       "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cli:config",

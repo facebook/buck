@@ -14,12 +14,28 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.apple.project_generator;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
+import com.facebook.buck.apple.AppleAssetCatalogDescription;
+import com.facebook.buck.apple.AppleBinaryDescription;
+import com.facebook.buck.apple.AppleBuildRules;
+import com.facebook.buck.apple.AppleBundle;
+import com.facebook.buck.apple.AppleBundleDescription;
+import com.facebook.buck.apple.AppleBundleExtension;
+import com.facebook.buck.apple.AppleDescriptions;
+import com.facebook.buck.apple.AppleLibraryDescription;
+import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
+import com.facebook.buck.apple.AppleResourceDescription;
+import com.facebook.buck.apple.AppleResources;
+import com.facebook.buck.apple.AppleTestDescription;
+import com.facebook.buck.apple.CoreDataModelDescription;
+import com.facebook.buck.apple.HasAppleBundleFields;
+import com.facebook.buck.apple.XcodePostbuildScriptDescription;
+import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;

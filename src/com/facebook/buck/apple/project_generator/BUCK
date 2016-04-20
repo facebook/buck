@@ -1,0 +1,31 @@
+standard_java_library(
+  immutable_types = [
+    'AppleTestBundleParamsKey'
+  ],
+  resources = [
+    'build-with-buck.st',
+    'codesign.st',
+    'codesign.py',
+    'fix-uuid.st',
+    'rn-package.st',
+    'fix_uuid.py',
+  ],
+  tests = [
+    '//test/com/facebook/buck/apple/project_generator:project_generator',
+  ],
+)
+
+python_library(
+  name = 'fixuuid',
+  srcs = [
+    'fix_uuid.py',
+  ],
+  deps = [],
+)
+
+python_test(
+  name = 'fixuuid_test',
+  srcs = ['fix_uuid_test.py'],
+  resources = glob(['uuid_test_app/**/*']),
+  deps = [':fixuuid'],
+)

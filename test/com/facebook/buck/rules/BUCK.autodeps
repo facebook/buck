@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 826d0545c83c68498aaae4156e83af2f482b1f06 #@#
+#@# GENERATED FILE: DO NOT MODIFY d5b691e2379160577d3d059c2acb90c0bde577a1 #@#
 {
   "rules" : {
     "deps" : [
@@ -65,6 +65,7 @@
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:hamcrest-junit",
       "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/jackson:jackson-core",
       "//third-party/java/jackson:jackson-databind",
       "//third-party/java/jimfs:jimfs",
       "//third-party/java/jsr:jsr305",

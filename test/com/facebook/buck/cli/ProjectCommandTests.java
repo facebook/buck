@@ -17,7 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
-import com.facebook.buck.apple.ProjectGenerator;
+import com.facebook.buck.apple.project_generator.ProjectGenerator;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.httpserver.WebServer;

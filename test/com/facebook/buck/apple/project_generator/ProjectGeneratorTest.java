@@ -14,12 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.apple.project_generator;
 
-import static com.facebook.buck.apple.ProjectGeneratorTestUtils.assertHasSingletonCopyFilesPhaseWithFileEntries;
-import static com.facebook.buck.apple.ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries;
-import static com.facebook.buck.apple.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
-import static com.facebook.buck.apple.ProjectGeneratorTestUtils.getSingletonPhaseByType;
+import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -38,6 +35,19 @@ import static org.junit.Assert.assertTrue;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.AppleAssetCatalogBuilder;
+import com.facebook.buck.apple.AppleBinaryBuilder;
+import com.facebook.buck.apple.AppleBundleBuilder;
+import com.facebook.buck.apple.AppleBundleExtension;
+import com.facebook.buck.apple.AppleLibraryBuilder;
+import com.facebook.buck.apple.AppleLibraryDescription;
+import com.facebook.buck.apple.AppleResourceBuilder;
+import com.facebook.buck.apple.AppleResourceDescription;
+import com.facebook.buck.apple.AppleTestBuilder;
+import com.facebook.buck.apple.AppleTestDescription;
+import com.facebook.buck.apple.CoreDataModelBuilder;
+import com.facebook.buck.apple.XcodePostbuildScriptBuilder;
+import com.facebook.buck.apple.XcodePrebuildScriptBuilder;
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
@@ -325,7 +335,8 @@ public class ProjectGeneratorTest {
     assertEquals("baz.h", fileRefBaz.getName());
 
     // There should be no PBXHeadersBuildPhase in the 'Buck header map mode'.
-    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
+    PBXTarget target =
+        assertTargetExistsAndReturnTarget(project, "//foo:lib");
     assertEquals(
         Optional.<PBXBuildPhase>absent(),
         Iterables.tryFind(
@@ -422,7 +433,8 @@ public class ProjectGeneratorTest {
     assertEquals("generated2.h", fileRefGenerated2.getName());
 
     // There should be no PBXHeadersBuildPhase in the 'Buck header map mode'.
-    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
+    PBXTarget target =
+        assertTargetExistsAndReturnTarget(project, "//foo:lib");
     assertEquals(
         Optional.<PBXBuildPhase>absent(),
         Iterables.tryFind(
@@ -786,7 +798,8 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
-    PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:test");
+    PBXTarget testPBXTarget =
+        assertTargetExistsAndReturnTarget(project, "//foo:test");
 
     ImmutableMap<String, String> buildSettings =
         getBuildSettings(testTarget, testPBXTarget, "Default");
@@ -851,7 +864,8 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
-    PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:test");
+    PBXTarget testPBXTarget =
+        assertTargetExistsAndReturnTarget(project, "//foo:test");
 
     ImmutableMap<String, String> buildSettings =
         getBuildSettings(testTarget, testPBXTarget, "Default");
@@ -916,7 +930,8 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
-    PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:test");
+    PBXTarget testPBXTarget =
+        assertTargetExistsAndReturnTarget(project, "//foo:test");
 
     ImmutableMap<String, String> buildSettings =
         getBuildSettings(testTarget, testPBXTarget, "Default");
@@ -1043,7 +1058,7 @@ public class ProjectGeneratorTest {
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     assertHasConfigurations(target, "Debug", "Release", "Profile");
     assertEquals(1, target.getBuildPhases().size());
-    PBXShellScriptBuildPhase scriptPhase = getSingletonPhaseByType(
+    PBXShellScriptBuildPhase scriptPhase = ProjectGeneratorTestUtils.getSingletonPhaseByType(
       target,
       PBXShellScriptBuildPhase.class);
     assertEquals(0, scriptPhase.getInputPaths().size());
@@ -1844,7 +1859,7 @@ public class ProjectGeneratorTest {
         target,
         ImmutableMap.of("fooTest.m", Optional.<String>absent()));
 
-    assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
         ImmutableList.of("$SDKROOT/Library.framework"));
   }
@@ -1914,7 +1929,7 @@ public class ProjectGeneratorTest {
         target,
         ImmutableMap.of("fooTest.m", Optional.<String>absent()));
 
-    assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
         ImmutableList.of("$SDKROOT/Library.framework"));
   }
@@ -1997,7 +2012,7 @@ public class ProjectGeneratorTest {
         ImmutableMap.of(
             "foo.m", Optional.of("-foo"),
             "libsomething.a", Optional.<String>absent()));
-    assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
         ImmutableList.of(
             "$SDKROOT/Foo.framework",
@@ -2059,7 +2074,7 @@ public class ProjectGeneratorTest {
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
 
     PBXShellScriptBuildPhase shellScriptBuildPhase =
-        getSingletonPhaseByType(
+        ProjectGeneratorTestUtils.getSingletonPhaseByType(
             target,
             PBXShellScriptBuildPhase.class);
 
@@ -2124,7 +2139,7 @@ public class ProjectGeneratorTest {
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
 
     PBXShellScriptBuildPhase shellScriptBuildPhase =
-        getSingletonPhaseByType(
+        ProjectGeneratorTestUtils.getSingletonPhaseByType(
             target,
             PBXShellScriptBuildPhase.class);
 
@@ -2191,7 +2206,7 @@ public class ProjectGeneratorTest {
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
 
     PBXShellScriptBuildPhase shellScriptBuildPhase =
-        getSingletonPhaseByType(
+        ProjectGeneratorTestUtils.getSingletonPhaseByType(
             target,
             PBXShellScriptBuildPhase.class);
 
@@ -2229,7 +2244,8 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
-    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bundle");
+    PBXTarget target =
+        assertTargetExistsAndReturnTarget(project, "//foo:bundle");
     assertEquals(target.getProductType(), ProductType.FRAMEWORK);
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     PBXFileReference productReference = target.getProductReference();
@@ -2324,7 +2340,8 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
-    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:custombundle");
+    PBXTarget target =
+        assertTargetExistsAndReturnTarget(project, "//foo:custombundle");
     assertEquals(
         target.getProductType(),
         ProductType.of("com.facebook.buck.niftyProductType"));
@@ -2368,7 +2385,8 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
-    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:custombundle");
+    PBXTarget target =
+        assertTargetExistsAndReturnTarget(project, "//foo:custombundle");
 
     ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target, "Debug");
     assertThat(buildSettings.get("PRODUCT_NAME"), Matchers.equalTo("FancyFramework"));
@@ -2450,11 +2468,11 @@ public class ProjectGeneratorTest {
         "//foo:HostApp");
     assertEquals(target.getProductType(), ProductType.APPLICATION);
 
-    assertHasSingletonCopyFilesPhaseWithFileEntries(
+    ProjectGeneratorTestUtils.assertHasSingletonCopyFilesPhaseWithFileEntries(
         target,
         ImmutableList.of("$BUILT_PRODUCTS_DIR/WatchApp.app"));
 
-    PBXCopyFilesBuildPhase copyBuildPhase = getSingletonPhaseByType(
+    PBXCopyFilesBuildPhase copyBuildPhase = ProjectGeneratorTestUtils.getSingletonPhaseByType(
         target,
         PBXCopyFilesBuildPhase.class
     );
@@ -2571,7 +2589,7 @@ public class ProjectGeneratorTest {
         "//foo:final");
     assertEquals(target.getProductType(), ProductType.BUNDLE);
     assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
-    assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
         ImmutableList.of(
             "$BUILT_PRODUCTS_DIR/libshared.dylib"));
@@ -2635,7 +2653,7 @@ public class ProjectGeneratorTest {
         "//foo:final");
     assertEquals(target.getProductType(), ProductType.BUNDLE);
     assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
-    assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
         ImmutableList.of("$BUILT_PRODUCTS_DIR/framework.framework"));
   }
@@ -2710,7 +2728,7 @@ public class ProjectGeneratorTest {
         "//foo:final");
     assertEquals(target.getProductType(), ProductType.BUNDLE);
     assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
-    assertHasSingletonCopyFilesPhaseWithFileEntries(
+    ProjectGeneratorTestUtils.assertHasSingletonCopyFilesPhaseWithFileEntries(
         target,
         ImmutableList.of("$BUILT_PRODUCTS_DIR/framework.framework"));
   }
@@ -2929,8 +2947,10 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject generatedProject = projectGenerator.getGeneratedProject();
-    PBXTarget target = assertTargetExistsAndReturnTarget(generatedProject, "//foo:rule#shared");
-    assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        generatedProject,
+        "//foo:rule#shared");
+    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
         ImmutableList.of(
             "$BUILT_PRODUCTS_DIR/libfoo.a",
@@ -3267,7 +3287,7 @@ public class ProjectGeneratorTest {
         ImmutableMap.of(
             BuckConstant.getGenPath().resolve("xcode-scripts/emptyFile.c").toString(),
             Optional.<String>absent()));
-    assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
         ImmutableList.of(
             "$BUILT_PRODUCTS_DIR/libxctest1.a",
@@ -3721,7 +3741,7 @@ public class ProjectGeneratorTest {
         "//foo:lib");
 
     PBXSourcesBuildPhase sourcesBuildPhase =
-        getSingletonPhaseByType(target, PBXSourcesBuildPhase.class);
+        ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXSourcesBuildPhase.class);
 
     ImmutableMap<String, String> expected = ImmutableMap.of(
         "foo1.m", "-std=gnu11 -fobjc-arc",
@@ -3826,7 +3846,7 @@ public class ProjectGeneratorTest {
     PBXTarget fooTestTarget = assertTargetExistsAndReturnTarget(
         project,
         "test");
-    PBXResourcesBuildPhase resourcesBuildPhase = getSingletonPhaseByType(
+    PBXResourcesBuildPhase resourcesBuildPhase = ProjectGeneratorTestUtils.getSingletonPhaseByType(
         fooTestTarget,
         PBXResourcesBuildPhase.class);
     assertThat(
@@ -4290,7 +4310,7 @@ public class ProjectGeneratorTest {
       ImmutableMap<String, Optional<String>> sourcesAndFlags) {
 
     PBXSourcesBuildPhase sourcesBuildPhase =
-        getSingletonPhaseByType(target, PBXSourcesBuildPhase.class);
+        ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXSourcesBuildPhase.class);
 
     assertEquals(
         "Sources build phase should have correct number of sources",
@@ -4330,7 +4350,7 @@ public class ProjectGeneratorTest {
 
   private void assertHasSingletonResourcesPhaseWithEntries(PBXTarget target, String... resources) {
     PBXResourcesBuildPhase buildPhase =
-        getSingletonPhaseByType(target, PBXResourcesBuildPhase.class);
+        ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXResourcesBuildPhase.class);
     assertEquals("Resources phase should have right number of elements",
         resources.length, buildPhase.getFiles().size());
 

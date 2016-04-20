@@ -22,29 +22,9 @@ java_immutables_library(
   visibility = ['PUBLIC'],
 )
 
-GENERATOR_SRCS = [
-  'CxxPlatformXcodeConfigGenerator.java',
-  'ProjectGenerator.java',
-  'SchemeGenerator.java',
-  'WorkspaceAndProjectGenerator.java',
-  'WorkspaceGenerator.java',
-]
-java_library(
-  name = 'generators',
-  srcs = GENERATOR_SRCS,
-  tests = [
-    '//test/com/facebook/buck/apple:apple',
-    '//test/com/facebook/buck/apple:apple_test_integration',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC'
-  ],
-)
-
 java_immutables_library(
   name = 'rules',
-  srcs = glob(['*.java',], excludes=PLATFORM_SRCS+GENERATOR_SRCS),
+  srcs = glob(['*.java',], excludes=PLATFORM_SRCS),
   immutable_types = [
     'ApplePackageConfig',
     'AppleBundleDestinations',
@@ -58,14 +38,6 @@ java_immutables_library(
     '//test/com/facebook/buck/apple:apple',
     '//test/com/facebook/buck/apple:apple_test_integration',
   ],
-  resources = [
-    'build-with-buck.st',
-    'codesign.st',
-    'codesign.py',
-    'fix-uuid.st',
-    'rn-package.st',
-    'fix_uuid.py',
-  ],
   deps = [
     '//src/com/facebook/buck/android:packageable',
   ],
@@ -73,19 +45,4 @@ java_immutables_library(
   visibility = [
     'PUBLIC'
   ],
-)
-
-python_library(
-  name = 'fixuuid',
-  srcs = [
-    'fix_uuid.py',
-  ],
-  deps = [],
-)
-
-python_test(
-  name = 'fixuuid_test',
-  srcs = ['fix_uuid_test.py'],
-  resources = glob(['uuid_test_app/**/*']),
-  deps = [':fixuuid'],
 )

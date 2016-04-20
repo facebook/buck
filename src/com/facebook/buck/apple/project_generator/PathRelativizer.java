@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.apple.project_generator;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
@@ -31,7 +31,7 @@ import java.nio.file.Paths;
  * Methods are named in the form of {@code xToY}, such that invocation of the method will take a
  * path referenced from Y to one that is referenced from X.
  */
-public final class PathRelativizer {
+final class PathRelativizer {
 
   private static final Path EMPTY_PATH = Paths.get("");
   private static final Path CURRENT_DIRECTORY = Paths.get(".");

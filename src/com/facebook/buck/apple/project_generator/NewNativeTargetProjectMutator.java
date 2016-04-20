@@ -14,11 +14,19 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.apple.project_generator;
 
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.AppleAssetCatalogDescription;
+import com.facebook.buck.apple.AppleHeaderVisibilities;
+import com.facebook.buck.apple.AppleResourceDescription;
+import com.facebook.buck.apple.GroupedSource;
+import com.facebook.buck.apple.RuleUtils;
+import com.facebook.buck.apple.XcodePostbuildScriptDescription;
+import com.facebook.buck.apple.XcodePrebuildScriptDescription;
+import com.facebook.buck.apple.XcodeScriptDescriptionArg;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
@@ -77,7 +85,7 @@ import java.util.Set;
  * Configures a PBXProject by adding a PBXNativeTarget and its associated dependencies into a
  * PBXProject object graph.
  */
-public class NewNativeTargetProjectMutator {
+class NewNativeTargetProjectMutator {
   private static final Logger LOG = Logger.get(NewNativeTargetProjectMutator.class);
   private static final String REACT_NATIVE_PACKAGE_TEMPLATE = "rn-package.st";
 

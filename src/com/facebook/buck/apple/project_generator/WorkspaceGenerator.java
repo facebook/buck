@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.apple.project_generator;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -53,7 +53,7 @@ import javax.xml.transform.stream.StreamResult;
 /**
  * Collects file references and generates an xcworkspace.
  */
-public class WorkspaceGenerator {
+class WorkspaceGenerator {
   private final ProjectFilesystem projectFilesystem;
   private final String workspaceName;
   private final Path outputDirectory;
