@@ -520,7 +520,7 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(console, listener, 540L, ImmutableList.of(parsingLine,
         DOWNLOAD_STRING,
         "[+] BUILDING...0.1s" + " [0%] (0/10 JOBS, 0 UPDATED, " +
-            "0.0% CACHE MISS)"));
+            "0 [0.0%] CACHE MISS)"));
 
     rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.started(fakeRule),
@@ -529,7 +529,7 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(console, listener, 800L, ImmutableList.of(parsingLine,
         DOWNLOAD_STRING,
         "[+] BUILDING...0.4s" + " [1%] (0/10 JOBS, 0 UPDATED, " +
-            "0.0% CACHE MISS)",
+            "0 [0.0%] CACHE MISS)",
         " |=> //banana:stand...  0.2s (checking local cache)"));
 
     String stepShortName = "doing_something";
@@ -544,7 +544,7 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(console, listener, 900L, ImmutableList.of(parsingLine,
         DOWNLOAD_STRING,
         "[+] BUILDING...0.5s" + " [1%] (0/10 JOBS, 0 UPDATED, " +
-            "0.0% CACHE MISS)",
+            "0 [0.0%] CACHE MISS)",
         " |=> //banana:stand...  0.3s (running doing_something[0.1s])"));
 
     rawEventBus.post(configureTestEventAtTime(StepEvent.finished(stepEventStarted, 0),
@@ -562,7 +562,7 @@ public class SuperConsoleEventBusListenerTest {
 
     validateConsole(console, listener, 1000L, ImmutableList.of(parsingLine,
         DOWNLOAD_STRING,
-        "[+] BUILDING...0.6s [1%] (1/10 JOBS, 1 UPDATED, 10.0% CACHE MISS)",
+        "[+] BUILDING...0.6s [1%] (1/10 JOBS, 1 UPDATED, 1 [10.0%] CACHE MISS)",
         " |=> IDLE"));
 
     rawEventBus.post(configureTestEventAtTime(
@@ -571,7 +571,7 @@ public class SuperConsoleEventBusListenerTest {
 
     validateConsole(console, listener, 1100L, ImmutableList.of(parsingLine,
         DOWNLOAD_STRING,
-        "[+] BUILDING...0.7s [2%] (1/10 JOBS, 1 UPDATED, 10.0% CACHE MISS)",
+        "[+] BUILDING...0.7s [2%] (1/10 JOBS, 1 UPDATED, 1 [10.0%] CACHE MISS)",
         " |=> IDLE",
         " |=> //chicken:dance...  0.1s (checking local cache)"));
 
@@ -591,7 +591,7 @@ public class SuperConsoleEventBusListenerTest {
         1234L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     final String buildingLine = "[-] BUILDING...FINISHED 0.8s" +
-        " [100%] (2/10 JOBS, 2 UPDATED, 20.0% CACHE MISS)";
+        " [100%] (2/10 JOBS, 2 UPDATED, 2 [20.0%] CACHE MISS)";
 
     validateConsole(console, listener, 1300L, ImmutableList.of(parsingLine,
         FINISHED_DOWNLOAD_STRING,

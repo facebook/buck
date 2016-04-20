@@ -335,13 +335,15 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           columns.add(
               String.format(
                   locale,
-                  "%.1f%% CACHE MISS",
+                  "%d [%.1f%%] CACHE MISS",
+                  cacheMisses.get(),
                   100 * (double) cacheMisses.get() / ruleCount.get()));
           if (cacheErrors.get() > 0) {
             columns.add(
                 String.format(
                     locale,
-                    "%.1f%% CACHE ERRORS",
+                    "%d [%.1f%%] CACHE ERRORS",
+                    cacheErrors.get(),
                     100 * (double) cacheErrors.get() / updated.get()));
           }
         }
