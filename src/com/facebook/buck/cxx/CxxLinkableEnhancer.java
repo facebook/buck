@@ -162,7 +162,7 @@ public class CxxLinkableEnhancer {
         Predicates.not(Predicates.in(blacklist))).values()) {
       NativeLinkableInput input = NativeLinkables.getNativeLinkableInput(
           cxxPlatform, depType, nativeLinkable);
-      LOG.debug("Native linkable %s returned input %s", nativeLinkable, input);
+      LOG.verbose("Native linkable %s returned input %s", nativeLinkable, input);
       nativeLinkableInputs.add(input);
     }
     NativeLinkableInput linkableInput = NativeLinkableInput.concat(nativeLinkableInputs.build());

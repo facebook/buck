@@ -262,14 +262,14 @@ class PerBuildState implements AutoCloseable {
         Path subpath = input.subpath(0, i);
         Path resolvedSymlink = symlinkExistenceCache.get(subpath);
         if (resolvedSymlink != null) {
-          LOG.debug("Detected cached symlink %s -> %s", subpath, resolvedSymlink);
+          LOG.verbose("Detected cached symlink %s -> %s", subpath, resolvedSymlink);
           newSymlinksEncountered.put(subpath, resolvedSymlink);
           result = true;
         } else if (projectFilesystem.isSymLink(subpath)) {
           Path symlinkTarget = projectFilesystem.resolve(subpath).toRealPath();
           Path relativeSymlinkTarget = projectFilesystem.getPathRelativeToProjectRoot(symlinkTarget)
               .or(symlinkTarget);
-          LOG.debug("Detected symbolic link %s -> %s", subpath, relativeSymlinkTarget);
+          LOG.verbose("Detected symbolic link %s -> %s", subpath, relativeSymlinkTarget);
           newSymlinksEncountered.put(subpath, relativeSymlinkTarget);
           symlinkExistenceCache.put(subpath, relativeSymlinkTarget);
           result = true;
