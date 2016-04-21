@@ -7,7 +7,7 @@ export ANDROID_TOOL=${ANDROID_HOME}/tools/android
 # the directory; it always gets created before we run.  Instead, check for the
 # tool we care about, and if it doesn't exist, download the SDK.
 if [ ! -x ${ANDROID_TOOL} ]; then
-  wget http://dl.google.com/android/android-sdk_r23-linux.tgz
+  wget https://dl.google.com/android/android-sdk_r23-linux.tgz
   tar -zxf android-sdk_r23-linux.tgz
   rm android-sdk_r23-linux.tgz
   rm -rf ${ANDROID_HOME}
