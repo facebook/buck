@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import java.io.IOException;
@@ -60,6 +61,11 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
   @Override
   public Optional<ImmutableList<String>> getValues(String key) {
     return Optional.fromNullable(metadataValues.get(key));
+  }
+
+  @Override
+  public Optional<ImmutableMap<String, String>> getMap(String key) {
+    return Optional.absent();
   }
 
   @Override

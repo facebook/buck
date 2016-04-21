@@ -66,6 +66,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -73,6 +74,7 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.AsyncFunction;
+import com.google.common.util.concurrent.Atomics;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -98,6 +100,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -585,6 +588,7 @@ public class CachingBuildEngine implements BuildEngine {
                 BuildInfo.METADATA_KEY_FOR_RULE_KEY,
                 keyFactories.defaultRuleKeyBuilderFactory.build(rule).toString());
     final BuildableContext buildableContext = new DefaultBuildableContext(buildInfoRecorder);
+    final AtomicReference<Long> outputSize = Atomics.newReference();
 
     ListenableFuture<BuildResult> buildResult =
           processBuildRule(
@@ -626,6 +630,9 @@ public class CachingBuildEngine implements BuildEngine {
                 buildInfoRecorder.recordArtifact(Paths.get(str));
               }
             }
+
+            // Try get the output size now that all outputs have been recorded.
+            outputSize.set(buildInfoRecorder.getOutputSize());
 
             // If the success type means the rule has potentially changed it's outputs...
             if (success.outputsHaveChanged()) {
@@ -688,6 +695,49 @@ public class CachingBuildEngine implements BuildEngine {
               }
             }
 
+            // If this rule was built locally, grab and record the output hashes in the build
+            // metadata so that cache hits avoid re-hashing file contents.  Since we use output
+            // hashes for input-based rule keys and for detecting non-determinism, we would spend
+            // a lot of time re-hashing output paths -- potentially in serialized in a single step.
+            // So, do the hashing here to distribute the workload across several threads and cache
+            // the results.
+            //
+            // Also, since hashing outputs can potentially be expensive, we avoid doing this for
+            // rules that are marked as uncacheable.  The rationale here is that they are likely not
+            // cached due to the sheer size which would be costly to hash or builtin non-determinism
+            // in the rule which somewhat defeats the purpose of logging the hash.
+            if (success == BuildRuleSuccessType.BUILT_LOCALLY &&
+                shouldUploadToCache(rule, outputSize.get())) {
+              ImmutableSortedMap.Builder<String, String> outputHashes =
+                  ImmutableSortedMap.naturalOrder();
+              for (Path path : buildInfoRecorder.getOutputPaths()) {
+                outputHashes.put(
+                    path.toString(),
+                    fileHashCache.get(rule.getProjectFilesystem().resolve(path)).toString());
+              }
+              buildInfoRecorder.addBuildMetadata(
+                  BuildInfo.METADATA_KEY_FOR_RECORDED_PATH_HASHES,
+                  outputHashes.build());
+            }
+
+            // If this rule was fetched from cache, seed the file hash cache with the recorded
+            // output hashes from the build metadata.  Since outputs which have been changed have
+            // already been invalidated above, this is purely a best-effort optimization -- if the
+            // the output hashes weren't recorded in the cache we do nothing.
+            if (success != BuildRuleSuccessType.BUILT_LOCALLY && success.outputsHaveChanged()) {
+              Optional<ImmutableMap<String, String>> hashes =
+                  onDiskBuildInfo.getMap(BuildInfo.METADATA_KEY_FOR_RECORDED_PATH_HASHES);
+              if (hashes.isPresent()) {
+                for (Map.Entry<String, String> ent : hashes.get().entrySet()) {
+                  Path path =
+                      rule.getProjectFilesystem().getRootPath().getFileSystem()
+                          .getPath(ent.getKey());
+                  HashCode hashCode = HashCode.fromString(ent.getValue());
+                  fileHashCache.set(rule.getProjectFilesystem().resolve(path), hashCode);
+                }
+              }
+            }
+
             // Make sure that all of the local files have the same values they would as if the
             // rule had been built locally.
             buildInfoRecorder.addBuildMetadata(
@@ -743,17 +793,6 @@ public class CachingBuildEngine implements BuildEngine {
                           "Error when deleting metadata for %s.",
                           rule));
                 }
-              }
-
-              private boolean shouldUploadToCache(long outputSize) {
-                if (!rule.isCacheable()) {
-                  return false;
-                }
-                if (artifactCacheSizeLimit.isPresent() &&
-                    outputSize > artifactCacheSizeLimit.get()) {
-                  return false;
-                }
-                return true;
               }
 
               private void uploadToCache(BuildRuleSuccessType success) {
@@ -841,12 +880,13 @@ public class CachingBuildEngine implements BuildEngine {
                   }
 
                   // If this rule is cacheable, upload it to the cache.
-                  if (outputSize.isPresent() && shouldUploadToCache(outputSize.get())) {
+                  if (outputSize.isPresent() && shouldUploadToCache(rule, outputSize.get())) {
                     uploadToCache(success);
                   }
 
                   // Calculate the hash of outputs that were built locally and are cacheable.
-                  if (success == BuildRuleSuccessType.BUILT_LOCALLY && rule.isCacheable()) {
+                  if (success == BuildRuleSuccessType.BUILT_LOCALLY &&
+                      shouldUploadToCache(rule, outputSize.get())) {
                     try {
                       outputHash = Optional.of(buildInfoRecorder.getOutputHash(fileHashCache));
                     } catch (IOException e) {
@@ -1254,6 +1294,25 @@ public class CachingBuildEngine implements BuildEngine {
       return null;
     }
     return result.get();
+  }
+
+  /**
+   * @return whether we should upload the given rules artifacts to cache.
+   */
+  private boolean shouldUploadToCache(BuildRule rule, long outputSize) {
+
+    // If the rule is explicitly marked uncacheable, don't cache it.
+    if (!rule.isCacheable()) {
+      return false;
+    }
+
+    // If the rule's outputs are bigger than the preset size limit, don't cache it.
+    if (artifactCacheSizeLimit.isPresent() &&
+        outputSize > artifactCacheSizeLimit.get()) {
+      return false;
+    }
+
+    return true;
   }
 
   private boolean useDependencyFileRuleKey(BuildRule rule) {

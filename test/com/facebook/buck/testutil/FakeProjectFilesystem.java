@@ -292,6 +292,14 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     return Preconditions.checkNotNull(fileAttributes.get(path));
   }
 
+  public void clear() {
+    fileContents.clear();
+    fileAttributes.clear();
+    fileLastModifiedTimes.clear();
+    symLinks.clear();
+    directories.clear();
+  }
+
   @Override
   public <A extends BasicFileAttributes> A readAttributes(
       Path pathRelativeToProjectRoot,

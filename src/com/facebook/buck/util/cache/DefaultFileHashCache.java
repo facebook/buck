@@ -19,12 +19,14 @@ package com.facebook.buck.util.cache;
 import com.facebook.buck.hashing.PathHashing;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
@@ -142,6 +144,28 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   @Override
   public ProjectFilesystem getFilesystem() {
     return projectFilesystem;
+  }
+
+  @Override
+  public void set(Path rawPath, HashCode hashCode) throws IOException {
+    final Path path = resolvePath(rawPath);
+    HashCodeAndFileType.Builder builder = HashCodeAndFileType.builder();
+    builder.setGetHashCode(hashCode);
+    if (projectFilesystem.isDirectory(path)) {
+      builder.setType(HashCodeAndFileType.Type.DIRECTORY);
+      builder.addAllChildren(
+          FluentIterable.from(projectFilesystem.getFilesUnderPath(path))
+              .transform(
+                  new Function<Path, Path>() {
+                    @Override
+                    public Path apply(Path input) {
+                      return path.relativize(input);
+                    }
+                  }));
+    } else {
+      builder.setType(HashCodeAndFileType.Type.FILE);
+    }
+    loadingCache.put(path, builder.build());
   }
 
 }

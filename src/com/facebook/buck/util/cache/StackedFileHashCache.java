@@ -77,4 +77,12 @@ public class StackedFileHashCache implements FileHashCache {
     return found.get().getFirst().get(found.get().getSecond());
   }
 
+  @Override
+  public void set(Path path, HashCode hashCode) throws IOException {
+    Optional<Pair<FileHashCache, Path>> found = lookup(path);
+    if (found.isPresent()) {
+      found.get().getFirst().set(found.get().getSecond(), hashCode);
+    }
+  }
+
 }

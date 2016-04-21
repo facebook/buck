@@ -75,6 +75,9 @@ public class ContentAgnosticRuleKeyBuilderFactory
 
       @Override
       public void invalidateAll() {}
+
+      @Override
+      public void set(Path path, HashCode hashCode) {}
     };
   }
 
@@ -87,6 +90,7 @@ public class ContentAgnosticRuleKeyBuilderFactory
           RuleKeyAppendable appendable) {
         return ruleKeyCache.getUnchecked(appendable);
       }
+
     };
   }
 

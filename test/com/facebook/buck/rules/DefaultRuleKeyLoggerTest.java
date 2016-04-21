@@ -165,6 +165,10 @@ public class DefaultRuleKeyLoggerTest {
         public HashCode get(Path path) throws IOException {
           return HashCode.fromString("f1134a34c0de");
         }
+
+        @Override
+        public void set(Path path, HashCode hashCode) {
+        }
       };
       logger = new DefaultRuleKeyLogger();
       ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver) {

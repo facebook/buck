@@ -64,6 +64,7 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -163,9 +164,9 @@ public class CachingBuildEngineTest {
     public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
     protected InMemoryArtifactCache cache = new InMemoryArtifactCache();
-    protected ProjectFilesystem filesystem;
+    protected FakeProjectFilesystem filesystem;
     protected DefaultFileHashCache fileHashCache;
-    protected BuildContext buildContext;
+    protected ImmutableBuildContext buildContext;
     protected BuildRuleResolver resolver;
     protected SourcePathResolver pathResolver;
     protected RuleKeyBuilderFactory ruleKeyBuilderFactory;
@@ -1201,6 +1202,64 @@ public class CachingBuildEngineTest {
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
       assertThat(result.getSuccess(), equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
       assertTrue(cache.isEmpty());
+    }
+
+    public void fetchingFromCacheSeedsFileHashCache() throws Throwable {
+      ArtifactCache artifactCache = new InMemoryArtifactCache();
+      BuildContext buildContext = this.buildContext.withArtifactCache(artifactCache);
+
+      // Create a simple rule which just writes something new to the output file.
+      BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+      Path output = filesystem.getRootPath().getFileSystem().getPath("output/path");
+      BuildRuleParams params =
+          new FakeBuildRuleParamsBuilder(target)
+              .setProjectFilesystem(filesystem)
+              .build();
+      BuildRule rule =
+          new WriteFile(params, pathResolver, "something else", output, /* executable */ false);
+
+      // Run an initial build to seed the cache.
+      CachingBuildEngine cachingBuildEngine =
+          new CachingBuildEngine(
+              toWeighted(MoreExecutors.newDirectExecutorService()),
+              fileHashCache,
+              CachingBuildEngine.BuildMode.SHALLOW,
+              CachingBuildEngine.DependencySchedulingOrder.RANDOM,
+              CachingBuildEngine.DepFiles.ENABLED,
+              256L,
+              Optional.<Long>absent(),
+              ObjectMappers.newDefaultInstance(),
+              resolver);
+      BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
+      assertEquals(
+          BuildRuleSuccessType.BUILT_LOCALLY,
+          result.getSuccess());
+
+      // Clear the file system.
+      filesystem.clear();
+
+      // Now run a second build that gets a cache hit.  We use an empty `FakeFileHashCache` which
+      // does *not* contain the path, so any attempts to hash it will fail.
+      FakeFileHashCache fakeFileHashCache =
+          new FakeFileHashCache(ImmutableMap.<Path, HashCode>of());
+      cachingBuildEngine =
+          new CachingBuildEngine(
+              toWeighted(MoreExecutors.newDirectExecutorService()),
+              fakeFileHashCache,
+              CachingBuildEngine.BuildMode.SHALLOW,
+              CachingBuildEngine.DependencySchedulingOrder.RANDOM,
+              CachingBuildEngine.DepFiles.ENABLED,
+              256L,
+              Optional.<Long>absent(),
+              ObjectMappers.newDefaultInstance(),
+              resolver);
+      result = cachingBuildEngine.build(buildContext, rule).get();
+      assertEquals(
+          BuildRuleSuccessType.FETCHED_FROM_CACHE,
+          result.getSuccess());
+
+      // Verify that the cache hit caused the file hash cache to contain the path.
+      assertTrue(fakeFileHashCache.contains(filesystem.resolve(output)));
     }
 
   }

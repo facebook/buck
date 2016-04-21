@@ -767,6 +767,10 @@ public class RuleKeyTest {
           public HashCode get(Path path) {
             return HashCode.fromString("deadbeef");
           }
+
+          @Override
+          public void set(Path path, HashCode hashCode) {
+          }
         };
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//some:example");
     BuildRule buildRule = new FakeBuildRule(buildTarget, resolver);

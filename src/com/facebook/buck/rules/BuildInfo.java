@@ -34,6 +34,11 @@ public class BuildInfo {
   static final String METADATA_KEY_FOR_RECORDED_PATHS = "RECORDED_PATHS";
 
   /**
+   * Key for {@link OnDiskBuildInfo} with a map of outputs to hashes.
+   */
+  static final String METADATA_KEY_FOR_RECORDED_PATH_HASHES = "RECORDED_PATH_HASHES";
+
+  /**
    * Key for {@link OnDiskBuildInfo} to identify additional info describing a build.
    */
   static final String METADATA_KEY_FOR_ADDITIONAL_INFO = "ADDITIONAL_INFO";
@@ -68,11 +73,6 @@ public class BuildInfo {
    * Key for {@link OnDiskBuildInfo} to store the build target of the owning build rule.
    */
   static final String METADATA_KEY_FOR_TARGET = "TARGET";
-
-  /**
-   * Key for {@link OnDiskBuildInfo} to store the dependencies of a build rule.
-   */
-  static final String METADATA_KEY_FOR_DEPS = "DEPS";
 
   /**
    * Key for {@link OnDiskBuildInfo} to store the manifest for build rules supporting manifest-based

@@ -61,7 +61,7 @@ public class FakeFileHashCache implements FileHashCache {
 
   @Override
   public boolean willGet(Path path) {
-    return pathsToHashes.containsKey(path);
+    return true;
   }
 
   @Override
@@ -81,6 +81,15 @@ public class FakeFileHashCache implements FileHashCache {
       throw new NoSuchFileException(path.toString());
     }
     return hashCode;
+  }
+
+  @Override
+  public void set(Path path, HashCode hashCode) {
+    pathsToHashes.put(path, hashCode);
+  }
+
+  public boolean contains(Path path) {
+    return pathsToHashes.containsKey(path);
   }
 
 }

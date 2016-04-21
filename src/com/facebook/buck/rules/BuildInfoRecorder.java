@@ -190,6 +190,10 @@ public class BuildInfoRecorder {
     return addBuildMetadata(key, toJson(value));
   }
 
+  public BuildInfoRecorder addBuildMetadata(String key, ImmutableMap<String, String> value) {
+    return addBuildMetadata(key, toJson(value));
+  }
+
   /**
    * This key/value pair is stored in memory until {@link #writeMetadataToDisk(boolean)} is invoked.
    */
@@ -250,6 +254,13 @@ public class BuildInfoRecorder {
         .addAll(getRecordedMetadataFiles())
         .addAll(getRecordedOutputDirsAndFiles())
         .build();
+  }
+
+  /**
+   * @return the outputs paths as recorded by the rule.
+   */
+  public ImmutableSortedSet<Path> getOutputPaths() {
+    return ImmutableSortedSet.copyOf(pathsToOutputs);
   }
 
   public ImmutableSortedSet<Path> getRecordedPaths() throws IOException {

@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -68,6 +69,23 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
               value.get(),
               new TypeReference<ImmutableList<String>>() {});
       return Optional.of(list);
+    } catch (IOException ignored) {
+      return Optional.absent();
+    }
+  }
+
+  @Override
+  public Optional<ImmutableMap<String, String>> getMap(String key) {
+    Optional<String> value = getValue(key);
+    if (!value.isPresent()) {
+      return Optional.absent();
+    }
+    try {
+      ImmutableMap<String, String> map =
+          objectMapper.readValue(
+              value.get(),
+              new TypeReference<ImmutableMap<String, String>>() {});
+      return Optional.of(map);
     } catch (IOException ignored) {
       return Optional.absent();
     }

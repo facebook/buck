@@ -44,4 +44,8 @@ public class NullFileHashCache implements FileHashCache {
     throw new NoSuchFileException(path.toString());
   }
 
+  @Override
+  public void set(Path path, HashCode hashCode) {
+  }
+
 }
