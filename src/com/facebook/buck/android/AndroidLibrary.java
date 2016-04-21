@@ -77,6 +77,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         exportedDeps,
         providedDeps,
         abiJar,
+        javacOptions.trackClassUsage(),
         additionalClasspathEntries,
         new JavacToJarStepFactory(javacOptions, new BootClasspathAppender()),
         resourcesRoot,

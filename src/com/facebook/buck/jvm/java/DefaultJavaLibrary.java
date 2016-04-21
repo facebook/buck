@@ -105,7 +105,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @AddToRuleKey
   private final Optional<String> mavenCoords;
   private final Optional<Path> outputJar;
-  private final Optional<Path> usedClassesFile;
   @AddToRuleKey
   private final Optional<SourcePath> proguardConfig;
   @AddToRuleKey
@@ -123,6 +122,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       declaredClasspathEntriesSupplier;
 
   private final SourcePath abiJar;
+  private final boolean trackClassUsage;
   @AddToRuleKey
   @SuppressWarnings("PMD.UnusedPrivateField")
   private final Supplier<ImmutableSortedSet<SourcePath>> abiClasspath;
@@ -176,6 +176,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
       SourcePath abiJar,
+      boolean trackClassUsage,
       ImmutableSet<Path> additionalClasspathEntries,
       CompileToJarStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
@@ -192,6 +193,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         exportedDeps,
         providedDeps,
         abiJar,
+        trackClassUsage,
         Suppliers.memoize(
             new Supplier<ImmutableSortedSet<SourcePath>>() {
               @Override
@@ -217,6 +219,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
       SourcePath abiJar,
+      boolean trackClassUsage,
       final Supplier<ImmutableSortedSet<SourcePath>> abiClasspath,
       ImmutableSet<Path> additionalClasspathEntries,
       CompileToJarStepFactory compileStepFactory,
@@ -260,14 +263,13 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.tests = tests;
 
     this.abiJar = abiJar;
+    this.trackClassUsage = trackClassUsage;
     this.abiClasspath = abiClasspath;
 
     if (!srcs.isEmpty() || !resources.isEmpty()) {
       this.outputJar = Optional.of(getOutputJarPath(getBuildTarget()));
-      this.usedClassesFile = Optional.of(getUsedClassesFilePath(getBuildTarget()));
     } else {
       this.outputJar = Optional.absent();
-      this.usedClassesFile = Optional.absent();
     }
 
     this.outputClasspathEntriesSupplier =
@@ -336,12 +338,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
             target.getShortNameAndFlavorPostfix()));
   }
 
-  static Path getUsedClassesFileDirPath(BuildTarget target) {
-    return BuildTargets.getGenPath(target, "lib__%s__used_classes");
-  }
-
   static Path getUsedClassesFilePath(BuildTarget target) {
-    return getUsedClassesFileDirPath(target).resolve("used-classes.json");
+    return getOutputJarDirPath(target).resolve("used-classes.json");
   }
 
   /**
@@ -481,13 +479,14 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), getOutputJarDirPath(target)));
 
-    final Path usedClassesFileDirPath = getUsedClassesFileDirPath(target);
-    steps.add(
-        new MakeCleanDirectoryStep(getProjectFilesystem(), usedClassesFileDirPath));
-    buildableContext.recordArtifact(usedClassesFileDirPath);
-
     // Only run javac if there are .java files to compile.
     if (!getJavaSrcs().isEmpty()) {
+      Optional<Path> usedClassesFilePath = Optional.absent();
+      if (trackClassUsage) {
+        usedClassesFilePath = Optional.of(getUsedClassesFilePath(target));
+        buildableContext.recordArtifact(usedClassesFilePath.get());
+      }
+
       // This adds the javac command, along with any supporting commands.
       Path pathToSrcsList = BuildTargets.getGenPath(getBuildTarget(), "__%s__srcs");
       steps.add(new MkdirStep(getProjectFilesystem(), pathToSrcsList.getParent()));
@@ -512,7 +511,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           /* mainClass */ Optional.<String>absent(),
           /* manifestFile */ Optional.<Path>absent(),
           outputJar.get(),
-          usedClassesFile,
+          usedClassesFilePath,
           /* output params */
           steps,
           buildableContext);

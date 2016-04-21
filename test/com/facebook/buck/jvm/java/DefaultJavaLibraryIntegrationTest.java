@@ -354,7 +354,7 @@ public class DefaultJavaLibraryIntegrationTest {
 
     Path bizClassUsageFilePath = BuildTargets.getGenPath(
         bizTarget,
-        "lib__%s__used_classes/used-classes.json");
+        "lib__%s__output/used-classes.json");
 
     final List<String> lines = Files.readAllLines(
         workspace.getPath(bizClassUsageFilePath), UTF_8);

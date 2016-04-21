@@ -69,6 +69,15 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     INTERMEDIATE_TO_DISK,
   }
 
+  public enum JavacSource {
+    /** Shell out to the javac in the JDK */
+    EXTERNAL,
+    /** Run javac in-process, loading it from a jar specified in .buckconfig. */
+    JAR,
+    /** Run javac in-process, loading it from the JRE in which Buck is running. */
+    JDK,
+  }
+
   protected abstract Optional<Path> getJavacPath();
   protected abstract Optional<SourcePath> getJavacJarPath();
 
@@ -104,23 +113,36 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     return !isProductionBuild();
   }
 
-  @Value.Lazy
-  public Javac getJavac() {
-    Optional<Path> externalJavac = getJavacPath();
-    if (externalJavac.isPresent()) {
-      return ExternalJavac.createJavac(externalJavac.get());
-    }
-
-    Optional<SourcePath> javacJarPath = getJavacJarPath();
-    if (javacJarPath.isPresent()) {
-      return new JarBackedJavac(
-          "com.sun.tools.javac.api.JavacTool",
-          ImmutableSet.of(javacJarPath.get()));
-    }
-
-    return new JdkProvidedInMemoryJavac();
+  public boolean trackClassUsage() {
+    final JavacSource javacSource = getJavacSource();
+    return javacSource == JavacSource.JAR || javacSource == JavacSource.JDK;
   }
 
+  public JavacSource getJavacSource() {
+    if (getJavacPath().isPresent()) {
+      return JavacSource.EXTERNAL;
+    } else if (getJavacJarPath().isPresent()) {
+      return JavacSource.JAR;
+    } else {
+      return JavacSource.JDK;
+    }
+  }
+
+  @Value.Lazy
+  public Javac getJavac() {
+    final JavacSource javacSource = getJavacSource();
+    switch (javacSource) {
+      case EXTERNAL:
+        return ExternalJavac.createJavac(getJavacPath().get());
+      case JAR:
+        return new JarBackedJavac(
+            "com.sun.tools.javac.api.JavacTool",
+            ImmutableSet.of(getJavacJarPath().get()));
+      case JDK:
+        return new JdkProvidedInMemoryJavac();
+    }
+    throw new AssertionError("Unknown javac source: " + javacSource);
+  }
 
   public void appendOptionsTo(
       OptionsConsumer optionsConsumer,

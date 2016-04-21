@@ -116,6 +116,7 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
                 params.getDeclaredDeps().get(),
                 resolver.getAllRules(args.providedDeps.get()),
                 new BuildTargetSourcePath(abiJarTarget),
+                /* trackClassUsage */ false,
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
                 new ScalacToJarStepFactory(
                     scalaBuckConfig.getScalac(resolver),

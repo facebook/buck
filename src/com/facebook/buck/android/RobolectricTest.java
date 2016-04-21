@@ -130,6 +130,7 @@ public class RobolectricTest extends JavaTest {
         contacts,
         proguardConfig,
         abiJar,
+        javacOptions.trackClassUsage(),
         additionalClasspathEntries,
         TestType.JUNIT,
         new JavacToJarStepFactory(javacOptions, new BootClasspathAppender()),

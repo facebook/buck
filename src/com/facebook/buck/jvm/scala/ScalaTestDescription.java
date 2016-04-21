@@ -140,6 +140,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                 args.contacts.get(),
                 /* proguardConfig */ Optional.<SourcePath>absent(),
                 new BuildTargetSourcePath(abiJarTarget),
+                /* trackClassUsage */ false,
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
                 args.testType.or(TestType.JUNIT),
                 new ScalacToJarStepFactory(
