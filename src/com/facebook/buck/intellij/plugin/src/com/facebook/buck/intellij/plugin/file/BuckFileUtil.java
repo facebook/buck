@@ -29,7 +29,7 @@ public final class BuckFileUtil {
       "  deps = [\n" +
       "    '//android_res/com/foo/interfaces:res',\n" +
       "    '//android_res/com/foo/common/strings:res',\n" +
-      "    '//android_res/com/foo/custom:res'\n" +
+      "    '//android_res/com/foo/custom:res,'\n" +
       "  ],\n" +
       "  visibility = [\n" +
       "    'PUBLIC',\n" +
