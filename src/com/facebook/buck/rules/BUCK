@@ -49,6 +49,7 @@ java_immutables_library(
     'ActionGraph.java',
     'ActionGraphEvent.java',
     'AddToRuleKey.java',
+    'ArchiveMemberSourcePath.java',
     'BinaryBuildRule.java',
     'BinaryBuildRuleToolProvider.java',
     'BuckPyFunction.java',

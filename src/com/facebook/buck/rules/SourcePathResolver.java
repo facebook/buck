@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -111,6 +112,24 @@ public class SourcePathResolver {
     }
 
     return ((PathSourcePath) sourcePath).getFilesystem().resolve(relative);
+  }
+
+  public ArchiveMemberPath getAbsoluteArchiveMemberPath(SourcePath sourcePath) {
+    Preconditions.checkState(sourcePath instanceof ArchiveMemberSourcePath);
+    ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) sourcePath;
+
+    Path archiveAbsolutePath = getAbsolutePath(archiveMemberSourcePath.getArchiveSourcePath());
+
+    return ArchiveMemberPath.of(archiveAbsolutePath, archiveMemberSourcePath.getMemberPath());
+  }
+
+  public ArchiveMemberPath getRelativeArchiveMemberPath(SourcePath sourcePath) {
+    Preconditions.checkState(sourcePath instanceof ArchiveMemberSourcePath);
+    ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) sourcePath;
+
+    Path archiveRelativePath = getRelativePath(archiveMemberSourcePath.getArchiveSourcePath());
+
+    return ArchiveMemberPath.of(archiveRelativePath, archiveMemberSourcePath.getMemberPath());
   }
 
   public Function<SourcePath, Path> getAbsolutePathFunction() {
@@ -234,6 +253,7 @@ public class SourcePathResolver {
   }
 
   public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
+    Preconditions.checkArgument(!(sourcePath instanceof ArchiveMemberSourcePath));
     if (sourcePath instanceof BuildTargetSourcePath) {
       return getNameForBuildTargetSourcePath((BuildTargetSourcePath) sourcePath);
     }

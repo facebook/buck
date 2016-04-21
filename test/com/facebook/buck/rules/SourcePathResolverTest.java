@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -324,6 +325,26 @@ public class SourcePathResolverTest {
     assertEquals(fakeBuildTarget.getShortName(), actual2);
   }
 
+  @Test(expected = IllegalArgumentException.class)
+  public void getSourcePathNameOnArchiveMemberSourcePath() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    String out = "test/blah.jar";
+    Genrule genrule = (Genrule) GenruleBuilder
+        .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
+        .setOut(out)
+        .build(resolver);
+    BuildTargetSourcePath archiveSourcePath = new BuildTargetSourcePath(
+        genrule.getBuildTarget());
+
+    ArchiveMemberSourcePath archiveMemberSourcePath =
+        new ArchiveMemberSourcePath(archiveSourcePath, Paths.get("member"));
+
+    pathResolver.getSourcePathName(null, archiveMemberSourcePath);
+  }
+
   @Test
   public void getSourcePathNamesThrowsOnDuplicates() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
@@ -396,6 +417,51 @@ public class SourcePathResolverTest {
         Paths.get("cheese").toAbsolutePath());
 
     pathResolver.getRelativePath(path);
+  }
+
+  @Test
+  public void testGetRelativePathForArchiveMemberSourcePath() {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    BuildRule rule = resolver.addToIndex(new FakeBuildRule("//foo:bar", pathResolver));
+    Path archivePath = BuckConstant.getGenPath().resolve("foo.jar");
+    SourcePath archiveSourcePath =
+        new BuildTargetSourcePath(
+            rule.getBuildTarget(),
+            archivePath);
+    Path memberPath = Paths.get("foo.class");
+
+    ArchiveMemberSourcePath path = new ArchiveMemberSourcePath(archiveSourcePath, memberPath);
+
+    ArchiveMemberPath relativePath = pathResolver.getRelativeArchiveMemberPath(path);
+    assertEquals(archivePath, relativePath.getArchivePath());
+    assertEquals(memberPath, relativePath.getMemberPath());
+  }
+
+  @Test
+  public void testGetAbsolutePathForArchiveMemberSourcePath() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    BuildRule rule = resolver.addToIndex(
+        new FakeBuildRule(BuildTargetFactory.newInstance("//foo:bar"), filesystem, pathResolver));
+    Path archivePath = BuckConstant.getGenPath().resolve("foo.jar");
+    Path archiveAbsolutePath = filesystem.resolve(archivePath);
+    SourcePath archiveSourcePath =
+        new BuildTargetSourcePath(
+            rule.getBuildTarget(),
+            archivePath);
+    Path memberPath = Paths.get("foo.class");
+
+    ArchiveMemberSourcePath path = new ArchiveMemberSourcePath(archiveSourcePath, memberPath);
+
+    ArchiveMemberPath absolutePath = pathResolver.getAbsoluteArchiveMemberPath(path);
+    assertEquals(archiveAbsolutePath, absolutePath.getArchivePath());
+    assertEquals(memberPath, absolutePath.getMemberPath());
   }
 
   private static class PathReferenceRule extends AbstractBuildRule {
