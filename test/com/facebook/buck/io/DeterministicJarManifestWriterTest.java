@@ -14,42 +14,78 @@
  * under the License.
  */
 
-package com.facebook.buck.jvm.java.abi;
+package com.facebook.buck.io;
 
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
-public class JarManifestWriterTest {
+public class DeterministicJarManifestWriterTest {
 
-  private JarManifestWriter manifestWriter;
-  private StringWriter stringWriter;
+  private DeterministicJarManifestWriter manifestWriter;
+  private ByteArrayOutputStream outputStream;
 
   @Before
   public void setUp() {
-    stringWriter = new StringWriter();
-    manifestWriter = new JarManifestWriter(stringWriter);
+    outputStream = new ByteArrayOutputStream();
+    manifestWriter = new DeterministicJarManifestWriter(outputStream);
+  }
+
+  @Test
+  public void testEntriesWrittenInSortedOrder() throws IOException {
+    manifestWriter.setEntryAttribute("Z", "Foo", "Bar");
+    manifestWriter.setEntryAttribute("A", "Foo", "Bar");
+    manifestWriter.write();
+
+    assertManifestContents(
+        "\r\n" +
+            "Name: A\r\n" +
+            "Foo: Bar\r\n" +
+            "\r\n" +
+            "Name: Z\r\n" +
+            "Foo: Bar\r\n" +
+            "\r\n");
+  }
+
+  @Test
+  public void testAttributesWrittenInSortedOrder() throws IOException {
+    manifestWriter.setEntryAttribute("A", "Foo", "Bar");
+    manifestWriter.setEntryAttribute("A", "Baz", "Bar");
+    manifestWriter.write();
+
+    assertManifestContents(
+        "\r\n" +
+            "Name: A\r\n" +
+            "Baz: Bar\r\n" +
+            "Foo: Bar\r\n" +
+            "\r\n");
   }
 
   @Test
   public void testShortLinesWrittenOnOneLine() throws IOException {
-    assertEntryWrittenAs("Key: value\r\n", "Key", "value");
+    assertEntryWrittenAs(
+        "\r\n" +
+            "Name: Entry\r\n" +
+            "Key: value\r\n" +
+            "\r\n",
+        "Key", "value");
   }
 
   @Test
   public void testLongLineSplit() throws IOException {
     assertEntryWrittenAs(
-        "12345678: 69-char value + 8 char key + 2 char padding = 79 chars.    |\r\n" +
-            " next line\r\n",
+        "\r\n" +
+            "Name: Entry\r\n" +
+            "12345678: 69-char value + 8 char key + 2 char padding = 79 chars.    |\r\n" +
+            " next line\r\n" +
+            "\r\n",
         "12345678",
         "69-char value + 8 char key + 2 char padding = 79 chars.    |" +
             "next line");
@@ -58,9 +94,12 @@ public class JarManifestWriterTest {
   @Test
   public void testReallyLongLineSplit() throws IOException {
     assertEntryWrittenAs(
-        "12345678: 138-char value + 8 char key + 2 char padding = 148 chars.  |\r\n" +
+        "\r\n" +
+            "Name: Entry\r\n" +
+            "12345678: 138-char value + 8 char key + 2 char padding = 148 chars.  |\r\n" +
             " 69-character second line                                            |\r\n" +
-            " last line\r\n",
+            " last line\r\n" +
+            "\r\n",
         "12345678",
         "138-char value + 8 char key + 2 char padding = 148 chars.  |" +
             "69-character second line                                            |" +
@@ -75,10 +114,8 @@ public class JarManifestWriterTest {
         "69-character second line                                            |" +
         "last line";
 
-    manifestWriter.writeLine();
-    manifestWriter.writeEntry("Name", entryName);
-    manifestWriter.writeEntry(key, value);
-    manifestWriter.writeLine();
+    manifestWriter.setEntryAttribute(entryName, key, value);
+    manifestWriter.write();
 
     Manifest jdkManifest = new Manifest();
     Attributes attrs = new Attributes();
@@ -90,11 +127,17 @@ public class JarManifestWriterTest {
 
     assertArrayEquals(
         expected.toByteArray(),
-        stringWriter.toString().getBytes(StandardCharsets.UTF_8));
+        outputStream.toByteArray());
   }
 
   private void assertEntryWrittenAs(String expected, String key, String value) throws IOException {
-    manifestWriter.writeEntry(key, value);
-    assertEquals(expected, stringWriter.toString());
+    manifestWriter.setEntryAttribute("Entry", key, value);
+    manifestWriter.write();
+
+    assertManifestContents(expected);
+  }
+
+  private void assertManifestContents(String expected) {
+    assertArrayEquals(expected.getBytes(StandardCharsets.UTF_8), outputStream.toByteArray());
   }
 }

@@ -31,6 +31,9 @@ java_library(
 java_library(
   name = 'io',
   srcs = glob(['*.java'], excludes = FINDER_SRCS + WATCHMAN_SRCS),
+  tests = [
+    '//test/com/facebook/buck/io:io',
+  ],
   autodeps = True,
   visibility = [ 'PUBLIC' ],
 )
