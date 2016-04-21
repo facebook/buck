@@ -92,6 +92,28 @@ public class ManifestTest {
   }
 
   @Test
+  public void addEntryFromArchive() throws IOException {
+    Manifest manifest = new Manifest();
+    RuleKey key = new RuleKey("aa");
+    SourcePath input = new ArchiveMemberSourcePath(
+        new FakeSourcePath("somewhere/a.jar"),
+        Paths.get("Member.class"));
+    HashCode hashCode = HashCode.fromInt(20);
+    FileHashCache fileHashCache =
+        FakeFileHashCache.withArchiveMemberPathHashes(
+            ImmutableMap.of(RESOLVER.getAbsoluteArchiveMemberPath(input), hashCode));
+    manifest.addEntry(fileHashCache, key, RESOLVER, ImmutableSet.of(input), ImmutableSet.of(input));
+    assertThat(
+        manifest.toMap(),
+        Matchers.equalTo(
+            ImmutableMap.of(
+                key,
+                ImmutableMap.of(
+                    RESOLVER.getRelativeArchiveMemberPath(input).toString(),
+                    hashCode))));
+  }
+
+  @Test
   public void addEntryWithSourcePathsThatHaveSameRelativePaths() throws IOException {
     RuleKey key = new RuleKey("aa");
 

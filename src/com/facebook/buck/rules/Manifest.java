@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -36,8 +37,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -131,24 +130,35 @@ public class Manifest {
       ImmutableList<SourcePath> paths)
       throws IOException {
     if (paths.size() == 1) {
-      return fileHashCache.get(resolver.getAbsolutePath(paths.asList().get(0)));
+      return hashSourcePath(paths.asList().get(0), fileHashCache, resolver);
     }
     Hasher hasher = Hashing.md5().newHasher();
     for (SourcePath path : paths) {
-      hasher.putBytes(fileHashCache.get(resolver.getAbsolutePath(path)).asBytes());
+      hasher.putBytes(hashSourcePath(path, fileHashCache, resolver).asBytes());
     }
     return hasher.hash();
+  }
+
+  private static HashCode hashSourcePath(
+      SourcePath path,
+      FileHashCache fileHashCache,
+      SourcePathResolver resolver) throws IOException {
+    if (path instanceof ArchiveMemberSourcePath) {
+      return fileHashCache.get(resolver.getAbsoluteArchiveMemberPath(path));
+    } else {
+      return fileHashCache.get(resolver.getAbsolutePath(path));
+    }
   }
 
   private boolean hashesMatch(
       FileHashCache fileHashCache,
       SourcePathResolver resolver,
-      ImmutableListMultimap<Path, SourcePath> universe,
+      ImmutableListMultimap<String, SourcePath> universe,
       int[] hashIndices)
       throws IOException {
     for (int hashIndex : hashIndices) {
       Pair<Integer, HashCode> hashEntry = hashes.get(hashIndex);
-      Path header = Paths.get(headers.get(hashEntry.getFirst()));
+      String header = headers.get(hashEntry.getFirst());
       ImmutableList<SourcePath> candidates = universe.get(header);
       if (candidates.isEmpty()) {
         return false;
@@ -176,14 +186,34 @@ public class Manifest {
       SourcePathResolver resolver,
       ImmutableSet<SourcePath> universe)
       throws IOException {
-    ImmutableListMultimap<Path, SourcePath> mappedUniverse =
-        Multimaps.index(universe, resolver.getRelativePathFunction());
+    ImmutableListMultimap<String, SourcePath> mappedUniverse =
+        Multimaps.index(universe, sourcePathToManifestHeaderFunction(resolver));
     for (Pair<RuleKey, int[]> entry : entries) {
       if (hashesMatch(fileHashCache, resolver, mappedUniverse, entry.getSecond())) {
         return Optional.of(entry.getFirst());
       }
     }
     return Optional.absent();
+  }
+
+  private static Function<SourcePath, String> sourcePathToManifestHeaderFunction(
+      final SourcePathResolver resolver) {
+    return new Function<SourcePath, String>() {
+      @Override
+      public String apply(SourcePath input) {
+        return sourcePathToManifestHeader(input, resolver);
+      }
+    };
+  }
+
+  private static String sourcePathToManifestHeader(
+      SourcePath input,
+      SourcePathResolver resolver) {
+    if (input instanceof ArchiveMemberSourcePath) {
+      return resolver.getRelativeArchiveMemberPath(input).toString();
+    } else {
+      return resolver.getRelativePath(input).toString();
+    }
   }
 
   /**
@@ -198,17 +228,17 @@ public class Manifest {
       throws IOException {
     int index = 0;
     int[] hashIndices = new int[inputs.size()];
-    ImmutableListMultimap<Path, SourcePath> sortedUniverse =
+    ImmutableListMultimap<String, SourcePath> sortedUniverse =
         Multimaps.index(
             universe,
-            resolver.getRelativePathFunction());
+            sourcePathToManifestHeaderFunction(resolver));
     for (SourcePath input : inputs) {
-      Path relativePath = resolver.getRelativePath(input);
+      String relativePath = sourcePathToManifestHeader(input, resolver);
       ImmutableList<SourcePath> paths = sortedUniverse.get(relativePath);
       Preconditions.checkState(!paths.isEmpty());
       hashIndices[index++] =
           addHash(
-              relativePath.toString(),
+              relativePath,
               hashSourcePathGroup(fileHashCache, resolver, paths));
     }
     entries.add(new Pair<>(key, hashIndices));
