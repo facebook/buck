@@ -19,14 +19,24 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxInferEnhancer;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
 import java.util.Set;
@@ -97,8 +107,7 @@ public class MultiarchFileInfos {
   public static ImmutableList<ImmutableSortedSet<Flavor>> generateThinFlavors(
       Set<Flavor> platformFlavors,
       SortedSet<Flavor> flavors) {
-    Set<Flavor> platformFreeFlavors =
-        Sets.difference(flavors, platformFlavors);
+    Set<Flavor> platformFreeFlavors = Sets.difference(flavors, platformFlavors);
     ImmutableList.Builder<ImmutableSortedSet<Flavor>> thinTargetsBuilder = ImmutableList.builder();
     for (Flavor flavor : flavors) {
       if (platformFlavors.contains(flavor)) {
@@ -110,6 +119,38 @@ public class MultiarchFileInfos {
       }
     }
     return thinTargetsBuilder.build();
+  }
+
+  /**
+   * Generate a fat rule from thin rules.
+   *
+   * Invariant: thinRules contain all the thin rules listed in info.getThinTargets().
+   */
+  public static BuildRule requireMultiarchRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      MultiarchFileInfo info,
+      ImmutableSortedSet<BuildRule> thinRules) {
+    Optional<BuildRule> existingRule = resolver.getRuleOptional(info.getFatTarget());
+    if (existingRule.isPresent()) {
+      return existingRule.get();
+    }
+
+    ImmutableSortedSet<SourcePath> inputs = FluentIterable
+        .from(thinRules)
+        .transform(SourcePaths.getToBuildTargetSourcePath())
+        .toSortedSet(Ordering.natural());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    MultiarchFile multiarchFile = new MultiarchFile(
+        params.copyWithDeps(
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(thinRules)),
+        pathResolver,
+        info.getRepresentativePlatform().getLipo(),
+        inputs,
+        BuildTargets.getGenPath(params.getBuildTarget(), "%s"));
+    resolver.addToIndex(multiarchFile);
+    return multiarchFile;
   }
 
   private static final ImmutableSet<Flavor> FORBIDDEN_BUILD_ACTIONS =

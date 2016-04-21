@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 5d90106c6200b6e6bbbab6e2bf3d8343deba8450 #@#
+#@# GENERATED FILE: DO NOT MODIFY 68b224cf0d900d54683520f862598db640f4d9d1 #@#
 {
   "generators" : {
     "deps" : [
@@ -34,7 +34,6 @@
   },
   "platform" : {
     "deps" : [
-      "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/util:exceptions",
       "//third-party/java/immutables:processor"
     ],

@@ -39,19 +39,16 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
@@ -289,42 +286,63 @@ public class AppleBinaryDescription implements
         platformFlavorsToAppleCxxPlatforms,
         params.getBuildTarget());
     if (fatBinaryInfo.isPresent()) {
-      return createFatBinaryBuildRule(targetGraph, params, resolver, args, fatBinaryInfo.get());
+      ImmutableSortedSet.Builder<BuildRule> thinRules = ImmutableSortedSet.naturalOrder();
+      for (BuildTarget thinTarget : fatBinaryInfo.get().getThinTargets()) {
+        Optional<BuildRule> existingThinRule = resolver.getRuleOptional(thinTarget);
+        if (existingThinRule.isPresent()) {
+          thinRules.add(existingThinRule.get());
+          continue;
+        }
+        BuildRule thinRule = requireThinBinary(
+            targetGraph,
+            params.copyWithBuildTarget(thinTarget),
+            resolver,
+            args);
+        resolver.addToIndex(thinRule);
+        thinRules.add(thinRule);
+      }
+      return MultiarchFileInfos.requireMultiarchRule(
+          params,
+          resolver,
+          fatBinaryInfo.get(),
+          thinRules.build());
     } else {
-      return createThinBinary(targetGraph, params, resolver, args);
+      return requireThinBinary(targetGraph, params, resolver, args);
     }
   }
 
-  private <A extends Arg> BuildRule createThinBinary(
+  private <A extends Arg> BuildRule requireThinBinary(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
+    Optional<BuildRule> existingThinRule = resolver.getRuleOptional(params.getBuildTarget());
+    if (existingThinRule.isPresent()) {
+      return existingThinRule.get();
+    }
+
     Optional<Path> stubBinaryPath = getStubBinaryPath(params, args);
     if (shouldUseStubBinary(params) && stubBinaryPath.isPresent()) {
       try {
-        return new WriteFile(
-            params,
-            new SourcePathResolver(resolver),
-            Files.readAllBytes(stubBinaryPath.get()),
-            BuildTargets.getGenPath(params.getBuildTarget(), "%s"),
-            true);
+        return resolver.addToIndex(
+            new WriteFile(
+                params,
+                new SourcePathResolver(resolver),
+                Files.readAllBytes(stubBinaryPath.get()),
+                BuildTargets.getGenPath(params.getBuildTarget(), "%s"),
+                true));
       } catch (IOException e) {
         throw new HumanReadableException("Could not read stub binary " + stubBinaryPath.get());
       }
     } else {
-      Optional<BuildRule> existingRule = resolver.getRuleOptional(params.getBuildTarget());
-      if (existingRule.isPresent()) {
-        return existingRule.get();
-      } else {
-        CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
-        AppleDescriptions.populateCxxBinaryDescriptionArg(
-            new SourcePathResolver(resolver),
-            delegateArg,
-            args,
-            params.getBuildTarget());
-        return delegate.createBuildRule(targetGraph, params, resolver, delegateArg);
-      }
+      CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
+      AppleDescriptions.populateCxxBinaryDescriptionArg(
+          new SourcePathResolver(resolver),
+          delegateArg,
+          args,
+          params.getBuildTarget());
+      return resolver.addToIndex(
+          delegate.createBuildRule(targetGraph, params, resolver, delegateArg));
     }
   }
 
@@ -347,54 +365,6 @@ public class AppleBinaryDescription implements
 
   private Optional<AppleCxxPlatform> getAppleCxxPlatformFromParams(BuildRuleParams params) {
     return platformFlavorsToAppleCxxPlatforms.getValue(params.getBuildTarget());
-  }
-
-  /**
-   * Create a fat binary rule.
-   */
-  private <A extends AppleBinaryDescription.Arg> BuildRule createFatBinaryBuildRule(
-      TargetGraph targetGraph,
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args,
-      MultiarchFileInfo fatBinaryInfo) throws NoSuchBuildTargetException {
-
-    Optional<BuildRule> existingRule = resolver.getRuleOptional(params.getBuildTarget());
-    if (existingRule.isPresent()) {
-      return existingRule.get();
-    }
-
-    ImmutableSortedSet.Builder<BuildRule> thinRules = ImmutableSortedSet.naturalOrder();
-    for (BuildTarget thinTarget : fatBinaryInfo.getThinTargets()) {
-      Optional<BuildRule> existingThinRule = resolver.getRuleOptional(thinTarget);
-      if (existingThinRule.isPresent()) {
-        thinRules.add(existingThinRule.get());
-        continue;
-      }
-      BuildRule thinRule = createThinBinary(
-          targetGraph,
-          params.copyWithBuildTarget(thinTarget),
-          resolver,
-          args);
-      resolver.addToIndex(thinRule);
-      thinRules.add(thinRule);
-    }
-
-    ImmutableSortedSet<SourcePath> inputs = FluentIterable
-        .from(resolver.getAllRules(fatBinaryInfo.getThinTargets()))
-        .transform(SourcePaths.getToBuildTargetSourcePath())
-        .toSortedSet(Ordering.natural());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    MultiarchFile multiarchFile = new MultiarchFile(
-        params.copyWithDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-            Suppliers.ofInstance(thinRules.build())),
-        pathResolver,
-        fatBinaryInfo.getRepresentativePlatform().getLipo(),
-        inputs,
-        BuildTargets.getGenPath(params.getBuildTarget(), "%s"));
-    resolver.addToIndex(multiarchFile);
-    return multiarchFile;
   }
 
   @Override

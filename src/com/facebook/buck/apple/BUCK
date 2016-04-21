@@ -6,7 +6,6 @@ PLATFORM_SRCS = [
   'AbstractAppleToolchain.java',
   'AbstractMultiarchFileInfo.java',
   'ApplePlatforms.java',
-  'MultiarchFileInfos.java',
 ]
 java_immutables_library(
   name = 'platform',
