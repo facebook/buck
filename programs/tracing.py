@@ -4,25 +4,29 @@ import errno
 import glob
 import json
 import os
+import os.path
+import platform
 import time
 from timing import monotonic_time_nanos
-
-# We need to optionally include some functions for Windows.
-import platform
-if platform.system() == 'Windows':
-    import ctypes
-
+import uuid
 
 def create_symlink(original, symlink):
-    assert os.path.isfile(original)
-    if os.path.lexists(symlink):
-        os.remove(symlink)
     if platform.system() == 'Windows':
-        k32 = ctypes.windll.LoadLibrary("kernel32.dll")
-        k32.CreateSymbolicLinkA(symlink, original, 0)
+        # Not worth dealing with the convenience symlink on Windows.
+        return
     else:
-        os.symlink(original, symlink)
-
+        (symlink_dir, symlink_file) = os.path.split(symlink)
+        # Avoid race conditions with other processes by:
+        #
+        # 1) Creating a symlink /path/to/.symlink_file.UUID -> /path/to/original
+        # 2) Atomically renaming /path/to/.symlink_file.UUID -> /path/to/symlink_file
+        #
+        # If another process races with this one, the most recent one wins, which
+        # is the behavior we want.
+        temp_symlink_filename = ".{0}.{1}".format(symlink_file, uuid.uuid4())
+        temp_symlink_path = os.path.join(symlink_dir, temp_symlink_filename)
+        os.symlink(original, temp_symlink_path)
+        os.rename(temp_symlink_path, symlink)
 
 class _TraceEventPhases(object):
     BEGIN = 'B'
@@ -105,11 +109,8 @@ class Tracing(object):
                 raise
         with open(trace_filename, 'w') as f:
             json.dump(Tracing._trace_events, f)
-        try:
-            create_symlink(trace_filename, trace_filename_link)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
+
+        create_symlink(trace_filename, trace_filename_link)
         Tracing.clean_up_old_logs(buck_log_dir)
 
     @staticmethod

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Either;
@@ -114,11 +115,15 @@ class ProjectBuildFileParserPool implements AutoCloseable {
                 requestParser(cell);
             if (parserRequest.isLeft()) {
               ProjectBuildFileParser parser = parserRequest.getLeft();
+              boolean hadErrorDuringParsing = false;
               try {
                 return Futures.immediateFuture(
                     ImmutableList.copyOf(parser.getAllRulesAndMetaRules(buildFile)));
+              } catch (BuildFileParseException e) {
+                hadErrorDuringParsing = true;
+                throw e;
               } finally {
-                returnParser(cell, parser);
+                returnParser(cell, parser, hadErrorDuringParsing);
               }
             } else {
               return Futures.transformAsync(parserRequest.getRight(), this, executorService);
@@ -197,9 +202,21 @@ class ProjectBuildFileParserPool implements AutoCloseable {
     return createIfAllowed(cell);
   }
 
-  private synchronized void returnParser(Cell cell, ProjectBuildFileParser parser) {
-    Deque<ProjectBuildFileParser> parkedParsersQueue = getParkedParserQueue(cell);
-    parkedParsersQueue.add(parser);
+  private synchronized void returnParser(
+      Cell cell,
+      ProjectBuildFileParser parser,
+      boolean parserIsDefunct) {
+    if (parserIsDefunct) {
+      createdParsers.remove(cell, parser);
+      try {
+        parser.close();
+      } catch (Exception e) {
+        LOG.info(e, "Error shutting down a defunct parser.");
+      }
+    } else {
+      Deque<ProjectBuildFileParser> parkedParsersQueue = getParkedParserQueue(cell);
+      parkedParsersQueue.add(parser);
+    }
     scheduleNextRequest(cell);
   }
 

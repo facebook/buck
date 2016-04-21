@@ -43,6 +43,7 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.TestSummaryEvent;
+import com.facebook.buck.simulate.SimulateEvent;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.BestCompressionGZIPOutputStream;
@@ -163,11 +164,11 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @VisibleForTesting
   void deleteOldTraces() {
-    if (!projectFilesystem.exists(BuckConstant.BUCK_TRACE_DIR)) {
+    if (!projectFilesystem.exists(BuckConstant.getBuckTraceDir())) {
       return;
     }
 
-    Path traceDirectory = projectFilesystem.getPathForRelativePath(BuckConstant.BUCK_TRACE_DIR);
+    Path traceDirectory = projectFilesystem.getPathForRelativePath(BuckConstant.getBuckTraceDir());
 
     try {
       for (Path path : PathListing.listMatchingPathsWithFilters(
@@ -190,7 +191,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     if (compressTraces) {
       traceName = traceName + ".gz";
     }
-    Path tracePath = BuckConstant.BUCK_TRACE_DIR.resolve(traceName);
+    Path tracePath = BuckConstant.getBuckTraceDir().resolve(traceName);
     try {
       projectFilesystem.createParentDirs(tracePath);
       OutputStream stream = projectFilesystem.newFileOutputStream(tracePath);
@@ -220,7 +221,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       jsonGenerator.close();
       traceStream.close();
       String symlinkName = compressTraces ? "build.trace.gz" : "build.trace";
-      Path symlinkPath = BuckConstant.BUCK_TRACE_DIR.resolve(symlinkName);
+      Path symlinkPath = BuckConstant.getBuckTraceDir().resolve(symlinkName);
       projectFilesystem.createSymLink(
           projectFilesystem.resolve(symlinkPath),
           projectFilesystem.resolve(tracePath),
@@ -230,6 +231,28 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     } catch (IOException e) {
       throw new HumanReadableException(e, "Unable to write trace file: " + e);
     }
+  }
+
+  @Subscribe
+  public void commandSimulateStarted(SimulateEvent.Started started) {
+    writeChromeTraceEvent("buck",
+        started.getEventName(),
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of(
+            "build_target", started.getTarget().toString()
+        ),
+        started);
+  }
+
+  @Subscribe
+  public void commandSimulateFinished(SimulateEvent.Finished finished) {
+    writeChromeTraceEvent("buck",
+        finished.getEventName(),
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.of(
+            "build_target", finished.getTarget().toString()
+        ),
+        finished);
   }
 
   @Subscribe

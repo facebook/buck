@@ -584,11 +584,11 @@ public class ProjectFilesystemTest {
         FluentIterable.from(ignorePaths).toSortedSet(Ordering.<Path>natural()),
         equalTo(
             ImmutableSortedSet.of(
-                BuckConstant.BUCK_OUTPUT_PATH,
-                BuckConstant.TRASH_PATH,
+                BuckConstant.getBuckOutputPath(),
+                BuckConstant.getTrashPath(),
                 Paths.get(".idea"),
                 Paths.get(System.getProperty(ProjectFilesystem.BUCK_BUCKD_DIR_KEY, ".buckd")),
-                Paths.get(BuckConstant.DEFAULT_CACHE_DIR),
+                Paths.get(BuckConstant.getDefaultCacheDir()),
                 Paths.get(".git"),
                 Paths.get("foo"),
                 Paths.get("bar"),

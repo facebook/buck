@@ -94,6 +94,7 @@ public class Build implements Closeable {
   private final DefaultStepRunner stepRunner;
   private final JavaPackageFinder javaPackageFinder;
   private final Clock clock;
+  private final ObjectMapper objectMapper;
 
   /** Not set until {@link #executeBuild(Iterable, boolean)} is invoked. */
   @Nullable
@@ -146,6 +147,7 @@ public class Build implements Closeable {
     this.stepRunner = new DefaultStepRunner(executionContext);
     this.javaPackageFinder = javaPackageFinder;
     this.clock = clock;
+    this.objectMapper = objectMapper;
   }
 
   public ActionGraph getActionGraph() {
@@ -191,6 +193,7 @@ public class Build implements Closeable {
             BuildContext.createBootclasspathSupplier(
                 executionContext.getAndroidPlatformTargetSupplier()))
         .setBuildId(buildId)
+        .setObjectMapper(objectMapper)
         .putAllEnvironment(executionContext.getEnvironment())
         .setKeepGoing(isKeepGoing)
         .setShouldReportAbsolutePaths(executionContext.shouldReportAbsolutePaths())

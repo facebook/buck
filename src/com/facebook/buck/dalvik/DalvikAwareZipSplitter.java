@@ -171,6 +171,11 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
             LOG.debug("Visiting " + entry.getRelativePath());
 
             String relativePath = entry.getRelativePath();
+            if (!relativePath.endsWith(".class")) {
+              // We don't need resources in dex jars, so just drop them.
+              return;
+            }
+
             Preconditions.checkNotNull(primaryOut);
             if (requiredInPrimaryZip.apply(relativePath)) {
               primaryOut.putEntry(entry);

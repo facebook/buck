@@ -9,14 +9,6 @@ ios_react_native_library(
 )
 
 sh_binary(
-  name = 'packager',
-  main = 'packager.sh',
-  visibility = [
-    'PUBLIC',
-  ],
-)
-
-sh_binary(
   name = 'packager_worker',
   main = 'packager_worker.sh',
   visibility = [

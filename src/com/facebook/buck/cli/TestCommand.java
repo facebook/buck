@@ -28,13 +28,11 @@ import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.CachingBuildEngine;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
-import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.rules.TestRule;
@@ -320,7 +318,7 @@ public class TestCommand extends BuildCommand {
     // Serialize the specs to a file to pass into the test runner.
     Path infoFile =
         params.getCell().getFilesystem()
-            .resolve(BuckConstant.SCRATCH_PATH.resolve("external_runner_specs.json"));
+            .resolve(BuckConstant.getScratchPath().resolve("external_runner_specs.json"));
     Files.createDirectories(infoFile.getParent());
     Files.deleteIfExists(infoFile);
     params.getObjectMapper().writerWithDefaultPrettyPrinter().writeValue(infoFile.toFile(), specs);
@@ -443,12 +441,10 @@ public class TestCommand extends BuildCommand {
         return 1;
       }
 
-      TargetGraphToActionGraph targetGraphToActionGraph =
-          new TargetGraphToActionGraph(
-              params.getBuckEventBus(),
-              new DefaultTargetNodeToBuildRuleTransformer());
       ActionGraphAndResolver actionGraphAndResolver = Preconditions.checkNotNull(
-          Preconditions.checkNotNull(targetGraphToActionGraph.apply(targetGraph)));
+          params.getActionGraphCache().getActionGraph(
+              params.getBuckEventBus(),
+              targetGraph));
       // Look up all of the test rules in the action graph.
       Iterable<TestRule> testRules = Iterables.filter(
           actionGraphAndResolver.getActionGraph().getNodes(),
@@ -472,6 +468,7 @@ public class TestCommand extends BuildCommand {
               params.getBuckConfig().getDependencySchedulingOrder(),
               params.getBuckConfig().getBuildDepFiles(),
               params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
+              params.getBuckConfig().getBuildArtifactCacheSizeLimit(),
               actionGraphAndResolver.getResolver());
       try (Build build = createBuild(
           params.getBuckConfig(),

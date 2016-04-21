@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 5d199bd561ec1b16c3a5ae9fc293cd88595f0a53 #@#
+#@# GENERATED FILE: DO NOT MODIFY e947fe82a63b3790db8cb696a17daaafd8034bf1 #@#
 {
   "halide" : {
     "deps" : [
@@ -9,6 +9,7 @@
       "//src/com/facebook/buck/util:exceptions"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/model:model",

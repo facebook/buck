@@ -20,17 +20,13 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidBinaryBuilder;
 import com.facebook.buck.android.AndroidLibraryBuilder;
-import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.TargetGraphToActionGraph;
-import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
@@ -53,7 +49,6 @@ public class AuditClasspathCommandTest {
   private TestConsole console;
   private AuditClasspathCommand auditClasspathCommand;
   private CommandRunnerParams params;
-  private TargetGraphTransformer targetGraphTransformer;
 
   @Before
   public void setUp() throws IOException, InterruptedException {
@@ -62,9 +57,6 @@ public class AuditClasspathCommandTest {
     params = CommandRunnerParamsForTesting.builder()
         .setConsole(console)
         .build();
-    targetGraphTransformer = new TargetGraphToActionGraph(
-        BuckEventBusFactory.newInstance(),
-        new DefaultTargetNodeToBuildRuleTransformer());
   }
 
   @Test
@@ -73,7 +65,6 @@ public class AuditClasspathCommandTest {
     auditClasspathCommand.printClasspath(
         params,
         TargetGraphFactory.newInstance(ImmutableSet.<TargetNode<?>>of()),
-        targetGraphTransformer,
         ImmutableSet.<BuildTarget>of());
     assertEquals("", console.getTextWrittenToStdOut());
     assertEquals("", console.getTextWrittenToStdErr());
@@ -124,7 +115,6 @@ public class AuditClasspathCommandTest {
                 keystoreNode,
                 testAndroidNode,
                 testJavaNode)),
-        targetGraphTransformer,
         ImmutableSet.<BuildTarget>of());
 
     // Still empty.
@@ -144,7 +134,6 @@ public class AuditClasspathCommandTest {
                 keystoreNode,
                 testAndroidNode,
                 testJavaNode)),
-        targetGraphTransformer,
         ImmutableSet.of(
             testAndroidTarget));
 
@@ -180,7 +169,6 @@ public class AuditClasspathCommandTest {
                 keystoreNode,
                 testAndroidNode,
                 testJavaNode)),
-        targetGraphTransformer,
         ImmutableSet.of(
             testAndroidTarget,
             javaLibraryTarget,
@@ -234,7 +222,6 @@ public class AuditClasspathCommandTest {
             ImmutableSet.of(
                 androidNode,
                 javaNode)),
-        targetGraphTransformer,
         ImmutableSet.of(
             androidTarget,
             javaTarget));

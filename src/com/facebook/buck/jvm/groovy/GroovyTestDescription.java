@@ -123,6 +123,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                 args.contacts.get(),
                 Optional.<SourcePath>absent(),
                 new BuildTargetSourcePath(abiJarTarget),
+                /* trackClassUsage */ false,
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
                 args.testType.or(TestType.JUNIT),
                 stepFactory,

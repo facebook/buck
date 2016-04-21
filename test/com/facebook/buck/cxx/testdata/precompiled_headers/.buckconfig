@@ -1,0 +1,4 @@
+[cxx]
+preprocess_mode = combined
+[build]
+depfiles = enabled

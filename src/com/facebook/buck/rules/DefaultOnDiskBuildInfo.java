@@ -19,14 +19,10 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.google.common.base.Function;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonStreamParser;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -42,31 +38,17 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
   private static final Logger LOG = Logger.get(DefaultOnDiskBuildInfo.class);
 
-  private static final Function<String, ImmutableList<String>> TO_STRINGS =
-      new Function<String, ImmutableList<String>>() {
-    @Override
-    public ImmutableList<String> apply(String input) {
-      JsonElement element = new JsonStreamParser(input).next();
-      Preconditions.checkState(element.isJsonArray(),
-          "Value for %s should have been a JSON array but was %s.",
-          input,
-          element);
-
-      JsonArray array = element.getAsJsonArray();
-      ImmutableList.Builder<String> out = ImmutableList.builder();
-      for (JsonElement item : array) {
-        out.add(item.getAsString());
-      }
-      return out.build();
-    }
-  };
-
   private final ProjectFilesystem projectFilesystem;
   private final Path metadataDirectory;
+  private final ObjectMapper objectMapper;
 
-  public DefaultOnDiskBuildInfo(BuildTarget target, ProjectFilesystem projectFilesystem) {
+  public DefaultOnDiskBuildInfo(
+      BuildTarget target,
+      ProjectFilesystem projectFilesystem,
+      ObjectMapper objectMapper) {
     this.projectFilesystem = projectFilesystem;
     this.metadataDirectory = BuildInfo.getPathToMetadataDirectory(target);
+    this.objectMapper = objectMapper;
   }
 
   @Override
@@ -76,9 +58,17 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Override
   public Optional<ImmutableList<String>> getValues(String key) {
+    Optional<String> value = getValue(key);
+    if (!value.isPresent()) {
+      return Optional.absent();
+    }
     try {
-      return getValue(key).transform(TO_STRINGS);
-    } catch (JsonParseException | IllegalStateException ignored) {
+      ImmutableList<String> list =
+          objectMapper.readValue(
+              value.get(),
+              new TypeReference<ImmutableList<String>>() {});
+      return Optional.of(list);
+    } catch (IOException ignored) {
       return Optional.absent();
     }
   }

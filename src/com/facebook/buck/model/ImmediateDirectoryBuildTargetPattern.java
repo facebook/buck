@@ -69,4 +69,9 @@ public class ImmediateDirectoryBuildTargetPattern implements BuildTargetPattern 
     return Objects.hashCode(cellPath, pathWithinCell);
   }
 
+  @Override
+  public String toString() {
+    return "+" + cellPath.getFileName().toString() + "//" + pathWithinCell.toString() + ":";
+  }
+
 }

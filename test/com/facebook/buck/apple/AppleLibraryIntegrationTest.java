@@ -33,6 +33,7 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
 
 import org.junit.Rule;
@@ -102,6 +103,43 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void testAppleLibraryBuildsForAppleTVOS() throws IOException {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.APPLETVOS));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_builds_something", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibrary:TestLibrary#appletvos-arm64,static");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(target, "%s"))));
+  }
+
+  @Test
+  public void testAppleLibraryBuildsForAppleTVSimulator() throws IOException {
+    assumeTrue(
+        AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.APPLETVSIMULATOR));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_builds_something", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibrary:TestLibrary#appletvsimulator-x86_64,static");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(target, "%s"))));
+  }
+
+  @Test
   public void testAppleLibraryBuildsSomethingUsingAppleCxxPlatform() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
@@ -160,7 +198,7 @@ public class AppleLibraryIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance(
-        "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64");
+        "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64,no-debug");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         target.getFullyQualifiedName());
@@ -184,6 +222,84 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void testAppleFrameworkWithDsym() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_builds_something", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        "//Libraries/TestLibrary:TestLibrary#dwarf-and-dsym,framework,macosx-x86_64",
+        "--config",
+        "cxx.cflags=-g");
+    result.assertSuccess();
+
+    Path dsymPath = tmp.getRootPath()
+        .resolve(BuckConstant.getGenDir())
+        .resolve("Libraries/TestLibrary/" +
+            "TestLibrary#dwarf-and-dsym,framework,include-frameworks,macosx-x86_64/" +
+            "TestLibrary.framework.dSYM");
+    assertThat(Files.exists(dsymPath), is(true));
+    AppleDsymTestUtil.checkDsymFileHasDebugSymbol("+[TestClass answer]", workspace, dsymPath);
+  }
+
+  @Test
+  public void testAppleDynamicLibraryProducesDylib() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_shared", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        "//Libraries/TestLibrary:TestLibrary#shared,macosx-x86_64",
+        "--config",
+        "cxx.cflags=-g");
+    result.assertSuccess();
+
+    Path output = tmp.getRootPath()
+        .resolve(BuckConstant.getGenDir())
+        .resolve("Libraries/TestLibrary/TestLibrary#macosx-x86_64,shared")
+        .resolve("libLibraries_TestLibrary_TestLibrary.dylib");
+    assertThat(Files.exists(output), is(true));
+  }
+
+  @Test
+  public void testAppleDynamicLibraryWithDsym() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_shared", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        "//Libraries/TestLibrary:TestLibrary#shared,macosx-x86_64,dwarf-and-dsym",
+        "--config",
+        "cxx.cflags=-g");
+    result.assertSuccess();
+
+    Path output = tmp.getRootPath()
+        .resolve(BuckConstant.getGenDir())
+        .resolve("Libraries/TestLibrary/TestLibrary#macosx-x86_64,shared")
+        .resolve("libLibraries_TestLibrary_TestLibrary.dylib");
+    assertThat(Files.exists(output), is(true));
+
+    Path dsymPath = tmp.getRootPath()
+        .resolve(BuckConstant.getGenDir())
+        .resolve("Libraries/TestLibrary")
+        .resolve("TestLibrary#apple-dsym,macosx-x86_64,shared.dSYM");
+    assertThat(Files.exists(dsymPath), is(true));
+    AppleDsymTestUtil.checkDsymFileHasDebugSymbol("+[TestClass answer]", workspace, dsymPath);
+  }
+
+  @Test
   public void frameworkContainsFrameworkDependencies() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
@@ -203,6 +319,7 @@ public class AppleLibraryIntegrationTest {
         BuildTargets
             .getGenPath(
                 BuildTarget.builder(target)
+                    .addFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor())
                     .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
                     .build(),
                 "%s")
@@ -245,6 +362,7 @@ public class AppleLibraryIntegrationTest {
         BuildTargets
             .getGenPath(
                 BuildTarget.builder(target)
+                    .addFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor())
                     .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
                     .build(),
                 "%s")
@@ -267,7 +385,8 @@ public class AppleLibraryIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance(
-        "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64,no-include-frameworks");
+        "//Libraries/TestLibrary:TestLibrary#" +
+            "dwarf-and-dsym,framework,macosx-x86_64,no-include-frameworks");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         target.getFullyQualifiedName());

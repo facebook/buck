@@ -1,14 +1,14 @@
-#@# GENERATED FILE: DO NOT MODIFY 0572d4560bd1c611cad17abffd542beca14285b2 #@#
+#@# GENERATED FILE: DO NOT MODIFY 25452500da2ff76772d11675b974969f492aca5b #@#
 {
   "impl" : {
     "deps" : [
       "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/util:io",
-      "//third-party/java/guava:guava"
+      "//src/com/facebook/buck/util:io"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/util:util",
-      "//src/com/facebook/buck/util/versioncontrol:versioncontrol"
+      "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+      "//third-party/java/guava:guava"
     ]
   },
   "versioncontrol" : {

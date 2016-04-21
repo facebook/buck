@@ -49,6 +49,7 @@ EXPORTED_RESOURCES = [
     Resource("path_to_intellij_py"),
     Resource("path_to_pex"),
     Resource("path_to_pywatchman"),
+    Resource("path_to_scandir_py", basename='scandir.py'),
     Resource("path_to_sh_binary_template"),
     Resource("jacoco_agent_jar"),
     Resource("report_generator_jar"),
@@ -183,7 +184,7 @@ class BuckTool(object):
                                     print('Daemon is busy, waiting for it to become free...',
                                           file=sys.stderr)
                                     last_diagnostic_time = now
-                                time.sleep(0.1)
+                                time.sleep(1)
                     return exit_code
 
 

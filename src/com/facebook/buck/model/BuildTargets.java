@@ -46,12 +46,31 @@ public class BuildTargets {
    * @return A {@link java.nio.file.Path} under buck-out/bin, scoped to the base path of
    * {@code target}.
    */
-
   public static Path getScratchPath(BuildTarget target, String format) {
     return Paths.get(
         String.format(
             "%s/%s" + format,
-            BuckConstant.SCRATCH_DIR,
+            BuckConstant.getScratchDir(),
+            target.getBasePathWithSlash(),
+            target.getShortNameAndFlavorPostfix()));
+  }
+
+  /**
+   * Return a path to a file in the buck-out/annotation/ directory. {@code format} will be prepended
+   * with the {@link com.facebook.buck.util.BuckConstant#ANNOTATION_DIR} and the target base path,
+   * then formatted with the target short name.
+   *
+   * @param target The {@link BuildTarget} to scope this path to.
+   * @param format {@link String#format} string for the path name.  It should contain one "%s",
+   *     which will be filled in with the rule's short name.  It should not start with a slash.
+   * @return A {@link java.nio.file.Path} under buck-out/annotation, scoped to the base path of
+   * {@code target}.
+   */
+  public static Path getAnnotationPath(BuildTarget target, String format) {
+    return Paths.get(
+        String.format(
+            "%s/%s" + format,
+            BuckConstant.getAnnotationDir(),
             target.getBasePathWithSlash(),
             target.getShortNameAndFlavorPostfix()));
   }
@@ -69,7 +88,7 @@ public class BuildTargets {
    */
   public static Path getGenPath(BuildTarget target, String format) {
     return Paths.get(String.format("%s/%s" + format,
-        BuckConstant.GEN_DIR,
+        BuckConstant.getGenDir(),
         target.getBasePathWithSlash(),
         target.getShortNameAndFlavorPostfix()));
   }

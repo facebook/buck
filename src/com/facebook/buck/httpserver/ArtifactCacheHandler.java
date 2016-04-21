@@ -104,9 +104,9 @@ public class ArtifactCacheHandler extends AbstractHandler {
 
     Path temp = null;
     try {
-      projectFilesystem.mkdirs(BuckConstant.SCRATCH_PATH);
+      projectFilesystem.mkdirs(BuckConstant.getScratchPath());
       temp = projectFilesystem.createTempFile(
-          BuckConstant.SCRATCH_PATH,
+          BuckConstant.getScratchPath(),
           "outgoing_rulekey",
           ".tmp");
       CacheResult fetchResult = artifactCache.get().fetch(ruleKey, LazyPath.ofInstance(temp));
@@ -143,9 +143,9 @@ public class ArtifactCacheHandler extends AbstractHandler {
 
     Path temp = null;
     try {
-      projectFilesystem.mkdirs(BuckConstant.SCRATCH_PATH);
+      projectFilesystem.mkdirs(BuckConstant.getScratchPath());
       temp = projectFilesystem.createTempFile(
-          BuckConstant.SCRATCH_PATH,
+          BuckConstant.getScratchPath(),
           "incoming_upload",
           ".tmp");
 

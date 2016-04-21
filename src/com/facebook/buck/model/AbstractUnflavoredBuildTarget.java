@@ -77,7 +77,7 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
    * "//third_party/java/guava:guava-latest".
    */
   public String getFullyQualifiedName() {
-    return (getCell().isPresent() ? "@" + getCell().get() : "") +
+    return (getCell().isPresent() ? getCell().get() : "") +
         getBaseName() + ":" + getShortName();
   }
 

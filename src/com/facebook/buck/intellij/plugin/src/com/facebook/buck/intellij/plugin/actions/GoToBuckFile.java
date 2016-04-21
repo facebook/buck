@@ -17,7 +17,7 @@
 package com.facebook.buck.intellij.plugin.actions;
 
 import com.facebook.buck.intellij.plugin.file.BuckFileUtil;
-import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
@@ -26,6 +26,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
+import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.Navigatable;
@@ -33,7 +34,13 @@ import com.intellij.pom.Navigatable;
 /**
  * Go to its BUCK file for current source file.
  */
-public class GoToBuckFile extends AnAction {
+public class GoToBuckFile extends DumbAwareAction {
+
+  public static final String ACTION_TITLE = "Go To Buck file";
+
+  public GoToBuckFile() {
+    super(ACTION_TITLE, ACTION_TITLE, AllIcons.Actions.Share);
+  }
 
   @Override
   public void actionPerformed(AnActionEvent e) {

@@ -18,7 +18,7 @@ package com.facebook.buck.swift;
 
 import com.facebook.buck.apple.AppleCxxPlatform;
 import com.facebook.buck.apple.ApplePlatforms;
-import com.facebook.buck.apple.FatBinaryInfo;
+import com.facebook.buck.apple.MultiarchFileInfo;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.FlavorDomain;
@@ -59,7 +59,7 @@ public class SwiftDescriptions {
         defaultCxxPlatform,
         appleCxxPlatformFlavorDomain,
         params.getBuildTarget(),
-        Optional.<FatBinaryInfo>absent());
+        Optional.<MultiarchFileInfo>absent());
     Optional<Tool> swiftCompiler = appleCxxPlatform.getSwift();
     if (!swiftCompiler.isPresent()) {
       throw new HumanReadableException("Platform %s is missing swift compiler", appleCxxPlatform);

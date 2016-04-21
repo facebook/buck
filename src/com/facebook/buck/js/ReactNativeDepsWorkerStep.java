@@ -29,7 +29,7 @@ public class ReactNativeDepsWorkerStep extends WorkerShellStep {
   public ReactNativeDepsWorkerStep(
       ProjectFilesystem filesystem,
       Path tmpDir,
-      Path jsPackager,
+      ImmutableList<String> jsPackagerCommand,
       Optional<String> additionalPackagerFlags,
       ReactNativePlatform platform,
       Path entryFile,
@@ -40,7 +40,7 @@ public class ReactNativeDepsWorkerStep extends WorkerShellStep {
         filesystem.getRootPath(),
         Optional.of(
             WorkerJobParams.of(
-                ImmutableList.of(jsPackager.toString()),
+                jsPackagerCommand,
                 String.format(
                     "--platform %s%s",
                     platform.toString(),

@@ -42,6 +42,7 @@ import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.TestRunComplete
 import com.facebook.buck.intellij.plugin.ws.buckevents.parts.TestCaseSummary;
 import com.facebook.buck.intellij.plugin.ws.buckevents.parts.TestResults;
 import com.facebook.buck.intellij.plugin.ws.buckevents.parts.TestResultsSummary;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.intellij.execution.ui.ConsoleViewContentType;
@@ -288,6 +289,9 @@ public class BuckEventsConsumer implements
 
     private void displayErrors() {
         if (mErrors.size() > 0) {
+            if (!BuckToolWindowFactory.isToolWindowVisible(mProject)) {
+                BuckToolWindowFactory.showToolWindow(mProject);
+            }
             Set<String> targetsWithErrors = mErrors.keySet();
             for (String target: targetsWithErrors) {
                 List<String> errorMessages = mErrors.get(target);
@@ -478,6 +482,9 @@ public class BuckEventsConsumer implements
     }
 
     public void showTestResults() {
+        if (!mTestResultsList.isEmpty() && !BuckToolWindowFactory.isToolWindowVisible(mProject)) {
+                BuckToolWindowFactory.showToolWindow(mProject);
+        }
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -559,6 +566,10 @@ public class BuckEventsConsumer implements
 
     @Override
     public void consumeConsoleEvent(final String message) {
+        if (!BuckToolWindowFactory.isToolWindowVisible(mProject)) {
+            BuckToolWindowFactory.showToolWindow(mProject);
+        }
+
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -575,10 +586,23 @@ public class BuckEventsConsumer implements
 
     @Override
     public void consumeInstallFinished(long timestamp, final String packageName) {
-
         if (BuckInstallDebugAction.shouldDebug()) {
-            AndroidDebugger.attachDebugger(packageName, mProject);
-            BuckInstallDebugAction.setDebug(false);
+            ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        AndroidDebugger.init();
+                        AndroidDebugger.attachDebugger(packageName, mProject);
+                        BuckInstallDebugAction.setDebug(false);
+                    } catch (InterruptedException e) {
+                        // Display the error on our console
+                        consumeConsoleEvent(e.toString());
+                    } catch (HumanReadableException e) {
+                        // Display the error on our console
+                        consumeConsoleEvent(e.toString());
+                    }
+                }
+            });
         }
     }
 }

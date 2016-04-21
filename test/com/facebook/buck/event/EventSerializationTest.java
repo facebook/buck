@@ -189,7 +189,7 @@ public class EventSerializationTest {
             BuildRuleKeys.of(new RuleKey("aaaa")),
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
-            Optional.<BuildRuleSuccessType>absent(),
+            Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
             Optional.<HashCode>absent(),
             Optional.<Long>absent());
     event.configure(timestamp, nanoTime, threadId, buildId);

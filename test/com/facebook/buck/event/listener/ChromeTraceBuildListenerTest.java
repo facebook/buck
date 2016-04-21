@@ -106,7 +106,7 @@ public class ChromeTraceBuildListenerTest {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
     BuildId buildId = new BuildId("BUILD_ID");
 
-    String tracePath = String.format("%s/build.trace", BuckConstant.BUCK_TRACE_DIR);
+    String tracePath = String.format("%s/build.trace", BuckConstant.getBuckTraceDir());
 
     File traceFile = new File(tmpDir.getRoot(), tracePath);
     projectFilesystem.createParentDirs(tracePath);
@@ -115,7 +115,7 @@ public class ChromeTraceBuildListenerTest {
 
     for (int i = 0; i < 10; ++i) {
       File oldResult = new File(tmpDir.getRoot(),
-          String.format("%s/build.100%d.trace", BuckConstant.BUCK_TRACE_DIR, i));
+          String.format("%s/build.100%d.trace", BuckConstant.getBuckTraceDir(), i));
       oldResult.createNewFile();
       oldResult.setLastModified(TimeUnit.SECONDS.toMillis(i));
     }
@@ -135,7 +135,7 @@ public class ChromeTraceBuildListenerTest {
     listener.deleteOldTraces();
 
     ImmutableList<String> files = FluentIterable.
-        from(Arrays.asList(projectFilesystem.listFiles(BuckConstant.BUCK_TRACE_DIR))).
+        from(Arrays.asList(projectFilesystem.listFiles(BuckConstant.getBuckTraceDir()))).
         transform(new Function<File, String>() {
           @Override
           public String apply(File input) {
@@ -295,7 +295,7 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(CommandEvent.finished(commandEventStarted, /* exitCode */ 0));
     listener.outputTrace(new BuildId("BUILD_ID"));
 
-    File resultFile = new File(tmpDir.getRoot(), BuckConstant.BUCK_TRACE_DIR + "/build.trace");
+    File resultFile = new File(tmpDir.getRoot(), BuckConstant.getBuckTraceDir() + "/build.trace");
 
     List<ChromeTraceEvent> originalResultList = mapper.readValue(
         resultFile,
@@ -517,7 +517,7 @@ public class ChromeTraceBuildListenerTest {
     } catch (HumanReadableException e) {
       assertEquals(
           "Unable to write trace file: java.nio.file.AccessDeniedException: " +
-              projectFilesystem.resolve(BuckConstant.BUCK_OUTPUT_PATH),
+              projectFilesystem.resolve(BuckConstant.getBuckOutputPath()),
           e.getMessage());
     }  finally {
       tmpDir.getRoot().setWritable(true);

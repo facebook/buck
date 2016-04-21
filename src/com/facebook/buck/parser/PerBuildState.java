@@ -156,7 +156,6 @@ class PerBuildState implements AutoCloseable {
   public TargetNode<?> getTargetNode(BuildTarget target)
       throws BuildFileParseException, BuildTargetException {
     Cell owningCell = getCell(target);
-    target = target.withoutCell();
 
     return parsePipeline.getTargetNode(owningCell, target);
   }

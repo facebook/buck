@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 7e1a1b2407e47a5ddc0404c44601f5dce63520db #@#
+#@# GENERATED FILE: DO NOT MODIFY 2143514c00357497fc8a661f80fe68900e47cb88 #@#
 {
   "ocaml" : {
     "deps" : [
@@ -12,6 +12,7 @@
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/io:io",

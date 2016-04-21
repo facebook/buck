@@ -361,7 +361,7 @@ public class SourcePathResolverTest {
             rule.getBuildTarget(),
             new BuildTargetSourcePath(
                 rule.getBuildTarget(),
-                BuckConstant.GEN_PATH.resolve("foo").resolve("something.cpp"))),
+                BuckConstant.getGenPath().resolve("foo").resolve("something.cpp"))),
         Matchers.equalTo("something.cpp"));
   }
 
@@ -374,11 +374,11 @@ public class SourcePathResolverTest {
     SourcePath sourcePath1 =
         new BuildTargetSourcePath(
             rule.getBuildTarget(),
-            BuckConstant.GEN_PATH.resolve("foo").resolve("name1"));
+            BuckConstant.getGenPath().resolve("foo").resolve("name1"));
     SourcePath sourcePath2 =
         new BuildTargetSourcePath(
             rule.getBuildTarget(),
-            BuckConstant.GEN_PATH.resolve("foo").resolve("name2"));
+            BuckConstant.getGenPath().resolve("foo").resolve("name2"));
     pathResolver.getSourcePathNames(
         rule.getBuildTarget(),
         "srcs",

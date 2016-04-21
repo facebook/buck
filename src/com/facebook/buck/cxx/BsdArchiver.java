@@ -125,8 +125,13 @@ public class BsdArchiver implements Archiver {
   @Override
   public ImmutableList<FileScrubber> getScrubbers() {
     return ImmutableList.of(
-        ObjectFileScrubbers.createDateUidGidScrubber(EXPECTED_GLOBAL_HEADER),
+        ObjectFileScrubbers.createDateUidGidScrubber(),
         SYMBOL_NAME_TABLE_PADDING_SCRUBBER);
+  }
+
+  @Override
+  public boolean supportsThinArchives() {
+    return false;
   }
 
   @Override

@@ -16,8 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.util.BuckConstant.DEFAULT_CACHE_DIR;
-
 import com.facebook.buck.config.Config;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -39,8 +37,11 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.SampleRate;
 import com.facebook.buck.util.environment.Architecture;
+import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.network.HostnameFetching;
 import com.google.common.annotations.Beta;
@@ -81,6 +82,8 @@ public class BuckConfig {
 
   private static final Float DEFAULT_THREAD_CORE_RATIO = Float.valueOf(1.0F);
 
+  private static final String ALT_CELL_PREFIX = "@";
+
   /**
    * This pattern is designed so that a fully-qualified build target cannot be a valid alias name
    * and vice-versa.
@@ -113,7 +116,26 @@ public class BuckConfig {
           if (!cellName.isPresent()) {
             return projectFilesystem.getRootPath();
           }
-          Optional<Path> root = getPath("repositories", cellName.get(), false);
+          Optional<Path> root = Optional.<Path>absent();
+          if (cellName.get().startsWith(ALT_CELL_PREFIX)) {
+            Optional<Path> legacyRoot = getPath(
+                "repositories",
+                cellName.get().substring(ALT_CELL_PREFIX.length()),
+                false);
+            root = getPath("repositories", cellName.get(), false);
+            if (legacyRoot.isPresent() && root.isPresent()) {
+              throw new HumanReadableException(
+                  "Both '%s' and '%s' found as cells rooted at: %s",
+                  cellName.get(),
+                  cellName.get().substring(ALT_CELL_PREFIX.length()),
+                  projectFilesystem.getRootPath());
+            }
+            if (!root.isPresent()) {
+              root = legacyRoot;
+            }
+          } else {
+            root = getPath("repositories", cellName.get(), false);
+          }
           if (!root.isPresent()) {
             throw new HumanReadableException(
                 "Unable to find repository '%s' in cell rooted at: %s",
@@ -136,6 +158,7 @@ public class BuckConfig {
   private final Platform platform;
 
   private final ImmutableMap<String, String> environment;
+  private final ImmutableMap<String, String> filteredEnvironment;
 
   public BuckConfig(
       Config config,
@@ -154,6 +177,8 @@ public class BuckConfig {
 
     this.platform = platform;
     this.environment = environment;
+    this.filteredEnvironment = ImmutableMap.copyOf(
+        Maps.filterKeys(environment, EnvironmentFilter.NOT_IGNORED_ENV_PREDICATE));
   }
 
   /**
@@ -570,19 +595,12 @@ public class BuckConfig {
     return getValue("log", "remote_log_url").transform(TO_URI);
   }
 
-  public Optional<Float> getRemoteLogSampleRate() {
+  public Optional<SampleRate> getRemoteLogSampleRate() {
     Optional<Float> sampleRate = config.getFloat("log", "remote_log_sample_rate");
     if (sampleRate.isPresent()) {
-      if (sampleRate.get() > 1.0f) {
-        throw new HumanReadableException(
-            ".buckconfig: remote_log_sample_rate should be less than or equal to 1.0.");
-      }
-      if (sampleRate.get() < 0.0f) {
-        throw new HumanReadableException(
-            ".buckconfig: remote_log_sample_rate should be greater than or equal to 0.");
-      }
+      return Optional.of(SampleRate.of(sampleRate.get()));
     }
-    return sampleRate;
+    return Optional.absent();
  }
 
   public boolean hasUserDefinedValue(String sectionName, String propertyName) {
@@ -591,6 +609,10 @@ public class BuckConfig {
 
   public Optional<String> getValue(String sectionName, String propertyName) {
     return config.getValue(sectionName, propertyName);
+  }
+
+  public Optional<Integer> getInteger(String sectionName, String propertyName) {
+    return config.getInteger(sectionName, propertyName);
   }
 
   public Optional<Long> getLong(String sectionName, String propertyName) {
@@ -652,6 +674,10 @@ public class BuckConfig {
     return environment;
   }
 
+  public ImmutableMap<String, String> getFilteredEnvironment() {
+    return filteredEnvironment;
+  }
+
   public String[] getEnv(String propertyName, String separator) {
     String value = getEnvironment().get(propertyName);
     if (value == null) {
@@ -695,10 +721,17 @@ public class BuckConfig {
   }
 
   /**
+   * @return the maximum size an artifact can be for the build engine to cache it.
+   */
+  public Optional<Long> getBuildArtifactCacheSizeLimit() {
+    return getLong("build", "artifact_cache_size_limit");
+  }
+
+  /**
    * @return the local cache directory
    */
   public String getLocalCacheDirectory() {
-    return getValue("cache", "dir").or(DEFAULT_CACHE_DIR);
+    return getValue("cache", "dir").or(BuckConstant.getDefaultCacheDir());
   }
 
   /**

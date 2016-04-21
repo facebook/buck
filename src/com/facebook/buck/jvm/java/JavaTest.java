@@ -147,6 +147,7 @@ public class JavaTest
       Set<String> contacts,
       Optional<SourcePath> proguardConfig,
       SourcePath abiJar,
+      boolean trackClassUsage,
       ImmutableSet<Path> addtionalClasspathEntries,
       TestType testType,
       CompileToJarStepFactory compileStepFactory,
@@ -172,6 +173,7 @@ public class JavaTest
         /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         abiJar,
+        trackClassUsage,
         addtionalClasspathEntries,
         compileStepFactory,
         resourcesRoot,
@@ -389,7 +391,7 @@ public class JavaTest
     }
 
     String[] pathsArray = pathsList.toArray(new String[pathsList.size()]);
-    return Paths.get(BuckConstant.GEN_DIR, pathsArray);
+    return Paths.get(BuckConstant.getGenDir(), pathsArray);
   }
 
   private Path getPathToTmpDirectory() {

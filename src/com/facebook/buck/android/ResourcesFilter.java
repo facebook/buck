@@ -37,7 +37,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -63,7 +62,7 @@ public class ResourcesFilter extends AbstractBuildRule
   private static final String RES_DIRECTORIES_KEY = "res_directories";
   private static final String STRING_FILES_KEY = "string_files";
 
-  static enum ResourceCompressionMode {
+  enum ResourceCompressionMode {
     DISABLED(/* isCompressResources */ false, /* isStoreStringsAsAssets */ false),
     ENABLED(/* isCompressResources */ true, /* isStoreStringsAsAssets */ false),
     ENABLED_STRINGS_ONLY(
@@ -77,7 +76,7 @@ public class ResourcesFilter extends AbstractBuildRule
     private final boolean isCompressResources;
     private final boolean isStoreStringsAsAssets;
 
-    private ResourceCompressionMode(boolean isCompressResources, boolean isStoreStringsAsAssets) {
+    ResourceCompressionMode(boolean isCompressResources, boolean isStoreStringsAsAssets) {
       this.isCompressResources = isCompressResources;
       this.isStoreStringsAsAssets = isStoreStringsAsAssets;
     }
@@ -167,10 +166,14 @@ public class ResourcesFilter extends AbstractBuildRule
       public int execute(ExecutionContext context) {
         buildableContext.addMetadata(
             RES_DIRECTORIES_KEY,
-            Iterables.transform(filteredResDirectories, Functions.toStringFunction()));
+            FluentIterable.from(filteredResDirectories)
+                .transform(Functions.toStringFunction())
+                .toList());
         buildableContext.addMetadata(
             STRING_FILES_KEY,
-            Iterables.transform(stringFilesBuilder.build(), Functions.toStringFunction()));
+            FluentIterable.from(stringFilesBuilder.build())
+                .transform(Functions.toStringFunction())
+                .toList());
         return 0;
       }
     });

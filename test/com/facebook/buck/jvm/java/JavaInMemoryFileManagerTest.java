@@ -58,11 +58,11 @@ public class JavaInMemoryFileManagerTest {
     JavaFileObject fileObject = inMemoryFileManager.getJavaFileForOutput(
         locationOf("src"),
         "com.facebook.buck.jvm.java.JavaFileParser",
-        JavaFileObject.Kind.SOURCE,
+        JavaFileObject.Kind.CLASS,
         null);
 
-    assertEquals(JavaFileObject.Kind.SOURCE, fileObject.getKind());
-    assertEquals("com/facebook/buck/jvm/java/JavaFileParser.java", fileObject.getName());
+    assertEquals(JavaFileObject.Kind.CLASS, fileObject.getKind());
+    assertEquals("com/facebook/buck/jvm/java/JavaFileParser.class", fileObject.getName());
   }
 
   @Test
@@ -70,7 +70,7 @@ public class JavaInMemoryFileManagerTest {
     JavaFileObject fileObject = inMemoryFileManager.getJavaFileForOutput(
         locationOf("src"),
         "JavaFileParser",
-        JavaFileObject.Kind.SOURCE,
+        JavaFileObject.Kind.CLASS,
         null);
 
     OutputStream stream = fileObject.openOutputStream();
@@ -87,7 +87,7 @@ public class JavaInMemoryFileManagerTest {
     JavaFileObject fileObject = inMemoryFileManager.getJavaFileForOutput(
         locationOf("src"),
         "jvm.java.JavaFileParser",
-        JavaFileObject.Kind.SOURCE,
+        JavaFileObject.Kind.CLASS,
         null);
 
     fileObject.openOutputStream().close();
@@ -96,7 +96,7 @@ public class JavaInMemoryFileManagerTest {
     assertEquals(3, zipEntries.size());
     assertEquals("jvm/", zipEntries.get(0).getName());
     assertEquals("jvm/java/", zipEntries.get(1).getName());
-    assertEquals("jvm/java/JavaFileParser.java", zipEntries.get(2).getName());
+    assertEquals("jvm/java/JavaFileParser.class", zipEntries.get(2).getName());
   }
 
   @Test
@@ -104,13 +104,13 @@ public class JavaInMemoryFileManagerTest {
     JavaFileObject fileObject1 = inMemoryFileManager.getJavaFileForOutput(
         locationOf("src"),
         "jvm.java.JavaFileParser",
-        JavaFileObject.Kind.SOURCE,
+        JavaFileObject.Kind.CLASS,
         null);
 
     JavaFileObject fileObject2 = inMemoryFileManager.getJavaFileForOutput(
         locationOf("src"),
         "jvm.java.JavaInMemoryFileManager",
-        JavaFileObject.Kind.SOURCE,
+        JavaFileObject.Kind.CLASS,
         null);
 
     fileObject1.openOutputStream().close();
@@ -120,8 +120,8 @@ public class JavaInMemoryFileManagerTest {
     assertEquals(4, zipEntries.size());
     assertEquals("jvm/", zipEntries.get(0).getName());
     assertEquals("jvm/java/", zipEntries.get(1).getName());
-    assertEquals("jvm/java/JavaFileParser.java", zipEntries.get(2).getName());
-    assertEquals("jvm/java/JavaInMemoryFileManager.java", zipEntries.get(3).getName());
+    assertEquals("jvm/java/JavaFileParser.class", zipEntries.get(2).getName());
+    assertEquals("jvm/java/JavaInMemoryFileManager.class", zipEntries.get(3).getName());
   }
 
   @Test
@@ -129,13 +129,13 @@ public class JavaInMemoryFileManagerTest {
     JavaFileObject fileObject1 = inMemoryFileManager.getJavaFileForOutput(
         locationOf("src"),
         "jvm.java.JavaFileParser",
-        JavaFileObject.Kind.SOURCE,
+        JavaFileObject.Kind.CLASS,
         null);
 
     JavaFileObject fileObject2 = inMemoryFileManager.getJavaFileForOutput(
         locationOf("src"),
         "jvm.java.JavaInMemoryFileManager",
-        JavaFileObject.Kind.SOURCE,
+        JavaFileObject.Kind.CLASS,
         null);
 
     assertFalse(inMemoryFileManager.isSameFile(fileObject1, fileObject2));
@@ -146,13 +146,13 @@ public class JavaInMemoryFileManagerTest {
     JavaFileObject fileObject1 = inMemoryFileManager.getJavaFileForOutput(
         locationOf("src"),
         "jvm.java.JavaFileParser",
-        JavaFileObject.Kind.SOURCE,
+        JavaFileObject.Kind.CLASS,
         null);
 
     JavaFileObject fileObject2 = inMemoryFileManager.getJavaFileForOutput(
         locationOf("src"),
         "jvm.java.JavaFileParser",
-        JavaFileObject.Kind.SOURCE,
+        JavaFileObject.Kind.CLASS,
         null);
 
     assertTrue(inMemoryFileManager.isSameFile(fileObject1, fileObject2));

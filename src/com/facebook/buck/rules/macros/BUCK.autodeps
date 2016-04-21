@@ -1,10 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY d04370ce605c5a3542e0632e0550d29db2c38277 #@#
+#@# GENERATED FILE: DO NOT MODIFY 2bdf254e410d620afc5fa21dbf5a567d47894da4 #@#
 {
   "macros" : {
     "deps" : [
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/parser:rule_pattern",
-      "//src/com/facebook/buck/shell:worker",
+      "//src/com/facebook/buck/shell:worker_tool",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
       "//third-party/java/immutables:processor"

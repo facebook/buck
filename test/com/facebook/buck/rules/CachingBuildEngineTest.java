@@ -16,14 +16,13 @@
 
 package com.facebook.buck.rules;
 
-import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.isA;
-import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -68,7 +67,9 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
@@ -80,10 +81,10 @@ import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipConstants;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -92,14 +93,13 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
+import com.google.common.util.concurrent.AbstractListeningExecutorService;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import org.easymock.EasyMockSupport;
-import org.hamcrest.FeatureMatcher;
-import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -115,16 +115,21 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -240,6 +245,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
 
       // Add a build step so we can verify that the steps are executed.
@@ -272,22 +278,11 @@ public class CachingBuildEngineTest {
 
       // Verify the events logged to the BuckEventBus.
       List<BuckEvent> events = listener.getEvents();
-      assertThat(events, Matchers.hasSize(15));
-      Iterator<BuckEvent> eventIter = events.iterator();
-      assertThat(eventIter.next(), isUnskipedRuleCountEvent(2));
-      assertEquals(
-          configureTestEvent(BuildRuleEvent.started(dep), buckEventBus),
-          eventIter.next());
-      assertEquals(
-          configureTestEvent(BuildRuleEvent.suspended(dep, ruleKeyBuilderFactory), buckEventBus),
-          eventIter.next());
-      assertEquals(
-          configureTestEvent(
+      assertThat(events, hasItem(BuildRuleEvent.started(dep)));
+      assertThat(
+          listener.getEvents(),
+          Matchers.<BuckEvent>containsInRelativeOrder(
               BuildRuleEvent.started(ruleToTest),
-              buckEventBus),
-          eventIter.next());
-      assertEquals(
-          configureTestEvent(
               BuildRuleEvent.finished(
                   ruleToTest,
                   BuildRuleKeys.of(ruleToTestKey),
@@ -295,9 +290,7 @@ public class CachingBuildEngineTest {
                   CacheResult.miss(),
                   Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                   Optional.<HashCode>absent(),
-                  Optional.<Long>absent()),
-              buckEventBus),
-          events.get(events.size() - 2));
+                  Optional.<Long>absent())));
     }
 
     @Test
@@ -348,6 +341,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
 
@@ -356,28 +350,18 @@ public class CachingBuildEngineTest {
 
       assertTrue(service.shutdownNow().isEmpty());
 
-      List<BuckEvent> events = listener.getEvents();
-      events = FluentIterable.from(events)
-          .filter(
-              Predicates.not(Predicates.instanceOf(BuildEvent.UnskippedRuleCountUpdated.class)))
-          .toList();
-      assertThat(events, Matchers.hasSize(8));
-      assertThat(events, Matchers.<BuckEvent>contains(
-          BuildRuleEvent.started(buildRule),
-          BuildRuleEvent.suspended(buildRule, ruleKeyBuilderFactory),
-          BuildRuleEvent.resumed(buildRule, ruleKeyBuilderFactory),
-          BuildRuleEvent.suspended(buildRule, ruleKeyBuilderFactory),
-          BuildRuleEvent.resumed(buildRule, ruleKeyBuilderFactory),
-          BuildRuleEvent.suspended(buildRule, ruleKeyBuilderFactory),
-          BuildRuleEvent.resumed(buildRule, ruleKeyBuilderFactory),
-          BuildRuleEvent.finished(
-              buildRule,
-              BuildRuleKeys.of(ruleKeyBuilderFactory.build(buildRule)),
-              BuildRuleStatus.SUCCESS,
-              CacheResult.miss(),
-              Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-              Optional.<HashCode>absent(),
-              Optional.<Long>absent())));
+      assertThat(
+          listener.getEvents(),
+          Matchers.<BuckEvent>containsInRelativeOrder(
+              BuildRuleEvent.started(buildRule),
+              BuildRuleEvent.finished(
+                  buildRule,
+                  BuildRuleKeys.of(ruleKeyBuilderFactory.build(buildRule)),
+                  BuildRuleStatus.SUCCESS,
+                  CacheResult.miss(),
+                  Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+                  Optional.<HashCode>absent(),
+                  Optional.<Long>absent())));
     }
 
     @Test
@@ -421,6 +405,7 @@ public class CachingBuildEngineTest {
           .setArtifactCache(artifactCache)
           .setJavaPackageFinder(createMock(JavaPackageFinder.class))
           .setEventBus(buckEventBus)
+          .setObjectMapper(ObjectMappers.newDefaultInstance())
           .build();
 
       filesystem.writeContentsToPath(
@@ -438,6 +423,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
       buckEventBus.post(
@@ -501,6 +487,7 @@ public class CachingBuildEngineTest {
           .setArtifactCache(artifactCache)
           .setJavaPackageFinder(createMock(JavaPackageFinder.class))
           .setEventBus(buckEventBus)
+          .setObjectMapper(ObjectMappers.newDefaultInstance())
           .build();
 
       filesystem.writeContentsToPath(
@@ -518,6 +505,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
       buckEventBus.post(
@@ -573,6 +561,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
 
       // Run the build.
@@ -583,24 +572,11 @@ public class CachingBuildEngineTest {
 
       // Verify the events logged to the BuckEventBus.
       List<BuckEvent> events = listener.getEvents();
-      assertThat(events, Matchers.hasSize(8));
-      Iterator<BuckEvent> eventIter = events.iterator();
-      assertThat(eventIter.next(), isUnskipedRuleCountEvent(2));
-      assertThat(eventIter.next(), isEqualEvent(BuildRuleEvent.started(dep)));
+      assertThat(events, hasItem(BuildRuleEvent.started(dep)));
       assertThat(
-          eventIter.next(),
-          isEqualEvent(BuildRuleEvent.suspended(dep, ruleKeyBuilderFactory)));
-      assertThat(eventIter.next(), isEqualEvent(BuildRuleEvent.started(ruleToTest)));
-      assertThat(
-          eventIter.next(),
-          isEqualEvent(BuildRuleEvent.suspended(ruleToTest, ruleKeyBuilderFactory)));
-      assertThat(
-          eventIter.next(),
-          isEqualEvent(BuildRuleEvent.resumed(ruleToTest, ruleKeyBuilderFactory)));
-      assertThat(eventIter.next(), isUnskipedRuleCountEvent(1));
-      assertThat(
-          eventIter.next(),
-          isEqualEvent(
+          events,
+          Matchers.<BuckEvent>containsInRelativeOrder(
+              BuildRuleEvent.started(ruleToTest),
               BuildRuleEvent.finished(
                   ruleToTest,
                   BuildRuleKeys.of(ruleToTestKey),
@@ -609,7 +585,6 @@ public class CachingBuildEngineTest {
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.<HashCode>absent(),
                   Optional.<Long>absent())));
-      assertThat(eventIter.hasNext(), is(false));
     }
 
     @Test
@@ -663,6 +638,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
 
       // Run the build.
@@ -671,30 +647,30 @@ public class CachingBuildEngineTest {
 
       // Verify the events logged to the BuckEventBus.
       List<BuckEvent> events = listener.getEvents();
-      assertThat(events, Matchers.hasSize(8));
-      assertThat(events, Matchers.<BuckEvent>contains(
-          BuildRuleEvent.started(dep),
-          BuildRuleEvent.suspended(dep, ruleKeyBuilderFactory),
-          BuildRuleEvent.started(ruleToTest),
-          BuildRuleEvent.suspended(ruleToTest, ruleKeyBuilderFactory),
-          BuildRuleEvent.resumed(ruleToTest, ruleKeyBuilderFactory),
-          BuildRuleEvent.resumed(dep, ruleKeyBuilderFactory),
-          BuildRuleEvent.finished(
-              dep,
-              BuildRuleKeys.of(depKey),
-              BuildRuleStatus.SUCCESS,
-              CacheResult.localKeyUnchangedHit(),
-              Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
-              Optional.<HashCode>absent(),
-              Optional.<Long>absent()),
-          BuildRuleEvent.finished(
-              ruleToTest,
-              BuildRuleKeys.of(ruleToTestKey),
-              BuildRuleStatus.SUCCESS,
-              CacheResult.localKeyUnchangedHit(),
-              Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
-              Optional.<HashCode>absent(),
-              Optional.<Long>absent())));
+      assertThat(
+          events,
+          Matchers.<BuckEvent>containsInRelativeOrder(
+              BuildRuleEvent.started(dep),
+              BuildRuleEvent.finished(
+                  dep,
+                  BuildRuleKeys.of(depKey),
+                  BuildRuleStatus.SUCCESS,
+                  CacheResult.localKeyUnchangedHit(),
+                  Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
+                  Optional.<HashCode>absent(),
+                  Optional.<Long>absent())));
+      assertThat(
+          events,
+          Matchers.<BuckEvent>containsInRelativeOrder(
+              BuildRuleEvent.started(ruleToTest),
+              BuildRuleEvent.finished(
+                  ruleToTest,
+                  BuildRuleKeys.of(ruleToTestKey),
+                  BuildRuleStatus.SUCCESS,
+                  CacheResult.localKeyUnchangedHit(),
+                  Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
+                  Optional.<HashCode>absent(),
+                  Optional.<Long>absent())));
     }
 
     @Test
@@ -771,6 +747,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
 
       // Run the build.
@@ -779,27 +756,10 @@ public class CachingBuildEngineTest {
 
       // Verify the events logged to the BuckEventBus.
       List<BuckEvent> events = listener.getEvents();
-      assertThat(events, Matchers.hasSize(13));
-      Iterator<BuckEvent> eventIter = events.iterator();
-      assertThat(eventIter.next(), isUnskipedRuleCountEvent(3));
-      assertThat(eventIter.next(), isEqualEvent(BuildRuleEvent.started(transitiveRuntimeDep)));
       assertThat(
-          eventIter.next(),
-          isEqualEvent(BuildRuleEvent.suspended(transitiveRuntimeDep, ruleKeyBuilderFactory)));
-      assertThat(eventIter.next(), isEqualEvent(BuildRuleEvent.started(runtimeDep)));
-      assertThat(
-          eventIter.next(),
-          isEqualEvent(BuildRuleEvent.suspended(runtimeDep, ruleKeyBuilderFactory)));
-      assertThat(eventIter.next(), isEqualEvent(BuildRuleEvent.started(ruleToTest)));
-      assertThat(
-          eventIter.next(),
-          isEqualEvent(BuildRuleEvent.suspended(ruleToTest, ruleKeyBuilderFactory)));
-      assertThat(
-          eventIter.next(),
-          isEqualEvent(BuildRuleEvent.resumed(ruleToTest, ruleKeyBuilderFactory)));
-      assertThat(
-          eventIter.next(),
-          isEqualEvent(
+          events,
+          Matchers.<BuckEvent>containsInRelativeOrder(
+              BuildRuleEvent.started(ruleToTest),
               BuildRuleEvent.finished(
                   ruleToTest,
                   BuildRuleKeys.of(ruleToTestKey),
@@ -809,11 +769,9 @@ public class CachingBuildEngineTest {
                   Optional.<HashCode>absent(),
                   Optional.<Long>absent())));
       assertThat(
-          eventIter.next(),
-          isEqualEvent(BuildRuleEvent.resumed(runtimeDep, ruleKeyBuilderFactory)));
-      assertThat(
-          eventIter.next(),
-          isEqualEvent(
+          events,
+          Matchers.<BuckEvent>containsInRelativeOrder(
+              BuildRuleEvent.started(runtimeDep),
               BuildRuleEvent.finished(
                   runtimeDep,
                   BuildRuleKeys.of(runtimeDepKey),
@@ -823,11 +781,9 @@ public class CachingBuildEngineTest {
                   Optional.<HashCode>absent(),
                   Optional.<Long>absent())));
       assertThat(
-          eventIter.next(),
-          isEqualEvent(BuildRuleEvent.resumed(transitiveRuntimeDep, ruleKeyBuilderFactory)));
-      assertThat(
-          eventIter.next(),
-          isEqualEvent(
+          events,
+          Matchers.<BuckEvent>containsInRelativeOrder(
+              BuildRuleEvent.started(transitiveRuntimeDep),
               BuildRuleEvent.finished(
                   transitiveRuntimeDep,
                   BuildRuleKeys.of(transitiveRuntimeDepKey),
@@ -836,7 +792,6 @@ public class CachingBuildEngineTest {
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.<HashCode>absent(),
                   Optional.<Long>absent())));
-      assertThat(eventIter.hasNext(), is(false));
     }
 
     @Test
@@ -888,6 +843,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
 
       // Run the build.
@@ -915,7 +871,7 @@ public class CachingBuildEngineTest {
               .build();
 
       BuildRule rule =
-          new NoopBuildRule(
+          new EmptyBuildRule(
               new FakeBuildRuleParamsBuilder("//:rule")
                   .setProjectFilesystem(filesystem)
                   .build(),
@@ -928,6 +884,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
 
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -941,7 +898,7 @@ public class CachingBuildEngineTest {
       Path output = Paths.get("output/path");
       filesystem.mkdirs(output.getParent());
       filesystem.writeContentsToPath("something", output);
-      HashCode originalHashCode = fileHashCache.get(output);
+      HashCode originalHashCode = fileHashCache.get(filesystem.resolve(output));
       assertTrue(fileHashCache.willGet(output));
 
       // Create a simple rule which just writes something new to the output file.
@@ -962,6 +919,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
 
       // Run the build.
@@ -969,7 +927,7 @@ public class CachingBuildEngineTest {
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
 
       // Verify that we have a new hash.
-      HashCode newHashCode = fileHashCache.get(output);
+      HashCode newHashCode = fileHashCache.get(filesystem.resolve(output));
       assertThat(newHashCode, Matchers.not(equalTo(originalHashCode)));
     }
 
@@ -1037,6 +995,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
 
       // Run the build.
@@ -1130,6 +1089,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
 
       // Run the build.
@@ -1187,12 +1147,46 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               resolver);
 
       assertThat(
           cachingBuildEngine.getNumRulesToBuild(ImmutableList.of(rule1)),
           equalTo(3));
     }
+
+    @Test
+    public void artifactCacheSizeLimit() throws Exception {
+      // Create a simple rule which just writes something new to the output file.
+      BuildRule rule =
+          new WriteFile(
+              new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule"))
+                  .setProjectFilesystem(filesystem)
+                  .build(),
+              pathResolver,
+              "data",
+              Paths.get("output/path"),
+              /* executable */ false);
+
+      // Create the build engine with low cache artifact limit which prevents caching the above\
+      // rule.
+      CachingBuildEngine cachingBuildEngine =
+          new CachingBuildEngine(
+              toWeighted(MoreExecutors.newDirectExecutorService()),
+              new NullFileHashCache(),
+              CachingBuildEngine.BuildMode.SHALLOW,
+              CachingBuildEngine.DependencySchedulingOrder.RANDOM,
+              CachingBuildEngine.DepFiles.ENABLED,
+              256L,
+              Optional.of(2L),
+              resolver);
+
+      // Verify that after building successfully, nothing is cached.
+      BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
+      assertThat(result.getSuccess(), equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
+      assertTrue(cache.isEmpty());
+    }
+
   }
 
   public static class InputBasedRuleKeyTests extends CommonFixture {
@@ -1230,6 +1224,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -1289,6 +1284,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -1361,6 +1357,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -1633,7 +1630,7 @@ public class CachingBuildEngineTest {
 
       // Now modify the input file and invalidate it in the cache.
       filesystem.writeContentsToPath("something else", input);
-      fileHashCache.invalidate(input);
+      fileHashCache.invalidate(filesystem.resolve(input));
 
       // Run the build.
       CachingBuildEngine cachingBuildEngine = engineWithDepFileFactory(depFileFactory);
@@ -1703,7 +1700,7 @@ public class CachingBuildEngineTest {
 
       // Now delete the input and invalidate it in the cache.
       filesystem.deleteFileAtPath(input);
-      fileHashCache.invalidate(input);
+      fileHashCache.invalidate(filesystem.resolve(input));
 
       // Run the build.
       CachingBuildEngine cachingBuildEngine = engineWithDepFileFactory(depFileFactory);
@@ -1720,6 +1717,7 @@ public class CachingBuildEngineTest {
           CachingBuildEngine.DependencySchedulingOrder.RANDOM,
           CachingBuildEngine.DepFiles.ENABLED,
           256L,
+          Optional.<Long>absent(),
           pathResolver,
           Functions.constant(
               new CachingBuildEngine.RuleKeyFactories(
@@ -1784,6 +1782,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.CACHE,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -1817,7 +1816,9 @@ public class CachingBuildEngineTest {
           equalTo(
               ImmutableMap.of(
                   depFileRuleKey,
-                  ImmutableMap.of(input.toString(), fileHashCache.get(input)))));
+                  ImmutableMap.of(
+                      input.toString(),
+                      fileHashCache.get(filesystem.resolve(input))))));
 
       // Verify that the artifact is also cached via the dep file rule key.
       Path fetchedArtifact = tmp.newFile("artifact").toPath();
@@ -1883,6 +1884,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.CACHE,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -1930,7 +1932,7 @@ public class CachingBuildEngineTest {
           equalTo(
               ImmutableMap.of(
                   depFileRuleKey,
-                  ImmutableMap.of(input.toString(), fileHashCache.get(input)),
+                  ImmutableMap.of(input.toString(), fileHashCache.get(filesystem.resolve(input))),
                   new RuleKey("abcd"),
                   ImmutableMap.of("some/path.h", HashCode.fromInt(12)))));
 
@@ -1998,6 +2000,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.CACHE,
               1L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -2046,7 +2049,9 @@ public class CachingBuildEngineTest {
           equalTo(
               ImmutableMap.of(
                   depFileRuleKey,
-                  ImmutableMap.of(input.toString(), fileHashCache.get(input)))));
+                  ImmutableMap.of(
+                      input.toString(),
+                      fileHashCache.get(filesystem.resolve(input))))));
     }
 
     @Test
@@ -2102,6 +2107,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.CACHE,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -2166,6 +2172,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -2217,6 +2224,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -2262,6 +2270,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -2311,6 +2320,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -2386,6 +2396,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DependencySchedulingOrder.RANDOM,
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
+              Optional.<Long>absent(),
               pathResolver,
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
@@ -2458,6 +2469,269 @@ public class CachingBuildEngineTest {
 
       public boolean hasStarted() {
         return started.availablePermits() == 1;
+      }
+
+    }
+
+  }
+
+  public static class BuildRuleEventTests extends CommonFixture {
+
+    // Use a executor service which uses a new thread for every task to help expose case where
+    // the build engine issues begin and end rule events on different threads.
+    private static final ListeningExecutorService SERVICE = new NewThreadExecutorService();
+
+    @Test
+    public void eventsForBuiltLocallyRuleAreOnCorrectThreads() throws Exception {
+      Clock clock = new IncrementingFakeClock();
+      BuckEventBus buckEventBus = BuckEventBusFactory.newInstance(clock);
+      FakeBuckEventListener listener = new FakeBuckEventListener();
+      buckEventBus.register(listener);
+
+      // Create a noop simple rule.
+      BuildRule rule =
+          new EmptyBuildRule(
+              new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule"))
+                  .setProjectFilesystem(filesystem)
+                  .build(),
+              pathResolver);
+
+      // Create the build engine.
+      CachingBuildEngine cachingBuildEngine =
+          new CachingBuildEngine(
+              toWeighted(SERVICE),
+              fileHashCache,
+              CachingBuildEngine.BuildMode.SHALLOW,
+              CachingBuildEngine.DependencySchedulingOrder.RANDOM,
+              CachingBuildEngine.DepFiles.ENABLED,
+              256L,
+              Optional.<Long>absent(),
+              pathResolver,
+              Functions.constant(
+                  new CachingBuildEngine.RuleKeyFactories(
+                      NOOP_RULE_KEY_FACTORY,
+                      NOOP_RULE_KEY_FACTORY,
+                      NOOP_RULE_KEY_FACTORY,
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)));
+
+      // The BuildContext that will be used by the rule's build() method.
+      BuildContext context =
+          FakeBuildContext.newBuilder()
+              .setEventBus(buckEventBus)
+              .setJavaPackageFinder(new FakeJavaPackageFinder())
+              .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
+              .build();
+
+      // Run the build.
+      BuildResult result = cachingBuildEngine.build(context, rule).get();
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
+
+      // Verify that events have correct thread IDs
+      assertRelatedBuildRuleEventsOnSameThread(
+          FluentIterable.from(listener.getEvents())
+              .filter(BuildRuleEvent.class));
+    }
+
+    @Test
+    public void eventsForMatchingRuleKeyRuleAreOnCorrectThreads() throws Exception {
+      Clock clock = new IncrementingFakeClock();
+      BuckEventBus buckEventBus = BuckEventBusFactory.newInstance(clock);
+      FakeBuckEventListener listener = new FakeBuckEventListener();
+      buckEventBus.register(listener);
+
+      // Create a simple rule and set it up so that it has a matching rule key.
+      BuildRule rule =
+          new EmptyBuildRule(
+              new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule"))
+                  .setProjectFilesystem(filesystem)
+                  .build(),
+              pathResolver);
+      filesystem.writeContentsToPath(
+          ruleKeyBuilderFactory.build(rule).toString(),
+          BuildInfo.getPathToMetadataDirectory(rule.getBuildTarget())
+              .resolve(BuildInfo.METADATA_KEY_FOR_RULE_KEY));
+      filesystem.writeContentsToPath(
+          MAPPER.writeValueAsString(ImmutableList.of()),
+          BuildInfo.getPathToMetadataDirectory(rule.getBuildTarget())
+              .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
+
+      // Create the build engine.
+      CachingBuildEngine cachingBuildEngine =
+          new CachingBuildEngine(
+              toWeighted(SERVICE),
+              fileHashCache,
+              CachingBuildEngine.BuildMode.SHALLOW,
+              CachingBuildEngine.DependencySchedulingOrder.RANDOM,
+              CachingBuildEngine.DepFiles.ENABLED,
+              256L,
+              Optional.<Long>absent(),
+              pathResolver,
+              Functions.constant(
+                  new CachingBuildEngine.RuleKeyFactories(
+                      NOOP_RULE_KEY_FACTORY,
+                      NOOP_RULE_KEY_FACTORY,
+                      NOOP_RULE_KEY_FACTORY,
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)));
+
+      // The BuildContext that will be used by the rule's build() method.
+      BuildContext context =
+          FakeBuildContext.newBuilder()
+              .setEventBus(buckEventBus)
+              .setJavaPackageFinder(new FakeJavaPackageFinder())
+              .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
+              .build();
+
+      // Run the build.
+      BuildResult result = cachingBuildEngine.build(context, rule).get();
+      assertEquals(BuildRuleSuccessType.MATCHING_RULE_KEY, result.getSuccess());
+
+      // Verify that events have correct thread IDs
+      assertRelatedBuildRuleEventsOnSameThread(
+          FluentIterable.from(listener.getEvents())
+              .filter(BuildRuleEvent.class));
+    }
+
+    @Test
+    public void eventsForBuiltLocallyRuleAndDepAreOnCorrectThreads() throws Exception {
+      Clock clock = new IncrementingFakeClock();
+      BuckEventBus buckEventBus = BuckEventBusFactory.newInstance(clock);
+      FakeBuckEventListener listener = new FakeBuckEventListener();
+      buckEventBus.register(listener);
+
+      // Create a simple rule and dep.
+      BuildRule dep =
+          new EmptyBuildRule(
+              new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep"))
+                  .setProjectFilesystem(filesystem)
+                  .build(),
+              pathResolver);
+      BuildRule rule =
+          new EmptyBuildRule(
+              new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule"))
+                  .setDeclaredDeps(ImmutableSortedSet.of(dep))
+                  .setProjectFilesystem(filesystem)
+                  .build(),
+              pathResolver);
+
+      // Create the build engine.
+      CachingBuildEngine cachingBuildEngine =
+          new CachingBuildEngine(
+              toWeighted(SERVICE),
+              fileHashCache,
+              CachingBuildEngine.BuildMode.SHALLOW,
+              CachingBuildEngine.DependencySchedulingOrder.RANDOM,
+              CachingBuildEngine.DepFiles.ENABLED,
+              256L,
+              Optional.<Long>absent(),
+              pathResolver,
+              Functions.constant(
+                  new CachingBuildEngine.RuleKeyFactories(
+                      NOOP_RULE_KEY_FACTORY,
+                      NOOP_RULE_KEY_FACTORY,
+                      NOOP_RULE_KEY_FACTORY,
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)));
+
+      // The BuildContext that will be used by the rule's build() method.
+      BuildContext context =
+          FakeBuildContext.newBuilder()
+              .setEventBus(buckEventBus)
+              .setJavaPackageFinder(new FakeJavaPackageFinder())
+              .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
+              .build();
+
+      // Run the build.
+      BuildResult result = cachingBuildEngine.build(context, rule).get();
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
+
+      // Verify that events have correct thread IDs
+      assertRelatedBuildRuleEventsOnSameThread(
+          FluentIterable.from(listener.getEvents())
+              .filter(BuildRuleEvent.class));
+    }
+
+    /**
+     * Verify that the begin and end events in build rule event pairs occur on the same thread.
+     */
+    private void assertRelatedBuildRuleEventsOnSameThread(Iterable<BuildRuleEvent> events) {
+      Map<BuildTarget, List<BuildRuleEvent>> grouped = new HashMap<>();
+      for (BuildRuleEvent event : events) {
+        if (!grouped.containsKey(event.getBuildRule().getBuildTarget())) {
+          grouped.put(event.getBuildRule().getBuildTarget(), new ArrayList<BuildRuleEvent>());
+        }
+        grouped.get(event.getBuildRule().getBuildTarget()).add(event);
+      }
+      for (List<BuildRuleEvent> queue : grouped.values()) {
+        Collections.sort(
+            queue,
+            new Comparator<BuildRuleEvent>() {
+              @Override
+              public int compare(BuildRuleEvent o1, BuildRuleEvent o2) {
+                return Long.compare(o1.getNanoTime(), o2.getNanoTime());
+              }
+            });
+        Iterator<BuildRuleEvent> itr = queue.iterator();
+        while (itr.hasNext()) {
+          BuildRuleEvent event1 = itr.next();
+          BuildRuleEvent event2 = itr.next();
+          assertThat(
+              String.format(
+                  "%s (%d) != %s (%d) (%s)",
+                  event1,
+                  event1.getThreadId(),
+                  event2,
+                  event2.getThreadId(),
+                  FluentIterable.from(queue)
+                      .transform(
+                          new Function<BuildRuleEvent, String>() {
+                            @Override
+                            public String apply(BuildRuleEvent event) {
+                              return String.format("%s@%s", event, event.getNanoTime());
+                            }
+                          })
+                        .toList()),
+              event1.getThreadId(),
+              equalTo(event2.getThreadId()));
+        }
+      }
+    }
+
+    /**
+     * A {@link ListeningExecutorService} which runs every task on a completely new thread.
+     */
+    private static class NewThreadExecutorService extends AbstractListeningExecutorService {
+
+      @Override
+      public void shutdown() {
+      }
+
+      @Nonnull
+      @Override
+      public List<Runnable> shutdownNow() {
+        return ImmutableList.of();
+      }
+
+      @Override
+      public boolean isShutdown() {
+        return false;
+      }
+
+      @Override
+      public boolean isTerminated() {
+        return false;
+      }
+
+      @Override
+      public boolean awaitTermination(long timeout, @Nonnull TimeUnit unit)
+          throws InterruptedException {
+        return false;
+      }
+
+      /**
+       * Spawn a new thread for every command.
+       */
+      @Override
+      public void execute(@Nonnull Runnable command) {
+        new Thread(command).start();
       }
 
     }
@@ -2767,22 +3041,26 @@ public class CachingBuildEngineTest {
         service);
   }
 
-  private static Matcher<BuckEvent> isEqualEvent(BuckEvent event) {
-    return equalTo(event);
-  }
+  private static class EmptyBuildRule extends AbstractBuildRule {
 
-  private static Matcher<BuckEvent> isUnskipedRuleCountEvent(int numRules) {
-    return both(Matchers.<BuckEvent>instanceOf(BuildEvent.UnskippedRuleCountUpdated.class))
-        .and(
-            new FeatureMatcher<BuckEvent, Integer>(
-                equalTo(numRules),
-                "reported number of unskipped rules",
-                "numRules") {
-              @Override
-              protected Integer featureValueOf(BuckEvent event) {
-                return ((BuildEvent.UnskippedRuleCountUpdated) event).getNumRules();
-              }
-            });
+    public EmptyBuildRule(
+        BuildRuleParams buildRuleParams,
+        SourcePathResolver resolver) {
+      super(buildRuleParams, resolver);
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext context, BuildableContext buildableContext) {
+      return ImmutableList.of();
+    }
+
+    @Nullable
+    @Override
+    public Path getPathToOutput() {
+      return null;
+    }
+
   }
 
 }

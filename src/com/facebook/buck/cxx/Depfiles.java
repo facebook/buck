@@ -205,16 +205,17 @@ public class Depfiles {
       // Skip the first prereq, as it's the input source file.
       Preconditions.checkState(inputPath.toString().equals(prereqs.get(0)));
       ImmutableList<String> headers = prereqs.subList(1, prereqs.size());
-      for (String header : headers) {
+      for (String rawHeader : headers) {
+        Path header = Paths.get(rawHeader).normalize();
         Optional<Path> absolutePath =
-            headerPathNormalizer.getAbsolutePathForUnnormalizedPath(Paths.get(header));
+            headerPathNormalizer.getAbsolutePathForUnnormalizedPath(header);
         if (absolutePath.isPresent()) {
           Preconditions.checkState(absolutePath.get().isAbsolute());
           writer.write(absolutePath.get().toString());
           writer.newLine();
         } else if (
             headerVerification.getMode() != HeaderVerification.Mode.IGNORE &&
-                !headerVerification.isWhitelisted(header)) {
+                !headerVerification.isWhitelisted(header.toString())) {
           context.getBuckEventBus().post(
               ConsoleEvent.create(
                   headerVerification.getMode() == HeaderVerification.Mode.ERROR ?

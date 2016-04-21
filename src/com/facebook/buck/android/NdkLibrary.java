@@ -207,7 +207,7 @@ public class NdkLibrary extends AbstractBuildRule
    *     can be referenced via a {@link com.facebook.buck.rules.BuildTargetSourcePath} or somesuch.
    */
   private Path getBuildArtifactsDirectory(BuildTarget target, boolean isScratchDir) {
-    Path base = isScratchDir ? BuckConstant.SCRATCH_PATH : BuckConstant.GEN_PATH;
+    Path base = isScratchDir ? BuckConstant.getScratchPath() : BuckConstant.getGenPath();
     return base.resolve(target.getBasePath()).resolve(lastPathComponent);
   }
 

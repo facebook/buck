@@ -22,14 +22,11 @@ import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class GnuArchiver implements Archiver {
-
-  private static final byte[] EXPECTED_GLOBAL_HEADER = "!<arch>\n".getBytes(Charsets.US_ASCII);
 
   private final Tool tool;
 
@@ -39,7 +36,12 @@ public class GnuArchiver implements Archiver {
 
   @Override
   public ImmutableList<FileScrubber> getScrubbers() {
-    return ImmutableList.of(ObjectFileScrubbers.createDateUidGidScrubber(EXPECTED_GLOBAL_HEADER));
+    return ImmutableList.of(ObjectFileScrubbers.createDateUidGidScrubber());
+  }
+
+  @Override
+  public boolean supportsThinArchives() {
+    return true;
   }
 
   @Override

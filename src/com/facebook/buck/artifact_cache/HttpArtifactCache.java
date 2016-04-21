@@ -48,6 +48,7 @@ import java.net.HttpURLConnection;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.regex.Matcher;
 import java.util.Set;
 
 import okio.BufferedSink;
@@ -358,8 +359,10 @@ public class HttpArtifactCache implements ArtifactCache {
     if (seenErrors.add(format)) {
       buckEventBus.post(ConsoleEvent.warning(
           errorTextTemplate
-              .replaceAll("\\{cache_name}", name)
-              .replaceAll("\\{error_message}", String.format(format, args))));
+              .replaceAll("\\{cache_name}",
+                  Matcher.quoteReplacement(name))
+              .replaceAll("\\{error_message}",
+                  Matcher.quoteReplacement(String.format(format, args)))));
     }
   }
 

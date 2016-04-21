@@ -92,7 +92,11 @@ public class ThriftLibraryDescriptionTest {
         new FakeBuildRuleParamsBuilder(target)
             .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
             .build();
-    return new HeaderSymlinkTree(params, resolver, root, ImmutableMap.<Path, SourcePath>of());
+    return new HeaderSymlinkTree(
+        params,
+        resolver,
+        root,
+        ImmutableMap.<Path, SourcePath>of());
   }
 
   private static class FakeThriftLanguageSpecificEnhancer

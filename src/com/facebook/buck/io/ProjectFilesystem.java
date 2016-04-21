@@ -225,16 +225,17 @@ public class ProjectFilesystem {
         })
         // TODO(#10068334) So we claim to ignore this path to preserve existing behaviour, but we
         // really don't end up ignoring it in reality (see extractIgnorePaths).
-        .append(ImmutableSet.of(root.getFileSystem().getPath(BuckConstant.BUCK_OUTPUT_DIRECTORY)))
+        .append(ImmutableSet.of(root.getFileSystem().getPath(
+            BuckConstant.getBuckOutputDirectory())))
         // "Path" is Iterable, so avoid adding each segment.
         // We use the default value here because that's what we've always done.
-        .append(ImmutableSet.of(getCacheDir(root, Optional.of(BuckConstant.DEFAULT_CACHE_DIR))))
-        .append(ImmutableSet.of(root.getFileSystem().getPath(BuckConstant.TRASH_DIR)))
+        .append(ImmutableSet.of(getCacheDir(root, Optional.of(BuckConstant.getDefaultCacheDir()))))
+        .append(ImmutableSet.of(root.getFileSystem().getPath(BuckConstant.getTrashDir())))
         .toSortedSet(Ordering.<Path>natural());
   }
 
   private static Path getCacheDir(Path root, Optional<String> value) {
-      String cacheDir = value.or(root.resolve(BuckConstant.DEFAULT_CACHE_DIR).toString());
+      String cacheDir = value.or(root.resolve(BuckConstant.getDefaultCacheDir()).toString());
       Path toReturn = root.getFileSystem().getPath(cacheDir);
       toReturn = MorePaths.expandHomeDir(toReturn);
       if (toReturn.isAbsolute()) {
@@ -274,7 +275,7 @@ public class ProjectFilesystem {
           public PathOrGlobMatcher apply(String input) {
             // We don't really want to ignore the output directory when doing things like filesystem
             // walks, so return null
-            if (BuckConstant.BUCK_OUTPUT_DIRECTORY.equals(input)) {
+            if (BuckConstant.getBuckOutputDirectory().equals(input)) {
               return null; //root.getFileSystem().getPathMatcher("glob:**");
             }
 

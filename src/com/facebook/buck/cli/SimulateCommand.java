@@ -92,6 +92,7 @@ public class SimulateCommand extends AbstractCommand {
 
     // Run the simulation with the generated ActionGraph.
     BuildSimulator simulator = new BuildSimulator(
+        params.getBuckEventBus(),
         times,
         actionGraphAndResolver.getActionGraph(),
         actionGraphAndResolver.getResolver(),

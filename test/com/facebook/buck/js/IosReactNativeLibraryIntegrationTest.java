@@ -1,22 +1,23 @@
 /*
  * Copyright 2015-present Facebook, Inc.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License. You may obtain
- *  a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- *  License for the specific language governing permissions and limitations
- *  under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
  */
 
 package com.facebook.buck.js;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -27,6 +28,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -48,10 +50,6 @@ public class IosReactNativeLibraryIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
   }
 
-  private void enablePackagerWorker() throws IOException {
-    workspace.writeContentsToPath("[react-native]\n  use_worker = true\n", ".buckconfig.local");
-  }
-
   @Before
   public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "ios_rn", tmpFolder);
@@ -60,37 +58,17 @@ public class IosReactNativeLibraryIntegrationTest {
 
   @Test
   public void testBundleOutputContainsJSAndResources() throws IOException {
-    runBundleOutputContainsJSAndResources();
-  }
-
-  @Test
-  public void testBundleOutputContainsJSAndResourcesWithWorker() throws IOException {
-    enablePackagerWorker();
-    runBundleOutputContainsJSAndResources();
-  }
-
-  private void runBundleOutputContainsJSAndResources() throws IOException {
     workspace.runBuckBuild("//:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
     workspace.verify(
         workspace.getPath(
             BuildTargets.getGenPath(
                 BuildTargetFactory.newInstance(
                     "//:DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks"),
-                    "%s")));
+                "%s")));
   }
 
   @Test
   public void testUnbundleOutputContainsJSAndResources() throws IOException {
-    runUnbundleOutputContainsJSAndResources();
-  }
-
-  @Test
-  public void testUnbundleOutputContainsJSAndResourcesWithWorker() throws IOException {
-    enablePackagerWorker();
-    runUnbundleOutputContainsJSAndResources();
-  }
-
-  private void runUnbundleOutputContainsJSAndResources() throws IOException {
     workspace.runBuckBuild("//:DemoApp-Unbundle#iphonesimulator-x86_64,no-debug").assertSuccess();
     workspace.verify(
         workspace.getPath(
@@ -102,16 +80,6 @@ public class IosReactNativeLibraryIntegrationTest {
 
   @Test
   public void testFlavoredBundleOutputDoesNotContainJSAndResources() throws IOException {
-    runFlavoredBundleOutputDoesNotContainJSAndResources();
-  }
-
-  @Test
-  public void testFlavoredBundleOutputDoesNotContainJSAndResourcesWithWorker() throws IOException {
-    enablePackagerWorker();
-    runFlavoredBundleOutputDoesNotContainJSAndResources();
-  }
-
-  private void runFlavoredBundleOutputDoesNotContainJSAndResources() throws IOException {
     workspace
         .runBuckBuild("//:DemoApp#iphonesimulator-x86_64,rn_no_bundle,no-debug")
         .assertSuccess();
@@ -125,5 +93,19 @@ public class IosReactNativeLibraryIntegrationTest {
 
     Path bundle = appDir.resolve("Apps/DemoApp/DemoApp.bundle");
     assertFalse(Files.exists(bundle));
+  }
+
+  @Test
+  public void testShowOutputReturnsPathToJSBundleFile() throws IOException {
+    String target = "//js:DemoAppJS";
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "targets", "--show-output", target);
+    result.assertSuccess();
+    Path path = BuildTargets.getGenPath(
+        BuildTargetFactory.newInstance(target),
+        ReactNativeBundle.JS_BUNDLE_OUTPUT_DIR_FORMAT);
+    assertThat(
+        result.getStdout().trim().split(" ")[1],
+        Matchers.equalTo(path.toString()));
   }
 }

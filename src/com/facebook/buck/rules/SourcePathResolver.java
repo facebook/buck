@@ -257,8 +257,8 @@ public class SourcePathResolver {
     Optional<Path> explicitPath = sourcePath.getResolvedPath();
     if (explicitPath.isPresent()) {
       Path path = explicitPath.get();
-      if (path.startsWith(BuckConstant.GEN_PATH)) {
-        path = BuckConstant.GEN_PATH.relativize(path);
+      if (path.startsWith(BuckConstant.getGenPath())) {
+        path = BuckConstant.getGenPath().relativize(path);
       }
       if (path.startsWith(rule.getBuildTarget().getBasePath())) {
         return rule.getBuildTarget().getBasePath().relativize(path).toString();

@@ -482,6 +482,9 @@ public class ParsePipeline implements AutoCloseable {
                 // non-threadsafe way making it inconvenient to access from the pipeline.
                 if (depCellPath.equals(cell.getRoot())) {
                   try {
+                    if (depTarget.isFlavored()) {
+                      getTargetNodeJob(cell, BuildTarget.of(depTarget.getUnflavoredBuildTarget()));
+                    }
                     getTargetNodeJob(cell, depTarget);
                   } catch (BuildTargetException e) {
                     // No biggie, we'll hit the error again in the non-speculative path.

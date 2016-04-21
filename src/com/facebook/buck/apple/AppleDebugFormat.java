@@ -28,6 +28,11 @@ public enum AppleDebugFormat implements FlavorConvertible {
   NONE(ImmutableFlavor.of("no-debug")),
 
   /**
+   * Produces an unstripped binary.
+   */
+  DWARF(ImmutableFlavor.of("dwarf")),
+
+  /**
    * Generate a .dSYM file from the binary and its constituent object files.
    */
   DWARF_AND_DSYM(ImmutableFlavor.of("dwarf-and-dsym")),

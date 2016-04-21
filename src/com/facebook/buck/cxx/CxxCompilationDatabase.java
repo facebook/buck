@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -50,6 +51,7 @@ import java.util.List;
 
 public class CxxCompilationDatabase extends AbstractBuildRule
     implements HasPostBuildSteps, HasRuntimeDeps {
+  private static final Logger LOG = Logger.get(CxxCompilationDatabase.class);
   public static final Flavor COMPILATION_DATABASE = ImmutableFlavor.of("compilation-database");
   public static final Flavor UBER_COMPILATION_DATABASE =
       ImmutableFlavor.of("uber-compilation-database");
@@ -67,8 +69,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule
       SourcePathResolver pathResolver,
       CxxPreprocessMode preprocessMode,
       Iterable<CxxPreprocessAndCompile> compileAndPreprocessRules,
-      HeaderSymlinkTree privateHeaderSymlinkTreeRule,
-      Optional<HeaderSymlinkTree> exportedHeaderSymlinkTreeRule) {
+      Iterable<HeaderSymlinkTree> headerSymlinkTreeRuntimeDeps) {
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> compileRules = ImmutableSortedSet
         .naturalOrder();
@@ -86,8 +87,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule
         pathResolver,
         compileRules.build(),
         preprocessMode,
-        privateHeaderSymlinkTreeRule,
-        exportedHeaderSymlinkTreeRule);
+        ImmutableSortedSet.<BuildRule>copyOf(headerSymlinkTreeRuntimeDeps));
   }
 
   CxxCompilationDatabase(
@@ -95,18 +95,16 @@ public class CxxCompilationDatabase extends AbstractBuildRule
       SourcePathResolver pathResolver,
       ImmutableSortedSet<CxxPreprocessAndCompile> compileRules,
       CxxPreprocessMode preprocessMode,
-      HeaderSymlinkTree privateHeaderSymlinkTreeRule,
-      Optional<HeaderSymlinkTree> exportedHeaderSymlinkTreeRule) {
+      ImmutableSortedSet<BuildRule> runtimeDeps) {
     super(buildRuleParams, pathResolver);
+    LOG.debug(
+        "Creating compilation database %s with runtime deps %s",
+        buildRuleParams.getBuildTarget(),
+        runtimeDeps);
     this.compileRules = compileRules;
     this.preprocessMode = preprocessMode;
     this.outputJsonFile = BuildTargets.getGenPath(buildRuleParams.getBuildTarget(), "__%s.json");
-    ImmutableSortedSet.Builder<BuildRule> runtimeDepsBuilder = ImmutableSortedSet.naturalOrder();
-    runtimeDepsBuilder.add(privateHeaderSymlinkTreeRule);
-    if (exportedHeaderSymlinkTreeRule.isPresent()) {
-      runtimeDepsBuilder.add(exportedHeaderSymlinkTreeRule.get());
-    }
-    this.runtimeDeps = runtimeDepsBuilder.build();
+    this.runtimeDeps = runtimeDeps;
   }
 
   @Override

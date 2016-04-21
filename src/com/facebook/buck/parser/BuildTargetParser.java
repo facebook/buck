@@ -40,7 +40,6 @@ public class BuildTargetParser {
 
   private static final String BUILD_RULE_PREFIX = "//";
   private static final String BUILD_RULE_SEPARATOR = ":";
-  private static final String CELL_STARTER = "@";
   private static final Splitter BUILD_RULE_SEPARATOR_SPLITTER = Splitter.on(BUILD_RULE_SEPARATOR);
   private static final Set<String> INVALID_BASE_NAME_PARTS = ImmutableSet.of("", ".", "..");
 
@@ -75,17 +74,10 @@ public class BuildTargetParser {
 
     Optional<String> givenCellName = Optional.absent();
     String targetAfterCell = buildTargetName;
-    if (buildTargetName.startsWith(CELL_STARTER)) {
-      if (!buildTargetName.contains(BUILD_RULE_PREFIX)) {
-        throw new BuildTargetParseException(
-            String.format(
-                "Cross-cell paths must contain %s (found %s)",
-                BUILD_RULE_PREFIX,
-                buildTargetName));
-      }
+    if (buildTargetName.contains(BUILD_RULE_PREFIX) &&
+        !buildTargetName.startsWith(BUILD_RULE_PREFIX)) {
       int slashIndex = buildTargetName.indexOf(BUILD_RULE_PREFIX);
-      givenCellName = Optional.of(
-          buildTargetName.substring(CELL_STARTER.length(), slashIndex));
+      givenCellName = Optional.of(buildTargetName.substring(0, slashIndex));
       targetAfterCell = buildTargetName.substring(slashIndex);
     }
 
@@ -120,8 +112,8 @@ public class BuildTargetParser {
             // be sure that if this doesn't throw an exception the target cell is visible to the
             // owning cell.
             .setCellPath(cellNames.apply(givenCellName))
-            // Because we've set the path properly, we don't need to set the cell.
-            .setCell(Optional.<String>absent());
+            // We are setting the cell name so we can print it later
+            .setCell(givenCellName);
 
     BuildTarget.Builder builder = BuildTarget.builder(unflavoredBuilder.build());
     for (String flavor : flavorNames) {

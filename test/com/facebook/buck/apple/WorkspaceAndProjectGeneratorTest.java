@@ -31,6 +31,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.apple.xcode.XCScheme;
@@ -38,7 +39,8 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -53,14 +55,12 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -69,7 +69,6 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -245,6 +244,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        ImmutableList.<BuildTarget>of(),
         false /* parallelizeBuild */,
         false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
@@ -316,6 +316,7 @@ public class WorkspaceAndProjectGeneratorTest {
         true /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        ImmutableList.<BuildTarget>of(),
         false /* parallelizeBuild */,
         false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
@@ -371,6 +372,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        ImmutableList.<BuildTarget>of(),
         false /* parallelizeBuild */,
         false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
@@ -455,6 +457,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        ImmutableList.<BuildTarget>of(),
         false /* parallelizeBuild */,
         false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
@@ -508,6 +511,7 @@ public class WorkspaceAndProjectGeneratorTest {
         true /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        ImmutableList.<BuildTarget>of(),
         false /* parallelizeBuild */,
         false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
@@ -543,6 +547,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         true /* buildWithBuck */,
         ImmutableList.<String>of(),
+        ImmutableList.<BuildTarget>of(),
         false /* parallelizeBuild */,
         false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
@@ -592,6 +597,94 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
+  public void buildWithBuckFocused() throws IOException {
+    final String fooLib = "//foo:lib";
+    Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
+        Paths.get("buck"),
+        ImmutableMap.<String, String>of());
+    assumeThat(buck.isPresent(), is(true));
+    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
+        rootCell,
+        targetGraph,
+        workspaceNode.getConstructorArg(),
+        workspaceNode.getBuildTarget(),
+        ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS,
+            ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
+        false /* combinedProject */,
+        true /* buildWithBuck */,
+        ImmutableList.<String>of(),
+        ImmutableList.of(BuildTargetFactory.newInstance(fooLib)),
+        false /* parallelizeBuild */,
+        false /* attemptToDetermineBestCxxPlatform */,
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.<String, String>of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
+        "BUCK",
+        getSourcePathResolverForNodeFunction(targetGraph),
+        getFakeBuckEventBus(),
+        halideBuckConfig,
+        cxxBuckConfig);
+    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
+    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+
+    ProjectGenerator fooProjectGenerator = projectGenerators.get(Paths.get("foo"));
+    assertThat(fooProjectGenerator, is(notNullValue()));
+
+    for (PBXTarget target : fooProjectGenerator.getGeneratedProject().getTargets()) {
+      if (target.getName() != null &&
+          !target.getName().equals(fooLib) &&
+          !target.getName().endsWith("-Buck")) {
+        // all non-lib and non-Buck targets should have 0 steps as they are not in focus
+        // (focus on .*lib.* only)
+        assertThat(target.getBuildPhases().size(), Matchers.equalTo(0));
+      }
+    }
+  }
+
+  @Test
+  public void buildWithBuckFocusedFailsIfTargetDoesNotExist() throws IOException {
+    final String fooLib = "//NOT:EXISTING_TARGET";
+    Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
+        Paths.get("buck"),
+        ImmutableMap.<String, String>of());
+    assumeThat(buck.isPresent(), is(true));
+    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
+        rootCell,
+        targetGraph,
+        workspaceNode.getConstructorArg(),
+        workspaceNode.getBuildTarget(),
+        ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS,
+            ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
+        false /* combinedProject */,
+        true /* buildWithBuck */,
+        ImmutableList.<String>of(),
+        ImmutableList.of(BuildTargetFactory.newInstance(fooLib)),
+        false /* parallelizeBuild */,
+        false /* attemptToDetermineBestCxxPlatform */,
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.<String, String>of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
+        "BUCK",
+        getSourcePathResolverForNodeFunction(targetGraph),
+        getFakeBuckEventBus(),
+        halideBuckConfig,
+        cxxBuckConfig);
+    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
+
+    try {
+      generator.generateWorkspaceAndDependentProjects(projectGenerators);
+    } catch (IllegalArgumentException e) {
+      assertThat(
+          e.getMessage(),
+          Matchers.equalTo("Cannot find build target " + fooLib + " in target graph"));
+      return;
+    }
+    fail("Project generation should fail because there is no " + fooLib + " target in the graph!");
+  }
+
+  @Test
   public void buildWithBuckWithCxxPlatformDetection() throws IOException {
     Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
         Paths.get("buck"),
@@ -607,6 +700,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         true /* buildWithBuck */,
         ImmutableList.<String>of(),
+        ImmutableList.<BuildTarget>of(),
         false /* parallelizeBuild */,
         true /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
@@ -705,6 +799,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        ImmutableList.<BuildTarget>of(),
         false /* parallelizeBuild */,
         false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
@@ -1127,6 +1222,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        ImmutableList.<BuildTarget>of(),
         false /* parallelizeBuild */,
         false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
@@ -1281,6 +1377,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        ImmutableList.<BuildTarget>of(),
         false /* parallelizeBuild */,
         false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
@@ -1373,6 +1470,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        ImmutableList.<BuildTarget>of(),
         true /* parallelizeBuild */,
         false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
@@ -1431,6 +1529,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        ImmutableList.<BuildTarget>of(),
         true /* parallelizeBuild */,
         false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
@@ -1493,15 +1592,9 @@ public class WorkspaceAndProjectGeneratorTest {
     return new Function<TargetNode<?>, SourcePathResolver>() {
       @Override
       public SourcePathResolver apply(TargetNode<?> input) {
-        TargetGraphToActionGraph targetGraphToActionGraph = new TargetGraphToActionGraph(
+        return new SourcePathResolver(ActionGraphCache.getFreshActionGraph(
             BuckEventBusFactory.newInstance(),
-            new DefaultTargetNodeToBuildRuleTransformer());
-        TargetGraph subgraph = targetGraph.getSubgraph(
-            ImmutableSet.of(
-                input));
-        BuildRuleResolver ruleResolver =
-            Preconditions.checkNotNull(targetGraphToActionGraph.apply(subgraph)).getResolver();
-        return new SourcePathResolver(ruleResolver);
+            targetGraph.getSubgraph(ImmutableSet.of(input))).getResolver());
       }
     };
   }

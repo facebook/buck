@@ -1,14 +1,14 @@
-#@# GENERATED FILE: DO NOT MODIFY 832f757405f25b18cced9fdd3cb9423d4c5d5a9d #@#
+#@# GENERATED FILE: DO NOT MODIFY 0417f72eebf70ca7aeaa9bea3f799e0b0468864e #@#
 {
   "abi" : {
     "deps" : [
       "//src/com/facebook/buck/zip:stream",
-      "//third-party/java/guava:guava",
       "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/io:io",
-      "//third-party/java/asm:asm"
+      "//third-party/java/asm:asm",
+      "//third-party/java/guava:guava"
     ]
   },
   "lib-api-stubber" : {

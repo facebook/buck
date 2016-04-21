@@ -25,6 +25,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxStrip;
+import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -35,6 +37,8 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -88,7 +92,7 @@ public class AppleBinaryIntegrationTest {
 
 
   @Test
-  public void testAppleBinaryAppBuildsApp() throws Exception {
+  public void testAppleBinaryAppBuildsAppWithDsym() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_binary_builds_something", tmp);
@@ -99,16 +103,49 @@ public class AppleBinaryIntegrationTest {
 
     BuildTarget appTarget = target.withFlavors(
         AppleBinaryDescription.APP_FLAVOR,
-        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
+        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR,
+        AppleDebugFormat.DWARF_AND_DSYM.getFlavor());
     Path outputPath = workspace.getPath(
         BuildTargets.getGenPath(appTarget, "%s")
             .resolve(appTarget.getShortName() + ".app"));
     assertThat(Files.exists(outputPath), is(true));
+    assertThat(Files.exists(outputPath.resolve("Info.plist")), is(true));
+
+    Path dsymPath = workspace.getPath(
+        BuildTargets.getGenPath(appTarget, "%s")
+            .resolve(appTarget.getShortName() + ".app.dSYM"));
+    assertThat(Files.exists(dsymPath), is(true));
     assertThat(
         workspace.runCommand(
             "file",
             outputPath.resolve(appTarget.getShortName()).toString()).getStdout().get(),
         containsString("executable"));
+  }
+
+  @Test
+  public void testAppleBinaryAppBuildsAppWithoutDsym() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_binary_builds_something", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp#app,no-debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    BuildTarget appTarget = target.withFlavors(
+        AppleBinaryDescription.APP_FLAVOR,
+        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR,
+        AppleDebugFormat.NONE.getFlavor());
+    Path outputPath = workspace.getPath(
+        BuildTargets.getGenPath(appTarget, "%s")
+            .resolve(appTarget.getShortName() + ".app"));
+    assertThat(Files.exists(outputPath), is(true));
+    assertThat(Files.exists(outputPath.resolve("Info.plist")), is(true));
+
+    Path dsymPath = workspace.getPath(
+        BuildTargets.getGenPath(appTarget, "%s")
+            .resolve(appTarget.getShortName() + ".app.dSYM"));
+    assertThat(Files.exists(dsymPath), is(false));
   }
 
   @Test
@@ -145,6 +182,39 @@ public class AppleBinaryIntegrationTest {
     assertThat(
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
         containsString("executable"));
+  }
+
+  @Test
+  public void testAppleBinaryWithLibraryDependencyBuildsApp() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_binary_with_library_dependency_builds_something", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//Apps/TestApp:TestApp#app,macosx-x86_64");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path bundlePath = workspace.getPath(
+        BuildTargets.getGenPath(
+            target.withAppendedFlavors(
+                AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
+                AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR),
+            "%s/TestApp.app"));
+    assertThat(Files.exists(bundlePath), is(true));
+    Path binaryPath = bundlePath.resolve("Contents/MacOS/TestApp");
+    assertThat(Files.exists(binaryPath), is(true));
+    assertThat(
+        workspace.runCommand("file", binaryPath.toString()).getStdout().get(),
+        containsString("executable"));
+    Path frameworkBundlePath = bundlePath.resolve("Contents/Frameworks/TestLibrary.framework");
+    assertThat(Files.exists(frameworkBundlePath), is(true));
+    Path frameworkBinaryPath = frameworkBundlePath.resolve("Contents/MacOS/TestLibrary");
+    assertThat(Files.exists(frameworkBinaryPath), is(true));
+    assertThat(
+        workspace.runCommand("file", frameworkBinaryPath.toString()).getStdout().get(),
+        containsString("dynamically linked shared library"));
   }
 
   @Test
@@ -291,6 +361,70 @@ public class AppleBinaryIntegrationTest {
         workspace.getPath(Paths.get("second").resolve(outputPath)));
   }
 
+  private void runTestAppleBinaryWithDebugFormatIsHermetic(AppleDebugFormat debugFormat)
+      throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_binary_is_hermetic", tmp);
+    workspace.setUp();
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance(
+            "//Apps/TestApp:TestApp#iphonesimulator-x86_64," + debugFormat.getFlavor().getName());
+    ProjectWorkspace.ProcessResult first = workspace.runBuckCommand(
+        workspace.getPath("first"),
+        "build",
+        target.getFullyQualifiedName());
+    first.assertSuccess();
+
+    ProjectWorkspace.ProcessResult second = workspace.runBuckCommand(
+        workspace.getPath("second"),
+        "build",
+        target.getFullyQualifiedName());
+    second.assertSuccess();
+
+    Path outputPath = BuildTargets.getGenPath(
+        target.withFlavors(
+            ImmutableFlavor.of("iphonesimulator-x86_64"),
+            ImmutableFlavor.of("compile-" + sanitize("TestClass.m.o"))),
+        "%s/TestClass.m.o");
+    MoreAsserts.assertContentsEqual(
+        workspace.getPath(Paths.get("first").resolve(outputPath)),
+        workspace.getPath(Paths.get("second").resolve(outputPath)));
+    outputPath = BuildTargets.getGenPath(
+        target.withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors()),
+        "%s");
+    MoreAsserts.assertContentsEqual(
+        workspace.getPath(Paths.get("first").resolve(outputPath)),
+        workspace.getPath(Paths.get("second").resolve(outputPath)));
+
+    if (debugFormat != AppleDebugFormat.DWARF) {
+      Path strippedPath = BuildTargets.getGenPath(
+          target
+              .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
+              .withAppendedFlavors(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor(), CxxStrip.RULE_FLAVOR),
+          "%s");
+      MoreAsserts.assertContentsEqual(
+          workspace.getPath(Paths.get("first").resolve(strippedPath)),
+          workspace.getPath(Paths.get("second").resolve(strippedPath)));
+    }
+  }
+
+  @Test
+  public void testAppleBinaryWithDwarfDebugFormatIsHermetic() throws IOException {
+    runTestAppleBinaryWithDebugFormatIsHermetic(AppleDebugFormat.DWARF);
+  }
+
+  @Test
+  public void testAppleBinaryWithDwarfAndDsymDebugFormatIsHermetic() throws IOException {
+    runTestAppleBinaryWithDebugFormatIsHermetic(AppleDebugFormat.DWARF_AND_DSYM);
+  }
+
+  @Test
+  public void testAppleBinaryWithNoneDebugFormatIsHermetic() throws IOException {
+    runTestAppleBinaryWithDebugFormatIsHermetic(AppleDebugFormat.NONE);
+  }
+
   @Test
   public void testAppleBinaryBuildsFatBinaries() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
@@ -315,7 +449,29 @@ public class AppleBinaryIntegrationTest {
   }
 
   @Test
-  public void testFlavoredAppleBundleBuildsAndDsymFileCreated() throws Exception {
+  public void testAppleBinaryBuildsFatBinariesWithDsym() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_application_bundle_no_debug", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//:DemoAppBinary#iphonesimulator-i386,iphonesimulator-x86_64");
+    BuildTarget targetToBuild = target
+        .withAppendedFlavor(AppleDebugFormat.DWARF_AND_DSYM.getFlavor());
+    BuildTarget dsymTarget = target.withAppendedFlavor(AppleDsym.RULE_FLAVOR);
+    workspace.runBuckCommand("build", targetToBuild.getFullyQualifiedName()).assertSuccess();
+    Path output = workspace.getPath(AppleDsym.getDsymOutputPath(dsymTarget));
+    AppleDsymTestUtil
+        .checkDsymFileHasDebugSymbolsForMainForConcreteArchitectures(
+            workspace,
+            output,
+            Optional.of(ImmutableList.of("i386", "x86_64")));
+  }
+
+  @Test
+  public void testFlavoredAppleBundleBuildsAndDsymFileCreatedAndBinaryIsStripped()
+      throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "simple_application_bundle_dwarf_and_dsym", tmp);
@@ -337,10 +493,45 @@ public class AppleBinaryIntegrationTest {
             .resolve(target.getShortName()));
     assertThat(Files.exists(output), Matchers.equalTo(true));
     AppleDsymTestUtil.checkDsymFileHasDebugSymbolForMain(workspace, output);
+
+    Path binaryOutput = workspace.getPath(
+        BuildTargets.getGenPath(appTarget, "%s")
+            .resolve(target.getShortName() + ".app")
+            .resolve(target.getShortName()));
+    assertThat(Files.exists(binaryOutput), Matchers.equalTo(true));
+
+    ProcessExecutor.Result hasSymbol = workspace.runCommand("nm", binaryOutput.toString());
+    String stdout = hasSymbol.getStdout().or("");
+    assertThat(stdout, Matchers.not(containsString("t -[AppDelegate window]")));
+    assertThat(stdout, containsString("U _UIApplicationMain"));
   }
 
   @Test
-  public void testFlavoredAppleBundleBuildsAndDsymFileIsNotCreated() throws Exception {
+  public void testFlavoredAppleBundleBuildsWithDwarfDebugFormatAndBinaryIsUnstripped()
+      throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_application_bundle_dwarf_and_dsym", tmp);
+    workspace.setUp();
+    BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp#dwarf");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+    BuildTarget appTarget = target.withFlavors(
+        AppleDebugFormat.DWARF.getFlavor(),
+        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
+    Path output = workspace.getPath(
+        BuildTargets.getGenPath(appTarget, "%s")
+            .resolve(target.getShortName() + ".app")
+            .resolve(target.getShortName()));
+    assertThat(Files.exists(output), Matchers.equalTo(true));
+    ProcessExecutor.Result hasSymbol = workspace.runCommand("nm", output.toString());
+    String stdout = hasSymbol.getStdout().or("");
+    assertThat(stdout, containsString("t -[AppDelegate window]"));
+    assertThat(stdout, containsString("U _UIApplicationMain"));
+  }
+
+  @Test
+  public void testFlavoredAppleBundleBuildsAndDsymFileIsNotCreatedAndBinaryIsStripped()
+      throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "simple_application_bundle_no_debug", tmp);
@@ -378,6 +569,20 @@ public class AppleBinaryIntegrationTest {
                     .resolve("Contents/Resources/DWARF")
                     .resolve(target.getShortName()))),
         Matchers.equalTo(false));
+
+    BuildTarget appTarget = target.withFlavors(
+        AppleDebugFormat.NONE.getFlavor(),
+        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
+    Path binaryOutput = workspace.getPath(
+        BuildTargets.getGenPath(appTarget, "%s")
+            .resolve(target.getShortName() + ".app")
+            .resolve(target.getShortName()));
+    assertThat(Files.exists(binaryOutput), Matchers.equalTo(true));
+
+    ProcessExecutor.Result hasSymbol = workspace.runCommand("nm", binaryOutput.toString());
+    String stdout = hasSymbol.getStdout().or("");
+    assertThat(stdout, Matchers.not(containsString("t -[AppDelegate window]")));
+    assertThat(stdout, containsString("U _UIApplicationMain"));
   }
 
   @Test

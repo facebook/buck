@@ -32,16 +32,14 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraphAndResolver;
+import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetGraphToActionGraph;
-import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.TestConsole;
@@ -119,14 +117,11 @@ public class ThriftLibraryIntegrationTest {
         MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
         ImmutableSet.of(target));
 
-    TargetNodeToBuildRuleTransformer transformer = new DefaultTargetNodeToBuildRuleTransformer();
-
     // There was a case where the cxx library being generated wouldn't put the header into the tree
     // with the right flavour. This catches this case without us needing to stick a working thrift
     // compiler into buck's own source.
-    ActionGraphAndResolver actionGraphAndResolver =
-        new TargetGraphToActionGraph(eventBus, transformer)
-        .apply(targetGraph);
+    ActionGraphAndResolver actionGraphAndResolver = ActionGraphCache.getFreshActionGraph(
+        eventBus, targetGraph);
 
     // This is to cover the case where we weren't passing flavors around correctly, which ended
     // making the binary depend 'placeholder' BuildRules instead of real ones. This is the

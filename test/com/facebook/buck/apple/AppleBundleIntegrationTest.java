@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -365,6 +366,68 @@ public class AppleBundleIntegrationTest {
       dsymutilOutput = result.getStdout().get();
     }
     assertThat(dsymutilOutput, containsString("warning: no debug symbols in executable"));
+  }
+
+  public String runSimpleBuildWithDefinedStripStyle(StripStyle stripStyle) throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "simple_application_bundle_no_debug",
+        tmp);
+    workspace.setUp();
+
+    BuildTarget target =
+        workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64," +
+            stripStyle.getFlavor().getName());
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    workspace.verify(
+        Paths.get("DemoApp_output.expected"),
+        BuildTargets.getGenPath(
+            BuildTarget.builder(target)
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                .addFlavors(stripStyle.getFlavor())
+                .addFlavors(AppleDebugFormat.NONE.getFlavor())
+                .build(),
+            "%s"));
+
+    Path bundlePath = workspace.getPath(
+        BuildTargets
+            .getGenPath(
+                BuildTarget.builder(target)
+                    .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                    .addFlavors(stripStyle.getFlavor())
+                    .addFlavors(AppleDebugFormat.NONE.getFlavor())
+                    .build(),
+                "%s")
+            .resolve(target.getShortName() + ".app"));
+    Path binaryPath = bundlePath.resolve("DemoApp");
+
+    ProcessExecutor.Result result = workspace.runCommand(
+        "nm",
+        binaryPath.toString());
+    return result.getStdout().or("");
+  }
+
+  @Test
+  public void bundleBinaryWithStripStyleAllDoesNotContainAnyDebugInfo() throws Exception {
+    String nmOutput = runSimpleBuildWithDefinedStripStyle(StripStyle.ALL_SYMBOLS);
+    assertThat(nmOutput, Matchers.not(containsString("t -[AppDelegate window]")));
+    assertThat(nmOutput, Matchers.not(containsString("S _OBJC_METACLASS_$_AppDelegate")));
+  }
+
+  @Test
+  public void bundleBinaryWithStripStyleNonGlobalContainsOnlyGlobals() throws Exception {
+    String nmOutput = runSimpleBuildWithDefinedStripStyle(StripStyle.NON_GLOBAL_SYMBOLS);
+    assertThat(nmOutput, Matchers.not(containsString("t -[AppDelegate window]")));
+    assertThat(nmOutput, containsString("S _OBJC_METACLASS_$_AppDelegate"));
+  }
+
+  @Test
+  public void bundleBinaryWithStripStyleDebuggingContainsGlobalsAndLocals() throws Exception {
+    String nmOutput = runSimpleBuildWithDefinedStripStyle(StripStyle.DEBUGGING_SYMBOLS);
+    assertThat(nmOutput, containsString("t -[AppDelegate window]"));
+    assertThat(nmOutput, containsString("S _OBJC_METACLASS_$_AppDelegate"));
   }
 
   @Test

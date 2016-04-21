@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
 import com.facebook.buck.js.ReactNativeBundle;
-import com.facebook.buck.js.ReactNativeFlavors;
 import com.facebook.buck.js.ReactNativeLibraryArgs;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
@@ -71,9 +70,7 @@ public class AppleResources {
       ImmutableSet.Builder<SourcePath> resourceFiles,
       ImmutableSet.Builder<SourcePath> bundleVariantFiles) {
     ImmutableSet<BuildRuleType> types =
-        ReactNativeFlavors.skipBundling(targetNode.getBuildTarget())
-            ? ImmutableSet.of(AppleResourceDescription.TYPE)
-            : ImmutableSet.of(AppleResourceDescription.TYPE, IosReactNativeLibraryDescription.TYPE);
+        ImmutableSet.of(AppleResourceDescription.TYPE, IosReactNativeLibraryDescription.TYPE);
 
     Iterable<TargetNode<?>> resourceNodes =
         AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(

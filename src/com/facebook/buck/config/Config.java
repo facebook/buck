@@ -143,6 +143,13 @@ public class Config {
         Optional.<Long>absent();
   }
 
+  public Optional<Integer> getInteger(String sectionName, String propertyName) {
+    Optional<String> value = getValue(sectionName, propertyName);
+    return value.isPresent() ?
+        Optional.of(Integer.valueOf(value.get())) :
+        Optional.<Integer>absent();
+  }
+
   public Optional<Float> getFloat(String sectionName, String propertyName) {
     Optional<String> value = getValue(sectionName, propertyName);
     if (value.isPresent()) {

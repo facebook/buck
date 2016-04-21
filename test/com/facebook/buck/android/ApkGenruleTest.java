@@ -16,13 +16,10 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.util.BuckConstant.GEN_DIR;
-import static com.facebook.buck.util.BuckConstant.GEN_PATH;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -42,6 +39,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -65,6 +63,8 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -150,7 +150,7 @@ public class ApkGenruleTest {
     String expectedApkOutput =
         MorePathsForTests.rootRelativePath(
             "/opt/src/buck/" +
-            GEN_DIR +
+                BuckConstant.getGenDir() +
             "/src/com/facebook/sign_fb4a/sign_fb4a.apk").toString();
     assertEquals(expectedApkOutput,
         apkGenrule.getAbsoluteOutputFilePath());
@@ -166,6 +166,7 @@ public class ApkGenruleTest {
         .setStepRunner(EasyMock.createNiceMock(StepRunner.class))
         .setClock(EasyMock.createMock(Clock.class))
         .setBuildId(EasyMock.createMock(BuildId.class))
+        .setObjectMapper(ObjectMappers.newDefaultInstance())
         .setArtifactCache(EasyMock.createMock(ArtifactCache.class))
         .setJavaPackageFinder(EasyMock.createNiceMock(JavaPackageFinder.class))
         .setEventBus(BuckEventBusFactory.newInstance())
@@ -197,7 +198,8 @@ public class ApkGenruleTest {
     Step secondStep = steps.get(1);
     assertTrue(secondStep instanceof MkdirStep);
     MkdirStep mkdirCommand = (MkdirStep) secondStep;
-    Path mkdirDir = projectFilesystem.resolve(GEN_DIR + "/src/com/facebook/sign_fb4a");
+    Path mkdirDir = projectFilesystem.resolve(BuckConstant.getGenDir() +
+        "/src/com/facebook/sign_fb4a");
     assertEquals(
         "Second command should make sure the output directory exists.",
         mkdirDir,
@@ -206,7 +208,8 @@ public class ApkGenruleTest {
     Step thirdStep = steps.get(2);
     assertTrue(thirdStep instanceof MakeCleanDirectoryStep);
     MakeCleanDirectoryStep secondMkdirCommand = (MakeCleanDirectoryStep) thirdStep;
-    Path relativePathToTmpDir = GEN_PATH.resolve("src/com/facebook/sign_fb4a__tmp");
+    Path relativePathToTmpDir = BuckConstant.getGenPath().resolve(
+        "src/com/facebook/sign_fb4a__tmp");
     assertEquals(
         "Third command should make sure the temp directory exists.",
         relativePathToTmpDir,
@@ -215,7 +218,8 @@ public class ApkGenruleTest {
     Step fourthStep = steps.get(3);
     assertTrue(fourthStep instanceof MakeCleanDirectoryStep);
     MakeCleanDirectoryStep thirdMkdirCommand = (MakeCleanDirectoryStep) fourthStep;
-    Path relativePathToSrcDir = GEN_PATH.resolve("src/com/facebook/sign_fb4a__srcs");
+    Path relativePathToSrcDir = BuckConstant.getGenPath().resolve(
+        "src/com/facebook/sign_fb4a__srcs");
     assertEquals(
         "Fourth command should make sure the temp directory exists.",
         relativePathToSrcDir,

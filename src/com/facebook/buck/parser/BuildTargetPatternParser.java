@@ -38,7 +38,6 @@ import javax.annotation.concurrent.Immutable;
 public abstract class BuildTargetPatternParser<T> {
 
   private static final String VISIBILITY_PUBLIC = "PUBLIC";
-  private static final String CELL_NAME_PREFIX = "@";
   private static final String BUILD_RULE_PREFIX = "//";
   private static final String WILDCARD_BUILD_RULE_SUFFIX = "...";
   private static final String BUILD_RULE_SEPARATOR = ":";
@@ -79,10 +78,9 @@ public abstract class BuildTargetPatternParser<T> {
     }
 
     Preconditions.checkArgument(
-        buildTargetPattern.startsWith(BUILD_RULE_PREFIX) ||
-            buildTargetPattern.startsWith(CELL_NAME_PREFIX),
+        buildTargetPattern.contains(BUILD_RULE_PREFIX),
         String.format(
-            "'%s' must start with '//' or a '@' followed by a cell name",
+            "'%s' must start with '//' or a cell followed by '//'",
             buildTargetPattern));
 
     if (buildTargetPattern.equals(WILDCARD_BUILD_RULE_SUFFIX) ||
@@ -102,11 +100,11 @@ public abstract class BuildTargetPatternParser<T> {
       Function<Optional<String>, Path> cellNames,
       String buildTargetPattern) {
     Path cellPath;
-    if (buildTargetPattern.startsWith(CELL_NAME_PREFIX)) {
+    if (buildTargetPattern.contains(BUILD_RULE_PREFIX) &&
+        !buildTargetPattern.startsWith(BUILD_RULE_PREFIX)) {
       int index = buildTargetPattern.indexOf(BUILD_RULE_PREFIX);
-      Preconditions.checkState(index != -1);
       cellPath = cellNames.apply(
-          Optional.of(buildTargetPattern.substring(CELL_NAME_PREFIX.length(), index)));
+          Optional.of(buildTargetPattern.substring(0, index)));
       buildTargetPattern = buildTargetPattern.substring(index);
     } else {
       cellPath = cellNames.apply(Optional.<String>absent());

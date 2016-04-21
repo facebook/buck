@@ -21,6 +21,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.slb.HttpLoadBalancer;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.LoadBalancedService;
+import com.facebook.buck.slb.RetryingHttpService;
 import com.facebook.buck.slb.SingleUriService;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.HumanReadableException;
@@ -230,14 +231,8 @@ public class ArtifactCaches {
     storeClient.setConnectTimeout(timeoutSeconds, TimeUnit.SECONDS);
     storeClient.setConnectionPool(
         new ConnectionPool(
-            // It's important that this number is greater than the `-j` parallelism,
-            // as if it's too small, we'll overflow the reusable connection pool and
-            // start spamming new connections.  While this isn't the best location,
-            // the other current option is setting this wherever we construct a `Build`
-            // object and have access to the `-j` argument.  However, since that is
-            // created in several places leave it here for now.
-            /* maxIdleConnections */ 200,
-            /* keepAliveDurationMs */ TimeUnit.MINUTES.toMillis(5)));
+            /* maxIdleConnections */ (int) config.getThreadPoolSize(),
+            /* keepAliveDurationMs */ config.getThreadPoolKeepAliveDurationMillis()));
 
     // For fetches, use a client with a read timeout.
     OkHttpClient fetchClient = storeClient.clone();
@@ -289,7 +284,11 @@ public class ArtifactCaches {
         HttpLoadBalancer clientSideSlb = config.getSlbConfig().createHttpClientSideSlb(
             new DefaultClock(),
             buckEventBus);
-        fetchService = new LoadBalancedService(clientSideSlb, fetchClient, buckEventBus);
+        fetchService =
+            new RetryingHttpService(
+                buckEventBus,
+                new LoadBalancedService(clientSideSlb, fetchClient, buckEventBus),
+                config.getMaxFetchRetries());
         storeService = new LoadBalancedService(clientSideSlb, storeClient, buckEventBus);
         break;
 

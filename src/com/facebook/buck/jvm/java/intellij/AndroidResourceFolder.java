@@ -29,16 +29,12 @@ public class AndroidResourceFolder extends InclusiveFolder {
     @Override
     public IjFolder create(
         Path path, boolean wantsPrefix, ImmutableSortedSet<Path> inputs) {
-      return new AndroidResourceFolder(path, wantsPrefix, inputs);
+      return new AndroidResourceFolder(path, inputs);
     }
   };
 
-  AndroidResourceFolder(Path path, boolean wantsPackagePrefix, ImmutableSortedSet<Path> inputs) {
-    super(path, wantsPackagePrefix, inputs);
-  }
-
-  AndroidResourceFolder(Path path, boolean wantsPackagePrefix) {
-    super(path, wantsPackagePrefix);
+  AndroidResourceFolder(Path path, ImmutableSortedSet<Path> inputs) {
+    super(path, true, inputs);
   }
 
   AndroidResourceFolder(Path path) {

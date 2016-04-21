@@ -118,3 +118,13 @@ cxx_binary(
     'untracked_header.cpp',
   ],
 )
+
+cxx_binary(
+  name = 'binary_with_used_relative_parent_header',
+  headers = [
+    'source_relative_parent_header.h',
+  ],
+  srcs = [
+    'source_relative_parent_header/source.cpp',
+  ],
+)

@@ -148,27 +148,17 @@ public class CxxBinaryDescription implements
               cxxPlatform,
               args,
               flavoredStripStyle);
-      HeaderSymlinkTree privateHeaderSymlinkTreeRule = CxxDescriptionEnhancer
-          .createHeaderSymlinkTree(
-              paramsWithoutFlavor,
-              resolver,
-              pathResolver,
-              cxxPlatform,
-              CxxDescriptionEnhancer.parseHeaders(
-                  params.getBuildTarget(),
-                  pathResolver,
-                  Optional.of(cxxPlatform),
-                  args),
-              HeaderVisibility.PRIVATE);
-
       return CxxCompilationDatabase.createCompilationDatabase(
           params,
           pathResolver,
           cxxBuckConfig.getPreprocessMode(),
           cxxLinkAndCompileRules.compileRules,
-          privateHeaderSymlinkTreeRule,
-          // cxx_binary rules do not export headers
-          Optional.<HeaderSymlinkTree>absent());
+          CxxDescriptionEnhancer.requireTransitiveCompilationDatabaseHeaderSymlinkTreeDeps(
+              paramsWithoutFlavor,
+              resolver,
+              pathResolver,
+              cxxPlatform,
+              args));
     }
 
     if (flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {

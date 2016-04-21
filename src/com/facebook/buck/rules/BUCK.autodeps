@@ -1,5 +1,20 @@
-#@# GENERATED FILE: DO NOT MODIFY 1a227db8c74d744a624db09bf506d350137c57c2 #@#
+#@# GENERATED FILE: DO NOT MODIFY bf52ff35146325ea09be3aa844198cd0918e3fca #@#
 {
+  "action_graph_cache" : {
+    "deps" : [
+      "//src/com/facebook/buck/graph:graph",
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/parser:rule_pattern",
+      "//src/com/facebook/buck/util:exceptions",
+      "//third-party/java/jsr:jsr305"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/counters:counters",
+      "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//third-party/java/guava:guava"
+    ]
+  },
   "build_event" : {
     "deps" : [ ],
     "exported_deps" : [
@@ -14,7 +29,6 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util/hash:hash",
-      "//third-party/java/gson:gson",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
@@ -121,6 +135,7 @@
       "//src/com/facebook/buck/go:go",
       "//src/com/facebook/buck/gwt:gwt",
       "//src/com/facebook/buck/halide:halide",
+      "//src/com/facebook/buck/haskell:haskell",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/js:js",
       "//src/com/facebook/buck/jvm/groovy:groovy",

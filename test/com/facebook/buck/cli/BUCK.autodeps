@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 89e718bf514932d3bf2f832ea15e896809b54164 #@#
+#@# GENERATED FILE: DO NOT MODIFY ef931b922f3f8fa0e1502586f4721e3d5edcd740 #@#
 {
   "FakeBuckConfig" : {
     "deps" : [
@@ -39,6 +39,7 @@
       "//src/com/facebook/buck/parser:parser",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/query:query",
+      "//src/com/facebook/buck/rules:action_graph_cache",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules:rules",
@@ -102,6 +103,7 @@
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/parser:config",
       "//src/com/facebook/buck/parser:parser",
+      "//src/com/facebook/buck/rules:action_graph_cache",
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/timing:timing",

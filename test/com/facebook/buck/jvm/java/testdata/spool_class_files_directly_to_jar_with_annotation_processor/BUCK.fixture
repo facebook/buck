@@ -1,0 +1,44 @@
+java_library(
+  name = 'a',
+  srcs = ['A.java', 'B.java', 'AbstractC.java'],
+  deps = [
+    ':processor',
+    ':guava',
+    ':jsr305',
+  ],
+  annotation_processors = [
+    'org.immutables.value.internal.$processor$.$Processor',
+  ],
+  annotation_processor_deps = [
+    ':processor',
+  ],
+)
+
+java_binary(
+    name = 'binary',
+    deps = [':a'],
+    main_class = 'A',
+)
+
+prebuilt_jar(
+  name = 'processor',
+  binary_jar = 'value-2.0.21.jar',
+)
+
+prebuilt_jar(
+  name = 'guava',
+  binary_jar = 'guava-19.0.jar',
+  source_jar = 'guava-19.0-sources.jar',
+)
+
+prebuilt_jar(
+  name = 'jsr305',
+  binary_jar = 'jsr305.jar',
+)
+
+prebuilt_jar(
+  name = 'jsr330',
+  binary_jar = 'javax.inject-1.jar',
+)
+
+

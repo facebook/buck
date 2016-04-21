@@ -63,7 +63,7 @@ public class TracesHelperTest {
             "\"args\":{\"command_args\":\"buck\"}" +
           "}" +
         "]",
-        BuckConstant.BUCK_TRACE_DIR.resolve("build.a.trace"));
+        BuckConstant.getBuckTraceDir().resolve("build.a.trace"));
 
     TracesHelper helper = new TracesHelper(projectFilesystem);
     TraceAttributes traceAttributes = helper.getTraceAttributesFor("a");
@@ -93,7 +93,7 @@ public class TracesHelperTest {
             "\"args\":{\"command_args\":\"buck\"}" +
           "}" +
         "]",
-        BuckConstant.BUCK_TRACE_DIR.resolve("build.b.trace"));
+        BuckConstant.getBuckTraceDir().resolve("build.b.trace"));
 
     TracesHelper helper = new TracesHelper(projectFilesystem);
     TraceAttributes traceAttributes = helper.getTraceAttributesFor("b");
@@ -119,7 +119,7 @@ public class TracesHelperTest {
             "\"ts\":5621911884918" +
           "}" +
         "]",
-        BuckConstant.BUCK_TRACE_DIR.resolve("build.c.trace"));
+        BuckConstant.getBuckTraceDir().resolve("build.c.trace"));
 
     TracesHelper helper = new TracesHelper(projectFilesystem);
     TraceAttributes traceAttributes = helper.getTraceAttributesFor("c");
@@ -136,26 +136,26 @@ public class TracesHelperTest {
     SettableFakeClock clock = new SettableFakeClock(0L, 0L);
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(clock);
     clock.setCurrentTimeMillis(1);
-    projectFilesystem.touch(BuckConstant.BUCK_TRACE_DIR.resolve("build.1.trace"));
+    projectFilesystem.touch(BuckConstant.getBuckTraceDir().resolve("build.1.trace"));
     clock.setCurrentTimeMillis(4);
-    projectFilesystem.touch(BuckConstant.BUCK_TRACE_DIR.resolve("build.4.trace"));
+    projectFilesystem.touch(BuckConstant.getBuckTraceDir().resolve("build.4.trace"));
     clock.setCurrentTimeMillis(2);
-    projectFilesystem.touch(BuckConstant.BUCK_TRACE_DIR.resolve("build.2.trace"));
+    projectFilesystem.touch(BuckConstant.getBuckTraceDir().resolve("build.2.trace"));
     clock.setCurrentTimeMillis(5);
-    projectFilesystem.touch(BuckConstant.BUCK_TRACE_DIR.resolve("build.5.trace"));
+    projectFilesystem.touch(BuckConstant.getBuckTraceDir().resolve("build.5.trace"));
     clock.setCurrentTimeMillis(3);
-    projectFilesystem.touch(BuckConstant.BUCK_TRACE_DIR.resolve("build.3.trace"));
-    projectFilesystem.touch(BuckConstant.BUCK_TRACE_DIR.resolve("build.3b.trace"));
+    projectFilesystem.touch(BuckConstant.getBuckTraceDir().resolve("build.3.trace"));
+    projectFilesystem.touch(BuckConstant.getBuckTraceDir().resolve("build.3b.trace"));
 
     TracesHelper helper = new TracesHelper(projectFilesystem);
     assertEquals(
         ImmutableSet.of(
-            BuckConstant.BUCK_TRACE_DIR.resolve("build.5.trace"),
-            BuckConstant.BUCK_TRACE_DIR.resolve("build.4.trace"),
-            BuckConstant.BUCK_TRACE_DIR.resolve("build.3b.trace"),
-            BuckConstant.BUCK_TRACE_DIR.resolve("build.3.trace"),
-            BuckConstant.BUCK_TRACE_DIR.resolve("build.2.trace"),
-            BuckConstant.BUCK_TRACE_DIR.resolve("build.1.trace")),
+            BuckConstant.getBuckTraceDir().resolve("build.5.trace"),
+            BuckConstant.getBuckTraceDir().resolve("build.4.trace"),
+            BuckConstant.getBuckTraceDir().resolve("build.3b.trace"),
+            BuckConstant.getBuckTraceDir().resolve("build.3.trace"),
+            BuckConstant.getBuckTraceDir().resolve("build.2.trace"),
+            BuckConstant.getBuckTraceDir().resolve("build.1.trace")),
         helper.listTraceFilesByLastModified());
   }
 
@@ -163,7 +163,7 @@ public class TracesHelperTest {
   public void testInputsForTracesThrowsWhenEmpty() throws IOException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
         new FakeClock(TimeUnit.MILLISECONDS.toNanos(2000L)));
-    projectFilesystem.mkdirs(BuckConstant.BUCK_TRACE_DIR);
+    projectFilesystem.mkdirs(BuckConstant.getBuckTraceDir());
     TracesHelper helper = new TracesHelper(projectFilesystem);
     helper.getInputsForTraces("nonexistent");
   }
@@ -172,7 +172,7 @@ public class TracesHelperTest {
   public void testTraceAttributesThrowsWhenEmpty() throws IOException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
         new FakeClock(TimeUnit.MILLISECONDS.toNanos(2000L)));
-    projectFilesystem.mkdirs(BuckConstant.BUCK_TRACE_DIR);
+    projectFilesystem.mkdirs(BuckConstant.getBuckTraceDir());
     TracesHelper helper = new TracesHelper(projectFilesystem);
     helper.getTraceAttributesFor("nonexistent");
   }

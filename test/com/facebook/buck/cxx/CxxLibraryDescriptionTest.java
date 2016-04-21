@@ -29,6 +29,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -1290,6 +1291,29 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         ImmutableSortedSet.copyOf(input.getDeps(resolver, pathResolver)),
         Matchers.<BuildRule>empty());
+  }
+
+  @Test
+  public void thinArchiveSettingIsPropagatedToArchive() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//:rule")
+            .withFlavors(
+                CxxDescriptionEnhancer.STATIC_FLAVOR,
+                CxxLibraryBuilder.createDefaultPlatform().getFlavor());
+    CxxLibraryBuilder libBuilder =
+        new CxxLibraryBuilder(
+            target,
+            new CxxBuckConfig(
+                FakeBuckConfig.builder().setSections("[cxx]", "archive_contents=thin").build()),
+            CxxPlatformUtils.DEFAULT_PLATFORMS);
+    libBuilder.setSrcs(
+        ImmutableSortedSet.of(
+            SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))));
+    Archive lib = (Archive) libBuilder.build(resolver, filesystem);
+    assertThat(lib.getContents(), Matchers.equalTo(Archive.Contents.THIN));
   }
 
 }

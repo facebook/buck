@@ -48,6 +48,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
@@ -58,8 +59,12 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.Set;
 
@@ -1442,8 +1447,8 @@ public class CxxBinaryIntegrationTest {
             CxxSource.Type.CXX,
             "bin.cpp");
     String contents = workspace.getFileContents(output.toString());
-    assertThat(contents, Matchers.not(Matchers.containsString(BuckConstant.SCRATCH_DIR)));
-    assertThat(contents, Matchers.not(Matchers.containsString(BuckConstant.GEN_DIR)));
+    assertThat(contents, Matchers.not(Matchers.containsString(BuckConstant.getScratchDir())));
+    assertThat(contents, Matchers.not(Matchers.containsString(BuckConstant.getGenDir())));
     assertThat(contents, Matchers.containsString("# 1 \"bin.h"));
     assertThat(contents, Matchers.containsString("# 1 \"lib1.h"));
     assertThat(contents, Matchers.containsString("# 1 \"lib2.h"));
@@ -1464,8 +1469,8 @@ public class CxxBinaryIntegrationTest {
     // Verify that the preprocessed source contains no references to the symlink tree used to
     // setup the headers.
     String error = result.getStderr();
-    assertThat(error, Matchers.not(Matchers.containsString(BuckConstant.SCRATCH_DIR)));
-    assertThat(error, Matchers.not(Matchers.containsString(BuckConstant.GEN_DIR)));
+    assertThat(error, Matchers.not(Matchers.containsString(BuckConstant.getScratchDir())));
+    assertThat(error, Matchers.not(Matchers.containsString(BuckConstant.getGenDir())));
     assertThat(error, Matchers.containsString("In file included from lib1.h:1"));
     assertThat(error, Matchers.containsString("from bin.h:1"));
     assertThat(error, Matchers.containsString("from bin.cpp:1:"));
@@ -1825,6 +1830,58 @@ public class CxxBinaryIntegrationTest {
     workspace.getBuildLog().assertTargetBuiltLocally(
         CxxDescriptionEnhancer.createCxxLinkTarget(BuildTargetFactory.newInstance("//foo:simple"))
             .toString());
+  }
+
+  @Test
+  public void testThinArchives() throws IOException {
+    CxxPlatform cxxPlatform =
+        DefaultCxxPlatforms.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    assumeTrue(cxxPlatform.getAr().supportsThinArchives());
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
+    workspace.setUp();
+    workspace.enableDirCache();
+    workspace.runBuckBuild(
+        "-c", "cxx.cache_links=false",
+        "-c", "cxx.archive_contents=thin",
+        "//foo:binary_with_dep")
+        .assertSuccess();
+    ImmutableSortedSet<Path> initialObjects =
+        findFiles(
+            tmp.getRootPath(),
+            tmp.getRootPath().getFileSystem().getPathMatcher("glob:**/*.o"));
+    workspace.runBuckCommand("clean");
+    workspace.runBuckBuild(
+        "-c", "cxx.cache_links=false",
+        "-c", "cxx.archive_contents=thin",
+        "//foo:binary_with_dep")
+        .assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally(
+        CxxDescriptionEnhancer
+            .createCxxLinkTarget(BuildTargetFactory.newInstance("//foo:binary_with_dep"))
+            .toString());
+    ImmutableSortedSet<Path> subsequentObjects =
+        findFiles(
+            tmp.getRootPath(),
+            tmp.getRootPath().getFileSystem().getPathMatcher("glob:**/*.o"));
+    assertThat(initialObjects, Matchers.equalTo(subsequentObjects));
+  }
+
+  private ImmutableSortedSet<Path> findFiles(Path root, final PathMatcher matcher)
+      throws IOException {
+    final ImmutableSortedSet.Builder<Path> files = ImmutableSortedSet.naturalOrder();
+    Files.walkFileTree(
+        root,
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+            if (matcher.matches(file)) {
+              files.add(file);
+            }
+            return FileVisitResult.CONTINUE;
+          }
+        });
+    return files.build();
   }
 
 }

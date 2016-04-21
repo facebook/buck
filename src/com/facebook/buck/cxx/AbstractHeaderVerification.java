@@ -16,8 +16,13 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.immutables.value.Value;
 
@@ -29,28 +34,56 @@ import java.util.regex.Pattern;
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractHeaderVerification {
+abstract class AbstractHeaderVerification implements RuleKeyAppendable {
 
-  public static final HeaderVerification NONE =
-      HeaderVerification.builder().setMode(Mode.IGNORE).build();
-
+  @Value.Parameter
   public abstract Mode getMode();
 
   /**
    * @return a list of regexes which match headers which should be exempt from verification.
    */
-  protected abstract ImmutableList<Pattern> getWhitelist();
+  @Value.Parameter
+  @Value.NaturalOrder
+  protected abstract ImmutableSortedSet<String> getWhitelist();
+
+  @Value.Derived
+  protected ImmutableList<Pattern> getWhitelistPatterns() {
+    return FluentIterable.from(getWhitelist())
+        .transform(
+            new Function<String, Pattern>() {
+              @Override
+              public Pattern apply(String input) {
+                return Pattern.compile(input);
+              }
+            })
+        .toList();
+  }
+
+  public static HeaderVerification of(Mode mode) {
+    return HeaderVerification.builder()
+        .setMode(mode)
+        .build();
+  }
 
   /**
    * @return whether the given header has been whitelisted.
    */
   public boolean isWhitelisted(String header) {
-    for (Pattern pattern : getWhitelist()) {
+    for (Pattern pattern : getWhitelistPatterns()) {
       if (pattern.matcher(header).matches()) {
         return true;
       }
     }
     return false;
+  }
+
+  @Override
+  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+    builder.setReflectively("mode", getMode());
+    if (getMode() != Mode.IGNORE) {
+      builder.setReflectively("whitelist", getWhitelist());
+    }
+    return builder;
   }
 
   public enum Mode {

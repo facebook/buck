@@ -122,6 +122,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       declaredClasspathEntriesSupplier;
 
   private final SourcePath abiJar;
+  private final boolean trackClassUsage;
   @AddToRuleKey
   @SuppressWarnings("PMD.UnusedPrivateField")
   private final Supplier<ImmutableSortedSet<SourcePath>> abiClasspath;
@@ -175,6 +176,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
       SourcePath abiJar,
+      boolean trackClassUsage,
       ImmutableSet<Path> additionalClasspathEntries,
       CompileToJarStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
@@ -191,6 +193,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         exportedDeps,
         providedDeps,
         abiJar,
+        trackClassUsage,
         Suppliers.memoize(
             new Supplier<ImmutableSortedSet<SourcePath>>() {
               @Override
@@ -216,6 +219,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
       SourcePath abiJar,
+      boolean trackClassUsage,
       final Supplier<ImmutableSortedSet<SourcePath>> abiClasspath,
       ImmutableSet<Path> additionalClasspathEntries,
       CompileToJarStepFactory compileStepFactory,
@@ -259,6 +263,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.tests = tests;
 
     this.abiJar = abiJar;
+    this.trackClassUsage = trackClassUsage;
     this.abiClasspath = abiClasspath;
 
     if (!srcs.isEmpty() || !resources.isEmpty()) {
@@ -331,6 +336,10 @@ public class DefaultJavaLibrary extends AbstractBuildRule
             "%s/%s.jar",
             getOutputJarDirPath(target),
             target.getShortNameAndFlavorPostfix()));
+  }
+
+  static Path getUsedClassesFilePath(BuildTarget target) {
+    return getOutputJarDirPath(target).resolve("used-classes.json");
   }
 
   /**
@@ -472,6 +481,12 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
     // Only run javac if there are .java files to compile.
     if (!getJavaSrcs().isEmpty()) {
+      Optional<Path> usedClassesFilePath = Optional.absent();
+      if (trackClassUsage) {
+        usedClassesFilePath = Optional.of(getUsedClassesFilePath(target));
+        buildableContext.recordArtifact(usedClassesFilePath.get());
+      }
+
       // This adds the javac command, along with any supporting commands.
       Path pathToSrcsList = BuildTargets.getGenPath(getBuildTarget(), "__%s__srcs");
       steps.add(new MkdirStep(getProjectFilesystem(), pathToSrcsList.getParent()));
@@ -496,6 +511,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           /* mainClass */ Optional.<String>absent(),
           /* manifestFile */ Optional.<Path>absent(),
           outputJar.get(),
+          usedClassesFilePath,
           /* output params */
           steps,
           buildableContext);

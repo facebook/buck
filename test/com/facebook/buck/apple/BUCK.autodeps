@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY dc1d58c44875c2771567edfe5094573235194fae #@#
+#@# GENERATED FILE: DO NOT MODIFY 63c1c9e69bf5b10c5427e79d848efef9a4bdb8e4 #@#
 {
   "apple" : {
     "deps" : [
@@ -17,6 +17,7 @@
       "//src/com/facebook/buck/js:js",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
+      "//src/com/facebook/buck/rules:action_graph_cache",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules:rules",
@@ -52,6 +53,7 @@
       "//test/com/facebook/buck/util:testutil",
       "//third-party/java/dd-plist:dd-plist",
       "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:hamcrest-junit",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/junit:junit"
     ],
@@ -61,7 +63,9 @@
     "deps" : [
       "//src/com/facebook/buck/apple:platform",
       "//src/com/facebook/buck/apple:rules",
+      "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/environment:platform",
@@ -76,10 +80,7 @@
   },
   "testutil" : {
     "deps" : [
-      "//src/com/facebook/buck/cli:config",
-      "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
-      "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/rules/coercer:types",
       "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util:util",
@@ -97,6 +98,9 @@
       "//src/com/facebook/buck/apple:platform",
       "//src/com/facebook/buck/apple:rules",
       "//src/com/facebook/buck/apple/xcode:xcode",
+      "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/cxx:platform",
+      "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",

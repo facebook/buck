@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 733a147e209f3b8df331bb8618b245a4758792a9 #@#
+#@# GENERATED FILE: DO NOT MODIFY bf36f35aa6c0479e7dec11b3c28f4b216761e0a5 #@#
 {
   "cxx" : {
     "deps" : [
@@ -20,7 +20,6 @@
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/shell:rules",
-      "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/test:test",
@@ -35,6 +34,7 @@
       "//test/com/facebook/buck/android:testutil",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/cxx:testutil",
+      "//test/com/facebook/buck/file:testutil",
       "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/rules:testutil",
       "//test/com/facebook/buck/shell:testutil",

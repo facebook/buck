@@ -28,12 +28,13 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public class AppleDsymTestUtil {
+  private static final String MAIN = "main";
   private AppleDsymTestUtil() {}
 
   public static void checkDsymFileHasDebugSymbolForMain(
       ProjectWorkspace workspace,
       Path dwarfPath) throws IOException, InterruptedException {
-    checkDsymFileHasDebugSymbol("main", workspace, dwarfPath);
+    checkDsymFileHasDebugSymbol(MAIN, workspace, dwarfPath);
   }
 
   public static void checkDsymFileHasDebugSymbol(
@@ -45,6 +46,13 @@ public class AppleDsymTestUtil {
         workspace,
         dwarfPath,
         Optional.<ImmutableList<String>>absent());
+  }
+
+  public static void checkDsymFileHasDebugSymbolsForMainForConcreteArchitectures(
+      ProjectWorkspace workspace,
+      Path dwarfPath,
+      Optional<ImmutableList<String>> architectures) throws IOException, InterruptedException {
+    checkDsymFileHasDebugSymbolForConcreteArchitectures(MAIN, workspace, dwarfPath, architectures);
   }
 
   public static void checkDsymFileHasDebugSymbolForConcreteArchitectures(

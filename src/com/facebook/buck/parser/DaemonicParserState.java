@@ -50,7 +50,6 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
-import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -365,7 +364,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
     // Because of the way that the parser works, we know this can never return null.
     Description<?> description = cell.getDescription(buildRuleType);
 
-    UnflavoredBuildTarget unflavoredBuildTarget = target.getUnflavoredBuildTarget();
+    UnflavoredBuildTarget unflavoredBuildTarget = target.withoutCell().getUnflavoredBuildTarget();
     if (target.isFlavored()) {
       if (description instanceof Flavored) {
         if (!((Flavored) description).hasFlavors(
@@ -409,7 +408,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
     Cell targetCell = cell.getCell(target);
     BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
         targetCell.getFilesystem(),
-        target.withoutCell(),
+        target,
         new FilesystemBackedBuildFileTree(
             cell.getFilesystem(),
             cell.getBuildFileName()),
@@ -673,12 +672,8 @@ class DaemonicParserState implements ParsePipeline.Cache {
     }
   }
 
-  private static ImmutableMap<String, String> filteredEnv(ImmutableMap<String, String> env) {
-    return ImmutableMap.copyOf(Maps.filterKeys(env, EnvironmentFilter.NOT_IGNORED_ENV_PREDICATE));
-  }
-
   private void invalidateIfProjectBuildFileParserStateChanged(Cell cell) {
-    ImmutableMap<String, String> cellEnv = filteredEnv(cell.getBuckConfig().getEnvironment());
+    ImmutableMap<String, String> cellEnv = cell.getBuckConfig().getFilteredEnvironment();
     Iterable<String> defaultIncludes = new ParserConfig(cell.getBuckConfig()).getDefaultIncludes();
 
     boolean invalidatedByEnvironmentVariableChange = false;

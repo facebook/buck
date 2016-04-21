@@ -202,6 +202,7 @@ public class CxxCompilationDatabaseTest {
                 Paths.get("test.o"),
                 new FakeSourcePath(filesystem, "test.cpp"),
                 CxxSource.Type.CXX,
+                Optional.<PrecompiledHeaderReference>absent(),
                 CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
                 strategy));
         break;
@@ -230,8 +231,7 @@ public class CxxCompilationDatabaseTest {
         testSourcePathResolver,
         strategy,
         rules.build(),
-        privateSymlinkTree,
-        Optional.of(exportedSymlinkTree));
+        ImmutableSortedSet.of(privateSymlinkTree, exportedSymlinkTree));
 
     assertThat(
         compilationDatabase.getRuntimeDeps(),

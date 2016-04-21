@@ -302,4 +302,32 @@ public class PythonTestDescriptionTest {
         Matchers.hasItem(pexExecutor));
   }
 
+  @Test
+  public void pexExecutorRuleIsAddedToParseTimeDeps() throws Exception {
+    ShBinaryBuilder pexExecutorBuilder =
+        new ShBinaryBuilder(BuildTargetFactory.newInstance("//:pex_executor"))
+            .setMain(new FakeSourcePath("run.sh"));
+    PythonTestBuilder builder =
+        new PythonTestBuilder(
+            BuildTargetFactory.newInstance("//:bin"),
+            new PythonBuckConfig(
+                FakeBuckConfig.builder()
+                    .setSections(
+                        ImmutableMap.of(
+                            "python",
+                            ImmutableMap.of(
+                                "path_to_pex_executer",
+                                pexExecutorBuilder.getTarget().toString())))
+                    .build(),
+                new AlwaysFoundExecutableFinder()),
+            PythonTestUtils.PYTHON_PLATFORMS,
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            CxxPlatformUtils.DEFAULT_PLATFORMS);
+    builder
+        .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE);
+    assertThat(
+        builder.build().getExtraDeps(),
+        Matchers.hasItem(pexExecutorBuilder.getTarget()));
+  }
+
 }

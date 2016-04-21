@@ -88,7 +88,7 @@ public class StackedFileHashCacheTest {
     DefaultFileHashCache innerCache = new DefaultFileHashCache(filesystem);
     StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
     expectedException.expect(NoSuchFileException.class);
-    cache.get(fullPath);
+    cache.get(filesystem.resolve(fullPath));
   }
 
   @Test
@@ -103,7 +103,7 @@ public class StackedFileHashCacheTest {
     DefaultFileHashCache innerCache = new DefaultFileHashCache(filesystem);
     StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
     expectedException.expect(NoSuchFileException.class);
-    cache.get(fullPath);
+    cache.get(filesystem.resolve(fullPath));
   }
 
 }

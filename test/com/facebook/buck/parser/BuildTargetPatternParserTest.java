@@ -116,12 +116,12 @@ public class BuildTargetPatternParserTest {
 
     assertEquals(
         new SingletonBuildTargetPattern(filesystem.getRootPath(), "//:something"),
-        buildTargetPatternParser.parse(cellNames, "@other//:something"));
+        buildTargetPatternParser.parse(cellNames, "other//:something"));
     assertEquals(
         new SubdirectoryBuildTargetPattern(
             filesystem.getRootPath(),
             filesystem.getRootPath().getFileSystem().getPath("sub")),
-        buildTargetPatternParser.parse(cellNames, "@other//sub/..."));
+        buildTargetPatternParser.parse(cellNames, "other//sub/..."));
   }
 
   @Test

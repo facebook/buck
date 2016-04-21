@@ -163,6 +163,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
                 /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
                 /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
                 /* abiJar */ new BuildTargetSourcePath(abiJarTarget),
+                templateOptions.trackClassUsage(),
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
                 new JavacToJarStepFactory(templateOptions, JavacOptionsAmender.IDENTITY),
                 /* resourcesRoot */ Optional.<Path>absent(),

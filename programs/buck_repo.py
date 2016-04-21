@@ -30,6 +30,7 @@ JAVA_CLASSPATHS = [
     "third-party/java/asm/asm-debug-all-5.0.3.jar",
     "third-party/java/closure-templates/soy-excluding-deps.jar",
     "third-party/java/commons-compress/commons-compress-1.8.1.jar",
+    "third-party/java/commons-logging/commons-logging-1.2.jar",
     "third-party/java/concurrent-locks/concurrent-locks-1.0.0.jar",
     "third-party/java/dd-plist/dd-plist.jar",
     "third-party/java/ddmlib/ddmlib-22.5.3.jar",
@@ -47,8 +48,8 @@ JAVA_CLASSPATHS = [
     "third-party/java/guice/guice-3.0.jar",
     "third-party/java/guice/guice-assistedinject-3.0.jar",
     "third-party/java/guice/guice-multibindings-3.0.jar",
-    "third-party/java/httpcomponents/httpclient-4.2.6.jar",
-    "third-party/java/httpcomponents/httpcore-4.2.5.jar",
+    "third-party/java/httpcomponents/httpclient-4.4.1.jar",
+    "third-party/java/httpcomponents/httpcore-4.4.1.jar",
     "third-party/java/icu4j/icu4j-54.1.1.jar",
     "third-party/java/infer-annotations/infer-annotations-1.5.jar",
     "third-party/java/ini4j/ini4j-0.5.2.jar",
@@ -102,6 +103,7 @@ RESOURCES = {
     "path_to_pathlib_py": "third-party/py/pathlib/pathlib.py",
     "path_to_pex": "src/com/facebook/buck/python/make_pex.py",
     "path_to_pywatchman": "third-party/py/pywatchman",
+    "path_to_scandir_py": "third-party/py/scandir/scandir.py",
     "path_to_sh_binary_template": "src/com/facebook/buck/shell/sh_binary_template",
     "path_to_static_content": "webserver/static",
     "report_generator_jar": "build/report-generator.jar",
@@ -279,6 +281,18 @@ class BuckRepo(BuckTool):
 
     def _get_buck_version_uid(self):
         with Tracing('BuckRepo._get_buck_version_uid'):
+
+            # Check if the developer has requested that we impersonate some other version.
+            fake_buck_version_file_path = os.path.join(self._buck_dir, ".fakebuckversion")
+            if os.path.exists(fake_buck_version_file_path):
+                with open(fake_buck_version_file_path) as fake_buck_version_file:
+                    fake_buck_version = fake_buck_version_file.read().strip()
+
+                print(textwrap.dedent("""\
+::: Faking buck version %s, despite your buck directory not being that version!
+::: We hope you know what you are doing...""" % fake_buck_version),
+                      file=sys.stderr)
+                return fake_buck_version
 
             # First try to get the "clean" buck version.  If it succeeds,
             # return it.

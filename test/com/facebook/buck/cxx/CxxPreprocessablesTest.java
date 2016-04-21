@@ -99,6 +99,10 @@ public class CxxPreprocessablesTest {
       return builder.build();
     }
 
+    @Override
+    public Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(CxxPlatform cxxPlatform) {
+      return Optional.absent();
+    }
   }
 
   private static FakeCxxPreprocessorDep createFakeCxxPreprocessorDep(

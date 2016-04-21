@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 
@@ -37,16 +38,16 @@ public interface BuildableContext {
    * (If we discover a good reason for this to be allowed later, we can always relax this
    * constraint.)
    */
-  public void addMetadata(String key, String value);
+  void addMetadata(String key, String value);
 
   /**
-   * @see BuildInfoRecorder#addMetadata(String, Iterable)
+   * @see BuildInfoRecorder#addMetadata(String, ImmutableList)
    */
-  public void addMetadata(String key, Iterable<String> values);
+  void addMetadata(String key, ImmutableList<String> values);
 
   /**
    * @see BuildInfoRecorder#recordArtifact(Path)
    */
-  public void recordArtifact(Path pathToArtifact);
+  void recordArtifact(Path pathToArtifact);
 
 }

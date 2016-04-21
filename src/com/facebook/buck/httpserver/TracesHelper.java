@@ -173,7 +173,7 @@ public class TracesHelper {
 
   Collection<Path> listTraceFilesByLastModified() throws IOException {
     return projectFilesystem.getSortedMatchingDirectoryContents(
-        BuckConstant.BUCK_TRACE_DIR,
+        BuckConstant.getBuckTraceDir(),
         "build.*.trace");
   }
 
@@ -187,7 +187,7 @@ public class TracesHelper {
     Preconditions.checkArgument(TracesHandlerDelegate.TRACE_ID_PATTERN.matcher(id).matches());
 
     Collection<Path> traces = projectFilesystem.getSortedMatchingDirectoryContents(
-        BuckConstant.BUCK_TRACE_DIR,
+        BuckConstant.getBuckTraceDir(),
         "*" + id + "*.trace");
 
     if (traces.isEmpty()) {

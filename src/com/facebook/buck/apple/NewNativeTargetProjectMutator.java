@@ -116,7 +116,6 @@ public class NewNativeTargetProjectMutator {
   private Iterable<PBXShellScriptBuildPhase> preBuildRunScriptPhases = ImmutableList.of();
   private Iterable<PBXBuildPhase> copyFilesPhases = ImmutableList.of();
   private Iterable<PBXShellScriptBuildPhase> postBuildRunScriptPhases = ImmutableList.of();
-  private boolean skipRNBundle = false;
 
   public NewNativeTargetProjectMutator(
       PathRelativizer pathRelativizer,
@@ -240,11 +239,6 @@ public class NewNativeTargetProjectMutator {
   public NewNativeTargetProjectMutator setPostBuildRunScriptPhases(
       Iterable<PBXShellScriptBuildPhase> phases) {
     postBuildRunScriptPhases = phases;
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator skipReactNativeBundle(boolean skipRNBundle) {
-    this.skipRNBundle = skipRNBundle;
     return this;
   }
 
@@ -681,7 +675,6 @@ public class NewNativeTargetProjectMutator {
     ReactNativeLibraryArgs args = (ReactNativeLibraryArgs) targetNode.getConstructorArg();
 
     template.add("bundle_name", args.bundleName);
-    template.add("skip_rn_bundle", skipRNBundle);
 
     ProjectFilesystem filesystem = targetNode.getRuleFactoryParams().getProjectFilesystem();
     BuildTarget buildTarget = targetNode.getBuildTarget();

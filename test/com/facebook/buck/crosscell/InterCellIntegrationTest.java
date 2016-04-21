@@ -149,6 +149,24 @@ public class InterCellIntegrationTest {
   }
 
   @Test
+  public void cellNameCanUseFullString() throws IOException {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+
+    ProjectWorkspace primary = createWorkspace("inter-cell/export-file/primary");
+    primary.setUp();
+
+    ProjectWorkspace secondary = createWorkspace("inter-cell/export-file/secondary");
+    secondary.setUp();
+
+    // Add the '@' for backward compatibility
+    registerCell(primary, "@secondary", secondary);
+
+    ProjectWorkspace.ProcessResult result = primary.runBuckBuild("//:cxxbinary");
+
+    result.assertSuccess();
+  }
+
+  @Test
   public void shouldBeAbleToUseMultipleXCell() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
@@ -201,7 +219,7 @@ public class InterCellIntegrationTest {
 
   private ImmutableMap<String, HashCode> findObjectFiles(final ProjectWorkspace workspace)
       throws IOException {
-    final Path buckOut = workspace.getPath(BuckConstant.BUCK_OUTPUT_DIRECTORY);
+    final Path buckOut = workspace.getPath(BuckConstant.getBuckOutputDirectory());
 
     final ImmutableMap.Builder<String, HashCode> objectHashCodes = ImmutableMap.builder();
     Files.walkFileTree(buckOut, new SimpleFileVisitor<Path>() {

@@ -100,6 +100,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
                 exportedDeps,
                 resolver.getAllRules(args.providedDeps.get()),
                 new BuildTargetSourcePath(abiJarTarget),
+                /* trackClassUsage */ false,
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
                 new GroovycToJarStepFactory(
                     groovyBuckConfig.getGroovyCompiler().get(),

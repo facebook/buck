@@ -17,6 +17,9 @@ java_test(
   run_test_separately = True,
   srcs = APPLE_TEST_INTEGRATION_TEST_SRCS,
   autodeps = True,
+  deps = [
+    '//src/com/facebook/buck/util:constants',
+  ],
   resources = glob(['testdata/**']),
 )
 

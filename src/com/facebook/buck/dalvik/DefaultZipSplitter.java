@@ -169,6 +169,10 @@ public class DefaultZipSplitter implements ZipSplitter {
   }
 
   private void processEntry(FileLike entry) throws IOException {
+    if (!entry.getRelativePath().endsWith(".class")) {
+      // We don't need resources in dex jars, so just drop them.
+      return;
+    }
     long entrySize = entry.getSize();
     if (entrySize <= 0) {
       return;

@@ -25,4 +25,6 @@ public interface Archiver extends Tool {
 
   ImmutableList<FileScrubber> getScrubbers();
 
+  boolean supportsThinArchives();
+
 }

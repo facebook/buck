@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CanonicalName</key>
+	<string>appletvsimulator9.1</string>
+	<key>CustomProperties</key>
+	<dict/>
+	<key>DefaultDeploymentTarget</key>
+	<string>9.1</string>
+	<key>DefaultProperties</key>
+	<dict>
+		<key>DEFAULT_COMPILER</key>
+		<string>com.apple.compilers.llvm.clang.1_0</string>
+		<key>DEPLOYMENT_TARGET_SUGGESTED_VALUES</key>
+		<array>
+			<string>9.0</string>
+			<string>9.1</string>
+		</array>
+		<key>PLATFORM_NAME</key>
+		<string>appletvsimulator</string>
+		<key>PLATFORM_VERSION_AVAILABILITY_H_FORMAT</key>
+		<string>90100</string>
+		<key>SUPPORTED_DEVICE_FAMILIES</key>
+		<string>3</string>
+		<key>TVOS_DEPLOYMENT_TARGET</key>
+		<string>9.1</string>
+	</dict>
+	<key>DisplayName</key>
+	<string>Simulator - tvOS 9.1</string>
+	<key>DocSetFeedName</key>
+	<string>tvOS 9.1</string>
+	<key>DocSetFeedURL</key>
+	<string>http://developer.apple.com/rss/com.apple.adc.documentation.AppleTVOS9_1.atom</string>
+	<key>IsBaseSDK</key>
+	<string>YES</string>
+	<key>MaximumDeploymentTarget</key>
+	<string>9.1.99</string>
+	<key>MinimalDisplayName</key>
+	<string>Simulator - 9.1</string>
+	<key>Toolchains</key>
+	<array>
+		<string>com.apple.dt.toolchain.AppleTVOS9_1</string>
+	</array>
+	<key>Version</key>
+	<string>9.1</string>
+</dict>
+</plist>

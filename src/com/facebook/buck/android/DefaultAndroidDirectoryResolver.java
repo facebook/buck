@@ -20,6 +20,7 @@ import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PropertyFinder;
 import com.facebook.buck.util.VersionStringComparator;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -30,17 +31,26 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.StringTokenizer;
 
 /**
  * Utility class used for resolving the location of Android specific directories.
  */
 public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver {
+  // Pre r11 NDKs store the version at RELEASE.txt.
+  // Post r11 NDKs store the version at source.properties.
+  @VisibleForTesting
+  static final String NDK_PRE_R11_VERSION_FILENAME = "RELEASE.TXT";
+  @VisibleForTesting
+  static final String NDK_POST_R11_VERSION_FILENAME = "source.properties";
 
   public static final ImmutableSet<String> BUILD_TOOL_PREFIXES =
       ImmutableSet.of("android-", "build-tools-");
@@ -121,14 +131,32 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
     return findNdkVersionFromPath(ndkPath.get());
   }
 
+  /**
+   * The method returns the NDK version of a path.
+   * @param ndkPath Path to the folder that contains the NDK.
+   * @return A string containing the NDK version or absent.
+   */
   private Optional<String> findNdkVersionFromPath(Path ndkPath) {
-    Path releaseVersion =  ndkPath.resolve("RELEASE.TXT");
-    Optional<String> contents = projectFilesystem.readFirstLineFromFile(releaseVersion);
+    Path releaseVersion = ndkPath.resolve(NDK_POST_R11_VERSION_FILENAME);
 
-    if (contents.isPresent()) {
-      StringTokenizer stringTokenizer = new StringTokenizer(contents.get());
-      if (stringTokenizer.hasMoreTokens()) {
-        return Optional.of(stringTokenizer.nextToken());
+    if (Files.exists(releaseVersion)) {
+      try (InputStream inputFile = new FileInputStream(releaseVersion.toFile())) {
+        Properties sourceProperties = new Properties();
+        sourceProperties.load(inputFile);
+        return Optional.of(sourceProperties.getProperty("Pkg.Revision"));
+      } catch (IOException e) {
+        throw new HumanReadableException(
+            e,
+            "Failed to read the Android NDK version from: %s", releaseVersion);
+      }
+    } else {
+      releaseVersion = ndkPath.resolve(NDK_PRE_R11_VERSION_FILENAME);
+      Optional<String> contents = projectFilesystem.readFirstLineFromFile(releaseVersion);
+      if (contents.isPresent()) {
+        StringTokenizer stringTokenizer = new StringTokenizer(contents.get());
+        if (stringTokenizer.hasMoreTokens()) {
+          return Optional.of(stringTokenizer.nextToken());
+        }
       }
     }
     return Optional.absent();

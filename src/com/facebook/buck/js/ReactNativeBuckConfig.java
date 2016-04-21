@@ -17,7 +17,9 @@
 package com.facebook.buck.js;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 
@@ -35,34 +37,27 @@ public class ReactNativeBuckConfig {
   }
 
   /**
-   * TODO(natthu): return a Tool instead.
+   * The JavaScript packager tool to use for React Native rules.  Note that callers need to add the
+   * result of {@link #getPackagerSourcePath()} to the list of deps on the build rule otherwise
+   * parsing will fail.
    *
-   * @return Path to the react native javascript packager.
+   * @return Tool for the react native javascript packager.
    */
-  public SourcePath getPackager() {
-    if (useWorker()) {
-      Optional<SourcePath> packagerWorker =
-          delegate.getSourcePath("react-native", "packager_worker");
-      if (!packagerWorker.isPresent()) {
-        throw new HumanReadableException("The 'use_worker' option in .buckconfig under the " +
-            "'react-native' section is set to 'true'. To use this option, you must also specify " +
-            "a 'packager_worker' value.");
-      }
-      return packagerWorker.get();
-    }
-    Optional<SourcePath> packager = delegate.getSourcePath("react-native", "packager");
-    if (!packager.isPresent()) {
+  public Tool getPackager(BuildRuleResolver resolver) {
+    return delegate.getRequiredTool("react-native", "packager_worker", resolver);
+  }
+
+  public SourcePath getPackagerSourcePath() {
+    Optional<SourcePath> packagerWorker =
+        delegate.getSourcePath("react-native", "packager_worker");
+    if (!packagerWorker.isPresent()) {
       throw new HumanReadableException("In order to use a 'react_native_library' rule, please " +
-          "specify 'packager' in .buckconfig under the 'react-native' section.");
+          "specify 'packager_worker' in .buckconfig under the 'react-native' section.");
     }
-    return packager.get();
+    return packagerWorker.get();
   }
 
   public Optional<Path> getServer() {
     return delegate.getPath("react-native", "server");
-  }
-
-  public boolean useWorker() {
-    return delegate.getBooleanValue("react-native", "use_worker", false);
   }
 }

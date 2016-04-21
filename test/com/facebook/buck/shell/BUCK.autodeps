@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY ecf4b5f9dedeaf6a364b8a6850033c47e610e918 #@#
+#@# GENERATED FILE: DO NOT MODIFY 5e529d75d5e8ef66dd6958c29630b9f5055a0b60 #@#
 {
   "shell" : {
     "deps" : [
@@ -20,6 +20,7 @@
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/shell:worker",
       "//src/com/facebook/buck/shell:worker_process",
+      "//src/com/facebook/buck/shell:worker_tool",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/timing:timing",
@@ -46,7 +47,8 @@
       "//third-party/java/hamcrest:hamcrest-junit",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/jsr:jsr305",
-      "//third-party/java/junit:junit"
+      "//third-party/java/junit:junit",
+      "//third-party/java/nailgun:nailgun"
     ],
     "exported_deps" : [ ]
   },

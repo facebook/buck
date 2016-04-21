@@ -26,13 +26,11 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.rules.Tool;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.util.Collections;
 
 public class ReactNativeLibraryGraphEnhancer {
 
@@ -58,20 +56,14 @@ public class ReactNativeLibraryGraphEnhancer {
     BuildTarget depsFinderTarget = BuildTarget.builder(originalBuildTarget)
         .addFlavors(REACT_NATIVE_DEPS_FLAVOR)
         .build();
-    BuildRuleParams paramsForDepsFinder =
-        params.copyWithBuildTarget(depsFinderTarget).appendExtraDeps(
-            resolver.getAllRules(
-                SourcePaths.filterBuildTargetSourcePaths(
-                    Collections.singleton(buckConfig.getPackager()))));
     ReactNativeDeps depsFinder = new ReactNativeDeps(
-        paramsForDepsFinder,
+        params.copyWithBuildTarget(depsFinderTarget),
         sourcePathResolver,
-        buckConfig.getPackager(),
+        buckConfig.getPackager(resolver),
         args.srcs.get(),
         args.entryPath,
         platform,
-        args.packagerFlags,
-        buckConfig.useWorker());
+        args.packagerFlags);
     return resolver.addToIndex(depsFinder);
   }
 
@@ -84,6 +76,7 @@ public class ReactNativeLibraryGraphEnhancer {
 
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
 
+    Tool jsPackager = buckConfig.getPackager(resolver);
     BuildTarget originalBuildTarget = params.getBuildTarget();
     BuildRuleParams paramsForBundle = params
         .copyWithBuildTarget(
@@ -93,10 +86,7 @@ public class ReactNativeLibraryGraphEnhancer {
         .appendExtraDeps(
             ImmutableList.<BuildRule>builder()
                 .add(reactNativeDeps)
-                .addAll(
-                    resolver.getAllRules(
-                        SourcePaths.filterBuildTargetSourcePaths(
-                            Collections.singleton(buckConfig.getPackager()))))
+                .addAll(jsPackager.getDeps(sourcePathResolver))
                 .build());
     ReactNativeBundle bundle = new ReactNativeBundle(
         paramsForBundle,
@@ -106,10 +96,9 @@ public class ReactNativeLibraryGraphEnhancer {
         ReactNativeFlavors.isDevMode(originalBuildTarget),
         args.bundleName,
         args.packagerFlags,
-        buckConfig.getPackager(),
+        jsPackager,
         ReactNativePlatform.ANDROID,
-        reactNativeDeps,
-        buckConfig.useWorker());
+        reactNativeDeps);
     resolver.addToIndex(bundle);
 
     ImmutableList.Builder<BuildRule> extraDeps = ImmutableList.builder();
@@ -156,24 +145,22 @@ public class ReactNativeLibraryGraphEnhancer {
     ReactNativeDeps reactNativeDeps =
         createReactNativeDeps(params, resolver, args, ReactNativePlatform.IOS);
 
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    Tool jsPackager = buckConfig.getPackager(resolver);
     return new ReactNativeBundle(
         params.appendExtraDeps(
             ImmutableList.<BuildRule>builder()
                 .add(reactNativeDeps)
-                .addAll(
-                    resolver.getAllRules(
-                        SourcePaths.filterBuildTargetSourcePaths(
-                            Collections.singleton(buckConfig.getPackager()))))
+                .addAll(jsPackager.getDeps(sourcePathResolver))
                 .build()),
-        new SourcePathResolver(resolver),
+        sourcePathResolver,
         args.entryPath,
         ReactNativeFlavors.useUnbundling(params.getBuildTarget()),
         ReactNativeFlavors.isDevMode(params.getBuildTarget()),
         args.bundleName,
         args.packagerFlags,
-        buckConfig.getPackager(),
+        jsPackager,
         ReactNativePlatform.IOS,
-        reactNativeDeps,
-        buckConfig.useWorker());
+        reactNativeDeps);
   }
 }

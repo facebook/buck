@@ -39,9 +39,7 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
-import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.slb.NoHealthyServersException;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
@@ -399,12 +397,10 @@ public class BuildCommand extends AbstractCommand {
               /* ignoreBuckAutodepsFiles */ false);
       buildTargets = result.getBuildTargets();
       buildTargetsHaveBeenCalculated = true;
-      TargetGraphToActionGraph targetGraphToActionGraph =
-          new TargetGraphToActionGraph(
-              params.getBuckEventBus(),
-              new DefaultTargetNodeToBuildRuleTransformer());
       actionGraphAndResolver = Preconditions.checkNotNull(
-          targetGraphToActionGraph.apply(result.getTargetGraph()));
+          params.getActionGraphCache().getActionGraph(
+              params.getBuckEventBus(),
+              result.getTargetGraph()));
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
@@ -455,6 +451,7 @@ public class BuildCommand extends AbstractCommand {
             params.getBuckConfig().getDependencySchedulingOrder(),
             params.getBuckConfig().getBuildDepFiles(),
             params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
+            params.getBuckConfig().getBuildArtifactCacheSizeLimit(),
             actionGraphAndResolver.getResolver()),
         artifactCache,
         params.getConsole(),

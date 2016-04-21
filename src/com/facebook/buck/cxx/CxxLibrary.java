@@ -151,6 +151,19 @@ public class CxxLibrary
   }
 
   @Override
+  public Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(CxxPlatform cxxPlatform) {
+    if (hasExportedHeaders.apply(cxxPlatform)) {
+      return Optional.of(
+          CxxPreprocessables.requireHeaderSymlinkTreeForLibraryTarget(
+              ruleResolver,
+              getBuildTarget(),
+              cxxPlatform.getFlavor()));
+    } else {
+      return Optional.absent();
+    }
+  }
+
+  @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) {
@@ -192,14 +205,17 @@ public class CxxLibrary
 
     if (!headerOnly.apply(cxxPlatform)) {
       if (type != Linker.LinkableDepType.SHARED || linkage == Linkage.STATIC) {
-        BuildRule rule = getLibraryLinkRule(cxxPlatform, type);
-        Arg library =
-            new SourcePathArg(getResolver(), new BuildTargetSourcePath(rule.getBuildTarget()));
+        Archive archive =
+            (Archive) requireBuildRule(
+                cxxPlatform.getFlavor(),
+                type == Linker.LinkableDepType.STATIC ?
+                    CxxDescriptionEnhancer.STATIC_FLAVOR :
+                    CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
         if (linkWhole) {
           Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
-          linkerArgsBuilder.addAll(linker.linkWhole(library));
+          linkerArgsBuilder.addAll(linker.linkWhole(archive.toArg()));
         } else {
-          linkerArgsBuilder.add(library);
+          linkerArgsBuilder.add(archive.toArg());
         }
       } else {
         BuildRule rule =
@@ -217,16 +233,6 @@ public class CxxLibrary
         linkerArgs,
         Preconditions.checkNotNull(frameworks),
         Preconditions.checkNotNull(libraries));
-  }
-
-  public BuildRule getLibraryLinkRule(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type) throws NoSuchBuildTargetException {
-    return requireBuildRule(
-        cxxPlatform.getFlavor(),
-        type == Linker.LinkableDepType.STATIC ?
-            CxxDescriptionEnhancer.STATIC_FLAVOR :
-            CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
   }
 
   public BuildRule requireBuildRule(Flavor... flavors) throws NoSuchBuildTargetException {

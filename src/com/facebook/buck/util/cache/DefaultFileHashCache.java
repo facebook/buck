@@ -34,7 +34,6 @@ import com.google.common.io.ByteSource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 
@@ -89,6 +88,13 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     return HashCodeAndFileType.ofDirectory(hasher.hash(), children);
   }
 
+  public Path resolvePath(Path path) {
+    Preconditions.checkState(path.isAbsolute());
+    Optional<Path> relativePath = projectFilesystem.getPathRelativeToProjectRoot(path);
+    Preconditions.checkState(!projectFilesystem.isIgnored(relativePath.get()));
+    return relativePath.get();
+  }
+
   @Override
   public boolean willGet(Path path) {
     Optional<Path> relativePath = projectFilesystem.getPathRelativeToProjectRoot(path);
@@ -101,7 +107,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   }
 
   @Override
-  public void invalidate(Path path) {
+  public void invalidate(Path rawPath) {
+    Path path = resolvePath(rawPath);
     HashCodeAndFileType cached = loadingCache.getIfPresent(path);
     if (cached != null) {
       for (Path child : cached.getChildren()) {
@@ -120,16 +127,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
    * @return The {@link com.google.common.hash.HashCode} of the contents of path.
    */
   @Override
-  public HashCode get(Path path) throws IOException {
-    if (path.isAbsolute()) {
-      Optional<Path> relativePath = projectFilesystem.getPathRelativeToProjectRoot(path);
-      if (!relativePath.isPresent()) {
-        throw new NoSuchFileException("Failed to find path in hash cache: " + path);
-      }
-      path = relativePath.get();
-    }
-
-    Preconditions.checkState(!projectFilesystem.isIgnored(path));
+  public HashCode get(Path rawPath) throws IOException {
+    Path path = resolvePath(rawPath);
     HashCode sha1;
     try {
       sha1 = loadingCache.get(path.normalize()).getHashCode();

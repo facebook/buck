@@ -1,0 +1,7 @@
+include *.py
+include *.c
+include *.h
+include *.txt
+include README.md
+recursive-include test *.py
+recursive-include test *.txt

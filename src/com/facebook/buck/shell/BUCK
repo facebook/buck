@@ -44,11 +44,22 @@ java_immutables_library(
   srcs = [
     'AbstractWorkerJobParams.java',
     'WorkerShellStep.java',
-    'WorkerTool.java',
     'WorkerToolDescription.java',
   ],
   immutable_types = [
     'WorkerJobParams',
+  ],
+  tests = [
+    '//test/com/facebook/buck/shell:shell',
+  ],
+  autodeps = True,
+  visibility = ['PUBLIC'],
+)
+
+java_library(
+  name = 'worker_tool',
+  srcs = [
+    'WorkerTool.java',
   ],
   tests = [
     '//test/com/facebook/buck/shell:shell',

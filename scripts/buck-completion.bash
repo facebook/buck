@@ -32,10 +32,15 @@
 # tab, and you should see logs in the original window of what this script is
 # doing.
 
+if [ -n "$ZSH_VERSION" ]; then
+  autoload -U bashcompinit
+  bashcompinit
+fi
+
 function _buck_completion_run() {
   COMPREPLY=()
 
-  local words=( "${COMP_WORDS[@]}" )
+  local -a words; words=( "${COMP_WORDS[@]}" )
   local cword=$COMP_CWORD
   local word="${words[$cword]}"
   local prev="$3"
@@ -44,6 +49,7 @@ function _buck_completion_run() {
   $log "==============================="
   $log "word=$word"
   $log "prev=$prev"
+
   $log "words:"
   for w in "${words[@]}"; do
     $log "  $w"
@@ -56,15 +62,11 @@ function _buck_completion_run() {
       ;;
 
     1)
-      local commands=$(_buck_completion_echo_buck_commands)
+      local commands="$(_buck_completion_echo_buck_commands)"
       COMPREPLY=( $(compgen -W "$commands" -- "$word") )
       ;;
 
     *)
-      if _buck_completion_try_long_arg "--version --help"; then
-        return 0
-      fi
-
       case "${words[1]}" in
         audit)      _buck_completion_try_audit      "$@";;
         build)      _buck_completion_try_build      "$@";;
@@ -371,7 +373,7 @@ function _buck_completion_add_target_alias_or_relative_path() {
 
 function _buck_completion_add_target_alias() {
   local prog='/^\[/ { p=0 } /^\[alias]/ { p=1 } /^ *[a-zA-Z_-]* *= *\/\// { if (p) print $1 }'
-  local aliases=( $(awk "$prog" < "$root/.buckconfig") )
+  local -a aliases; aliases=($(awk "$prog" < "$root/.buckconfig"))
 
   for a in "${aliases[@]}"; do
     if [[ "$a" == "$word"* ]]; then
@@ -390,7 +392,7 @@ function _buck_completion_add_relative_path_with_prefix() {
   local prefix="$2"
 
   # Complete directory containing BUCK file
-  local raw_dirs=( $(compgen -A directory -- "$dir") )
+  local -a raw_dirs; raw_dirs=( $(compgen -A directory -- "$dir") )
 
   for d in "${raw_dirs[@]}"; do
     local suffix

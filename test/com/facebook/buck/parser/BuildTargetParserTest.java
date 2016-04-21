@@ -19,8 +19,8 @@ package com.facebook.buck.parser;
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.hamcrest.Matchers.hasItems;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTarget;
@@ -193,11 +193,11 @@ public class BuildTargetParserTest {
         return localRepoRoot;
       }
     };
-    String targetStr = "@localreponame//foo/bar:baz";
+    String targetStr = "localreponame//foo/bar:baz";
 
     BuildTarget buildTarget = parser.parse(targetStr, fullyQualifiedParser, cellRoots);
-    assertEquals("//foo/bar:baz", buildTarget.getFullyQualifiedName());
-    assertFalse(buildTarget.getCell().isPresent());
+    assertEquals("localreponame//foo/bar:baz", buildTarget.getFullyQualifiedName());
+    assertTrue(buildTarget.getCell().isPresent());
     assertEquals(localRepoRoot, buildTarget.getCellPath());
   }
 
@@ -206,13 +206,6 @@ public class BuildTargetParserTest {
 
     String invalidTargetStr = "@myRepo:baz";
     parser.parse(invalidTargetStr, fullyQualifiedParser, createCellRoots(null));
-  }
-
-  @Test(expected = BuildTargetParseException.class)
-  public void testParseFailsWithEmptyRepoName() throws NoSuchBuildTargetException {
-
-    String zeroLengthRepoTargetStr = "@//foo/bar:baz";
-    parser.parse(zeroLengthRepoTargetStr, fullyQualifiedParser, createCellRoots(null));
   }
 
   @Test

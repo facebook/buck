@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -31,15 +32,20 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.martiansoftware.nailgun.NGContext;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ShBinaryRuleIntegrationTest {
 
@@ -130,4 +136,33 @@ public class ShBinaryRuleIntegrationTest {
 
     assertThat(buildResult.getStderr(), containsString("/overwrite.sh: Permission denied"));
   }
+
+  @Test
+  public void testShBinaryPreservesPwdEnvVar() throws IOException {
+    // sh_binary is not available on Windows. Ignore this test on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this,
+            "sh_binary_pwd",
+            temporaryFolder);
+    workspace.setUp();
+
+    String alteredPwd = workspace.getDestPath().toString() + "////////";
+    Map<String, String> env = new HashMap<>();
+    env.putAll(System.getenv());
+    env.put("PWD", alteredPwd);
+    ProcessResult buildResult =
+        workspace.runBuckCommandWithEnvironmentAndContext(
+            workspace.getDestPath(),
+            Optional.<NGContext>absent(),
+            Optional.<BuckEventListener>absent(),
+            Optional.of(ImmutableMap.copyOf(env)),
+            "run",
+            "//:pwd");
+    buildResult.assertSuccess();
+    assertThat(buildResult.getStdout(), Matchers.equalTo(alteredPwd));
+  }
+
 }

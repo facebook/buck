@@ -72,6 +72,7 @@ public class RDotJava {
 
     return new JavacStep(
         outputDirectory,
+        Optional.<Path>absent(),
         Optional.<StandardJavaFileManagerFactory>absent(),
         Optional.<Path>absent(),
         javaSourceFilePaths,

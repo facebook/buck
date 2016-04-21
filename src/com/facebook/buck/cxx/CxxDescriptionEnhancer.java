@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.json.JsonConcatenate;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -428,7 +429,7 @@ public class CxxDescriptionEnhancer {
         .resolve(name);
   }
 
-  static String getSharedLibrarySoname(
+  public static String getSharedLibrarySoname(
       Optional<String> declaredSoname,
       BuildTarget target,
       CxxPlatform platform) {
@@ -813,6 +814,71 @@ public class CxxDescriptionEnhancer {
     }
   }
 
+  public static
+  ImmutableSortedSet<HeaderSymlinkTree> requireTransitiveCompilationDatabaseHeaderSymlinkTreeDeps(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      final CxxPlatform cxxPlatform,
+      CxxConstructorArg arg) {
+    BuildRuleParams paramsWithoutFlavor = params.withoutFlavor(
+        CxxCompilationDatabase.COMPILATION_DATABASE);
+    final ImmutableSortedSet.Builder<HeaderSymlinkTree> resultBuilder =
+        ImmutableSortedSet.naturalOrder();
+    resultBuilder.add(
+        CxxDescriptionEnhancer.requireHeaderSymlinkTree(
+            paramsWithoutFlavor,
+            ruleResolver,
+            pathResolver,
+            cxxPlatform,
+            CxxDescriptionEnhancer.parseHeaders(
+                params.getBuildTarget(),
+                pathResolver,
+                Optional.of(cxxPlatform),
+                arg),
+            HeaderVisibility.PRIVATE));
+
+    if (arg instanceof CxxLibraryDescription.Arg) {
+      CxxLibraryDescription.Arg libArg = (CxxLibraryDescription.Arg) arg;
+      resultBuilder.add(
+        CxxDescriptionEnhancer.requireHeaderSymlinkTree(
+            paramsWithoutFlavor,
+            ruleResolver,
+            pathResolver,
+            cxxPlatform,
+            CxxDescriptionEnhancer.parseExportedHeaders(
+                params.getBuildTarget(),
+                pathResolver,
+                Optional.of(cxxPlatform),
+                libArg),
+            HeaderVisibility.PUBLIC));
+    }
+
+    // Walk the transitive deps and add any exported headers present as
+    // runtime dependencies.
+    //
+    // TODO(bhamiltoncx): Use BuildRuleResolver.requireMetadata() so we can
+    // cache the result of this walk.
+    AbstractBreadthFirstTraversal<BuildRule> visitor =
+        new AbstractBreadthFirstTraversal<BuildRule>(params.getDeps()) {
+          @Override
+          public ImmutableSet<BuildRule> visit(BuildRule dep) {
+            if (dep instanceof CxxPreprocessorDep) {
+              CxxPreprocessorDep cxxPreprocessorDep = (CxxPreprocessorDep) dep;
+              Optional<HeaderSymlinkTree> exportedHeaderSymlinkTree =
+                  cxxPreprocessorDep.getExportedHeaderSymlinkTree(cxxPlatform);
+              if (exportedHeaderSymlinkTree.isPresent()) {
+                resultBuilder.add(exportedHeaderSymlinkTree.get());
+              }
+            }
+            return dep.getDeps();
+          }
+        };
+    visitor.start();
+
+    return resultBuilder.build();
+  }
+
   /**
    * Create all build rules needed to generate the compilation database.
    *
@@ -838,45 +904,17 @@ public class CxxDescriptionEnhancer {
         cxxPlatform,
         CxxSourceRuleFactory.PicType.PIC,
         arg);
-
-    HeaderSymlinkTree privateHeaderSymlinkTree =
-        CxxDescriptionEnhancer.requireHeaderSymlinkTree(
-            paramsWithoutFlavor,
-            ruleResolver,
-            pathResolver,
-            cxxPlatform,
-            CxxDescriptionEnhancer.parseHeaders(
-                params.getBuildTarget(),
-                pathResolver,
-                Optional.of(cxxPlatform),
-                arg),
-            HeaderVisibility.PRIVATE);
-
-    Optional<HeaderSymlinkTree> exportedHeaderSymlinkTree;
-    if (arg instanceof CxxLibraryDescription.Arg) {
-      CxxLibraryDescription.Arg libArg = (CxxLibraryDescription.Arg) arg;
-      exportedHeaderSymlinkTree = Optional.of(
-        CxxDescriptionEnhancer.requireHeaderSymlinkTree(
-            paramsWithoutFlavor,
-            ruleResolver,
-            pathResolver,
-            cxxPlatform,
-            CxxDescriptionEnhancer.parseExportedHeaders(
-                params.getBuildTarget(),
-                pathResolver,
-                Optional.of(cxxPlatform),
-                libArg),
-            HeaderVisibility.PUBLIC));
-    } else {
-      exportedHeaderSymlinkTree = Optional.absent();
-    }
     return CxxCompilationDatabase.createCompilationDatabase(
         params,
         pathResolver,
         cxxBuckConfig.getPreprocessMode(),
         objects.keySet(),
-        privateHeaderSymlinkTree,
-        exportedHeaderSymlinkTree);
+        requireTransitiveCompilationDatabaseHeaderSymlinkTreeDeps(
+            params,
+            ruleResolver,
+            pathResolver,
+            cxxPlatform,
+            arg));
   }
 
   public static BuildRule createUberCompilationDatabase(

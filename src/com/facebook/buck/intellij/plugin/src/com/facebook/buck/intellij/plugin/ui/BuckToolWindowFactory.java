@@ -73,9 +73,23 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
     }
   }
 
+  public static void showToolWindow(final Project project) {
+    ApplicationManager.getApplication().getInvokator().invokeLater(new Runnable() {
+      @Override
+      public void run() {
+        ToolWindow toolWindow = ToolWindowManager.getInstance(project)
+            .getToolWindow(TOOL_WINDOW_ID);
+        if (toolWindow != null) {
+          toolWindow.activate(null, false);
+        }
+      }
+    });
+  }
+
   public static boolean isToolWindowVisible(Project project) {
     ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow(TOOL_WINDOW_ID);
-    return toolWindow.isVisible();
+
+    return toolWindow == null || toolWindow.isVisible();
   }
 
   public static synchronized void outputConsoleMessage(

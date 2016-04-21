@@ -128,6 +128,7 @@ public abstract class Jsr199Javac implements Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
+      Optional<Path> usedClassesFile,
       Optional<StandardJavaFileManagerFactory> fileManagerFactory) {
     JavaCompiler compiler = createCompiler(context, resolver);
 
@@ -154,6 +155,7 @@ public abstract class Jsr199Javac implements Javac {
             javaSourceFilePaths,
             pathToSrcsList,
             compiler,
+            usedClassesFile,
             fileManager,
             compilationUnits);
       } finally {
@@ -176,6 +178,7 @@ public abstract class Jsr199Javac implements Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       JavaCompiler compiler,
+      Optional<Path> usedClassesFile,
       StandardJavaFileManager fileManager,
       Iterable<? extends JavaFileObject> compilationUnits) {
     // write javaSourceFilePaths to classes file
@@ -199,9 +202,14 @@ public abstract class Jsr199Javac implements Javac {
     DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
     List<String> classNamesForAnnotationProcessing = ImmutableList.of();
     Writer compilerOutputWriter = new PrintWriter(context.getStdErr());
+    ClassUsageTracker classTracker = new ClassUsageTracker();
+    final StandardJavaFileManager maybeWrappedFileManager =
+        usedClassesFile.isPresent() ?
+        classTracker.wrapFileManager(fileManager) :
+        fileManager;
     JavaCompiler.CompilationTask compilationTask = compiler.getTask(
         compilerOutputWriter,
-        fileManager,
+        maybeWrappedFileManager,
         diagnostics,
         options,
         classNamesForAnnotationProcessing,
@@ -247,6 +255,13 @@ public abstract class Jsr199Javac implements Javac {
     }
 
     if (isSuccess) {
+      if (usedClassesFile.isPresent()) {
+        ClassUsageFile.writeFromTrackerData(
+            filesystem,
+            filesystem.resolve(usedClassesFile.get()),
+            classTracker,
+            context.getObjectMapper());
+      }
       return 0;
     } else {
       if (context.getVerbosity().shouldPrintStandardInformation()) {

@@ -482,6 +482,7 @@ public class CxxLibraryDescription implements
         sourcePathResolver,
         cxxPlatform.getAr(),
         cxxPlatform.getRanlib(),
+        cxxBuckConfig.getArchiveContents(),
         staticLibraryPath,
         ImmutableList.copyOf(objects.values()));
   }

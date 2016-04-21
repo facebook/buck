@@ -97,6 +97,10 @@ public class InMemoryArtifactCache implements ArtifactCache {
   public void close() {
   }
 
+  public boolean isEmpty() {
+    return artifacts.isEmpty();
+  }
+
   public class Artifact {
     public ImmutableMap<String, String> metadata;
     public byte[] data;

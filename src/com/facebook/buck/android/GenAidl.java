@@ -119,7 +119,7 @@ public class GenAidl extends AbstractBuildRule {
     commands.add(command);
 
     // Files must ultimately be written to GEN_DIR to be used as source paths.
-    Path genDirectory = Paths.get(BuckConstant.GEN_DIR, importPath);
+    Path genDirectory = Paths.get(BuckConstant.getGenDir(), importPath);
 
     // Warn the user if the genDirectory is not under the output directory.
     if (!importPath.startsWith(target.getBasePath().toString())) {

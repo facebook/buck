@@ -26,7 +26,8 @@ public enum AppleBundleExtension {
   PLUGIN,
   BUNDLE,
   OCTEST,
-  XCTEST;
+  XCTEST,
+  DSYM;
 
   public String toFileExtension() {
     switch (this) {
@@ -44,6 +45,8 @@ public enum AppleBundleExtension {
         return "octest";
       case XCTEST:
         return "xctest";
+      case DSYM:
+        return "dSYM";
       default:
         throw new IllegalStateException("Invalid bundle extension value: " + this.toString());
     }

@@ -122,7 +122,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
 
       // We run ndk-build from the root of the NDK, so fixup paths that use the relative path to
       // the buck out directory.
-      if (arg.startsWith(BuckConstant.BUCK_OUTPUT_DIRECTORY)) {
+      if (arg.startsWith(BuckConstant.getBuckOutputDirectory())) {
         escapedArg = "$(BUCK_PROJECT_DIR)/" + escapedArg;
       }
 

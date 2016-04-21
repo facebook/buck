@@ -62,7 +62,7 @@ public class BuildLogHelper {
 
   public ImmutableList<BuildLogEntry> getBuildLogs() throws IOException {
     Collection<Path> logFiles = projectFilesystem.getSortedMatchingDirectoryContents(
-        BuckConstant.LOG_PATH,
+        BuckConstant.getLogPath(),
         BUCK_LOG_FILE_GLOB);
     ImmutableList.Builder<BuildLogEntry> logEntries = ImmutableList.builder();
     for (Path logFile : logFiles) {

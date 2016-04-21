@@ -22,6 +22,21 @@
 
   <ul>
       <li>
+        <b>2.4</b>
+          Added the plugin to the toolbar.
+          Show successful/failed notification on action finished.
+          Automatically find buck executable.
+          Added install debugging.
+          Minor bug fixes
+      </li>
+
+       <li>
+        <b>2.3</b>
+          Updated with the new buck API.
+          Fixed old commands to work with Buck.
+      </li>
+
+      <li>
         <b>2.2</b>
         Fetch build status via websocket.
         Publish build status notifications.
@@ -99,7 +114,7 @@
   </extensions>
 
   <actions>
-    <group id="buck.Menu" popup="true" text="Buck">
+    <group id="buck.Menu">
       <action
           id="buck.GoToBuckFile"
           class="com.facebook.buck.intellij.plugin.actions.GoToBuckFile"
@@ -109,9 +124,11 @@
       </action>
       <add-to-group anchor="first" group-id="BuildMenu"/>
       <add-to-group anchor="first" group-id="EditorPopupMenu"/>
+      <add-to-group anchor="last" group-id="MainToolBar"/>
     </group>
 
     <group id="buck.BuildGroup">
+      <separator></separator>
       <action class="com.facebook.buck.intellij.plugin.actions.ChooseTargetAction" id="buck.ChooseTarget">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift J"/>
       </action>
@@ -136,6 +153,7 @@
       <action class="com.facebook.buck.intellij.plugin.actions.BuckUninstallAction" id="buck.Uninstall">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift M"/>
       </action>
+      <add-to-group anchor="last" group-id="MainToolBar"/>
     </group>
   </actions>
 

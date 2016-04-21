@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertThat;
 
@@ -42,7 +41,7 @@ import java.nio.file.Paths;
 public class CxxPrecompiledHeaderTest {
 
   @Test
-  public void generatesPchAsPostBuildStep() {
+  public void generatesPchStepShouldUseCorrectLang() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     BuildRuleResolver resolver =
@@ -70,14 +69,11 @@ public class CxxPrecompiledHeaderTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 sourcePathResolver),
             ImmutableList.<CxxHeaders>of()),
+        CxxToolFlags.of(),
         new FakeSourcePath("foo.h"),
         CxxSource.Type.C,
         CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
-    ImmutableList<Step> steps =
-        precompiledHeader.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
-    assertThat("Nothing should be done for cachable steps", steps, empty());
-
-    ImmutableList<Step> postBuildSteps = precompiledHeader.getPostBuildSteps(
+    ImmutableList<Step> postBuildSteps = precompiledHeader.getBuildSteps(
         FakeBuildContext.NOOP_CONTEXT,
         new FakeBuildableContext());
     CxxPreprocessAndCompileStep step = Iterables.getOnlyElement(

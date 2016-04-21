@@ -73,6 +73,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.google.common.base.Charsets;
@@ -113,7 +114,7 @@ public class DefaultJavaLibraryTest {
   private static final String ANNOTATION_SCENARIO_TARGET =
       "//android/java/src/com/facebook:fb";
   private static final String ANNOTATION_SCENARIO_GEN_PATH_POSTIX =
-      BuckConstant.ANNOTATION_DIR + "/android/java/src/com/facebook/__fb_gen__";
+      BuckConstant.getAnnotationDir() + "/android/java/src/com/facebook/__fb_gen__";
 
   @Rule
   public TemporaryFolder tmp = new TemporaryFolder();
@@ -1140,6 +1141,7 @@ public class DefaultJavaLibraryTest {
         exportedDeps,
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* abiJar */ new FakeSourcePath("abi.jar"),
+        javacOptions.trackClassUsage(),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
         /* resourcesRoot */ Optional.<Path>absent(),
@@ -1286,6 +1288,7 @@ public class DefaultJavaLibraryTest {
         .setStepRunner(EasyMock.createMock(StepRunner.class))
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())
+        .setObjectMapper(ObjectMappers.newDefaultInstance())
         .setArtifactCache(new NoopArtifactCache())
         .setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class))
         .setAndroidBootclasspathSupplier(

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.util.SampleRate;
 import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
@@ -42,7 +43,7 @@ public class BuildIdSamplerTest {
 
   @Test
   public void testRejectAllSampler() {
-    BuildIdSampler rejectAllSampler = new BuildIdSampler(0);
+    BuildIdSampler rejectAllSampler = new BuildIdSampler(SampleRate.of(0));
     for (BuildId buildId : buildIdToExpectedHashMap.keySet()) {
       assertThat(
           String.format("BuildId %s", buildId),
@@ -54,7 +55,7 @@ public class BuildIdSamplerTest {
 
   @Test
   public void testAcceptAllSampler() {
-    BuildIdSampler acceptAllSampler = new BuildIdSampler(1.0f);
+    BuildIdSampler acceptAllSampler = new BuildIdSampler(SampleRate.of(1.0f));
     for (BuildId buildId : buildIdToExpectedHashMap.keySet()) {
       assertThat(
           String.format("BuildId %s", buildId),
@@ -66,7 +67,7 @@ public class BuildIdSamplerTest {
 
   @Test
   public void testAcceptHalf() {
-    BuildIdSampler sampler = BuildIdSampler.CREATE_FUNCTION.apply(0.5f);
+    BuildIdSampler sampler = BuildIdSampler.CREATE_FUNCTION.apply(SampleRate.of(0.5f));
     for (BuildId buildId : buildIdToExpectedHashMap.keySet()) {
       boolean shouldAccept = buildIdToExpectedHashMap.get(buildId) < 0.5f;
       assertThat(
@@ -86,7 +87,7 @@ public class BuildIdSamplerTest {
     List<Pair<BuildIdSampler, AtomicInteger>> buckets = new ArrayList<>();
     for (int i = 1; i <= bucketCount; ++i) {
       buckets.add(new Pair<BuildIdSampler, AtomicInteger>(
-              new BuildIdSampler(((float) i) / bucketCount),
+              new BuildIdSampler(SampleRate.of(((float) i) / bucketCount)),
               new AtomicInteger(0)));
     }
 

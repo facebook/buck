@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import static com.facebook.buck.rules.BuildRuleSuccessType.BUILT_LOCALLY;
 import static com.facebook.buck.rules.BuildRuleSuccessType.FETCHED_FROM_CACHE;
 import static com.facebook.buck.rules.BuildRuleSuccessType.MATCHING_RULE_KEY;
-import static com.facebook.buck.util.BuckConstant.GEN_PATH;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
@@ -31,6 +30,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
@@ -41,9 +41,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.artifact_cache.CacheResult;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.CachingBuildEngine;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildEngine;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -65,6 +64,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -115,7 +115,7 @@ public class TestRunningTest {
    */
   @Test
   public void testGeneratedSourceFile() {
-    Path pathToGenFile = GEN_PATH.resolve("GeneratedFile.java");
+    Path pathToGenFile = BuckConstant.getGenPath().resolve("GeneratedFile.java");
     assertTrue(MorePaths.isGeneratedFile(pathToGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToGenFile);
@@ -240,7 +240,7 @@ public class TestRunningTest {
    */
   @Test
   public void testMixedSourceFile() {
-    Path pathToGenFile = GEN_PATH.resolve("com/facebook/GeneratedFile.java");
+    Path pathToGenFile = BuckConstant.getGenPath().resolve("com/facebook/GeneratedFile.java");
     Path pathToNonGenFile1 = Paths.get("package/src/SourceFile1.java");
     Path pathToNonGenFile2 = Paths.get("package/src-gen/SourceFile2.java");
 

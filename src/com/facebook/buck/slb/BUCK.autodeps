@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY 52aaa02a70c7e82f173174e4455867db399caa94 #@#
+#@# GENERATED FILE: DO NOT MODIFY 2f15fcdc083a403d86304424b3a55b551fa101e8 #@#
 {
   "slb" : {
     "deps" : [
+      "//src/com/facebook/buck/counters:counters",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [

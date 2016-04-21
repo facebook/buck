@@ -43,8 +43,9 @@
   <property name="unittest2.dir" value="${third-party.dir}/py/unittest2" />
   <property name="pywatchman.dir" value="${third-party.dir}/py/pywatchman" />
   <property name="nailgun.dir" value="${third-party.dir}/nailgun" />
+  <property name="scandir.dir" value="${third-party.dir}/py/scandir" />
 
-  <property name="buck.pythonpath" value="${pathlib.dir}:${pywatchman.dir}:${nailgun.dir}" />
+  <property name="buck.pythonpath" value="${pathlib.dir}:${pywatchman.dir}:${nailgun.dir}:${scandir.dir}" />
 
   <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.0.21.jar" />
   <property name="immutables.gensrc.dir" value="${build.dir}/immutables" />
@@ -89,6 +90,7 @@
     <include name="asm/asm-debug-all-5.0.3.jar" />
     <include name="closure-templates/soy-excluding-deps.jar" />
     <include name="commons-compress/commons-compress-1.8.1.jar" />
+    <include name="commons-logging/commons-logging-1.2.jar" />
     <include name="concurrent-locks/concurrent-locks-1.0.0.jar" />
     <include name="dd-plist/dd-plist.jar" />
     <include name="eclipse/org.eclipse.core.contenttype_3.4.200.v20140207-1251.jar"/>
@@ -127,8 +129,8 @@
     <include name="aether/aether-spi-1.0.2.v20150114.jar" />
     <include name="aether/aether-transport-http-1.0.2.v20150114.jar" />
     <include name="aether/aether-util-1.0.2.v20150114.jar" />
-    <include name="httpcomponents/httpclient-4.2.6.jar" />
-    <include name="httpcomponents/httpcore-4.2.5.jar" />
+    <include name="httpcomponents/httpclient-4.4.1.jar" />
+    <include name="httpcomponents/httpcore-4.4.1.jar" />
     <include name="maven/maven-aether-provider-3.2.5.jar" />
     <include name="maven/maven-model-3.2.5.jar" />
     <include name="maven/maven-model-builder-3.2.5.jar" />
@@ -746,7 +748,7 @@
     <fail if="hasFailingTests" />
   </target>
 
-  <target name="py-test" description="runs the Python tests" depends="buck-py-test, class-loader-py-test, pathlib-py-test, zip-munger-py-test, buck-tool-py-test" />
+  <target name="py-test" description="runs the Python tests" depends="buck-py-test, class-loader-py-test, pathlib-py-test, zip-munger-py-test, buck-tool-py-test, scandir-py-test" />
 
   <target name="buck-py-test" description="tests the BUCK parser">
     <exec executable="python" failonerror="true">
@@ -767,6 +769,14 @@
       <!-- Needed on Python 2.6. -->
       <env key="PYTHONPATH" path="${unittest2.dir}" />
       <arg value="test_pathlib.py" />
+    </exec>
+  </target>
+
+  <target name="scandir-py-test" description="tests scandir.py">
+    <exec executable="python" failonerror="true" dir="${scandir.dir}/test">
+      <!-- Needed on Python 2.6. -->
+      <env key="PYTHONPATH" path="${unittest2.dir}" />
+      <arg value="run_tests.py" />
     </exec>
   </target>
 

@@ -21,21 +21,12 @@ import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class ClangPreprocessor implements Preprocessor {
-
-  private static final String PRAGMA_TOKEN = "_Pragma";
-  private static final String PRAGMA_TOKEN_PLACEHOLDER = "__BUCK__PRAGMA_PLACEHOLDER__";
-  private static final Pattern PRAGMA_TOKEN_PLACEHOLDER_PATTERN = Pattern
-      .compile("(.*?)" + PRAGMA_TOKEN_PLACEHOLDER + "\\(\"(.*?)\"\\)(.*?)");
 
   private final Tool tool;
 
@@ -44,46 +35,8 @@ public class ClangPreprocessor implements Preprocessor {
   }
 
   @Override
-  public Optional<ImmutableList<String>> getExtraFlags() {
-    return Optional.of(
-        ImmutableList.of(
-            "-Wno-builtin-macro-redefined",
-            "-Wno-error=builtin-macro-redefined",
-            "-D" + PRAGMA_TOKEN + "=" + PRAGMA_TOKEN_PLACEHOLDER));
-  }
-
-  @Override
   public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
     return Optional.of(ImmutableList.of("-fcolor-diagnostics"));
-  }
-
-  @Override
-  public Optional<Function<String, Iterable<String>>> getExtraLineProcessor() {
-    return Optional.<Function<String, Iterable<String>>>of(
-        new Function<String, Iterable<String>>() {
-          @Override
-          public Iterable<String> apply(String input) {
-            String remainder = input;
-            ImmutableList.Builder<String> processedLines = ImmutableList.builder();
-            if (remainder.isEmpty()) {
-              processedLines.add(remainder);
-            }
-
-            while (!remainder.isEmpty()) {
-              Matcher m = PRAGMA_TOKEN_PLACEHOLDER_PATTERN.matcher(remainder);
-              if (!m.matches()) {
-                processedLines.add(remainder);
-                break;
-              }
-              processedLines.add(m.group(1));
-              processedLines.add("#pragma " + m.group(2).replaceAll("\\\\\"", "\""));
-              remainder = m.group(3);
-            }
-
-            return processedLines.build();
-          }
-        }
-    );
   }
 
   @Override

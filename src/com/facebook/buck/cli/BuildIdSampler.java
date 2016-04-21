@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.util.SampleRate;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 
@@ -25,23 +26,21 @@ import com.google.common.base.Preconditions;
  */
 public class BuildIdSampler implements Function<BuildId, Boolean> {
 
-  public static final Function<Float, BuildIdSampler> CREATE_FUNCTION =
-      new Function<Float, BuildIdSampler>() {
+  public static final Function<SampleRate, BuildIdSampler> CREATE_FUNCTION =
+      new Function<SampleRate, BuildIdSampler>() {
         @Override
-        public BuildIdSampler apply(Float input) {
+        public BuildIdSampler apply(SampleRate input) {
           return new BuildIdSampler(input);
         }
       };
 
-  private float sampleRate;
+  private SampleRate sampleRate;
 
   /**
    * @param sampleRate value in percent between 0 and 100 inclusive. This decides the probability
    *                   of a random {@link BuildId} belongin to the sample.
    */
-  public BuildIdSampler(float sampleRate) {
-    Preconditions.checkArgument(sampleRate >= 0.0f);
-    Preconditions.checkArgument(sampleRate <= 1.0f);
+  public BuildIdSampler(SampleRate sampleRate) {
     this.sampleRate = sampleRate;
   }
 
@@ -51,11 +50,22 @@ public class BuildIdSampler implements Function<BuildId, Boolean> {
    */
   @Override
   public Boolean apply(BuildId buildId) {
-    if (sampleRate == 0.0f) {
+    return apply(sampleRate, buildId);
+  }
+
+  /**
+   * @param sampleRate It decides the probability of a random {@link BuildId} belonging to the
+   *                   sample.
+   * @param buildId {@link BuildId} to test.
+   * @return Whether the supplied {@link BuildId} belongs to the sample.
+   */
+  public static boolean apply(SampleRate sampleRate, BuildId buildId) {
+    if (sampleRate.getSampleRate() == 0.0f) {
       return false;
-    } else if (sampleRate == 1.0f) {
+    } else if (sampleRate.getSampleRate() == 1.0f) {
       return true;
     }
+
     String buildIdString = buildId.toString();
     // Naive hashcode implementation so we don't rely on the platform's hashcode implementation.
     int hash = 7;
@@ -66,6 +76,7 @@ public class BuildIdSampler implements Function<BuildId, Boolean> {
     long adjustedHash = ((long) hash) - ((long) Integer.MIN_VALUE);
     float scaledHash = ((float) adjustedHash) / range;
     Preconditions.checkState(scaledHash <= 1.0f && scaledHash >= 0.0f);
-    return sampleRate > scaledHash;
+    return sampleRate.getSampleRate() > scaledHash;
   }
 }
+

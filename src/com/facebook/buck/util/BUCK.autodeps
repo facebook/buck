@@ -1,10 +1,12 @@
-#@# GENERATED FILE: DO NOT MODIFY 03bc04beca395ccb69ae39a8f61ef38a2bb53457 #@#
+#@# GENERATED FILE: DO NOT MODIFY 1f458485046cb49c23118bf2f24803c75bc6d4d2 #@#
 {
   "constants" : {
     "deps" : [
-      "//third-party/java/guava:guava"
+      "//third-party/java/guava:guava",
+      "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/jsr:jsr305"
     ]
   },

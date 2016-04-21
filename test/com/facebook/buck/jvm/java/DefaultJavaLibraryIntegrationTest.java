@@ -41,6 +41,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -109,7 +110,7 @@ public class DefaultJavaLibraryIntegrationTest {
     workspace.verify();
 
     // Verify the build cache.
-    Path buildCache = workspace.getPath(BuckConstant.DEFAULT_CACHE_DIR);
+    Path buildCache = workspace.getPath(BuckConstant.getDefaultCacheDir());
     assertTrue(Files.isDirectory(buildCache));
 
     ArtifactCache dirCache = TestArtifactCaches.createDirCacheForTest(
@@ -341,6 +342,33 @@ public class DefaultJavaLibraryIntegrationTest {
   }
 
   @Test
+  public void testClassUsageFileOutputProperly() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "class_usage_file", tmp);
+    workspace.setUp();
+
+    // Run `buck build`.
+    BuildTarget bizTarget = BuildTargetFactory.newInstance("//:biz");
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", bizTarget.getFullyQualifiedName());
+    buildResult.assertSuccess("Successful build should exit with 0.");
+
+    Path bizClassUsageFilePath = BuildTargets.getGenPath(
+        bizTarget,
+        "lib__%s__output/used-classes.json");
+
+    final List<String> lines = Files.readAllLines(
+        workspace.getPath(bizClassUsageFilePath), UTF_8);
+
+    assertEquals("Expected just one line of JSON", 1, lines.size());
+
+    final String expected =
+        "{\"buck-out/gen/lib__util__output/util.jar\":[\"com/example/Util.class\"]}";
+    final String actual = lines.get(0);
+
+    assertEquals(expected, actual);
+  }
+
+  @Test
   public void updatingAResourceWhichIsJavaLibraryCausesAJavaLibraryToBeRepacked()
       throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -483,6 +511,39 @@ public class DefaultJavaLibraryIntegrationTest {
     assertThat(zip.getNextEntry().getName(), is("A.class"));
     assertThat(zip.getNextEntry().getName(), is("B.class"));
     zip.close();
+  }
+
+  @Test
+  public void testSpoolClassFilesDirectlyToJarWithAnnotationProcessor() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "spool_class_files_directly_to_jar_with_annotation_processor",
+        tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:a");
+    ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
+
+    result.assertSuccess();
+
+    Path classesDir = workspace.getPath(BuildTargets.getScratchPath(target, "lib__%s__classes"));
+    assertThat(Files.exists(classesDir), is(Boolean.TRUE));
+    assertThat(
+        "There should be no class files in disk",
+        ImmutableList.copyOf(classesDir.toFile().listFiles()), hasSize(0));
+
+    Path sourcesDir = workspace.getPath(BuildTargets.getAnnotationPath(target, "__%s_gen__"));
+    assertThat(Files.exists(sourcesDir), is(Boolean.TRUE));
+    assertThat(
+        "There should one source file in disk, from the Immutable class.",
+        ImmutableList.copyOf(sourcesDir.toFile().listFiles()), hasSize(1));
+
+    Path jarPath = workspace.getPath(BuildTargets.getGenPath(target, "lib__%s__output/a.jar"));
+    assertTrue(Files.exists(jarPath));
+
+    ZipInspector zipInspector = new ZipInspector(jarPath);
+    zipInspector.assertFileDoesNotExist("ImmutableC.java");
+    zipInspector.assertFileExists("ImmutableC.class");
   }
 
   /**

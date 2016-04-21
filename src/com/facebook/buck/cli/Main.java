@@ -61,6 +61,7 @@ import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
@@ -211,7 +212,7 @@ public final class Main {
   // Ensure we only have one instance of this, so multiple trash cleaning
   // operations are serialized on one queue.
   private static final AsynchronousDirectoryContentsCleaner TRASH_CLEANER =
-      new AsynchronousDirectoryContentsCleaner(BuckConstant.TRASH_PATH);
+      new AsynchronousDirectoryContentsCleaner(BuckConstant.getTrashPath());
 
   private final Platform platform;
 
@@ -256,6 +257,7 @@ public final class Main {
     private final EventBus fileEventBus;
     private final Optional<WebServer> webServer;
     private final UUID watchmanQueryUUID;
+    private final ActionGraphCache actionGraphCache;
 
     public Daemon(
         Cell cell,
@@ -268,9 +270,11 @@ public final class Main {
           new DefaultFileHashCache(
               new ProjectFilesystem(
                   cell.getFilesystem().getRootPath(),
-                  Optional.of(ImmutableSet.of(BuckConstant.BUCK_OUTPUT_PATH)),
+                  Optional.of(ImmutableSet.of(BuckConstant.getBuckOutputPath())),
                   ImmutableSet.<ProjectFilesystem.PathOrGlobMatcher>of()));
       this.fileEventBus = new EventBus("file-change-events");
+
+      actionGraphCache = new ActionGraphCache();
 
       TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(objectMapper);
       this.parser = new Parser(
@@ -278,6 +282,7 @@ public final class Main {
           typeCoercerFactory,
           new ConstructorArgMarshaller(typeCoercerFactory));
       fileEventBus.register(parser);
+      fileEventBus.register(actionGraphCache);
       fileEventBus.register(hashCache);
 
       if (webServerToReuse.isPresent()) {
@@ -345,6 +350,10 @@ public final class Main {
 
     private Parser getParser() {
       return parser;
+    }
+
+    private ActionGraphCache getActionGraphCache() {
+      return actionGraphCache;
     }
 
     private DefaultFileHashCache getFileHashCache() {
@@ -572,7 +581,7 @@ public final class Main {
       Console console,
       BuildId buildId,
       Path... pathsToMove) throws IOException {
-    Path trashPath = BuckConstant.TRASH_PATH.resolve(buildId.toString());
+    Path trashPath = BuckConstant.getTrashPath().resolve(buildId.toString());
     filesystem.mkdirs(trashPath);
     for (Path pathToMove : pathsToMove) {
       try {
@@ -703,7 +712,7 @@ public final class Main {
       if (!command.isReadOnly()) {
 
         Optional<String> currentVersion =
-            filesystem.readFileIfItExists(BuckConstant.CURRENT_VERSION_FILE);
+            filesystem.readFileIfItExists(BuckConstant.getCurrentVersionFile());
         if (!currentVersion.isPresent() || !currentVersion.get().equals(BuckVersion.getVersion())) {
           // Migrate any version-dependent directories (which might be
           // huge) to a trash directory so we can delete it
@@ -712,15 +721,15 @@ public final class Main {
               filesystem,
               console,
               buildId,
-              BuckConstant.ANNOTATION_PATH,
-              BuckConstant.GEN_PATH,
-              BuckConstant.SCRATCH_PATH,
-              BuckConstant.RES_PATH);
+              BuckConstant.getAnnotationPath(),
+              BuckConstant.getGenPath(),
+              BuckConstant.getScratchPath(),
+              BuckConstant.getResPath());
           shouldCleanUpTrash = true;
-          filesystem.mkdirs(BuckConstant.CURRENT_VERSION_FILE.getParent());
+          filesystem.mkdirs(BuckConstant.getCurrentVersionFile().getParent());
           filesystem.writeContentsToPath(
               BuckVersion.getVersion(),
-              BuckConstant.CURRENT_VERSION_FILE);
+              BuckConstant.getCurrentVersionFile());
         }
       }
 
@@ -800,7 +809,7 @@ public final class Main {
               new DefaultFileHashCache(
                   new ProjectFilesystem(
                       rootCell.getFilesystem().getRootPath(),
-                      Optional.of(ImmutableSet.of(BuckConstant.BUCK_OUTPUT_PATH)),
+                      Optional.of(ImmutableSet.of(BuckConstant.getBuckOutputPath())),
                       ImmutableSet.<ProjectFilesystem.PathOrGlobMatcher>of()));
         }
 
@@ -859,12 +868,12 @@ public final class Main {
         // to the other resources before they are closed.
         try (ConsoleLogLevelOverrider consoleLogLevelOverrider =
             new ConsoleLogLevelOverrider(buildId.toString(), verbosity);
-            ConsoleHandlerRedirector consoleHandlerRedirector =
+             ConsoleHandlerRedirector consoleHandlerRedirector =
             new ConsoleHandlerRedirector(
                 buildId.toString(),
                 console.getStdErr(),
                 Optional.<OutputStream>of(stdErr));
-            AbstractConsoleEventBusListener consoleListener =
+             AbstractConsoleEventBusListener consoleListener =
             createConsoleEventListener(
                 clock,
                 new SuperConsoleConfig(buckConfig),
@@ -873,13 +882,13 @@ public final class Main {
                 executionEnvironment,
                 webServer,
                 locale,
-                BuckConstant.LOG_PATH.resolve("test.log"));
-            TempDirectoryCreator tempDirectoryCreator =
+                BuckConstant.getLogPath().resolve("test.log"));
+             TempDirectoryCreator tempDirectoryCreator =
             new TempDirectoryCreator(testTempDirOverride);
-            AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
-            BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
-            // NOTE: This will only run during the lifetime of the process and will flush on close.
-            CounterRegistry counterRegistry = new CounterRegistryImpl(
+             AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
+             BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
+             // NOTE: This will only run during the lifetime of the process and will flush on close.
+             CounterRegistry counterRegistry = new CounterRegistryImpl(
                 MoreExecutors.newSingleThreadScheduledExecutor("CounterAggregatorThread"),
                 buildEventBus,
                 buckConfig.getCountersFirstFlushIntervalMillis(),
@@ -981,11 +990,20 @@ public final class Main {
                 new ConstructorArgMarshaller(typeCoercerFactory));
           }
 
+          ActionGraphCache actionGraphCache = getActionGraphCacheFromDaemon(context, rootCell);
+
           // Because the Parser is potentially constructed before the CounterRegistry,
           // we need to manually register its counters after it's created.
           //
           // The counters will be unregistered once the counter registry is closed.
           counterRegistry.registerCounters(parser.getCounters());
+
+          // Because the ActionGraphCache is potentially constructed before the CounterRegistry,
+          // we need to manually register its counters after it's created. We register the counters
+          // of the ActionGraphCache only if we run the daemon.
+          if (context.isPresent()) {
+            counterRegistry.registerCounters(actionGraphCache.getCounters());
+          }
 
           JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootCell.getFilesystem());
 
@@ -1034,7 +1052,8 @@ public final class Main {
                   buckConfig,
                   fileHashCache,
                   executors,
-                  buildEnvironmentDescription));
+                  buildEnvironmentDescription,
+                  actionGraphCache));
           // Wait for HTTP writes to complete.
           closeHttpExecutorService(
               cacheBuckConfig, Optional.of(buildEventBus), httpWriteExecutorService);
@@ -1242,12 +1261,22 @@ public final class Main {
   private Optional<WebServer> getWebServerIfDaemon(
       Optional<NGContext> context,
       Cell cell)
-      throws IOException, InterruptedException  {
+      throws IOException, InterruptedException {
     if (context.isPresent()) {
       Daemon daemon = getDaemon(cell, objectMapper);
       return daemon.getWebServer();
     }
     return Optional.absent();
+  }
+
+  private ActionGraphCache getActionGraphCacheFromDaemon(
+      Optional<NGContext> context,
+      Cell cell)
+      throws IOException, InterruptedException {
+    if (context.isPresent()) {
+      return getDaemon(cell, objectMapper).getActionGraphCache();
+    }
+    return new ActionGraphCache();
   }
 
   private void loadListenersFromBuckConfig(
@@ -1583,14 +1612,15 @@ public final class Main {
   private static void daemonizeIfPossible() {
     String osName = System.getProperty("os.name");
     Libc.OpenPtyLibrary openPtyLibrary;
-    if ("Linux".equals(osName)) {
+    Platform platform = Platform.detect();
+    if (platform == Platform.LINUX) {
       Libc.Constants.rTIOCSCTTY = Libc.Constants.LINUX_TIOCSCTTY;
       Libc.Constants.rFDCLOEXEC = Libc.Constants.LINUX_FD_CLOEXEC;
       Libc.Constants.rFGETFD = Libc.Constants.LINUX_F_GETFD;
       Libc.Constants.rFSETFD = Libc.Constants.LINUX_F_SETFD;
       openPtyLibrary = (Libc.OpenPtyLibrary)
           Native.loadLibrary("libutil", Libc.OpenPtyLibrary.class);
-    } else if ("OS X".equals(osName)) {
+    } else if (platform == Platform.MACOS) {
       Libc.Constants.rTIOCSCTTY = Libc.Constants.DARWIN_TIOCSCTTY;
       Libc.Constants.rFDCLOEXEC = Libc.Constants.DARWIN_FD_CLOEXEC;
       Libc.Constants.rFGETFD = Libc.Constants.DARWIN_F_GETFD;

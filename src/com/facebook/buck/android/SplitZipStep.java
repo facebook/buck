@@ -247,14 +247,6 @@ public class SplitZipStep implements Step {
     return new Predicate<String>() {
       @Override
       public boolean apply(String classFileName) {
-        // This is a bit of a hack.  DX automatically strips non-class assets from the primary
-        // dex (because the output is classes.dex, which cannot contain assets), but not from
-        // secondary dex jars (because the output is a jar that can contain assets), so we put
-        // all assets in the primary jar to ensure that they get dropped.
-        if (!classFileName.endsWith(".class")) {
-          return true;
-        }
-
         // Drop the ".class" suffix and deobfuscate the class name before we apply our checks.
         String internalClassName = Preconditions.checkNotNull(
             deobfuscate.apply(classFileName.replaceAll("\\.class$", "")));

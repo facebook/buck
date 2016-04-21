@@ -178,7 +178,7 @@ public class ProjectWorkspace {
              new BufferedOutputStream(
                  Channels.newOutputStream(
                      Files.newByteChannel(
-                         destPath.resolve(BuckConstant.CURRENT_VERSION_FILE),
+                         destPath.resolve(BuckConstant.getCurrentVersionFile()),
                          ImmutableSet.<OpenOption>of(
                              StandardOpenOption.CREATE_NEW,
                              StandardOpenOption.WRITE))))) {
@@ -429,6 +429,9 @@ public class ProjectWorkspace {
         "OS",
         "ProgramW6432",
         "ProgramFiles(x86)",
+
+        // The haskell integration tests call into GHC, which needs HOME to be set.
+        "HOME",
 
         // TODO(#6586154): set TMP variable for ShellSteps
         "TMP");

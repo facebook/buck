@@ -57,7 +57,7 @@ public class TargetGraphHashingTest {
             cellBuilder.build(),
             targetGraph,
             new NullFileHashCache(),
-            ImmutableList.<BuildTarget>of())
+            ImmutableList.<TargetNode<?>>of())
             .entrySet(),
         empty());
   }
@@ -86,13 +86,13 @@ public class TargetGraphHashingTest {
         cellBuilder.build(),
         targetGraph,
         baseCache,
-        ImmutableList.of(node.getBuildTarget()));
+        ImmutableList.<TargetNode<?>>of(node));
 
     Map<BuildTarget, HashCode> modifiedResult = TargetGraphHashing.hashTargetGraph(
         cellBuilder.build(),
         targetGraph,
         modifiedCache,
-        ImmutableList.of(node.getBuildTarget()));
+        ImmutableList.<TargetNode<?>>of(node));
 
     assertThat(baseResult, aMapWithSize(1));
     assertThat(baseResult, hasKey(node.getBuildTarget()));
@@ -131,19 +131,19 @@ public class TargetGraphHashingTest {
         cellBuilder.build(),
         targetGraphA,
         fileHashCache,
-        ImmutableList.of(nodeA.getBuildTarget()));
+        ImmutableList.<TargetNode<?>>of(nodeA));
 
     Map<BuildTarget, HashCode> resultsB = TargetGraphHashing.hashTargetGraph(
         cellBuilder.build(),
         targetGraphB,
         fileHashCache,
-        ImmutableList.of(nodeB.getBuildTarget()));
+        ImmutableList.<TargetNode<?>>of(nodeB));
 
     Map<BuildTarget, HashCode> commonResults = TargetGraphHashing.hashTargetGraph(
         cellBuilder.build(),
         commonTargetGraph,
         fileHashCache,
-        ImmutableList.of(nodeA.getBuildTarget(), nodeB.getBuildTarget()));
+        ImmutableList.of(nodeA, nodeB));
 
     assertThat(resultsA, aMapWithSize(1));
     assertThat(resultsA, hasKey(nodeA.getBuildTarget()));
@@ -207,13 +207,13 @@ public class TargetGraphHashingTest {
         cellBuilder.build(),
         targetGraphA,
         fileHashCache,
-        ImmutableList.of(nodeTarget));
+        ImmutableList.<TargetNode<?>>of(targetGraphA.get(nodeTarget)));
 
     Map<BuildTarget, HashCode> resultB = TargetGraphHashing.hashTargetGraph(
         cellBuilder.build(),
         targetGraphB,
         fileHashCache,
-        ImmutableList.of(nodeTarget));
+        ImmutableList.<TargetNode<?>>of(targetGraphB.get(nodeTarget)));
 
     assertThat(resultA, aMapWithSize(2));
     assertThat(resultA, hasKey(nodeTarget));

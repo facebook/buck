@@ -137,6 +137,7 @@ public class JavaTestDescription implements
                 args.proguardConfig.transform(
                     SourcePaths.toSourcePath(params.getProjectFilesystem())),
                 new BuildTargetSourcePath(abiJarTarget),
+                javacOptions.trackClassUsage(),
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
                 args.testType.or(TestType.JUNIT),
                 new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),

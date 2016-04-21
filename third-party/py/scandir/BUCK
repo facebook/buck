@@ -1,0 +1,21 @@
+# Excludes native extension, exports python only
+python_library(
+  name = 'scandir',
+  srcs = [
+    'scandir.py',
+  ],
+  base_module = '',
+  licenses = [
+    'LICENSE.txt',
+  ],
+  visibility = [
+    'PUBLIC'
+  ],
+)
+
+export_file(
+  name = 'scandir.py',
+  visibility=[
+    'PUBLIC',
+  ],
+)

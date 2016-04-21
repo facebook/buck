@@ -103,7 +103,7 @@ public class TimeoutTest {
 
     @Test
     public void testsMayTimeOut() throws InterruptedException {
-      Thread.sleep(200);
+      Thread.sleep(1000);
     }
 
     @Test

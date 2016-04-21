@@ -30,6 +30,7 @@ public enum BuildRuleSuccessType {
 
   /** Built by executing the {@link Step}s for the rule. */
   BUILT_LOCALLY(
+      "BUILT",
       Property.SHOULD_UPLOAD_RESULTING_ARTIFACT,
       Property.SHOULD_UPLOAD_RESULTING_ARTIFACT_INPUT_BASED,
       Property.SHOULD_UPLOAD_RESULTING_ARTIFACT_MANIFEST_BASED,
@@ -39,15 +40,18 @@ public enum BuildRuleSuccessType {
 
   /** Fetched via the {@link ArtifactCache}. */
   FETCHED_FROM_CACHE(
+      "CACHE",
       Property.OUTPUTS_HAVE_CHANGED
   ),
 
   /** Computed {@link RuleKey} matches the one on disk. */
   MATCHING_RULE_KEY(
+      "MATCH"
   ),
 
   /** Fetched via the {@link ArtifactCache} using an input-based rule key. */
   FETCHED_FROM_CACHE_INPUT_BASED(
+      "CACHE",
       Property.SHOULD_UPLOAD_RESULTING_ARTIFACT,
       Property.SHOULD_UPDATE_METADATA_ON_DISK,
       Property.OUTPUTS_HAVE_CHANGED
@@ -55,6 +59,7 @@ public enum BuildRuleSuccessType {
 
   /** Fetched via the {@link ArtifactCache} using an input-based rule key. */
   FETCHED_FROM_CACHE_MANIFEST_BASED(
+      "CACHE",
       Property.SHOULD_UPLOAD_RESULTING_ARTIFACT,
       Property.SHOULD_UPDATE_METADATA_ON_DISK,
       Property.OUTPUTS_HAVE_CHANGED
@@ -62,6 +67,7 @@ public enum BuildRuleSuccessType {
 
   /** Computed input-based {@link RuleKey} matches the one on disk. */
   MATCHING_INPUT_BASED_RULE_KEY(
+      "MATCH",
       // TODO(#8364892): We should re-upload to the cache under the main rule key once local
       // caching performance is better and we don't hurt the incremental workflow as much.
       Property.SHOULD_UPDATE_METADATA_ON_DISK
@@ -71,6 +77,7 @@ public enum BuildRuleSuccessType {
    * Computed ABI {@link RuleKey} matches the one on disk.
    */
   MATCHING_ABI_RULE_KEY(
+      "MATCH",
       Property.SHOULD_UPDATE_METADATA_ON_DISK
   ),
 
@@ -78,18 +85,22 @@ public enum BuildRuleSuccessType {
    * Computed dep-file {@link RuleKey} matches the one on disk
    */
   MATCHING_DEP_FILE_RULE_KEY(
+      "MATCH",
       Property.SHOULD_UPDATE_METADATA_ON_DISK
   ),
 
   ;
 
+  private final String shortDescription;
   private final EnumSet<Property> properties;
 
-  BuildRuleSuccessType() {
+  BuildRuleSuccessType(String shortDescription) {
+    this.shortDescription = shortDescription;
     this.properties = EnumSet.noneOf(Property.class);
   }
 
-  BuildRuleSuccessType(Property... properties) {
+  BuildRuleSuccessType(String shortDescription, Property... properties) {
+    this.shortDescription = shortDescription;
     this.properties = EnumSet.copyOf(ImmutableSet.copyOf(properties));
   }
 
@@ -120,6 +131,10 @@ public enum BuildRuleSuccessType {
    */
   public boolean outputsHaveChanged() {
     return properties.contains(Property.OUTPUTS_HAVE_CHANGED);
+  }
+
+  public String getShortDescription() {
+    return shortDescription;
   }
 
   private enum Property {

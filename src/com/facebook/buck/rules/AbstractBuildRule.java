@@ -88,7 +88,7 @@ public abstract class AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public final String getType() {
+  public String getType() {
     return typeSupplier.get();
   }
 

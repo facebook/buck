@@ -17,12 +17,12 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Set;
 
@@ -89,12 +88,7 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
 
   private Path getGeneratedSrcFolder() {
     Preconditions.checkNotNull(filesystem);
-    return Paths.get(
-        String.format(
-            "%s/%s__%s_gen__",
-            BuckConstant.ANNOTATION_DIR,
-            Preconditions.checkNotNull(ownerTarget).getBasePathWithSlash(),
-            ownerTarget.getShortNameAndFlavorPostfix()));
+    return BuildTargets.getAnnotationPath(Preconditions.checkNotNull(ownerTarget), "__%s_gen__");
   }
 
   public boolean isEmpty() {

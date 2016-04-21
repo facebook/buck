@@ -492,6 +492,7 @@ public class DaemonIntegrationTest {
             .setFilesystem(filesystem)
             .build(),
         ObjectMappers.newDefaultInstance());
+
     assertEquals(
         "Daemon should not be replaced when config equal.", daemon,
         Main.getDaemon(

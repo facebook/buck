@@ -57,7 +57,6 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
-import com.facebook.buck.js.ReactNativeFlavors;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildTarget;
@@ -265,6 +264,7 @@ public class ProjectGenerator {
   private final Map<String, String> gidsToTargetNames;
   private final HalideBuckConfig halideBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
+  private final ImmutableList<BuildTarget> focusModules;
 
   public ProjectGenerator(
       TargetGraph targetGraph,
@@ -276,6 +276,7 @@ public class ProjectGenerator {
       Set<Option> options,
       Optional<BuildTarget> targetToBuildWithBuck,
       ImmutableList<String> buildWithBuckFlags,
+      ImmutableList<BuildTarget> focusModules,
       ExecutableFinder executableFinder,
       ImmutableMap<String, String> environment,
       FlavorDomain<CxxPlatform> cxxPlatforms,
@@ -337,6 +338,13 @@ public class ProjectGenerator {
     gidsToTargetNames = new HashMap<>();
     this.halideBuckConfig = halideBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.focusModules = focusModules;
+
+    for (BuildTarget focusedTarget : focusModules) {
+      Preconditions.checkArgument(
+          targetGraph.getOptional(focusedTarget).isPresent(),
+          "Cannot find build target %s in target graph", focusedTarget);
+    }
   }
 
   /**
@@ -727,7 +735,8 @@ public class ProjectGenerator {
   }
 
   private static Path getHalideOutputPath(BuildTarget target) {
-    return Paths.get("buck-out/halide")
+    return  BuckConstant.getBuckOutputPath()
+        .resolve("halide")
         .resolve(target.getBasePath())
         .resolve(target.getShortName());
   }
@@ -1070,32 +1079,37 @@ public class ProjectGenerator {
 
     mutator
         .setTargetName(getXcodeTargetName(buildTarget))
-        .setLangPreprocessorFlags(langPreprocessorFlags)
         .setProduct(
             productType,
             buildTargetName,
-            Paths.get(String.format(productOutputFormat, buildTargetName)))
-        .setSourcesWithFlags(ImmutableSet.copyOf(arg.srcs.get()))
-        .setPublicHeaders(exportedHeaders)
-        .setPrivateHeaders(headers)
-        .setPrefixHeader(arg.prefixHeader)
-        .setRecursiveResources(recursiveResources)
-        .setDirectResources(directResources);
+            Paths.get(String.format(productOutputFormat, buildTargetName)));
 
-    if (bundle.isPresent()) {
+    boolean isFocusedOnTarget = shouldIncludeBuildTargetIntoFocusedProject(buildTarget);
+    if (isFocusedOnTarget) {
+      mutator
+          .setLangPreprocessorFlags(langPreprocessorFlags)
+          .setPublicHeaders(exportedHeaders)
+          .setPrefixHeader(arg.prefixHeader)
+          .setSourcesWithFlags(ImmutableSet.copyOf(arg.srcs.get()))
+          .setPrivateHeaders(headers)
+          .setRecursiveResources(recursiveResources)
+          .setDirectResources(directResources);
+    }
+
+    if (bundle.isPresent() && isFocusedOnTarget) {
       HasAppleBundleFields bundleArg = bundle.get().getConstructorArg();
       mutator.setInfoPlist(Optional.of(bundleArg.getInfoPlist()));
     }
 
     Optional<TargetNode<AppleNativeTargetDescriptionArg>> appleTargetNode =
         targetNode.castArg(AppleNativeTargetDescriptionArg.class);
-    if (appleTargetNode.isPresent()) {
+    if (appleTargetNode.isPresent() && isFocusedOnTarget) {
       AppleNativeTargetDescriptionArg appleArg = appleTargetNode.get().getConstructorArg();
       mutator = mutator
           .setExtraXcodeSources(ImmutableSet.copyOf(appleArg.extraXcodeSources.get()));
     }
 
-    if (options.contains(Option.CREATE_DIRECTORY_STRUCTURE)) {
+    if (options.contains(Option.CREATE_DIRECTORY_STRUCTURE) && isFocusedOnTarget) {
       mutator.setTargetGroupPath(
           FluentIterable
               .from(buildTarget.getBasePath())
@@ -1103,16 +1117,15 @@ public class ProjectGenerator {
               .toList());
     }
 
-    if (!recursiveAssetCatalogs.isEmpty()) {
-      mutator.setRecursiveAssetCatalogs(
-          recursiveAssetCatalogs);
+    if (!recursiveAssetCatalogs.isEmpty() && isFocusedOnTarget) {
+      mutator.setRecursiveAssetCatalogs(recursiveAssetCatalogs);
     }
 
-    if (!directAssetCatalogs.isEmpty()) {
+    if (!directAssetCatalogs.isEmpty() && isFocusedOnTarget) {
       mutator.setDirectAssetCatalogs(directAssetCatalogs);
     }
 
-    if (includeFrameworks) {
+    if (includeFrameworks && isFocusedOnTarget) {
       ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
       frameworksBuilder.addAll(targetNode.getConstructorArg().frameworks.get());
       frameworksBuilder.addAll(targetNode.getConstructorArg().libraries.get());
@@ -1127,25 +1140,23 @@ public class ProjectGenerator {
     // and add any shell script rules here
     ImmutableList.Builder<TargetNode<?>> preScriptPhases = ImmutableList.builder();
     ImmutableList.Builder<TargetNode<?>> postScriptPhases = ImmutableList.builder();
-    boolean skipRNBundle = ReactNativeFlavors.skipBundling(buildTargetNode.getBuildTarget());
-    if (bundle.isPresent() && targetNode != bundle.get()) {
+    if (bundle.isPresent() && targetNode != bundle.get() && isFocusedOnTarget) {
       collectBuildScriptDependencies(
           targetGraph.getAll(bundle.get().getDeclaredDeps()),
           preScriptPhases,
-          postScriptPhases,
-          skipRNBundle);
+          postScriptPhases);
     }
     collectBuildScriptDependencies(
         targetGraph.getAll(targetNode.getDeclaredDeps()),
         preScriptPhases,
-        postScriptPhases,
-        skipRNBundle);
-    mutator.setPreBuildRunScriptPhasesFromTargetNodes(preScriptPhases.build());
-    if (copyFilesPhases.isPresent()) {
-      mutator.setCopyFilesPhases(copyFilesPhases.get());
+        postScriptPhases);
+    if (isFocusedOnTarget) {
+      mutator.setPreBuildRunScriptPhasesFromTargetNodes(preScriptPhases.build());
+      if (copyFilesPhases.isPresent()) {
+        mutator.setCopyFilesPhases(copyFilesPhases.get());
+      }
+      mutator.setPostBuildRunScriptPhasesFromTargetNodes(postScriptPhases.build());
     }
-    mutator.setPostBuildRunScriptPhasesFromTargetNodes(postScriptPhases.build());
-    mutator.skipReactNativeBundle(skipRNBundle);
 
     NewNativeTargetProjectMutator.Result targetBuilderResult;
     try {
@@ -1168,7 +1179,7 @@ public class ProjectGenerator {
     extraSettingsBuilder
         .put("TARGET_NAME", buildTargetName)
         .put("SRCROOT", pathRelativizer.outputPathToBuildTargetPath(buildTarget).toString());
-    if (bundleLoaderNode.isPresent()) {
+    if (bundleLoaderNode.isPresent() && isFocusedOnTarget) {
       TargetNode<AppleBundleDescription.Arg> bundleLoader = bundleLoaderNode.get();
       String bundleLoaderProductName = getProductNameForBuildTarget(bundleLoader.getBuildTarget());
       String bundleLoaderBundleName = bundleLoaderProductName + "." +
@@ -1266,7 +1277,7 @@ public class ProjectGenerator {
     ImmutableSet<Path> recursiveHeaderSearchPaths = collectRecursiveHeaderSearchPaths(targetNode);
     ImmutableSet<Path> headerMapBases = recursiveHeaderSearchPaths.isEmpty() ?
         ImmutableSet.<Path>of() :
-        ImmutableSet.of(pathRelativizer.outputDirToRootRelative(BuckConstant.BUCK_OUTPUT_PATH));
+        ImmutableSet.of(pathRelativizer.outputDirToRootRelative(BuckConstant.getBuckOutputPath()));
 
     appendConfigsBuilder
         .put(
@@ -1277,61 +1288,67 @@ public class ProjectGenerator {
             Joiner.on(' ').join(collectRecursiveLibrarySearchPaths(ImmutableSet.of(targetNode))))
         .put(
             "FRAMEWORK_SEARCH_PATHS",
-            Joiner.on(' ').join(collectRecursiveFrameworkSearchPaths(ImmutableList.of(targetNode))))
-        .put(
-            "OTHER_CFLAGS",
-            Joiner
-                .on(' ')
-                .join(
-                    Iterables.transform(
-                        Iterables.concat(
-                            cxxBuckConfig.getFlags("cflags").or(DEFAULT_CFLAGS),
-                            collectRecursiveExportedPreprocessorFlags(
-                                ImmutableList.of(targetNode)),
-                            targetNode.getConstructorArg().compilerFlags.get(),
-                            targetNode.getConstructorArg().preprocessorFlags.get()),
-                        Escaper.BASH_ESCAPER)))
-        .put(
-            "OTHER_CPLUSPLUSFLAGS",
-            Joiner
-                .on(' ')
-                .join(
-                    Iterables.transform(
-                        Iterables.concat(
-                            cxxBuckConfig.getFlags("cxxflags").or(DEFAULT_CXXFLAGS),
-                            collectRecursiveExportedPreprocessorFlags(
-                                ImmutableList.of(targetNode)),
-                            targetNode.getConstructorArg().compilerFlags.get(),
-                            targetNode.getConstructorArg().preprocessorFlags.get()),
-                        Escaper.BASH_ESCAPER)))
-        .put(
-            "OTHER_LDFLAGS",
-            Joiner
-                .on(' ')
-                .join(
-                    Iterables.transform(
-                        Iterables.concat(
-                            targetNode.getConstructorArg().linkerFlags.get(),
-                            collectRecursiveExportedLinkerFlags(
-                                ImmutableList.of(targetNode))),
-                        Escaper.BASH_ESCAPER)));
+            Joiner.on(' ').join(
+                collectRecursiveFrameworkSearchPaths(ImmutableList.of(targetNode))));
+    if (isFocusedOnTarget) {
+      appendConfigsBuilder
+          .put(
+              "OTHER_CFLAGS",
+              Joiner
+                  .on(' ')
+                  .join(
+                      Iterables.transform(
+                          Iterables.concat(
+                              cxxBuckConfig.getFlags("cflags").or(DEFAULT_CFLAGS),
+                              collectRecursiveExportedPreprocessorFlags(
+                                  ImmutableList.of(targetNode)),
+                              targetNode.getConstructorArg().compilerFlags.get(),
+                              targetNode.getConstructorArg().preprocessorFlags.get()),
+                          Escaper.BASH_ESCAPER)))
+          .put(
+              "OTHER_CPLUSPLUSFLAGS",
+              Joiner
+                  .on(' ')
+                  .join(
+                      Iterables.transform(
+                          Iterables.concat(
+                              cxxBuckConfig.getFlags("cxxflags").or(DEFAULT_CXXFLAGS),
+                              collectRecursiveExportedPreprocessorFlags(
+                                  ImmutableList.of(targetNode)),
+                              targetNode.getConstructorArg().compilerFlags.get(),
+                              targetNode.getConstructorArg().preprocessorFlags.get()),
+                          Escaper.BASH_ESCAPER)))
+          .put(
+              "OTHER_LDFLAGS",
+              Joiner
+                  .on(' ')
+                  .join(
+                      Iterables.transform(
+                          Iterables.concat(
+                              targetNode.getConstructorArg().linkerFlags.get(),
+                              collectRecursiveExportedLinkerFlags(
+                                  ImmutableList.of(targetNode))),
+                          Escaper.BASH_ESCAPER)));
+    }
 
     ImmutableMap<String, String> appendedConfig = appendConfigsBuilder.build();
 
-    Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs =
-        getXcodeBuildConfigurationsForTargetNode(
-            targetNode,
-            appendedConfig);
-
     PBXNativeTarget target = targetBuilderResult.target;
-    setTargetBuildConfigurations(
-        getConfigurationNameToXcconfigPath(buildTarget),
-        target,
-        project.getMainGroup(),
-        configs.get(),
-        extraSettingsBuilder.build(),
-        defaultSettingsBuilder.build(),
-        appendedConfig);
+
+    if (isFocusedOnTarget) {
+      Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs =
+          getXcodeBuildConfigurationsForTargetNode(
+              targetNode,
+              appendedConfig);
+      setTargetBuildConfigurations(
+          getConfigurationNameToXcconfigPath(buildTarget),
+          target,
+          project.getMainGroup(),
+          configs.get(),
+          extraSettingsBuilder.build(),
+          defaultSettingsBuilder.build(),
+          appendedConfig);
+    }
 
     // -- phases
     createHeaderSymlinkTree(
@@ -1351,6 +1368,23 @@ public class ProjectGenerator {
     }
 
     return target;
+  }
+
+  private boolean shouldIncludeBuildTargetIntoFocusedProject(BuildTarget buildTarget) {
+    if (focusModules.isEmpty()) {
+      return true;
+    }
+
+    if (targetToBuildWithBuck.isPresent() && buildTarget.equals(targetToBuildWithBuck.get())) {
+      return true;
+    }
+
+    for (BuildTarget target : focusModules) {
+      if (buildTarget.equals(target)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public static String getProductName(TargetNode<?> buildTargetNode, BuildTarget buildTarget) {
@@ -1682,15 +1716,12 @@ public class ProjectGenerator {
   private void collectBuildScriptDependencies(
       Iterable<TargetNode<?>> targetNodes,
       ImmutableList.Builder<TargetNode<?>> preRules,
-      ImmutableList.Builder<TargetNode<?>> postRules,
-      boolean skipRNBundle) {
+      ImmutableList.Builder<TargetNode<?>> postRules) {
     for (TargetNode<?> targetNode : targetNodes) {
       BuildRuleType type = targetNode.getType();
       if (type.equals(IosReactNativeLibraryDescription.TYPE)) {
         postRules.add(targetNode);
-        if (!skipRNBundle) {
-          requiredBuildTargetsBuilder.add(targetNode.getBuildTarget());
-        }
+        requiredBuildTargetsBuilder.add(targetNode.getBuildTarget());
       } else if (type.equals(XcodePostbuildScriptDescription.TYPE)) {
         postRules.add(targetNode);
       } else if (type.equals(XcodePrebuildScriptDescription.TYPE)) {
@@ -2527,7 +2558,7 @@ public class ProjectGenerator {
   }
 
   private Path emptyFileWithExtension(String extension) {
-    Path path = BuckConstant.GEN_PATH.resolve("xcode-scripts/emptyFile." + extension);
+    Path path = BuckConstant.getGenPath().resolve("xcode-scripts/emptyFile." + extension);
     if (!projectFilesystem.exists(path)) {
       try {
         projectFilesystem.createParentDirs(path);

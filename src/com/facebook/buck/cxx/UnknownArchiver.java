@@ -45,6 +45,11 @@ public class UnknownArchiver implements Archiver {
   }
 
   @Override
+  public boolean supportsThinArchives() {
+    return false;
+  }
+
+  @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
     return tool.getDeps(resolver);
   }

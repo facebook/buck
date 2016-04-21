@@ -33,6 +33,6 @@ public class ApiStubber {
     Path source = Paths.get(args[0]);
     Path destination = Paths.get(args[1]);
 
-    new StubJar(source).writeTo(new ProjectFilesystem(Paths.get("")), destination);
+    new StubJar(source).writeTo(new ProjectFilesystem(Paths.get("").toAbsolutePath()), destination);
   }
 }

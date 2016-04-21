@@ -15,31 +15,43 @@
  */
 package com.facebook.buck.apple;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.cxx.CxxStrip;
+import com.facebook.buck.cxx.StripStyle;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasPostBuildSteps;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.shell.DefaultShellStep;
+import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class AppleDsym extends AbstractBuildRule implements HasPostBuildSteps {
+/**
+ * Creates dSYM bundle for the given _unstripped_ binary.
+ */
+public class AppleDsym
+    extends AbstractBuildRule
+    implements HasPostBuildSteps, SupportsInputBasedRuleKey {
 
-  private static final Logger LOG = Logger.get(AppleDsym.class);
+  public static final Flavor RULE_FLAVOR = ImmutableFlavor.of("apple-dsym");
 
   @AddToRuleKey
   private final Tool lldb;
@@ -48,90 +60,73 @@ public class AppleDsym extends AbstractBuildRule implements HasPostBuildSteps {
   private final Tool dsymutil;
 
   @AddToRuleKey
-  private final Tool strip;
+  private final SourcePath unstrippedBinarySourcePath;
 
-  private final Path bundleRoot;
-  private final Path bundleBinaryPath;
-  private final Path dsymPath;
+  @AddToRuleKey(stringify = true)
+  private final Path dsymOutputPath;
 
   public AppleDsym(
-      BuildRuleParams buildRuleParams,
+      BuildRuleParams params,
       SourcePathResolver resolver,
-      Path bundleRoot,
-      Path bundleBinaryPath,
       Tool dsymutil,
       Tool lldb,
-      Tool strip) {
-    super(buildRuleParams, resolver);
-
+      SourcePath unstrippedBinarySourcePath,
+      Path dsymOutputPath) {
+    super(params, resolver);
     this.dsymutil = dsymutil;
     this.lldb = lldb;
-    this.strip = strip;
+    this.unstrippedBinarySourcePath = unstrippedBinarySourcePath;
+    this.dsymOutputPath = dsymOutputPath;
+    checkFlavorCorrectness(params.getBuildTarget());
+  }
 
-    this.bundleRoot = bundleRoot;
-    this.bundleBinaryPath = bundleBinaryPath;
-    this.dsymPath = bundleRoot
-        .getParent()
-        .resolve(bundleRoot.getFileName().toString() + ".dSYM");
+  public static Path getDsymOutputPath(BuildTarget target) {
+    AppleDsym.checkFlavorCorrectness(target);
+    return BuildTargets.getGenPath(target, "%s." + AppleBundleExtension.DSYM.toFileExtension());
+  }
+
+  public static String getDwarfFilenameForDsymTarget(BuildTarget dsymTarget) {
+    AppleDsym.checkFlavorCorrectness(dsymTarget);
+    BuildTarget target = dsymTarget.withoutFlavors(ImmutableSet.of(AppleDsym.RULE_FLAVOR));
+    return BuildTargets.getGenPath(target, "%s").getFileName().toString();
+  }
+
+  private static void checkFlavorCorrectness(BuildTarget buildTarget) {
+    Preconditions.checkArgument(
+        buildTarget.getFlavors().contains(RULE_FLAVOR),
+        "Rule %s must be identified by %s flavor", buildTarget, RULE_FLAVOR);
+    Preconditions.checkArgument(
+        !AppleDebugFormat.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
+        "Rule %s must not contain any debug format flavors (%s), only rule flavor %s",
+        buildTarget, AppleDebugFormat.FLAVOR_DOMAIN.getFlavors(), RULE_FLAVOR);
+    Preconditions.checkArgument(
+        !buildTarget.getFlavors().contains(CxxStrip.RULE_FLAVOR),
+        "Rule %s must not contain strip flavor %s: %s works only with unstripped binaries!",
+        buildTarget, CxxStrip.RULE_FLAVOR, AppleDsym.class.toString());
+    Preconditions.checkArgument(
+        !StripStyle.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
+        "Rule %s must not contain strip style flavors: %s works only with unstripped binaries!",
+        buildTarget, AppleDsym.class.toString());
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    buildableContext.recordArtifact(dsymPath);
+    buildableContext.recordArtifact(dsymOutputPath);
 
-    DsymStep generateDsymStep = new DsymStep(
-        getProjectFilesystem(),
-        dsymutil.getEnvironment(getResolver()),
-        dsymutil.getCommandPrefix(getResolver()),
-        bundleBinaryPath,
-        dsymPath);
-    Step stripDebugSymbolsStep = getStripDebugSymbolsStep();
-
-    return ImmutableList.of(generateDsymStep, stripDebugSymbolsStep);
-  }
-
-  private Step getStripDebugSymbolsStep() {
-    return new Step() {
-      @Override
-      public int execute(ExecutionContext context) throws IOException, InterruptedException {
-        // Don't strip binaries which are already code-signed.  Note: we need to use
-        // binaryOutputPath instead of bundleBinaryPath because codesign will evaluate the
-        // entire .app bundle, even if you pass it the direct path to the embedded binary.
-        if (!CodeSigning.hasValidSignature(context.getProcessExecutor(), bundleBinaryPath)) {
-          return (new DefaultShellStep(
-              getProjectFilesystem().getRootPath(),
-              ImmutableList.<String>builder()
-                  .addAll(strip.getCommandPrefix(getResolver()))
-                  .add("-S")
-                  .add(getProjectFilesystem().resolve(bundleBinaryPath).toString())
-                  .build(),
-              strip.getEnvironment(getResolver())))
-              .execute(context);
-        } else {
-          LOG.info("Not stripping code-signed binary.");
-          return 0;
-        }
-      }
-
-      @Override
-      public String getShortName() {
-        return "strip binary";
-      }
-
-      @Override
-      public String getDescription(ExecutionContext context) {
-        return String.format(
-            "strip debug symbols from binary '%s'",
-            bundleRoot);
-      }
-    };
+    return ImmutableList.<Step>of(
+        new DsymStep(
+            getProjectFilesystem(),
+            dsymutil.getEnvironment(getResolver()),
+            dsymutil.getCommandPrefix(getResolver()),
+            getResolver().getAbsolutePath(unstrippedBinarySourcePath),
+            dsymOutputPath));
   }
 
   @Override
   public Path getPathToOutput() {
-    return dsymPath;
+    return dsymOutputPath;
   }
 
   @Override
@@ -150,7 +145,9 @@ public class AppleDsym extends AbstractBuildRule implements HasPostBuildSteps {
                 params,
                 ImmutableSet.<ProcessExecutor.Option>of(),
                 Optional.of(
-                    String.format("target create %s\ntarget symbols add %s", bundleRoot, dsymPath)),
+                    String.format("target create %s\ntarget symbols add %s",
+                        getResolver().getAbsolutePath(unstrippedBinarySourcePath),
+                        dsymOutputPath)),
                 Optional.<Long>absent(),
                 Optional.<Function<Process, Void>>absent()).getExitCode();
           }
@@ -164,8 +161,8 @@ public class AppleDsym extends AbstractBuildRule implements HasPostBuildSteps {
           public String getDescription(ExecutionContext context) {
             return String.format(
                 "register debug symbols for binary '%s': '%s'",
-                bundleRoot,
-                dsymPath);
+                getResolver().getRelativePath(unstrippedBinarySourcePath),
+                dsymOutputPath);
           }
         });
   }

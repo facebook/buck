@@ -1,5 +1,6 @@
 apple_binary(
   name = 'TestApp',
+  info_plist = 'Info.plist',
   srcs = ['main.c'],
   frameworks = ['$SDKROOT/System/Library/Frameworks/CoreFoundation.framework'],
   deps = ['//Apps/TestLibrary:TestLibrary'],

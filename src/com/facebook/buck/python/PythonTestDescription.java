@@ -389,6 +389,7 @@ public class PythonTestDescription implements
 
     if (pythonBuckConfig.getPackageStyle() == PythonBuckConfig.PackageStyle.STANDALONE) {
       targets.addAll(pythonBuckConfig.getPexTarget().asSet());
+      targets.addAll(pythonBuckConfig.getPexExecutorTarget().asSet());
     }
 
     return targets.build();

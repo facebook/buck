@@ -53,6 +53,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
       Optional<Path> workingDirectory,
       Path pathToSrcsList,
       Optional<SuggestBuildRules> suggestBuildRules,
+      Optional<Path> usedClassesFile,
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
 
@@ -64,6 +65,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
     steps.add(
         new JavacStep(
             outputDirectory,
+            usedClassesFile,
             Optional.<StandardJavaFileManagerFactory>absent(),
             workingDirectory,
             sourceFilePaths,
@@ -94,6 +96,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
       Optional<String> mainClass,
       Optional<Path> manifestFile,
       Path outputJar,
+      Optional<Path> usedClassesFile,
       /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
@@ -120,6 +123,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
           mainClass,
           manifestFile,
           outputJar,
+          usedClassesFile,
           steps,
           buildableContext);
       return;
@@ -145,7 +149,8 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
             entriesToJar,
             mainClass,
             manifestFile,
-            outputJar));
+            outputJar,
+            usedClassesFile));
   }
 
   private static void addAnnotationGenFolderStep(

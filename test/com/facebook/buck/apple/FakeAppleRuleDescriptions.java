@@ -28,8 +28,8 @@ import com.facebook.buck.cxx.InferBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -45,7 +45,7 @@ public class FakeAppleRuleDescriptions {
   // Utility class, do not instantiate.
   private FakeAppleRuleDescriptions() { }
 
-  private static final AppleSdkPaths DEFAULT_MACOSX_SDK_PATHS =
+  public static final AppleSdkPaths DEFAULT_MACOSX_SDK_PATHS =
       AppleSdkPaths.builder()
           .setDeveloperPath(Paths.get("."))
           .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
@@ -53,7 +53,7 @@ public class FakeAppleRuleDescriptions {
           .setSdkPath(Paths.get("Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"))
           .build();
 
-  private static final AppleSdkPaths DEFAULT_IPHONEOS_SDK_PATHS =
+  public static final AppleSdkPaths DEFAULT_IPHONEOS_SDK_PATHS =
       AppleSdkPaths.builder()
           .setDeveloperPath(Paths.get("."))
           .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
@@ -61,7 +61,7 @@ public class FakeAppleRuleDescriptions {
           .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
           .build();
 
-  private static final AppleSdk DEFAULT_MACOSX_SDK =
+  public static final AppleSdk DEFAULT_MACOSX_SDK =
       AppleSdk.builder()
           .setApplePlatform(ApplePlatform.MACOSX)
           .setName("macosx")
@@ -70,7 +70,7 @@ public class FakeAppleRuleDescriptions {
           .setToolchains(ImmutableList.<AppleToolchain>of())
           .build();
 
-  private static final AppleSdk DEFAULT_IPHONEOS_SDK =
+  public static final AppleSdk DEFAULT_IPHONEOS_SDK =
       AppleSdk.builder()
           .setApplePlatform(ApplePlatform.IPHONEOS)
           .setName("iphoneos")
@@ -79,7 +79,7 @@ public class FakeAppleRuleDescriptions {
           .setToolchains(ImmutableList.<AppleToolchain>of())
           .build();
 
-  private static final ExecutableFinder EXECUTABLE_FINDER = new FakeExecutableFinder(
+  public static final ExecutableFinder EXECUTABLE_FINDER = new FakeExecutableFinder(
       ImmutableSet.of(
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"),
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"),
@@ -96,7 +96,7 @@ public class FakeAppleRuleDescriptions {
           Paths.get("Tools/otest"),
           Paths.get("usr/bin/xctest")));
 
-  private static final AppleCxxPlatform DEFAULT_IPHONEOS_I386_PLATFORM =
+  public static final AppleCxxPlatform DEFAULT_IPHONEOS_I386_PLATFORM =
       AppleCxxPlatforms.buildWithExecutableChecker(
           DEFAULT_IPHONEOS_SDK,
           "8.0",
@@ -107,7 +107,7 @@ public class FakeAppleRuleDescriptions {
           EXECUTABLE_FINDER,
           Optional.<ProcessExecutor>absent());
 
-  private static final AppleCxxPlatform DEFAULT_IPHONEOS_X86_64_PLATFORM =
+  public static final AppleCxxPlatform DEFAULT_IPHONEOS_X86_64_PLATFORM =
       AppleCxxPlatforms.buildWithExecutableChecker(
           DEFAULT_IPHONEOS_SDK,
           "8.0",
@@ -119,7 +119,7 @@ public class FakeAppleRuleDescriptions {
           Optional.<ProcessExecutor>absent());
 
 
-  private static final AppleCxxPlatform DEFAULT_MACOSX_X86_64_PLATFORM =
+  public static final AppleCxxPlatform DEFAULT_MACOSX_X86_64_PLATFORM =
       AppleCxxPlatforms.buildWithExecutableChecker(
           DEFAULT_MACOSX_SDK,
           "8.0",
@@ -130,13 +130,13 @@ public class FakeAppleRuleDescriptions {
           EXECUTABLE_FINDER,
           Optional.<ProcessExecutor>absent());
 
-  private static final BuckConfig DEFAULT_BUCK_CONFIG = FakeBuckConfig.builder().build();
+  public static final BuckConfig DEFAULT_BUCK_CONFIG = FakeBuckConfig.builder().build();
 
-  private static final CxxPlatform DEFAULT_PLATFORM = DefaultCxxPlatforms.build(
+  public static final CxxPlatform DEFAULT_PLATFORM = DefaultCxxPlatforms.build(
       Platform.MACOS,
       new CxxBuckConfig(DEFAULT_BUCK_CONFIG));
 
-  private static final FlavorDomain<CxxPlatform> DEFAULT_APPLE_FLAVOR_DOMAIN =
+  public static final FlavorDomain<CxxPlatform> DEFAULT_APPLE_FLAVOR_DOMAIN =
       FlavorDomain.of(
           "Fake iPhone C/C++ Platform",
           DEFAULT_PLATFORM,
@@ -144,7 +144,7 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_IPHONEOS_X86_64_PLATFORM.getCxxPlatform(),
           DEFAULT_MACOSX_X86_64_PLATFORM.getCxxPlatform());
 
-  private static final FlavorDomain<AppleCxxPlatform> DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN =
+  public static final FlavorDomain<AppleCxxPlatform> DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN =
       FlavorDomain.of(
           "Fake Apple C++ Platforms",
           DEFAULT_IPHONEOS_I386_PLATFORM,
@@ -165,7 +165,8 @@ public class FakeAppleRuleDescriptions {
         DEFAULT_PLATFORM,
         CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
         ProvisioningProfileStore.fromProvisioningProfiles(
-            ImmutableList.<ProvisioningProfileMetadata>of()));
+            ImmutableList.<ProvisioningProfileMetadata>of()),
+        AppleDebugFormat.NONE);
 
   /**
    * A fake apple_binary description with an iOS platform for use in tests.
@@ -180,7 +181,8 @@ public class FakeAppleRuleDescriptions {
         DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
         CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
         ProvisioningProfileStore.fromProvisioningProfiles(
-            ImmutableList.<ProvisioningProfileMetadata>of()));
+            ImmutableList.<ProvisioningProfileMetadata>of()),
+        AppleDebugFormat.NONE);
 
   /**
    * A fake apple_bundle description with an iOS platform for use in tests.
@@ -195,7 +197,7 @@ public class FakeAppleRuleDescriptions {
           CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(
               ImmutableList.<ProvisioningProfileMetadata>of()),
-          AppleDebugFormat.DWARF_AND_DSYM);
+          AppleDebugFormat.NONE);
 
   /**
    * A fake apple_test description with an iOS platform for use in tests.
@@ -203,7 +205,6 @@ public class FakeAppleRuleDescriptions {
   public static final AppleTestDescription TEST_DESCRIPTION =
       new AppleTestDescription(
           new FakeAppleConfig(),
-          BUNDLE_DESCRIPTION,
           LIBRARY_DESCRIPTION,
           DEFAULT_APPLE_FLAVOR_DOMAIN,
           DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
@@ -211,5 +212,6 @@ public class FakeAppleRuleDescriptions {
           CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(
               ImmutableList.<ProvisioningProfileMetadata>of()),
-          Suppliers.ofInstance(Optional.<Path>absent()));
+          Suppliers.ofInstance(Optional.<Path>absent()),
+          AppleDebugFormat.NONE);
 }

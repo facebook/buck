@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 09a96050c158e684d27de98fa4789d3458dc0ed0 #@#
+#@# GENERATED FILE: DO NOT MODIFY 9949fef01a437121852c32d0fb370c37ff92a474 #@#
 {
   "listener" : {
     "deps" : [
@@ -14,6 +14,7 @@
       "//src/com/facebook/buck/log:log",
       "//src/com/facebook/buck/parser:parser",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/simulate:simulate",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",

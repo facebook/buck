@@ -31,6 +31,7 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
@@ -101,7 +102,9 @@ public class AppleTestIntegrationTest {
     BuildTarget appleTestBundleFlavoredBuildTarget = BuildTarget.copyOf(buildTarget)
         .withFlavors(
             ImmutableFlavor.of("iphonesimulator-x86_64"),
-            ImmutableFlavor.of("apple-test-bundle"));
+            ImmutableFlavor.of("apple-test-bundle"),
+            AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
+            AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path outputPath = projectRoot.resolve(
         BuildTargets.getGenPath(
             appleTestBundleFlavoredBuildTarget,
@@ -132,7 +135,9 @@ public class AppleTestIntegrationTest {
     BuildTarget appleTestBundleFlavoredBuildTarget = BuildTarget.copyOf(buildTarget)
         .withFlavors(
             ImmutableFlavor.of("iphonesimulator-x86_64"),
-            ImmutableFlavor.of("apple-test-bundle"));
+            ImmutableFlavor.of("apple-test-bundle"),
+            AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
+            AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path outputPath = projectRoot.resolve(
         BuildTargets.getGenPath(
             appleTestBundleFlavoredBuildTarget,
@@ -159,7 +164,9 @@ public class AppleTestIntegrationTest {
         Paths.get("foo_output.expected"),
         BuildTargets.getGenPath(
             BuildTarget.builder(target)
+                .addFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor())
                 .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                 .build(),
             "%s"));
   }
@@ -180,6 +187,8 @@ public class AppleTestIntegrationTest {
         BuildTargets.getGenPath(
             BuildTarget.builder(target)
                 .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
+                .addFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor())
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                 .build(),
             "%s"));
   }
@@ -199,14 +208,18 @@ public class AppleTestIntegrationTest {
         Paths.get("foo_output.expected"),
         BuildTargets.getGenPath(
             BuildTarget.builder(buildTarget)
+                .addFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor())
                 .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                 .build(),
             "%s"));
 
     Path projectRoot = Paths.get(tmp.getRootPath().toFile().getCanonicalPath());
     BuildTarget appleTestBundleFlavoredBuildTarget = BuildTarget.copyOf(buildTarget)
         .withFlavors(
-            ImmutableFlavor.of("apple-test-bundle"));
+            ImmutableFlavor.of("apple-test-bundle"),
+            AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
+            AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path outputPath = projectRoot.resolve(
         BuildTargets.getGenPath(
             appleTestBundleFlavoredBuildTarget,
@@ -257,7 +270,9 @@ public class AppleTestIntegrationTest {
         Paths.get("foo_output.expected"),
         BuildTargets.getGenPath(
             BuildTarget.builder(target)
+                .addFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor())
                 .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
+                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                 .build(),
             "%s"));
   }
@@ -334,6 +349,48 @@ public class AppleTestIntegrationTest {
     assertThat(
         result.getStderr(),
         containsString("1 Passed   0 Skipped   0 Failed   AppTest"));
+  }
+
+  @Test
+  public void testWithHostAppWithDsym() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_test_with_host_app", tmp);
+    workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(this).resolve("xctool"),
+        Paths.get("xctool"));
+    workspace.writeContentsToPath(
+        "[apple]\n  xctool_path = xctool/bin/xctool\n",
+        ".buckconfig.local");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "test",
+        "//:AppTest#dwarf-and-dsym",
+        "--config",
+        "cxx.cflags=-g");
+    result.assertSuccess();
+
+    assertThat(
+        result.getStderr(),
+        containsString("1 Passed   0 Skipped   0 Failed   AppTest"));
+
+    Path appTestDsym = tmp.getRootPath()
+        .resolve(BuckConstant.getGenDir())
+        .resolve("AppTest#apple-test-bundle,dwarf-and-dsym,no-include-frameworks")
+        .resolve("AppTest.xctest.dSYM");
+    AppleDsymTestUtil.checkDsymFileHasDebugSymbol(
+        "-[AppTest testMagicValue]",
+        workspace,
+        appTestDsym);
+
+    Path hostAppDsym = tmp.getRootPath()
+        .resolve(BuckConstant.getGenDir())
+        .resolve("TestHostApp#dwarf-and-dsym,no-include-frameworks")
+        .resolve("TestHostApp.app.dSYM");
+    AppleDsymTestUtil.checkDsymFileHasDebugSymbol(
+        "-[TestHostApp magicValue]",
+        workspace,
+        hostAppDsym);
   }
 
   @Test

@@ -77,4 +77,10 @@ public class SubdirectoryBuildTargetPattern implements BuildTargetPattern {
   public int hashCode() {
     return Objects.hashCode(cellPath, pathWithinCell);
   }
+
+  @Override
+  public String toString() {
+    return cellPath.getFileName().toString() + "//" + pathWithinCell.toString() + "/...";
+  }
+
 }

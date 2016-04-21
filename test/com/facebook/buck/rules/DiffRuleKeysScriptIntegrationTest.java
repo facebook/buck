@@ -43,7 +43,7 @@ import java.util.logging.Logger;
 
 public class DiffRuleKeysScriptIntegrationTest {
 
-  private static final Path LOG_FILE_PATH = BuckConstant.LOG_PATH.resolve("buck.log");
+  private static final Path LOG_FILE_PATH = BuckConstant.getLogPath().resolve("buck.log");
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
@@ -146,14 +146,17 @@ public class DiffRuleKeysScriptIntegrationTest {
 
     // Adding new deps is not handled too well currently.
     String expectedResult = Joiner.on('\n').join(
-        "Change details for [//:java_lib_2->buck.extraDeps]",
+        "Change details for [//:java_lib_2->abiClasspath]",
         "  (buck.declaredDeps):",
-        "    -[ruleKey(sha1=33ff324624b7e5a31151e4f6dde2b966439e5a52)]\n" +
-        "    +[ruleKey(sha1=ddf8658ff7efbab94e2c320075aa962b5aa1c84d)]\n" +
+        "    -[ruleKey(sha1=33ff324624b7e5a31151e4f6dde2b966439e5a52)]",
+        "    +[ruleKey(sha1=ddf8658ff7efbab94e2c320075aa962b5aa1c84d)]",
         "Change details for [//:java_lib_2->buck.extraDeps]",
+        "  (binaryJar):",
+        "    -[ruleKey(sha1=33ff324624b7e5a31151e4f6dde2b966439e5a52)]",
+        "    +[ruleKey(sha1=ddf8658ff7efbab94e2c320075aa962b5aa1c84d)]",
         "  (buck.declaredDeps):",
-        "    -[ruleKey(sha1=33ff324624b7e5a31151e4f6dde2b966439e5a52)]\n" +
-        "    +[ruleKey(sha1=ddf8658ff7efbab94e2c320075aa962b5aa1c84d)]\n" +
+        "    -[ruleKey(sha1=33ff324624b7e5a31151e4f6dde2b966439e5a52)]",
+        "    +[ruleKey(sha1=ddf8658ff7efbab94e2c320075aa962b5aa1c84d)]",
         "  (name):",
         "    -[string(\"//:java_lib_1#abi\")]",
         "    +[string(\"//:java_lib_3#abi\")]",

@@ -29,5 +29,5 @@ public final class JacocoConstants {
           "buck.jacoco_agent_jar",
           "third-party/java/jacoco/jacocoagent.jar");
   public static final String JACOCO_EXEC_COVERAGE_FILE = "jacoco.exec";
-  public static final Path JACOCO_OUTPUT_DIR = BuckConstant.GEN_PATH.resolve("jacoco");
+  public static final Path JACOCO_OUTPUT_DIR = BuckConstant.getGenPath().resolve("jacoco");
 }

@@ -1,0 +1,36 @@
+cxx_library(
+  name = 'some_library',
+  prefix_header = 'prefix_header.h',
+  srcs = [
+    'lib.c',
+  ],
+  exported_headers = [
+    'lib.h',
+  ],
+  headers = [
+    'referenced_by_prefix_header.h',
+  ],
+  deps = [
+    ':some_dependency',
+  ],
+)
+
+cxx_library(
+  name = 'some_dependency',
+  srcs = [
+    'some_dependency.c',
+  ],
+  exported_headers = [
+    'referenced_by_prefix_header_from_dependency.h',
+  ],
+)
+
+cxx_binary(
+  name = 'some_binary',
+  srcs = [
+    'bin.c' ,
+  ],
+  deps = [
+    ':some_library',
+  ]
+)

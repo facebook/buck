@@ -135,6 +135,7 @@ public class CachingBuildEngine implements BuildEngine {
   private final DepFiles depFiles;
   private final long maxDepFileCacheEntries;
   private final SourcePathResolver pathResolver;
+  private final Optional<Long> artifactCacheSizeLimit;
   private final LoadingCache<ProjectFilesystem, FileHashCache> fileHashCaches;
   private final LoadingCache<ProjectFilesystem, RuleKeyFactories> ruleKeyFactories;
 
@@ -145,6 +146,7 @@ public class CachingBuildEngine implements BuildEngine {
       DependencySchedulingOrder dependencySchedulingOrder,
       DepFiles depFiles,
       long maxDepFileCacheEntries,
+      Optional<Long> artifactCacheSizeLimit,
       final BuildRuleResolver resolver) {
     this.ruleDeps = new RuleDepsCache(service);
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, service);
@@ -154,6 +156,7 @@ public class CachingBuildEngine implements BuildEngine {
     this.dependencySchedulingOrder = dependencySchedulingOrder;
     this.depFiles = depFiles;
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
+    this.artifactCacheSizeLimit = artifactCacheSizeLimit;
     this.pathResolver = new SourcePathResolver(resolver);
 
     this.fileHashCaches = createFileHashCacheLoader(fileHashCache);
@@ -177,6 +180,7 @@ public class CachingBuildEngine implements BuildEngine {
       DependencySchedulingOrder dependencySchedulingOrder,
       DepFiles depFiles,
       long maxDepFileCacheEntries,
+      Optional<Long> artifactCacheSizeLimit,
       SourcePathResolver pathResolver,
       final Function<? super ProjectFilesystem, RuleKeyFactories> ruleKeyFactoriesFunction) {
     this.ruleDeps = new RuleDepsCache(service);
@@ -187,6 +191,7 @@ public class CachingBuildEngine implements BuildEngine {
     this.dependencySchedulingOrder = dependencySchedulingOrder;
     this.depFiles = depFiles;
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
+    this.artifactCacheSizeLimit = artifactCacheSizeLimit;
     this.pathResolver = pathResolver;
 
     this.fileHashCaches = createFileHashCacheLoader(fileHashCache);
@@ -220,7 +225,7 @@ public class CachingBuildEngine implements BuildEngine {
             FileHashCache buckOutCache = new DefaultFileHashCache(
                 new ProjectFilesystem(
                     filesystem.getRootPath(),
-                    Optional.of(ImmutableSet.of(BuckConstant.BUCK_OUTPUT_PATH)),
+                    Optional.of(ImmutableSet.of(BuckConstant.getBuckOutputPath())),
                     ImmutableSet.<ProjectFilesystem.PathOrGlobMatcher>of()));
             return new StackedFileHashCache(
                 ImmutableList.of(defaultCache, cellCache, buckOutCache));
@@ -294,76 +299,74 @@ public class CachingBuildEngine implements BuildEngine {
 
     final RuleKeyFactories ruleKeyFactory =
         ruleKeyFactories.getUnchecked(rule.getProjectFilesystem());
+    final CacheResult cacheResult;
 
-    // 1. Check if it's already built.
-    Optional<RuleKey> cachedRuleKey =
-        onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY);
-    if (ruleKeyFactory.defaultRuleKeyBuilderFactory.build(rule).equals(cachedRuleKey.orNull())) {
-      return Futures.transform(
-          markRuleAsUsed(rule, context.getEventBus()),
-          Functions.constant(
-              BuildResult.success(
-                  rule,
-                  BuildRuleSuccessType.MATCHING_RULE_KEY,
-                  CacheResult.localKeyUnchangedHit())));
+    try (BuildRuleEvent.Scope scope =
+             BuildRuleEvent.resumeSuspendScope(
+                 context.getEventBus(),
+                 rule,
+                 ruleKeyFactory.defaultRuleKeyBuilderFactory)) {
+
+      // 1. Check if it's already built.
+      Optional<RuleKey> cachedRuleKey =
+          onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY);
+      if (ruleKeyFactory.defaultRuleKeyBuilderFactory.build(rule).equals(cachedRuleKey.orNull())) {
+        return Futures.transform(
+            markRuleAsUsed(rule, context.getEventBus()),
+            Functions.constant(
+                BuildResult.success(
+                    rule,
+                    BuildRuleSuccessType.MATCHING_RULE_KEY,
+                    CacheResult.localKeyUnchangedHit())));
+      }
+
+      // 2. Rule key cache lookup.
+      cacheResult =
+          tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+              rule,
+              ruleKeyFactory.defaultRuleKeyBuilderFactory.build(rule),
+              buildInfoRecorder,
+              context.getArtifactCache(),
+              // TODO(shs96c): This should be a shared between all tests, not one per cell
+              rule.getProjectFilesystem(),
+              context);
+      if (cacheResult.getType().isSuccess()) {
+        return Futures.transform(
+            markRuleAsUsed(rule, context.getEventBus()),
+            Functions.constant(
+                BuildResult.success(rule, BuildRuleSuccessType.FETCHED_FROM_CACHE, cacheResult)));
+      }
     }
-
-    // 2. Rule key cache lookup.
-    final CacheResult cacheResult =
-        tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-            rule,
-            ruleKeyFactory.defaultRuleKeyBuilderFactory.build(rule),
-            buildInfoRecorder,
-            context.getArtifactCache(),
-            // TODO(shs96c): This should be a shared between all tests, not one per cell
-            rule.getProjectFilesystem(),
-            context);
-    if (cacheResult.getType().isSuccess()) {
-      return Futures.transform(
-          markRuleAsUsed(rule, context.getEventBus()),
-          Functions.constant(
-              BuildResult.success(rule, BuildRuleSuccessType.FETCHED_FROM_CACHE, cacheResult)));
-    }
-
-    // Log to the event bus.
-    context.getEventBus().logVerboseAndPost(
-        LOG,
-        BuildRuleEvent.suspended(
-            rule,
-            ruleKeyFactory.defaultRuleKeyBuilderFactory));
-
-    ListenableFuture<List<BuildResult>> getDepResultsAndMarkRuleAsUsed = Futures.transformAsync(
-        getDepResults(rule, context, asyncCallbacks),
-        new AsyncFunction<List<BuildResult>, List<BuildResult>>() {
-          @Override
-          public ListenableFuture<List<BuildResult>> apply(List<BuildResult> input) {
-            return Futures.transform(
-                markRuleAsUsed(rule, context.getEventBus()),
-                Functions.constant(input));
-          }
-        });
 
     // 3. Build deps.
-    return Futures.transformAsync(
-        getDepResultsAndMarkRuleAsUsed,
-        new AsyncFunction<List<BuildResult>, BuildResult>() {
-          @Override
-          public ListenableFuture<BuildResult> apply(@Nonnull List<BuildResult> depResults)
-              throws Exception {
+    ListenableFuture<List<BuildResult>> getDepResults =
+        Futures.transformAsync(
+            getDepResults(rule, context, asyncCallbacks),
+            new AsyncFunction<List<BuildResult>, List<BuildResult>>() {
+              @Override
+              public ListenableFuture<List<BuildResult>> apply(List<BuildResult> input) {
+                return Futures.transform(
+                    markRuleAsUsed(rule, context.getEventBus()),
+                    Functions.constant(input));
+              }
+            });
 
-            // Log to the event bus.
-            context.getEventBus().logVerboseAndPost(
-                LOG,
-                BuildRuleEvent.resumed(
-                    rule,
-                    ruleKeyFactory.defaultRuleKeyBuilderFactory));
+    // 4. Return to the current rule and check caches to see if we can avoid building locally.
+    AsyncFunction<List<BuildResult>, Optional<BuildResult>> checkCachesCallback =
+        new AsyncFunction<List<BuildResult>, Optional<BuildResult>>() {
+          @Override
+          public ListenableFuture<Optional<BuildResult>> apply(List<BuildResult> depResults)
+              throws Exception {
 
             // If any dependency wasn't successful, cancel ourselves.
             for (BuildResult depResult : depResults) {
               if (buildMode != BuildMode.POPULATE_FROM_REMOTE_CACHE &&
                   depResult.getStatus() != BuildRuleStatus.SUCCESS) {
                 return Futures.immediateFuture(
-                    BuildResult.canceled(rule, Preconditions.checkNotNull(depResult.getFailure())));
+                    Optional.of(
+                        BuildResult.canceled(
+                            rule,
+                            Preconditions.checkNotNull(depResult.getFailure()))));
               }
             }
 
@@ -371,7 +374,7 @@ public class CachingBuildEngine implements BuildEngine {
             if (buildMode != BuildMode.POPULATE_FROM_REMOTE_CACHE &&
                 !context.isKeepGoing() &&
                 firstFailure != null) {
-              return Futures.immediateFuture(BuildResult.canceled(rule, firstFailure));
+              return Futures.immediateFuture(Optional.of(BuildResult.canceled(rule, firstFailure)));
             }
 
             // Dep-file rule keys.
@@ -382,7 +385,7 @@ public class CachingBuildEngine implements BuildEngine {
                   calculateDepFileRuleKey(
                       rule,
                       onDiskBuildInfo.getValues(BuildInfo.METADATA_KEY_FOR_DEP_FILE),
-                      /* allowMissingInputs */ true);
+                          /* allowMissingInputs */ true);
               if (depFileRuleKey.isPresent()) {
 
                 // Check the input-based rule key says we're already built.
@@ -390,10 +393,11 @@ public class CachingBuildEngine implements BuildEngine {
                     onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY);
                 if (depFileRuleKey.equals(lastDepFileRuleKey)) {
                   return Futures.immediateFuture(
-                      BuildResult.success(
-                          rule,
-                          BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY,
-                          CacheResult.localKeyUnchangedHit()));
+                      Optional.of(
+                          BuildResult.success(
+                              rule,
+                              BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY,
+                              CacheResult.localKeyUnchangedHit())));
                 }
               }
             }
@@ -406,10 +410,11 @@ public class CachingBuildEngine implements BuildEngine {
                   performManifestBasedCacheFetch(rule, context, buildInfoRecorder);
               if (cacheResult.getType().isSuccess()) {
                 return Futures.immediateFuture(
-                    BuildResult.success(
-                        rule,
-                        BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED,
-                        cacheResult));
+                    Optional.of(
+                        BuildResult.success(
+                            rule,
+                            BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED,
+                            cacheResult)));
               }
             }
 
@@ -427,10 +432,11 @@ public class CachingBuildEngine implements BuildEngine {
                   onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY);
               if (inputRuleKey.equals(lastInputRuleKey.orNull())) {
                 return Futures.immediateFuture(
-                    BuildResult.success(
-                        rule,
-                        BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY,
-                        CacheResult.localKeyUnchangedHit()));
+                    Optional.of(
+                        BuildResult.success(
+                            rule,
+                            BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY,
+                            CacheResult.localKeyUnchangedHit())));
               }
 
               // Try to fetch the artifact using the input-based rule key.
@@ -445,14 +451,15 @@ public class CachingBuildEngine implements BuildEngine {
                       context);
               if (cacheResult.getType().isSuccess()) {
                 return Futures.immediateFuture(
-                    BuildResult.success(
-                        rule,
-                        BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED,
-                        cacheResult));
+                    Optional.of(
+                        BuildResult.success(
+                            rule,
+                            BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED,
+                            cacheResult)));
               }
             }
 
-            // 4. ABI check
+            // ABI check:
             // Deciding whether we need to rebuild is tricky business. We want to rebuild as little
             // as possible while always being sound.
             //
@@ -483,10 +490,11 @@ public class CachingBuildEngine implements BuildEngine {
                   onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_ABI_RULE_KEY);
               if (abiRuleKey.equals(lastAbiRuleKey.orNull())) {
                 return Futures.immediateFuture(
-                    BuildResult.success(
-                        rule,
-                        BuildRuleSuccessType.MATCHING_ABI_RULE_KEY,
-                        CacheResult.localKeyUnchangedHit()));
+                    Optional.of(
+                        BuildResult.success(
+                            rule,
+                            BuildRuleSuccessType.MATCHING_ABI_RULE_KEY,
+                            CacheResult.localKeyUnchangedHit())));
               }
             }
 
@@ -495,46 +503,60 @@ public class CachingBuildEngine implements BuildEngine {
               LOG.info("Cannot populate cache for " +
                   rule.getBuildTarget().getFullyQualifiedName());
               return Futures.immediateFuture(
-                  BuildResult.canceled(
-                      rule,
-                      new HumanReadableException(
-                          "Skipping %s: in cache population mode local builds are disabled",
-                          rule)));
+                  Optional.of(
+                      BuildResult.canceled(
+                          rule,
+                          new HumanReadableException(
+                              "Skipping %s: in cache population mode local builds are disabled",
+                              rule))));
             }
 
-            // Log to the event bus.
-            context.getEventBus().logVerboseAndPost(
-                LOG,
-                BuildRuleEvent.suspended(
-                    rule,
-                    ruleKeyFactory.defaultRuleKeyBuilderFactory));
+            return Futures.immediateFuture(Optional.<BuildResult>absent());
+          }
+        };
+    ListenableFuture<Optional<BuildResult>> checkCachesResult =
+        Futures.transformAsync(
+            getDepResults,
+            ruleAsyncFunction(rule, context, checkCachesCallback));
 
-            // 5. build the rule.  We re-submit via the service so that we schedule it with the
-            // custom weight assigned to this rules steps.
+    // 5. Build the current rule locally, if we have to.
+    AsyncFunction<Optional<BuildResult>, BuildResult> buildLocallyCallback =
+        new AsyncFunction<Optional<BuildResult>, BuildResult>() {
+          @Override
+          public ListenableFuture<BuildResult> apply(Optional<BuildResult> result) {
+
+            // If we already got a result checking the caches, then we don't build locally.
+            if (result.isPresent()) {
+              return Futures.immediateFuture(result.get());
+            }
+
+            // Otherwise, build the rule.  We re-submit via the service so that we schedule it with
+            // the custom weight assigned to this rules steps.
             RuleScheduleInfo ruleScheduleInfo = getRuleScheduleInfo(rule);
             return service.submit(
                 new Callable<BuildResult>() {
                   @Override
                   public BuildResult call() throws Exception {
-
-                    // Log to the event bus.
-                    context.getEventBus().logVerboseAndPost(
-                        LOG,
-                        BuildRuleEvent.resumed(
-                            rule,
-                            ruleKeyFactory.defaultRuleKeyBuilderFactory));
-
-                    executeCommandsNowThatDepsAreBuilt(rule, context, buildableContext);
-                    return BuildResult.success(
-                        rule,
-                        BuildRuleSuccessType.BUILT_LOCALLY,
-                        cacheResult);
+                    if (!context.isKeepGoing() && firstFailure != null) {
+                      return BuildResult.canceled(rule, firstFailure);
+                    }
+                    try (BuildRuleEvent.Scope scope =
+                             BuildRuleEvent.resumeSuspendScope(
+                                 context.getEventBus(),
+                                 rule,
+                                 ruleKeyFactory.defaultRuleKeyBuilderFactory)) {
+                      executeCommandsNowThatDepsAreBuilt(rule, context, buildableContext);
+                      return BuildResult.success(
+                          rule,
+                          BuildRuleSuccessType.BUILT_LOCALLY,
+                          cacheResult);
+                    }
                   }
                 },
                 DEFAULT_BUILD_WEIGHT * ruleScheduleInfo.getJobsMultiplier());
           }
-        },
-        service);
+        };
+    return Futures.transformAsync(checkCachesResult, buildLocallyCallback);
   }
 
   private ListenableFuture<BuildResult> processBuildRule(
@@ -546,17 +568,10 @@ public class CachingBuildEngine implements BuildEngine {
     final RuleKeyFactories keyFactories =
         ruleKeyFactories.getUnchecked(rule.getProjectFilesystem());
     final FileHashCache fileHashCache = fileHashCaches.getUnchecked(rule.getProjectFilesystem());
-
-    // Log to the event bus.
-    context.getEventBus().logVerboseAndPost(
-        LOG,
-        BuildRuleEvent.resumed(
-            rule,
-            keyFactories.defaultRuleKeyBuilderFactory));
-
-    final OnDiskBuildInfo onDiskBuildInfo = context.createOnDiskBuildInfoFor(
-        rule.getBuildTarget(),
-        rule.getProjectFilesystem());
+    final OnDiskBuildInfo onDiskBuildInfo =
+        context.createOnDiskBuildInfoFor(
+            rule.getBuildTarget(),
+            rule.getProjectFilesystem());
     final BuildInfoRecorder buildInfoRecorder =
         context.createBuildInfoRecorder(rule.getBuildTarget(), rule.getProjectFilesystem())
             .addBuildMetadata(
@@ -564,15 +579,14 @@ public class CachingBuildEngine implements BuildEngine {
                 keyFactories.defaultRuleKeyBuilderFactory.build(rule).toString());
     final BuildableContext buildableContext = new DefaultBuildableContext(buildInfoRecorder);
 
-    // Dispatch the build job for this rule.
     ListenableFuture<BuildResult> buildResult =
-        processBuildRule(
-            rule,
-            context,
-            onDiskBuildInfo,
-            buildInfoRecorder,
-            buildableContext,
-            asyncCallbacks);
+          processBuildRule(
+              rule,
+              context,
+              onDiskBuildInfo,
+              buildInfoRecorder,
+              buildableContext,
+              asyncCallbacks);
 
     // If we're performing a deep build, guarantee that all dependencies will *always* get
     // materialized locally by chaining up to our result future.
@@ -587,7 +601,7 @@ public class CachingBuildEngine implements BuildEngine {
     AsyncFunction<BuildResult, BuildResult> callback =
         new AsyncFunction<BuildResult, BuildResult>() {
           @Override
-          public ListenableFuture<BuildResult> apply(@Nonnull BuildResult input) throws Exception {
+          public ListenableFuture<BuildResult> apply(BuildResult input) throws Exception {
 
             // If we weren't successful, exit now.
             if (input.getStatus() != BuildRuleStatus.SUCCESS) {
@@ -621,7 +635,7 @@ public class CachingBuildEngine implements BuildEngine {
               // Invalidate any cached hashes for the output paths, since we've updated them.
               FileHashCache fileHashCache = fileHashCaches.get(rule.getProjectFilesystem());
               for (Path path : buildInfoRecorder.getRecordedPaths()) {
-                fileHashCache.invalidate(path);
+                fileHashCache.invalidate(rule.getProjectFilesystem().resolve(path));
               }
             }
 
@@ -675,7 +689,8 @@ public class CachingBuildEngine implements BuildEngine {
             buildInfoRecorder.addMetadata(
                 BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS,
                 FluentIterable.from(buildInfoRecorder.getRecordedPaths())
-                    .transform(Functions.toStringFunction()));
+                    .transform(Functions.toStringFunction())
+                    .toList());
             if (success.shouldWriteRecordedMetadataToDiskAfterBuilding()) {
               try {
                 boolean clearExistingMetadata = success.shouldClearAndOverwriteMetadataOnDisk();
@@ -700,7 +715,7 @@ public class CachingBuildEngine implements BuildEngine {
             return Futures.immediateFuture(input);
           }
         };
-    buildResult = Futures.transformAsync(buildResult, callback);
+    buildResult = Futures.transformAsync(buildResult, ruleAsyncFunction(rule, context, callback));
 
     // Handle either build success or failure.
     final SettableFuture<BuildResult> result = SettableFuture.create();
@@ -723,10 +738,18 @@ public class CachingBuildEngine implements BuildEngine {
                 }
               }
 
-              private void uploadToCache(BuildRuleSuccessType success) {
+              private boolean shouldUploadToCache(long outputSize) {
                 if (!rule.isCacheable()) {
-                  return;
+                  return false;
                 }
+                if (artifactCacheSizeLimit.isPresent() &&
+                    outputSize > artifactCacheSizeLimit.get()) {
+                  return false;
+                }
+                return true;
+              }
+
+              private void uploadToCache(BuildRuleSuccessType success) {
 
                 // Collect up all the rule keys we have index the artifact in the cache with.
                 Set<RuleKey> ruleKeys = Sets.newHashSet();
@@ -779,6 +802,10 @@ public class CachingBuildEngine implements BuildEngine {
                 Optional<HashCode> outputHash = Optional.absent();
                 Optional<BuildRuleSuccessType> successType = Optional.absent();
 
+                context.getEventBus().logVerboseAndPost(
+                    LOG,
+                    BuildRuleEvent.resumed(rule, keyFactories.defaultRuleKeyBuilderFactory));
+
                 if (input.getStatus() == BuildRuleStatus.FAIL) {
 
                   // Make this failure visible for other rules, so that they can stop early.
@@ -794,18 +821,32 @@ public class CachingBuildEngine implements BuildEngine {
                 if (input.getStatus() == BuildRuleStatus.SUCCESS) {
                   BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
                   successType = Optional.of(success);
-                  uploadToCache(success);
 
-                  // Calculate the hash and size of the rule outputs that we built locally.
-                  if (success == BuildRuleSuccessType.BUILT_LOCALLY) {
+                  // Try get the output size.
+                  try {
+                    outputSize = Optional.of(buildInfoRecorder.getOutputSize());
+                  } catch (IOException e) {
+                    context.getEventBus().post(
+                        ThrowableConsoleEvent.create(
+                            e,
+                            "Error getting output size for %s.",
+                            rule));
+                  }
+
+                  // If this rule is cacheable, upload it to the cache.
+                  if (outputSize.isPresent() && shouldUploadToCache(outputSize.get())) {
+                    uploadToCache(success);
+                  }
+
+                  // Calculate the hash of outputs that were built locally and are cacheable.
+                  if (success == BuildRuleSuccessType.BUILT_LOCALLY && rule.isCacheable()) {
                     try {
-                      outputSize = Optional.of(buildInfoRecorder.getOutputSize());
                       outputHash = Optional.of(buildInfoRecorder.getOutputHash(fileHashCache));
                     } catch (IOException e) {
                       context.getEventBus().post(
                           ThrowableConsoleEvent.create(
                               e,
-                              "Error getting output hash and size for %s.",
+                              "Error getting output hash for %s.",
                               rule));
                     }
                   }
@@ -885,7 +926,7 @@ public class CachingBuildEngine implements BuildEngine {
             ruleKey,
             new AsyncFunction<RuleKey, BuildResult>() {
               @Override
-              public ListenableFuture<BuildResult> apply(@Nonnull RuleKey input) throws Exception {
+              public ListenableFuture<BuildResult> apply(RuleKey input) throws Exception {
                 return processBuildRule(rule, context, asyncCallbacks);
               }
             },
@@ -939,8 +980,7 @@ public class CachingBuildEngine implements BuildEngine {
         ruleDeps.get(rule),
         new AsyncFunction<ImmutableSortedSet<BuildRule>, List<Object>>() {
           @Override
-          public ListenableFuture<List<Object>> apply(
-              @Nonnull ImmutableSortedSet<BuildRule> deps) {
+          public ListenableFuture<List<Object>> apply(ImmutableSortedSet<BuildRule> deps) {
             List<ListenableFuture<?>> results =
                 Lists.newArrayListWithExpectedSize(deps.size());
             for (BuildRule dep : deps) {
@@ -979,8 +1019,7 @@ public class CachingBuildEngine implements BuildEngine {
               ruleDeps.get(rule),
               new AsyncFunction<ImmutableSortedSet<BuildRule>, List<RuleKey>>() {
                 @Override
-                public ListenableFuture<List<RuleKey>> apply(
-                    @Nonnull ImmutableSortedSet<BuildRule> deps) {
+                public ListenableFuture<List<RuleKey>> apply(ImmutableSortedSet<BuildRule> deps) {
                   List<ListenableFuture<RuleKey>> depKeys =
                       Lists.newArrayListWithExpectedSize(rule.getDeps().size());
                   for (BuildRule dep : deps) {
@@ -999,15 +1038,12 @@ public class CachingBuildEngine implements BuildEngine {
           new Function<List<RuleKey>, RuleKey>() {
             @Override
             public RuleKey apply(List<RuleKey> input) {
-              context.getEventBus().logVerboseAndPost(LOG, BuildRuleEvent.started(rule));
-              try {
+              try (BuildRuleEvent.Scope scope =
+                       BuildRuleEvent.startSuspendScope(
+                           context.getEventBus(),
+                           rule,
+                           keyFactories.defaultRuleKeyBuilderFactory)) {
                 return keyFactories.defaultRuleKeyBuilderFactory.build(rule);
-              } finally {
-                context.getEventBus().logVerboseAndPost(
-                    LOG,
-                    BuildRuleEvent.suspended(
-                        rule,
-                        keyFactories.defaultRuleKeyBuilderFactory));
               }
             }
           },
@@ -1034,7 +1070,7 @@ public class CachingBuildEngine implements BuildEngine {
         resultFuture,
         new AsyncFunction<BuildResult, BuildResult>() {
           @Override
-          public ListenableFuture<BuildResult> apply(@Nonnull BuildResult result)
+          public ListenableFuture<BuildResult> apply(BuildResult result)
               throws Exception {
             return Futures.transform(
                 Futures.allAsList(asyncCallbacks),
@@ -1071,6 +1107,7 @@ public class CachingBuildEngine implements BuildEngine {
     CacheResult cacheResult =
         buildInfoRecorder.fetchArtifactForBuildable(ruleKey, lazyZipPath, artifactCache);
     if (!cacheResult.getType().isSuccess()) {
+      LOG.debug("Cache miss for '%s' with rulekey '%s'", rule, ruleKey);
       return cacheResult;
     }
     LOG.debug("Fetched '%s' from cache with rulekey '%s'", rule, ruleKey);
@@ -1459,6 +1496,27 @@ public class CachingBuildEngine implements BuildEngine {
     ENABLED,
     DISABLED,
     CACHE,
+  }
+
+  // Wrap an async function in rule resume/suspend events.
+  private <F, T> AsyncFunction<F, T> ruleAsyncFunction(
+      final BuildRule rule,
+      final BuildContext context,
+      final AsyncFunction<F, T> delegate) {
+    return new AsyncFunction<F, T>() {
+      @Override
+      public ListenableFuture<T> apply(@Nullable F input) throws Exception {
+        RuleKeyFactories ruleKeyFactory =
+            ruleKeyFactories.getUnchecked(rule.getProjectFilesystem());
+        try (BuildRuleEvent.Scope event =
+                 BuildRuleEvent.resumeSuspendScope(
+                     context.getEventBus(),
+                     rule,
+                     ruleKeyFactory.defaultRuleKeyBuilderFactory)) {
+          return delegate.apply(input);
+        }
+      }
+    };
   }
 
   @VisibleForTesting

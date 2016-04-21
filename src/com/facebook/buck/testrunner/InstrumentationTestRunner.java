@@ -31,6 +31,7 @@ public class InstrumentationTestRunner {
   private final String packageName;
   private final String testRunner;
   private final File outputDirectory;
+  private final boolean attemptUninstall;
   @Nullable private final String instrumentationApkPath;
   @Nullable private final String apkUnderTestPath;
 
@@ -41,7 +42,8 @@ public class InstrumentationTestRunner {
       String testRunner,
       File outputDirectory,
       String instrumentationApkPath,
-      String apkUnderTestPath) {
+      String apkUnderTestPath,
+      boolean attemptUninstall) {
     this.adbExecutablePath = adbExecutablePath;
     this.deviceSerial = deviceSerial;
     this.packageName = packageName;
@@ -49,6 +51,7 @@ public class InstrumentationTestRunner {
     this.outputDirectory = outputDirectory;
     this.instrumentationApkPath = instrumentationApkPath;
     this.apkUnderTestPath = apkUnderTestPath;
+    this.attemptUninstall = attemptUninstall;
   }
 
   public static InstrumentationTestRunner fromArgs(String... args) throws Throwable {
@@ -58,6 +61,7 @@ public class InstrumentationTestRunner {
     String packageName = null;
     String testRunner = null;
     String instrumentationApkPath = null;
+    boolean attemptUninstall = false;
 
     for (int i = 0; i < args.length; i++) {
       switch (args[i]) {
@@ -82,6 +86,9 @@ public class InstrumentationTestRunner {
           break;
         case "--instrumentation-apk-path":
           instrumentationApkPath = args[++i];
+          break;
+        case "--attempt-uninstall":
+          attemptUninstall = true;
           break;
       }
     }
@@ -119,7 +126,8 @@ public class InstrumentationTestRunner {
         testRunner,
         outputDirectory,
         instrumentationApkPath,
-        apkUnderTestPath);
+        apkUnderTestPath,
+        attemptUninstall);
   }
 
   public void run() throws Throwable {
@@ -137,14 +145,21 @@ public class InstrumentationTestRunner {
       }
     }
 
-    RemoteAndroidTestRunner runner = new RemoteAndroidTestRunner(
-        this.packageName,
-        this.testRunner,
-        getDevice(deviceSerial)
-    );
-    BuckXmlTestRunListener listener = new BuckXmlTestRunListener();
-    listener.setReportDir(this.outputDirectory);
-    runner.run(listener);
+    try {
+      RemoteAndroidTestRunner runner = new RemoteAndroidTestRunner(
+          this.packageName,
+          this.testRunner,
+          getDevice(deviceSerial)
+      );
+      BuckXmlTestRunListener listener = new BuckXmlTestRunListener();
+      listener.setReportDir(this.outputDirectory);
+      runner.run(listener);
+    } finally {
+      if (this.attemptUninstall) {
+        // Best effort uninstall from the emulator/device.
+        device.uninstallPackage(this.packageName);
+      }
+    }
   }
 
   @Nullable

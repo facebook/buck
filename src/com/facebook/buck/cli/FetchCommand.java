@@ -26,11 +26,11 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.rules.ActionGraphAndResolver;
+import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
-import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
@@ -65,10 +65,6 @@ public class FetchCommand extends BuildCommand {
     }
 
     FetchTargetNodeToBuildRuleTransformer ruleGenerator = createFetchTransformer(params);
-    TargetGraphToActionGraph transformer = new TargetGraphToActionGraph(
-        params.getBuckEventBus(),
-        ruleGenerator);
-
     int exitCode;
     try (CommandThreadManager pool = new CommandThreadManager(
         "Fetch",
@@ -87,8 +83,11 @@ public class FetchCommand extends BuildCommand {
                     params.getBuckConfig(),
                     getArguments()),
                 /* ignoreBuckAutodepsFiles */ false);
-        actionGraphAndResolver = Preconditions.checkNotNull(transformer.apply(
-            result.getTargetGraph()));
+        actionGraphAndResolver = Preconditions.checkNotNull(
+            ActionGraphCache.getFreshActionGraph(
+                params.getBuckEventBus(),
+                ruleGenerator,
+                result.getTargetGraph()));
         buildTargets = ruleGenerator.getDownloadableTargets();
       } catch (BuildTargetException | BuildFileParseException e) {
         params.getBuckEventBus().post(ConsoleEvent.severe(
@@ -108,6 +107,7 @@ public class FetchCommand extends BuildCommand {
               params.getBuckConfig().getDependencySchedulingOrder(),
               params.getBuckConfig().getBuildDepFiles(),
               params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
+              params.getBuckConfig().getBuildArtifactCacheSizeLimit(),
               actionGraphAndResolver.getResolver()),
           params.getArtifactCache(),
           params.getConsole(),

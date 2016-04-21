@@ -1,0 +1,8 @@
+prebuilt_jar(
+  name = 'commons-logging',
+  binary_jar = 'commons-logging-1.2.jar',
+  javadoc_url = 'https://hc.apache.org/httpcomponents-client-ga/',
+  visibility = [
+    'PUBLIC',
+  ],
+)

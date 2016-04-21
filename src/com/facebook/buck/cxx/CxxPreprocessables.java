@@ -206,6 +206,31 @@ public class CxxPreprocessables {
   }
 
   /**
+   * @return The BuildRule corresponding to the exported (public) header symlink
+   * tree for the provided target.
+   */
+  public static HeaderSymlinkTree requireHeaderSymlinkTreeForLibraryTarget(
+      BuildRuleResolver ruleResolver,
+      BuildTarget libraryBuildTarget,
+      Flavor platformFlavor) {
+    BuildRule rule;
+    try {
+      rule = ruleResolver.requireRule(
+          BuildTarget.builder(libraryBuildTarget)
+              .addFlavors(
+                  platformFlavor,
+                  CxxDescriptionEnhancer.getHeaderSymlinkTreeFlavor(HeaderVisibility.PUBLIC))
+              .build());
+    } catch (NoSuchBuildTargetException e) {
+      // This shouldn't happen; if a library rule exists, its header symlink tree rule
+      // should exist.
+      throw new IllegalStateException(e);
+    }
+    Preconditions.checkState(rule instanceof HeaderSymlinkTree);
+    return (HeaderSymlinkTree) rule;
+  }
+
+  /**
    * Builds a {@link CxxPreprocessorInput} for a rule.
    */
   public static CxxPreprocessorInput getCxxPreprocessorInput(

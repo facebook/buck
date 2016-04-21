@@ -107,7 +107,7 @@ public class CompilationDatabaseIntegrationTest {
     Iterable<String> includes = ImmutableList.of(
         pathToPrivateHeaders,
         pathToPublicHeaders,
-        BuckConstant.BUCK_OUTPUT_DIRECTORY);
+        BuckConstant.getBuckOutputDirectory());
 
     // Verify the entries in the compilation database.
     assertFlags(
@@ -189,7 +189,7 @@ public class CompilationDatabaseIntegrationTest {
     Iterable<String> includes = ImmutableList.of(
         pathToPrivateHeaders,
         pathToPublicHeaders,
-        BuckConstant.BUCK_OUTPUT_DIRECTORY);
+        BuckConstant.getBuckOutputDirectory());
 
     assertFlags(
         "Apps/Weather/Weather/EXViewController.m",

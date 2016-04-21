@@ -332,8 +332,9 @@ $ buck targets --resolve-alias app#src_jar
   {param example_value: 'DWARF_AND_DSYM' /}
   {param description}
     <code>default_debug_info_format</code> setting controls the default debug info format. If you
-    don't specify it, <code>DWARF_AND_DSYM</code> value will be used. You can also disable debug
-    data by specifying <code>NONE</code> value.
+    don't specify it, <code>DWARF_AND_DSYM</code> value will be used. You can disable debug
+    data by specifying <code>NONE</code> value. You can produce unstripped binary by specifying
+    <code>DWARF</code> value.
   {/param}
 {/call}
 
@@ -371,6 +372,60 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: '*_package_command' /}
+  {param description}
+    Specify a custom command to run for <code>apple_package()</code> rules. The syntax of this field
+    is similar to the <code>cmd</code> field of {call buck.genrule /}, and supports some expansions:
+
+    <dl>
+        <dt><code>SRCS</code></dt>
+        <dd>
+            Expands to the absolute path of the <code>bundle</code> argument output to the
+            <code>apple_package()</code> rule.
+        </dd>
+        <dt><code>OUT</code></dt>
+        <dd>
+            Expands to the output file for the <code>apple_package()</code> rule. The file specified
+            by this variable must always be written by this command.
+        </dt>
+        <dt><code>SDKROOT</code></dt>
+        <dd>
+            Expands to the SDK root directory for the requested SDK.  For example,
+            <code>/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.2.sdk/</code>.
+        </dd>
+    </dl>
+
+    Note that since strings in the config can be quoted, literal quotes can only be written by
+    quoting the string and use escaped quotes.
+
+    If omitted, this will revert to the built-in behavior.
+
+    When this option is specified, <code>*_package_extension</code> must also be specified.
+  {/param}
+  {param raw_example}
+      {literal}
+      <pre class = "prettyprint lang-ini">
+[apple]
+  iphoneos_package_command = "\"$PLATFORM_DIR/Developer/usr/bin/PackageApplication\" \"$SRCS\" \"$OUT\""
+  iphoneos_package_extension = zip</pre>
+      {/literal}
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: '*_package_extension' /}
+  {param description}
+    Specify the output extension for custom <code>apple_package</code> rules configured with
+    <code>*_package_command</code>.
+
+    This config option must be specified when <code>*_package_command</code> is specified, or both
+    omitted.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'build' /}
   {param description}
@@ -380,7 +435,7 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'build' /}
-  {param name: 'engine_mode' /}
+  {param name: 'engine' /}
   {param example_value: 'shallow' /}
   {param description}
     This has two possible values that change the behavior of how Buck operates when building a{sp}
