@@ -61,12 +61,13 @@
       means that you can refer to these without needing to be aware of how
       Buck is storing data on the disk mid-build.</dd>
 
+      {let $maven_coords}
+        <groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>
+      {/let}
       <dt><code>$(maven_coords /&#x2F;path/to:target)</code></dt>
       <dd>Expands to the Maven coordinates for the build rule. This allows
       you to access the Maven coordinates for Maven-aware build rules. The
-      format of the expansion is: <code>
-      &lt;groupId&gt;:&lt;artifactId&gt;[:&lt;extension&gt;[:&lt;classifier&gt;]]:&lt;version&gt;
-      </code>
+      format of the expansion is: <code>{$maven_coords}</code>
       </dd>
     </dl>
 
