@@ -125,8 +125,9 @@ def main():
         # Set the starting point for this PEX.
         pex_builder.info.entry_point = options.entry_point
 
-        # Copy in our version of `pkg_resources`.
+        # Copy in our version of `pkg_resources` & `_markerlib`.
         copy_package(pex_builder, 'pkg_resources', prefix=pex_builder.BOOTSTRAP_DIR)
+        copy_package(pex_builder, '_markerlib', prefix=pex_builder.BOOTSTRAP_DIR)
 
         # Add the sources listed in the manifest.
         for dst, src in manifest['modules'].iteritems():

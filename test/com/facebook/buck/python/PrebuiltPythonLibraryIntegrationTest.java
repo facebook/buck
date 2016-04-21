@@ -67,8 +67,11 @@ public class PrebuiltPythonLibraryIntegrationTest {
 
   @Test
   public void testRunPexWithEggDependency() throws IOException {
-    ProcessResult results = workspace.runBuckCommand("run", "//:main");
-    results.assertSuccess();
+    ProcessResult eggResults = workspace.runBuckCommand("run", "//:main_egg");
+    eggResults.assertSuccess();
+
+    ProcessResult whlResults = workspace.runBuckCommand("run", "//:main_whl");
+    whlResults.assertSuccess();
   }
 
 }
