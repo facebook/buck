@@ -51,6 +51,9 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 import java.util.Map;
 import java.util.Set;
@@ -227,7 +230,7 @@ public class AppleLibraryDescription implements
 
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
-    BuildRule unstrippedBinaryRule = createUnstrippedBuildRule(
+    BuildRule unstrippedBinaryRule = requireUnstrippedBuildRule(
         params,
         resolver,
         args,
@@ -240,10 +243,20 @@ public class AppleLibraryDescription implements
         return unstrippedBinaryRule;
     }
 
+    // If we built a multiarch binary, we can just use the strip tool from any platform.
+    // We pick the platform in this odd way due to FlavorDomain's restriction of allowing only one
+    // matching flavor in the build target.
+    CxxPlatform representativePlatform =
+        delegate.getCxxPlatforms().getValue(
+            Iterables.getFirst(
+                Sets.intersection(
+                    delegate.getCxxPlatforms().getFlavors(),
+                    params.getBuildTarget().getFlavors()),
+                defaultCxxPlatform.getFlavor()));
     BuildRule strippedBinaryRule = CxxDescriptionEnhancer.createCxxStripRule(
         CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle),
         resolver,
-        delegate.getCxxPlatforms().getValue(params.getBuildTarget()).or(defaultCxxPlatform),
+        representativePlatform.getStrip(),
         flavoredStripStyle.or(StripStyle.NON_GLOBAL_SYMBOLS),
         pathResolver,
         unstrippedBinaryRule);
@@ -259,7 +272,7 @@ public class AppleLibraryDescription implements
         appleCxxPlatformFlavorDomain);
   }
 
-  private <A extends AppleNativeTargetDescriptionArg> BuildRule createUnstrippedBuildRule(
+  private <A extends AppleNativeTargetDescriptionArg> BuildRule requireUnstrippedBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args,
@@ -267,6 +280,48 @@ public class AppleLibraryDescription implements
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
       SourcePathResolver pathResolver) throws NoSuchBuildTargetException {
+    Optional<MultiarchFileInfo> multiarchFileInfo =
+        MultiarchFileInfos.create(appleCxxPlatformFlavorDomain, params.getBuildTarget());
+    if (multiarchFileInfo.isPresent()) {
+      ImmutableSortedSet.Builder<BuildRule> thinRules = ImmutableSortedSet.naturalOrder();
+      for (BuildTarget thinTarget : multiarchFileInfo.get().getThinTargets()) {
+        thinRules.add(
+            requireSingleArchUnstrippedBuildRule(
+                params.copyWithBuildTarget(thinTarget),
+                resolver,
+                args,
+                linkableDepType,
+                bundleLoader,
+                blacklist,
+                pathResolver));
+      }
+      return MultiarchFileInfos.requireMultiarchRule(
+          params,
+          resolver,
+          multiarchFileInfo.get(),
+          thinRules.build());
+    } else {
+      return requireSingleArchUnstrippedBuildRule(
+          params,
+          resolver,
+          args,
+          linkableDepType,
+          bundleLoader,
+          blacklist,
+          pathResolver);
+    }
+  }
+
+  private <A extends AppleNativeTargetDescriptionArg> BuildRule
+  requireSingleArchUnstrippedBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args,
+      Optional<Linker.LinkableDepType> linkableDepType,
+      Optional<SourcePath> bundleLoader,
+      ImmutableSet<BuildTarget> blacklist,
+      SourcePathResolver pathResolver) throws NoSuchBuildTargetException {
+
     CxxLibraryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
     AppleDescriptions.populateCxxLibraryDescriptionArg(
         pathResolver,
@@ -295,8 +350,7 @@ public class AppleLibraryDescription implements
           linkableDepType,
           bundleLoader,
           blacklist);
-      resolver.addToIndex(rule);
-      return rule;
+      return resolver.addToIndex(rule);
     }
   }
 

@@ -36,6 +36,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
@@ -713,7 +714,7 @@ public class CxxDescriptionEnhancer {
       CxxStrip stripRule = createCxxStripRule(
           params,
           resolver,
-          cxxPlatform,
+          cxxPlatform.getStrip(),
           stripStyle.get(),
           sourcePathResolver,
           cxxLink);
@@ -787,7 +788,7 @@ public class CxxDescriptionEnhancer {
   public static CxxStrip createCxxStripRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      CxxPlatform cxxPlatform,
+      Tool stripTool,
       StripStyle stripStyle,
       SourcePathResolver sourcePathResolver,
       BuildRule unstrippedBinaryRule) {
@@ -807,7 +808,7 @@ public class CxxDescriptionEnhancer {
           sourcePathResolver,
           stripStyle,
           new BuildTargetSourcePath(unstrippedBinaryRule.getBuildTarget()),
-          cxxPlatform.getStrip(),
+          stripTool,
           CxxDescriptionEnhancer.getLinkOutputPath(stripRuleParams.getBuildTarget()));
       resolver.addToIndex(cxxStrip);
       return cxxStrip;

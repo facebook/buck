@@ -34,6 +34,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 
 import org.junit.Rule;
@@ -216,6 +217,43 @@ public class AppleLibraryIntegrationTest {
     assertThat(Files.exists(frameworkPath.resolve("Contents/Info.plist")), is(true));
     Path libraryPath = frameworkPath.resolve("Contents/MacOS/TestLibrary");
     assertThat(Files.exists(libraryPath), is(true));
+    assertThat(
+        workspace.runCommand("file", libraryPath.toString()).getStdout().get(),
+        containsString("dynamically linked shared library"));
+  }
+
+  @Test
+  public void appleLibraryBuildsMultiarchFramework() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_builds_something", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64,macosx-i386,no-debug");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path frameworkPath = workspace.getPath(
+        BuildTargets
+            .getGenPath(
+                BuildTarget.builder(target)
+                    .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
+                    .build(),
+                "%s")
+            .resolve("TestLibrary.framework"));
+    Path libraryPath = frameworkPath.resolve("Contents/MacOS/TestLibrary");
+    assertThat(Files.exists(libraryPath), is(true));
+    ProcessExecutor.Result lipoVerifyResult =
+        workspace.runCommand("lipo", libraryPath.toString(), "-verify_arch", "i386", "x86_64");
+    assertEquals(
+        lipoVerifyResult.getStderr().or(""),
+        0,
+        lipoVerifyResult.getExitCode());
     assertThat(
         workspace.runCommand("file", libraryPath.toString()).getStdout().get(),
         containsString("dynamically linked shared library"));
