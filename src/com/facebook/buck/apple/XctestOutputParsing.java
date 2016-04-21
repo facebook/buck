@@ -36,7 +36,7 @@ import javax.annotation.Nullable;
 /**
  * Utility class to parse the output from {@code xctest}.
  */
-public class XctestOutputParsing {
+class XctestOutputParsing {
 
   private static final Logger LOG = Logger.get(XctestOutputParsing.class);
 

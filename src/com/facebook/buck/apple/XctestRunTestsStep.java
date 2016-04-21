@@ -45,7 +45,7 @@ import java.util.Map;
  * The output is written as standard XCTest output to {@code outputPath}
  * and can be parsed by {@link XctestOutputParsing}.
  */
-public class XctestRunTestsStep implements Step {
+class XctestRunTestsStep implements Step {
 
   private static final Logger LOG = Logger.get(XctestRunTestsStep.class);
 

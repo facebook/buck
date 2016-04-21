@@ -27,7 +27,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.SortedSet;
 
-public class ActoolStep extends ShellStep {
+class ActoolStep extends ShellStep {
 
   private final String applePlatformName;
   private final ImmutableMap<String, String> environment;

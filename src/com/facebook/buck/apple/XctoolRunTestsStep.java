@@ -64,7 +64,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * The output is written in streaming JSON format to stdout and is
  * parsed by {@link XctoolOutputParsing}.
  */
-public class XctoolRunTestsStep implements Step {
+class XctoolRunTestsStep implements Step {
 
   private static final Semaphore stutterLock = new Semaphore(1);
   private static final ScheduledExecutorService stutterTimeoutExecutorService =

@@ -30,7 +30,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class RegisterDebugSymbolsStep implements Step {
+class RegisterDebugSymbolsStep implements Step {
 
   private final BuildRule binaryBuildRule;
   private final Tool lldb;

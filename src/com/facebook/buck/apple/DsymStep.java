@@ -38,7 +38,7 @@ import java.util.List;
  * @see <a href="http://wiki.dwarfstd.org/index.php?title=Apple%27s_%22Lazy%22_DWARF_Scheme">
  *   Information on DWARF and DSYM on Macs</a>
  */
-public class DsymStep extends ShellStep {
+class DsymStep extends ShellStep {
 
   private final ProjectFilesystem filesystem;
   private final ImmutableMap<String, String> environment;

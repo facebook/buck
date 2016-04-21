@@ -29,7 +29,7 @@ import java.util.List;
  * {@link ShellStep} implementation which invokes Apple's {@code ibtool}
  * utility to compile {@code XIB} files to {@code NIB} files.
  */
-public class IbtoolStep extends ShellStep {
+class IbtoolStep extends ShellStep {
 
   private final ProjectFilesystem filesystem;
   private final ImmutableMap<String, String> environment;

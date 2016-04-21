@@ -39,7 +39,7 @@ import javax.annotation.Nullable;
 /**
  * Utility class to parse the output from {@code xctool -reporter json-stream}.
  */
-public class XctoolOutputParsing {
+class XctoolOutputParsing {
 
   private static final Logger LOG = Logger.get(XctoolOutputParsing.class);
 

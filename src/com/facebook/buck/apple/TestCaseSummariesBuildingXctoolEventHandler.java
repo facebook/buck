@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * collects {@code xctool} events and converts them to {@link TestCaseSummary} objects,
  * reporting progress to a {@code TestRule.TestReportingCallback}.
  */
-public class TestCaseSummariesBuildingXctoolEventHandler
+class TestCaseSummariesBuildingXctoolEventHandler
     implements XctoolOutputParsing.XctoolEventCallback {
   private final TestRule.TestReportingCallback testReportingCallback;
   private final ImmutableListMultimap.Builder<String, TestResultSummary> testResultSummariesBuilder;

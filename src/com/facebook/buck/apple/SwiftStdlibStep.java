@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * A step that invokes Apple's tool to scan the binary and copy any needed Swift standard libraries.
  */
-public class SwiftStdlibStep implements Step {
+class SwiftStdlibStep implements Step {
 
   private static final Logger LOG = Logger.get(SwiftStdlibStep.class);
 

@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
  *
  * with specified string values.
  */
-public class InfoPlistSubstitution {
+class InfoPlistSubstitution {
 
   // Utility class, do not instantiate.
   private InfoPlistSubstitution() { }

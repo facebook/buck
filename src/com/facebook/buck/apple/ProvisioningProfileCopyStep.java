@@ -43,7 +43,7 @@ import java.nio.file.Path;
  *    with those provided in the {@code .mobileprovision} file and writing out a new temporary
  *    file used for code-signing.
  */
-public class ProvisioningProfileCopyStep implements Step {
+class ProvisioningProfileCopyStep implements Step {
   private static final String KEYCHAIN_ACCESS_GROUPS = "keychain-access-groups";
   private static final String APPLICATION_IDENTIFIER = "application-identifier";
 

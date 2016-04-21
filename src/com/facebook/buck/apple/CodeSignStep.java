@@ -34,7 +34,7 @@ import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Set;
 
-public class CodeSignStep implements Step {
+class CodeSignStep implements Step {
   private final Path workingDirectory;
   private final SourcePathResolver resolver;
   private final Path pathToSign;

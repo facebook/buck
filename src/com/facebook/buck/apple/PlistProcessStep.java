@@ -31,7 +31,7 @@ import java.io.InputStream;
 import java.io.BufferedInputStream;
 import java.nio.file.Path;
 
-public class PlistProcessStep implements Step {
+class PlistProcessStep implements Step {
 
   /** Controls what format the plist is output in. */
   public enum OutputFormat {
