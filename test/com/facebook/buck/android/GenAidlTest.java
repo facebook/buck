@@ -103,7 +103,7 @@ public class GenAidlTest {
     ShellStep aidlStep = (ShellStep) steps.get(2);
     assertEquals(
         "gen_aidl() should use the aidl binary to write .java files.",
-        String.format("(cd %s && %s -b -p%s -I%s -o%s %s)",
+        String.format("(cd %s && %s -p%s -I%s -o%s %s)",
             stubFilesystem.getRootPath(),
             pathToAidlExecutable,
             pathToFrameworkAidl,
