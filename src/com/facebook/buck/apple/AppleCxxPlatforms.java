@@ -126,11 +126,20 @@ public class AppleCxxPlatforms {
     cflagsBuilder.add("-arch", targetArchitecture);
     cflagsBuilder.add(targetSdk.getApplePlatform().getMinVersionFlagPrefix() + minVersion);
 
+    if (targetSdk.getApplePlatform().equals(ApplePlatform.WATCHOS)) {
+      cflagsBuilder.add("-fembed-bitcode");
+    }
+
     // Some flags are common to both asm and C.
     ImmutableList<String> asflags = cflagsBuilder.build();
 
-    ImmutableList<String> ldflags =
-        ImmutableList.copyOf(Linkers.iXlinker("-sdk_version", targetSdk.getVersion(), "-ObjC"));
+    ImmutableList.Builder<String> ldflagsBuilder = ImmutableList.builder();
+    ldflagsBuilder.addAll(Linkers.iXlinker("-sdk_version", targetSdk.getVersion(), "-ObjC"));
+    if (targetSdk.getApplePlatform().equals(ApplePlatform.WATCHOS)) {
+      ldflagsBuilder.addAll(
+          Linkers.iXlinker("-bitcode_verify", "-bitcode_hide_symbols", "-bitcode_symbol_map"));
+    }
+    ImmutableList<String> ldflags = ldflagsBuilder.build();
 
     ImmutableList.Builder<String> versionsBuilder = ImmutableList.builder();
     versionsBuilder.add(targetSdk.getVersion());

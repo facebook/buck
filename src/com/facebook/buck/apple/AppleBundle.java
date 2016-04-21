@@ -519,7 +519,9 @@ public class AppleBundle
   private void copyAnotherCopyOfWatchKitStub(
       ImmutableList.Builder<Step> stepsBuilder,
       Path binaryOutputPath) {
-    if (binary.get() instanceof WriteFile) {
+    if (platformName.contains("watch") &&
+        minOSVersion.equals("2.0") &&
+        binary.get() instanceof WriteFile) {
       final Path watchKitStubDir = bundleRoot.resolve("_WatchKitStub");
       stepsBuilder.add(
           new MkdirStep(getProjectFilesystem(), watchKitStubDir),
@@ -629,6 +631,10 @@ public class AppleBundle
       keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("iPhoneOS")));
     } else if (platformName.contains("iphonesimulator")) {
       keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("iPhoneSimulator")));
+    } else if (platformName.contains("watchos") && !isLegacyWatchApp()) {
+      keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("WatchOS")));
+    } else if (platformName.contains("watchsimulator") && !isLegacyWatchApp()) {
+      keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("WatchSimulator")));
     }
 
     keys.put("DTPlatformName", new NSString(platformName));

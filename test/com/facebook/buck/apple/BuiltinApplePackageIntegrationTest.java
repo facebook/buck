@@ -101,14 +101,35 @@ public class BuiltinApplePackageIntegrationTest {
   }
 
   @Test
-  public void packageHasProperStructureForWatch() throws IOException, InterruptedException {
+  public void packageHasProperStructureForWatch20() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "watch_application_bundle",
         tmp);
     workspace.setUp();
+    workspace.writeContentsToPath("[apple]\n  watchsimulator_target_sdk_version = 2.0",
+        ".buckconfig.local");
+    packageHasProperStructureForWatchHelper(workspace, true);
+  }
 
+  @Test
+  public void packageHasProperStructureForWatch21() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "watch_application_bundle",
+        tmp);
+    workspace.setUp();
+    workspace.writeContentsToPath("[apple]\n  watchsimulator_target_sdk_version = 2.1",
+        ".buckconfig.local");
+    packageHasProperStructureForWatchHelper(workspace, false);
+  }
+
+  private void packageHasProperStructureForWatchHelper(
+      ProjectWorkspace workspace,
+      boolean shouldHaveStubInsideBundle)
+      throws IOException, InterruptedException {
     BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
 
@@ -118,17 +139,19 @@ public class BuiltinApplePackageIntegrationTest {
         destination,
         Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
-    Path stubInsideBundle = destination.resolve(
-        "Payload/DemoApp.app/Watch/DemoWatchApp.app/_WatchKitStub/WK");
     Path stubOutsideBundle = destination.resolve("WatchKitSupport2/WK");
-
-    assertTrue(Files.exists(stubInsideBundle));
     assertTrue(Files.isExecutable(stubOutsideBundle));
     assertTrue(Files.isDirectory(destination.resolve("Symbols")));
     assertTrue(isDirEmpty(destination.resolve("Symbols")));
-    assertEquals(
-        new String(Files.readAllBytes(stubInsideBundle)),
-        new String(Files.readAllBytes(stubOutsideBundle)));
+
+    if (shouldHaveStubInsideBundle) {
+      Path stubInsideBundle = destination.resolve(
+          "Payload/DemoApp.app/Watch/DemoWatchApp.app/_WatchKitStub/WK");
+      assertTrue(Files.exists(stubInsideBundle));
+      assertEquals(
+          new String(Files.readAllBytes(stubInsideBundle)),
+          new String(Files.readAllBytes(stubOutsideBundle)));
+    }
   }
 
   @Test
