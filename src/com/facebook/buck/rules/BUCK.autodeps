@@ -1,11 +1,15 @@
-#@# GENERATED FILE: DO NOT MODIFY bf52ff35146325ea09be3aa844198cd0918e3fca #@#
+#@# GENERATED FILE: DO NOT MODIFY 58e11c876415f767f4fe7b28a44e696ef6581edd #@#
 {
   "action_graph_cache" : {
     "deps" : [
       "//src/com/facebook/buck/graph:graph",
+      "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
+      "//src/com/facebook/buck/rules:rule_key",
+      "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util/concurrent:concurrent",
       "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [

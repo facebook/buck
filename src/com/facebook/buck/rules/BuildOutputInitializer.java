@@ -53,9 +53,6 @@ public class BuildOutputInitializer<T> {
    * @throws IllegalStateException if this method has already been invoked.
    */
   public void setBuildOutput(T buildOutput) throws IllegalStateException {
-    Preconditions.checkState(this.buildOutput == null,
-        "buildOutput should not already be set for %s",
-        buildTarget);
     this.buildOutput = buildOutput;
   }
 

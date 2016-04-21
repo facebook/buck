@@ -35,6 +35,7 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -53,6 +54,8 @@ public class ActionGraphCacheTest {
 
   private static final int CACHE_HIT_COUNTER_INDEX = 0;
   private static final int CACHE_MISS_COUNTER_INDEX = 1;
+  private static final boolean CHECK_GRAPHS = true;
+  private static final boolean NOT_CHECK_GRAPHS = false;
 
   private TargetNode<?> nodeA;
   private TargetNode<?> nodeB;
@@ -81,22 +84,20 @@ public class ActionGraphCacheTest {
   }
 
   @Test
-  public void hitOnCache() {
-    ActionGraphCache cache = new ActionGraphCache();
+  public void hitOnCache() throws InterruptedException {
+    ActionGraphCache cache = new ActionGraphCache(MoreExecutors.newDirectExecutorService());
 
-    ActionGraphAndResolver resultRun1 = cache.getActionGraph(eventBus, targetGraph);
+    ActionGraphAndResolver resultRun1 = cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph);
     // The 1st time you query the ActionGraph it's a cache miss.
     ImmutableList<Counter> counters = cache.getCounters();
     assertEquals(((IntegerCounter) counters.get(CACHE_HIT_COUNTER_INDEX)).get(), 0);
     assertEquals(((IntegerCounter) counters.get(CACHE_MISS_COUNTER_INDEX)).get(), 1);
 
-
-    ActionGraphAndResolver resultRun2 = cache.getActionGraph(eventBus, targetGraph);
+    ActionGraphAndResolver resultRun2 = cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph);
     // The 2nd time it should be a cache hit and the ActionGraphs should be exactly the same.
     counters = cache.getCounters();
     assertEquals(((IntegerCounter) counters.get(CACHE_HIT_COUNTER_INDEX)).get(), 1);
     assertEquals(((IntegerCounter) counters.get(CACHE_MISS_COUNTER_INDEX)).get(), 1);
-
 
     // Check all the RuleKeys are the same between the 2 ActionGraphs.
     Map<BuildRule, RuleKey> resultRun1RuleKeys = getRuleKeysFromBuildRules(
@@ -113,7 +114,7 @@ public class ActionGraphCacheTest {
   public void missOnCache() {
     ActionGraphCache cache = new ActionGraphCache();
 
-    ActionGraphAndResolver resultRun1 = cache.getActionGraph(eventBus, targetGraph);
+    ActionGraphAndResolver resultRun1 = cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph);
     // Each time you call it for a different TargetGraph so all calls should be misses.
     ImmutableList<Counter> counters = cache.getCounters();
     assertEquals(((IntegerCounter) counters.get(CACHE_HIT_COUNTER_INDEX)).get(), 0);
@@ -121,13 +122,14 @@ public class ActionGraphCacheTest {
 
     ActionGraphAndResolver resultRun2 = cache.getActionGraph(
         eventBus,
+        CHECK_GRAPHS,
         targetGraph.getSubgraph(ImmutableSet.of(nodeB)));
 
     counters = cache.getCounters();
     assertEquals(((IntegerCounter) counters.get(CACHE_HIT_COUNTER_INDEX)).get(), 0);
     assertEquals(((IntegerCounter) counters.get(CACHE_MISS_COUNTER_INDEX)).get(), 2);
 
-    ActionGraphAndResolver resultRun3 = cache.getActionGraph(eventBus, targetGraph);
+    ActionGraphAndResolver resultRun3 = cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph);
     counters = cache.getCounters();
     assertEquals(((IntegerCounter) counters.get(CACHE_HIT_COUNTER_INDEX)).get(), 0);
     assertEquals(((IntegerCounter) counters.get(CACHE_MISS_COUNTER_INDEX)).get(), 3);
@@ -175,35 +177,35 @@ public class ActionGraphCacheTest {
 
   @Test
   public void cacheInvalidationBasedOnEvents() throws IOException, InterruptedException {
-    ActionGraphCache cache = new ActionGraphCache();
+    ActionGraphCache cache = new ActionGraphCache(MoreExecutors.newDirectExecutorService());
     Path file = tmpFilePath.newFile("foo.txt");
 
     // Fill the cache. An overflow event should invalidate the cache.
-    cache.getActionGraph(eventBus, targetGraph);
+    cache.getActionGraph(eventBus, NOT_CHECK_GRAPHS, targetGraph);
     assertFalse(cache.isEmpty());
     cache.invalidateBasedOn(WatchEventsForTests.createOverflowEvent());
     assertTrue(cache.isEmpty());
 
     // Fill the cache. Add a file and ActionGraphCache should be invalidated.
-    cache.getActionGraph(eventBus, targetGraph);
+    cache.getActionGraph(eventBus, NOT_CHECK_GRAPHS, targetGraph);
     assertFalse(cache.isEmpty());
     cache.invalidateBasedOn(
         WatchEventsForTests.createPathEvent(file, StandardWatchEventKinds.ENTRY_CREATE));
     assertTrue(cache.isEmpty());
 
     //Re-fill cache. Remove a file and ActionGraphCache should be invalidated.
-    cache.getActionGraph(eventBus, targetGraph);
+    cache.getActionGraph(eventBus, NOT_CHECK_GRAPHS, targetGraph);
     assertFalse(cache.isEmpty());
     cache.invalidateBasedOn(
         WatchEventsForTests.createPathEvent(file, StandardWatchEventKinds.ENTRY_DELETE));
     assertTrue(cache.isEmpty());
 
     // Re-fill cache. Modify contents of a file, ActionGraphCache should NOT be invalidated.
-    cache.getActionGraph(eventBus, targetGraph);
+    cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph);
     assertFalse(cache.isEmpty());
     cache.invalidateBasedOn(
         WatchEventsForTests.createPathEvent(file, StandardWatchEventKinds.ENTRY_MODIFY));
-    cache.getActionGraph(eventBus, targetGraph);
+    cache.getActionGraph(eventBus, NOT_CHECK_GRAPHS, targetGraph);
     assertFalse(cache.isEmpty());
 
     // We should have 4 cache misses and 1 hit from when you request the same graph after a file

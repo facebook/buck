@@ -601,7 +601,15 @@ public class BuckConfig {
       return Optional.of(SampleRate.of(sampleRate.get()));
     }
     return Optional.absent();
- }
+  }
+
+  public SampleRate getActionGraphCacheCheckSampleRate() {
+    Optional<Float> sampleRate = config.getFloat("cache", "action_graph_cache_check_rate");
+    if (sampleRate.isPresent()) {
+      return SampleRate.of(sampleRate.get());
+    }
+    return SampleRate.of(0.75f);
+  }
 
   public boolean hasUserDefinedValue(String sectionName, String propertyName) {
     return config.get(sectionName).containsKey(propertyName);

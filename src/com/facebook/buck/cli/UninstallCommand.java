@@ -120,6 +120,9 @@ public class UninstallCommand extends AbstractCommand {
       resolver = Preconditions.checkNotNull(
           params.getActionGraphCache().getActionGraph(
               params.getBuckEventBus(),
+              BuildIdSampler.apply(
+                  params.getBuckConfig().getActionGraphCacheCheckSampleRate(),
+                  params.getBuckEventBus().getBuildId()),
               result.getTargetGraph())
           ).getResolver();
     } catch (BuildTargetException | BuildFileParseException e) {

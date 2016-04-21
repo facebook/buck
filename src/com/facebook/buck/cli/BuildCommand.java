@@ -400,6 +400,9 @@ public class BuildCommand extends AbstractCommand {
       actionGraphAndResolver = Preconditions.checkNotNull(
           params.getActionGraphCache().getActionGraph(
               params.getBuckEventBus(),
+              BuildIdSampler.apply(
+                  params.getBuckConfig().getActionGraphCacheCheckSampleRate(),
+                  params.getBuckEventBus().getBuildId()),
               result.getTargetGraph()));
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
