@@ -1,15 +1,18 @@
-#@# GENERATED FILE: DO NOT MODIFY b50ed68c769016fad8f3d9c94e2420c082b47f21 #@#
+#@# GENERATED FILE: DO NOT MODIFY af23d94a5cdf107dd8a022f7b6ef53aea8ccf4c1 #@#
 {
   "keys" : {
     "deps" : [
-      "//src/com/facebook/buck/log:api"
+      "//src/com/facebook/buck/log:api",
+      "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/util/cache:cache",
+      "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
+      "//third-party/java/jackson:jackson-databind",
       "//third-party/java/jsr:jsr305"
     ]
   }

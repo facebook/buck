@@ -50,6 +50,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.AbiRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -80,6 +81,7 @@ import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipConstants;
 import com.facebook.buck.zip.ZipOutputStreams;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -246,6 +248,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              ObjectMappers.newDefaultInstance(),
               resolver);
 
       // Add a build step so we can verify that the steps are executed.
@@ -342,6 +345,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              ObjectMappers.newDefaultInstance(),
               resolver);
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
 
@@ -424,6 +428,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              ObjectMappers.newDefaultInstance(),
               resolver);
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
       buckEventBus.post(
@@ -506,6 +511,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              ObjectMappers.newDefaultInstance(),
               resolver);
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
       buckEventBus.post(
@@ -562,6 +568,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              ObjectMappers.newDefaultInstance(),
               resolver);
 
       // Run the build.
@@ -639,6 +646,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              ObjectMappers.newDefaultInstance(),
               resolver);
 
       // Run the build.
@@ -748,6 +756,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              ObjectMappers.newDefaultInstance(),
               resolver);
 
       // Run the build.
@@ -844,6 +853,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              ObjectMappers.newDefaultInstance(),
               resolver);
 
       // Run the build.
@@ -885,6 +895,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              ObjectMappers.newDefaultInstance(),
               resolver);
 
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -920,6 +931,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              ObjectMappers.newDefaultInstance(),
               resolver);
 
       // Run the build.
@@ -996,6 +1008,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              ObjectMappers.newDefaultInstance(),
               resolver);
 
       // Run the build.
@@ -1090,6 +1103,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              ObjectMappers.newDefaultInstance(),
               resolver);
 
       // Run the build.
@@ -1148,6 +1162,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              ObjectMappers.newDefaultInstance(),
               resolver);
 
       assertThat(
@@ -1179,6 +1194,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.of(2L),
+              ObjectMappers.newDefaultInstance(),
               resolver);
 
       // Verify that after building successfully, nothing is cached.
@@ -1472,7 +1488,9 @@ public class CachingBuildEngineTest {
       CachingBuildEngine cachingBuildEngine = engineWithDepFileFactory(depFileFactory);
 
       // Run the build.
-      RuleKey depFileRuleKey = depFileFactory.build(rule, ImmutableList.of(input));
+      RuleKey depFileRuleKey = depFileFactory.build(
+          rule,
+          ImmutableList.of(DependencyFileEntry.of(input, Optional.<Path>absent())));
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, getSuccess(result));
 
@@ -1483,7 +1501,7 @@ public class CachingBuildEngineTest {
           equalTo(Optional.of(depFileRuleKey)));
       assertThat(
           onDiskBuildInfo.getValues(BuildInfo.METADATA_KEY_FOR_DEP_FILE),
-          equalTo(Optional.of(ImmutableList.of(input.toString()))));
+          equalTo(Optional.of(ImmutableList.of(fileToDepFileEntryString(input)))));
 
       // Verify that the dep file rule key and dep file were written to the cached artifact.
       Path fetchedArtifact = tmp.newFile("fetched_artifact.zip").toPath();
@@ -1499,7 +1517,7 @@ public class CachingBuildEngineTest {
       inspector.assertFileContents(
           BuildInfo.getPathToMetadataDirectory(target)
               .resolve(BuildInfo.METADATA_KEY_FOR_DEP_FILE),
-          MAPPER.writeValueAsString(ImmutableList.of(input.toString())));
+          MAPPER.writeValueAsString(ImmutableList.of(fileToDepFileEntryString(input))));
     }
 
     @Test
@@ -1553,7 +1571,7 @@ public class CachingBuildEngineTest {
           BuildInfo.getPathToMetadataDirectory(target)
               .resolve(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY));
       filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of(input.toString())),
+          MAPPER.writeValueAsString(ImmutableList.of(fileToDepFileEntryString(input))),
           BuildInfo.getPathToMetadataDirectory(target)
               .resolve(BuildInfo.METADATA_KEY_FOR_DEP_FILE));
 
@@ -1594,7 +1612,7 @@ public class CachingBuildEngineTest {
                 BuildableContext buildableContext) {
               buildableContext.addMetadata(
                   BuildInfo.METADATA_KEY_FOR_DEP_FILE,
-                  ImmutableList.of(input.toString()));
+                  ImmutableList.of(fileToDepFileEntryString(input)));
               return ImmutableList.<Step>of(
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
@@ -1610,7 +1628,9 @@ public class CachingBuildEngineTest {
 
       // Prepare an input file that should appear in the dep file.
       filesystem.writeContentsToPath("something", input);
-      RuleKey depFileRuleKey = depFileFactory.build(rule, ImmutableList.of(input));
+      RuleKey depFileRuleKey = depFileFactory.build(
+          rule,
+          ImmutableList.of(DependencyFileEntry.of(input, Optional.<Path>absent())));
 
       // Prepopulate the dep file rule key and dep file.
       filesystem.writeContentsToPath(
@@ -1618,7 +1638,7 @@ public class CachingBuildEngineTest {
           BuildInfo.getPathToMetadataDirectory(target)
               .resolve(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY));
       filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of(input.toString())),
+          MAPPER.writeValueAsString(ImmutableList.of(fileToDepFileEntryString(input))),
           BuildInfo.getPathToMetadataDirectory(target)
               .resolve(BuildInfo.METADATA_KEY_FOR_DEP_FILE));
 
@@ -1664,7 +1684,7 @@ public class CachingBuildEngineTest {
                 BuildableContext buildableContext) {
               buildableContext.addMetadata(
                   BuildInfo.METADATA_KEY_FOR_DEP_FILE,
-                  ImmutableList.of(input.toString()));
+                  ImmutableList.of(fileToDepFileEntryString(input)));
               return ImmutableList.<Step>of(
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
@@ -1680,7 +1700,9 @@ public class CachingBuildEngineTest {
 
       // Prepare an input file that should appear in the dep file.
       filesystem.writeContentsToPath("something", input);
-      RuleKey depFileRuleKey = depFileFactory.build(rule, ImmutableList.of(input));
+      RuleKey depFileRuleKey = depFileFactory.build(
+          rule,
+          ImmutableList.of(DependencyFileEntry.of(input, Optional.<Path>absent())));
 
       // Prepopulate the dep file rule key and dep file.
       filesystem.writeContentsToPath(
@@ -1688,7 +1710,7 @@ public class CachingBuildEngineTest {
           BuildInfo.getPathToMetadataDirectory(target)
               .resolve(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY));
       filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of(input.toString())),
+          MAPPER.writeValueAsString(ImmutableList.of(fileToDepFileEntryString(input))),
           BuildInfo.getPathToMetadataDirectory(target)
               .resolve(BuildInfo.METADATA_KEY_FOR_DEP_FILE));
 
@@ -2790,6 +2812,16 @@ public class CachingBuildEngineTest {
         return result.getSuccess();
       default:
         throw new IllegalStateException();
+    }
+  }
+
+  private static String fileToDepFileEntryString(Path file) {
+    DependencyFileEntry entry = DependencyFileEntry.of(file, Optional.<Path>absent());
+
+    try {
+      return MAPPER.writeValueAsString(entry);
+    } catch (JsonProcessingException e) {
+      throw new AssertionError(e);
     }
   }
 

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 1f458485046cb49c23118bf2f24803c75bc6d4d2 #@#
+#@# GENERATED FILE: DO NOT MODIFY 46772ec456356c2c7df969ce3e5ebec65228758c #@#
 {
   "constants" : {
     "deps" : [
@@ -55,12 +55,14 @@
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/zip:unzip",
-      "//third-party/java/aosp:aosp"
+      "//third-party/java/aosp:aosp",
+      "//third-party/java/jackson:jackson-core"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/util:io",
       "//third-party/java/guava:guava",
+      "//third-party/java/jackson:jackson-databind",
       "//third-party/java/jsr:jsr305"
     ]
   },

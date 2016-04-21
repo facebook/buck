@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 public interface DependencyFileRuleKeyBuilderFactory {
 
@@ -32,7 +31,7 @@ public interface DependencyFileRuleKeyBuilderFactory {
    * @return a {@link RuleKey} for the given {@link BuildRule} using the given list of explicit
    *     {@code inputs}.
    */
-  RuleKey build(BuildRule rule, ImmutableList<Path> inputs) throws IOException;
+  RuleKey build(BuildRule rule, ImmutableList<DependencyFileEntry> inputs) throws IOException;
 
   /**
    * @return the {@link RuleKey} used to index the manifest database and the universe of inputs

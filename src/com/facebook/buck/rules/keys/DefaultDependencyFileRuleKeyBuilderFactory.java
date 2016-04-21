@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
 
 /**
  * A variant of {@link InputBasedRuleKeyBuilderFactory} which ignores inputs when calculating the
@@ -51,31 +50,34 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
   }
 
   @Override
-  public RuleKey build(BuildRule rule, ImmutableList<Path> inputs) throws IOException {
+  public RuleKey build(
+      BuildRule rule,
+      ImmutableList<DependencyFileEntry> inputs) throws IOException {
 
     // Create a builder which records all `SourcePath`s which are possibly used by the rule.
     Builder builder = newInstance(rule);
 
-    // Use a multi-map to gather up all the `SourcePath`s that have relative paths that are
+    // Use a multi-map to gather up all the `SourcePath`s that have relative URIs that are
     // referenced in the input list, as it's possible for multiple `SourcePath`s to have the
-    // same relative path (but come from different cells).
-    ImmutableSet<Path> inputSet = ImmutableSet.copyOf(inputs);
-    ImmutableMultimap.Builder<Path, SourcePath> relativePathToSourcePathsBuilder =
+    // same relative URI (but come from different cells).
+    ImmutableSet<DependencyFileEntry> inputSet = ImmutableSet.copyOf(inputs);
+
+    ImmutableMultimap.Builder<DependencyFileEntry, SourcePath> entryToSourcePathsBuilder =
         ImmutableMultimap.builder();
     for (SourcePath input : builder.getInputsSoFar()) {
-      Path relativePath = pathResolver.getRelativePath(input);
-      if (inputSet.contains(relativePath)) {
-        relativePathToSourcePathsBuilder.put(relativePath, input);
+      DependencyFileEntry entry = DependencyFileEntry.fromSourcePath(input, pathResolver);
+      if (inputSet.contains(entry)) {
+        entryToSourcePathsBuilder.put(entry, input);
       }
     }
-    final ImmutableMultimap<Path, SourcePath> relativePathToSourcePaths =
-        relativePathToSourcePathsBuilder.build();
+    final ImmutableMultimap<DependencyFileEntry, SourcePath> entryToSourcePaths =
+        entryToSourcePathsBuilder.build();
 
     // Now add the actual given inputs to the rule key using all possible `SourcePath`s they map to.
     // It's important that we do this by walking the `inputs` list, so that we maintain the original
     // ordering the duplicate handling.
-    for (Path input : inputs) {
-      ImmutableCollection<SourcePath> sourcePaths = relativePathToSourcePaths.get(input);
+    for (DependencyFileEntry input : inputs) {
+      ImmutableCollection<SourcePath> sourcePaths = entryToSourcePaths.get(input);
 
       // If we don't find actual inputs in the rule that correspond to this input, this likely means
       // that the rule changed to no longer use the input.  In this case, we need to throw a

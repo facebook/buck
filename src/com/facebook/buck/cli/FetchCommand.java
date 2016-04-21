@@ -108,6 +108,7 @@ public class FetchCommand extends BuildCommand {
               params.getBuckConfig().getBuildDepFiles(),
               params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
               params.getBuckConfig().getBuildArtifactCacheSizeLimit(),
+              params.getObjectMapper(),
               actionGraphAndResolver.getResolver()),
           params.getArtifactCache(),
           params.getConsole(),

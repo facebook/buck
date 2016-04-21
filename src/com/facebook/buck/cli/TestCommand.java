@@ -472,6 +472,7 @@ public class TestCommand extends BuildCommand {
               params.getBuckConfig().getBuildDepFiles(),
               params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
               params.getBuckConfig().getBuildArtifactCacheSizeLimit(),
+              params.getObjectMapper(),
               actionGraphAndResolver.getResolver());
       try (Build build = createBuild(
           params.getBuckConfig(),

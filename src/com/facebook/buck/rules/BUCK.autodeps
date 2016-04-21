@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 58e11c876415f767f4fe7b28a44e696ef6581edd #@#
+#@# GENERATED FILE: DO NOT MODIFY a78c1cdb41c0d1f90fa6de3f36e20c27ceb8047c #@#
 {
   "action_graph_cache" : {
     "deps" : [
@@ -84,6 +84,7 @@
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/zip:unzip",
       "//third-party/java/immutables:processor",
@@ -107,6 +108,7 @@
       "//third-party/java/guava:guava",
       "//third-party/java/infer-annotations:infer-annotations",
       "//third-party/java/jackson:jackson-annotations",
+      "//third-party/java/jackson:jackson-databind",
       "//third-party/java/jsr:jsr305"
     ]
   },

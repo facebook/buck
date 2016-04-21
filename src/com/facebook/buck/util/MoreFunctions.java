@@ -16,7 +16,13 @@
 
 package com.facebook.buck.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
+
+import java.io.IOException;
+
+import javax.annotation.Nullable;
 
 public abstract class MoreFunctions {
 
@@ -31,6 +37,36 @@ public abstract class MoreFunctions {
       @Override
       public V apply(Function<A, V> input) {
         return input.apply(arg);
+      }
+    };
+  }
+
+  public static final <T> Function<T, String> toJsonFunction(final ObjectMapper mapper) {
+    return new Function<T, String>() {
+      @Nullable
+      @Override
+      public String apply(@Nullable T input) {
+        try {
+          return mapper.writeValueAsString(input);
+        } catch (JsonProcessingException e) {
+          throw new HumanReadableException(e, "Failed to serialize to json: " + input);
+        }
+      }
+    };
+  }
+
+  public static final <T> Function<String, T> fromJsonFunction(
+      final ObjectMapper mapper,
+      final Class<T> type) {
+    return new Function<String, T>() {
+      @Nullable
+      @Override
+      public T apply(@Nullable String input) {
+        try {
+          return mapper.readValue(input, type);
+        } catch (IOException e) {
+          throw new HumanReadableException(e, "Failed to read from json: " + input);
+        }
       }
     };
   }

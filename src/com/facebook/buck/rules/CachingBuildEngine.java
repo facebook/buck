@@ -26,7 +26,6 @@ import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -35,6 +34,7 @@ import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.keys.AbiRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
@@ -44,12 +44,15 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreFunctions;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.zip.Unzip;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -134,6 +137,7 @@ public class CachingBuildEngine implements BuildEngine {
   private final DependencySchedulingOrder dependencySchedulingOrder;
   private final DepFiles depFiles;
   private final long maxDepFileCacheEntries;
+  private final ObjectMapper objectMapper;
   private final SourcePathResolver pathResolver;
   private final Optional<Long> artifactCacheSizeLimit;
   private final LoadingCache<ProjectFilesystem, FileHashCache> fileHashCaches;
@@ -147,6 +151,7 @@ public class CachingBuildEngine implements BuildEngine {
       DepFiles depFiles,
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
+      ObjectMapper objectMapper,
       final BuildRuleResolver resolver) {
     this.ruleDeps = new RuleDepsCache(service);
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, service);
@@ -157,6 +162,7 @@ public class CachingBuildEngine implements BuildEngine {
     this.depFiles = depFiles;
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
+    this.objectMapper = objectMapper;
     this.pathResolver = new SourcePathResolver(resolver);
 
     this.fileHashCaches = createFileHashCacheLoader(fileHashCache);
@@ -192,6 +198,7 @@ public class CachingBuildEngine implements BuildEngine {
     this.depFiles = depFiles;
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
+    this.objectMapper = ObjectMappers.newDefaultInstance();
     this.pathResolver = pathResolver;
 
     this.fileHashCaches = createFileHashCacheLoader(fileHashCache);
@@ -650,11 +657,11 @@ public class CachingBuildEngine implements BuildEngine {
               // Record the inputs into our metadata for next time.
               //
               // TODO(#9117006): We don't support a way to serlialize `SourcePath`s to the cache,
-              // so need to use relative paths instead and recover them on deserialization.
+              // so need to use DependencyFileEntry's instead and recover them on deserialization.
               ImmutableList<String> inputStrings =
                   FluentIterable.from(inputs)
-                      .transform(pathResolver.getRelativePathFunction())
-                      .transform(Functions.toStringFunction())
+                      .transform(DependencyFileEntry.fromSourcePathFunction(pathResolver))
+                      .transform(MoreFunctions.toJsonFunction(objectMapper))
                       .toList();
               buildInfoRecorder.addMetadata(
                   BuildInfo.METADATA_KEY_FOR_DEP_FILE,
@@ -1277,8 +1284,11 @@ public class CachingBuildEngine implements BuildEngine {
 
     // Build the dep-file rule key.  If any inputs are no longer on disk, this means something
     // changed and a dep-file based rule key can't be calculated.
-    ImmutableList<Path> inputs =
-        FluentIterable.from(depFile.get()).transform(MorePaths.TO_PATH).toList();
+
+    ImmutableList<DependencyFileEntry> inputs =
+        FluentIterable.from(depFile.get()).transform(MoreFunctions.fromJsonFunction(
+            objectMapper,
+            DependencyFileEntry.class)).toList();
     try {
       return Optional.of(
           this.ruleKeyFactories.getUnchecked(rule.getProjectFilesystem())
