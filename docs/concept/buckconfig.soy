@@ -858,7 +858,7 @@ $ buck targets --resolve-alias app#src_jar
     This section configures credentials to be used when fetching from
     authenticated Maven repositories via HTTPS.
     <p>
-    For a repository <code>repo</code> appearing in
+    For a repository <code>repo</code> appearing in{sp}
     {call buckconfig.maven_repositories /}, Buck reads the values of
     {sp}<code>repo_user</code> and <code>repo_pass</code> in this section
     (if present), and passes them to the server using {sp}
@@ -1663,6 +1663,15 @@ int run_starter(
 </pre>{/literal}
   {/param}
 {/call}
+
+<p>
+Note that if you using Buck to talk to Maven and you are using IPv6, you
+might need to <a href="./buckjavaargs.html">add the following option to
+your <code>.buckjavaargs</code> file</a>:
+</p>
+
+{literal}<pre>
+-Djava.net.preferIPv6Addresses=true</pre>{/literal}
 
 {call buckconfig.section}
   {param name: 'ndk' /}

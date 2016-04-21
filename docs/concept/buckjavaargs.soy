@@ -12,20 +12,32 @@
 
 <div class="{css overview}">
 
+<p>
 The root of your project may contain a configuration file named <code>.buckjavaargs</code>. If
 present, Buck will read this file and append any flags specified in it when launching its java
 process. Note the flags are only used when launching the main Buck java process, and not any other
 java tools Buck will invoke.  The content of this file is split into individual arguments
 according to the rules of Python's <code>shlex.split</code>.  On POSIX systems, Bourne shell
 quoting rules apply.
+</p>
 
 <p>
+Here are some examples of why you would want to use <code>.buckjavaargs</code>.
+</p>
 
-For example, to specify a larger heap size:
+<p>
+To specify a larger heap size:
+</p>
 
 {literal}<pre>
 -Xmx2g</pre>{/literal}
 
+<p>
+To ensure you can talk to the Maven Central Repo on a machine that uses IPv6:
+</p>
+
+{literal}<pre>
+-Djava.net.preferIPv6Addresses=true</pre>{/literal}
 
 </div> // close overview
 
