@@ -20,6 +20,7 @@ import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -45,6 +46,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -72,6 +75,9 @@ public class CxxLibrary
   private final Optional<String> soname;
   private final ImmutableSortedSet<BuildTarget> tests;
   private final boolean canBeAsset;
+
+  private final Map<Pair<Flavor, Linker.LinkableDepType>, NativeLinkableInput> nativeLinkableCache =
+      new HashMap<>();
 
   private final LoadingCache<
           CxxPreprocessables.CxxPreprocessorInputCacheKey,
@@ -189,8 +195,7 @@ public class CxxLibrary
         .filter(NativeLinkable.class);
   }
 
-  @Override
-  public NativeLinkableInput getNativeLinkableInput(
+  public NativeLinkableInput getNativeLinkableInputUncached(
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) throws NoSuchBuildTargetException {
 
@@ -233,6 +238,20 @@ public class CxxLibrary
         linkerArgs,
         Preconditions.checkNotNull(frameworks),
         Preconditions.checkNotNull(libraries));
+  }
+
+  @Override
+  public NativeLinkableInput getNativeLinkableInput(
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType type)
+      throws NoSuchBuildTargetException {
+    Pair<Flavor, Linker.LinkableDepType> key = new Pair<>(cxxPlatform.getFlavor(), type);
+    NativeLinkableInput input = nativeLinkableCache.get(key);
+    if (input == null) {
+      input = getNativeLinkableInputUncached(cxxPlatform, type);
+      nativeLinkableCache.put(key, input);
+    }
+    return input;
   }
 
   public BuildRule requireBuildRule(Flavor... flavors) throws NoSuchBuildTargetException {

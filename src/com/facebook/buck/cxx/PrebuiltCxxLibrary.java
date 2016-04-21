@@ -19,6 +19,8 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -44,6 +46,9 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class PrebuiltCxxLibrary
     extends NoopBuildRule
     implements AbstractCxxLibrary, CanProvideSharedNativeLinkTarget {
@@ -65,6 +70,8 @@ public class PrebuiltCxxLibrary
   private final boolean linkWhole;
   private final boolean provided;
 
+  private final Map<Pair<Flavor, Linker.LinkableDepType>, NativeLinkableInput> nativeLinkableCache =
+      new HashMap<>();
 
   private final LoadingCache<
           CxxPreprocessables.CxxPreprocessorInputCacheKey,
@@ -274,8 +281,7 @@ public class PrebuiltCxxLibrary
     return exportedDeps;
   }
 
-  @Override
-  public NativeLinkableInput getNativeLinkableInput(
+  public NativeLinkableInput getNativeLinkableInputUncached(
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) throws NoSuchBuildTargetException {
     // Build the library path and linker arguments that we pass through the
@@ -330,6 +336,20 @@ public class PrebuiltCxxLibrary
         linkerArgs,
         ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
+  }
+
+  @Override
+  public NativeLinkableInput getNativeLinkableInput(
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType type)
+      throws NoSuchBuildTargetException {
+    Pair<Flavor, Linker.LinkableDepType> key = new Pair<>(cxxPlatform.getFlavor(), type);
+    NativeLinkableInput input = nativeLinkableCache.get(key);
+    if (input == null) {
+      input = getNativeLinkableInputUncached(cxxPlatform, type);
+      nativeLinkableCache.put(key, input);
+    }
+    return input;
   }
 
   @Override
