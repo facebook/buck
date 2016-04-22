@@ -4,3 +4,8 @@ apple_binary(
   deps=['//lib:lib'],
   visibility=['PUBLIC'],
 )
+
+genrule(
+  name='genrule',
+  out='out'
+)

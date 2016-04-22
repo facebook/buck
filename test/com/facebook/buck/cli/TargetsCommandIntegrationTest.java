@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import org.hamcrest.MatcherAssert;
@@ -128,8 +129,6 @@ public class TargetsCommandIntegrationTest {
 
   @Test
   public void testOutputWithoutTarget() throws IOException {
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage("Must specify at least one build target.");
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "output_path", tmp);
     workspace.setUp();
@@ -137,13 +136,15 @@ public class TargetsCommandIntegrationTest {
     ProcessResult result = workspace.runBuckCommand(
         "targets",
         "--show-output");
-    result.assertFailure();
+    result.assertSuccess();
+    assertEquals(
+        "//:another-test buck-out/gen/another-test/test-output\n" +
+            "//:test buck-out/gen/test/test-output\n",
+        result.getStdout());
   }
 
   @Test
   public void testRuleKeyWithoutTarget() throws IOException {
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage("Must specify at least one build target.");
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "output_path", tmp);
     workspace.setUp();
@@ -151,18 +152,26 @@ public class TargetsCommandIntegrationTest {
     ProcessResult result = workspace.runBuckCommand(
         "targets",
         "--show-rulekey");
-    result.assertFailure();
+    result.assertSuccess();
+    assertEquals(
+        "//:another-test 9837c730735a095e73fde946172bca84a228cb6d\n" +
+            "//:test 12c109cdbab186fbb8fdd785853d8bcb4538aed2\n",
+        result.getStdout());
   }
 
-  private void parseAndVerifyTargetsAndHashes(String outputLine, String... targets) {
+  private ImmutableList<String> parseAndVerifyTargetsAndHashes(
+      String outputLine,
+      String... targets) {
     List<String> lines = Splitter.on('\n').splitToList(
         CharMatcher.whitespace().trimFrom(outputLine));
     assertEquals(targets.length, lines.size());
+    ImmutableList.Builder<String> hashes = ImmutableList.builder();
     for (int i = 0; i < targets.length; ++i) {
       String line = lines.get(i);
       String target = targets[i];
-      parseAndVerifyTargetAndHash(line, target);
+      hashes.add(parseAndVerifyTargetAndHash(line, target));
     }
+    return hashes.build();
   }
 
   private String parseAndVerifyTargetAndHash(String outputLine, String target) {
@@ -173,6 +182,56 @@ public class TargetsCommandIntegrationTest {
     assertFalse(targetAndHash.get(1).isEmpty());
     assertTrue(LOWER_CASE_HEX_DIGITS.matchesAllOf(targetAndHash.get(1)));
     return targetAndHash.get(1);
+  }
+
+  @Test
+  public void testTargetHashWithoutTarget() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "output_path", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "targets",
+        "--show-target-hash");
+    result.assertSuccess();
+    parseAndVerifyTargetsAndHashes(
+        result.getStdout(),
+        "//:another-test",
+        "//:test");
+  }
+
+  @Test
+  public void testRuleKeyWithReferencedFiles() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "java_library_with_tests", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "targets",
+        "--show-rulekey",
+        "--referenced-file",
+        "Test.java");
+    result.assertSuccess();
+    parseAndVerifyTargetAndHash(result.getStdout(), "//:test");
+  }
+
+  @Test
+  public void testRuleKeyWithReferencedFilesAndDetectTestChanges() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "java_library_with_tests", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "targets",
+        "--show-rulekey",
+        "--detect-test-changes",
+        "--referenced-file",
+        "Test.java");
+    result.assertSuccess();
+    parseAndVerifyTargetsAndHashes(
+        result.getStdout(),
+        "//:lib",
+        "//:test");
   }
 
   @Test
@@ -240,6 +299,41 @@ public class TargetsCommandIntegrationTest {
   }
 
   @Test
+  public void testTargetHashXcodeWorkspaceWithTestsForAllTargets() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "xcode_workspace_with_tests", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "targets",
+        "--show-target-hash",
+        "--detect-test-changes");
+    result.assertSuccess();
+    parseAndVerifyTargetsAndHashes(
+        result.getStdout(),
+        "//bin:bin",
+        "//bin:genrule",
+        "//lib:lib",
+        "//test:test",
+        "//workspace:workspace");
+  }
+
+  @Test
+  public void testTargetHashWithBrokenTargets() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "detect_test_changes_with_broken_targets", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "targets",
+        "--show-target-hash",
+        "--detect-test-changes",
+        "//:test");
+    result.assertSuccess();
+    parseAndVerifyTargetAndHash(result.getStdout(), "//:test");
+  }
+
+  @Test
   public void testTargetHashXcodeWorkspaceWithoutTestsDiffersFromWithTests() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "xcode_workspace_with_tests", tmp);
@@ -291,6 +385,48 @@ public class TargetsCommandIntegrationTest {
         "//workspace:workspace");
 
     assertNotEquals(hash, hash2);
+  }
+
+  @Test
+  public void testTargetHashChangesAfterModifyingSourceFileForAllTargets() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "xcode_workspace_with_tests", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "targets",
+        "--show-target-hash",
+        "--detect-test-changes");
+    result.assertSuccess();
+    List<String> hashes = parseAndVerifyTargetsAndHashes(
+        result.getStdout(),
+        "//bin:bin",
+        "//bin:genrule",
+        "//lib:lib",
+        "//test:test",
+        "//workspace:workspace");
+
+    String fileName = "test/Test.m";
+    Files.write(workspace.getPath(fileName), "// This is not a test\n".getBytes(UTF_8));
+    ProcessResult result2 = workspace.runBuckCommand(
+        "targets",
+        "--show-target-hash",
+        "--detect-test-changes");
+    result2.assertSuccess();
+    List<String> hashesAfterModification = parseAndVerifyTargetsAndHashes(
+        result2.getStdout(),
+        "//bin:bin",
+        "//bin:genrule",
+        "//lib:lib",
+        "//test:test",
+        "//workspace:workspace");
+
+    assertNotEquals(hashes.get(0), hashesAfterModification.get(0));
+    // bin:genrule wasn't changed
+    assertEquals(hashes.get(1), hashesAfterModification.get(1));
+    assertNotEquals(hashes.get(2), hashesAfterModification.get(2));
+    assertNotEquals(hashes.get(3), hashesAfterModification.get(3));
+    assertNotEquals(hashes.get(4), hashesAfterModification.get(4));
   }
 
   @Test

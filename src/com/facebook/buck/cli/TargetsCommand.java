@@ -274,26 +274,18 @@ public class TargetsCommand extends AbstractCommand {
   private int runWithExecutor(
       CommandRunnerParams params,
       ListeningExecutorService executor) throws IOException, InterruptedException {
+    Optional<ImmutableSet<BuildRuleType>> buildRuleTypes = getBuildRuleTypesFromParams(params);
+    if (!buildRuleTypes.isPresent()) {
+      return 1;
+    }
+
     ImmutableMap<BuildTarget, ShowOptions> showRulesResult =
         ImmutableMap.of();
 
     if (isShowOutput() || isShowRuleKey() || isShowTargetHash()) {
       try {
-        if (getArguments().isEmpty()) {
-          throw new HumanReadableException("Must specify at least one build target.");
-        }
-
-        TargetGraphAndBuildTargets targetGraphAndBuildTargetsForShowRules = params.getParser()
-            .buildTargetGraphForTargetNodeSpecs(
-                params.getBuckEventBus(),
-                params.getCell(),
-                getEnableProfiling(),
-                executor,
-                parseArgumentsAsTargetNodeSpecs(
-                    params.getBuckConfig(),
-                    getArguments()),
-            /* ignoreBuckAutodepsFiles */ false);
-
+        TargetGraphAndBuildTargets targetGraphAndBuildTargetsForShowRules =
+            buildTargetGraphAndTargetsForShowRules(params, executor, buildRuleTypes);
         showRulesResult = computeShowRules(
             params,
             executor,
@@ -313,11 +305,6 @@ public class TargetsCommand extends AbstractCommand {
         printShowRules(showRulesResult, params);
         return 0;
       }
-    }
-
-    Optional<ImmutableSet<BuildRuleType>> buildRuleTypes = getBuildRuleTypesFromParams(params);
-    if (!buildRuleTypes.isPresent()) {
-      return 1;
     }
 
     // Parse the entire action graph, or (if targets are specified),
@@ -340,6 +327,50 @@ public class TargetsCommand extends AbstractCommand {
         buildRuleTypes);
 
     return printResults(params, executor, matchingNodes, showRulesResult);
+  }
+
+  private TargetGraphAndBuildTargets buildTargetGraphAndTargetsForShowRules(
+      CommandRunnerParams params,
+      ListeningExecutorService executor,
+      Optional<ImmutableSet<BuildRuleType>> buildRuleTypes)
+      throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
+    if (getArguments().isEmpty()) {
+      TargetGraphAndBuildTargets completeTargetGraphAndBuildTargets = params.getParser()
+          .buildTargetGraphForTargetNodeSpecs(
+              params.getBuckEventBus(),
+              params.getCell(),
+              getEnableProfiling(),
+              executor,
+              ImmutableList.of(
+                  TargetNodePredicateSpec.of(
+                      Predicates.<TargetNode<?>>alwaysTrue(),
+                      BuildFileSpec.fromRecursivePath(
+                          Paths.get("")))),
+              false);
+      SortedMap<String, TargetNode<?>> matchingNodes = getMatchingNodes(
+          params,
+          completeTargetGraphAndBuildTargets,
+          buildRuleTypes);
+
+      Iterable<BuildTarget> buildTargets = FluentIterable.from(matchingNodes.values()).transform(
+          HasBuildTarget.TO_TARGET);
+
+      return TargetGraphAndBuildTargets.builder()
+          .setTargetGraph(completeTargetGraphAndBuildTargets.getTargetGraph())
+          .setBuildTargets(buildTargets)
+          .build();
+    } else {
+      return params.getParser()
+          .buildTargetGraphForTargetNodeSpecs(
+              params.getBuckEventBus(),
+              params.getCell(),
+              getEnableProfiling(),
+              executor,
+              parseArgumentsAsTargetNodeSpecs(
+                  params.getBuckConfig(),
+                  getArguments()),
+              false);
+    }
   }
 
   /**
