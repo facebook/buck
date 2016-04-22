@@ -2,3 +2,8 @@ genrule(
   name = 'test',
   out = 'test-output',
 )
+
+genrule(
+  name = 'another-test',
+  out = 'test-output',
+)

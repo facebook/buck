@@ -68,9 +68,27 @@ public class TargetsCommandIntegrationTest {
     ProcessResult result = workspace.runBuckCommand(
         "targets",
         "--show-output",
+        "//:test",
+        "//:another-test");
+    result.assertSuccess();
+    assertEquals(
+        "//:another-test buck-out/gen/another-test/test-output\n" +
+            "//:test buck-out/gen/test/test-output\n",
+        result.getStdout());
+  }
+
+  @Test
+  public void testRuleKeyWithOneTarget() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "output_path", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "targets",
+        "--show-rulekey",
         "//:test");
     result.assertSuccess();
-    assertEquals("//:test buck-out/gen/test/test-output\n", result.getStdout());
+    assertEquals("//:test 12c109cdbab186fbb8fdd785853d8bcb4538aed2\n", result.getStdout());
   }
 
   @Test
@@ -82,9 +100,13 @@ public class TargetsCommandIntegrationTest {
     ProcessResult result = workspace.runBuckCommand(
         "targets",
         "--show-rulekey",
-        "//:test");
+        "//:test",
+        "//:another-test");
     result.assertSuccess();
-    assertEquals("//:test 12c109cdbab186fbb8fdd785853d8bcb4538aed2\n", result.getStdout());
+    parseAndVerifyTargetsAndHashes(
+        result.getStdout(),
+        "//:another-test",
+        "//:test");
   }
 
   @Test
@@ -132,7 +154,18 @@ public class TargetsCommandIntegrationTest {
     result.assertFailure();
   }
 
-  private String parseAndVerifyTargetAndHash(String target, String outputLine) {
+  private void parseAndVerifyTargetsAndHashes(String outputLine, String... targets) {
+    List<String> lines = Splitter.on('\n').splitToList(
+        CharMatcher.whitespace().trimFrom(outputLine));
+    assertEquals(targets.length, lines.size());
+    for (int i = 0; i < targets.length; ++i) {
+      String line = lines.get(i);
+      String target = targets[i];
+      parseAndVerifyTargetAndHash(line, target);
+    }
+  }
+
+  private String parseAndVerifyTargetAndHash(String outputLine, String target) {
     List<String> targetAndHash = Splitter.on(' ').splitToList(
         CharMatcher.whitespace().trimFrom(outputLine));
     assertEquals(2, targetAndHash.size());
@@ -151,11 +184,13 @@ public class TargetsCommandIntegrationTest {
     ProcessResult result = workspace.runBuckCommand(
         "targets",
         "--show-target-hash",
-        "//:test");
-    result.assertSuccess();
-    parseAndVerifyTargetAndHash(
         "//:test",
-        result.getStdout());
+        "//:another-test");
+    result.assertSuccess();
+    parseAndVerifyTargetsAndHashes(
+        result.getStdout(),
+        "//:another-test",
+        "//:test");
   }
 
   @Test
@@ -201,7 +236,7 @@ public class TargetsCommandIntegrationTest {
         "--detect-test-changes",
         "//workspace:workspace");
     result.assertSuccess();
-    parseAndVerifyTargetAndHash("//workspace:workspace", result.getStdout());
+    parseAndVerifyTargetAndHash(result.getStdout(), "//workspace:workspace");
   }
 
   @Test
@@ -216,14 +251,14 @@ public class TargetsCommandIntegrationTest {
         "--detect-test-changes",
         "//workspace:workspace");
     result.assertSuccess();
-    String hash = parseAndVerifyTargetAndHash("//workspace:workspace", result.getStdout());
+    String hash = parseAndVerifyTargetAndHash(result.getStdout(), "//workspace:workspace");
 
     ProcessResult result2 = workspace.runBuckCommand(
         "targets",
         "--show-target-hash",
         "//workspace:workspace");
     result2.assertSuccess();
-    String hash2 = parseAndVerifyTargetAndHash("//workspace:workspace", result2.getStdout());
+    String hash2 = parseAndVerifyTargetAndHash(result2.getStdout(), "//workspace:workspace");
     assertNotEquals(hash, hash2);
   }
 
@@ -240,8 +275,8 @@ public class TargetsCommandIntegrationTest {
         "//workspace:workspace");
     result.assertSuccess();
     String hash = parseAndVerifyTargetAndHash(
-        "//workspace:workspace",
-        result.getStdout());
+        result.getStdout(),
+        "//workspace:workspace");
 
     String fileName = "test/Test.m";
     Files.write(workspace.getPath(fileName), "// This is not a test\n".getBytes(UTF_8));
@@ -252,8 +287,8 @@ public class TargetsCommandIntegrationTest {
         "//workspace:workspace");
     result2.assertSuccess();
     String hash2 = parseAndVerifyTargetAndHash(
-        "//workspace:workspace",
-        result2.getStdout());
+        result2.getStdout(),
+        "//workspace:workspace");
 
     assertNotEquals(hash, hash2);
   }
@@ -271,8 +306,8 @@ public class TargetsCommandIntegrationTest {
         "//workspace:workspace");
     result.assertSuccess();
     String hash = parseAndVerifyTargetAndHash(
-        "//workspace:workspace",
-        result.getStdout());
+        result.getStdout(),
+        "//workspace:workspace");
 
     String fileName = "test/Test.m";
     Files.delete(workspace.getPath(fileName));
@@ -284,8 +319,8 @@ public class TargetsCommandIntegrationTest {
     result2.assertSuccess();
 
     String hash2 = parseAndVerifyTargetAndHash(
-        "//workspace:workspace",
-        result2.getStdout());
+        result2.getStdout(),
+        "//workspace:workspace");
     assertNotEquals(hash, hash2);
   }
 

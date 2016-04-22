@@ -461,7 +461,8 @@ public class TargetsCommand extends AbstractCommand {
   private void printShowRules(
       Map<BuildTarget, ShowOptions> showRulesResult,
       CommandRunnerParams params) {
-    for (Entry<BuildTarget, ShowOptions> entry : showRulesResult.entrySet()) {
+    for (Entry<BuildTarget, ShowOptions> entry :
+        ImmutableSortedMap.copyOf(showRulesResult).entrySet()) {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       builder.add(entry.getKey().getFullyQualifiedName());
       ShowOptions showOptions = entry.getValue();
