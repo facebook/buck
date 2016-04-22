@@ -430,7 +430,7 @@ public class CxxDescriptionEnhancer {
         .resolve(name);
   }
 
-  static String getSharedLibrarySoname(
+  public static String getSharedLibrarySoname(
       Optional<String> declaredSoname,
       BuildTarget target,
       CxxPlatform platform) {

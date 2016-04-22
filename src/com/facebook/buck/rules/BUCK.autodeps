@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 43838b4eea8bf5adeea92af7f1245243922181d5 #@#
+#@# GENERATED FILE: DO NOT MODIFY a78c1cdb41c0d1f90fa6de3f36e20c27ceb8047c #@#
 {
   "action_graph_cache" : {
     "deps" : [
@@ -141,6 +141,7 @@
       "//src/com/facebook/buck/go:go",
       "//src/com/facebook/buck/gwt:gwt",
       "//src/com/facebook/buck/halide:halide",
+      "//src/com/facebook/buck/haskell:haskell",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/js:js",
       "//src/com/facebook/buck/jvm/groovy:groovy",

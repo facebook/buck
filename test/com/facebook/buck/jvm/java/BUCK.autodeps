@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 7c8787534a9b939b47b30a16618b77f7b2ba0217 #@#
+#@# GENERATED FILE: DO NOT MODIFY a7ae4a001cf475c01d0bb3278b4c477e3bf4a71b #@#
 {
   "fakepackagefinder" : {
     "deps" : [ ],
@@ -57,6 +57,7 @@
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",
+      "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/zip:stream",

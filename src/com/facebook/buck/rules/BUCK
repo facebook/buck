@@ -152,6 +152,7 @@ java_immutables_library(
     'AbstractBuildRuleKeys.java',
     'AbstractRuleScheduleInfo.java',
     'AssociatedTargetNodePredicate.java',
+    'BinaryWrapperRule.java',
     'BuildOutputInitializer.java',
     'BuildRuleEvent.java',
     'CachingBuildEngine.java',
