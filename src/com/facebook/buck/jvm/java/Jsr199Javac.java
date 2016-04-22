@@ -26,7 +26,9 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
@@ -36,6 +38,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -50,6 +53,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
@@ -125,6 +129,7 @@ public abstract class Jsr199Javac implements Javac {
       SourcePathResolver resolver,
       BuildTarget invokingRule,
       ImmutableList<String> options,
+      ImmutableSet<String> safeAnnotationProcessors,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
@@ -152,6 +157,7 @@ public abstract class Jsr199Javac implements Javac {
             filesystem,
             invokingRule,
             options,
+            safeAnnotationProcessors,
             javaSourceFilePaths,
             pathToSrcsList,
             compiler,
@@ -175,6 +181,7 @@ public abstract class Jsr199Javac implements Javac {
       ProjectFilesystem filesystem,
       BuildTarget invokingRule,
       ImmutableList<String> options,
+      ImmutableSet<String> safeAnnotationProcessors,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       JavaCompiler compiler,
@@ -235,6 +242,8 @@ public abstract class Jsr199Javac implements Javac {
           ProcessorBundle bundle = prepareProcessors(
               context.getBuckEventBus(),
               compiler.getClass().getClassLoader(),
+              context.getClassLoaderCache(),
+              safeAnnotationProcessors,
               invokingRule,
               options)) {
         compilationTask.setProcessors(bundle.processors);
@@ -303,6 +312,8 @@ public abstract class Jsr199Javac implements Javac {
   private ProcessorBundle prepareProcessors(
       BuckEventBus buckEventBus,
       ClassLoader compilerClassLoader,
+      ClassLoaderCache classLoaderCache,
+      Set<String> safeAnnotationProcessors,
       BuildTarget target,
       List<String> options) {
     String processorClassPath = null;
@@ -318,16 +329,9 @@ public abstract class Jsr199Javac implements Javac {
       }
     }
 
-    ProcessorBundle processorBundle = new ProcessorBundle();
     if (processorClassPath == null || processorNames == null) {
-      return processorBundle;
+      return new ProcessorBundle();
     }
-
-    // N.B. You might think that we could avoid some overhead by using the same classloader every
-    // time we create an instance of annotation processor.  In an ideal world, that would work well,
-    // but many annotation processors aren't thread-safe, and they store state in class-static
-    // variables.  In the interest of maximum safety, we'll create a new ClassLoader every time we
-    // need an annotation processor.
 
     Iterable<String> rawPaths = Splitter.on(File.pathSeparator)
         .omitEmptyStrings()
@@ -348,14 +352,23 @@ public abstract class Jsr199Javac implements Javac {
               }
             })
         .toArray(URL.class);
-    processorBundle.classLoader = new URLClassLoader(
-        urls,
-        compilerClassLoader);
 
-    Iterable<String> names = Splitter.on(",")
+    List<String> names = Splitter.on(",")
         .trimResults()
         .omitEmptyStrings()
-        .split(processorNames);
+        .splitToList(processorNames);
+
+    ProcessorBundle processorBundle = new ProcessorBundle();
+    setProcessorBundleClassLoader(
+        names,
+        urls,
+        compilerClassLoader,
+        classLoaderCache,
+        safeAnnotationProcessors,
+        target,
+        processorBundle);
+
+
     for (String name : names) {
       try {
         LOG.debug("Loading %s from own classloader", name);
@@ -379,6 +392,46 @@ public abstract class Jsr199Javac implements Javac {
     }
 
     return processorBundle;
+  }
+
+  @VisibleForTesting
+  void setProcessorBundleClassLoader(
+      List<String> processorNames,
+      URL[] processorClasspath,
+      ClassLoader baseClassLoader,
+      ClassLoaderCache classLoaderCache,
+      Set<String> safeAnnotationProcessors,
+      BuildTarget target,
+      ProcessorBundle processorBundle) {
+    // We can avoid lots of overhead in large builds by reusing the same classloader for annotation
+    // processors. However, some annotation processors use static variables in a way that assumes
+    // there is only one instance running in the process at a time (or at all), and such annotation
+    // processors would break running inside of Buck. So we default to creating a new ClassLoader
+    // for each build rule, with an option to whitelist "safe" processors in .buckconfig.
+    if (safeAnnotationProcessors.containsAll(processorNames)) {
+      LOG.debug("Reusing class loaders for %s.", target);
+      processorBundle.classLoader = (URLClassLoader) classLoaderCache.getClassLoaderForClassPath(
+          baseClassLoader,
+          ImmutableList.copyOf(processorClasspath));
+      processorBundle.closeClassLoader = false;
+    } else {
+      final List<String> unsafeProcessors = new ArrayList<>();
+      for (String name : processorNames) {
+        if (safeAnnotationProcessors.contains(name)) {
+          continue;
+        }
+        unsafeProcessors.add(name);
+      }
+      LOG.debug(
+          "Creating new class loader for %s because the following processors are not marked safe " +
+              "for multiple use in a single process: %s",
+          target,
+          Joiner.on(',').join(unsafeProcessors));
+      processorBundle.classLoader = new URLClassLoader(
+          processorClasspath,
+          baseClassLoader);
+      processorBundle.closeClassLoader = true;
+    }
   }
 
   private Iterable<? extends JavaFileObject> createCompilationUnits(
@@ -438,15 +491,18 @@ public abstract class Jsr199Javac implements Javac {
     context.getBuckEventBus().post(event);
   }
 
-  private static class ProcessorBundle implements Closeable {
+  @VisibleForTesting
+  static class ProcessorBundle implements Closeable {
     @Nullable
     public URLClassLoader classLoader;
+    public boolean closeClassLoader;
     public List<Processor> processors = Lists.newArrayList();
 
     @Override
     public void close() throws IOException {
-      if (classLoader != null) {
+      if (closeClassLoader && classLoader != null) {
         classLoader.close();
+        classLoader = null;
       }
     }
   }

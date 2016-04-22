@@ -41,6 +41,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Represents the command line options that should be passed to javac. Note that the options do not
@@ -104,6 +105,8 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   public AnnotationProcessingParams getAnnotationProcessingParams() {
     return AnnotationProcessingParams.EMPTY;
   }
+
+  public abstract Set<String> getSafeAnnotationProcessors();
 
   public abstract List<String> getExtraArguments();
   protected abstract Optional<String> getBootclasspath();
@@ -271,6 +274,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     builder.setJavacJarPath(options.getJavacJarPath());
     builder.setSpoolMode(options.getSpoolMode());
     builder.setAnnotationProcessingParams(options.getAnnotationProcessingParams());
+    builder.setSafeAnnotationProcessors(options.getSafeAnnotationProcessors());
     builder.putAllSourceToBootclasspath(options.getSourceToBootclasspath());
     builder.setBootclasspath(options.getBootclasspath());
     builder.setSourceLevel(options.getSourceLevel());

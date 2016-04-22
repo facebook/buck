@@ -54,6 +54,10 @@ public class JavaBuckConfig {
         "java",
         "extra_arguments");
 
+    ImmutableList<String> safeAnnotationProcessors = delegate.getListWithoutComments(
+        "java",
+        "safe_annotation_processors");
+
     AbstractJavacOptions.SpoolMode spoolMode = delegate
         .getEnum("java", "jar_spool_mode", AbstractJavacOptions.SpoolMode.class)
         .or(AbstractJavacOptions.SpoolMode.INTERMEDIATE_TO_DISK);
@@ -74,6 +78,7 @@ public class JavaBuckConfig {
         .setSpoolMode(spoolMode)
         .putAllSourceToBootclasspath(bootclasspaths.build())
         .addAllExtraArguments(extraArguments)
+        .setSafeAnnotationProcessors(safeAnnotationProcessors)
         .build();
   }
 

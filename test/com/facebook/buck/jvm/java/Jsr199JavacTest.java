@@ -18,16 +18,28 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.JavaBuckConfig.TARGETED_JAVA_VERSION;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.easymock.EasyMockSupport;
 import org.junit.Test;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.Set;
+
+import javax.tools.ToolProvider;
 
 public class Jsr199JavacTest extends EasyMockSupport {
   private static final Path PATH_TO_SRCS_LIST = Paths.get("srcs_list");
@@ -61,6 +73,60 @@ public class Jsr199JavacTest extends EasyMockSupport {
             getArgs().add("bar.jar" + File.pathSeparator + "foo.jar").build(),
             SOURCE_FILES,
             PATH_TO_SRCS_LIST));
+  }
+
+  @Test
+  public void testAnnotationProcessorClassloadersNotReusedByDefault() throws MalformedURLException {
+    assertFalse(isAnnotationProcessorClassLoaderReused(
+        ImmutableList.of("some.Processor"),  // processors
+        Collections.<String>emptySet()));    // safe processors
+  }
+
+  @Test
+  public void testAnnotationProcessorClassloadersReusedIfMarkedSafe() throws MalformedURLException {
+    assertTrue(isAnnotationProcessorClassLoaderReused(
+        ImmutableList.of("some.Processor"),  // processors
+        ImmutableSet.of("some.Processor")));    // safe processors
+  }
+
+  @Test
+  public void testAnnotationProcessorsMustAllBeSafeToReuseClassLoader()
+      throws MalformedURLException {
+    assertFalse(isAnnotationProcessorClassLoaderReused(
+        ImmutableList.of("some.Processor", "some.other.Processor"),  // processors
+        ImmutableSet.of("some.Processor")));    // safe processors
+  }
+
+  private boolean isAnnotationProcessorClassLoaderReused(
+      ImmutableList<String> annotationProcessors,
+      Set<String> safeAnnotationProcessors) throws MalformedURLException {
+    URL[] annotationProcessorClasspath = {new URL("file:///some/path/to.jar")};
+    ClassLoader baseClassLoader = ToolProvider.getSystemToolClassLoader();
+    ClassLoaderCache classLoaderCache = new ClassLoaderCache();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:test");
+
+    Jsr199Javac step = createTestStep();
+    Jsr199Javac.ProcessorBundle bundle = new Jsr199Javac.ProcessorBundle();
+    step.setProcessorBundleClassLoader(
+        annotationProcessors,
+        annotationProcessorClasspath,
+        baseClassLoader,
+        classLoaderCache,
+        safeAnnotationProcessors,
+        buildTarget,
+        bundle);
+
+    Jsr199Javac.ProcessorBundle bundle2 = new Jsr199Javac.ProcessorBundle();
+    step.setProcessorBundleClassLoader(
+        annotationProcessors,
+        annotationProcessorClasspath,
+        baseClassLoader,
+        classLoaderCache,
+        safeAnnotationProcessors,
+        buildTarget,
+        bundle2);
+
+    return bundle.classLoader == bundle2.classLoader;
   }
 
   private Jsr199Javac createTestStep() {

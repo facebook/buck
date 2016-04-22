@@ -32,7 +32,6 @@ public final class BuckTracing {
   private static final InheritableThreadLocal<BuckTracingInterface> curThreadTracingInterface =
       new InheritableThreadLocal<>();
 
-  private final BuckTracingInterface tracingInterface;
   private final String pluginName;
 
   /**
@@ -42,11 +41,10 @@ public final class BuckTracing {
    * all instances.
    */
   public static BuckTracing getInstance(String pluginName) {
-    return new BuckTracing(curThreadTracingInterface.get(), pluginName);
+    return new BuckTracing(pluginName);
   }
 
-  private BuckTracing(BuckTracingInterface tracingInterface, String pluginName) {
-    this.tracingInterface = tracingInterface;
+  private BuckTracing(String pluginName) {
     this.pluginName = pluginName;
   }
 
@@ -69,6 +67,7 @@ public final class BuckTracing {
    * to {@link #end(Map)} should be in the finally block.
    */
   public void begin(final String eventName, final Map<String, String> args) {
+    final BuckTracingInterface tracingInterface = curThreadTracingInterface.get();
     if (tracingInterface == null) {
       return;
     }
@@ -97,6 +96,7 @@ public final class BuckTracing {
    * {@link #begin(String, Map)} call immediately before the try.
    */
   public void end(final Map<String, String> args) {
+    final BuckTracingInterface tracingInterface = curThreadTracingInterface.get();
     if (tracingInterface == null) {
       return;
     }

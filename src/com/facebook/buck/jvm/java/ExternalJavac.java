@@ -168,6 +168,7 @@ public class ExternalJavac implements Javac {
       SourcePathResolver resolver,
       BuildTarget invokingRule,
       ImmutableList<String> options,
+      ImmutableSet<String> safeAnnotationProcessors,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
