@@ -1,0 +1,6 @@
+cxx_library(
+  name = 'foo',
+  srcs = [
+    'foo.c',
+  ],
+)

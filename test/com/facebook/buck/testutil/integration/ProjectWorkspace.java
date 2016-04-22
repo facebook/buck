@@ -246,9 +246,9 @@ public class ProjectWorkspace {
     return runBuckCommand(totalArgs);
   }
 
-  public Path buildAndReturnOutput(String target) throws IOException {
+  public Path buildAndReturnOutput(String... args) throws IOException {
     // Build the java_library.
-    ProjectWorkspace.ProcessResult buildResult = runBuckBuild(target);
+    ProjectWorkspace.ProcessResult buildResult = runBuckBuild(args);
     buildResult.assertSuccess();
 
     // Use `buck targets` to find the output JAR file.
@@ -256,7 +256,7 @@ public class ProjectWorkspace {
     ProjectWorkspace.ProcessResult outputFileResult = runBuckCommand(
         "targets",
         "--show-output",
-        target);
+        args[args.length - 1]);
     outputFileResult.assertSuccess();
     String pathToGeneratedJarFile = outputFileResult.getStdout().split(" ")[1].trim();
     return getPath(pathToGeneratedJarFile);

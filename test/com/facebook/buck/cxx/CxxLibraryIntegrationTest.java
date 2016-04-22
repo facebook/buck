@@ -17,10 +17,12 @@
 package com.facebook.buck.cxx;
 
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -30,11 +32,17 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 
+import org.apache.commons.compress.archivers.ar.ArArchiveEntry;
+import org.apache.commons.compress.archivers.ar.ArArchiveInputStream;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 public class CxxLibraryIntegrationTest {
 
@@ -133,5 +141,38 @@ public class CxxLibraryIntegrationTest {
     workspace.runBuckBuild("//foo:headers_only_lib#infer-capture-all").assertSuccess();
   }
 
+  @Test
+  public void thinArchivesDoNotContainAbsolutePaths() throws IOException {
+    CxxPlatform cxxPlatform =
+        DefaultCxxPlatforms.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    assumeTrue(cxxPlatform.getAr().supportsThinArchives());
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_library", tmp);
+    workspace.setUp();
+    Path archive =
+        workspace.buildAndReturnOutput(
+            "-c", "cxx.archive_contents=thin",
+            "//:foo#default,static");
+
+    // NOTE: Replace the thin header with a normal header just so the commons compress parser
+    // can parse the archive contents.
+    try (OutputStream outputStream =
+             Files.newOutputStream(workspace.getPath(archive), StandardOpenOption.WRITE)) {
+      outputStream.write(ObjectFileScrubbers.GLOBAL_HEADER);
+    }
+
+    // Now iterate the archive and verify it contains no absolute paths.
+    try (ArArchiveInputStream stream = new ArArchiveInputStream(
+        new FileInputStream(workspace.getPath(archive).toFile()))) {
+      ArArchiveEntry entry;
+      while ((entry = stream.getNextArEntry()) != null) {
+        if (!entry.getName().isEmpty()) {
+          assertFalse(
+              "found absolute path: " + entry.getName(),
+              workspace.getDestPath().getFileSystem().getPath(entry.getName()).isAbsolute());
+        }
+      }
+    }
+  }
 
 }
