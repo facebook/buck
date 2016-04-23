@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
+import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -36,7 +37,9 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
@@ -47,6 +50,7 @@ public class CxxBinaryDescription implements
     Description<CxxBinaryDescription.Arg>,
     Flavored,
     ImplicitDepsInferringDescription<CxxBinaryDescription.Arg>,
+    ImplicitFlavorsInferringDescription,
     MetadataProvidingDescription<CxxBinaryDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("cxx_binary");
@@ -342,6 +346,36 @@ public class CxxBinaryDescription implements
               }
             }
         );
+  }
+
+  @Override
+  public ImmutableSortedSet<Flavor> addImplicitFlavors(
+      ImmutableSortedSet<Flavor> argDefaultFlavors) {
+    return addImplicitFlavorsForRuleTypes(argDefaultFlavors, TYPE);
+  }
+
+  public ImmutableSortedSet<Flavor> addImplicitFlavorsForRuleTypes(
+      ImmutableSortedSet<Flavor> argDefaultFlavors,
+      BuildRuleType... types) {
+    Optional<Flavor> platformFlavor = getCxxPlatforms().getFlavor(argDefaultFlavors);
+
+    for (BuildRuleType type : types) {
+      ImmutableMap<String, Flavor> libraryDefaults =
+          cxxBuckConfig.getDefaultFlavorsForRuleType(type);
+
+      if (!platformFlavor.isPresent()) {
+        platformFlavor = Optional.fromNullable(
+            libraryDefaults.get(CxxBuckConfig.DEFAULT_FLAVOR_PLATFORM));
+      }
+    }
+
+    if (platformFlavor.isPresent()) {
+      return ImmutableSortedSet.of(platformFlavor.get());
+    } else {
+      // To avoid changing the output path of binaries built without a flavor,
+      // we'll default to no flavor, which implicitly builds the default platform.
+      return ImmutableSortedSet.of();
+    }
   }
 
   @SuppressFieldNotInitialized

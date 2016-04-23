@@ -25,6 +25,7 @@ import com.facebook.buck.file.StackedDownloader;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildEvent;
@@ -82,7 +83,8 @@ public class FetchCommand extends BuildCommand {
                 parseArgumentsAsTargetNodeSpecs(
                     params.getBuckConfig(),
                     getArguments()),
-                /* ignoreBuckAutodepsFiles */ false);
+                /* ignoreBuckAutodepsFiles */ false,
+                Parser.ApplyDefaultFlavorsMode.ENABLED);
         actionGraphAndResolver = Preconditions.checkNotNull(
             ActionGraphCache.getFreshActionGraph(
                 params.getBuckEventBus(),

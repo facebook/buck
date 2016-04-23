@@ -38,6 +38,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -61,6 +62,7 @@ import java.util.Set;
 public class AppleLibraryDescription implements
     Description<AppleLibraryDescription.Arg>,
     Flavored,
+    ImplicitFlavorsInferringDescription,
     MetadataProvidingDescription<AppleLibraryDescription.Arg> {
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_library");
 
@@ -407,6 +409,16 @@ public class AppleLibraryDescription implements
     resolver.requireRule(buildTarget);
     sourcePaths.add(new BuildTargetSourcePath(buildTarget));
     return Optional.of(metadataClass.cast(FrameworkDependencies.of(sourcePaths.build())));
+  }
+
+  @Override
+  public ImmutableSortedSet<Flavor> addImplicitFlavors(
+      ImmutableSortedSet<Flavor> argDefaultFlavors) {
+    // Use defaults.apple_library if present, but fall back to defaults.cxx_library otherwise.
+    return delegate.addImplicitFlavorsForRuleTypes(
+        argDefaultFlavors,
+        TYPE,
+        CxxLibraryDescription.TYPE);
   }
 
   public static boolean isSharedLibraryTarget(BuildTarget target) {

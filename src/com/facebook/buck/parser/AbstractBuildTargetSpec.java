@@ -20,7 +20,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
 import org.immutables.value.Value;
 
@@ -51,8 +54,22 @@ abstract class AbstractBuildTargetSpec implements TargetNodeSpec {
   }
 
   @Override
-  public ImmutableSet<BuildTarget> filter(Iterable<TargetNode<?>> nodes) {
-    return ImmutableSet.of(getBuildTarget());
+  public TargetType getTargetType() {
+    return TargetType.SINGLE_TARGET;
+  }
+
+  @Override
+  public ImmutableMap<BuildTarget, Optional<TargetNode<?>>> filter(Iterable<TargetNode<?>> nodes) {
+    Optional<TargetNode<?>> firstMatchingNode = Iterables.tryFind(
+        nodes,
+        new Predicate<TargetNode<?>>() {
+          @Override
+          public boolean apply(TargetNode<?> input) {
+            return input.getBuildTarget().getUnflavoredBuildTarget().equals(
+                getBuildTarget().getUnflavoredBuildTarget());
+          }
+        });
+    return ImmutableMap.of(getBuildTarget(), firstMatchingNode);
   }
 
   @Override

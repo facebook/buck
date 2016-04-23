@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
@@ -30,6 +31,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
+import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
@@ -64,6 +66,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -71,8 +74,11 @@ import java.util.regex.Pattern;
 public class CxxLibraryDescription implements
     Description<CxxLibraryDescription.Arg>,
     ImplicitDepsInferringDescription<CxxLibraryDescription.Arg>,
+    ImplicitFlavorsInferringDescription,
     Flavored,
     MetadataProvidingDescription<CxxLibraryDescription.Arg> {
+
+  private static final Logger LOG = Logger.get(CxxLibraryDescription.class);
 
   private static final MacroHandler MACRO_HANDLER =
       new MacroHandler(
@@ -865,6 +871,49 @@ public class CxxLibraryDescription implements
               }
             }
         );
+  }
+
+  @Override
+  public ImmutableSortedSet<Flavor> addImplicitFlavors(
+      ImmutableSortedSet<Flavor> argDefaultFlavors) {
+    return addImplicitFlavorsForRuleTypes(
+        argDefaultFlavors,
+        TYPE);
+  }
+
+  public ImmutableSortedSet<Flavor> addImplicitFlavorsForRuleTypes(
+      ImmutableSortedSet<Flavor> argDefaultFlavors,
+      BuildRuleType... types) {
+    Optional<Flavor> typeFlavor = LIBRARY_TYPE.getFlavor(argDefaultFlavors);
+    Optional<Flavor> platformFlavor = getCxxPlatforms().getFlavor(argDefaultFlavors);
+
+    LOG.debug("Got arg default type %s platform %s", typeFlavor, platformFlavor);
+
+    for (BuildRuleType type : types) {
+      ImmutableMap<String, Flavor> libraryDefaults =
+          cxxBuckConfig.getDefaultFlavorsForRuleType(type);
+
+      if (!typeFlavor.isPresent()) {
+        typeFlavor = Optional.fromNullable(
+            libraryDefaults.get(CxxBuckConfig.DEFAULT_FLAVOR_LIBRARY_TYPE));
+      }
+
+      if (!platformFlavor.isPresent()) {
+        platformFlavor = Optional.fromNullable(
+            libraryDefaults.get(CxxBuckConfig.DEFAULT_FLAVOR_PLATFORM));
+      }
+    }
+
+    ImmutableSortedSet<Flavor> result = ImmutableSortedSet.of(
+        // Default to static if not otherwise specified.
+        typeFlavor.or(CxxDescriptionEnhancer.STATIC_FLAVOR),
+        platformFlavor.or(defaultCxxPlatform.getFlavor()));
+
+    LOG.debug(
+        "Got default flavors %s for rule types %s",
+        result,
+        Arrays.toString(types));
+    return result;
   }
 
   @SuppressFieldNotInitialized

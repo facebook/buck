@@ -18,17 +18,25 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * A specification used by the parser to match {@link TargetNode} objects.
  */
 public interface TargetNodeSpec {
 
+  enum TargetType {
+      SINGLE_TARGET,
+      MULTIPLE_TARGETS
+  }
+
+  TargetType getTargetType();
+
   /**
-   * @return whether the given {@link TargetNode} should be traversed.
+   * @return the targets which should be built according to this spec
    */
-  ImmutableSet<BuildTarget> filter(Iterable<TargetNode<?>> nodes);
+  ImmutableMap<BuildTarget, Optional<TargetNode<?>>> filter(Iterable<TargetNode<?>> nodes);
 
   /**
    * @return a {@link BuildFileSpec} representing the build files to parse to search for

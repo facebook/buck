@@ -32,6 +32,7 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildEngine;
@@ -394,7 +395,8 @@ public class BuildCommand extends AbstractCommand {
               parseArgumentsAsTargetNodeSpecs(
                   params.getBuckConfig(),
                   getArguments()),
-              /* ignoreBuckAutodepsFiles */ false);
+              /* ignoreBuckAutodepsFiles */ false,
+              Parser.ApplyDefaultFlavorsMode.ENABLED);
       buildTargets = result.getBuildTargets();
       buildTargetsHaveBeenCalculated = true;
       actionGraphAndResolver = Preconditions.checkNotNull(

@@ -50,6 +50,7 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
@@ -368,7 +369,8 @@ public class ProjectCommand extends BuildCommand {
                 parseArgumentsAsTargetNodeSpecs(
                     params.getBuckConfig(),
                     getArguments()),
-                SpeculativeParsing.of(true));
+                SpeculativeParsing.of(true),
+                Parser.ApplyDefaultFlavorsMode.ENABLED);
         needsFullRecursiveParse = needsFullRecursiveParse || passedInTargetsSet.isEmpty();
         projectGraph = getProjectGraphForIde(
             params,

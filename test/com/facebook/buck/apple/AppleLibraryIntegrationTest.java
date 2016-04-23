@@ -67,6 +67,49 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void testAppleLibraryWithDefaultsInConfigBuildsSomething() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_builds_something", tmp);
+    workspace.setUp();
+    workspace.writeContentsToPath(
+        "[defaults.apple_library]\n  platform = iphonesimulator-x86_64\n  type = shared\n",
+        ".buckconfig.local");
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    BuildTarget implicitTarget = target.withAppendedFlavors(
+        ImmutableFlavor.of("shared"),
+        ImmutableFlavor.of("iphonesimulator-x86_64")
+    );
+    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(implicitTarget, "%s"))));
+  }
+
+  @Test
+  public void testAppleLibraryWithDefaultsInRuleBuildsSomething() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_with_platform_and_type", tmp);
+    workspace.setUp();
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    BuildTarget implicitTarget = target.withAppendedFlavors(
+        ImmutableFlavor.of("shared"),
+        ImmutableFlavor.of("iphoneos-arm64")
+    );
+    Path outputPath = workspace.getPath(BuildTargets.getGenPath(implicitTarget, "%s"));
+    assertTrue(Files.exists(outputPath));
+  }
+  @Test
   public void testAppleLibraryBuildsForWatchOS() throws IOException {
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.WATCHOS));
 

@@ -19,8 +19,9 @@ package com.facebook.buck.parser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
 
@@ -39,16 +40,22 @@ abstract class AbstractTargetNodePredicateSpec implements TargetNodeSpec {
   public abstract BuildFileSpec getBuildFileSpec();
 
   @Override
-  public ImmutableSet<BuildTarget> filter(Iterable<TargetNode<?>> nodes) {
-    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
+  public TargetType getTargetType() {
+    return TargetType.MULTIPLE_TARGETS;
+  }
+
+  @Override
+  public ImmutableMap<BuildTarget, Optional<TargetNode<?>>> filter(Iterable<TargetNode<?>> nodes) {
+    ImmutableMap.Builder<BuildTarget, Optional<TargetNode<?>>> resultBuilder =
+        ImmutableMap.builder();
 
     for (TargetNode<?> node : nodes) {
       if (getPredicate().apply(node)) {
-        targets.add(node.getBuildTarget());
+        resultBuilder.put(node.getBuildTarget(), Optional.<TargetNode<?>>of(node));
       }
     }
 
-    return targets.build();
+    return resultBuilder.build();
   }
 
 }

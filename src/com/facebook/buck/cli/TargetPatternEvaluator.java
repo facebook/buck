@@ -17,9 +17,11 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.json.BuildFileParseException;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryFileTarget;
@@ -36,6 +38,8 @@ import java.util.Map;
 import java.util.Set;
 
 public class TargetPatternEvaluator {
+  private static final Logger LOG = Logger.get(TargetPatternEvaluator.class);
+
   private final boolean enableProfiling;
   private final CommandRunnerParams params;
   private final Path projectRoot;
@@ -108,7 +112,11 @@ public class TargetPatternEvaluator {
             enableProfiling,
             executor,
             ImmutableSet.of(targetNodeSpecParser.parse(params.getCell().getCellRoots(), pattern)),
-            SpeculativeParsing.of(false));
+            SpeculativeParsing.of(false),
+            // We disable mapping //path/to:lib to //path/to:lib#default,static
+            // because the query engine doesn't handle flavors very well.
+            Parser.ApplyDefaultFlavorsMode.DISABLED);
+    LOG.debug("Build target pattern %s -> targets %s", pattern, buildTargets);
     // Sorting to have predictable results across different java libraries implementations.
     ImmutableSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
     for (BuildTarget target : buildTargets) {

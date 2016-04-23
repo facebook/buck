@@ -82,6 +82,7 @@ java_immutables_library(
     'HashedFileTool.java',
     'Hint.java',
     'ImplicitDepsInferringDescription.java',
+    'ImplicitFlavorsInferringDescription.java',
     'ImplicitInputsInferringDescription.java',
     'MetadataProvidingDescription.java',
     'NonHashableSourcePathContainer.java',

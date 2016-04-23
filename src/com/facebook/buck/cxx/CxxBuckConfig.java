@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BinaryBuildRuleToolProvider;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleScheduleInfo;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
@@ -30,7 +31,9 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 
 import org.immutables.value.Value;
 
@@ -49,6 +52,10 @@ public class CxxBuckConfig {
 
   private final BuckConfig delegate;
   private final String cxxSection;
+
+  public static final String DEFAULT_FLAVOR_LIBRARY_TYPE = "type";
+  public static final String DEFAULT_FLAVOR_PLATFORM = "platform";
+  public static final String DEFAULT_FLAVOR_DEBUG_FORMAT = "debug_format";
 
   /**
    * Constructs set of flavors given in a .buckconfig file, as is specified by section names
@@ -309,6 +316,13 @@ public class CxxBuckConfig {
   public Archive.Contents getArchiveContents() {
     return delegate.getEnum(cxxSection, "archive_contents", Archive.Contents.class)
         .or(Archive.Contents.NORMAL);
+  }
+
+  public ImmutableMap<String, Flavor> getDefaultFlavorsForRuleType(BuildRuleType type) {
+    return ImmutableMap.copyOf(
+        Maps.transformValues(
+            delegate.getEntriesForSection("defaults." + type.getName()),
+            Flavor.TO_FLAVOR));
   }
 
   @Value.Immutable

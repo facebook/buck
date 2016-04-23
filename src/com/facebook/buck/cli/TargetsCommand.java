@@ -36,6 +36,7 @@ import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
@@ -346,7 +347,8 @@ public class TargetsCommand extends AbstractCommand {
                       Predicates.<TargetNode<?>>alwaysTrue(),
                       BuildFileSpec.fromRecursivePath(
                           Paths.get("")))),
-              false);
+              false,
+              Parser.ApplyDefaultFlavorsMode.ENABLED);
       SortedMap<String, TargetNode<?>> matchingNodes = getMatchingNodes(
           params,
           completeTargetGraphAndBuildTargets,
@@ -452,7 +454,8 @@ public class TargetsCommand extends AbstractCommand {
                             Predicates.<TargetNode<?>>alwaysTrue(),
                             BuildFileSpec.fromRecursivePath(
                                 Paths.get("")))),
-                    ignoreBuckAutodepsFiles).getTargetGraph()).build());
+                    ignoreBuckAutodepsFiles,
+                    Parser.ApplyDefaultFlavorsMode.ENABLED).getTargetGraph()).build());
       } else {
         return Optional.of(
             params.getParser()
@@ -464,7 +467,8 @@ public class TargetsCommand extends AbstractCommand {
                     parseArgumentsAsTargetNodeSpecs(
                         params.getBuckConfig(),
                         getArguments()),
-                    ignoreBuckAutodepsFiles));
+                    ignoreBuckAutodepsFiles,
+                Parser.ApplyDefaultFlavorsMode.ENABLED));
       }
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(

@@ -36,6 +36,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -60,6 +61,7 @@ import java.util.Set;
 public class AppleBinaryDescription implements
     Description<AppleBinaryDescription.Arg>,
     Flavored,
+    ImplicitFlavorsInferringDescription,
     MetadataProvidingDescription<AppleBinaryDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_binary");
@@ -380,6 +382,16 @@ public class AppleBinaryDescription implements
         args,
         buildTarget);
     return delegate.createMetadata(buildTarget, resolver, delegateArg, metadataClass);
+  }
+
+  @Override
+  public ImmutableSortedSet<Flavor> addImplicitFlavors(
+        ImmutableSortedSet<Flavor> argDefaultFlavors) {
+    // Use defaults.apple_binary if present, but fall back to defaults.cxx_binary otherwise.
+    return delegate.addImplicitFlavorsForRuleTypes(
+        argDefaultFlavors,
+        TYPE,
+        CxxBinaryDescription.TYPE);
   }
 
   @SuppressFieldNotInitialized

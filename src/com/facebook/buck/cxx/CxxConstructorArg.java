@@ -17,6 +17,8 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.HasDefaultFlavors;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.Hint;
@@ -33,7 +35,8 @@ import com.google.common.collect.ImmutableSortedSet;
 
 
 @SuppressFieldNotInitialized
-public class CxxConstructorArg extends AbstractDescriptionArg implements HasTests {
+public class CxxConstructorArg extends AbstractDescriptionArg
+    implements HasDefaultFlavors, HasTests {
 
   public Optional<ImmutableSortedSet<SourceWithFlags>> srcs;
   public Optional<PatternMatchedCollection<ImmutableSortedSet<SourceWithFlags>>> platformSrcs;
@@ -55,10 +58,17 @@ public class CxxConstructorArg extends AbstractDescriptionArg implements HasTest
   public Optional<Linker.CxxRuntimeType> cxxRuntimeType;
 
   @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
+  public Optional<ImmutableMap<String, Flavor>> defaults;
 
   @Override
   public ImmutableSortedSet<BuildTarget> getTests() {
     return tests.get();
   }
 
+  @Override
+  public ImmutableSortedSet<Flavor> getDefaultFlavors() {
+    // We don't (yet) use the keys in the default_flavors map, but we
+    // plan to eventually support key-value flavors.
+    return ImmutableSortedSet.copyOf(defaults.get().values());
+  }
 }

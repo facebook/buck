@@ -39,6 +39,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
@@ -300,7 +301,8 @@ public class InstallCommand extends BuildCommand {
                     getEnableProfiling(),
                     executor,
                     ImmutableList.of(spec),
-                    SpeculativeParsing.of(false)))
+                    SpeculativeParsing.of(false),
+                    Parser.ApplyDefaultFlavorsMode.DISABLED))
             .first().get();
 
         TargetNode<?> node = params.getParser().getTargetNode(

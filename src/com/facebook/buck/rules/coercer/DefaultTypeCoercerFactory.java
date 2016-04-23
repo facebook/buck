@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.python.NeededCoverageSpec;
 import com.facebook.buck.rules.Label;
@@ -63,6 +64,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
     TypeCoercer<String> stringTypeCoercer = new IdentityTypeCoercer<>(String.class);
+    TypeCoercer<Flavor> flavorTypeCoercer = new FlavorTypeCoercer();
     TypeCoercer<Path> pathTypeCoercer = new PathTypeCoercer();
     TypeCoercer<Label> labelTypeCoercer = new LabelTypeCoercer();
     // This has no implementation, but is here so that constructor succeeds so that it can be
@@ -99,6 +101,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         // special classes
         labelTypeCoercer,
         pathTypeCoercer,
+        flavorTypeCoercer,
         sourcePathTypeCoercer,
         buildTargetTypeCoercer,
         buildTargetPatternTypeCoercer,

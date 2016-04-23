@@ -20,6 +20,7 @@ import static com.facebook.buck.parser.ParserConfig.DEFAULT_BUILD_FILE_NAME;
 import static com.facebook.buck.testutil.WatchEventsForTests.createPathEvent;
 import static com.google.common.base.Charsets.UTF_8;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -1562,7 +1563,7 @@ public class ParserTest {
                   }
                 })
             .toList(),
-        Matchers.hasItems(fooLib1Target, fooLib2Target));
+        hasItems(fooLib1Target, fooLib2Target));
   }
 
   @Test
@@ -2013,7 +2014,146 @@ public class ParserTest {
             TargetNodePredicateSpec.of(
                 Predicates.alwaysTrue(),
                 BuildFileSpec.fromRecursivePath(Paths.get("foo")))),
-        SpeculativeParsing.of(true));
+        SpeculativeParsing.of(true),
+        Parser.ApplyDefaultFlavorsMode.ENABLED);
+  }
+
+  @Test
+  public void defaultFlavorsInRuleArgsAppliedToTarget() throws Exception {
+    // We depend on Xcode platforms for this test.
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    Path buckFile = cellRoot.resolve("lib/BUCK");
+    Files.createDirectories(buckFile.getParent());
+    Files.write(
+        buckFile,
+        ("cxx_library(" +
+        "  name = 'lib', " +
+        "  srcs=glob(['*.c']), " +
+        "  defaults={'platform':'iphonesimulator-x86_64'}" +
+        ")").getBytes(UTF_8));
+
+    ImmutableSet<BuildTarget> result =
+        parser.buildTargetGraphForTargetNodeSpecs(
+            eventBus,
+            cell,
+            false,
+            executorService,
+            ImmutableList.of(
+                AbstractBuildTargetSpec.from(
+                    BuildTarget.builder(cellRoot, "//lib", "lib").build())),
+            /* ignoreBuckAutodepsFiles */ false,
+            Parser.ApplyDefaultFlavorsMode.ENABLED).getBuildTargets();
+
+    assertThat(
+        result,
+        hasItems(
+            BuildTarget.builder(cellRoot, "//lib", "lib")
+                .addFlavors(
+                    ImmutableFlavor.of("iphonesimulator-x86_64"),
+                    ImmutableFlavor.of("static"))
+                .build()));
+  }
+
+  @Test
+  public void defaultFlavorsInConfigAppliedToTarget() throws Exception {
+    // We depend on Xcode platforms for this test.
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    Path buckFile = cellRoot.resolve("lib/BUCK");
+    Files.createDirectories(buckFile.getParent());
+    Files.write(
+        buckFile,
+        ("cxx_library(" +
+        "  name = 'lib', " +
+        "  srcs=glob(['*.c']) " +
+        ")").getBytes(UTF_8));
+
+    BuckConfig config = FakeBuckConfig.builder()
+        .setFilesystem(filesystem)
+        .setSections(
+            ImmutableMap.of(
+                "defaults.cxx_library",
+                ImmutableMap.of(
+                    "platform",
+                    "iphoneos-arm64",
+                    "type",
+                    "shared")))
+        .build();
+
+    cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+
+    ImmutableSet<BuildTarget> result =
+        parser.buildTargetGraphForTargetNodeSpecs(
+            eventBus,
+            cell,
+            false,
+            executorService,
+            ImmutableList.of(
+                AbstractBuildTargetSpec.from(
+                    BuildTarget.builder(cellRoot, "//lib", "lib").build())),
+            /* ignoreBuckAutodepsFiles */ false,
+            Parser.ApplyDefaultFlavorsMode.ENABLED).getBuildTargets();
+
+    assertThat(
+        result,
+        hasItems(
+            BuildTarget.builder(cellRoot, "//lib", "lib")
+                .addFlavors(
+                    ImmutableFlavor.of("iphoneos-arm64"),
+                    ImmutableFlavor.of("shared"))
+                .build()));
+  }
+
+  @Test
+  public void defaultFlavorsInArgsOverrideDefaultsFromConfig() throws Exception {
+    // We depend on Xcode platforms for this test.
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    Path buckFile = cellRoot.resolve("lib/BUCK");
+    Files.createDirectories(buckFile.getParent());
+    Files.write(
+        buckFile,
+        ("cxx_library(" +
+        "  name = 'lib', " +
+        "  srcs=glob(['*.c']), " +
+        "  defaults={'platform':'macosx-x86_64'}" +
+        ")").getBytes(UTF_8));
+
+    BuckConfig config = FakeBuckConfig.builder()
+        .setFilesystem(filesystem)
+        .setSections(
+            ImmutableMap.of(
+                "defaults.cxx_library",
+                ImmutableMap.of(
+                    "platform",
+                    "iphoneos-arm64",
+                    "type",
+                    "shared")))
+        .build();
+
+    cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+
+    ImmutableSet<BuildTarget> result =
+        parser.buildTargetGraphForTargetNodeSpecs(
+            eventBus,
+            cell,
+            false,
+            executorService,
+            ImmutableList.of(
+                AbstractBuildTargetSpec.from(
+                    BuildTarget.builder(cellRoot, "//lib", "lib").build())),
+            /* ignoreBuckAutodepsFiles */ false,
+            Parser.ApplyDefaultFlavorsMode.ENABLED).getBuildTargets();
+
+    assertThat(
+        result,
+        hasItems(
+            BuildTarget.builder(cellRoot, "//lib", "lib")
+                .addFlavors(
+                    ImmutableFlavor.of("macosx-x86_64"),
+                    ImmutableFlavor.of("shared"))
+                .build()));
   }
 
   private BuildRuleResolver buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {

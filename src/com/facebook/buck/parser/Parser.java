@@ -29,8 +29,11 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.model.HasDefaultFlavors;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
@@ -47,6 +50,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
@@ -76,6 +80,14 @@ import javax.annotation.Nullable;
 public class Parser {
 
   private static final Logger LOG = Logger.get(Parser.class);
+
+  /**
+   * Controls whether default flavors should be applied to unflavored targets.
+   */
+  public enum ApplyDefaultFlavorsMode {
+      ENABLED,
+      DISABLED
+  };
 
   private final DaemonicParserState permState;
   private final ConstructorArgMarshaller marshaller;
@@ -343,6 +355,32 @@ public class Parser {
       ListeningExecutorService executor,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       boolean ignoreBuckAutodepsFiles)
+    throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
+    return buildTargetGraphForTargetNodeSpecs(
+        eventBus,
+        rootCell,
+        enableProfiling,
+        executor,
+        targetNodeSpecs,
+        ignoreBuckAutodepsFiles,
+        ApplyDefaultFlavorsMode.DISABLED);
+  }
+
+  /**
+   * @param eventBus used to log events while parsing.
+   * @param targetNodeSpecs the specs representing the build targets to generate a target graph for.
+   * @param ignoreBuckAutodepsFiles If true, do not load deps from {@code BUCK.autodeps} files.
+   * @return the target graph containing the build targets and their related targets.
+   */
+  public synchronized TargetGraphAndBuildTargets
+  buildTargetGraphForTargetNodeSpecs(
+      BuckEventBus eventBus,
+      Cell rootCell,
+      boolean enableProfiling,
+      ListeningExecutorService executor,
+      Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+      boolean ignoreBuckAutodepsFiles,
+      ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
 
     try (PerBuildState state =
@@ -360,7 +398,8 @@ public class Parser {
           state,
           eventBus,
           rootCell,
-          targetNodeSpecs);
+          targetNodeSpecs,
+          applyDefaultFlavorsMode);
       TargetGraph graph = buildTargetGraph(state, eventBus, buildTargets, ignoreBuckAutodepsFiles);
 
       return TargetGraphAndBuildTargets.builder()
@@ -381,7 +420,8 @@ public class Parser {
       boolean enableProfiling,
       ListeningExecutorService executor,
       Iterable<? extends TargetNodeSpec> specs,
-      SpeculativeParsing speculativeParsing)
+      SpeculativeParsing speculativeParsing,
+      ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
 
     try (PerBuildState state =
@@ -398,7 +438,8 @@ public class Parser {
           state,
           eventBus,
           rootCell,
-          specs);
+          specs,
+          applyDefaultFlavorsMode);
     }
   }
 
@@ -406,7 +447,8 @@ public class Parser {
       PerBuildState state,
       BuckEventBus eventBus,
       Cell rootCell,
-      Iterable<? extends TargetNodeSpec> specs)
+      Iterable<? extends TargetNodeSpec> specs,
+      final ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
 
     ParserConfig parserConfig = new ParserConfig(rootCell.getBuckConfig());
@@ -422,8 +464,8 @@ public class Parser {
       buildFileSearchMethod = ParserConfig.BuildFileSearchMethod.FILESYSTEM_CRAWL;
     }
 
-    ImmutableList.Builder<ListenableFuture<ImmutableSet<BuildTarget>>> targetFutures =
-        ImmutableList.builder();
+    ImmutableList.Builder<ListenableFuture<ImmutableSet<BuildTarget>>>
+        targetFutures = ImmutableList.builder();
     for (final TargetNodeSpec spec : specs) {
       ImmutableSet<Path> buildFiles;
       try (SimplePerfEvent.Scope perfEventScope = SimplePerfEvent.scope(
@@ -448,11 +490,13 @@ public class Parser {
         targetFutures.add(
             Futures.transform(
                 state.getAllTargetNodesJob(rootCell, buildFile),
-                new Function<ImmutableSet<TargetNode<?>>, ImmutableSet<BuildTarget>>() {
+                new Function<ImmutableSet<TargetNode<?>>,
+                             ImmutableSet<BuildTarget>>() {
                   @Override
-                  public ImmutableSet<BuildTarget> apply(ImmutableSet<TargetNode<?>> nodes) {
+                  public ImmutableSet<BuildTarget> apply(
+                      ImmutableSet<TargetNode<?>> nodes) {
                     // Call back into the target node spec to filter the relevant build targets.
-                    return spec.filter(nodes);
+                    return applySpecFilter(spec, nodes, applyDefaultFlavorsMode);
                   }
                 }));
       }
@@ -461,7 +505,7 @@ public class Parser {
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
     try {
       for (ImmutableSet<BuildTarget> partialTargets :
-          Futures.allAsList(targetFutures.build()).get()) {
+               Futures.allAsList(targetFutures.build()).get()) {
         targets.addAll(partialTargets);
       }
     } catch (ExecutionException e) {
@@ -471,6 +515,58 @@ public class Parser {
       throw ParsePipeline.propagateRuntimeException(e);
     }
     return targets.build();
+  }
+
+  private static ImmutableSet<BuildTarget> applySpecFilter(
+      TargetNodeSpec spec,
+      ImmutableSet<TargetNode<?>> targetNodes,
+      ApplyDefaultFlavorsMode applyDefaultFlavorsMode) {
+    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
+    ImmutableMap<BuildTarget, Optional<TargetNode<?>>> partialTargets =
+        spec.filter(targetNodes);
+    for (Map.Entry<BuildTarget, Optional<TargetNode<?>>> partialTarget :
+             partialTargets.entrySet()) {
+      BuildTarget target = applyDefaultFlavors(
+            partialTarget.getKey(),
+            partialTarget.getValue(),
+            spec.getTargetType(),
+            applyDefaultFlavorsMode);
+      targets.add(target);
+    }
+    return targets.build();
+  }
+
+  private static BuildTarget applyDefaultFlavors(
+      BuildTarget target,
+      Optional<TargetNode<?>> targetNode,
+      TargetNodeSpec.TargetType targetType,
+      ApplyDefaultFlavorsMode applyDefaultFlavorsMode) {
+    if (target.isFlavored() ||
+        !targetNode.isPresent() ||
+        targetType == TargetNodeSpec.TargetType.MULTIPLE_TARGETS ||
+        applyDefaultFlavorsMode == ApplyDefaultFlavorsMode.DISABLED) {
+      return target;
+    }
+
+    TargetNode<?> node = targetNode.get();
+
+    ImmutableSortedSet<Flavor> defaultFlavors = ImmutableSortedSet.of();
+    if (node.getConstructorArg() instanceof HasDefaultFlavors) {
+      defaultFlavors = ((HasDefaultFlavors) node.getConstructorArg()).getDefaultFlavors();
+      LOG.debug("Got default flavors %s from args of %s", defaultFlavors, target);
+    }
+
+    if (node.getDescription() instanceof ImplicitFlavorsInferringDescription) {
+      defaultFlavors =
+          ((ImplicitFlavorsInferringDescription)
+           node.getDescription()).addImplicitFlavors(defaultFlavors);
+      LOG.debug(
+          "Got default flavors %s from description of %s",
+          defaultFlavors,
+          target);
+    }
+
+    return target.withFlavors(defaultFlavors);
   }
 
   static SimplePerfEvent.Scope getTargetNodeEventScope(

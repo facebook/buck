@@ -73,6 +73,52 @@ public class AppleBinaryIntegrationTest {
   }
 
   @Test
+  public void testAppleBinaryUsesDefaultsFromConfig() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_binary_with_config_default_platform", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    BuildTarget implicitTarget = target.withAppendedFlavors(
+        ImmutableFlavor.of("iphoneos-arm64"));
+    Path outputPath = workspace.getPath(BuildTargets.getGenPath(implicitTarget, "%s"));
+    assertThat(Files.exists(outputPath), is(true));
+    assertThat(Files.exists(Paths.get(outputPath.toString() + "-LinkMap.txt")), is(true));
+    assertThat(
+        workspace.runCommand("file", outputPath.toString()).getStdout().get(),
+        containsString("executable"));
+    assertThat(
+        workspace.runCommand("otool", "-hv", outputPath.toString()).getStdout().get(),
+        containsString("ARM64"));
+  }
+
+  @Test
+  public void testAppleBinaryUsesDefaultsFromArgs() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_binary_with_platform", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    BuildTarget implicitTarget = target.withAppendedFlavors(
+        ImmutableFlavor.of("iphoneos-arm64"));
+    Path outputPath = workspace.getPath(BuildTargets.getGenPath(implicitTarget, "%s"));
+    assertThat(Files.exists(outputPath), is(true));
+    assertThat(Files.exists(Paths.get(outputPath.toString() + "-LinkMap.txt")), is(true));
+    assertThat(
+        workspace.runCommand("file", outputPath.toString()).getStdout().get(),
+        containsString("executable"));
+    assertThat(
+        workspace.runCommand("otool", "-hv", outputPath.toString()).getStdout().get(),
+        containsString("ARM64"));
+  }
+
+  @Test
   public void testAppleBinaryUsesPlatformLinkerFlags() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
