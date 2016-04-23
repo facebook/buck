@@ -46,7 +46,7 @@ public enum BuildRuleSuccessType {
 
   /** Computed {@link RuleKey} matches the one on disk. */
   MATCHING_RULE_KEY(
-      "MATCH"
+      "FOUND"
   ),
 
   /** Fetched via the {@link ArtifactCache} using an input-based rule key. */
@@ -67,7 +67,7 @@ public enum BuildRuleSuccessType {
 
   /** Computed input-based {@link RuleKey} matches the one on disk. */
   MATCHING_INPUT_BASED_RULE_KEY(
-      "MATCH",
+      "FOUND",
       // TODO(#8364892): We should re-upload to the cache under the main rule key once local
       // caching performance is better and we don't hurt the incremental workflow as much.
       Property.SHOULD_UPDATE_METADATA_ON_DISK
@@ -77,7 +77,7 @@ public enum BuildRuleSuccessType {
    * Computed ABI {@link RuleKey} matches the one on disk.
    */
   MATCHING_ABI_RULE_KEY(
-      "MATCH",
+      "FOUND",
       Property.SHOULD_UPDATE_METADATA_ON_DISK
   ),
 
@@ -85,7 +85,7 @@ public enum BuildRuleSuccessType {
    * Computed dep-file {@link RuleKey} matches the one on disk
    */
   MATCHING_DEP_FILE_RULE_KEY(
-      "MATCH",
+      "FOUND",
       Property.SHOULD_UPDATE_METADATA_ON_DISK
   ),
 
