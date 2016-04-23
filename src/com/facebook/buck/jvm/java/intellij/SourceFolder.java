@@ -49,19 +49,4 @@ public class SourceFolder extends InclusiveFolder {
   public IJFolderFactory getFactory() {
     return FACTORY;
   }
-
-  @Override
-  public IjFolder merge(IjFolder otherFolder) {
-    checkMergeConditions(otherFolder);
-
-    if (otherFolder == this) {
-      return this;
-    }
-
-    return new SourceFolder(
-        otherFolder.getPath(),
-        getWantsPackagePrefix() || otherFolder.getWantsPackagePrefix(),
-        combineInputs(this, otherFolder)
-    );
-  }
 }

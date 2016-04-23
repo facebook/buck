@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java.intellij;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -53,12 +52,6 @@ abstract class IjFolder implements Comparable<IjFolder> {
    * @return name IntelliJ would use to refer to this type of folder.
    */
   public abstract String getIjName();
-
-  /**
-   * @return true if the folder can be coalesced with others of the same type
-   */
-
-  public abstract boolean isCoalescent();
 
   /**
    * @return path that this folder represents relative to the project root.
@@ -104,10 +97,13 @@ abstract class IjFolder implements Comparable<IjFolder> {
   }
 
   public boolean canMergeWith(IjFolder other) {
-    return other != null;
+    return other != null &&
+        getClass().equals(other.getClass()) &&
+        getWantsPackagePrefix() == other.getWantsPackagePrefix() &&
+        getPath().startsWith(other.getPath());
   }
 
-  void checkMergeConditions(IjFolder otherFolder) {
+  public IjFolder merge(IjFolder otherFolder) {
     if (!canMergeWith(otherFolder)) {
       throw new IllegalArgumentException(
           "Can not merge " + this.getClass().getSimpleName() +
@@ -115,10 +111,16 @@ abstract class IjFolder implements Comparable<IjFolder> {
         );
     }
 
-    Preconditions.checkArgument(getPath().startsWith(otherFolder.getPath()));
-  }
+    if (equals(otherFolder)) {
+      return this;
+    }
 
-  public abstract IjFolder merge(IjFolder otherFolder);
+    return getFactory().create(
+        otherFolder.getPath(),
+        getWantsPackagePrefix() || otherFolder.getWantsPackagePrefix(),
+        combineInputs(this, otherFolder)
+    );
+  }
 
   @Override
   public int compareTo(IjFolder other) {
@@ -127,9 +129,11 @@ abstract class IjFolder implements Comparable<IjFolder> {
 
   @Override
   public boolean equals(Object other) {
-    if (other == null ||
-        !(other instanceof IjFolder) ||
-        !this.getClass().equals(other.getClass())) {
+    if (this == other) {
+      return true;
+    }
+
+    if (other == null || !this.getClass().equals(other.getClass())) {
       return false;
     }
 

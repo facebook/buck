@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -21,32 +21,37 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 /**
- * A path which contains a set of sources we wish to present to IntelliJ.
+ * Base class for folders which can only be merged with other instances holding
+ * equal data.
  */
-public class AnnotationOutputFolder extends SelfMergingOnlyFolder {
+public abstract class SelfMergingOnlyFolder extends InclusiveFolder {
 
-  public static final IJFolderFactory FACTORY = new IJFolderFactory() {
-    @Override
-    public IjFolder create(
-        Path path, boolean wantsPrefix, ImmutableSortedSet<Path> inputs) {
-      return new AnnotationOutputFolder(path, wantsPrefix, inputs);
-    }
-  };
-
-  AnnotationOutputFolder(Path path, boolean wantsPackagePrefix, ImmutableSortedSet<Path> inputs) {
+  SelfMergingOnlyFolder(Path path, boolean wantsPackagePrefix, ImmutableSortedSet<Path> inputs) {
     super(path, wantsPackagePrefix, inputs);
   }
 
-  AnnotationOutputFolder(Path path, boolean wantsPackagePrefix) {
+  SelfMergingOnlyFolder(Path path, boolean wantsPackagePrefix) {
     super(path, wantsPackagePrefix);
   }
 
-  AnnotationOutputFolder(Path path) {
+  SelfMergingOnlyFolder(Path path) {
     super(path);
   }
 
   @Override
-  public IJFolderFactory getFactory() {
-    return FACTORY;
+  public boolean canMergeWith(IjFolder other) {
+    return equals(other);
+  }
+
+  @Override
+  public IjFolder merge(IjFolder otherFolder) {
+    if (equals(otherFolder)) {
+      return this;
+    }
+
+    throw new IllegalArgumentException(
+        "Can not merge two " +
+            getClass().getSimpleName() +
+            "s with different paths");
   }
 }

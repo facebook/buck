@@ -193,9 +193,21 @@ public class IjModuleFactory {
       Path path = folder.getPath();
       IjFolder otherFolder = sourceFoldersMergeMap.get(path);
       if (otherFolder != null) {
-        folder = folder.merge(otherFolder);
+        folder = mergeAllowingTestToBePromotedToSource(otherFolder, folder);
       }
       sourceFoldersMergeMap.put(path, folder);
+    }
+
+    private IjFolder mergeAllowingTestToBePromotedToSource(IjFolder from, IjFolder to) {
+      if ((from instanceof TestFolder && to instanceof SourceFolder) ||
+          (to instanceof TestFolder && from instanceof SourceFolder)) {
+        return new SourceFolder(
+            to.getPath(),
+            from.getWantsPackagePrefix() || to.getWantsPackagePrefix(),
+            IjFolder.combineInputs(from, to)
+        );
+      }
+      return from.merge(to);
     }
 
     public void addDeps(

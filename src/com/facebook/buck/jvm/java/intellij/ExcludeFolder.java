@@ -58,31 +58,4 @@ public class ExcludeFolder extends IjFolder {
   public String getIjName() {
     return FOLDER_IJ_NAME;
   }
-
-  /**
-   * @return true if the folder can be coalesced with others of the same type
-   */
-  @Override
-  public boolean isCoalescent() {
-    return false;
-  }
-
-  @SuppressWarnings("unused")
-  public boolean canMergeWith(SourceFolder other) {
-    return false;
-  }
-
-  @Override
-  public IjFolder merge(IjFolder otherFolder) {
-    checkMergeConditions(otherFolder);
-
-    if (otherFolder == this) {
-      return this;
-    }
-
-    return new ExcludeFolder(
-        otherFolder.getPath(),
-        combineInputs(this, otherFolder)
-    );
-  }
 }

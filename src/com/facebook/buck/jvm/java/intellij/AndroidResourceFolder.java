@@ -23,7 +23,7 @@ import java.nio.file.Path;
 /**
  * A path which contains a set of sources we wish to present to IntelliJ.
  */
-public class AndroidResourceFolder extends InclusiveFolder {
+public class AndroidResourceFolder extends SelfMergingOnlyFolder {
 
   public static final IJFolderFactory FACTORY = new IJFolderFactory() {
     @Override
@@ -42,29 +42,7 @@ public class AndroidResourceFolder extends InclusiveFolder {
   }
 
   @Override
-  public boolean isCoalescent() {
-    return false;
-  }
-
-  @Override
-  public boolean canMergeWith(IjFolder other) {
-    return false;
-  }
-
-  @Override
   public IJFolderFactory getFactory() {
     return FACTORY;
   }
-
-  @Override
-  public IjFolder merge(IjFolder otherFolder) {
-    if (getPath().equals(otherFolder.getPath()) &&
-        getInputs().equals(otherFolder.getInputs())) {
-      return this;
-    }
-
-    throw new IllegalArgumentException(
-        "Can not merge two AndroidResourceFolders with different paths");
-  }
-
 }

@@ -46,17 +46,4 @@ public abstract class InclusiveFolder extends IjFolder {
   public String getIjName() {
     return FOLDER_IJ_NAME;
   }
-
-  /**
-   * @return true if the folder can be coalesced with others of the same type
-   */
-  @Override
-  public boolean isCoalescent() {
-    return true;
-  }
-
-  @SuppressWarnings("unused")
-  public boolean canMergeWith(ExcludeFolder other) {
-    return false;
-  }
 }

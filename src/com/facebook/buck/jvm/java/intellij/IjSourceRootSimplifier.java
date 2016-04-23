@@ -24,7 +24,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -32,8 +31,11 @@ import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -58,26 +60,11 @@ public class IjSourceRootSimplifier {
   public ImmutableSet<IjFolder> simplify(
       SimplificationLimit limit,
       ImmutableSet<IjFolder> folders) {
-
-    ImmutableSet.Builder<IjFolder> mergedFoldersBuilder = ImmutableSet.builder();
-    ImmutableSet.Builder<IjFolder> foldersToMergeBuilder = ImmutableSet.builder();
-
-    for (IjFolder folder : folders) {
-      if (folder.isCoalescent()) {
-        foldersToMergeBuilder.add(folder);
-      } else {
-        mergedFoldersBuilder.add(folder);
-      }
-    }
-
-    ImmutableSet<IjFolder> foldersToMerge = foldersToMergeBuilder.build();
-    PackagePathCache packagePathCache = new PackagePathCache(foldersToMerge, javaPackageFinder);
+    PackagePathCache packagePathCache = new PackagePathCache(folders, javaPackageFinder);
     BottomUpPathMerger walker =
-        new BottomUpPathMerger(foldersToMerge, limit.getValue(), packagePathCache);
+        new BottomUpPathMerger(folders, limit.getValue(), packagePathCache);
 
-    return mergedFoldersBuilder
-        .addAll(walker.getMergedFolders())
-        .build();
+    return walker.getMergedFolders();
   }
 
   @Value.Immutable
@@ -154,53 +141,65 @@ public class IjSourceRootSimplifier {
                   })
               .toList();
 
-      boolean anyAbsent = FluentIterable.from(children)
-          .anyMatch(Predicates.equalTo(Optional.<IjFolder>absent()));
-      if (anyAbsent) {
-        // Signal that no further merging should be done.
-        return Optional.absent();
+      List<IjFolder> presentChildren = new ArrayList<>(children.size());
+      for (Optional<IjFolder> folderOptional : children) {
+        if (!folderOptional.isPresent()) {
+          return Optional.absent();
+        }
+
+        IjFolder folder = folderOptional.get();
+        // We don't want to merge exclude folders.
+        if (folder instanceof ExcludeFolder) {
+          continue;
+        }
+        presentChildren.add(folderOptional.get());
       }
 
-      ImmutableSet<IjFolder> presentChildren = FluentIterable.from(children)
-          .transform(
-              new Function<Optional<IjFolder>, IjFolder>() {
-                @Override
-                public IjFolder apply(Optional<IjFolder> input) {
-                  return input.get();
-                }
-              })
-          .toSet();
       IjFolder currentFolder = mergePathsMap.get(currentPath);
       if (presentChildren.isEmpty()) {
-        return Optional.of(Preconditions.checkNotNull(currentFolder));
+        return Optional.fromNullable(currentFolder);
       }
 
-      final IjFolder myFolder;
+      final IjFolder mergeDistination;
       if (currentFolder != null) {
-        myFolder = currentFolder;
+        mergeDistination = currentFolder;
       } else {
-        IjFolder aChild = findBestChildToAggregateTo(presentChildren);
-        myFolder = aChild.createCopyWith(currentPath);
+        mergeDistination =
+            findBestChildToAggregateTo(presentChildren)
+              .createCopyWith(currentPath);
       }
+
       boolean allChildrenCanBeMerged = FluentIterable.from(presentChildren)
           .allMatch(
               new Predicate<IjFolder>() {
                 @Override
                 public boolean apply(IjFolder input) {
-                  return canMerge(myFolder, input, packagePathCache);
+                  return canMerge(mergeDistination, input, packagePathCache);
                 }
               });
       if (!allChildrenCanBeMerged) {
         return Optional.absent();
       }
-      IjFolder mergedFolder = myFolder;
-      for (IjFolder presentChild : presentChildren) {
-        mergePathsMap.remove(presentChild.getPath());
-        mergedFolder = presentChild.merge(mergedFolder);
-      }
-      mergePathsMap.put(mergedFolder.getPath(), mergedFolder);
 
-      return Optional.of(mergedFolder);
+      return attemptMerge(mergeDistination, presentChildren);
+    }
+
+    private Optional<IjFolder> attemptMerge(IjFolder mergePoint, Collection<IjFolder> children) {
+      List<Path> mergedPaths = new ArrayList<>(children.size());
+      for (IjFolder presentChild : children) {
+        mergedPaths.add(presentChild.getPath());
+        if (!canMerge(mergePoint, presentChild, packagePathCache)) {
+          return Optional.absent();
+        }
+        mergePoint = presentChild.merge(mergePoint);
+      }
+
+      for (Path path : mergedPaths) {
+        mergePathsMap.remove(path);
+      }
+      mergePathsMap.put(mergePoint.getPath(), mergePoint);
+
+      return Optional.of(mergePoint);
     }
   }
 
@@ -211,7 +210,7 @@ public class IjSourceRootSimplifier {
    * - SourceFolder - because most things should merge into it
    * - First Child - because no other folders significantly affect aggregation.
    */
-  private static IjFolder findBestChildToAggregateTo(ImmutableSet<IjFolder> children) {
+  private static IjFolder findBestChildToAggregateTo(Iterable<IjFolder> children) {
     Iterator<IjFolder> childIterator = children.iterator();
 
     IjFolder bestCandidate = childIterator.next();
@@ -236,20 +235,8 @@ public class IjSourceRootSimplifier {
       PackagePathCache packagePathCache) {
     Preconditions.checkArgument(child.getPath().startsWith(parent.getPath()));
 
-    if (!parent.getClass().equals(child.getClass())) {
-      return false;
-    }
-
-    if (!child.isCoalescent()) {
-      return false;
-    }
-
     if (!child.canMergeWith(parent)) {
         return false;
-    }
-
-    if (parent.getWantsPackagePrefix() != child.getWantsPackagePrefix()) {
-      return false;
     }
 
     if (parent.getWantsPackagePrefix()) {

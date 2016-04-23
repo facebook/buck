@@ -247,13 +247,11 @@ public class IjSourceRootSimplifierTest {
     IjFolder abrFolder = buildNonCoalescingFolder("src/a/b/r");
     IjFolder acFolder = buildSourceFolder("src/a/c");
 
-    IjFolder mergedSrcFolder = buildSourceFolder("src/");
-
     assertThat(
         simplifier.simplify(
             SimplificationLimit.of(0),
             ImmutableSet.of(abFolder, abrFolder, acFolder)),
-        Matchers.containsInAnyOrder(mergedSrcFolder, abrFolder));
+        Matchers.containsInAnyOrder(abFolder, abrFolder, acFolder));
   }
 
   @Test

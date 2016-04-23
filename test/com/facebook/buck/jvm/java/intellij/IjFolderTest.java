@@ -45,23 +45,6 @@ public class IjFolderTest {
         testFolder,
         testFolder.merge(testFolder));
 
-    IjFolder mergedSourceAndTest =
-        new SourceFolder(
-            srcPath,
-            false,
-            ImmutableSortedSet.of(
-                Paths.get("Source.java"),
-                Paths.get("Test.java")
-            ));
-
-    assertEquals("Merging prod with test means test is promoted to prod.",
-        mergedSourceAndTest,
-        testFolder.merge(sourceFolder));
-
-    assertEquals("Merging prod with test means test is promoted to prod in either order.",
-        mergedSourceAndTest,
-        sourceFolder.merge(testFolder));
-
     assertEquals("Merging the folder with itself is that folder.",
         excludeFolder,
         excludeFolder.merge(excludeFolder));

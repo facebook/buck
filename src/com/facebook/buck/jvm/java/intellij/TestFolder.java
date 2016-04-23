@@ -45,19 +45,4 @@ public class TestFolder extends InclusiveFolder {
   public IJFolderFactory getFactory() {
     return FACTORY;
   }
-
-  @Override
-  public IjFolder merge(IjFolder otherFolder) {
-    checkMergeConditions(otherFolder);
-
-    if (otherFolder == this) {
-      return this;
-    }
-
-    IJFolderFactory factory = otherFolder.getFactory();
-    return factory.create(
-        otherFolder.getPath(),
-        getWantsPackagePrefix() || otherFolder.getWantsPackagePrefix(),
-        combineInputs(this, otherFolder));
-  }
 }
