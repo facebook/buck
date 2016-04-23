@@ -146,7 +146,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
-      BuildableContext buildableContext) {
+      final BuildableContext buildableContext) {
 
     final ImmutableList.Builder<Step> relinkerSteps = ImmutableList.builder();
     if (isRelinkable) {
@@ -180,6 +180,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
             ImmutableSet<String> symbolsNeeded = readSymbolsNeeded();
             if (!isRelinkable) {
               getProjectFilesystem().copyFile(getBaseLibPath(), getLibFilePath());
+              buildableContext.recordArtifact(getLibFilePath());
             } else {
               writeVersionScript(symbolsNeeded);
               for (Step s : relinkerSteps.build()) {
