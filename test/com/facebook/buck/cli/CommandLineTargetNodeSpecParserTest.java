@@ -76,4 +76,11 @@ public class CommandLineTargetNodeSpecParserTest {
     assertEquals("//...", PARSER.normalizeBuildTargetString("..."));
   }
 
+  @Test
+  public void crossCellTargets(){
+    assertEquals("@other//:", PARSER.normalizeBuildTargetString("@other//:"));
+    assertEquals("+other//...", PARSER.normalizeBuildTargetString("+other//..."));
+    assertEquals("other//:", PARSER.normalizeBuildTargetString("other//"));
+  }
+
 }

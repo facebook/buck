@@ -41,6 +41,12 @@ public class CommandLineBuildTargetNormalizerTest {
     assertEquals("Slash before colon should be stripped",
         "//src/com/facebook/orca:messenger",
         normalize("src/com/facebook/orca/:messenger"));
+
+    // Assert the cell prefix normalizes
+    assertEquals("other//src/com/facebook/orca:orca", normalize("other//src/com/facebook/orca"));
+    assertEquals(
+        "@other//src/com/facebook/orca:messenger",
+        normalize("@other//src/com/facebook/orca:messenger"));
   }
 
   @Test(expected = NullPointerException.class)

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
@@ -92,8 +93,21 @@ class CommandLineBuildTargetNormalizer {
       return buildTargetFromCommandLine;
     }
 
-    // Add the colon, if necessary.
     String target = buildTargetFromCommandLine;
+
+    // Save the cell
+    int targetSeparator = target.indexOf("//");
+    String cellName = "";
+    if (targetSeparator > 0) {
+      cellName = target.substring(0, targetSeparator);
+      target = target.substring(targetSeparator);
+    }
+
+    // Strip out the leading "//" if there is one to make it easier to normalize the
+    // remaining target string.  We'll add this back at the end.
+    target = MoreStrings.stripPrefix(target, "//").or(target);
+
+    // Add the colon, if necessary.
     int colonIndex = target.indexOf(':');
     if (colonIndex < 0) {
       // Strip a trailing slash if there is no colon.
@@ -114,11 +128,6 @@ class CommandLineBuildTargetNormalizer {
       }
     }
 
-    // Add the double slash prefix, if necessary.
-    if (!target.startsWith("//")) {
-      target = "//" + target;
-    }
-
-    return target;
+    return cellName + "//" + target;
   }
 }

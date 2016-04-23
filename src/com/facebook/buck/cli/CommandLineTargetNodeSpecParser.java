@@ -39,6 +39,13 @@ public class CommandLineTargetNodeSpecParser {
 
   @VisibleForTesting
   protected String normalizeBuildTargetString(String target) {
+    // Check and save the cell name
+    int targetSeparator = target.indexOf("//");
+    String cellName = "";
+    if (targetSeparator > 0) {
+      cellName = target.substring(0, targetSeparator);
+      target = target.substring(targetSeparator);
+    }
 
     // Strip out the leading "//" if there is one to make it easier to normalize the
     // remaining target string.  We'll add this back at the end.
@@ -73,7 +80,7 @@ public class CommandLineTargetNodeSpecParser {
       target += ":" + nameAfterColon.get();
     }
 
-    return "//" + target;
+    return cellName + "//" + target;
   }
 
   public TargetNodeSpec parse(Function<Optional<String>, Path> cellNames, String arg) {

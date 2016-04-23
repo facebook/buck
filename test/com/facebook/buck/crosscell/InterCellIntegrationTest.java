@@ -118,6 +118,11 @@ public class InterCellIntegrationTest {
         "--show-target-hash",
         "//:cxxbinary");
     result.assertSuccess();
+
+    ProjectWorkspace.ProcessResult result2 = primary.runBuckCommand(
+        "targets",
+        "secondary//:cxxlib");
+    result2.assertSuccess();
   }
 
   @Test
