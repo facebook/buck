@@ -181,20 +181,19 @@ public class HaskellBinaryDescription implements
 
     final CommandTool executable = executableBuilder.build();
     final HaskellLinkRule linkRule =
-        resolver.addToIndex(
-            HaskellDescriptionUtils.createLinkRule(
-                binaryTarget,
-                params,
-                resolver,
-                pathResolver,
-                cxxPlatform,
-                haskellBuckConfig,
-                Linker.LinkType.EXECUTABLE,
-                linkFlags,
-                linkArgs,
-                FluentIterable.from(params.getDeps())
-                    .filter(NativeLinkable.class),
-                depType));
+        HaskellDescriptionUtils.createLinkRule(
+            binaryTarget,
+            params,
+            resolver,
+            pathResolver,
+            cxxPlatform,
+            haskellBuckConfig,
+            Linker.LinkType.EXECUTABLE,
+            linkFlags,
+            linkArgs,
+            FluentIterable.from(params.getDeps())
+                .filter(NativeLinkable.class),
+            depType);
 
     return new BinaryWrapperRule(params, pathResolver) {
 

@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY f7f5845dea102f6d56bee5e15e438a6256b76c08 #@#
+#@# GENERATED FILE: DO NOT MODIFY 47a61a18fc7b4f0eb0a4978faf2e509321d7d243 #@#
 {
   "haskell" : {
     "deps" : [
+      "//src/com/facebook/buck/file:rules",
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/rules/coercer:coercer",

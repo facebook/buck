@@ -16,6 +16,7 @@
 
 package com.facebook.buck.haskell;
 
+import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
@@ -23,18 +24,22 @@ import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkables;
+import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
@@ -180,11 +185,11 @@ public class HaskellDescriptionUtils {
     Tool linker = haskellBuckConfig.getLinker().resolve(resolver);
     String name = target.getShortName();
 
+    ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
-    ImmutableList.Builder<String> flagsBuilder = ImmutableList.builder();
 
     // Add the base flags from the `.buckconfig` first.
-    flagsBuilder.addAll(haskellBuckConfig.getLinkerFlags());
+    argsBuilder.addAll(StringArg.from(haskellBuckConfig.getLinkerFlags()));
 
     // Pass in the appropriate flags to link a shared library.
     if (linkType.equals(Linker.LinkType.SHARED)) {
@@ -193,47 +198,91 @@ public class HaskellDescriptionUtils {
               Optional.<String>absent(),
               target.withFlavors(),
               cxxPlatform);
-      flagsBuilder.add("-shared", "-dynamic");
-      flagsBuilder.addAll(
-          MoreIterables.zipAndConcat(
-              Iterables.cycle("-optl"),
-              cxxPlatform.getLd().resolve(resolver).soname(name)));
+      argsBuilder.addAll(StringArg.from("-shared", "-dynamic"));
+      argsBuilder.addAll(
+          StringArg.from(
+              MoreIterables.zipAndConcat(
+                  Iterables.cycle("-optl"),
+                  cxxPlatform.getLd().resolve(resolver).soname(name))));
     }
 
     // Add in extra flags passed into this function.
-    flagsBuilder.addAll(extraFlags);
+    argsBuilder.addAll(StringArg.from(extraFlags));
 
     // We pass in the linker inputs and all native linkable deps by prefixing with `-optl` so that
     // the args go straight to the linker, and preserve their order.
-    argsBuilder.addAll(linkerInputs);
+    linkerArgsBuilder.addAll(linkerInputs);
     for (NativeLinkable nativeLinkable :
          NativeLinkables.getNativeLinkables(cxxPlatform, deps, depType).values()) {
-      argsBuilder.addAll(
+      linkerArgsBuilder.addAll(
           NativeLinkables.getNativeLinkableInput(cxxPlatform, depType, nativeLinkable).getArgs());
     }
 
-    ImmutableList<Arg> args = argsBuilder.build();
-    ImmutableList<String> flags = flagsBuilder.build();
+    // Since we use `-optl` to pass all linker inputs directly to the linker, the haskell linker
+    // will complain about not having any input files.  So, create a dummy archive with an empty
+    // module and pass that in normally to work around this.
+    BuildTarget emptyModuleTarget = target.withAppendedFlavor(ImmutableFlavor.of("empty-module"));
+    WriteFile emptyModule =
+        resolver.addToIndex(
+            new WriteFile(
+                baseParams.copyWithBuildTarget(emptyModuleTarget),
+                pathResolver,
+                "module Unused where",
+                BuildTargets.getGenPath(emptyModuleTarget, "%s/Unused.hs"),
+                /* executable */ false));
+    HaskellCompileRule emptyCompiledModule =
+        resolver.addToIndex(
+            createCompileRule(
+                target.withAppendedFlavors(ImmutableFlavor.of("empty-compiled-module")),
+                baseParams,
+                resolver,
+                pathResolver,
+                cxxPlatform,
+                haskellBuckConfig,
+                CxxSourceRuleFactory.PicType.PIC,
+                Optional.<String>absent(),
+                ImmutableList.<SourcePath>of(
+                    new BuildTargetSourcePath(emptyModule.getBuildTarget()))));
+    BuildTarget emptyArchiveTarget =
+        target.withAppendedFlavors(ImmutableFlavor.of("empty-archive"));
+    Archive emptyArchive =
+        resolver.addToIndex(
+            Archive.from(
+                emptyArchiveTarget,
+                baseParams,
+                pathResolver,
+                cxxPlatform.getAr(),
+                cxxPlatform.getRanlib(),
+                Archive.Contents.NORMAL,
+                BuildTargets.getGenPath(emptyArchiveTarget, "%s/libempty.a"),
+                ImmutableList.of(emptyCompiledModule.getObjectDirPath())));
+    argsBuilder.add(
+        new SourcePathArg(pathResolver, new BuildTargetSourcePath(emptyArchive.getBuildTarget())));
 
-    return new HaskellLinkRule(
-        baseParams.copyWithChanges(
-            target,
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(linker.getDeps(pathResolver))
-                    .addAll(
-                        FluentIterable.from(args)
-                            .transformAndConcat(Arg.getDepsFunction(pathResolver)))
-                    .build()),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
-        pathResolver,
-        cxxPlatform.getAr(),
-        cxxPlatform.getRanlib(),
-        linker,
-        flags,
-        name,
-        args,
-        haskellBuckConfig.shouldCacheLinks());
+    ImmutableList<Arg> args = argsBuilder.build();
+    ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
+
+    return resolver.addToIndex(
+        new HaskellLinkRule(
+            baseParams.copyWithChanges(
+                target,
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(linker.getDeps(pathResolver))
+                        .addAll(
+                            FluentIterable.from(args)
+                                .transformAndConcat(Arg.getDepsFunction(pathResolver)))
+                        .addAll(
+                            FluentIterable.from(linkerArgs)
+                                .transformAndConcat(Arg.getDepsFunction(pathResolver)))
+                        .build()),
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            pathResolver,
+            linker,
+            name,
+            args,
+            linkerArgs,
+            haskellBuckConfig.shouldCacheLinks()));
   }
 
   /**
