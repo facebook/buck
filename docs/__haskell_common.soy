@@ -1,0 +1,36 @@
+{namespace haskell_common}
+
+/***/
+{template .srcs_arg}
+{call buck.arg}
+  {param name : 'srcs' /}
+  {param default : '[]' /}
+  {param desc}
+  A list of Haskell sources to be built by this rule.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .deps_arg}
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  Either {call buck.haskell_library /} or {call buck.prebuilt_haskell_library /} rules
+  from which this rules sources import modules or native linkable rules exporting symbols
+  this rules sources call into.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .exported_linker_flags_arg}
+{call buck.arg}
+  {param name: 'exported_linker_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  Linker flags used by dependent rules when linking with this library.
+  {/param}
+{/call}
+{/template}

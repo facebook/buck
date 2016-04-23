@@ -208,6 +208,8 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
             'halide_library',
         ],
         'haskell': [
+            'haskell_binary',
+            'haskell_library',
             'prebuilt_haskell_library',
         ],
         'ios': [
@@ -698,6 +700,16 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 /***/
 {template .groovy_library}
 {call .ruleLink}{param name : 'groovy_library' /}{/call}
+{/template}
+
+/***/
+{template .haskell_binary}
+{call .ruleLink}{param name : 'haskell_binary' /}{/call}
+{/template}
+
+/***/
+{template .haskell_library}
+{call .ruleLink}{param name : 'haskell_library' /}{/call}
 {/template}
 
 /***/

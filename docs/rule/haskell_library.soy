@@ -1,0 +1,51 @@
+{namespace haskell_library}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'haskell_library()' /}
+    {param prettify: true /}
+    {param description}
+      A haskell_library() rule represents a group of Haskell sources.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A <code>haskell_library()</code> rule is used to identity a group of
+Haskell sources.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call haskell_common.srcs_arg /}
+
+{call haskell_common.deps_arg /}
+
+{/param} // close args
+
+{param examples}
+
+{literal}<pre class="prettyprint lang-py">
+haskell_library(
+  name = 'fileutil',
+  srcs = [
+    'FileUtil.hs',
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

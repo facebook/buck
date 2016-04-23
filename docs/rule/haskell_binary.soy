@@ -1,0 +1,62 @@
+{namespace haskell_binary}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'haskell_binary()' /}
+    {param prettify: true /}
+    {param description}
+      A haskell_binary() rule represents a Haskell executable.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A <code>haskell_binary()</code> rule represents a groups of Haskell sources
+and deps which build an executable.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'main' /}
+  {param default: 'None' /}
+  {param desc}
+  The main module serving as the entry point into the binary.  If not specified,
+  the compiler default is used.
+  {/param}
+{/call}
+
+{call native_common.link_style /}
+
+{call haskell_common.srcs_arg /}
+
+{call haskell_common.deps_arg /}
+
+{/param} // close args
+
+{param examples}
+
+{literal}<pre class="prettyprint lang-py">
+haskell_binary(
+  name = 'foo',
+  srcs = [
+    'Foo.hs',
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

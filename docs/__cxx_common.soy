@@ -251,18 +251,6 @@
 {/template}
 
 /***/
-{template .link_style}
-{call buck.arg}
-  {param name : 'link_style' /}
-  {param default: 'static' /}
-  {param desc}
-  Determines whether to build and link this rule's dependencies statically or dynamically. Can be
-  either <code>static</code> or <code>dynamic</code>.
-  {/param}
-{/call}
-{/template}
-
-/***/
 {template .force_static}
 {call buck.arg}
   {param name : 'force_static' /}
