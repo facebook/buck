@@ -34,7 +34,7 @@ public class BuckQueryAction {
   }
 
   public static void execute(final Project project, final String target) {
-    ApplicationManager.getApplication().invokeLater(
+    ApplicationManager.getApplication().executeOnPooledThread(
         new Runnable() {
           public void run() {
             BuckBuildManager buildManager = BuckBuildManager.getInstance(project);

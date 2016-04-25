@@ -19,8 +19,6 @@ package com.facebook.buck.intellij.plugin.actions;
 import com.facebook.buck.intellij.plugin.file.BuckFileUtil;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
@@ -60,18 +58,13 @@ public class GoToBuckFile extends DumbAwareAction {
 
     final VirtualFile file = BuckFileUtil.getBuckFile(virtualFile);
     if (file != null) {
-      ApplicationManager.getApplication().invokeLater(new Runnable() {
-        @Override
-        public void run() {
-          // This is for better cursor position.
-          OpenFileDescriptor descriptor = new OpenFileDescriptor(project, file);
-          Navigatable n = descriptor.setUseCurrentWindow(false);
-          if (!n.canNavigate()) {
-            return;
-          }
-          n.navigate(true);
-        }
-      }, ModalityState.NON_MODAL);
+      final OpenFileDescriptor descriptor = new OpenFileDescriptor(project, file);
+      // This is for better cursor position.
+      final Navigatable n = descriptor.setUseCurrentWindow(false);
+      if (!n.canNavigate()) {
+        return;
+      }
+      n.navigate(true);
     }
   }
 }

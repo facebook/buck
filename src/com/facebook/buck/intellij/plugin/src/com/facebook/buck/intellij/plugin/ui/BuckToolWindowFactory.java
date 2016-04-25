@@ -124,13 +124,12 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
 
     RunnerLayoutUi runnerLayoutUi = BuckUIManager.getInstance(project).getLayoutUi(project);
 
-    Content consoleContent = createConsoleContent(runnerLayoutUi, project);
-
     BuckSettingsProvider.State state = BuckSettingsProvider.getInstance().getState();
 
     JBTabs myTabs = new JBTabsImpl(project);
     // Debug Console
     if (state.showDebug) {
+      Content consoleContent = createConsoleContent(runnerLayoutUi, project);
       myTabs.addTab(new TabInfo(consoleContent.getComponent())).setText("Debug");
     }
     // Build Tree Events

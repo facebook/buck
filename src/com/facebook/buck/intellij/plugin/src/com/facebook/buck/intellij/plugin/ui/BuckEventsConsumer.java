@@ -176,21 +176,21 @@ public class BuckEventsConsumer implements
     public void consumeParseRuleStart(long timestamp) {
         mParseFilesStartTimestamp = timestamp;
 
-        ApplicationManager.getApplication().invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                // start may be called before of after progress update
-                if (BuckEventsConsumer.this.mParseProgress == null) {
-                    BuckEventsConsumer.this.mParseProgress = new BuckTreeNodeDetail(
-                        mCurrentBuildRootElement,
-                        BuckTreeNodeDetail.DetailType.INFO,
-                        "Current file parsing progress: " +
-                            Math.round(mParseProgressValue * 100) + "%");
+        // start may be called before of after progress update
+        if (BuckEventsConsumer.this.mParseProgress == null) {
+            BuckEventsConsumer.this.mParseProgress = new BuckTreeNodeDetail(
+                mCurrentBuildRootElement,
+                BuckTreeNodeDetail.DetailType.INFO,
+                "Current file parsing progress: " +
+                    Math.round(mParseProgressValue * 100) + "%");
+            ApplicationManager.getApplication().invokeLater(new Runnable() {
+                @Override
+                public void run() {
                     BuckEventsConsumer.this.mCurrentBuildRootElement.addChild(mParseProgress);
                     BuckEventsConsumer.this.mTreeModel.reload();
                 }
-            }
-        });
+            });
+        }
     }
 
     @Override
@@ -368,14 +368,6 @@ public class BuckEventsConsumer implements
                 //set progress to 100%
                 consumeBuckBuildProgressUpdate(timestamp, 1f);
 
-                ApplicationManager.getApplication().invokeLater(new Runnable() {
-                  @Override
-                  public void run() {
-                    BuckEventsConsumer.this.mBuildProgress.setDetail(message);
-                    BuckEventsConsumer.this.mTreeModel.reload();
-                  }
-                });
-
                 if (errorsMessageToUse.length() > 0) {
                     clearDisplay();
                     BuckTreeNodeDetail errorsMessageNode = new BuckTreeNodeDetail(
@@ -391,7 +383,13 @@ public class BuckEventsConsumer implements
                     BuckEventsConsumer.this.displayErrors();
                 }
 
-                BuckEventsConsumer.this.mTreeModel.reload();
+                ApplicationManager.getApplication().invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        BuckEventsConsumer.this.mBuildProgress.setDetail(message);
+                        BuckEventsConsumer.this.mTreeModel.reload();
+                    }
+                });
             }
         });
 
@@ -402,20 +400,20 @@ public class BuckEventsConsumer implements
     public void consumeBuildStart(long timestamp) {
         log("Starting build\n");
         mMainBuildStartTimestamp = timestamp;
-        ApplicationManager.getApplication().invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                // start may be called before of after progress update
-                if (BuckEventsConsumer.this.mBuildProgress == null) {
-                    BuckEventsConsumer.this.mBuildProgress = new BuckTreeNodeDetail(
-                        BuckEventsConsumer.this.mCurrentBuildRootElement,
-                        BuckTreeNodeDetail.DetailType.INFO,
-                        "Current build progress: " + Math.round(mBuildProgressValue * 100) + "%");
+        if (BuckEventsConsumer.this.mBuildProgress == null) {
+            BuckEventsConsumer.this.mBuildProgress = new BuckTreeNodeDetail(
+                BuckEventsConsumer.this.mCurrentBuildRootElement,
+                BuckTreeNodeDetail.DetailType.INFO,
+                "Current build progress: " + Math.round(mBuildProgressValue * 100) + "%");
+            ApplicationManager.getApplication().invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    // start may be called before of after progress update
                     BuckEventsConsumer.this.mCurrentBuildRootElement.addChild(mBuildProgress);
                     BuckEventsConsumer.this.mTreeModel.reload();
                 }
-            }
-        });
+            });
+        }
     }
 
     @Override
@@ -461,76 +459,75 @@ public class BuckEventsConsumer implements
     @Override
     public void consumeBuckProjectGenerationStarted(long timestamp) {
         mProjectGenerationStartTimestamp = timestamp;
-
-        ApplicationManager.getApplication().invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                // start may be called before of after progress update
-                if (BuckEventsConsumer.this.mProjectGenerationProgress == null) {
-                    BuckEventsConsumer.this.mProjectGenerationProgress = new BuckTreeNodeDetail(
-                        BuckEventsConsumer.this.mCurrentBuildRootElement,
-                        BuckTreeNodeDetail.DetailType.INFO,
-                        "Current project generation progress: " +
-                            Math.round(BuckEventsConsumer.this
-                                .mProjectGenerationProgressValue * 100) + "%");
+        // start may be called before of after progress update
+        if (BuckEventsConsumer.this.mProjectGenerationProgress == null) {
+            BuckEventsConsumer.this.mProjectGenerationProgress = new BuckTreeNodeDetail(
+                BuckEventsConsumer.this.mCurrentBuildRootElement,
+                BuckTreeNodeDetail.DetailType.INFO,
+                "Current project generation progress: " +
+                    Math.round(BuckEventsConsumer.this
+                        .mProjectGenerationProgressValue * 100) + "%");
+            ApplicationManager.getApplication().invokeLater(new Runnable() {
+                @Override
+                public void run() {
                     BuckEventsConsumer.this.mCurrentBuildRootElement
                         .addChild(mProjectGenerationProgress);
                     BuckEventsConsumer.this.mTreeModel.reload();
                 }
-            }
-        });
+            });
+        }
     }
 
     public void showTestResults() {
         if (!mTestResultsList.isEmpty() && !BuckToolWindowFactory.isToolWindowVisible(mProject)) {
                 BuckToolWindowFactory.showToolWindow(mProject);
         }
+        float duration = (mTestingEndTimestamp - mTestingStartTimestamp) / 1000;
+
+        final StringBuilder message = new StringBuilder(
+            "Testing ended, took " + duration + " seconds!\n");
+
+        for (TestResults testResults : mTestResultsList) {
+            for (TestCaseSummary testCaseSummary : testResults.getTestCases()) {
+                long time = testCaseSummary.getTotalTime();
+                String formattedTime;
+
+                if (time >= 1000) {
+                    formattedTime = (time / 1000 + time % 1000) + "s";
+                } else {
+                    formattedTime = time + "ms";
+                }
+                if (testCaseSummary.isSuccess() == true) {
+                    message.append("PASS  " + formattedTime + "  " +
+                        testCaseSummary.getTestResults().size() +
+                        " passed  " + testCaseSummary.getTestCaseName() + "\n");
+                } else {
+                    int failureCount = 0;
+                    StringBuilder failureMessage = new StringBuilder();
+                    for (TestResultsSummary testResultSummary :
+                        testCaseSummary.getTestResults()) {
+                        if (!testResultSummary.isSuccess()) {
+                            failureMessage.append(testResultSummary.getStacktrace() + "\n");
+                            failureCount++;
+                        }
+                    }
+
+                    message.append("FAILED  " + formattedTime + "  " +
+                        (testCaseSummary.getTestResults().size() - failureCount) +
+                        " passed  " + failureCount + " failed  " +
+                        testCaseSummary.getTestCaseName() + "\n");
+                    message.append(failureMessage);
+                }
+            }
+        }
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
-                float duration = (mTestingEndTimestamp - mTestingStartTimestamp) / 1000;
-
-                StringBuilder message = new StringBuilder(
-                        "Testing ended, took " + duration + " seconds!\n");
-
-                for (TestResults testResults : mTestResultsList) {
-                    for (TestCaseSummary testCaseSummary : testResults.getTestCases()) {
-                        long time = testCaseSummary.getTotalTime();
-                        String formattedTime;
-
-                        if (time >= 1000) {
-                            formattedTime = (time / 1000 + time % 1000) + "s";
-                        } else {
-                            formattedTime = time + "ms";
-                        }
-                        if (testCaseSummary.isSuccess() == true) {
-                            message.append("PASS  " + formattedTime + "  " +
-                                    testCaseSummary.getTestResults().size() +
-                                    " passed  " + testCaseSummary.getTestCaseName() + "\n");
-                        } else {
-                            int failureCount = 0;
-                            StringBuilder failureMessage = new StringBuilder();
-                            for (TestResultsSummary testResultSummary :
-                                    testCaseSummary.getTestResults()) {
-                                if (!testResultSummary.isSuccess()) {
-                                    failureMessage.append(testResultSummary.getStacktrace() + "\n");
-                                    failureCount++;
-                                }
-                            }
-
-                            message.append("FAILED  " + formattedTime + "  " +
-                                    (testCaseSummary.getTestResults().size() - failureCount) +
-                                    " passed  " + failureCount + " failed  " +
-                                    testCaseSummary.getTestCaseName() + "\n");
-                            message.append(failureMessage);
-                        }
-                    }
-                }
                 BuckEventsConsumer.this.mTestResults.setDetail(message.toString());
                 BuckEventsConsumer.this.mTreeModel.reload();
-                mTestResultsList.clear();
             }
         });
+        mTestResultsList.clear();
     }
 
     @Override

@@ -26,6 +26,7 @@ import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.ActionPlaces;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -134,7 +135,12 @@ public class BuckBuildManager {
     Project project = handler.project();
 
     // Always save files
-    FileDocumentManager.getInstance().saveAllDocuments();
+    ApplicationManager.getApplication().invokeLater(new Runnable() {
+      @Override
+      public void run() {
+        FileDocumentManager.getInstance().saveAllDocuments();
+      }
+    });
 
     String exec = BuckSettingsProvider.getInstance().getState().buckExecutable;
     if (exec == null) {
@@ -151,11 +157,17 @@ public class BuckBuildManager {
     }
 
     final ProgressManager manager = ProgressManager.getInstance();
-    manager.run(new Task.Backgroundable(handler.project(), operationTitle, true) {
-      public void run(final ProgressIndicator indicator) {
-        runInCurrentThread(handler, indicator, true, operationTitle);
+    ApplicationManager.getApplication().invokeLater(new Runnable() {
+      @Override
+      public void run() {
+        manager.run(new Task.Backgroundable(handler.project(), operationTitle, true) {
+          public void run(final ProgressIndicator indicator) {
+            runInCurrentThread(handler, indicator, true, operationTitle);
+          }
+        });
       }
     });
+
   }
 
   /**
