@@ -20,6 +20,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -31,6 +32,7 @@ import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
@@ -60,8 +62,11 @@ import java.util.Set;
  * The query language is documented at docs/command/query.soy
  */
 public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
+
+  private static final Logger LOG = Logger.get(BuckQueryEnvironment.class);
+
   private final CommandRunnerParams params;
-  private final BuildFileTree buildFileTree;
+  private Map<Cell, BuildFileTree> buildFileTrees =  new HashMap<>();
   private TargetGraph graph = TargetGraph.EMPTY;
 
   @VisibleForTesting
@@ -76,9 +81,11 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
       boolean enableProfiling) {
     this.params = params;
     this.enableProfiling = enableProfiling;
-    this.buildFileTree = new FilesystemBackedBuildFileTree(
-        params.getCell().getFilesystem(),
-        params.getCell().getBuildFileName());
+    this.buildFileTrees.put(
+        params.getCell(),
+        new FilesystemBackedBuildFileTree(
+            params.getCell().getFilesystem(),
+            params.getCell().getBuildFileName()));
     this.targetPatternEvaluator = new TargetPatternEvaluator(params, enableProfiling);
   }
 
@@ -268,6 +275,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   @Override
   public ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets)
       throws InterruptedException, QueryException {
+    final Cell rootCell = params.getCell();
     final ProjectFilesystem cellFilesystem = params.getCell().getFilesystem();
     final Path rootPath = cellFilesystem.getRootPath();
     Preconditions.checkState(rootPath.isAbsolute());
@@ -276,15 +284,26 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     for (QueryTarget target : targets) {
       Preconditions.checkState(target instanceof QueryBuildTarget);
       BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
+      Cell cell = rootCell.getCell(buildTarget);
 
-      Optional<Path> path = buildFileTree.getBasePathOfAncestorTarget(buildTarget.getBasePath());
+      if (!buildFileTrees.containsKey(cell)) {
+        LOG.info("Creating a new filesystem-backed build file tree for %s", cell.getRoot());
+        buildFileTrees.put(
+            cell,
+            new FilesystemBackedBuildFileTree(
+                cell.getFilesystem(),
+                cell.getBuildFileName()));
+      }
+      BuildFileTree buildFileTree = Preconditions.checkNotNull(buildFileTrees.get(cell));
+      Optional<Path> path = buildFileTree.getBasePathOfAncestorTarget(
+          buildTarget.getBasePath());
       Preconditions.checkState(path.isPresent());
 
       Path buildFilePath = MorePaths.relativize(
           rootPath,
-          cellFilesystem
+          cell.getFilesystem()
               .resolve(path.get())
-              .resolve(params.getCell().getBuildFileName()));
+              .resolve(cell.getBuildFileName()));
       Preconditions.checkState(cellFilesystem.exists(buildFilePath));
       builder.add(QueryFileTarget.of(buildFilePath));
     }
@@ -295,6 +314,8 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   public ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files)
       throws InterruptedException, QueryException {
     try {
+      BuildFileTree buildFileTree = Preconditions.checkNotNull(
+          buildFileTrees.get(params.getCell()));
       AuditOwnerCommand.OwnersReport report = new AuditOwnerCommand().buildOwnersReport(
           params,
           buildFileTree,
