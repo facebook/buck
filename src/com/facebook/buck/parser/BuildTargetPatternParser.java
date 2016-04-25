@@ -100,11 +100,9 @@ public abstract class BuildTargetPatternParser<T> {
       Function<Optional<String>, Path> cellNames,
       String buildTargetPattern) {
     Path cellPath;
-    if (buildTargetPattern.contains(BUILD_RULE_PREFIX) &&
-        !buildTargetPattern.startsWith(BUILD_RULE_PREFIX)) {
-      int index = buildTargetPattern.indexOf(BUILD_RULE_PREFIX);
-      cellPath = cellNames.apply(
-          Optional.of(buildTargetPattern.substring(0, index)));
+    int index = buildTargetPattern.indexOf(BUILD_RULE_PREFIX);
+    if (index > 0) {
+      cellPath = cellNames.apply(Optional.of(buildTargetPattern.substring(0, index)));
       buildTargetPattern = buildTargetPattern.substring(index);
     } else {
       cellPath = cellNames.apply(Optional.<String>absent());

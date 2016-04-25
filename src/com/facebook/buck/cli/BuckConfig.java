@@ -82,8 +82,6 @@ public class BuckConfig {
 
   private static final Float DEFAULT_THREAD_CORE_RATIO = Float.valueOf(1.0F);
 
-  private static final String ALT_CELL_PREFIX = "@";
-
   /**
    * This pattern is designed so that a fully-qualified build target cannot be a valid alias name
    * and vice-versa.
@@ -116,26 +114,7 @@ public class BuckConfig {
           if (!cellName.isPresent()) {
             return projectFilesystem.getRootPath();
           }
-          Optional<Path> root = Optional.<Path>absent();
-          if (cellName.get().startsWith(ALT_CELL_PREFIX)) {
-            Optional<Path> legacyRoot = getPath(
-                "repositories",
-                cellName.get().substring(ALT_CELL_PREFIX.length()),
-                false);
-            root = getPath("repositories", cellName.get(), false);
-            if (legacyRoot.isPresent() && root.isPresent()) {
-              throw new HumanReadableException(
-                  "Both '%s' and '%s' found as cells rooted at: %s",
-                  cellName.get(),
-                  cellName.get().substring(ALT_CELL_PREFIX.length()),
-                  projectFilesystem.getRootPath());
-            }
-            if (!root.isPresent()) {
-              root = legacyRoot;
-            }
-          } else {
-            root = getPath("repositories", cellName.get(), false);
-          }
+          Optional<Path> root = getPath("repositories", cellName.get(), false);
           if (!root.isPresent()) {
             throw new HumanReadableException(
                 "Unable to find repository '%s' in cell rooted at: %s",

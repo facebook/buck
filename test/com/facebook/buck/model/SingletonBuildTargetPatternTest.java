@@ -55,10 +55,14 @@ public class SingletonBuildTargetPatternTest {
     SingletonBuildTargetPattern singletonPattern3 = new SingletonBuildTargetPattern(
         ROOT,
         "//src/com/facebook/buck/cli:cli");
+    SingletonBuildTargetPattern singletonPattern4 = new SingletonBuildTargetPattern(
+        ROOT,
+        "cell//src/com/facebook/buck:buck");
 
     assertFalse(singletonPattern1.equals(null));
     assertEquals(singletonPattern1, singletonPattern2);
     assertFalse(singletonPattern2.equals(singletonPattern3));
+    assertEquals(singletonPattern1, singletonPattern4);
   }
 
   @Test

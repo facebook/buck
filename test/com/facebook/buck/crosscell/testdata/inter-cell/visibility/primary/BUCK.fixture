@@ -1,11 +1,11 @@
 
 export_file(
   name = 'visible-target',
-  src = '@secondary//:hello',
+  src = 'secondary//:hello',
 )
 
 export_file(
   name = 'not-visible-target',
-  src = '@secondary//:hello',
+  src = 'secondary//:hello',
 )
 

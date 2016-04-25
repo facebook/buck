@@ -204,7 +204,7 @@ public class BuildTargetParserTest {
   @Test(expected = BuildTargetParseException.class)
   public void testParseFailsWithRepoNameAndRelativeTarget() throws NoSuchBuildTargetException {
 
-    String invalidTargetStr = "@myRepo:baz";
+    String invalidTargetStr = "myRepo:baz";
     parser.parse(invalidTargetStr, fullyQualifiedParser, createCellRoots(null));
   }
 

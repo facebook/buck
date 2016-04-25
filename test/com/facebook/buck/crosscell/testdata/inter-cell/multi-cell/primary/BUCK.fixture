@@ -3,6 +3,6 @@ cxx_binary(
   srcs = glob(['*.cpp']),
   compiler_flags = ['-g'],
   deps = [
-    '@secondary//:cxxlib'
+    'secondary//:cxxlib'
   ],
 )

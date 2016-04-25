@@ -154,24 +154,6 @@ public class InterCellIntegrationTest {
   }
 
   @Test
-  public void cellNameCanUseFullString() throws IOException {
-    assumeThat(Platform.detect(), is(not(WINDOWS)));
-
-    ProjectWorkspace primary = createWorkspace("inter-cell/export-file/primary");
-    primary.setUp();
-
-    ProjectWorkspace secondary = createWorkspace("inter-cell/export-file/secondary");
-    secondary.setUp();
-
-    // Add the '@' for backward compatibility
-    registerCell(primary, "@secondary", secondary);
-
-    ProjectWorkspace.ProcessResult result = primary.runBuckBuild("//:cxxbinary");
-
-    result.assertSuccess();
-  }
-
-  @Test
   public void shouldBeAbleToUseMultipleXCell() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 

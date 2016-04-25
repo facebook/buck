@@ -4,7 +4,7 @@ cxx_library(
   exported_headers = ['sum.hpp'],
   compiler_flags = ['-g'],
   exported_deps = [
-    '@ternary//:cxxlib2'
+    'ternary//:cxxlib2'
   ],
   visibility = ['PUBLIC'],
 )

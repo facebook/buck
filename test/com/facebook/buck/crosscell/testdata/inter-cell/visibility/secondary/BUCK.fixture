@@ -3,8 +3,8 @@ export_file(
   name = 'hello',
   src = 'hello-world.txt',
   visibility = [
-    '@primary//:visible-target',
-    '@primary//sub/...',
-    '@primary//sub2:',
+    'primary//:visible-target',
+    'primary//sub/...',
+    'primary//sub2:',
   ],
 )
