@@ -1,0 +1,29 @@
+java_library(
+  name = 'annotation_processor',
+  srcs = [
+    'AnnotationProcessor.java',
+  ],
+  deps = [
+    ':util',
+  ]
+)
+
+java_library(
+  name = 'main',
+  srcs = [
+    'Main.java',
+  ],
+  annotation_processors = [
+    'com.example.AnnotationProcessor',
+  ],
+  annotation_processor_deps = [
+    ':annotation_processor',
+  ],
+)
+
+java_library(
+  name = 'util',
+  srcs = [
+    'Util.java',
+  ],
+)
