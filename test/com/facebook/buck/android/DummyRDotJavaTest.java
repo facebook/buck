@@ -106,7 +106,7 @@ public class DummyRDotJavaTest {
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     List<Step> steps = dummyRDotJava.getBuildSteps(EasyMock.createMock(BuildContext.class),
         buildableContext);
-    assertEquals("DummyRDotJava returns an incorrect number of Steps.", 7, steps.size());
+    assertEquals("DummyRDotJava returns an incorrect number of Steps.", 9, steps.size());
 
     String rDotJavaSrcFolder =
         BuildTargets.getScratchPath(dummyRDotJava.getBuildTarget(), "__%s_rdotjava_src__")
@@ -117,6 +117,14 @@ public class DummyRDotJavaTest {
     String rDotJavaAbiFolder =
         BuildTargets.getGenPath(dummyRDotJava.getBuildTarget(), "__%s_dummyrdotjava_abi__")
             .toString();
+    String rDotJavaOutputFolder =
+        BuildTargets.getGenPath(dummyRDotJava.getBuildTarget(), "__%s_dummyrdotjava_output__")
+            .toString();
+    String rDotJavaOutputJar =
+        String.format(
+            "%s/%s.jar",
+            rDotJavaOutputFolder,
+            dummyRDotJava.getBuildTarget().getShortNameAndFlavorPostfix());
     String genFolder = Paths.get("buck-out/gen/java/base/").toString();
 
     List<String> sortedSymbolsFiles = FluentIterable.from(ImmutableList.of(
@@ -131,6 +139,7 @@ public class DummyRDotJavaTest {
         "android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles),
         makeCleanDirDescription(filesystem.resolve(rDotJavaBinFolder)),
         makeCleanDirDescription(filesystem.resolve(rDotJavaAbiFolder)),
+        makeCleanDirDescription(filesystem.resolve(rDotJavaOutputFolder)),
         String.format("mkdir -p %s", filesystem.resolve(genFolder)),
         RDotJava.createJavacStepForDummyRDotJavaFiles(
             javaSourceFiles,
@@ -141,6 +150,7 @@ public class DummyRDotJavaTest {
             pathResolver,
             new FakeProjectFilesystem())
             .getDescription(TestExecutionContext.newInstance()),
+        String.format("jar cf %s  %s", rDotJavaOutputJar, rDotJavaBinFolder),
         String.format("calculate_abi %s", rDotJavaBinFolder));
 
     MoreAsserts.assertSteps(
@@ -149,7 +159,7 @@ public class DummyRDotJavaTest {
         steps,
         TestExecutionContext.newInstance());
 
-    assertEquals(ImmutableSet.of(Paths.get(rDotJavaBinFolder)),
+    assertEquals(ImmutableSet.of(Paths.get(rDotJavaBinFolder), Paths.get(rDotJavaOutputJar)),
         buildableContext.getRecordedArtifacts());
 
     Sha1HashCode expectedSha1 = AndroidResource.ABI_HASHER.apply(
