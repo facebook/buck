@@ -1351,7 +1351,10 @@ public class CachingBuildEngine implements BuildEngine {
     try {
       return Optional.of(
           this.ruleKeyFactories.getUnchecked(rule.getProjectFilesystem())
-              .depFileRuleKeyBuilderFactory.build(rule, inputs));
+              .depFileRuleKeyBuilderFactory.build(
+              rule,
+              ((SupportsDependencyFileRuleKey) rule).getPossibleInputSourcePaths(),
+              inputs));
     } catch (NoSuchFileException e) {
       if (!allowMissingInputs) {
         throw e;

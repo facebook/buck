@@ -36,8 +36,10 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 
 import org.hamcrest.Matchers;
@@ -77,7 +79,10 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             hashCache,
             pathResolver,
             defaultRuleKeyBuilderFactory1)
-            .build(rule, ImmutableList.<DependencyFileEntry>of());
+            .build(
+                rule,
+                Optional.<ImmutableSet<SourcePath>>absent(),
+                ImmutableList.<DependencyFileEntry>of());
 
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache = new FakeFileHashCache(
@@ -93,7 +98,10 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             hashCache,
             pathResolver,
             defaultRuleKeyBuilderFactory2)
-            .build(rule, ImmutableList.<DependencyFileEntry>of());
+            .build(
+                rule,
+                Optional.<ImmutableSet<SourcePath>>absent(),
+                ImmutableList.<DependencyFileEntry>of());
 
     assertThat(inputKey1, Matchers.equalTo(inputKey2));
   }
@@ -128,7 +136,10 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             hashCache,
             pathResolver,
             defaultRuleKeyBuilderFactory1)
-            .build(rule, ImmutableList.<DependencyFileEntry>of());
+            .build(
+                rule,
+                Optional.<ImmutableSet<SourcePath>>absent(),
+                ImmutableList.<DependencyFileEntry>of());
 
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache = new FakeFileHashCache(
@@ -144,7 +155,10 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             hashCache,
             pathResolver,
             defaultRuleKeyBuilderFactory2)
-            .build(rule, ImmutableList.<DependencyFileEntry>of());
+            .build(
+                rule,
+                Optional.<ImmutableSet<SourcePath>>absent(),
+                ImmutableList.<DependencyFileEntry>of());
 
     assertThat(inputKey1, Matchers.equalTo(inputKey2));
   }

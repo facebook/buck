@@ -18,7 +18,9 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 
@@ -28,6 +30,16 @@ import java.io.IOException;
 public interface SupportsDependencyFileRuleKey extends BuildRule {
 
   boolean useDependencyFileRuleKeys();
+
+  /**
+   * Returns a set of all possible source paths that may be returned from
+   * {@link #getInputsAfterBuildingLocally()}. This information is used by the rule key builder
+   * to infer that inputs *not* in this list should be included unconditionally in the rule key.
+   *
+   * TODO(jkeljo): This is only optional because I added it for Java and didn't have the time to go
+   * back and figure out how to implement it for C++.
+   */
+  Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() throws IOException;
 
   ImmutableList<SourcePath> getInputsAfterBuildingLocally() throws IOException;
 

@@ -34,6 +34,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -127,6 +128,11 @@ public class CxxPrecompiledHeader
   @Override
   public boolean useDependencyFileRuleKeys() {
     return true;
+  }
+
+  @Override
+  public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() throws IOException {
+    return preprocessorDelegate.getPossibleInputSourcePaths();
   }
 
   @Override

@@ -36,6 +36,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import java.io.IOException;
@@ -331,6 +332,15 @@ public class CxxPreprocessAndCompile
   @Override
   public boolean useDependencyFileRuleKeys() {
     return operation.isPreprocess();
+  }
+
+  @Override
+  public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() throws IOException {
+    if (preprocessDelegate.isPresent()) {
+      return preprocessDelegate.get().getPossibleInputSourcePaths();
+    }
+
+    return Optional.absent();
   }
 
   @Override

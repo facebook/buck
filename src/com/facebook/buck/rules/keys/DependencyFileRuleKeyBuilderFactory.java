@@ -20,6 +20,7 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -31,7 +32,10 @@ public interface DependencyFileRuleKeyBuilderFactory {
    * @return a {@link RuleKey} for the given {@link BuildRule} using the given list of explicit
    *     {@code inputs}.
    */
-  RuleKey build(BuildRule rule, ImmutableList<DependencyFileEntry> inputs) throws IOException;
+  RuleKey build(
+      BuildRule rule,
+      Optional<ImmutableSet<SourcePath>> possibleDepFileSourcePaths,
+      ImmutableList<DependencyFileEntry> inputs) throws IOException;
 
   /**
    * @return the {@link RuleKey} used to index the manifest database and the universe of inputs

@@ -33,6 +33,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -202,6 +203,11 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     }
 
     return inputs.build();
+  }
+
+  public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
+    // TODO(jkeljo): I didn't know how to implement this, and didn't have time to figure it out.
+    return Optional.absent();
   }
 
   public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
