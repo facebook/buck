@@ -65,9 +65,6 @@ public class AidlStep extends ShellStep {
     // For some reason, all of the flags to aidl do not permit a space between the flag name and
     // the flag value.
 
-    // fail when trying to compile a parcelable
-    args.add("-b");
-
     // file created by --preprocess to import
     args.add("-p" + androidPlatformTarget.getAndroidFrameworkIdlFile().toString());
 
