@@ -186,7 +186,12 @@ public class PythonTestDescription implements
                 .or(pythonPlatforms.getFlavors().iterator().next())));
     CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
+    Path baseModule = PythonUtil.getBasePath(
+        params.getBuildTarget(),
+        args.baseModule,
+        args.baseModuleStrip.isPresent()
+            ? args.baseModuleStrip
+            : pythonBuckConfig.getBaseModuleStrip());
 
     ImmutableMap<Path, SourcePath> srcs =
         ImmutableMap.<Path, SourcePath>builder()

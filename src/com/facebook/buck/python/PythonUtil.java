@@ -291,10 +291,22 @@ public class PythonUtil {
     return allComponents.build();
   }
 
-  public static Path getBasePath(BuildTarget target, Optional<String> override) {
-    return override.isPresent()
+  public static Path getBasePath(
+      BuildTarget target,
+      Optional<String> override,
+      Optional<Integer> strip) {
+
+    Path basePath = override.isPresent()
         ? Paths.get(override.get().replace('.', '/'))
         : target.getBasePath();
+
+    if (strip.isPresent()) {
+        if (strip.get() == basePath.getNameCount()) {
+            return Paths.get("");
+        }
+        return basePath.subpath(strip.get(), basePath.getNameCount());
+    }
+    return basePath;
   }
 
   public static ImmutableSet<String> getPreloadNames(

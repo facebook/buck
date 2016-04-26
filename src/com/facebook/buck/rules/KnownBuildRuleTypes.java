@@ -588,7 +588,7 @@ public class KnownBuildRuleTypes {
     builder.register(cxxLibraryDescription);
     builder.register(new CxxLuaExtensionDescription(luaConfig, cxxBuckConfig, cxxPlatforms));
     builder.register(
-        new CxxPythonExtensionDescription(pythonPlatforms, cxxBuckConfig, cxxPlatforms));
+        new CxxPythonExtensionDescription(pythonPlatforms, pyConfig, cxxBuckConfig, cxxPlatforms));
     builder.register(
         new CxxTestDescription(
             cxxBuckConfig,
@@ -662,7 +662,7 @@ public class KnownBuildRuleTypes {
     builder.register(new PrebuiltPythonLibraryDescription());
     builder.register(new ProjectConfigDescription());
     builder.register(pythonBinaryDescription);
-    builder.register(new PythonLibraryDescription());
+    builder.register(new PythonLibraryDescription(pyConfig));
     builder.register(
         new PythonTestDescription(
             pythonBinaryDescription,
@@ -704,9 +704,18 @@ public class KnownBuildRuleTypes {
                     thriftBuckConfig,
                     cxxLibraryDescription,
                     /* cpp2 */ true),
-                new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.NORMAL),
-                new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.TWISTED),
-                new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.ASYNCIO))));
+                new ThriftPythonEnhancer(
+                    thriftBuckConfig,
+                    pyConfig,
+                    ThriftPythonEnhancer.Type.NORMAL),
+                new ThriftPythonEnhancer(
+                    thriftBuckConfig,
+                    pyConfig,
+                    ThriftPythonEnhancer.Type.TWISTED),
+                new ThriftPythonEnhancer(
+                    thriftBuckConfig,
+                    pyConfig,
+                    ThriftPythonEnhancer.Type.ASYNCIO))));
     builder.register(new WorkerToolDescription());
     builder.register(new XcodePostbuildScriptDescription());
     builder.register(new XcodePrebuildScriptDescription());

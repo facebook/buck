@@ -19,10 +19,12 @@ package com.facebook.buck.python;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
@@ -48,7 +50,9 @@ public class PythonLibraryDescriptionTest {
     // Run without a base module set and verify it defaults to using the build target
     // base name.
     PythonLibrary normal =
-        (PythonLibrary) new PythonLibraryBuilder(target)
+        (PythonLibrary) new PythonLibraryBuilder(
+                target,
+                new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()))
             .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source)))
             .build(
                 new BuildRuleResolver(
@@ -63,9 +67,11 @@ public class PythonLibraryDescriptionTest {
     // Run *with* a base module set and verify it gets used to build the main module path.
     String baseModule = "blah";
     PythonLibrary withBaseModule =
-        (PythonLibrary) new PythonLibraryBuilder(target)
+        (PythonLibrary) new PythonLibraryBuilder(
+                target,
+                new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()))
             .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source)))
-            .setBaseModule("blah")
+            .setBaseModule(baseModule)
             .build(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY,
@@ -78,12 +84,85 @@ public class PythonLibraryDescriptionTest {
   }
 
   @Test
+  public void baseModuleStrip() throws Exception {
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
+    String sourceName = "main.py";
+    SourcePath source1 = new FakeSourcePath("foo/" + sourceName);
+    SourcePath source2 = new FakeSourcePath("foo/bar/" + sourceName);
+
+    // Run without a base module set and verify it defaults to using the build target
+    // base name.
+    PythonLibrary normal =
+        (PythonLibrary) new PythonLibraryBuilder(
+                target,
+                new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()))
+            .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source1, source2)))
+            .build(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new DefaultTargetNodeToBuildRuleTransformer()));
+    assertEquals(
+        ImmutableMap.of(
+            Paths.get("foo").resolve(sourceName),
+            source1,
+            Paths.get("foo/bar").resolve(sourceName),
+            source2),
+        normal.getSrcs(PythonTestUtils.PYTHON_PLATFORM));
+
+    // Run *with* a base module strip set and verify it gets used to build the main module path.
+    Integer baseModuleStrip = 1;
+    PythonLibrary withBaseModuleStrip =
+        (PythonLibrary) new PythonLibraryBuilder(
+                target,
+                new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()))
+            .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source1, source2)))
+            .setBaseModuleStrip(baseModuleStrip)
+            .build(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new DefaultTargetNodeToBuildRuleTransformer()));
+    assertEquals(
+        ImmutableMap.of(
+            Paths.get("").resolve(sourceName),
+            source1,
+            Paths.get("bar").resolve(sourceName),
+            source2),
+        withBaseModuleStrip.getSrcs(PythonTestUtils.PYTHON_PLATFORM));
+
+    // Run it again, this time use the config to influence it
+    PythonLibrary withBaseModuleStripConfig =
+        (PythonLibrary) new PythonLibraryBuilder(
+                target,
+                new PythonBuckConfig(
+                    FakeBuckConfig.builder().setSections(
+                        ImmutableMap.of(
+                            "python",
+                            ImmutableMap.of(
+                                "base_module_strip", "1"))).build(),
+                    new ExecutableFinder()))
+            .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source1, source2)))
+            .build(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new DefaultTargetNodeToBuildRuleTransformer()));
+    assertEquals(
+        ImmutableMap.of(
+            Paths.get("").resolve(sourceName),
+            source1,
+            Paths.get("bar").resolve(sourceName),
+            source2),
+        withBaseModuleStripConfig.getSrcs(PythonTestUtils.PYTHON_PLATFORM));
+  }
+
+  @Test
   public void platformSrcs() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
     SourcePath matchedSource = new FakeSourcePath("foo/a.py");
     SourcePath unmatchedSource = new FakeSourcePath("foo/b.py");
     PythonLibrary library =
-        (PythonLibrary) new PythonLibraryBuilder(target)
+        (PythonLibrary) new PythonLibraryBuilder(
+                target,
+                new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()))
             .setPlatformSrcs(
                 PatternMatchedCollection.<SourceList>builder()
                     .add(
@@ -108,7 +187,9 @@ public class PythonLibraryDescriptionTest {
     SourcePath matchedSource = new FakeSourcePath("foo/a.dat");
     SourcePath unmatchedSource = new FakeSourcePath("foo/b.dat");
     PythonLibrary library =
-        (PythonLibrary) new PythonLibraryBuilder(target)
+        (PythonLibrary) new PythonLibraryBuilder(
+                target,
+                new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()))
             .setPlatformResources(
                 PatternMatchedCollection.<SourceList>builder()
                     .add(

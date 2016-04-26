@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
@@ -31,9 +32,10 @@ public class CxxPythonExtensionBuilder extends
   public CxxPythonExtensionBuilder(
       BuildTarget target,
       FlavorDomain<PythonPlatform> pythonPlatforms,
+      PythonBuckConfig pythonBuckConfig,
       CxxBuckConfig cxxBuckConfig,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(new CxxPythonExtensionDescription(pythonPlatforms, cxxBuckConfig, cxxPlatforms), target);
+    super(new CxxPythonExtensionDescription(pythonPlatforms, pythonBuckConfig, cxxBuckConfig, cxxPlatforms), target);
   }
 
   public CxxPythonExtensionBuilder setBaseModule(String baseModule) {

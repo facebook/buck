@@ -27,6 +27,7 @@ import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
@@ -88,7 +89,9 @@ public class PythonBinaryDescriptionTest {
             .setOut("blah.py")
             .build(resolver);
     PythonLibrary lib =
-        (PythonLibrary) new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+        (PythonLibrary) new PythonLibraryBuilder(
+                BuildTargetFactory.newInstance("//:lib"),
+                new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()))
             .setSrcs(
                 SourceList.ofUnnamedSources(
                     ImmutableSortedSet.<SourcePath>of(
@@ -256,7 +259,9 @@ public class PythonBinaryDescriptionTest {
         new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .build(resolver);
     BuildRule pythonLibrary =
-        new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+        new PythonLibraryBuilder(
+              BuildTargetFactory.newInstance("//:lib"),
+              new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()))
             .setDeps(ImmutableSortedSet.of(cxxBinary.getBuildTarget()))
             .build(resolver);
     PythonBinary pythonBinary =
@@ -474,6 +479,7 @@ public class PythonBinaryDescriptionTest {
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:extension"),
             pythonPlatforms,
+            new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             CxxPlatformUtils.DEFAULT_PLATFORMS);
     extensionBuilder.setBaseModule("hello");
@@ -527,7 +533,9 @@ public class PythonBinaryDescriptionTest {
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("cxx.c"))))
             .setDeps(ImmutableSortedSet.of(transitiveCxxLibraryBuilder.getTarget()));
     PythonLibraryBuilder pythonLibraryBuilder =
-        new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+        new PythonLibraryBuilder(
+                BuildTargetFactory.newInstance("//:lib"),
+                new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()))
             .setSrcs(
                 SourceList.ofUnnamedSources(
                     ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("prebuilt.so"))))

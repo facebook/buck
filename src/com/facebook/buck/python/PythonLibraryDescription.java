@@ -40,6 +40,12 @@ public class PythonLibraryDescription implements Description<Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("python_library");
 
+  private final PythonBuckConfig pythonBuckConfig;
+
+  public PythonLibraryDescription(PythonBuckConfig pythonBuckConfig) {
+      this.pythonBuckConfig = pythonBuckConfig;
+  }
+
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public Optional<SourceList> srcs;
@@ -48,6 +54,7 @@ public class PythonLibraryDescription implements Description<Arg> {
     public Optional<PatternMatchedCollection<SourceList>> platformResources;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<String> baseModule;
+    public Optional<Integer> baseModuleStrip;
     public Optional<Boolean> zipSafe;
   }
 
@@ -68,7 +75,12 @@ public class PythonLibraryDescription implements Description<Arg> {
       BuildRuleResolver resolver,
       final A args) {
     final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    final Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
+    final Path baseModule = PythonUtil.getBasePath(
+        params.getBuildTarget(),
+        args.baseModule,
+        args.baseModuleStrip.isPresent()
+            ? args.baseModuleStrip
+            : pythonBuckConfig.getBaseModuleStrip());
     return new PythonLibrary(
         params,
         pathResolver,

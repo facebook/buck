@@ -19,6 +19,7 @@ package com.facebook.buck.thrift;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.PythonLibrary;
 import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonUtil;
@@ -56,10 +57,15 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
   }
 
   private final ThriftBuckConfig thriftBuckConfig;
+  private final PythonBuckConfig pythonBuckConfig;
   private final Type type;
 
-  public ThriftPythonEnhancer(ThriftBuckConfig thriftBuckConfig, Type type) {
+  public ThriftPythonEnhancer(
+      ThriftBuckConfig thriftBuckConfig,
+      PythonBuckConfig pythonBuckConfig,
+      Type type) {
     this.thriftBuckConfig = thriftBuckConfig;
+    this.pythonBuckConfig = pythonBuckConfig;
     this.type = type;
   }
 
@@ -89,7 +95,7 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
       ImmutableList<String> services) {
 
     Path prefix =
-        PythonUtil.getBasePath(target, getBaseModule(args))
+        PythonUtil.getBasePath(target, getBaseModule(args), pythonBuckConfig.getBaseModuleStrip())
             .resolve(Files.getNameWithoutExtension(thriftName));
 
     ImmutableSortedSet.Builder<String> sources = ImmutableSortedSet.naturalOrder();

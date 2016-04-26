@@ -25,12 +25,14 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class PythonLibraryBuilder extends AbstractNodeBuilder<PythonLibraryDescription.Arg> {
 
-  public PythonLibraryBuilder(BuildTarget target) {
-    super(new PythonLibraryDescription(), target);
+  public PythonLibraryBuilder(BuildTarget target, PythonBuckConfig pythonBuckConfig) {
+    super(new PythonLibraryDescription(pythonBuckConfig), target);
   }
 
-  public static PythonLibraryBuilder createBuilder(BuildTarget target) {
-    return new PythonLibraryBuilder(target);
+  public static PythonLibraryBuilder createBuilder(
+      BuildTarget target,
+      PythonBuckConfig pythonBuckConfig) {
+    return new PythonLibraryBuilder(target, pythonBuckConfig);
   }
 
   public PythonLibraryBuilder setSrcs(SourceList srcs) {
@@ -56,6 +58,11 @@ public class PythonLibraryBuilder extends AbstractNodeBuilder<PythonLibraryDescr
 
   public PythonLibraryBuilder setBaseModule(String baseModule) {
     arg.baseModule = Optional.of(baseModule);
+    return this;
+  }
+
+  public PythonLibraryBuilder setBaseModuleStrip(Integer baseModuleStrip) {
+    arg.baseModuleStrip = Optional.of(baseModuleStrip);
     return this;
   }
 
