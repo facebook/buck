@@ -884,10 +884,11 @@ public final class Main {
                 locale,
                 BuckConstant.getLogPath().resolve("test.log"));
              TempDirectoryCreator tempDirectoryCreator =
-            new TempDirectoryCreator(testTempDirOverride);
+                 new TempDirectoryCreator(testTempDirOverride);
              AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
              BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
-             // NOTE: This will only run during the lifetime of the process and will flush on close.
+
+        // NOTE: This will only run during the lifetime of the process and will flush on close.
              CounterRegistry counterRegistry = new CounterRegistryImpl(
                 MoreExecutors.newSingleThreadScheduledExecutor("CounterAggregatorThread"),
                 buildEventBus,
@@ -1366,6 +1367,8 @@ public final class Main {
     }
 
     loadListenersFromBuckConfig(eventListenersBuilder, projectFilesystem, config);
+
+
 
 
     Optional<URI> remoteLogUrl = config.getRemoteLogUrl();
