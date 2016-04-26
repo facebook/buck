@@ -14,6 +14,8 @@
  * under the License.
  */
 
+package endtoend;
+
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import org.jetbrains.annotations.Nullable;

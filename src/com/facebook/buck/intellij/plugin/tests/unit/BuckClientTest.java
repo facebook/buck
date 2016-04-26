@@ -14,6 +14,8 @@
  * under the License.
  */
 
+package unit;
+
 import com.facebook.buck.intellij.plugin.ws.BuckClient;
 import com.facebook.buck.intellij.plugin.ws.BuckSocket;
 import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventsHandlerInterface;

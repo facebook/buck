@@ -14,22 +14,22 @@
  * under the License.
  */
 
-import com.intellij.openapi.actionSystem.IdeActions;
+package endtoend;
 
-public class BuckCommenterTest extends BuckTestCase {
+import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.testFramework.TestLoggerFactory;
+import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 
-  private void doTest(String actionId) {
-    myFixture.configureByFile("commenter/" + getTestName(false) + "/before.BUCK");
-    myFixture.performEditorAction(actionId);
-    myFixture.checkResultByFile("commenter/" + getTestName(false) + "/after.BUCK", true);
+/**
+ * The base class of all Buck plugin tests.
+ * TODO(#8067091): Integrate plugin unit tests with Buck's own test framework
+ */
+public abstract class BuckTestCase extends LightPlatformCodeInsightFixtureTestCase {
+  static {
+    Logger.setFactory(TestLoggerFactory.class);
   }
 
-  public void testLineCommenter1() {
-    doTest(IdeActions.ACTION_COMMENT_LINE);
+  public String getTestDataPath() {
+    return "tests/testdata";
   }
-
-  public void testLineCommenter2() {
-    doTest(IdeActions.ACTION_COMMENT_LINE);
-  }
-
 }

@@ -14,6 +14,8 @@
  * under the License.
  */
 
+package endtoend;
+
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.util.ArrayUtil;
 

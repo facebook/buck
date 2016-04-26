@@ -14,6 +14,8 @@
  * under the License.
  */
 
+package endtoend;
+
 import com.facebook.buck.intellij.plugin.file.BuckFileUtil;
 import com.facebook.buck.intellij.plugin.lang.BuckParserDefinition;
 import com.intellij.testFramework.ParsingTestCase;
@@ -26,7 +28,7 @@ public class BuckParsingTest extends ParsingTestCase {
 
   @Override
   protected String getTestDataPath() {
-    return "testData";
+    return "tests/testdata";
   }
 
   @Override

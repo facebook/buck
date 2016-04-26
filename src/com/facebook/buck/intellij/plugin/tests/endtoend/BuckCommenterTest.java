@@ -14,24 +14,24 @@
  * under the License.
  */
 
-import com.intellij.codeInsight.actions.OptimizeImportsAction;
-import com.intellij.ide.DataManager;
+package endtoend;
 
-public class BuckDependencyOptimizerTest extends BuckTestCase {
-  public void testSimple() {
-    doTest();
+import com.intellij.openapi.actionSystem.IdeActions;
+
+public class BuckCommenterTest extends BuckTestCase {
+
+  private void doTest(String actionId) {
+    myFixture.configureByFile("commenter/" + getTestName(false) + "/before.BUCK");
+    myFixture.performEditorAction(actionId);
+    myFixture.checkResultByFile("commenter/" + getTestName(false) + "/after.BUCK", true);
   }
 
-  public void testLintRule() {
-    doTest();
+  public void testLineCommenter1() {
+    doTest(IdeActions.ACTION_COMMENT_LINE);
   }
 
-  private void doTest() {
-    myFixture.configureByFile("dependencyOptimizer/" + getTestName(false) + "/before.BUCK");
-
-    OptimizeImportsAction.actionPerformedImpl(
-        DataManager.getInstance().getDataContext(myFixture.getEditor().getContentComponent()));
-
-    myFixture.checkResultByFile("dependencyOptimizer/" + getTestName(true) + "/after.BUCK");
+  public void testLineCommenter2() {
+    doTest(IdeActions.ACTION_COMMENT_LINE);
   }
+
 }

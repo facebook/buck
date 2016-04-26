@@ -14,6 +14,8 @@
  * under the License.
  */
 
+package unit;
+
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.intellij.plugin.ui.utils.CompilerErrorItem;
