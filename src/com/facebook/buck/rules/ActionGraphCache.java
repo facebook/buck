@@ -53,6 +53,7 @@ import javax.annotation.Nullable;
  * last ActionGraph it generated.
  */
 public class ActionGraphCache {
+  private static final Logger LOG = Logger.get(ActionGraphCache.class);
 
   private static final String COUNTER_CATEGORY = "buck_action_graph_cache";
   private static final String CACHE_HIT_COUNTER_NAME = "cache_hit";
@@ -117,11 +118,17 @@ public class ActionGraphCache {
     try {
       if (lastActionGraph != null && lastActionGraph.getFirst().equals(targetGraph)) {
         cacheHitCounter.inc();
+        LOG.info("ActionGraph cache hit.");
         if (checkActionGraphs) {
           spawnThreadToCompareActionGraphs(eventBus, targetGraph);
         }
       } else {
         cacheMissCounter.inc();
+        if (lastActionGraph == null) {
+          LOG.info("ActionGraph cache miss. Cache was empty.");
+        } else {
+          LOG.info("ActionGraph cache miss. TargetGraphs mismatched.");
+        }
         lastActionGraph = new Pair<TargetGraph, ActionGraphAndResolver>(
             targetGraph,
             createActionGraph(
@@ -244,7 +251,7 @@ public class ActionGraphCache {
           if (lastActionGraph == null) {
             return;
           }
-
+          LOG.info("ActionGraph integrity check spawned.");
           Pair<TargetGraph, ActionGraphAndResolver> newActionGraph =
               new Pair<TargetGraph, ActionGraphAndResolver>(
                   targetGraph,
@@ -272,7 +279,7 @@ public class ActionGraphCache {
             for (BuildRule rule : misMatchedBuildRules) {
               mismatchInfo += rule.toString() + "\n";
             }
-            Logger.get(ActionGraphCache.class).error(mismatchInfo);
+            LOG.error(mismatchInfo);
           }
         } finally {
           checkAlreadyRunning.set(false);
@@ -283,6 +290,7 @@ public class ActionGraphCache {
 
   public void invalidateBasedOn(WatchEvent<?> event) throws InterruptedException {
     if (!isFileContentModificationEvent(event)) {
+      LOG.info("ActionGraph cache invalidation due to Watchman event %s.", event);
       invalidateCache();
     }
   }
