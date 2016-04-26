@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
@@ -58,6 +59,9 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule, Has
   private final Supplier<ImmutableMap<String, String>> env;
   @AddToRuleKey
   private final Supplier<ImmutableList<String>> args;
+  @AddToRuleKey
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  private final ImmutableSortedSet<SourcePath> resources;
   private final Supplier<ImmutableSortedSet<BuildRule>> additionalDeps;
   private final ImmutableSet<Label> labels;
   private final ImmutableSet<String> contacts;
@@ -71,6 +75,7 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule, Has
       final ImmutableMap<String, String> toolEnv,
       final Supplier<ImmutableMap<String, String>> env,
       Supplier<ImmutableList<String>> args,
+      ImmutableSortedSet<SourcePath> resources,
       Supplier<ImmutableSortedSet<BuildRule>> additionalDeps,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
@@ -89,6 +94,7 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule, Has
           }
         });
     this.args = Suppliers.memoize(args);
+    this.resources = resources;
     this.additionalDeps = Suppliers.memoize(additionalDeps);
     this.labels = labels;
     this.contacts = contacts;

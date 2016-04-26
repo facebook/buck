@@ -1,0 +1,12 @@
+{namespace test_common}
+
+/***/
+{template .resources_arg}
+{call buck.arg}
+  {param name : 'resources' /}
+  {param default : '[]' /}
+  {param desc}
+  Additional data or source files which this test uses.
+ {/param}
+{/call}
+{/template}

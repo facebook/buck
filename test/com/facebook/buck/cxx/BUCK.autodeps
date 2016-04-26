@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY bf36f35aa6c0479e7dec11b3c28f4b216761e0a5 #@#
+#@# GENERATED FILE: DO NOT MODIFY 0cfee2e3a41b7ec6fb87bb221dffc762d65af895 #@#
 {
   "cxx" : {
     "deps" : [
@@ -55,6 +55,7 @@
   "testutil" : {
     "deps" : [
       "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/rules/args:args",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/testutil:testutil"

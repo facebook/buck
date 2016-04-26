@@ -21,6 +21,9 @@ import com.facebook.buck.model.FlavorDomain;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
+
+import java.nio.file.Path;
 
 public class CxxTestBuilder extends
     AbstractCxxSourceBuilder<CxxTestDescription.Arg, CxxTestBuilder> {
@@ -65,6 +68,11 @@ public class CxxTestBuilder extends
 
   public CxxTestBuilder setFramework(CxxTestType framework) {
     arg.framework = Optional.of(framework);
+    return this;
+  }
+
+  public CxxTestBuilder setResources(ImmutableSortedSet<Path> resources) {
+    arg.resources = Optional.of(resources);
     return this;
   }
 

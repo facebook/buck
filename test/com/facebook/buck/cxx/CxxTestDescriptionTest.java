@@ -31,11 +31,15 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.FakeBuildContext;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
@@ -44,6 +48,7 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -54,6 +59,7 @@ import com.google.common.collect.Iterables;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
+import java.nio.file.Path;
 import java.util.regex.Pattern;
 
 public class CxxTestDescriptionTest {
@@ -317,6 +323,66 @@ public class CxxTestDescriptionTest {
     assertThat(
         binary.getDeps(),
         Matchers.not(Matchers.hasItem(dep)));
+  }
+
+  @Test
+  public void resourcesAffectRuleKey() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path resource = filesystem.getRootPath().getFileSystem().getPath("resource");
+    filesystem.touch(resource);
+    for (CxxTestType framework : CxxTestType.values()) {
+
+      // Create a test rule without resources attached.
+      BuildRuleResolver resolver =
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+      CxxTest cxxTestWithoutResources =
+          (CxxTest) createTestBuilder(resolver, filesystem)
+              .setFramework(framework)
+              .build(resolver, filesystem);
+      RuleKey ruleKeyWithoutResource = getRuleKey(cxxTestWithoutResources);
+
+      // Create a rule with a resource attached.
+      resolver =
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+      CxxTest cxxTestWithResources =
+          (CxxTest) createTestBuilder(resolver, filesystem)
+              .setFramework(framework)
+              .setResources(ImmutableSortedSet.of(resource))
+              .build(resolver, filesystem);
+      RuleKey ruleKeyWithResource = getRuleKey(cxxTestWithResources);
+
+      // Verify that their rule keys are different.
+      assertThat(ruleKeyWithoutResource, Matchers.not(Matchers.equalTo(ruleKeyWithResource)));
+    }
+  }
+
+  @Test
+  public void resourcesAreInputs() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path resource = filesystem.getRootPath().getFileSystem().getPath("resource");
+    filesystem.touch(resource);
+    for (CxxTestType framework : CxxTestType.values()) {
+      BuildRuleResolver resolver =
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+      TargetNode<?> cxxTestWithResources =
+          createTestBuilder(resolver, filesystem)
+              .setFramework(framework)
+              .setResources(ImmutableSortedSet.of(resource))
+              .build();
+      assertThat(
+          cxxTestWithResources.getInputs(),
+          Matchers.hasItem(resource));
+    }
+  }
+
+  private RuleKey getRuleKey(BuildRule rule) {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(rule.getProjectFilesystem());
+    DefaultRuleKeyBuilderFactory factory =
+        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    return factory.build(rule);
   }
 
 }

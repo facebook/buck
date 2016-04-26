@@ -36,6 +36,8 @@ it as part of <code>buck test</code>.
 
 {call cxx_common.linker_flags_arg /}
 
+{call test_common.resources_arg /}
+
 {call buck.arg}
   {param name: 'framework' /}
   {param default : '"gtest"' /}

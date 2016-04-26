@@ -29,6 +29,7 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
@@ -74,6 +75,7 @@ public class CxxTestTest {
           ImmutableMap.<String, String>of(),
           Suppliers.ofInstance(ImmutableMap.<String, String>of()),
           Suppliers.ofInstance(ImmutableList.<String>of()),
+          ImmutableSortedSet.<SourcePath>of(),
           Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
           ImmutableSet.<Label>of(),
           ImmutableSet.<String>of(),

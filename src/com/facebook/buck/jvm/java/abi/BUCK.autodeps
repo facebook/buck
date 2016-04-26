@@ -1,8 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY 0417f72eebf70ca7aeaa9bea3f799e0b0468864e #@#
+#@# GENERATED FILE: DO NOT MODIFY 2d022c914878cd502944e56070c856d12fce484c #@#
 {
   "abi" : {
     "deps" : [
-      "//src/com/facebook/buck/zip:stream",
       "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [

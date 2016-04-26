@@ -19,11 +19,9 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ConstantToolProvider;
-import com.facebook.buck.rules.HashedFileTool;
-import com.google.common.base.Optional;
-
-import java.nio.file.Paths;
+import com.facebook.buck.rules.Tool;
 
 public class CxxPlatformUtils {
 
@@ -32,49 +30,37 @@ public class CxxPlatformUtils {
   public static final CxxBuckConfig DEFAULT_CONFIG =
       new CxxBuckConfig(new FakeBuckConfig.Builder().build());
 
+  private static final Tool DEFAULT_TOOL = new CommandTool.Builder().build();
+
+  private static final PreprocessorProvider DEFAULT_PREPROCESSOR_PROVIDER =
+      new PreprocessorProvider(
+          new ConstantToolProvider(DEFAULT_TOOL),
+          CxxToolProvider.Type.DEFAULT);
+
+  private static final CompilerProvider DEFAULT_COMPILER_PROVIDER =
+      new CompilerProvider(
+          new ConstantToolProvider(DEFAULT_TOOL),
+          CxxToolProvider.Type.DEFAULT);
+
   public static final CxxPlatform DEFAULT_PLATFORM =
       CxxPlatform.builder()
           .setFlavor(ImmutableFlavor.of("platform"))
-          .setAs(
-              new CompilerProvider(
-                  Paths.get("tool"),
-                  Optional.of(CxxToolProvider.Type.DEFAULT)))
-          .setAspp(
-              new PreprocessorProvider(
-                  Paths.get("tool"),
-                  Optional.of(CxxToolProvider.Type.DEFAULT)))
-          .setCc(
-              new CompilerProvider(
-                  Paths.get("tool"),
-                  Optional.of(CxxToolProvider.Type.DEFAULT)))
-          .setCpp(
-              new PreprocessorProvider(
-                  Paths.get("tool"),
-                  Optional.of(CxxToolProvider.Type.DEFAULT)))
-          .setCxx(
-              new CompilerProvider(
-                  Paths.get("tool"),
-                  Optional.of(CxxToolProvider.Type.DEFAULT)))
-          .setCxxpp(
-              new PreprocessorProvider(
-                  Paths.get("tool"),
-                  Optional.of(CxxToolProvider.Type.DEFAULT)))
-          .setCuda(
-              new CompilerProvider(
-                  Paths.get("tool"),
-                  Optional.of(CxxToolProvider.Type.DEFAULT)))
-          .setCudapp(
-              new PreprocessorProvider(
-                  Paths.get("tool"),
-                  Optional.of(CxxToolProvider.Type.DEFAULT)))
+          .setAs(DEFAULT_COMPILER_PROVIDER)
+          .setAspp(DEFAULT_PREPROCESSOR_PROVIDER)
+          .setCc(DEFAULT_COMPILER_PROVIDER)
+          .setCpp(DEFAULT_PREPROCESSOR_PROVIDER)
+          .setCxx(DEFAULT_COMPILER_PROVIDER)
+          .setCxxpp(DEFAULT_PREPROCESSOR_PROVIDER)
+          .setCuda(DEFAULT_COMPILER_PROVIDER)
+          .setCudapp(DEFAULT_PREPROCESSOR_PROVIDER)
           .setLd(
               new DefaultLinkerProvider(
                   LinkerProvider.Type.GNU,
-                  new ConstantToolProvider(new HashedFileTool(Paths.get("tool")))))
-          .setStrip(new HashedFileTool(Paths.get("tool")))
-          .setAr(new GnuArchiver(new HashedFileTool(Paths.get("tool"))))
-          .setRanlib(new HashedFileTool(Paths.get("ranlib")))
-          .setSymbolNameTool(new PosixNmSymbolNameTool(new HashedFileTool(Paths.get("nm"))))
+                  new ConstantToolProvider(DEFAULT_TOOL)))
+          .setStrip(DEFAULT_TOOL)
+          .setAr(new GnuArchiver(DEFAULT_TOOL))
+          .setRanlib(DEFAULT_TOOL)
+          .setSymbolNameTool(new PosixNmSymbolNameTool(DEFAULT_TOOL))
           .setSharedLibraryExtension("so")
           .setSharedLibraryVersionedExtensionFormat("so.%s")
           .setDebugPathSanitizer(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER)

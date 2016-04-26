@@ -22,6 +22,7 @@ import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
@@ -76,6 +77,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       Tool executable,
       Supplier<ImmutableMap<String, String>> env,
       Supplier<ImmutableList<String>> args,
+      ImmutableSortedSet<SourcePath> resources,
       Supplier<ImmutableSortedSet<BuildRule>> additionalDeps,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
@@ -89,6 +91,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         executable.getEnvironment(resolver),
         env,
         args,
+        resources,
         additionalDeps,
         labels,
         contacts,

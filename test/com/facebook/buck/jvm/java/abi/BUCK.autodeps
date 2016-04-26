@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 53a70a982f8bd9421899c3f71a5618af21e0eb2f #@#
+#@# GENERATED FILE: DO NOT MODIFY e122b5a44aff3880e1c27a31b1f6d20d5b358d5b #@#
 {
   "abi" : {
     "deps" : [
@@ -15,11 +15,9 @@
   },
   "testutil" : {
     "deps" : [
-      "//third-party/java/guava:guava",
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [
-      "//src/com/facebook/buck/io:io",
       "//third-party/java/asm:asm"
     ]
   }

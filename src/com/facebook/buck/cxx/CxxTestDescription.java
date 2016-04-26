@@ -30,6 +30,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.macros.MacroException;
 import com.facebook.buck.util.HumanReadableException;
@@ -45,6 +46,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
@@ -204,6 +206,9 @@ public class CxxTestDescription implements
             cxxLinkAndCompileRules.executable,
             testEnv,
             testArgs,
+            FluentIterable.from(args.resources.or(ImmutableSortedSet.<Path>of()))
+                .transform(SourcePaths.toSourcePath(params.getProjectFilesystem()))
+                .toSortedSet(Ordering.natural()),
             additionalDeps,
             args.labels.get(),
             args.contacts.get(),
@@ -221,6 +226,9 @@ public class CxxTestDescription implements
             cxxLinkAndCompileRules.executable,
             testEnv,
             testArgs,
+            FluentIterable.from(args.resources.or(ImmutableSortedSet.<Path>of()))
+                .transform(SourcePaths.toSourcePath(params.getProjectFilesystem()))
+                .toSortedSet(Ordering.natural()),
             additionalDeps,
             args.labels.get(),
             args.contacts.get(),
@@ -334,6 +342,7 @@ public class CxxTestDescription implements
     public Optional<Boolean> runTestSeparately;
     public Optional<Boolean> useDefaultTestMain;
     public Optional<Long> testRuleTimeoutMs;
+    public Optional<ImmutableSortedSet<Path>> resources;
 
     @Override
     public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {

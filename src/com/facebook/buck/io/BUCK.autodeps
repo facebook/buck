@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 7d4faf8dd9c3b452442198bc3dea4f9cc4dd7e0f #@#
+#@# GENERATED FILE: DO NOT MODIFY 09bac0a221ad7de07aa1d4d286331e59016e4dbe #@#
 {
   "executable-finder" : {
     "deps" : [
@@ -19,11 +19,13 @@
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util/concurrent:concurrent",
       "//src/com/facebook/buck/util/environment:platform",
-      "//src/com/facebook/buck/zip:stream"
+      "//src/com/facebook/buck/zip:stream",
+      "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/io:executable-finder",
+      "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
       "//third-party/java/jsr:jsr305",
       "//third-party/java/okio:okio"
