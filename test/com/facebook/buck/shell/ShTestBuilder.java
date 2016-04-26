@@ -24,6 +24,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.nio.file.Path;
+
 public class ShTestBuilder extends AbstractNodeBuilder<ShTestDescription.Arg> {
 
   public ShTestBuilder(BuildTarget target) {
@@ -47,6 +49,11 @@ public class ShTestBuilder extends AbstractNodeBuilder<ShTestDescription.Arg> {
 
   public ShTestBuilder setEnv(ImmutableMap<String, String> env) {
     arg.env = Optional.of(env);
+    return this;
+  }
+
+  public ShTestBuilder setResources(ImmutableSortedSet<Path> resources) {
+    arg.resources = Optional.of(resources);
     return this;
   }
 

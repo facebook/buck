@@ -29,6 +29,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
@@ -69,6 +70,7 @@ public class ShTestTest extends EasyMockSupport {
         new FakeSourcePath("run_test.sh"),
         /* args */ ImmutableList.<Arg>of(),
         /* env */ ImmutableMap.<String, Arg>of(),
+        /* resources */ ImmutableSortedSet.<SourcePath>of(),
         Optional.<Long>absent(),
         /* labels */ ImmutableSet.<Label>of());
 
@@ -105,6 +107,7 @@ public class ShTestTest extends EasyMockSupport {
         new FakeSourcePath("run_test.sh"),
         /* args */ ImmutableList.<Arg>of(),
         /* env */ ImmutableMap.<String, Arg>of(),
+        /* resources */ ImmutableSortedSet.<SourcePath>of(),
         Optional.<Long>absent(),
         /* labels */ ImmutableSet.<Label>of());
 

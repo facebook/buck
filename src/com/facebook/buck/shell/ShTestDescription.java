@@ -27,6 +27,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
@@ -45,6 +46,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 
@@ -113,6 +115,9 @@ public class ShTestDescription implements
         args.test,
         testArgs,
         testEnv,
+        FluentIterable.from(args.resources.or(ImmutableSortedSet.<Path>of()))
+            .transform(SourcePaths.toSourcePath(params.getProjectFilesystem()))
+            .toSortedSet(Ordering.natural()),
         args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
         args.labels.get());
   }
@@ -146,6 +151,8 @@ public class ShTestDescription implements
     public Optional<ImmutableSortedSet<Label>> labels;
     public Optional<Long> testRuleTimeoutMs;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<Path>> resources;
     public Optional<ImmutableMap<String, String>> env;
   }
+
 }

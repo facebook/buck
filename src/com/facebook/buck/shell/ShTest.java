@@ -66,6 +66,9 @@ public class ShTest
   private final ImmutableList<Arg> args;
   @AddToRuleKey
   private final ImmutableMap<String, Arg> env;
+  @AddToRuleKey
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  private final ImmutableSortedSet<SourcePath> resources;
   private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<Label> labels;
 
@@ -75,12 +78,14 @@ public class ShTest
       SourcePath test,
       ImmutableList<Arg> args,
       ImmutableMap<String, Arg> env,
+      ImmutableSortedSet<SourcePath> resources,
       Optional<Long> testRuleTimeoutMs,
       Set<Label> labels) {
     super(params, resolver);
     this.test = test;
     this.args = args;
     this.env = env;
+    this.resources = resources;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.labels = ImmutableSet.copyOf(labels);
   }

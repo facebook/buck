@@ -18,20 +18,30 @@ package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
+
+import java.nio.file.Path;
 
 public class ShTestDescriptionTest {
 
@@ -85,6 +95,59 @@ public class ShTestDescriptionTest {
                 "LOC",
                 pathResolver.getAbsolutePath(
                     new BuildTargetSourcePath(dep.getBuildTarget())).toString())));
+  }
+
+  @Test
+  public void resourcesAffectRuleKey() throws Exception {
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path resource = filesystem.getRootPath().getFileSystem().getPath("resource");
+    filesystem.touch(resource);
+
+    // Create a test rule without resources attached.
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    ShTest shTestWithoutResources =
+        (ShTest) new ShTestBuilder(target)
+            .build(resolver, filesystem);
+    RuleKey ruleKeyWithoutResource = getRuleKey(shTestWithoutResources);
+
+    // Create a rule with a resource attached.
+    resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    ShTest shTestWithResources =
+        (ShTest) new ShTestBuilder(target)
+            .setResources(ImmutableSortedSet.of(resource))
+            .build(resolver, filesystem);
+    RuleKey ruleKeyWithResource = getRuleKey(shTestWithResources);
+
+    // Verify that their rule keys are different.
+    assertThat(ruleKeyWithoutResource, Matchers.not(Matchers.equalTo(ruleKeyWithResource)));
+  }
+
+  @Test
+  public void resourcesAreInputs() throws Exception {
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path resource = filesystem.getRootPath().getFileSystem().getPath("resource");
+    filesystem.touch(resource);
+    TargetNode<?> shTestWithResources =
+        new ShTestBuilder(target)
+            .setResources(ImmutableSortedSet.of(resource))
+            .build();
+    assertThat(
+        shTestWithResources.getInputs(),
+        Matchers.hasItem(resource));
+  }
+
+  private RuleKey getRuleKey(BuildRule rule) {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(rule.getProjectFilesystem());
+    DefaultRuleKeyBuilderFactory factory =
+        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    return factory.build(rule);
   }
 
 }
