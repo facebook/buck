@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
@@ -26,6 +27,7 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.hash.AppendingHasher;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
@@ -96,6 +98,17 @@ public class RuleKeyBuilder {
   }
 
   protected RuleKeyBuilder setSourcePath(SourcePath sourcePath) {
+    if (sourcePath instanceof ArchiveMemberSourcePath) {
+      ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) sourcePath;
+      try {
+        return setArchiveMemberPath(
+            resolver.getAbsoluteArchiveMemberPath(archiveMemberSourcePath),
+            resolver.getRelativeArchiveMemberPath(archiveMemberSourcePath));
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
     // And now we need to figure out what this thing is.
     Optional<BuildRule> buildRule = resolver.getRule(sourcePath);
     if (buildRule.isPresent()) {
@@ -266,6 +279,25 @@ public class RuleKeyBuilder {
 
     feed(addToKey.toString().getBytes(StandardCharsets.UTF_8));
     feed(sha1.toString().getBytes(StandardCharsets.UTF_8));
+    return this;
+  }
+
+  public RuleKeyBuilder setArchiveMemberPath(
+      ArchiveMemberPath absoluteArchiveMemberPath,
+      ArchiveMemberPath relativeArchiveMemberPath) throws IOException {
+    Preconditions.checkState(absoluteArchiveMemberPath.isAbsolute());
+    Preconditions.checkState(!relativeArchiveMemberPath.isAbsolute());
+
+    HashCode hash = hashCache.get(absoluteArchiveMemberPath);
+    if (hash == null) {
+      throw new RuntimeException("No hash for " + absoluteArchiveMemberPath);
+    }
+
+    ArchiveMemberPath addToKey = relativeArchiveMemberPath;
+    ruleKeyLogger.addArchiveMemberPath(addToKey, hash);
+
+    feed(addToKey.toString().getBytes(StandardCharsets.UTF_8));
+    feed(hash.toString().getBytes(StandardCharsets.UTF_8));
     return this;
   }
 

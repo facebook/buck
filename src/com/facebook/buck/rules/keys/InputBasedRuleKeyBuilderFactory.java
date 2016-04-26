@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.util.Collections;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * A factory for generating input-based {@link RuleKey}s.
@@ -124,6 +126,17 @@ public class InputBasedRuleKeyBuilderFactory
       return result.getRuleKey();
     }
 
+    @Override
+    public RuleKeyBuilder setReflectively(String key, @Nullable Object val) {
+      if (val instanceof ArchiveDependencySupplier) {
+        return super.setReflectively(
+            key,
+            ((ArchiveDependencySupplier) val).getArchiveMembers(pathResolver));
+      }
+
+      return super.setReflectively(key, val);
+    }
+
     // Input-based rule keys are evaluated after all dependencies for a rule are available on
     // disk, and so we can always resolve the `Path` packaged in a `SourcePath`.  We hash this,
     // rather than the rule key from it's `BuildRule`.
@@ -133,9 +146,15 @@ public class InputBasedRuleKeyBuilderFactory
         deps.add(pathResolver.getRule(sourcePath).asSet());
 
         try {
-          setPath(
-              pathResolver.getAbsolutePath(sourcePath),
-              pathResolver.getRelativePath(sourcePath));
+          if (sourcePath instanceof ArchiveMemberSourcePath) {
+            setArchiveMemberPath(
+                pathResolver.getAbsoluteArchiveMemberPath(sourcePath),
+                pathResolver.getRelativeArchiveMemberPath(sourcePath));
+          } else {
+            setPath(
+                pathResolver.getAbsolutePath(sourcePath),
+                pathResolver.getRelativePath(sourcePath));
+          }
         } catch (IOException e) {
           throw new RuntimeException(e);
         }

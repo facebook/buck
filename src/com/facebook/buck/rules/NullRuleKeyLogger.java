@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.hash.HashCode;
 
@@ -60,6 +61,11 @@ public class NullRuleKeyLogger implements RuleKeyLogger {
   @Override
   public Scope pushSourceWithFlags() {
     return NO_OP_SCOPE;
+  }
+
+  @Override
+  public void addArchiveMemberPath(
+      ArchiveMemberPath archiveMemberPath, HashCode hashCode) {
   }
 
   @Override

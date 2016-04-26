@@ -492,6 +492,80 @@ public class RuleKeyTest {
   }
 
   @Test
+  public void setInputArchiveMemberSourcePath() {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    final FakeBuildRule fakeBuildRule = new FakeBuildRule("//:fake", pathResolver);
+    resolver.addToIndex(fakeBuildRule);
+
+    BuildTargetSourcePath archive1 = new BuildTargetSourcePath(
+        fakeBuildRule.getBuildTarget(),
+        Paths.get("location"));
+    PathSourcePath archive2 = new PathSourcePath(
+        new FakeProjectFilesystem(),
+        Paths.get("otherLocation"));
+
+    // Verify that two ArchiveMemberSourcePaths with the same archive and path
+    assertEquals(
+        createEmptyRuleKey(
+            pathResolver)
+            .setReflectively(
+                "key",
+                new ArchiveMemberSourcePath(
+                    archive1,
+                    Paths.get("location")))
+            .build(),
+        createEmptyRuleKey(
+            pathResolver)
+            .setReflectively(
+                "key",
+                new ArchiveMemberSourcePath(
+                    archive1,
+                    Paths.get("location")))
+            .build());
+
+    // Verify that just changing the archive changes the rule key
+    assertNotEquals(
+        createEmptyRuleKey(
+            pathResolver)
+            .setReflectively(
+                "key",
+                new ArchiveMemberSourcePath(
+                    archive1,
+                    Paths.get("location")))
+            .build(),
+        createEmptyRuleKey(
+            pathResolver)
+            .setReflectively(
+                "key",
+                new ArchiveMemberSourcePath(
+                    archive2,
+                    Paths.get("location")))
+            .build());
+
+    // Verify that just changing the member path changes the rule key
+    assertNotEquals(
+        createEmptyRuleKey(
+            pathResolver)
+            .setReflectively(
+                "key",
+                new ArchiveMemberSourcePath(
+                    archive1,
+                    Paths.get("location")))
+            .build(),
+        createEmptyRuleKey(
+            pathResolver)
+            .setReflectively(
+                "key",
+                new ArchiveMemberSourcePath(
+                    archive1,
+                    Paths.get("different")))
+            .build());
+  }
+
+  @Test
   public void canAddMapsToRuleKeys() {
     ImmutableMap<String, ?> map = ImmutableMap.of(
         "path",
@@ -776,7 +850,7 @@ public class RuleKeyTest {
 
           @Override
           public HashCode get(ArchiveMemberPath archiveMemberPath) {
-            throw new AssertionError();
+            return HashCode.fromString("deadbeef");
           }
 
           @Override

@@ -117,6 +117,29 @@ public class DefaultRuleKeyLoggerTest {
   }
 
   @Test
+  public void archiveMemberPathField() {
+    Fixture fixture = new Fixture();
+
+    TestRule fakeRule = new TestRule(
+        BuildTargetFactory.newInstance("//:foo"),
+        fixture.getPathResolver(),
+        null,
+        new ArchiveMemberSourcePath(new FakeSourcePath(FAKE_PATH.toString()), Paths.get("member")),
+        null);
+
+    fixture.getRuleKeyBuilderFactory().build(fakeRule);
+
+    assertThat(
+        fixture.getLogger().getCurrentLogElements(),
+        Matchers.contains(
+            "string(\"//:foo\"):", "key(name):",
+            "string(\"test_rule\"):", "key(buck.type):",
+            "string(\"N/A\"):", "key(buckVersionUid):",
+            "archiveMember(foo/bar/path/1!/member:f1134a34c0de):", "key(pathField):"));
+
+  }
+
+  @Test
   public void appendable() {
     Fixture fixture = new Fixture();
 
@@ -174,7 +197,7 @@ public class DefaultRuleKeyLoggerTest {
 
         @Override
         public HashCode get(ArchiveMemberPath archiveMemberPath) {
-          throw new AssertionError();
+          return HashCode.fromString("f1134a34c0de");
         }
 
         @Override

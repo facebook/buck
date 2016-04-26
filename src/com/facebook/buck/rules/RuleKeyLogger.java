@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.hash.HashCode;
 
@@ -34,6 +35,7 @@ public interface RuleKeyLogger {
   Scope pushMapValue();
   Scope pushSourceWithFlags();
 
+  void addArchiveMemberPath(ArchiveMemberPath archiveMemberPath, HashCode hashCode);
   void addPath(Path path, HashCode hashCode);
   void addNonHashingPath(String path);
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.annotations.VisibleForTesting;
@@ -89,6 +90,12 @@ public class DefaultRuleKeyLogger implements RuleKeyLogger {
   @Override
   public Scope pushMapValue() {
     return NO_OP_SCOPE;
+  }
+
+  @Override
+  public void addArchiveMemberPath(
+      ArchiveMemberPath archiveMemberPath, HashCode hashCode) {
+    appendLogElement(String.format("archiveMember(%s:%s):", archiveMemberPath, hashCode));
   }
 
   @Override

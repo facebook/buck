@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.io.ArchiveMemberPath;
+import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -54,7 +56,15 @@ abstract class AbstractDependencyFileEntry {
       SourcePath sourcePath,
       SourcePathResolver resolver) {
     final DependencyFileEntry.Builder builder = DependencyFileEntry.builder();
-    builder.setPathToFile(resolver.getRelativePath(sourcePath));
+    if (sourcePath instanceof ArchiveMemberSourcePath) {
+      ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) sourcePath;
+      ArchiveMemberPath relativeArchiveMemberPath =
+          resolver.getRelativeArchiveMemberPath(archiveMemberSourcePath);
+      builder.setPathToFile(relativeArchiveMemberPath.getArchivePath());
+      builder.setPathWithinArchive(relativeArchiveMemberPath.getMemberPath());
+    } else {
+      builder.setPathToFile(resolver.getRelativePath(sourcePath));
+    }
 
     return builder.build();
   }

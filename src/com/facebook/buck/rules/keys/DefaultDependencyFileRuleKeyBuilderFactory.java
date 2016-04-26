@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
@@ -169,9 +170,15 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
       // Add each `SourcePath` using `builder.setPath()`.  We can't use `builder.setSourcePath()`
       // here since the special `RuleKeyBuilder` sub-class that dep-file rule keys use intentionally
       // override `builder.setSourcePath()` to be a noop (and just record the inputs).
-      builder.setPath(
-          pathResolver.getAbsolutePath(sourcePath),
-          pathResolver.getRelativePath(sourcePath));
+      if (sourcePath instanceof ArchiveMemberSourcePath) {
+        builder.setArchiveMemberPath(
+            pathResolver.getAbsoluteArchiveMemberPath(sourcePath),
+            pathResolver.getRelativeArchiveMemberPath(sourcePath));
+      } else {
+        builder.setPath(
+            pathResolver.getAbsolutePath(sourcePath),
+            pathResolver.getRelativePath(sourcePath));
+      }
     }
   }
 }

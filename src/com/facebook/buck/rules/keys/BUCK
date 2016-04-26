@@ -4,6 +4,9 @@ java_immutables_library(
   immutable_types = [
     'DependencyFileEntry',
   ],
+  tests = [
+    '//test/com/facebook/buck/rules/keys:keys',
+  ],
   autodeps = True,
   visibility = [
     'PUBLIC',
