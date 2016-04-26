@@ -455,7 +455,10 @@ abstract class AbstractCxxSourceRuleFactory {
     CxxInferCapture result = new CxxInferCapture(
         getParams().copyWithChanges(
             target,
-            new DepsBuilder().addPreprocessDeps().add(source),
+            new DepsBuilder()
+                .addPreprocessDeps()
+                .add(preprocessorDelegate.getPreprocessor())
+                .add(source),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         getPathResolver(),
         CxxToolFlags.copyOf(
