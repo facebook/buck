@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.PathSourcePath;
@@ -49,6 +50,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -58,7 +60,7 @@ import java.util.concurrent.Callable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class AndroidInstrumentationTest extends AbstractBuildRule
-    implements TestRule, ExternalTestRunnerRule {
+    implements ExternalTestRunnerRule, HasRuntimeDeps, TestRule {
 
   private static final String TEST_RESULT_FILE = "test_result.xml";
 
@@ -311,5 +313,10 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
   private static Path toPath(InstallableApk apk) {
     return apk.getProjectFilesystem().resolve(
         apk.getApkPath());
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    return ImmutableSortedSet.<BuildRule>of(apk);
   }
 }
