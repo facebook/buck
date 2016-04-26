@@ -180,6 +180,21 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
 {call android_common.deps_apk_arg /}
 
 {call buck.arg}
+  {param name : 'cpu_filters' /}
+  {param default : '[]' /}
+  {param desc}
+  The CPU architecture filter applied to the final apk. Could be a subset of <code>ARM</code>,
+  {sp}<code>ARMV7</code>, <code>X86</code>, <code>X86_64</code>, <code>MIPS</code>.
+
+  <p>
+    <strong>Note</strong>: If you set this parameter, you must setup your NDK, otherwise BUCK
+    build will fail. You can follow the Android SDK and NDK part of the
+    {sp}<a href="{ROOT}setup/install.html">install guide</a> to set it up.
+  </p>
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name : 'linear_alloc_hard_limit' /}
   {param default : '4194304' /}
   {param desc}
