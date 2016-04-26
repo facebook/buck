@@ -207,6 +207,9 @@ public class IjModuleFactory {
             IjFolder.combineInputs(from, to)
         );
       }
+
+      Preconditions.checkArgument(from.getClass() == to.getClass());
+
       return from.merge(to);
     }
 

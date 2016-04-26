@@ -104,13 +104,6 @@ abstract class IjFolder implements Comparable<IjFolder> {
   }
 
   public IjFolder merge(IjFolder otherFolder) {
-    if (!canMergeWith(otherFolder)) {
-      throw new IllegalArgumentException(
-          "Can not merge " + this.getClass().getSimpleName() +
-          " with a " + otherFolder.getClass().getSimpleName()
-        );
-    }
-
     if (equals(otherFolder)) {
       return this;
     }
@@ -152,7 +145,12 @@ abstract class IjFolder implements Comparable<IjFolder> {
 
   @Override
   public String toString() {
-    return getClass().getSimpleName() + " for " + getPath().toString();
+    return getClass().getSimpleName() +
+            " for " +
+            getPath().toString() +
+            (wantsPackagePrefix ? " wanting a package prefix" : "") +
+            " covering " +
+            getInputs();
   }
 
   static ImmutableSortedSet<Path> combineInputs(IjFolder first, IjFolder second) {
