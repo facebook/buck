@@ -1,4 +1,4 @@
 Project URL: https://pypi.python.org/packages/source/s/setuptools/setuptools-18.5.tar.gz#md5=533c868f01169a3085177dffe5e768bb
 Version: 18.5
 License: PSF or ZPL
-Local modifications: kept only pkg_resources module
+Local modifications: kept only pkg_resources & _markerlib modules
