@@ -573,4 +573,23 @@ public class TargetsCommandIntegrationTest {
         observed,
         equalTo(expected));
   }
+
+  @Test
+  public void testShowAllTargets() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "xcode_workspace_with_tests", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "targets");
+    result.assertSuccess();
+    assertEquals(
+        ImmutableSet.of(
+            "//bin:bin",
+            "//bin:genrule",
+            "//lib:lib",
+            "//test:test",
+            "//workspace:workspace"),
+        ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(result.getStdout())));
+  }
 }

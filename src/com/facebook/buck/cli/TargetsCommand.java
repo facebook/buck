@@ -772,8 +772,7 @@ public class TargetsCommand extends AbstractCommand {
       }
     }
 
-    for (TargetNode<?> targetNode :
-        ImmutableSortedSet.copyOf(targetGraphAndTargetNodes.getTargetNodes())) {
+    for (TargetNode<?> targetNode : targetGraphAndTargetNodes.getTargetNodes()) {
       ShowOptions.Builder showOptionsBuilder =
           getShowOptionBuilder(showOptionBuilderMap, targetNode.getBuildTarget());
       Preconditions.checkNotNull(showOptionsBuilder);
