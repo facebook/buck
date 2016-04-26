@@ -19,6 +19,7 @@ package com.facebook.buck.intellij.plugin.navigation;
 import com.facebook.buck.intellij.plugin.build.BuckBuildUtil;
 import com.facebook.buck.intellij.plugin.lang.BuckLanguage;
 import com.facebook.buck.intellij.plugin.lang.psi.BuckValue;
+import com.google.common.base.Optional;
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandlerBase;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
@@ -47,12 +48,19 @@ public class BuckGotoProvider extends GotoDeclarationHandlerBase {
       if (target.startsWith("'") && target.endsWith("'")) {
         target = target.substring(1, target.length() - 1);
       }
-      VirtualFile targetBuckFile =
-          BuckBuildUtil.getBuckFileFromAbsoluteTarget(project, target);
-      if (targetBuckFile == null) {
+
+      VirtualFile targetFile =
+          // Try to find the BUCK file
+          Optional.fromNullable(BuckBuildUtil.getBuckFileFromAbsoluteTarget(project, target))
+              // Try to find the normal file
+              .or(Optional.fromNullable(source.getContainingFile().getParent().getVirtualFile()
+                  // If none exist, then it's null
+                  .findFileByRelativePath(target))).orNull();
+
+      if (targetFile == null) {
         return null;
       }
-      return PsiManager.getInstance(project).findFile(targetBuckFile);
+      return PsiManager.getInstance(project).findFile(targetFile);
     }
     return null;
   }
