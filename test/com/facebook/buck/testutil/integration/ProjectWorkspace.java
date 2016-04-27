@@ -452,6 +452,7 @@ public class ProjectWorkspace {
           repoRoot,
           context,
           env.or(sanizitedEnv),
+          /* setupLogging */ false,
           args);
     } catch (InterruptedException e) {
       e.printStackTrace(stderr);

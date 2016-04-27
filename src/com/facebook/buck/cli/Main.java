@@ -643,24 +643,11 @@ public final class Main {
       Path projectRoot,
       Optional<NGContext> context,
       ImmutableMap<String, String> clientEnvironment,
+      boolean setupLogging,
       String... args)
       throws IOException, InterruptedException {
 
-    Verbosity verbosity = VerbosityParser.parse(args);
-    Optional<String> color;
-    if (context.isPresent() && (context.get().getEnv() != null)) {
-      String colorString = context.get().getEnv().getProperty(BUCKD_COLOR_DEFAULT_ENV_VAR);
-      color = Optional.fromNullable(colorString);
-    } else {
-      color = Optional.absent();
-    }
-
-    // We need a BuckConfig to create a Console, but we get BuckConfig from Cell, and we need
-    // a Console to create a Cell. To break this bootstrapping loop, create a temporary
-    // BuckConfig.
-    // TODO(oconnor663): We probably shouldn't rely on BuckConfig to instantiate Console.
-    // Begin ugly bootstrapping code
-
+    // Parse the command line args.
     BuckCommand command = new BuckCommand();
     AdditionalOptionsCmdLineParser cmdLineParser = new AdditionalOptionsCmdLineParser(command);
     try {
@@ -674,6 +661,7 @@ public final class Main {
       return 1;
     }
 
+    // Setup filesystem and buck config.
     Path canonicalRootPath = projectRoot.toRealPath().normalize();
     Config config = Configs.createDefaultConfig(canonicalRootPath, command.getConfigOverrides());
     ProjectFilesystem filesystem = new ProjectFilesystem(canonicalRootPath, config);
@@ -683,8 +671,46 @@ public final class Main {
         architecture,
         platform,
         clientEnvironment);
-    // End ugly bootstrapping code.
 
+    // Setup logging.
+    if (setupLogging) {
+
+      // Reset logging each time we run a command while daemonized.
+      // This will cause us to write a new log per command.
+      if (context.isPresent()) {
+        LOG.debug("Rotating log.");
+        LogConfig.flushLogs();
+        LogConfig.setupLogging();
+      }
+
+      if (LOG.isDebugEnabled()) {
+        Long gitCommitTimestamp = Long.getLong("buck.git_commit_timestamp");
+        String buildDateStr;
+        if (gitCommitTimestamp == null) {
+          buildDateStr = "(unknown)";
+        } else {
+          buildDateStr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US).format(
+              new Date(TimeUnit.SECONDS.toMillis(gitCommitTimestamp)));
+        }
+        String buildRev = System.getProperty("buck.git_commit", "(unknown)");
+        LOG.debug(
+            "Starting up (build date %s, rev %s), args: %s",
+            buildDateStr,
+            buildRev,
+            Arrays.toString(args));
+        LOG.debug("System properties: %s", System.getProperties());
+      }
+    }
+
+    // Setup the console.
+    Verbosity verbosity = VerbosityParser.parse(args);
+    Optional<String> color;
+    if (context.isPresent() && (context.get().getEnv() != null)) {
+      String colorString = context.get().getEnv().getProperty(BUCKD_COLOR_DEFAULT_ENV_VAR);
+      color = Optional.fromNullable(colorString);
+    } else {
+      color = Optional.absent();
+    }
     final Console console = new Console(
         verbosity,
         stdOut,
@@ -1468,33 +1494,13 @@ public final class Main {
       String... args)
       throws IOException, InterruptedException {
     try {
-
-      // Reset logging each time we run a command while daemonized.
-      // This will cause us to write a new log per command.
-      if (context.isPresent()) {
-        LOG.debug("Rotating log.");
-        LogConfig.flushLogs();
-        LogConfig.setupLogging();
-      }
-
-      if (LOG.isDebugEnabled()) {
-        Long gitCommitTimestamp = Long.getLong("buck.git_commit_timestamp");
-        String buildDateStr;
-        if (gitCommitTimestamp == null) {
-          buildDateStr = "(unknown)";
-        } else {
-          buildDateStr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US).format(
-              new Date(TimeUnit.SECONDS.toMillis(gitCommitTimestamp)));
-        }
-        String buildRev = System.getProperty("buck.git_commit", "(unknown)");
-        LOG.debug(
-            "Starting up (build date %s, rev %s), args: %s",
-            buildDateStr,
-            buildRev,
-            Arrays.toString(args));
-        LOG.debug("System properties: %s", System.getProperties());
-      }
-      return runMainWithExitCode(buildId, projectRoot, context, clientEnvironment, args);
+      return runMainWithExitCode(
+          buildId,
+          projectRoot,
+          context,
+          clientEnvironment,
+          /* setupLogging */ true,
+          args);
     } catch (HumanReadableException e) {
       Console console = new Console(Verbosity.STANDARD_INFORMATION,
           stdOut,
