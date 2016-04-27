@@ -112,7 +112,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
     ImmutableSet<Path> additionalClasspathEntries = ImmutableSet.of();
     if (dummyRDotJava.isPresent()) {
-      additionalClasspathEntries = ImmutableSet.of(dummyRDotJava.get().getPathToOutput());
+      additionalClasspathEntries = ImmutableSet.of(dummyRDotJava.get().getRDotJavaBinFolder());
       ImmutableSortedSet<BuildRule> newExtraDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
           .addAll(params.getExtraDeps().get())
           .add(dummyRDotJava.get())
