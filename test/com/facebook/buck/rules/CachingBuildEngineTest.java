@@ -1557,7 +1557,7 @@ public class CachingBuildEngineTest {
       RuleKey depFileRuleKey = depFileFactory.build(
           rule,
           Optional.<ImmutableSet<SourcePath>>absent(),
-          ImmutableList.of(DependencyFileEntry.of(input, Optional.<Path>absent())));
+          ImmutableList.of(DependencyFileEntry.of(input, Optional.<Path>absent()))).getFirst();
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, getSuccess(result));
 
@@ -1708,7 +1708,7 @@ public class CachingBuildEngineTest {
       RuleKey depFileRuleKey = depFileFactory.build(
           rule,
           Optional.<ImmutableSet<SourcePath>>absent(),
-          ImmutableList.of(DependencyFileEntry.of(input, Optional.<Path>absent())));
+          ImmutableList.of(DependencyFileEntry.of(input, Optional.<Path>absent()))).getFirst();
 
       // Prepopulate the dep file rule key and dep file.
       filesystem.writeContentsToPath(
@@ -1785,7 +1785,7 @@ public class CachingBuildEngineTest {
       RuleKey depFileRuleKey = depFileFactory.build(
           rule,
           Optional.of(inputsBefore),
-          ImmutableList.<DependencyFileEntry>of());
+          ImmutableList.<DependencyFileEntry>of()).getFirst();
       filesystem.writeContentsToPath(
           depFileRuleKey.toString(),
           BuildInfo.getPathToMetadataDirectory(target)
@@ -1869,7 +1869,7 @@ public class CachingBuildEngineTest {
       RuleKey depFileRuleKey = depFileFactory.build(
           rule,
           Optional.<ImmutableSet<SourcePath>>absent(),
-          ImmutableList.of(DependencyFileEntry.of(input, Optional.<Path>absent())));
+          ImmutableList.of(DependencyFileEntry.of(input, Optional.<Path>absent()))).getFirst();
 
       // Prepopulate the dep file rule key and dep file.
       filesystem.writeContentsToPath(
@@ -1934,6 +1934,11 @@ public class CachingBuildEngineTest {
       final Path input = Preconditions.checkNotNull(genrule.getPathToOutput());
       filesystem.writeContentsToPath("contents", input);
 
+      // Create another input that will be ineligible for the dep file. Such inputs should still
+      // be part of the manifest.
+      final Path input2 = Paths.get("input2");
+      filesystem.writeContentsToPath("contents2", input2);
+
       // Create a simple rule which just writes a file.
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
       BuildRuleParams params =
@@ -1945,6 +1950,8 @@ public class CachingBuildEngineTest {
           new DepFileBuildRule(params, pathResolver) {
             @AddToRuleKey
             private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
+            @AddToRuleKey
+            private final SourcePath otherDep = new PathSourcePath(filesystem, input2);
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context,
@@ -1955,11 +1962,11 @@ public class CachingBuildEngineTest {
             @Override
             public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths()
                 throws IOException {
-              return Optional.absent();
+              return Optional.of(ImmutableSet.of(path));
             }
             @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
-              return ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, input));
+              return ImmutableList.<SourcePath>of(path);
             }
             @Override
             public Path getPathToOutput() {
@@ -2012,7 +2019,9 @@ public class CachingBuildEngineTest {
                   depFileRuleKey,
                   ImmutableMap.of(
                       input.toString(),
-                      fileHashCache.get(filesystem.resolve(input))))));
+                      fileHashCache.get(filesystem.resolve(input)),
+                      input2.toString(),
+                      fileHashCache.get(filesystem.resolve(input2))))));
 
       // Verify that the artifact is also cached via the dep file rule key.
       Path fetchedArtifact = tmp.newFile("artifact").toPath();

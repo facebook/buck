@@ -82,7 +82,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             .build(
                 rule,
                 Optional.<ImmutableSet<SourcePath>>absent(),
-                ImmutableList.<DependencyFileEntry>of());
+                ImmutableList.<DependencyFileEntry>of()).getFirst();
 
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache = new FakeFileHashCache(
@@ -101,7 +101,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             .build(
                 rule,
                 Optional.<ImmutableSet<SourcePath>>absent(),
-                ImmutableList.<DependencyFileEntry>of());
+                ImmutableList.<DependencyFileEntry>of()).getFirst();
 
     assertThat(inputKey1, Matchers.equalTo(inputKey2));
   }
@@ -139,7 +139,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             .build(
                 rule,
                 Optional.<ImmutableSet<SourcePath>>absent(),
-                ImmutableList.<DependencyFileEntry>of());
+                ImmutableList.<DependencyFileEntry>of()).getFirst();
 
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache = new FakeFileHashCache(
@@ -158,7 +158,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             .build(
                 rule,
                 Optional.<ImmutableSet<SourcePath>>absent(),
-                ImmutableList.<DependencyFileEntry>of());
+                ImmutableList.<DependencyFileEntry>of()).getFirst();
 
     assertThat(inputKey1, Matchers.equalTo(inputKey2));
   }

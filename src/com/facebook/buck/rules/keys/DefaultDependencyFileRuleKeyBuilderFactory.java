@@ -52,7 +52,7 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
   }
 
   @Override
-  public RuleKey build(
+  public Pair<RuleKey, ImmutableSet<SourcePath>> build(
       BuildRule rule,
       Optional<ImmutableSet<SourcePath>> possibleDepFileSourcePaths,
       ImmutableList<DependencyFileEntry> depFileEntries) throws IOException {
@@ -78,14 +78,23 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
       builder = newInstance(rule);
     }
 
-    public RuleKey build(
+    public Pair<RuleKey, ImmutableSet<SourcePath>> build(
         Optional<ImmutableSet<SourcePath>> possibleDepFileSourcePaths,
         ImmutableList<DependencyFileEntry> depFileEntries) throws IOException {
 
-      addToRuleKey(getNonDepFileSourcePaths(possibleDepFileSourcePaths));
-      addToRuleKey(getDepFileSourcePaths(depFileEntries, possibleDepFileSourcePaths));
+      ImmutableList<SourcePath> nonDepFileSourcePaths =
+          getNonDepFileSourcePaths(possibleDepFileSourcePaths);
+      ImmutableList<SourcePath> depFileSourcePaths =
+          getDepFileSourcePaths(depFileEntries, possibleDepFileSourcePaths);
 
-      return builder.build();
+      addToRuleKey(nonDepFileSourcePaths);
+      addToRuleKey(depFileSourcePaths);
+
+      ImmutableSet.Builder<SourcePath> allInputsBuilder = ImmutableSet.builder();
+      allInputsBuilder.addAll(nonDepFileSourcePaths);
+      allInputsBuilder.addAll(depFileSourcePaths);
+
+      return new Pair<>(builder.build(), allInputsBuilder.build());
     }
 
     private ImmutableList<SourcePath> getNonDepFileSourcePaths(

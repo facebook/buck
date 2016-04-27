@@ -30,9 +30,10 @@ public interface DependencyFileRuleKeyBuilderFactory {
 
   /**
    * @return a {@link RuleKey} for the given {@link BuildRule} using the given list of explicit
-   *     {@code inputs}.
+   *     {@code inputs} and an {@link ImmutableSet} of the complete set of inputs used in
+   *     constructing that key.
    */
-  RuleKey build(
+  Pair<RuleKey, ImmutableSet<SourcePath>> build(
       BuildRule rule,
       Optional<ImmutableSet<SourcePath>> possibleDepFileSourcePaths,
       ImmutableList<DependencyFileEntry> inputs) throws IOException;

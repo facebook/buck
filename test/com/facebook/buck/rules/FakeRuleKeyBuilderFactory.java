@@ -74,11 +74,11 @@ public class FakeRuleKeyBuilderFactory
   }
 
   @Override
-  public RuleKey build(
+  public Pair<RuleKey, ImmutableSet<SourcePath>> build(
       BuildRule rule,
       Optional<ImmutableSet<SourcePath>> possibleDepFileSourcePaths,
       ImmutableList<DependencyFileEntry> inputs) throws IOException {
-    return build(rule);
+    return new Pair<>(build(rule), ImmutableSet.<SourcePath>of());
   }
 
   @Override

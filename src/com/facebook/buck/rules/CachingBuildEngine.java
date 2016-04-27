@@ -391,17 +391,20 @@ public class CachingBuildEngine implements BuildEngine {
             if (useDependencyFileRuleKey(rule)) {
 
               // Try to get the current dep-file rule key.
-              Optional<RuleKey> depFileRuleKey =
+              Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> depFileRuleKeyAndInputs =
                   calculateDepFileRuleKey(
                       rule,
                       onDiskBuildInfo.getValues(BuildInfo.METADATA_KEY_FOR_DEP_FILE),
                           /* allowMissingInputs */ true);
-              if (depFileRuleKey.isPresent()) {
+              if (depFileRuleKeyAndInputs.isPresent()) {
+
+                RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getFirst();
 
                 // Check the input-based rule key says we're already built.
                 Optional<RuleKey> lastDepFileRuleKey =
                     onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY);
-                if (depFileRuleKey.equals(lastDepFileRuleKey)) {
+                if (lastDepFileRuleKey.isPresent() &&
+                    depFileRuleKey.equals(lastDepFileRuleKey.get())) {
                   return Futures.immediateFuture(
                       Optional.of(
                           BuildResult.success(
@@ -675,22 +678,23 @@ public class CachingBuildEngine implements BuildEngine {
                   inputStrings);
 
               // Re-calculate and store the depfile rule key for next time.
-              Optional<RuleKey> depFileRuleKey =
+              Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> depFileRuleKeyAndInputs =
                   calculateDepFileRuleKey(
                       rule,
                       Optional.of(inputStrings),
                       /* allowMissingInputs */ false);
-              Preconditions.checkState(depFileRuleKey.isPresent());
+              Preconditions.checkState(depFileRuleKeyAndInputs.isPresent());
+              RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getFirst();
               buildInfoRecorder.addBuildMetadata(
                   BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY,
-                  depFileRuleKey.get().toString());
+                  depFileRuleKey.toString());
 
               // Push an updated manifest to the cache.
               if (useManifestCaching(rule)) {
                 updateAndStoreManifest(
                     rule,
-                    depFileRuleKey.get(),
-                    ImmutableSet.copyOf(inputs),
+                    depFileRuleKeyAndInputs.get().getFirst(),
+                    depFileRuleKeyAndInputs.get().getSecond(),
                     context.getArtifactCache());
               }
             }
@@ -1328,7 +1332,7 @@ public class CachingBuildEngine implements BuildEngine {
         ((SupportsDependencyFileRuleKey) rule).useDependencyFileRuleKeys();
   }
 
-  private Optional<RuleKey> calculateDepFileRuleKey(
+  private Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> calculateDepFileRuleKey(
       BuildRule rule,
       Optional<ImmutableList<String>> depFile,
       boolean allowMissingInputs)
