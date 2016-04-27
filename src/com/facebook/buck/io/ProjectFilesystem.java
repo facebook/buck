@@ -33,10 +33,12 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Ordering;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
@@ -67,6 +69,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
@@ -85,6 +88,8 @@ import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import javax.annotation.Nullable;
 
@@ -602,6 +607,23 @@ public class ProjectFilesystem {
                 }
               })
           .toList();
+    }
+  }
+
+  public ImmutableCollection<Path> getZipMembers(Path archivePath)
+      throws IOException {
+    Path archiveAbsolutePath =
+        archivePath.isAbsolute() ? archivePath : getPathForRelativePath(archivePath);
+    try (ZipFile zip = new ZipFile(archiveAbsolutePath.toFile())) {
+      return ImmutableList.copyOf(
+          Iterators.transform(
+              Iterators.forEnumeration(zip.entries()),
+              new Function<ZipEntry, Path>() {
+                @Override
+                public Path apply(ZipEntry input) {
+                  return Paths.get(input.getName());
+                }
+              }));
     }
   }
 

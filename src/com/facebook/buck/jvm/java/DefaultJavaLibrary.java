@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
@@ -40,6 +41,7 @@ import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -49,11 +51,13 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -68,6 +72,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -92,7 +97,7 @@ import javax.annotation.Nullable;
 public class DefaultJavaLibrary extends AbstractBuildRule
     implements JavaLibrary, HasClasspathEntries, ExportDependencies,
     InitializableFromDisk<JavaLibrary.Data>, AndroidPackageable,
-    SupportsInputBasedRuleKey, HasTests {
+    SupportsInputBasedRuleKey, SupportsDependencyFileRuleKey, HasTests {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
@@ -125,7 +130,9 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   private final boolean trackClassUsage;
   @AddToRuleKey
   @SuppressWarnings("PMD.UnusedPrivateField")
-  private final Supplier<ImmutableSortedSet<SourcePath>> abiClasspath;
+  private final JarArchiveDependencySupplier abiClasspath;
+  private final ImmutableSortedSet<BuildRule> deps;
+  @Nullable private DependencyFileInputListBuilder depFileListBuilder;
 
   private final BuildOutputInitializer<Data> buildOutputInitializer;
   private final ImmutableSortedSet<BuildTarget> tests;
@@ -194,13 +201,15 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         providedDeps,
         abiJar,
         trackClassUsage,
-        Suppliers.memoize(
-            new Supplier<ImmutableSortedSet<SourcePath>>() {
-              @Override
-              public ImmutableSortedSet<SourcePath> get() {
-                return JavaLibraryRules.getAbiInputs(params.getDeps());
-              }
-            }),
+        new JarArchiveDependencySupplier(
+            Suppliers.memoize(
+                new Supplier<ImmutableSortedSet<SourcePath>>() {
+                  @Override
+                  public ImmutableSortedSet<SourcePath> get() {
+                    return JavaLibraryRules.getAbiInputs(params.getDeps());
+                  }
+                }),
+            params.getProjectFilesystem()),
         additionalClasspathEntries,
         compileStepFactory,
         resourcesRoot,
@@ -220,7 +229,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSortedSet<BuildRule> providedDeps,
       SourcePath abiJar,
       boolean trackClassUsage,
-      final Supplier<ImmutableSortedSet<SourcePath>> abiClasspath,
+      final JarArchiveDependencySupplier abiClasspath,
       ImmutableSet<Path> additionalClasspathEntries,
       CompileToJarStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
@@ -265,7 +274,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.abiJar = abiJar;
     this.trackClassUsage = trackClassUsage;
     this.abiClasspath = abiClasspath;
-
+    this.deps = params.getDeps();
     if (!srcs.isEmpty() || !resources.isEmpty()) {
       this.outputJar = Optional.of(getOutputJarPath(getBuildTarget()));
     } else {
@@ -485,6 +494,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       if (trackClassUsage) {
         final Path usedClassesFilePath = getUsedClassesFilePath(getBuildTarget());
         ClassUsageTracker classUsageTracker = new ClassUsageTracker();
+        depFileListBuilder = new DependencyFileInputListBuilder(deps, classUsageTracker);
         usedClassesFileWriter = new DefaultClassUsageFileWriter(
             usedClassesFilePath,
             classUsageTracker);
@@ -614,4 +624,80 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     }
   }
 
+  @Override
+  public boolean useDependencyFileRuleKeys() {
+    return !getJavaSrcs().isEmpty() && trackClassUsage;
+  }
+
+  @Override
+  public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() throws IOException {
+    return Optional.<ImmutableSet<SourcePath>>of(abiClasspath.getArchiveMembers(getResolver()));
+  }
+
+  @Override
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally() throws IOException {
+    Preconditions.checkState(useDependencyFileRuleKeys());
+
+    return Preconditions.checkNotNull(depFileListBuilder).build();
+  }
+
+  private static class DependencyFileInputListBuilder {
+    private final ClassUsageTracker tracker;
+    private final ImmutableSortedSet<BuildRule> deps;
+
+    public DependencyFileInputListBuilder(
+        ImmutableSortedSet<BuildRule> deps,
+        ClassUsageTracker tracker) {
+      this.tracker = tracker;
+      this.deps = deps;
+    }
+
+    private ImmutableMap<Path, SourcePath> buildJarToAbiJarMap(ImmutableSortedSet<BuildRule> deps) {
+      ImmutableMap.Builder<Path, SourcePath> jarAbsolutePathToAbiJarSourcePathBuilder =
+          ImmutableMap.builder();
+
+      for (BuildRule dep : deps) {
+        if (!(dep instanceof HasJavaAbi)) {
+          continue;
+        }
+
+        HasJavaAbi depWithJavaAbi = (HasJavaAbi) dep;
+        Optional<SourcePath> depAbiJar = depWithJavaAbi.getAbiJar();
+        if (!depAbiJar.isPresent()) {
+          continue;
+        }
+
+        Function<Path, Path> absolutifier = dep.getProjectFilesystem().getAbsolutifier();
+        Path jarAbsolutePath = absolutifier.apply(dep.getPathToOutput());
+
+        jarAbsolutePathToAbiJarSourcePathBuilder.put(jarAbsolutePath, depAbiJar.get());
+      }
+
+      return jarAbsolutePathToAbiJarSourcePathBuilder.build();
+    }
+
+    public ImmutableList<SourcePath> build() {
+      final ImmutableMap<Path, SourcePath> jarAbsolutePathToAbiJarSourcePath =
+          buildJarToAbiJarMap(deps);
+
+      final ImmutableList.Builder<SourcePath> builder = ImmutableList.builder();
+      final ImmutableMap<Path, Collection<Path>> classUsageMap = tracker.getClassUsageMap().asMap();
+      for (Map.Entry<Path, Collection<Path>> jarUsedClassesEntry : classUsageMap.entrySet()) {
+        Path jarAbsolutePath = jarUsedClassesEntry.getKey();
+        SourcePath abiJarSourcePath = jarAbsolutePathToAbiJarSourcePath.get(jarAbsolutePath);
+        if (abiJarSourcePath == null) {
+          // This indicates a dependency that wasn't among the deps of the rule; i.e., it came from
+          // the build environment (JDK, Android SDK, etc.)
+          continue;
+        }
+
+        Collection<Path> classAbsolutePaths = jarUsedClassesEntry.getValue();
+        for (Path classAbsolutePath : classAbsolutePaths) {
+          builder.add(new ArchiveMemberSourcePath(abiJarSourcePath, classAbsolutePath));
+        }
+      }
+
+      return builder.build();
+    }
+  }
 }

@@ -34,6 +34,7 @@ import com.facebook.buck.zip.ZipConstants;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -535,6 +536,28 @@ public class ProjectFilesystemTest {
     assertEquals(
         ImmutableSet.of("foo/bar.txt", "foo/baz.txt", "log/info.txt"),
         zipInspector.getZipFileEntries());
+  }
+
+  @Test
+  public void testGetZipContents() throws IOException {
+    tmp.newFolder("foo");
+    tmp.newFile("foo/bar.txt");
+    tmp.newFile("foo/baz.txt");
+
+    Path output = tmp.newFile("out.zip");
+
+    filesystem.createZip(
+        ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")),
+        output,
+        ImmutableMap.of(Paths.get("log/info.txt"), "hello"));
+
+    ImmutableCollection<Path> actualContents = filesystem.getZipMembers(output);
+    assertEquals(
+        ImmutableList.of(
+            Paths.get("foo/bar.txt"),
+            Paths.get("foo/baz.txt"),
+            Paths.get("log/info.txt")),
+        actualContents);
   }
 
   @Test

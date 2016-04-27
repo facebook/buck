@@ -69,6 +69,10 @@ public class BuckBuildLog {
     assertBuildSuccessType(buildTargetRaw, BuildRuleSuccessType.FETCHED_FROM_CACHE);
   }
 
+  public void assertTargetWasFetchedFromCacheByManifestMatch(String buildTargetRaw) {
+    assertBuildSuccessType(buildTargetRaw, BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED);
+  }
+
   public void assertTargetHadMatchingInputRuleKey(String buildTargetRaw) {
     assertBuildSuccessType(buildTargetRaw, BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY);
   }

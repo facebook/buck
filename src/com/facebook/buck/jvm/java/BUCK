@@ -102,6 +102,7 @@ java_library(
     'DefaultJavaLibrary.java',
     'DefaultSuggestBuildRules.java',
     'GwtModule.java',
+    'JarArchiveDependencySupplier.java',
     'JarFattener.java',
     'JavaBinary.java',
     'JavaBinaryDescription.java',
@@ -118,6 +119,7 @@ java_library(
     'MavenUberJar.java',
     'PrebuiltJar.java',
     'PrebuiltJarDescription.java',
+    'ZipArchiveDependencySupplier.java',
   ],
   tests = [
     '//test/com/facebook/buck/jvm/java:integration-slow',

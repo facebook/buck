@@ -116,9 +116,15 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     return !isProductionBuild();
   }
 
+  @Value.Default
+  boolean getTrackClassUsageNotDisabled() {
+    return true;
+  }
+
   public boolean trackClassUsage() {
     final JavacSource javacSource = getJavacSource();
-    return javacSource == JavacSource.JAR || javacSource == JavacSource.JDK;
+    return getTrackClassUsageNotDisabled() &&
+        (javacSource == JavacSource.JAR || javacSource == JavacSource.JDK);
   }
 
   public JavacSource getJavacSource() {
@@ -222,7 +228,8 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
         .setReflectively("bootclasspath", getBootclasspath())
         .setReflectively("javac", getJavac())
         .setReflectively("annotationProcessingParams", getAnnotationProcessingParams())
-        .setReflectively("spoolMode", getSpoolMode());
+        .setReflectively("spoolMode", getSpoolMode())
+        .setReflectively("trackClassUsage", trackClassUsage());
 
     return builder;
   }

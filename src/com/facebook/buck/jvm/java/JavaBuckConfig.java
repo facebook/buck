@@ -62,6 +62,11 @@ public class JavaBuckConfig {
         .getEnum("java", "jar_spool_mode", AbstractJavacOptions.SpoolMode.class)
         .or(AbstractJavacOptions.SpoolMode.INTERMEDIATE_TO_DISK);
 
+    // This is just to make it possible to turn off dep-based rulekeys in case anything goes wrong
+    // and can be removed when we're sure class usage tracking and dep-based keys for Java
+    // work fine.
+    boolean trackClassUsage = delegate.getBooleanValue("java", "track_class_usage", true);
+
     ImmutableMap<String, String> allEntries = delegate.getEntriesForSection("java");
     ImmutableMap.Builder<String, String> bootclasspaths = ImmutableMap.builder();
     for (Map.Entry<String, String> entry : allEntries.entrySet()) {
@@ -79,6 +84,7 @@ public class JavaBuckConfig {
         .putAllSourceToBootclasspath(bootclasspaths.build())
         .addAllExtraArguments(extraArguments)
         .setSafeAnnotationProcessors(safeAnnotationProcessors)
+        .setTrackClassUsageNotDisabled(trackClassUsage)
         .build();
   }
 

@@ -80,6 +80,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import javax.annotation.Nullable;
 
@@ -392,6 +394,22 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
               }
             })
         .toList();
+  }
+
+  @Override
+  public ImmutableCollection<Path> getZipMembers(Path archivePath) throws IOException {
+    // We can't use ZipFile here because it won't work with streams. We don't use ZipInputStream
+    // in the real ProjectFilesystem because it reads the entire zip file to list entries, whereas
+    // ZipFile just looks at the directory if it exists.
+    try (ZipInputStream zipInputStream = new ZipInputStream(newFileInputStream(archivePath))) {
+      ImmutableList.Builder<Path> resultBuilder = ImmutableList.builder();
+      ZipEntry zipEntry;
+      while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+        resultBuilder.add(Paths.get(zipEntry.getName()));
+      }
+
+      return resultBuilder.build();
+    }
   }
 
   @Override

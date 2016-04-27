@@ -23,6 +23,7 @@ import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
@@ -226,6 +227,25 @@ public class JavaBuckConfigTest {
     assertEquals(
         javac.toPath(),
         ((ExternalJavac) javacOptions.getJavac()).getPath());
+  }
+
+  @Test
+  public void classUsageTracking()
+      throws IOException, NoSuchBuildTargetException, InterruptedException {
+    String jarPath = temporaryFolder.newFile("javac.jar").toString();
+    String config = Joiner.on('\n').join(
+        "[tools]",
+        "    javac_jar = " + jarPath.replace("\\", "\\\\"));
+
+    assertTrue(createWithDefaultFilesystem(
+        new StringReader(config))
+        .getDefaultJavacOptions()
+        .trackClassUsage());
+
+    assertFalse(createWithDefaultFilesystem(
+        new StringReader(config + "\n[java]\ntrack_class_usage = false"))
+        .getDefaultJavacOptions()
+        .trackClassUsage());
   }
 
   private void assertOptionKeyAbsent(JavacOptions options, String key) {
