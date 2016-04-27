@@ -110,7 +110,7 @@ public class AndroidLibraryDescription
     } else {
       ImmutableSet<Path> additionalClasspathEntries = ImmutableSet.of();
       if (dummyRDotJava.isPresent()) {
-        additionalClasspathEntries = ImmutableSet.of(dummyRDotJava.get().getRDotJavaBinFolder());
+        additionalClasspathEntries = ImmutableSet.of(dummyRDotJava.get().getPathToOutput());
         ImmutableSortedSet<BuildRule> newDeclaredDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
             .addAll(params.getDeclaredDeps().get())
             .add(dummyRDotJava.get())

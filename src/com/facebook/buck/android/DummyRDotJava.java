@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.CalculateAbiStep;
 import com.facebook.buck.jvm.java.HasJavaAbi;
+import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
@@ -57,6 +58,7 @@ public class DummyRDotJava extends AbstractBuildRule
 
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final SourcePath abiJar;
+  private final Path outputJar;
   @AddToRuleKey
   private final JavacOptions javacOptions;
   @AddToRuleKey
@@ -77,6 +79,7 @@ public class DummyRDotJava extends AbstractBuildRule
     this.androidResourceDeps = FluentIterable.from(androidResourceDeps)
         .toSortedList(HasBuildTarget.BUILD_TARGET_COMPARATOR);
     this.abiJar = abiJar;
+    this.outputJar = getOutputJarPath(getBuildTarget());
     this.javacOptions = javacOptions;
     this.forceFinalResourceIds = forceFinalResourceIds;
     this.unionPackage = unionPackage;
@@ -128,6 +131,9 @@ public class DummyRDotJava extends AbstractBuildRule
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToAbiOutputDir));
     Path pathToAbiOutputFile = pathToAbiOutputDir.resolve("abi.jar");
 
+    Path pathToJarOutputDir = outputJar.getParent();
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToJarOutputDir));
+
     Path pathToSrcsList = BuildTargets.getGenPath(getBuildTarget(), "__%s__srcs");
     steps.add(new MkdirStep(getProjectFilesystem(), pathToSrcsList.getParent()));
 
@@ -143,6 +149,15 @@ public class DummyRDotJava extends AbstractBuildRule
             getProjectFilesystem());
     steps.add(javacStep);
     buildableContext.recordArtifact(rDotJavaClassesFolder);
+
+    steps.add(
+        new JarDirectoryStep(
+            getProjectFilesystem(),
+            outputJar,
+            ImmutableSortedSet.of(rDotJavaClassesFolder),
+            null,
+            null));
+    buildableContext.recordArtifact(outputJar);
 
     steps.add(
         new CalculateAbiStep(
@@ -171,9 +186,18 @@ public class DummyRDotJava extends AbstractBuildRule
     return BuildTargets.getGenPath(buildTarget, "__%s_dummyrdotjava_abi__");
   }
 
+  private static Path getPathToOutputDir(BuildTarget buildTarget) {
+    return BuildTargets.getGenPath(buildTarget, "__%s_dummyrdotjava_output__");
+  }
+
+  private static Path getOutputJarPath(BuildTarget buildTarget) {
+    return getPathToOutputDir(buildTarget).resolve(
+        String.format("%s.jar", buildTarget.getShortNameAndFlavorPostfix()));
+  }
+
   @Override
   public Path getPathToOutput() {
-    return getRDotJavaBinFolder();
+    return outputJar;
   }
 
   public Path getRDotJavaBinFolder() {

@@ -47,7 +47,7 @@ public class AndroidXmlFileIntegrationTest {
   private static final String PATH_TO_LAYOUT_XML = "res/com/sample/top/res/layout/top_layout.xml";
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws IOException, InterruptedException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "android_project", tmpFolder);
