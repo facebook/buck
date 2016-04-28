@@ -157,7 +157,7 @@ public class JavaDepsFinder {
       PrebuiltJarDescription.TYPE);
 
   public DepsForBuildFiles findDepsForBuildFiles(final TargetGraph graph, Console console) {
-    final Set<BuildTarget> rulesWithAutodeps = new HashSet<>();
+    final Set<TargetNode<?>> rulesWithAutodeps = new HashSet<>();
 
     // Keys are rules with autodeps = True. Values are symbols that are referenced by Java files in
     // the rule. These need to satisfied by one of the following:
@@ -165,17 +165,18 @@ public class JavaDepsFinder {
     // * The provided_deps of the rule.
     // * The auto-generated deps provided by this class.
     // * The exported_deps of one of the above.
-    final HashMultimap<BuildTarget, String> ruleToRequiredSymbols = HashMultimap.create();
-    final HashMultimap<BuildTarget, String> ruleToExportedSymbols = HashMultimap.create();
+    final HashMultimap<TargetNode<?>, String> ruleToRequiredSymbols = HashMultimap.create();
+    final HashMultimap<TargetNode<?>, String> ruleToExportedSymbols = HashMultimap.create();
 
-    final HashMultimap<String, BuildTarget> symbolToProviders = HashMultimap.create();
+    final HashMultimap<String, TargetNode<?>> symbolToProviders = HashMultimap.create();
 
     // Keys are rules with autodeps = True. Values are the provided_deps for the rule.
     // Note that not every entry in rulesWithAutodeps will have an entry in this multimap.
-    final HashMultimap<BuildTarget, BuildTarget> rulesWithAutodepsToProvidedDeps =
+    final HashMultimap<TargetNode<?>, BuildTarget> rulesWithAutodepsToProvidedDeps =
         HashMultimap.create();
 
-    final HashMultimap<BuildTarget, BuildTarget> ruleToRulesThatExportIt = HashMultimap.create();
+    final HashMultimap<TargetNode<?>, TargetNode<?>> ruleToRulesThatExportIt =
+        HashMultimap.create();
 
     // Walk the graph and for each Java rule we find, do the following:
     // 1. Make note if it has autodeps = True.
@@ -210,23 +211,22 @@ public class JavaDepsFinder {
           throw new IllegalStateException("This rule is not supported by autodeps: " + node);
         }
 
-        BuildTarget buildTarget = node.getBuildTarget();
         if (autodeps) {
-          rulesWithAutodeps.add(buildTarget);
-          rulesWithAutodepsToProvidedDeps.putAll(buildTarget, providedDeps);
+          rulesWithAutodeps.add(node);
+          rulesWithAutodepsToProvidedDeps.putAll(node, providedDeps);
         }
 
         for (BuildTarget exportedDep : exportedDeps) {
-          ruleToRulesThatExportIt.put(exportedDep, buildTarget);
+          ruleToRulesThatExportIt.put(graph.get(exportedDep), node);
         }
 
         Symbols symbols = getJavaFileFeatures(node, autodeps);
         if (autodeps) {
-          ruleToRequiredSymbols.putAll(buildTarget, symbols.required);
-          ruleToExportedSymbols.putAll(buildTarget, symbols.exported);
+          ruleToRequiredSymbols.putAll(node, symbols.required);
+          ruleToExportedSymbols.putAll(node, symbols.exported);
         }
         for (String providedEntity : symbols.provided) {
-          symbolToProviders.put(providedEntity, buildTarget);
+          symbolToProviders.put(providedEntity, node);
         }
       }
     }.traverse();
@@ -238,20 +238,20 @@ public class JavaDepsFinder {
     // Currently, we process each rule with autodeps=True on a single thread. See the class overview
     // for DepsForBuildFiles about what it would take to do this work in a multi-threaded way.
     DepsForBuildFiles depsForBuildFiles = new DepsForBuildFiles();
-    for (final BuildTarget buildTarget : rulesWithAutodeps) {
-      final Set<BuildTarget> providedDeps = rulesWithAutodepsToProvidedDeps.get(buildTarget);
-      final Predicate<BuildTarget> isVisibleDepNotAlreadyInProvidedDeps =
-          new Predicate<BuildTarget>() {
+    for (final TargetNode<?> rule : rulesWithAutodeps) {
+      final Set<BuildTarget> providedDeps = rulesWithAutodepsToProvidedDeps.get(rule);
+      final Predicate<TargetNode<?>> isVisibleDepNotAlreadyInProvidedDeps =
+          new Predicate<TargetNode<?>>() {
             @Override
-            public boolean apply(BuildTarget provider) {
-              TargetNode<?> node = graph.get(provider);
-              return node.isVisibleTo(buildTarget) && !providedDeps.contains(provider);
+            public boolean apply(TargetNode<?> provider) {
+              return provider.isVisibleTo(rule.getBuildTarget()) &&
+                  !providedDeps.contains(provider.getBuildTarget());
             }
           };
-      final boolean isJavaTestRule = graph.get(buildTarget).getType() == JavaTestDescription.TYPE;
+      final boolean isJavaTestRule = rule.getType() == JavaTestDescription.TYPE;
 
       for (DependencyType type : DependencyType.values()) {
-        HashMultimap<BuildTarget, String> ruleToSymbolsMap;
+        HashMultimap<TargetNode<?>, String> ruleToSymbolsMap;
         switch (type) {
         case DEPS:
           ruleToSymbolsMap = ruleToRequiredSymbols;
@@ -271,23 +271,23 @@ public class JavaDepsFinder {
           typeOfDepToAdd = type;
         }
 
-        for (String requiredSymbol : ruleToSymbolsMap.get(buildTarget)) {
+        for (String requiredSymbol : ruleToSymbolsMap.get(rule)) {
           BuildTarget provider = findProviderForSymbolFromBuckConfig(requiredSymbol);
           if (provider != null) {
-            depsForBuildFiles.addDep(buildTarget, provider, typeOfDepToAdd);
+            depsForBuildFiles.addDep(rule.getBuildTarget(), provider, typeOfDepToAdd);
             continue;
           }
 
-          Set<BuildTarget> providers = symbolToProviders.get(requiredSymbol);
-          SortedSet<BuildTarget> candidateProviders = FluentIterable.from(providers)
+          Set<TargetNode<?>> providers = symbolToProviders.get(requiredSymbol);
+          SortedSet<TargetNode<?>> candidateProviders = FluentIterable.from(providers)
               .filter(isVisibleDepNotAlreadyInProvidedDeps)
-              .toSortedSet(Ordering.<BuildTarget>natural());
+              .toSortedSet(Ordering.<TargetNode<?>>natural());
 
           int numCandidates = candidateProviders.size();
           if (numCandidates == 1) {
             depsForBuildFiles.addDep(
-                buildTarget,
-                Iterables.getOnlyElement(candidateProviders),
+                rule.getBuildTarget(),
+                Iterables.getOnlyElement(candidateProviders).getBuildTarget(),
                 typeOfDepToAdd);
           } else if (numCandidates > 1) {
             // Warn the user that there is an ambiguity. This could be very common with macros that
@@ -308,12 +308,11 @@ public class JavaDepsFinder {
             // the symbol via its exported_deps. We make this a secondary check because we prefer to
             // depend on the rule that defines the symbol directly rather than one of possibly many
             // rules that provides it via its exported_deps.
-            SortedSet<BuildTarget> newCandidates = new TreeSet<>();
-            for (BuildTarget candidate : providers) {
-              Set<BuildTarget> rulesThatExportCandidate = ruleToRulesThatExportIt.get(candidate);
-              for (BuildTarget ruleThatExportsCandidate : rulesThatExportCandidate) {
-                TargetNode<?> node = graph.get(ruleThatExportsCandidate);
-                if (node.isVisibleTo(buildTarget)) {
+            SortedSet<TargetNode<?>> newCandidates = new TreeSet<>();
+            for (TargetNode<?> candidate : providers) {
+              Set<TargetNode<?>> rulesThatExportCandidate = ruleToRulesThatExportIt.get(candidate);
+              for (TargetNode<?> ruleThatExportsCandidate : rulesThatExportCandidate) {
+                if (ruleThatExportsCandidate.isVisibleTo(rule.getBuildTarget())) {
                   newCandidates.add(ruleThatExportsCandidate);
                 }
               }
@@ -322,15 +321,15 @@ public class JavaDepsFinder {
             int numNewCandidates = newCandidates.size();
             if (numNewCandidates == 1) {
               depsForBuildFiles.addDep(
-                  buildTarget,
-                  Iterables.getOnlyElement(newCandidates),
+                  rule.getBuildTarget(),
+                  Iterables.getOnlyElement(newCandidates).getBuildTarget(),
                   typeOfDepToAdd);
             } else if (numNewCandidates > 1) {
               console.printErrorText(String.format(
                   "WARNING: No providers found for '%s' for build rule %s, " +
                       "but there are multiple rules that export a rule to provide %s: %s",
                   requiredSymbol,
-                  buildTarget,
+                  rule.getBuildTarget(),
                   requiredSymbol,
                   Joiner.on(", ").join(newCandidates)
               ));
