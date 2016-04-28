@@ -485,9 +485,15 @@ public class IjModuleGraphTest {
         Paths.get("a"),
         Paths.get(""));
 
-    Function<Path, Path> transform = aggregationMode.getBasePathTransform(graphSize);
+    ImmutableSet<Path> dummyAggregationStops = ImmutableSet.of();
+    int minimumDepth = aggregationMode.getGraphMinimumDepth(graphSize);
+    ImmutableList.Builder<Path> transformedPaths = ImmutableList.builder();
+    for (Path path : originalPaths) {
+      transformedPaths.add(IjModuleGraph.simplifyPath(path, minimumDepth, dummyAggregationStops));
+    }
+
     assertThat(
-        FluentIterable.from(originalPaths).transform(transform).toList(),
+        transformedPaths.build(),
         Matchers.equalTo(expectTrimmed ? trimmedPaths : originalPaths));
   }
 

@@ -23,7 +23,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Ascii;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -97,22 +96,17 @@ public class IjModuleGraph {
     public static final int MIN_SHALLOW_GRAPH_SIZE = 500;
     public static final int SHALLOW_MAX_PATH_LENGTH = 3;
 
-    public Function<Path, Path> getBasePathTransform(int graphSize) {
-
-      if (this == AUTO && graphSize < MIN_SHALLOW_GRAPH_SIZE || this == NONE) {
-        return Functions.identity();
+    public int getGraphMinimumDepth(int graphSize) {
+      switch(this) {
+        case NONE:
+          return Integer.MAX_VALUE;
+        case SHALLOW:
+          return SHALLOW_MAX_PATH_LENGTH;
+        case AUTO:
+          return graphSize < MIN_SHALLOW_GRAPH_SIZE ? Integer.MAX_VALUE : SHALLOW_MAX_PATH_LENGTH;
+        default:
+          throw new HumanReadableException("Invalid aggregation mode value %s.", this);
       }
-
-      return new Function<Path, Path>() {
-        @Nullable
-        @Override
-        public Path apply(@Nullable Path input) {
-          if (input == null || input.getNameCount() <= SHALLOW_MAX_PATH_LENGTH) {
-            return input;
-          }
-          return input.subpath(0, SHALLOW_MAX_PATH_LENGTH);
-        }
-      };
     }
 
     public static Function<String, AggregationMode> fromStringFunction() {
@@ -145,20 +139,26 @@ public class IjModuleGraph {
   private static ImmutableMap<BuildTarget, IjModule> createModules(
       TargetGraph targetGraph,
       IjModuleFactory moduleFactory,
-      final Function<Path, Path> basePathTransform) {
+      final int minimumPathDepth) {
     ImmutableSet<TargetNode<?>> supportedTargets = FluentIterable.from(targetGraph.getNodes())
         .filter(IjModuleFactory.SUPPORTED_MODULE_TYPES_PREDICATE)
         .toSet();
+
+    final ImmutableSet<Path> aggregationHaltPoints =
+        createAggregationHaltPoints(targetGraph);
+
     ImmutableListMultimap<Path, TargetNode<?>> baseTargetPathMultimap =
         FluentIterable.from(supportedTargets).index(
             new Function<TargetNode<?>, Path>() {
               @Override
               public Path apply(TargetNode<?> input) {
-                if (!(input.getConstructorArg() instanceof AndroidResourceDescription.Arg)) {
-                  return basePathTransform.apply(input.getBuildTarget().getBasePath());
+                Path basePath = input.getBuildTarget().getBasePath();
+
+                if (input.getConstructorArg() instanceof AndroidResourceDescription.Arg) {
+                  return basePath;
                 }
 
-                return input.getBuildTarget().getBasePath();
+                return simplifyPath(basePath, minimumPathDepth, aggregationHaltPoints);
               }
             });
 
@@ -176,6 +176,44 @@ public class IjModuleGraph {
     }
 
     return moduleMapBuilder.build();
+  }
+
+  static Path simplifyPath(
+      Path basePath,
+      int minimumPathDepth,
+      ImmutableSet<Path> aggregationHaltPoints) {
+    Path parent = basePath.getParent();
+    while (parent != null &&
+        basePath.getNameCount() > minimumPathDepth &&
+        !aggregationHaltPoints.contains(basePath)) {
+      basePath = parent;
+      parent = basePath.getParent();
+    }
+
+    return basePath;
+  }
+
+  /**
+   * Create the set of paths which should terminate coalesing.
+   */
+
+  private static ImmutableSet<Path> createAggregationHaltPoints(TargetGraph targetGraph) {
+    return
+        FluentIterable
+            .from(targetGraph.getNodes())
+            .filter(new Predicate<TargetNode<?>>() {
+              @Override
+              public boolean apply(TargetNode<?> input) {
+                return input.getConstructorArg() instanceof AndroidResourceDescription.Arg;
+              }
+            })
+            .transform(new Function<TargetNode<?>, Path>() {
+              @Override
+              public Path apply(TargetNode<?> input) {
+                return input.getBuildTarget().getBasePath();
+              }
+            })
+            .toSet();
   }
 
   /**
@@ -197,7 +235,7 @@ public class IjModuleGraph {
         createModules(
             targetGraph,
             moduleFactory,
-            aggregationMode.getBasePathTransform(targetGraph.getNodes().size()));
+            aggregationMode.getGraphMinimumDepth(targetGraph.getNodes().size()));
     final ExportedDepsClosureResolver exportedDepsClosureResolver =
         new ExportedDepsClosureResolver(targetGraph);
     ImmutableMap.Builder<IjProjectElement, ImmutableMap<IjProjectElement, DependencyType>>
@@ -244,8 +282,7 @@ public class IjModuleGraph {
                         return depModule;
                       }
                       TargetNode<?> targetNode = targetGraph.get(depTarget);
-                      IjLibrary library = libraryFactory.getLibrary(targetNode).orNull();
-                      return library;
+                      return libraryFactory.getLibrary(targetNode).orNull();
                     }
                   })
               .filter(Predicates.notNull())
