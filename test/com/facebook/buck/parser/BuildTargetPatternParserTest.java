@@ -123,13 +123,4 @@ public class BuildTargetPatternParserTest {
             filesystem.getRootPath().getFileSystem().getPath("sub")),
         buildTargetPatternParser.parse(cellNames, "other//sub/..."));
   }
-
-  @Test
-  public void visibilityParserCanHandleSpecialCasedPublicVisibility()
-      throws NoSuchBuildTargetException {
-    BuildTargetPatternParser<BuildTargetPattern> parser =
-        BuildTargetPatternParser.forVisibilityArgument();
-
-    assertEquals(BuildTargetPattern.MATCH_ALL, parser.parse(createCellRoots(filesystem), "PUBLIC"));
-  }
 }

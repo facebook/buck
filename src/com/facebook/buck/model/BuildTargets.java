@@ -106,30 +106,6 @@ public class BuildTargets {
         .build();
   }
 
-  /**
-   * Returns whether the {@link BuildTarget} `target` is visible to the {@link BuildTarget} `other`
-   * using the given visibility patterns.
-   */
-  public static boolean isVisibleTo(
-      BuildTarget target,
-      ImmutableSet<BuildTargetPattern> visibilityPatterns,
-      BuildTarget other) {
-
-    // Targets in the same build file are always visible to each other.
-    if (target.getCellPath().equals(other.getCellPath()) &&
-        target.getBaseName().equals(other.getBaseName())) {
-      return true;
-    }
-
-    for (BuildTargetPattern pattern : visibilityPatterns) {
-      if (pattern.apply(other)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   public static Predicate<BuildTarget> containsFlavors(final FlavorDomain<?> domain) {
     return new Predicate<BuildTarget>() {
       @Override

@@ -109,6 +109,8 @@ java_immutables_library(
     'TargetNodes.java',
     'Tool.java',
     'ToolProvider.java',
+    'VisibilityPattern.java',
+    'VisibilityPatternParser.java',
   ],
   immutable_types = [
     'BuildRuleType',

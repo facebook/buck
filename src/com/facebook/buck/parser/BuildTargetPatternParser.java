@@ -37,7 +37,6 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 public abstract class BuildTargetPatternParser<T> {
 
-  private static final String VISIBILITY_PUBLIC = "PUBLIC";
   private static final String BUILD_RULE_PREFIX = "//";
   private static final String WILDCARD_BUILD_RULE_SUFFIX = "...";
   private static final String BUILD_RULE_SEPARATOR = ":";
@@ -52,10 +51,6 @@ public abstract class BuildTargetPatternParser<T> {
     return baseName;
   }
 
-  protected boolean isPublicVisibilityAllowed() {
-    return false;
-  }
-
   protected boolean isWildCardAllowed() {
     return false;
   }
@@ -68,15 +63,6 @@ public abstract class BuildTargetPatternParser<T> {
    * {@link BuildTargetPatternParser#forVisibilityArgument()}.
    */
   public final T parse(Function<Optional<String>, Path> cellNames, String buildTargetPattern) {
-    if (VISIBILITY_PUBLIC.equals(buildTargetPattern)) {
-      if (isPublicVisibilityAllowed()) {
-        return createForAll();
-      } else {
-        throw new BuildTargetParseException(
-            String.format("%s not supported in the parse context", VISIBILITY_PUBLIC));
-      }
-    }
-
     Preconditions.checkArgument(
         buildTargetPattern.contains(BUILD_RULE_PREFIX),
         String.format(
@@ -156,7 +142,6 @@ public abstract class BuildTargetPatternParser<T> {
    */
   public abstract String makeTargetDescription(String buildTargetName, String buildFileName);
 
-  protected abstract T createForAll();
   protected abstract T createForDescendants(Path cellPath, Path basePath);
   protected abstract T createForChildren(Path cellPath, Path basePath);
   protected abstract T createForSingleton(BuildTarget target);
@@ -165,10 +150,6 @@ public abstract class BuildTargetPatternParser<T> {
       extends BuildTargetPatternParser<BuildTargetPattern> {
     public BuildTargetPatternBaseParser(String baseName) {
       super(baseName);
-    }
-    @Override
-    public BuildTargetPattern createForAll() {
-      return BuildTargetPattern.MATCH_ALL;
     }
     @Override
     public BuildTargetPattern createForDescendants(Path cellPath, Path basePath) {
@@ -228,11 +209,6 @@ public abstract class BuildTargetPatternParser<T> {
     @Override
     public String makeTargetDescription(String buildTargetName, String buildFileName) {
       return String.format("%s in context visibility", buildTargetName);
-    }
-
-    @Override
-    protected boolean isPublicVisibilityAllowed() {
-      return true;
     }
 
     @Override

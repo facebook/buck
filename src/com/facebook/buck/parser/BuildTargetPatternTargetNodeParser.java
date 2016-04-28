@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Predicates;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class BuildTargetPatternTargetNodeParser
     extends BuildTargetPatternParser<TargetNodeSpec> {
@@ -32,13 +31,6 @@ public class BuildTargetPatternTargetNodeParser
   @Override
   public String makeTargetDescription(String buildTargetName, String buildFileName) {
     return String.format("%s in command line context.", buildTargetName);
-  }
-
-  @Override
-  public TargetNodeSpec createForAll() {
-    return TargetNodePredicateSpec.of(
-        Predicates.alwaysTrue(),
-        BuildFileSpec.fromRecursivePath(Paths.get("")));
   }
 
   @Override

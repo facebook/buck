@@ -33,7 +33,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
@@ -49,6 +48,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
@@ -119,7 +119,7 @@ public class AuditOwnerCommandTest {
           new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()),
           params,
           ImmutableSet.<BuildTarget>of(),
-          ImmutableSet.<BuildTargetPattern>of(),
+          ImmutableSet.<VisibilityPattern>of(),
           createCellRoots(params.getProjectFilesystem()));
     } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
       throw new RuntimeException(e);

@@ -22,11 +22,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
@@ -34,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.NonCheckingBuildRuleFactoryParams;
@@ -41,6 +40,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
@@ -248,7 +248,7 @@ public class JvmLibraryArgInterpreterTest {
           factoryParams,
           arg,
           ImmutableSet.<BuildTarget>builder(),
-          ImmutableSet.<BuildTargetPattern>builder(),
+          ImmutableSet.<VisibilityPattern>builder(),
           ImmutableMap.<String, Object>of());
     } catch (ConstructorArgMarshalException | NoSuchBuildTargetException error) {
       throw Throwables.propagate(error);

@@ -19,13 +19,13 @@ package com.facebook.buck.rules;
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -47,27 +47,14 @@ import java.util.Map;
 
 public class TargetNodeTest {
 
+  public static final BuildTarget TARGET_THREE =
+      BuildTargetFactory.newInstance("//example/path:three");
+
   @Test
   public void testIgnoreNonBuildTargetOrPathOrSourcePathArgument()
       throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
-    Description<Arg> description = new TestDescription();
-    BuildRuleFactoryParams buildRuleFactoryParams = buildRuleFactoryParams();
-    TargetNode<Arg> targetNode = new TargetNode<>(
-        Hashing.sha1().hashString(buildRuleFactoryParams.target.getFullyQualifiedName(), UTF_8),
-        description,
-        createPopulatedConstructorArg(
-            description,
-            buildRuleFactoryParams,
-            ImmutableMap.<String, Object>of(
-                "deps", ImmutableList.of(),
-                "string", "//example/path:one",
-                "target", "//example/path:two",
-                "sourcePaths", ImmutableSortedSet.of())),
-        new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()),
-        buildRuleFactoryParams,
-        ImmutableSet.<BuildTarget>of(),
-        ImmutableSet.<BuildTargetPattern>of(),
-        createCellRoots(buildRuleFactoryParams.getProjectFilesystem()));
+
+    TargetNode<Arg> targetNode = createTargetNode(TARGET_THREE);
 
     assertTrue(targetNode.getExtraDeps().isEmpty());
     assertTrue(targetNode.getDeclaredDeps().isEmpty());
@@ -76,8 +63,6 @@ public class TargetNodeTest {
   @Test
   public void testDepsAndPathsAreCollected()
       throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
-    Description<Arg> description = new TestDescription();
-    BuildRuleFactoryParams buildRuleFactoryParams = buildRuleFactoryParams();
     ImmutableList<String> depsStrings = ImmutableList.of(
         "//example/path:one",
         "//example/path:two");
@@ -91,22 +76,13 @@ public class TargetNodeTest {
                }
             })
         .toSet();
-    TargetNode<Arg> targetNode = new TargetNode<>(
-        Hashing.sha1().hashString(buildRuleFactoryParams.target.getFullyQualifiedName(), UTF_8),
-        description,
-        createPopulatedConstructorArg(
-            description,
-            buildRuleFactoryParams,
-            ImmutableMap.<String, Object>of(
-                "deps", depsStrings,
-                "sourcePaths", ImmutableList.of("//example/path:four", "MyClass.java"),
-                "appleSource", "//example/path:five",
-                "source", "AnotherClass.java")),
-        new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()),
-        buildRuleFactoryParams,
-        depsTargets,
-        ImmutableSet.<BuildTargetPattern>of(),
-        createCellRoots(buildRuleFactoryParams.getProjectFilesystem()));
+    ImmutableMap<String, Object> rawNode = ImmutableMap.<String, Object>of(
+        "deps", depsStrings,
+        "sourcePaths", ImmutableList.of("//example/path:four", "MyClass.java"),
+        "appleSource", "//example/path:five",
+        "source", "AnotherClass.java");
+
+    TargetNode<Arg> targetNode = createTargetNode(TARGET_THREE, depsTargets, rawNode);
 
     assertThat(
         targetNode.getInputs(),
@@ -127,7 +103,24 @@ public class TargetNodeTest {
             BuildTargetFactory.newInstance("//example/path:two")));
   }
 
-  public class Arg extends AbstractDescriptionArg {
+  @Test
+  public void targetsWithTheSameRelativePathButNotTheSameCellMightNotBeAbleToSeeEachOther()
+      throws Exception {
+
+    ProjectFilesystem rootOne = FakeProjectFilesystem.createJavaOnlyFilesystem("/one");
+    BuildTarget buildTargetOne = BuildTargetFactory.newInstance(rootOne, "//foo:bar");
+    TargetNode<Arg> targetNodeOne = createTargetNode(buildTargetOne);
+
+    ProjectFilesystem rootTwo = FakeProjectFilesystem.createJavaOnlyFilesystem("/two");
+    BuildTarget buildTargetTwo = BuildTargetFactory.newInstance(rootTwo, "//foo:bar");
+    TargetNode<Arg> targetNodeTwo = createTargetNode(buildTargetTwo);
+
+    boolean isVisible = targetNodeOne.isVisibleTo(targetNodeTwo);
+
+    assertThat(isVisible, is(false));
+  }
+
+  public static class Arg extends AbstractDescriptionArg {
     public ImmutableSortedSet<BuildTarget> deps;
     public ImmutableSortedSet<SourcePath> sourcePaths;
     public Optional<SourceWithFlags> appleSource;
@@ -137,7 +130,7 @@ public class TargetNodeTest {
     public Optional<BuildTarget> target;
   }
 
-  public class TestDescription implements Description<Arg> {
+  public static class TestDescription implements Description<Arg> {
 
     @Override
     public BuildRuleType getBuildRuleType() {
@@ -159,12 +152,44 @@ public class TargetNodeTest {
     }
   }
 
-  public BuildRuleFactoryParams buildRuleFactoryParams() {
-    BuildTarget target = BuildTargetFactory.newInstance("//example/path:three");
-    return NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(target);
+  private static TargetNode<Arg> createTargetNode(
+      BuildTarget buildTarget)
+      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
+    ImmutableMap<String, Object> rawNode = ImmutableMap.<String, Object>of(
+        "deps", ImmutableList.of(),
+        "string", "//example/path:one",
+        "target", "//example/path:two",
+        "sourcePaths", ImmutableSortedSet.of());
+
+    return createTargetNode(buildTarget, ImmutableSet.<BuildTarget>of(), rawNode);
   }
 
-  public Arg createPopulatedConstructorArg(
+  private static TargetNode<Arg> createTargetNode(
+      BuildTarget buildTarget,
+      ImmutableSet<BuildTarget> declaredDeps,
+      ImmutableMap<String, Object> rawNode)
+      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
+    BuildRuleFactoryParams buildRuleFactoryParams =
+        NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(buildTarget);
+
+    Description<Arg> description = new TestDescription();
+
+    return new TargetNode<>(
+        Hashing.sha1().hashString(buildRuleFactoryParams.target.getFullyQualifiedName(), UTF_8),
+        description,
+        createPopulatedConstructorArg(
+            description,
+            buildRuleFactoryParams,
+            rawNode),
+        new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()),
+        buildRuleFactoryParams,
+        declaredDeps,
+        ImmutableSet.<VisibilityPattern>of(),
+        createCellRoots(buildRuleFactoryParams.getProjectFilesystem()));
+  }
+
+
+  private static Arg createPopulatedConstructorArg(
       Description<Arg> description,
       BuildRuleFactoryParams buildRuleFactoryParams,
       Map<String, Object> instance) throws NoSuchBuildTargetException {
@@ -180,7 +205,7 @@ public class TargetNodeTest {
           buildRuleFactoryParams,
           constructorArg,
           ImmutableSet.<BuildTarget>builder(),
-          ImmutableSet.<BuildTargetPattern>builder(),
+          ImmutableSet.<VisibilityPattern>builder(),
           instance);
     } catch (ConstructorArgMarshalException e) {
       throw new RuntimeException(e);

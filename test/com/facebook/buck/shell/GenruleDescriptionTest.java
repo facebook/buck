@@ -22,12 +22,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -35,10 +33,12 @@ import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
@@ -76,7 +76,7 @@ public class GenruleDescriptionTest {
         new ConstructorArgMarshaller(new DefaultTypeCoercerFactory(
             ObjectMappers.newDefaultInstance()));
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
-    ImmutableSet.Builder<BuildTargetPattern> visibilityPatterns = ImmutableSet.builder();
+    ImmutableSet.Builder<VisibilityPattern> visibilityPatterns = ImmutableSet.builder();
     GenruleDescription.Arg constructorArg = genruleDescription.createUnpopulatedConstructorArg();
     try {
       marshaller.populate(

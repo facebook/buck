@@ -18,8 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.annotations.VisibleForTesting;
@@ -88,7 +86,7 @@ public class ConstructorArgMarshaller {
       BuildRuleFactoryParams params,
       Object dto,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
-      ImmutableSet.Builder<BuildTargetPattern> visibilityPatterns,
+      ImmutableSet.Builder<VisibilityPattern> visibilityPatterns,
       Map<String, ?> instance) throws ConstructorArgMarshalException, NoSuchBuildTargetException {
     for (ParamInfo info : getAllParamInfo(dto)) {
       try {
@@ -149,7 +147,7 @@ public class ConstructorArgMarshaller {
   @SuppressWarnings("unchecked")
   private void populateVisibilityPatterns(
       Function<Optional<String>, Path> cellNames,
-      ImmutableSet.Builder<BuildTargetPattern> visibilityPatterns,
+      ImmutableSet.Builder<VisibilityPattern> visibilityPatterns,
       Map<String, ?> instance) throws NoSuchBuildTargetException {
     Object value = instance.get("visibility");
     if (value != null) {
@@ -158,9 +156,9 @@ public class ConstructorArgMarshaller {
             String.format("Expected an array for visibility but was %s", value));
       }
 
+      VisibilityPatternParser parser = new VisibilityPatternParser();
       for (String visibility : (List<String>) value) {
-        visibilityPatterns.add(
-            BuildTargetPatternParser.forVisibilityArgument().parse(cellNames, visibility));
+        visibilityPatterns.add(parser.parse(cellNames, visibility));
       }
     }
   }

@@ -244,7 +244,7 @@ public class JavaDepsFinder {
           new Predicate<TargetNode<?>>() {
             @Override
             public boolean apply(TargetNode<?> provider) {
-              return provider.isVisibleTo(rule.getBuildTarget()) &&
+              return provider.isVisibleTo(rule) &&
                   !providedDeps.contains(provider.getBuildTarget());
             }
           };
@@ -312,7 +312,7 @@ public class JavaDepsFinder {
             for (TargetNode<?> candidate : providers) {
               Set<TargetNode<?>> rulesThatExportCandidate = ruleToRulesThatExportIt.get(candidate);
               for (TargetNode<?> ruleThatExportsCandidate : rulesThatExportCandidate) {
-                if (ruleThatExportsCandidate.isVisibleTo(rule.getBuildTarget())) {
+                if (ruleThatExportsCandidate.isVisibleTo(rule)) {
                   newCandidates.add(ruleThatExportsCandidate);
                 }
               }

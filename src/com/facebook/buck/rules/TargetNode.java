@@ -18,8 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -55,7 +53,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
   private final ImmutableSet<Path> pathsReferenced;
   private final ImmutableSet<BuildTarget> declaredDeps;
   private final ImmutableSortedSet<BuildTarget> extraDeps;
-  private final ImmutableSet<BuildTargetPattern> visibilityPatterns;
+  private final ImmutableSet<VisibilityPattern> visibilityPatterns;
 
   @SuppressWarnings("unchecked")
   public TargetNode(
@@ -65,7 +63,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
       TypeCoercerFactory typeCoercerFactory,
       BuildRuleFactoryParams params,
       ImmutableSet<BuildTarget> declaredDeps,
-      ImmutableSet<BuildTargetPattern> visibilityPatterns,
+      ImmutableSet<VisibilityPattern> visibilityPatterns,
       Function<Optional<String>, Path> cellRoots)
       throws NoSuchBuildTargetException, InvalidSourcePathInputException {
     this.rawInputsHashCode = rawInputsHashCode;
@@ -167,14 +165,23 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
    * most of what is now `BuildRuleParams` to `DescriptionParams` and set them up
    * while building the target graph.
    */
-  public boolean isVisibleTo(BuildTarget other) {
-    return BuildTargets.isVisibleTo(
-        getBuildTarget(),
-        visibilityPatterns,
-        other);
+  public boolean isVisibleTo(TargetNode<?> other) {
+    // Targets in the same build file are always visible to each other.
+    if (getBuildTarget().getCellPath().equals(other.getBuildTarget().getCellPath()) &&
+        getBuildTarget().getBaseName().equals(other.getBuildTarget().getBaseName())) {
+      return true;
+    }
+
+    for (VisibilityPattern pattern : visibilityPatterns) {
+      if (pattern.apply(other)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
-  public void checkVisibility(BuildTarget other) {
+  public void checkVisibility(TargetNode<?> other) {
     if (!isVisibleTo(other)) {
       throw new HumanReadableException(
           "%s depends on %s, which is not visible",

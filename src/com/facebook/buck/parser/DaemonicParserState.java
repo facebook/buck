@@ -34,7 +34,6 @@ import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.UnflavoredBuildTarget;
@@ -46,6 +45,7 @@ import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
@@ -416,7 +416,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
     Object constructorArg = description.createUnpopulatedConstructorArg();
     try {
       ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
-      ImmutableSet.Builder<BuildTargetPattern> visibilityPatterns =
+      ImmutableSet.Builder<VisibilityPattern> visibilityPatterns =
           ImmutableSet.builder();
       try (SimplePerfEvent.Scope scope = SimplePerfEvent.scope(
           eventBus,

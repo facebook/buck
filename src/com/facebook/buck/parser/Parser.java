@@ -301,7 +301,7 @@ public class Parser {
                   e.getMessage());
             }
           }
-          depTargetNode.checkVisibility(target);
+          depTargetNode.checkVisibility(node);
           deps.add(dep);
         }
         return deps.iterator();
