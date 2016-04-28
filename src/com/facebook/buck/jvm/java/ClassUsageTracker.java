@@ -52,8 +52,6 @@ class ClassUsageTracker {
 
   @Nullable private ImmutableSetMultimap<Path, Path> result;
 
-  private final FileObjectTracker fileTracker = new FileObjectTracker();
-
   /**
    * Returns a {@link JavaFileManager} that tracks which files are opened. Provide this to
    * {@code JavaCompiler.getTask} anytime file usage tracking is desired.
@@ -112,6 +110,8 @@ class ClassUsageTracker {
   }
 
   private class UsageTrackingFileManager extends ForwardingStandardJavaFileManager {
+
+    private final FileObjectTracker fileTracker = new FileObjectTracker();
 
     public UsageTrackingFileManager(StandardJavaFileManager fileManager) {
       super(fileManager);
@@ -216,43 +216,43 @@ class ClassUsageTracker {
           relativeName,
           sibling));
     }
-  }
 
-  private class TrackingIterable implements Iterable<JavaFileObject> {
-    private final Iterable<? extends JavaFileObject> inner;
+    private class TrackingIterable implements Iterable<JavaFileObject> {
+      private final Iterable<? extends JavaFileObject> inner;
 
-    public TrackingIterable(final Iterable<? extends JavaFileObject> inner) {
-      this.inner = inner;
+      public TrackingIterable(final Iterable<? extends JavaFileObject> inner) {
+        this.inner = inner;
+      }
+
+      @Override
+      public Iterator<JavaFileObject> iterator() {
+        return new TrackingIterator(inner.iterator());
+      }
     }
 
-    @Override
-    public Iterator<JavaFileObject> iterator() {
-      return new TrackingIterator(inner.iterator());
-    }
-  }
+    private class TrackingIterator implements Iterator<JavaFileObject> {
 
-  private class TrackingIterator implements Iterator<JavaFileObject> {
+      private final Iterator<? extends JavaFileObject> inner;
 
-    private final Iterator<? extends JavaFileObject> inner;
+      public TrackingIterator(final Iterator<? extends JavaFileObject> inner) {
+        this.inner = inner;
+      }
 
-    public TrackingIterator(final Iterator<? extends JavaFileObject> inner) {
-      this.inner = inner;
-    }
+      @Override
+      public boolean hasNext() {
+        return inner.hasNext();
+      }
 
-    @Override
-    public boolean hasNext() {
-      return inner.hasNext();
-    }
+      @Override
+      public JavaFileObject next() {
+        JavaFileObject result = fileTracker.wrap(inner.next());
+        return result;
+      }
 
-    @Override
-    public JavaFileObject next() {
-      JavaFileObject result = fileTracker.wrap(inner.next());
-      return result;
-    }
-
-    @Override
-    public void remove() {
-      inner.remove();
+      @Override
+      public void remove() {
+        inner.remove();
+      }
     }
   }
 
