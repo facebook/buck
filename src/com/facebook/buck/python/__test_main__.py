@@ -208,7 +208,7 @@ class BuckTestResult(unittest._TextTestResult):
 
     def stopTestRun(self):
         cov = self._main_program.get_coverage()
-        if cov:
+        if cov is not None:
             self._results.append({
                 'coverage': cov,
             })
@@ -597,9 +597,9 @@ class MainProgram(object):
         self.cov.start()
 
     def get_coverage(self):
-        result = {}
         if not self.options.collect_coverage:
-            return result
+            return None
+        result = {}
 
         self.cov.stop()
 
