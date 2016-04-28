@@ -31,6 +31,7 @@ import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 
@@ -38,7 +39,6 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -64,6 +64,8 @@ public class ActionGraphCache {
   private final IntegerCounter cacheHitCounter;
   private final IntegerCounter cacheMissCounter;
   private final IntegerCounter actionGraphsMismatch;
+
+  private static final int MAX_MISMATCH_RULES_TO_PRINT = 10;
 
   @Nullable
   private Pair<TargetGraph, ActionGraphAndResolver> lastActionGraph;
@@ -120,7 +122,7 @@ public class ActionGraphCache {
         cacheHitCounter.inc();
         LOG.info("ActionGraph cache hit.");
         if (checkActionGraphs) {
-          spawnThreadToCompareActionGraphs(eventBus, targetGraph);
+          spawnThreadToCompareActionGraphs(eventBus, lastActionGraph.getSecond(), targetGraph);
         }
       } else {
         cacheMissCounter.inc();
@@ -229,11 +231,13 @@ public class ActionGraphCache {
    * Compares the cached ActionGraph with a newly generated from the targetGraph. The comparison
    * is done by generating and comparing content agnostic RuleKeys. This takes time so we spawn it
    * to another thread. In case of mismatch, the mismatching BuildRules are printed.
-   * @param eventBus Buck's event bus
+   * @param eventBus Buck's event bus.
+   * @param lastActionGraphAndResolver The cached version of the graph that gets compared.
    * @param targetGraph Used to generate the actionGraph that gets compared with lastActionGraph.
    */
   private void spawnThreadToCompareActionGraphs(
       final BuckEventBus eventBus,
+      final ActionGraphAndResolver lastActionGraphAndResolver,
       final TargetGraph targetGraph) {
     // If a check already runs on a previous command do not interrupt and skip the test of this one.
     if (!checkAlreadyRunning.compareAndSet(false, true)) {
@@ -248,9 +252,6 @@ public class ActionGraphCache {
             PerfEventId.of("ActionGraphCacheCheck"))) {
           // We check that the lastActionGraph is not null because it's possible we had a
           // invalidateCache() between the scheduling and the execution of this task.
-          if (lastActionGraph == null) {
-            return;
-          }
           LOG.info("ActionGraph integrity check spawned.");
           Pair<TargetGraph, ActionGraphAndResolver> newActionGraph =
               new Pair<TargetGraph, ActionGraphAndResolver>(
@@ -261,8 +262,8 @@ public class ActionGraphCache {
                       targetGraph));
 
           Map<BuildRule, RuleKey> lastActionGraphRuleKeys = getRuleKeysFromBuildRules(
-              lastActionGraph.getSecond().getActionGraph().getNodes(),
-              lastActionGraph.getSecond().getResolver());
+              lastActionGraphAndResolver.getActionGraph().getNodes(),
+              lastActionGraphAndResolver.getResolver());
           Map<BuildRule, RuleKey> newActionGraphRuleKeys = getRuleKeysFromBuildRules(
               newActionGraph.getSecond().getActionGraph().getNodes(),
               newActionGraph.getSecond().getResolver());
@@ -270,13 +271,23 @@ public class ActionGraphCache {
           if (!lastActionGraphRuleKeys.equals(newActionGraphRuleKeys)) {
             actionGraphsMismatch.inc();
             invalidateCache();
-            Set<BuildRule> misMatchedBuildRules =
-                Maps.difference(lastActionGraphRuleKeys, newActionGraphRuleKeys)
-                    .entriesDiffering()
-                    .keySet();
-            String mismatchInfo = "RuleKeys of cached and new ActionGraph don't match. Rules " +
-                "that did not match:\n";
-            for (BuildRule rule : misMatchedBuildRules) {
+            String mismatchInfo = "RuleKeys of cached and new ActionGraph don't match:\n";
+            MapDifference<BuildRule, RuleKey> mismatchedRules =
+                Maps.difference(lastActionGraphRuleKeys, newActionGraphRuleKeys);
+            mismatchInfo +=
+                "Number of nodes in common/differing: " + mismatchedRules.entriesInCommon().size() +
+                    "/" + mismatchedRules.entriesDiffering().size() + "\n" +
+                    "Entries only in the cached ActionGraph: " +
+                    mismatchedRules.entriesOnlyOnLeft().size() +
+                    "Entries only in the newly created ActionGraph: " +
+                    mismatchedRules.entriesOnlyOnRight().size() +
+                "The first " + MAX_MISMATCH_RULES_TO_PRINT + " rules that did not match:\n";
+
+            int rulesAlreadyPrinted = 0;
+            for (BuildRule rule : mismatchedRules.entriesDiffering().keySet()) {
+              if (++rulesAlreadyPrinted == MAX_MISMATCH_RULES_TO_PRINT) {
+                break;
+              }
               mismatchInfo += rule.toString() + "\n";
             }
             LOG.error(mismatchInfo);
