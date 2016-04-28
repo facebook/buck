@@ -280,6 +280,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     builder.setJavacPath(options.getJavacPath());
     builder.setJavacJarPath(options.getJavacJarPath());
     builder.setSpoolMode(options.getSpoolMode());
+    builder.setTrackClassUsageNotDisabled(options.getTrackClassUsageNotDisabled());
     builder.setAnnotationProcessingParams(options.getAnnotationProcessingParams());
     builder.setSafeAnnotationProcessors(options.getSafeAnnotationProcessors());
     builder.putAllSourceToBootclasspath(options.getSourceToBootclasspath());
