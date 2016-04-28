@@ -381,7 +381,7 @@ public class TestCommand extends BuildCommand {
           targetGraph = params.getParser().buildTargetGraphForTargetNodeSpecs(
               params.getBuckEventBus(),
               params.getCell(),
-              getEnableProfiling(),
+              getEnableParserProfiling(),
               pool.getExecutor(),
               ImmutableList.of(
                   TargetNodePredicateSpec.of(
@@ -404,7 +404,7 @@ public class TestCommand extends BuildCommand {
               .buildTargetGraphForTargetNodeSpecs(
                   params.getBuckEventBus(),
                   params.getCell(),
-                  getEnableProfiling(),
+                  getEnableParserProfiling(),
                   pool.getExecutor(),
                   parseArgumentsAsTargetNodeSpecs(
                       params.getBuckConfig(),
@@ -429,7 +429,7 @@ public class TestCommand extends BuildCommand {
             targetGraph = params.getParser().buildTargetGraph(
                 params.getBuckEventBus(),
                 params.getCell(),
-                getEnableProfiling(),
+                getEnableParserProfiling(),
                 pool.getExecutor(),
                 Iterables.concat(
                     explicitBuildTargets,

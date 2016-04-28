@@ -91,7 +91,7 @@ public class AutodepsCommand extends AbstractCommand {
             .buildTargetGraphForTargetNodeSpecs(
                 params.getBuckEventBus(),
                 cell,
-                getEnableProfiling(),
+                getEnableParserProfiling(),
                 executorService,
                 ImmutableList.of(
                     TargetNodePredicateSpec.of(

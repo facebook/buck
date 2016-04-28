@@ -78,7 +78,7 @@ public class FetchCommand extends BuildCommand {
             .buildTargetGraphForTargetNodeSpecs(
                 params.getBuckEventBus(),
                 params.getCell(),
-                getEnableProfiling(),
+                getEnableParserProfiling(),
                 pool.getExecutor(),
                 parseArgumentsAsTargetNodeSpecs(
                     params.getBuckConfig(),

@@ -264,7 +264,7 @@ public class TargetsCommand extends AbstractCommand {
         return ResolveAliasHelper.resolveAlias(
             params,
             executor,
-            getEnableProfiling(),
+            getEnableParserProfiling(),
             getArguments());
       }
 
@@ -340,7 +340,7 @@ public class TargetsCommand extends AbstractCommand {
           .buildTargetGraphForTargetNodeSpecs(
               params.getBuckEventBus(),
               params.getCell(),
-              getEnableProfiling(),
+              getEnableParserProfiling(),
               executor,
               ImmutableList.of(
                   TargetNodePredicateSpec.of(
@@ -366,7 +366,7 @@ public class TargetsCommand extends AbstractCommand {
           .buildTargetGraphForTargetNodeSpecs(
               params.getBuckEventBus(),
               params.getCell(),
-              getEnableProfiling(),
+              getEnableParserProfiling(),
               executor,
               parseArgumentsAsTargetNodeSpecs(
                   params.getBuckConfig(),
@@ -447,7 +447,7 @@ public class TargetsCommand extends AbstractCommand {
                 .buildTargetGraphForTargetNodeSpecs(
                     params.getBuckEventBus(),
                     params.getCell(),
-                    getEnableProfiling(),
+                    getEnableParserProfiling(),
                     executor,
                     ImmutableList.of(
                         TargetNodePredicateSpec.of(
@@ -462,7 +462,7 @@ public class TargetsCommand extends AbstractCommand {
                 .buildTargetGraphForTargetNodeSpecs(
                     params.getBuckEventBus(),
                     params.getCell(),
-                    getEnableProfiling(),
+                    getEnableParserProfiling(),
                     executor,
                     parseArgumentsAsTargetNodeSpecs(
                         params.getBuckConfig(),
@@ -670,7 +670,7 @@ public class TargetsCommand extends AbstractCommand {
       sortedTargetRule = params.getParser().getRawTargetNode(
           params.getBuckEventBus(),
           params.getCell(),
-          getEnableProfiling(),
+          getEnableParserProfiling(),
           executor,
           targetNode);
       if (sortedTargetRule == null) {
@@ -826,7 +826,7 @@ public class TargetsCommand extends AbstractCommand {
       TargetGraph targetGraphWithTests = params.getParser().buildTargetGraph(
           params.getBuckEventBus(),
           params.getCell(),
-          getEnableProfiling(),
+          getEnableParserProfiling(),
           executor,
           matchingBuildTargetsWithTests);
 

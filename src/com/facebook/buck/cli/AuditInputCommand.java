@@ -115,7 +115,7 @@ public class AuditInputCommand extends AbstractCommand {
       graph = params.getParser().buildTargetGraph(
           params.getBuckEventBus(),
           params.getCell(),
-          getEnableProfiling(),
+          getEnableParserProfiling(),
           pool.getExecutor(),
           targets);
     } catch (BuildFileParseException | BuildTargetException e) {

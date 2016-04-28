@@ -48,7 +48,7 @@ public abstract class AbstractCommand implements Command {
   private static final String HELP_LONG_ARG = "--help";
   private static final String NO_CACHE_LONG_ARG = "--no-cache";
   private static final String OUTPUT_TEST_EVENTS_TO_FILE_LONG_ARG = "--output-test-events-to-file";
-  private static final String PROFILE_LONG_ARG = "--profile";
+  private static final String PROFILE_PARSER_LONG_ARG = "--profile-buck-parser";
   private static final String NUM_THREADS_LONG_ARG = "--num-threads";
   private static final String LOAD_LIMIT_LONG_ARG = "--load-limit";
 
@@ -125,9 +125,10 @@ public abstract class AbstractCommand implements Command {
   private String eventsOutputPath = null;
 
   @Option(
-      name = PROFILE_LONG_ARG,
-      usage = "Enable profiling of buck.py in debug log")
-  private boolean enableProfiling = false;
+      name = PROFILE_PARSER_LONG_ARG,
+      usage = "Enable profiling of buck.py internals (not the target being compiled) in the debug" +
+          "log and trace.")
+  private boolean enableParserProfiling = false;
 
   @Option(
       name = HELP_LONG_ARG,
@@ -176,8 +177,8 @@ public abstract class AbstractCommand implements Command {
     return new CommandLineBuildTargetNormalizer(buckConfig);
   }
 
-  public boolean getEnableProfiling() {
-    return enableProfiling;
+  public boolean getEnableParserProfiling() {
+    return enableParserProfiling;
   }
 
   public ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
@@ -258,8 +259,8 @@ public abstract class AbstractCommand implements Command {
       builder.add(OUTPUT_TEST_EVENTS_TO_FILE_LONG_ARG);
       builder.add(eventsOutputPath);
     }
-    if (enableProfiling) {
-      builder.add(PROFILE_LONG_ARG);
+    if (enableParserProfiling) {
+      builder.add(PROFILE_PARSER_LONG_ARG);
     }
     return builder.build();
   }

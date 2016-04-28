@@ -105,7 +105,7 @@ public class QueryCommand extends AbstractCommand {
       return 1;
     }
 
-    BuckQueryEnvironment env = new BuckQueryEnvironment(params, getEnableProfiling());
+    BuckQueryEnvironment env = new BuckQueryEnvironment(params, getEnableParserProfiling());
     try (CommandThreadManager pool = new CommandThreadManager(
         "Query",
         params.getBuckConfig().getWorkQueueExecutionOrder(),
@@ -219,7 +219,7 @@ public class QueryCommand extends AbstractCommand {
         SortedMap<String, Object> sortedTargetRule =  params.getParser().getRawTargetNode(
             params.getBuckEventBus(),
             params.getCell(),
-            getEnableProfiling(),
+            getEnableParserProfiling(),
             executor,
             node);
         if (sortedTargetRule == null) {

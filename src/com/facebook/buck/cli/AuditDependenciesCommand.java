@@ -92,7 +92,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
               shouldGenerateJsonOutput())));
     }
 
-    BuckQueryEnvironment env = new BuckQueryEnvironment(params, getEnableProfiling());
+    BuckQueryEnvironment env = new BuckQueryEnvironment(params, getEnableParserProfiling());
     try (CommandThreadManager pool = new CommandThreadManager(
         "Audit",
         params.getBuckConfig().getWorkQueueExecutionOrder(),

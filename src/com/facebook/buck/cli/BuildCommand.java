@@ -390,7 +390,7 @@ public class BuildCommand extends AbstractCommand {
           .buildTargetGraphForTargetNodeSpecs(
               params.getBuckEventBus(),
               params.getCell(),
-              getEnableProfiling(),
+              getEnableParserProfiling(),
               executor,
               parseArgumentsAsTargetNodeSpecs(
                   params.getBuckConfig(),
