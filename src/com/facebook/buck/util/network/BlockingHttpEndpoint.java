@@ -25,7 +25,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-import java.io.Closeable;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,7 +43,7 @@ import java.util.concurrent.TimeUnit;
  * HttpEndpoint implementation which only allows a certain number of concurrent requests to be in
  * flight at any given point in time.
  */
-public class BlockingHttpEndpoint implements HttpEndpoint, Closeable {
+public class BlockingHttpEndpoint implements HttpEndpoint {
 
   private static final Logger LOG = Logger.get(BlockingHttpEndpoint.class);
 
@@ -66,7 +65,8 @@ public class BlockingHttpEndpoint implements HttpEndpoint, Closeable {
     // Create an ExecutorService that blocks after N requests are in flight.  Taken from
     // http://www.springone2gx.com/blog/billy_newport/2011/05/there_s_more_to_configuring_threadpools_than_thread_pool_size
     LinkedBlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<>(maxParallelRequests);
-    ExecutorService executor = new ThreadPoolExecutor(maxParallelRequests,
+    ExecutorService executor = new ThreadPoolExecutor(
+        maxParallelRequests,
         maxParallelRequests,
         2L,
         TimeUnit.MINUTES,

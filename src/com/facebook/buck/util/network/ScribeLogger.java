@@ -18,6 +18,6 @@ package com.facebook.buck.util.network;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-public interface ScribeLogger {
+public interface ScribeLogger extends AutoCloseable {
   ListenableFuture<Void> log(String category, Iterable<String> lines);
 }

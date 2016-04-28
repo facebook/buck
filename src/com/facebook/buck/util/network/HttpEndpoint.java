@@ -18,6 +18,6 @@ package com.facebook.buck.util.network;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-public interface HttpEndpoint {
+public interface HttpEndpoint extends AutoCloseable {
   ListenableFuture<HttpResponse> post(String content);
 }

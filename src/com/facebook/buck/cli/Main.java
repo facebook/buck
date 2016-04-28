@@ -160,6 +160,7 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -198,6 +199,7 @@ public final class Main {
       "buck.path_to_static_content", "webserver/static");
   private static final int DISK_IO_STATS_TIMEOUT_SECONDS = 10;
   private static final int EXECUTOR_SERVICES_TIMEOUT_SECONDS = 60;
+  private static final int COUNTER_AGGREGATOR_SERVICE_TIMEOUT_SECONDS = 20;
 
   private final InputStream stdIn;
   private final PrintStream stdOut;
@@ -878,6 +880,8 @@ public final class Main {
         ExecutorService diskIoExecutorService = MoreExecutors.newSingleThreadExecutor("Disk I/O");
         ListeningExecutorService httpWriteExecutorService =
             getHttpWriteExecutorService(cacheBuckConfig);
+        ScheduledExecutorService counterAggregatorExecutor =
+            MoreExecutors.newSingleThreadScheduledExecutor("CounterAggregatorThread");
         VersionControlStatsGenerator vcStatsGenerator = null;
 
         // Eventually, we'll want to get allow websocket and/or nailgun clients to specify locale
@@ -893,33 +897,32 @@ public final class Main {
         // must be the last resource, so that it is closed first and can deliver its queued events
         // to the other resources before they are closed.
         try (ConsoleLogLevelOverrider consoleLogLevelOverrider =
-            new ConsoleLogLevelOverrider(buildId.toString(), verbosity);
+                 new ConsoleLogLevelOverrider(buildId.toString(), verbosity);
              ConsoleHandlerRedirector consoleHandlerRedirector =
-            new ConsoleHandlerRedirector(
-                buildId.toString(),
-                console.getStdErr(),
-                Optional.<OutputStream>of(stdErr));
+                 new ConsoleHandlerRedirector(
+                     buildId.toString(),
+                     console.getStdErr(),
+                     Optional.<OutputStream>of(stdErr));
              AbstractConsoleEventBusListener consoleListener =
-            createConsoleEventListener(
-                clock,
-                new SuperConsoleConfig(buckConfig),
-                console,
-                testConfig.getResultSummaryVerbosity(),
-                executionEnvironment,
-                webServer,
-                locale,
-                BuckConstant.getLogPath().resolve("test.log"));
+                 createConsoleEventListener(
+                     clock,
+                     new SuperConsoleConfig(buckConfig),
+                     console,
+                     testConfig.getResultSummaryVerbosity(),
+                     executionEnvironment,
+                     webServer,
+                     locale,
+                     BuckConstant.getLogPath().resolve("test.log"));
              TempDirectoryCreator tempDirectoryCreator =
                  new TempDirectoryCreator(testTempDirOverride);
              AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
              BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
-
-        // NOTE: This will only run during the lifetime of the process and will flush on close.
+             // NOTE: This will only run during the lifetime of the process and will flush on close.
              CounterRegistry counterRegistry = new CounterRegistryImpl(
-                MoreExecutors.newSingleThreadScheduledExecutor("CounterAggregatorThread"),
-                buildEventBus,
-                buckConfig.getCountersFirstFlushIntervalMillis(),
-                buckConfig.getCountersFlushIntervalMillis())) {
+                 counterAggregatorExecutor,
+                 buildEventBus,
+                 buckConfig.getCountersFirstFlushIntervalMillis(),
+                 buckConfig.getCountersFlushIntervalMillis())) {
 
           buildEventBus.register(HANG_MONITOR.getHangMonitor());
 
@@ -1084,6 +1087,10 @@ public final class Main {
           // Wait for HTTP writes to complete.
           closeHttpExecutorService(
               cacheBuckConfig, Optional.of(buildEventBus), httpWriteExecutorService);
+          closeExecutorService(
+              "CounterAggregatorExecutor",
+              counterAggregatorExecutor,
+              COUNTER_AGGREGATOR_SERVICE_TIMEOUT_SECONDS);
           buildEventBus.post(CommandEvent.finished(startedEvent, exitCode));
         } catch (Throwable t) {
           LOG.debug(t, "Failing build on exception.");

@@ -51,4 +51,8 @@ public final class FakeScribeLogger implements ScribeLogger {
       return ImmutableList.copyOf(lines);
     }
   }
+
+  @Override
+  public void close() throws Exception {
+  }
 }

@@ -39,6 +39,10 @@ public class HttpPutLoggerTest {
         uploadedData.add(content);
         return Futures.immediateFuture(new HttpResponse(""));
       }
+
+      @Override
+      public void close() throws Exception {
+      }
     };
     HttpPutLogger httpPutLogger =
         new HttpPutLogger(testEndpoint, ObjectMappers.newDefaultInstance());
@@ -56,5 +60,7 @@ public class HttpPutLoggerTest {
             "[" + entry1 + "," + entry2 + "]"
         )
     );
+
+    testEndpoint.close();
   }
 }

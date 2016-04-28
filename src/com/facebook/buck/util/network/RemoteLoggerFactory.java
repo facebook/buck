@@ -19,13 +19,18 @@ package com.facebook.buck.util.network;
 import com.facebook.buck.util.HumanReadableException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.AsyncFunction;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.net.MalformedURLException;
 import java.net.URI;
+
+import javax.annotation.Nullable;
 
 public abstract class RemoteLoggerFactory {
 
@@ -81,6 +86,39 @@ public abstract class RemoteLoggerFactory {
                 }
               }).toList();
       return scribeLogger.log(category, lines);
+    }
+  }
+
+  /**
+   * Allows us to express the fact that the returned RemoteLogger needs to close resources
+   * when
+   */
+  public static class RemoteLogClosingWrapper implements RemoteLogger {
+    private final RemoteLogger delegate;
+    private final AutoCloseable resource;
+
+    public RemoteLogClosingWrapper(RemoteLogger delegate, AutoCloseable resource) {
+      this.delegate = delegate;
+      this.resource = resource;
+    }
+
+    @Override
+    public Optional<ListenableFuture<Void>> log(String logLine) {
+      return delegate.log(logLine);
+    }
+
+    @Override
+    public ListenableFuture<Void> close() {
+      return Futures.transformAsync(
+          delegate.close(),
+          new AsyncFunction<Void, Void>() {
+            @Override
+            @Nullable
+            public ListenableFuture<Void> apply(Void input) throws Exception {
+              resource.close();
+              return null;
+            }
+          });
     }
   }
 }
