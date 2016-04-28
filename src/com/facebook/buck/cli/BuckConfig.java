@@ -96,6 +96,7 @@ public class BuckConfig {
   private static final ImmutableMap<String, ImmutableSet<String>> IGNORE_FIELDS_FOR_DAEMON_RESTART =
       ImmutableMap.of(
           "build", ImmutableSet.of("threads", "load_limit"),
+          "cache", ImmutableSet.of("dir", "dir_mode", "http_mode", "http_url", "mode"),
           "client", ImmutableSet.of("id"),
           "project", ImmutableSet.of("ide_prompt")
   );
