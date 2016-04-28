@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 804ce039a5f1c0b8906c27d43e1a37891495a629 #@#
+#@# GENERATED FILE: DO NOT MODIFY 524ba2e749799f7cb201ef691cfffd5c28225de1 #@#
 {
   "config" : {
     "deps" : [ ],
@@ -13,7 +13,6 @@
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/concurrent:concurrent",
@@ -31,6 +30,7 @@
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:types",
       "//src/com/facebook/buck/rules/coercer:types",
+      "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
       "//third-party/java/jackson:jackson-annotations",

@@ -25,7 +25,6 @@ import com.facebook.buck.counters.TagSetCounter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.WatchEvents;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.JsonObjectHashing;
@@ -369,12 +368,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
       if (description instanceof Flavored) {
         if (!((Flavored) description).hasFlavors(
             ImmutableSet.copyOf(target.getFlavors()))) {
-          throw new HumanReadableException(
-              "Unrecognized flavor in target %s while parsing %s%s.",
-              target,
-              UnflavoredBuildTarget.BUILD_TARGET_PREFIX,
-              MorePaths.pathWithUnixSeparators(
-                  target.getBasePath().resolve(cell.getBuildFileName())));
+          throw UnexpectedFlavorException.createWithSuggestions(cell, target);
         }
       } else {
         LOG.warn(
