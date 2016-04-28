@@ -609,9 +609,13 @@ class MainProgram(object):
             lines = f.getvalue().split('\n')
         except coverage.misc.CoverageException:
             # Nothing was covered. That's fine by us
-            lines = range(5)
+            return result
 
-        for line in lines[2:-3]:
+        # N.B.: the format of the coverage library's output differs
+        # depending on whether one or more files are in the results
+        for line in lines[2:]:
+            if line.strip('-') == '':
+                break
             r = line.split()[0]
             analysis = self.cov.analysis2(r)
             covString = self.convert_to_diff_cov_str(analysis)
