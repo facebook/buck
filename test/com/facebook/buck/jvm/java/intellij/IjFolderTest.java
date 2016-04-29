@@ -20,33 +20,127 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class IjFolderTest {
+@Ignore
+public abstract class IjFolderTest {
+
+  IjFolder.IJFolderFactory folderFactory;
+
+  public abstract void setupFolderFactory();
 
   @Test
-  public void testMergeForSamePath() {
+  public void testMergeWithSelf() {
     Path srcPath = Paths.get("src");
-    IjFolder sourceFolder =
-        new SourceFolder(srcPath, false, ImmutableSortedSet.<Path>of(Paths.get("Source.java")));
-    IjFolder testFolder =
-        new TestFolder(srcPath, false, ImmutableSortedSet.<Path>of(Paths.get("Test.java")));
-    IjFolder excludeFolder =
-        new ExcludeFolder(srcPath);
+    IjFolder folder =
+        folderFactory.create(
+            srcPath,
+            false,
+            ImmutableSortedSet.<Path>of(Paths.get("Source.java")));
 
-    assertEquals("Merging the folder with itself is that folder.",
-        sourceFolder,
-        sourceFolder.merge(sourceFolder));
-
-    assertEquals("Merging the folder with itself is that folder.",
-        testFolder,
-        testFolder.merge(testFolder));
-
-    assertEquals("Merging the folder with itself is that folder.",
-        excludeFolder,
-        excludeFolder.merge(excludeFolder));
+    assertEquals(
+        "Merging " + folder + " with itself didn't result in the same folder being returned.",
+        folder,
+        folder.merge(folder));
   }
+
+  @Test
+  public void testMergeSourceWithSamePath() {
+    Path srcPath = Paths.get("src");
+    testSamePathMerge(
+        folderFactory.create(
+            srcPath,
+            false,
+            ImmutableSortedSet.<Path>of(Paths.get("Source.java"))),
+        folderFactory.create(
+            srcPath,
+            false,
+            ImmutableSortedSet.<Path>of(Paths.get("Source2.java"))));
+  }
+
+  @Test
+  public void testMergeParentWithChild() {
+    Path parentPath = Paths.get("src");
+    Path childPath = Paths.get("src/child");
+    testMergeParentWithChild(
+        folderFactory.create(
+            parentPath,
+            false,
+            ImmutableSortedSet.<Path>of(Paths.get("Source.java"))),
+        folderFactory.create(
+            childPath,
+            false,
+            ImmutableSortedSet.<Path>of(Paths.get("Source2.java"))));
+  }
+
+  @Ignore
+  private void testMergeParentWithChild(
+      IjFolder parent,
+      IjFolder child) {
+    IjFolder mergedFolder = child.merge(parent);
+
+    assertEquals(
+        "Path of merged child and parent is not that of the parent",
+        mergedFolder.getPath(),
+        parent.getPath());
+
+    ImmutableSortedSet<Path> expectedMergedInputs =
+        ImmutableSortedSet
+            .<Path>naturalOrder()
+            .addAll(parent.getInputs())
+            .addAll(child.getInputs())
+            .build();
+
+    assertEquals(
+        "Combined parent and child input paths are not equial to the inputs from the two folders",
+        mergedFolder.getInputs(),
+        expectedMergedInputs);
+  }
+
+  @Ignore
+  private void testSamePathMerge(
+      IjFolder folder1,
+      IjFolder folder2) {
+    IjFolder mergedFolder = folder1.merge(folder2);
+
+    assertEquals(
+        "Merged folder isn't in the same folder as " + folder1,
+        mergedFolder.getPath(),
+        folder1.getPath());
+
+    assertEquals(
+        "Merged folder isn't in the same folder as " + folder2,
+        mergedFolder.getPath(),
+        folder2.getPath());
+
+    ImmutableSortedSet<Path> expectedMergedInputs =
+        ImmutableSortedSet
+            .<Path>naturalOrder()
+            .addAll(folder1.getInputs())
+            .addAll(folder2.getInputs())
+            .build();
+
+    assertEquals(
+        "Merged folder does not contain the inputs of the two separate folders",
+        mergedFolder.getInputs(),
+        expectedMergedInputs);
+  }
+
+  public void testMerge(IjFolder.IJFolderFactory otherFactory) {
+    Path path = Paths.get("/src");
+
+    IjFolder left = folderFactory.create(path, false, ImmutableSortedSet.<Path>of());
+    IjFolder right = otherFactory.create(path, false, ImmutableSortedSet.<Path>of());
+
+    if (!left.canMergeWith(right)) {
+      throw new IllegalArgumentException("Can't merge " + left + " with " + right);
+    }
+
+    left.merge(right);
+  }
+
 }

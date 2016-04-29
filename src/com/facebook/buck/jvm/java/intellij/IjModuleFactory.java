@@ -193,7 +193,7 @@ public class IjModuleFactory {
       Path path = folder.getPath();
       IjFolder otherFolder = sourceFoldersMergeMap.get(path);
       if (otherFolder != null) {
-        folder = mergeAllowingTestToBePromotedToSource(otherFolder, folder);
+        folder = mergeAllowingTestToBePromotedToSource(folder, otherFolder);
       }
       sourceFoldersMergeMap.put(path, folder);
     }
