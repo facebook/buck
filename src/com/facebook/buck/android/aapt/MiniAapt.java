@@ -173,11 +173,10 @@ public class MiniAapt implements Step {
     try {
       Set<RDotTxtEntry> missing = verifyReferences(filesystem, references.build());
       if (!missing.isEmpty()) {
-        context.logError(
-            new RuntimeException(),
+        context.getBuckEventBus().post(ConsoleEvent.severe(
             "The following resources were not found when processing %s: \n%s\n",
             resDirectory,
-            Joiner.on('\n').join(missing));
+            Joiner.on('\n').join(missing)));
         return 1;
       }
     } catch (IOException e) {
