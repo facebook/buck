@@ -159,9 +159,6 @@ public class XctestOutputParsingTest {
 
     nextStreamedObject = iter.next();
     assertThat(nextStreamedObject, instanceOf(XctestOutputParsing.BeginXctestEvent.class));
-    @SuppressWarnings("unused")
-    XctestOutputParsing.BeginXctestEvent beginXctestEvent = (XctestOutputParsing.BeginXctestEvent)
-        nextStreamedObject;
 
     nextStreamedObject = iter.next();
     assertThat(nextStreamedObject, instanceOf(XctestOutputParsing.BeginTestSuiteEvent.class));
@@ -219,9 +216,6 @@ public class XctestOutputParsingTest {
 
     nextStreamedObject = iter.next();
     assertThat(nextStreamedObject, instanceOf(XctestOutputParsing.EndXctestEvent.class));
-    @SuppressWarnings("unused")
-    XctestOutputParsing.EndXctestEvent endXctestEvent =
-        (XctestOutputParsing.EndXctestEvent) nextStreamedObject;
   }
 
   @Test
@@ -241,9 +235,6 @@ public class XctestOutputParsingTest {
 
     nextStreamedObject = iter.next();
     assertThat(nextStreamedObject, instanceOf(XctestOutputParsing.BeginXctestEvent.class));
-    @SuppressWarnings("unused")
-    XctestOutputParsing.BeginXctestEvent beginXctestEvent = (XctestOutputParsing.BeginXctestEvent)
-        nextStreamedObject;
 
     nextStreamedObject = iter.next();
     assertThat(nextStreamedObject, instanceOf(XctestOutputParsing.BeginTestSuiteEvent.class));
@@ -306,9 +297,6 @@ public class XctestOutputParsingTest {
 
     nextStreamedObject = iter.next();
     assertThat(nextStreamedObject, instanceOf(XctestOutputParsing.EndXctestEvent.class));
-    @SuppressWarnings("unused")
-    XctestOutputParsing.EndXctestEvent endXctestEvent =
-        (XctestOutputParsing.EndXctestEvent) nextStreamedObject;
   }
 
   @Test
@@ -324,14 +312,8 @@ public class XctestOutputParsingTest {
 
     nextStreamedObject = iter.next();
     assertThat(nextStreamedObject, instanceOf(XctestOutputParsing.BeginXctestEvent.class));
-    @SuppressWarnings("unused")
-    XctestOutputParsing.BeginXctestEvent beginXctestEvent = (XctestOutputParsing.BeginXctestEvent)
-        nextStreamedObject;
 
     nextStreamedObject = iter.next();
     assertThat(nextStreamedObject, instanceOf(XctestOutputParsing.EndXctestEvent.class));
-    @SuppressWarnings("unused")
-    XctestOutputParsing.EndXctestEvent endXctestEvent =
-        (XctestOutputParsing.EndXctestEvent) nextStreamedObject;
   }
 }

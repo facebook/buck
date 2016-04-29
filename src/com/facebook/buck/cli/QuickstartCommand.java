@@ -190,7 +190,7 @@ public class QuickstartCommand extends AbstractCommand {
       }
 
       case IOS: {
-        ImmutableMap<AppleSdk, AppleSdkPaths> appleSdkPaths = null;
+        ImmutableMap<AppleSdk, AppleSdkPaths> appleSdkPaths;
         try (
             PrintStream stdout = new PrintStream(new ByteArrayOutputStream());
             PrintStream stderr = new PrintStream(new ByteArrayOutputStream())) {

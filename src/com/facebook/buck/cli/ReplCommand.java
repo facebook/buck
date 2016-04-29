@@ -52,7 +52,7 @@ public class ReplCommand extends AbstractCommand {
 
     ScriptEngine engine = initializeEngine(params);
     BufferedReader bufferRead = new BufferedReader(new InputStreamReader(params.getStdIn()));
-    String line = "";
+    String line;
     boolean eof = false;
 
     while (!eof) {
@@ -69,7 +69,6 @@ public class ReplCommand extends AbstractCommand {
         if (!e.getMessage().contains(EXIT_MESSAGE)) {
           params.getConsole().getStdOut().println("Script error: " + e.getMessage());
         } else {
-          eof = true;
           break;
         }
       } catch (Exception e) {

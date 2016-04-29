@@ -541,7 +541,6 @@ public class ConstructorArgMarshallerTest {
       public List<? extends SourcePath> yup;
     }
 
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathResolver pathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
@@ -607,7 +606,6 @@ public class ConstructorArgMarshallerTest {
       public Optional<Path> notAPath;
     }
 
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathResolver resolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
      );

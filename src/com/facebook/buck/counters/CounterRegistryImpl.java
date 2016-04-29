@@ -119,7 +119,7 @@ public class CounterRegistryImpl implements CounterRegistry {
   }
 
   private void flushCounters() {
-    List<Optional<CounterSnapshot>> snapshots = null;
+    List<Optional<CounterSnapshot>> snapshots;
     synchronized (this) {
       snapshots = Lists.newArrayListWithCapacity(counters.size());
       for (Counter counter : counters) {

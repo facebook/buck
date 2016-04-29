@@ -277,8 +277,8 @@ public class ArtifactCaches {
       }
     }));
 
-    HttpService fetchService = null;
-    HttpService storeService = null;
+    HttpService fetchService;
+    HttpService storeService;
     switch (config.getLoadBalancingType()) {
       case CLIENT_SLB:
         HttpLoadBalancer clientSideSlb = config.getSlbConfig().createHttpClientSideSlb(

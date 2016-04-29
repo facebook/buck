@@ -82,7 +82,7 @@ public class TestSelector {
       remainder = rawSelectorString;
     }
 
-    Pattern classPattern = null;
+    Pattern classPattern;
     Pattern methodPattern = null;
     String[] parts = remainder.split("#", -1);
 

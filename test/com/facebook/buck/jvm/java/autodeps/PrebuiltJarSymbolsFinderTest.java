@@ -136,8 +136,8 @@ public class PrebuiltJarSymbolsFinderTest {
       public RuleKey apply(ImmutableSet<String> entries) {
         File jarFile = absolutePathToJar.toFile();
 
-        JavaSymbolsRule javaSymbolsRule = null;
-        FakeFileHashCache fileHashCache = null;
+        JavaSymbolsRule javaSymbolsRule;
+        FakeFileHashCache fileHashCache;
         try {
           PrebuiltJarSymbolsFinder finder = createFinderForFileWithEntries(
               relativePathToJar.getFileName().toString(),

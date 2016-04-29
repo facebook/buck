@@ -882,7 +882,7 @@ public final class Main {
             getHttpWriteExecutorService(cacheBuckConfig);
         ScheduledExecutorService counterAggregatorExecutor =
             MoreExecutors.newSingleThreadScheduledExecutor("CounterAggregatorThread");
-        VersionControlStatsGenerator vcStatsGenerator = null;
+        VersionControlStatsGenerator vcStatsGenerator;
 
         // Eventually, we'll want to get allow websocket and/or nailgun clients to specify locale
         // when connecting. For now, we'll use the default from the server environment.

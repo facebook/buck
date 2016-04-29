@@ -122,7 +122,7 @@ public class DefaultZipSplitter implements ZipSplitter {
     classpathTraverser.traverse(new ClasspathTraversal(inFiles, filesystem) {
       @Override
       public void visit(FileLike entry) {
-        long entrySize = 0;
+        long entrySize;
         try {
           entrySize = entry.getSize();
         } catch (IOException e) {

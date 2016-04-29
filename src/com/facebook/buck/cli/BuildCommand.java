@@ -323,7 +323,7 @@ public class BuildCommand extends AbstractCommand {
       return 1;
     }
 
-    int exitCode = -1;
+    int exitCode;
     if (useDistributedBuild) {
       exitCode = executeDistributedBuild(params);
     } else {

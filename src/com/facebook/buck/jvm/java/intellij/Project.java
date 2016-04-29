@@ -44,11 +44,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExportDependencies;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.ProjectConfig;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceRoot;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Ansi;
@@ -605,7 +605,7 @@ public class Project {
       return false;
     }
 
-    JavaLibrary javaLibrary = null;
+    JavaLibrary javaLibrary;
     if (buildRule instanceof JavaLibrary) {
       javaLibrary = (JavaLibrary) buildRule;
       Path basePath = buildRule.getBuildTarget().getBasePath();

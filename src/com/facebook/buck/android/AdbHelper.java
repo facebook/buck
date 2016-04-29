@@ -587,7 +587,7 @@ public class AdbHelper {
       getBuckEventBus().post(ConsoleEvent.info("Installing apk on %s.", name));
     }
     try {
-      String reason = null;
+      String reason;
       if (installViaSd) {
         reason = deviceInstallPackageViaSd(device, apk.getAbsolutePath());
       } else {
@@ -610,7 +610,7 @@ public class AdbHelper {
   protected boolean isDeviceTempWritable(IDevice device, String name) {
     StringBuilder loggingInfo = new StringBuilder();
     try {
-      String output = null;
+      String output;
 
       try {
         output = executeCommandWithErrorChecking(device, "ls -l -d /data/local/tmp");

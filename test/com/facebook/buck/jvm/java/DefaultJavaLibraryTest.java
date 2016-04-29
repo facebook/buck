@@ -30,9 +30,8 @@ import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
-import com.facebook.buck.io.HashingDeterministicJarWriter;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.io.HashingDeterministicJarWriter;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
@@ -47,6 +46,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -150,7 +150,6 @@ public class DefaultJavaLibraryTest {
         new BuildRuleResolver(
             TargetGraph.EMPTY,
             new DefaultTargetNodeToBuildRuleTransformer());
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
     BuildRule libraryRule = AndroidLibraryBuilder
         .createBuilder(buildTarget)
         .addSrc(src)
@@ -159,7 +158,7 @@ public class DefaultJavaLibraryTest {
 
     String bootclasspath = "effects.jar" + File.pathSeparator + "maps.jar" +
         File.pathSeparator + "usb.jar" + File.pathSeparator;
-    BuildContext context = createBuildContext(libraryRule, bootclasspath, projectFilesystem);
+    BuildContext context = createBuildContext(libraryRule, bootclasspath);
 
     List<Step> steps = javaLibrary.getBuildSteps(context, new FakeBuildableContext());
 
@@ -657,11 +656,7 @@ public class DefaultJavaLibraryTest {
         Optional.of(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR),
         /* postprocessClassesCommands */ ImmutableList.<String>of());
 
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
-    BuildContext buildContext = createBuildContext(
-        javaLibraryBuildRule,
-        /* bootclasspath */ null,
-        projectFilesystem);
+    BuildContext buildContext = createBuildContext(javaLibraryBuildRule, /* bootclasspath */ null);
 
     ImmutableList<Step> steps =
         javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
@@ -685,11 +680,7 @@ public class DefaultJavaLibraryTest {
         Optional.of(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR),
         /* postprocessClassesCommands */ ImmutableList.of("process_class_files.py"));
 
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
-    BuildContext buildContext = createBuildContext(
-        javaLibraryBuildRule,
-        /* bootclasspath */ null,
-        projectFilesystem);
+    BuildContext buildContext = createBuildContext(javaLibraryBuildRule, /* bootclasspath */ null);
 
     ImmutableList<Step> steps =
         javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
@@ -713,11 +704,7 @@ public class DefaultJavaLibraryTest {
         Optional.of(AbstractJavacOptions.SpoolMode.INTERMEDIATE_TO_DISK),
         /* postprocessClassesCommands */ ImmutableList.<String>of());
 
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
-    BuildContext buildContext = createBuildContext(
-        javaLibraryBuildRule,
-        /* bootclasspath */ null,
-        projectFilesystem);
+    BuildContext buildContext = createBuildContext(javaLibraryBuildRule, /* bootclasspath */ null);
 
     ImmutableList<Step> steps =
         javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
@@ -1295,9 +1282,7 @@ public class DefaultJavaLibraryTest {
   }
 
   // test.
-  private BuildContext createBuildContext(BuildRule javaLibrary,
-                                          @Nullable String bootclasspath,
-                                          @Nullable ProjectFilesystem projectFilesystem) {
+  private BuildContext createBuildContext(BuildRule javaLibrary, @Nullable String bootclasspath) {
     AndroidPlatformTarget platformTarget = EasyMock.createMock(AndroidPlatformTarget.class);
     ImmutableList<Path> bootclasspathEntries = (bootclasspath == null)
         ? ImmutableList.of(Paths.get("I am not used"))
@@ -1305,10 +1290,6 @@ public class DefaultJavaLibraryTest {
     expect(platformTarget.getBootclasspathEntries()).andReturn(bootclasspathEntries)
         .anyTimes();
     replay(platformTarget);
-
-    if (projectFilesystem == null) {
-      projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    }
 
     // TODO(bolinfest): Create a utility that populates a BuildContext.Builder with fakes.
     return ImmutableBuildContext.builder()
@@ -1402,7 +1383,7 @@ public class DefaultJavaLibraryTest {
     public ImmutableList<String> buildAndGetCompileParameters() throws IOException {
       ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
       BuildRule javaLibrary = createJavaLibraryRule(projectFilesystem);
-      buildContext = createBuildContext(javaLibrary, /* bootclasspath */ null, projectFilesystem);
+      buildContext = createBuildContext(javaLibrary, /* bootclasspath */ null);
       List<Step> steps = javaLibrary.getBuildSteps(
           buildContext, new FakeBuildableContext());
       JavacStep javacCommand = lastJavacCommand(steps);

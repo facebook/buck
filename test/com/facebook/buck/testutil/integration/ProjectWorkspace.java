@@ -28,9 +28,9 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.config.Config;
 import com.facebook.buck.cli.Main;
 import com.facebook.buck.cli.TestRunning;
+import com.facebook.buck.config.Config;
 import com.facebook.buck.config.Configs;
 import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.event.BuckEvent;
@@ -207,7 +207,7 @@ public class ProjectWorkspace {
           // On NTFS length of path must be greater than 0 and less than 4096.
           if (attrs.size() > 0 && attrs.size() <= 4096) {
             String linkTo = new String(Files.readAllBytes(path), UTF_8);
-            Path linkToFile = null;
+            Path linkToFile;
             try {
               linkToFile = templatePath.resolve(linkTo);
             } catch (InvalidPathException e) {
@@ -445,7 +445,7 @@ public class ProjectWorkspace {
     ImmutableMap<String, String> sanizitedEnv = envBuilder.build();
 
     Main main = new Main(stdout, stderr, stdin, eventListeners.build());
-    int exitCode = 0;
+    int exitCode;
     try {
       exitCode = main.runMainWithExitCode(
           new BuildId(),

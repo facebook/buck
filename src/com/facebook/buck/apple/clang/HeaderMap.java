@@ -443,7 +443,7 @@ public class HeaderMap {
     Preconditions.checkArgument(offset >= 0 && offset <= stringBytesActualLength);
 
     StringBuffer buffer = new StringBuffer();
-    byte b = 0;
+    byte b;
     while ((offset < stringBytesActualLength) && ((b = stringBytes[offset]) != 0)) {
       buffer.append((char) b);
       offset++;
