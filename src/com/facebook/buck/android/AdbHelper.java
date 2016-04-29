@@ -426,27 +426,13 @@ public class AdbHelper {
     @Nullable
     protected abstract String matchForError(String line);
 
-    /**
-     * Look for a message indicating success - the error message is reset if this returns
-     * {@code true}.
-     * @param line
-     * @return {@code true} if this line indicates success.
-     */
-    protected boolean matchForSuccess(String line) {
-      return false;
-    }
-
     @Override
     public void processNewLines(String[] lines) {
         for (String line : lines) {
             if (line.length() > 0) {
-                if (matchForSuccess(line)) {
-                    errorMessage = null;
-                } else {
-                    String err = matchForError(line);
-                    if (err != null) {
-                      errorMessage = err;
-                    }
+                String err = matchForError(line);
+                if (err != null) {
+                  errorMessage = err;
                 }
             }
         }
