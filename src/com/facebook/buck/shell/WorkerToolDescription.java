@@ -28,6 +28,8 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.macros.ClasspathMacroExpander;
+import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroException;
 import com.facebook.buck.rules.macros.MacroExpander;
@@ -48,8 +50,10 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
 
   public static final MacroHandler MACRO_HANDLER = new MacroHandler(
       ImmutableMap.<String, MacroExpander>builder()
-        .put("location", new LocationMacroExpander())
-        .build());
+          .put("location", new LocationMacroExpander())
+          .put("classpath", new ClasspathMacroExpander())
+          .put("exe", new ExecutableMacroExpander())
+          .build());
 
   @Override
   public BuildRuleType getBuildRuleType() {
