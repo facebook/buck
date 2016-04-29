@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
@@ -60,22 +61,58 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
   }
 
   @Override
-  public Pair<RuleKey, ImmutableSet<SourcePath>> buildManifestKey(BuildRule rule) {
-    Builder builder = newInstance(rule);
-    builder.setReflectively("buck.key_type", "manifest");
-    ImmutableSet<SourcePath> inputs = builder.getInputsSoFar();
-    return new Pair<>(builder.build(), inputs);
+  public Pair<RuleKey, ImmutableSet<SourcePath>> buildManifestKey(BuildRule rule)
+      throws IOException {
+    SupportsDependencyFileRuleKey depFileSupportingRule = (SupportsDependencyFileRuleKey) rule;
+
+    return new ManifestKeyBuilder(rule).build(depFileSupportingRule.getPossibleInputSourcePaths());
   }
 
+  private class ManifestKeyBuilder {
+    private final BuilderWrapper builder;
+
+    public ManifestKeyBuilder(BuildRule rule) {
+      builder = new BuilderWrapper(newInstance(rule));
+      builder.setReflectively("buck.key_type", "manifest");
+    }
+
+    /**
+     * @return Pair of dep-file rule key and the members of possibleDepFileSourcePaths that actually
+     *         appeared in the dep file
+     * @throws IOException
+     */
+    public Pair<RuleKey, ImmutableSet<SourcePath>> build(
+        Optional<ImmutableSet<SourcePath>> possibleDepFileSourcePaths) throws IOException {
+      ImmutableSet<SourcePath> inputs = builder.getInputsSoFar();
+
+      ImmutableSet<SourcePath> depFileInputs = inputs;
+
+      if (possibleDepFileSourcePaths.isPresent()) {
+        Sets.SetView<SourcePath> nonDepFileInputs = Sets.difference(
+            inputs,
+            possibleDepFileSourcePaths.get());
+
+        builder.addToRuleKey(ImmutableSet.copyOf(nonDepFileInputs));
+
+        depFileInputs = ImmutableSet.copyOf(Sets.intersection(
+            inputs,
+            possibleDepFileSourcePaths.get()));
+      }
+
+      return new Pair<>(builder.build(), depFileInputs);
+    }
+  }
+
+
   private class DependencyFileRuleKeyBuilder {
-    private final Builder builder;
+    private final BuilderWrapper builder;
     private final BuildRule rule;
 
     public DependencyFileRuleKeyBuilder(BuildRule rule) {
       this.rule = rule;
 
       // Create a builder which records all `SourcePath`s which are possibly used by the rule.
-      builder = newInstance(rule);
+      builder = new BuilderWrapper(newInstance(rule));
     }
 
     public Pair<RuleKey, ImmutableSet<SourcePath>> build(
@@ -87,14 +124,10 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
       ImmutableList<SourcePath> depFileSourcePaths =
           getDepFileSourcePaths(depFileEntries, possibleDepFileSourcePaths);
 
-      addToRuleKey(nonDepFileSourcePaths);
-      addToRuleKey(depFileSourcePaths);
+      builder.addToRuleKey(nonDepFileSourcePaths);
+      builder.addToRuleKey(depFileSourcePaths);
 
-      ImmutableSet.Builder<SourcePath> allInputsBuilder = ImmutableSet.builder();
-      allInputsBuilder.addAll(nonDepFileSourcePaths);
-      allInputsBuilder.addAll(depFileSourcePaths);
-
-      return new Pair<>(builder.build(), allInputsBuilder.build());
+      return new Pair<>(builder.build(), ImmutableSet.copyOf(depFileSourcePaths));
     }
 
     private ImmutableList<SourcePath> getNonDepFileSourcePaths(
@@ -168,14 +201,30 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
       }
       return entryToSourcePathsBuilder.build();
     }
+  }
 
-    private void addToRuleKey(ImmutableCollection<SourcePath> sourcePaths) throws IOException {
+  private class BuilderWrapper {
+    private final Builder builder;
+
+    public BuilderWrapper(Builder builder) {
+      this.builder = builder;
+    }
+
+    public RuleKey build() {
+      return builder.build();
+    }
+
+    public ImmutableSet<SourcePath> getInputsSoFar() {
+      return builder.getInputsSoFar();
+    }
+
+    public void addToRuleKey(ImmutableCollection<SourcePath> sourcePaths) throws IOException {
       for (SourcePath sourcePath : sourcePaths) {
         addToRuleKey(sourcePath);
       }
     }
 
-    private void addToRuleKey(SourcePath sourcePath) throws IOException {
+    public void addToRuleKey(SourcePath sourcePath) throws IOException {
       // Add each `SourcePath` using `builder.setPath()`.  We can't use `builder.setSourcePath()`
       // here since the special `RuleKeyBuilder` sub-class that dep-file rule keys use intentionally
       // override `builder.setSourcePath()` to be a noop (and just record the inputs).
@@ -188,6 +237,11 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
             pathResolver.getAbsolutePath(sourcePath),
             pathResolver.getRelativePath(sourcePath));
       }
+    }
+
+    public BuilderWrapper setReflectively(String key, Object value) {
+      builder.setReflectively(key, value);
+      return this;
     }
   }
 }

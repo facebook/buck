@@ -2012,6 +2012,8 @@ public class CachingBuildEngineTest {
           cacheResult.getType(),
           equalTo(CacheResultType.HIT));
       Manifest manifest = loadManifest(fetchedManifest);
+      // The manifest should only contain the inputs that were in the dep file. The non-eligible
+      // dependency went toward computing the manifest key and thus doesn't need to be in the value.
       assertThat(
           manifest.toMap(),
           equalTo(
@@ -2019,9 +2021,7 @@ public class CachingBuildEngineTest {
                   depFileRuleKey,
                   ImmutableMap.of(
                       input.toString(),
-                      fileHashCache.get(filesystem.resolve(input)),
-                      input2.toString(),
-                      fileHashCache.get(filesystem.resolve(input2))))));
+                      fileHashCache.get(filesystem.resolve(input))))));
 
       // Verify that the artifact is also cached via the dep file rule key.
       Path fetchedArtifact = tmp.newFile("artifact").toPath();

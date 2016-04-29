@@ -1373,7 +1373,7 @@ public class CachingBuildEngine implements BuildEngine {
   }
 
   @VisibleForTesting
-  protected RuleKey getManifestRuleKey(BuildRule rule) {
+  protected RuleKey getManifestRuleKey(BuildRule rule) throws IOException {
     return ruleKeyFactories.getUnchecked(rule.getProjectFilesystem())
         .depFileRuleKeyBuilderFactory.buildManifestKey(rule).getFirst();
   }

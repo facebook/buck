@@ -471,6 +471,43 @@ public class DefaultJavaLibraryIntegrationTest {
     workspace.getBuildLog().assertTargetWasFetchedFromCacheByManifestMatch("//:biz");
   }
 
+  // Yes, we actually had the bug against which this test is guarding.
+  @Test
+  public void testAddedSourceFileInvalidatesManifest() throws IOException {
+
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "manifest_key", tmp);
+    workspace.setUp();
+    workspace.enableDirCache();
+
+    // Run `buck build` to warm the cache.
+    BuildTarget mainTarget = BuildTargetFactory.newInstance("//:main");
+    // Warm the used classes file
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", mainTarget.getFullyQualifiedName());
+    buildResult.assertSuccess("Successful build should exit with 0.");
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//:main");
+
+    // Run `buck clean` so that we're forced to fetch the dep file from the cache.
+    ProcessResult cleanResult = workspace.runBuckCommand("clean");
+    cleanResult.assertSuccess("Successful clean should exit with 0.");
+
+    // Add a new source file
+    workspace.writeContentsToPath(
+        "package com.example; public class NewClass { }",
+        "NewClass.java");
+
+    // Run `buck build` again.
+    ProcessResult buildResult2 = workspace.runBuckCommand(
+        "build",
+        mainTarget.getFullyQualifiedName());
+    buildResult2.assertSuccess("Successful build should exit with 0.");
+
+    // The new source file should result in a different manifest being downloaded and thus a
+    // cache miss.
+    workspace.getBuildLog().assertTargetBuiltLocally("//:main");
+  }
+
   @Test
   public void testClassUsageFileOutputProperly() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "class_usage_file", tmp);

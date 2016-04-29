@@ -30,8 +30,8 @@ public interface DependencyFileRuleKeyBuilderFactory {
 
   /**
    * @return a {@link RuleKey} for the given {@link BuildRule} using the given list of explicit
-   *     {@code inputs} and an {@link ImmutableSet} of the complete set of inputs used in
-   *     constructing that key.
+   *     {@code inputs} and an {@link ImmutableSet} of the members of possibleDepFileSourcePaths
+   *     that were actually used in constructing the key.
    */
   Pair<RuleKey, ImmutableSet<SourcePath>> build(
       BuildRule rule,
@@ -39,9 +39,10 @@ public interface DependencyFileRuleKeyBuilderFactory {
       ImmutableList<DependencyFileEntry> inputs) throws IOException;
 
   /**
-   * @return the {@link RuleKey} used to index the manifest database and the universe of inputs
-   *     used by the {@code rule}.
+   * @return the {@link RuleKey} used to index the manifest database and the list of inputs that
+   *         should appear in the manifest (i.e., those that appeared in the dependency file,
+   *         because all other inputs would be accounted for in the manifest key itself)
    */
-  Pair<RuleKey, ImmutableSet<SourcePath>> buildManifestKey(BuildRule rule);
+  Pair<RuleKey, ImmutableSet<SourcePath>> buildManifestKey(BuildRule rule) throws IOException;
 
 }
