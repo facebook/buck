@@ -137,7 +137,7 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule, Has
   /**
    * @return the shell command used to run the test.
    */
-  protected abstract ImmutableList<String> getShellCommand(ExecutionContext context, Path output);
+  protected abstract ImmutableList<String> getShellCommand(Path output);
 
   @Override
   public boolean hasTestResultFiles(ExecutionContext executionContext) {
@@ -156,7 +156,7 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule, Has
         new CxxTestStep(
             getProjectFilesystem(),
             ImmutableList.<String>builder()
-                .addAll(getShellCommand(executionContext, getPathToTestResults()))
+                .addAll(getShellCommand(getPathToTestResults()))
                 .addAll(args.get())
                 .build(),
             env.get(),
@@ -166,7 +166,6 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule, Has
   }
 
   protected abstract ImmutableList<TestResultSummary> parseResults(
-      ExecutionContext context,
       Path exitCode,
       Path output,
       Path results)
@@ -184,7 +183,6 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule, Has
         if (!isDryRun) {
           ImmutableList<TestResultSummary> resultSummaries =
               parseResults(
-                  executionContext,
                   getPathToTestExitCode(),
                   getPathToTestOutput(),
                   getPathToTestResults());

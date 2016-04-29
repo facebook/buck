@@ -110,9 +110,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   }
 
   @Override
-  protected ImmutableList<String> getShellCommand(
-      ExecutionContext context,
-      Path output) {
+  protected ImmutableList<String> getShellCommand(Path output) {
     return ImmutableList.<String>builder()
         .addAll(executable.getCommandPrefix(getResolver()))
         .add("--gtest_color=no")
@@ -136,7 +134,6 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
 
   @Override
   protected ImmutableList<TestResultSummary> parseResults(
-      ExecutionContext context,
       Path exitCode,
       Path output,
       Path results)

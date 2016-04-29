@@ -18,13 +18,13 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeTestRule;
@@ -85,14 +85,12 @@ public class CxxTestTest {
     }
 
     @Override
-    protected ImmutableList<String> getShellCommand(
-        ExecutionContext context, Path output) {
+    protected ImmutableList<String> getShellCommand(Path output) {
       return ImmutableList.of();
     }
 
     @Override
     protected ImmutableList<TestResultSummary> parseResults(
-        ExecutionContext context,
         Path exitCode,
         Path output,
         Path results)
@@ -115,8 +113,7 @@ public class CxxTestTest {
           }
 
           @Override
-          protected ImmutableList<String> getShellCommand(
-              ExecutionContext context, Path output) {
+          protected ImmutableList<String> getShellCommand(Path output) {
             return command;
           }
 
@@ -178,7 +175,6 @@ public class CxxTestTest {
 
           @Override
           protected ImmutableList<TestResultSummary> parseResults(
-              ExecutionContext context,
               Path exitCode,
               Path output,
               Path results)

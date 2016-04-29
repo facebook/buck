@@ -18,13 +18,13 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.RuleScheduleInfo;
@@ -33,8 +33,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -113,8 +111,6 @@ public class CxxGtestTestTest {
         /* testRuleTimeoutMs */ Optional.<Long>absent(),
         /* maxTestOutputSize */ 100L);
 
-    ExecutionContext context = TestExecutionContext.newInstance();
-
     for (String sample : samples) {
       Path exitCode = Paths.get("unused");
       Path output = workspace.resolve(Paths.get(sample)).resolve("output");
@@ -123,7 +119,7 @@ public class CxxGtestTestTest {
       List<TestResultSummary> expectedSummaries =
           mapper.readValue(summaries.toFile(), SUMMARIES_REFERENCE);
       ImmutableList<TestResultSummary> actualSummaries =
-          test.parseResults(context, exitCode, output, results);
+          test.parseResults(exitCode, output, results);
       assertEquals(sample, expectedSummaries, actualSummaries);
     }
 
