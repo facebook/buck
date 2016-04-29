@@ -30,7 +30,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -270,26 +269,9 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   }
 
   public static JavacOptions.Builder builder(JavacOptions options) {
-    Preconditions.checkNotNull(options);
-
     JavacOptions.Builder builder = JavacOptions.builder();
 
-    builder.setVerbose(options.isVerbose());
-    builder.setProductionBuild(options.isProductionBuild());
-
-    builder.setJavacPath(options.getJavacPath());
-    builder.setJavacJarPath(options.getJavacJarPath());
-    builder.setSpoolMode(options.getSpoolMode());
-    builder.setTrackClassUsageNotDisabled(options.getTrackClassUsageNotDisabled());
-    builder.setAnnotationProcessingParams(options.getAnnotationProcessingParams());
-    builder.setSafeAnnotationProcessors(options.getSafeAnnotationProcessors());
-    builder.putAllSourceToBootclasspath(options.getSourceToBootclasspath());
-    builder.setBootclasspath(options.getBootclasspath());
-    builder.setSourceLevel(options.getSourceLevel());
-    builder.setTargetLevel(options.getTargetLevel());
-    builder.addAllExtraArguments(options.getExtraArguments());
-
-    return builder;
+    return builder.from(options);
   }
 
   public final Optional<Path> getGeneratedSourceFolderName() {
