@@ -35,6 +35,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -131,13 +132,22 @@ public class HaskellLibrary extends NoopBuildRule implements HaskellCompileDep, 
     return libs.build();
   }
 
+  @VisibleForTesting
+  protected HaskellCompileRule requireCompileRule(
+      CxxPlatform cxxPlatform,
+      CxxSourceRuleFactory.PicType picType)
+      throws NoSuchBuildTargetException {
+    return (HaskellCompileRule) requireBuildRule(
+        cxxPlatform.getFlavor(),
+        getInterfaceType(picType).getFlavor());
+  }
+
   @Override
   public HaskellCompileInput getCompileInput(
       CxxPlatform cxxPlatform,
       CxxSourceRuleFactory.PicType picType)
       throws NoSuchBuildTargetException {
-    BuildRule rule =
-        requireBuildRule(cxxPlatform.getFlavor(), getInterfaceType(picType).getFlavor());
+    HaskellCompileRule rule = requireCompileRule(cxxPlatform, picType);
     return HaskellCompileInput.of(
         ImmutableList.<String>of(),
         ImmutableList.<SourcePath>of(new BuildTargetSourcePath(rule.getBuildTarget())));

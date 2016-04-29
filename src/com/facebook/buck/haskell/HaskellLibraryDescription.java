@@ -61,15 +61,15 @@ public class HaskellLibraryDescription implements
   private static final FlavorDomain<Type> LIBRARY_TYPE =
       FlavorDomain.from("Haskell Library Type", Type.class);
 
-  private final HaskellBuckConfig haskellBuckConfig;
+  private final HaskellConfig haskellConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public HaskellLibraryDescription(
-      HaskellBuckConfig haskellBuckConfig,
+      HaskellConfig haskellConfig,
       CxxBuckConfig cxxBuckConfig,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    this.haskellBuckConfig = haskellBuckConfig;
+    this.haskellConfig = haskellConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatforms = cxxPlatforms;
   }
@@ -97,9 +97,10 @@ public class HaskellLibraryDescription implements
         resolver,
         pathResolver,
         cxxPlatform,
-        haskellBuckConfig,
+        haskellConfig,
         picType,
         Optional.<String>absent(),
+        args.compilerFlags.or(ImmutableList.<String>of()),
         args.srcs.or(ImmutableList.<SourcePath>of()));
   }
 
@@ -166,7 +167,7 @@ public class HaskellLibraryDescription implements
         resolver,
         pathResolver,
         cxxPlatform,
-        haskellBuckConfig,
+        haskellConfig,
         Linker.LinkType.SHARED,
         ImmutableList.<String>of(),
         ImmutableList.<com.facebook.buck.rules.args.Arg>of(
@@ -255,7 +256,7 @@ public class HaskellLibraryDescription implements
       BuildTarget buildTarget,
       Function<Optional<String>, Path> cellRoots,
       Arg constructorArg) {
-    return HaskellDescriptionUtils.getParseTimeDeps(haskellBuckConfig, cxxPlatforms.getValues());
+    return HaskellDescriptionUtils.getParseTimeDeps(haskellConfig, cxxPlatforms.getValues());
   }
 
   protected enum Type implements FlavorConvertible {
@@ -283,6 +284,7 @@ public class HaskellLibraryDescription implements
   @SuppressFieldNotInitialized
   public static class Arg {
     public Optional<ImmutableList<SourcePath>> srcs;
+    public Optional<ImmutableList<String>> compilerFlags;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 

@@ -25,6 +25,17 @@
 {/template}
 
 /***/
+{template .compiler_flags_arg}
+{call buck.arg}
+  {param name: 'compiler_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  Flags to pass to the Haskell compiler when compiling this rule's sources.
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .exported_linker_flags_arg}
 {call buck.arg}
   {param name: 'exported_linker_flags' /}

@@ -33,6 +33,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreIterables;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -154,6 +155,11 @@ public class HaskellCompileRule extends AbstractBuildRule {
 
   public SourcePath getObjectDirPath() {
     return new BuildTargetSourcePath(getBuildTarget(), getObjectDir());
+  }
+
+  @VisibleForTesting
+  protected ImmutableList<String> getFlags() {
+    return flags;
   }
 
 }

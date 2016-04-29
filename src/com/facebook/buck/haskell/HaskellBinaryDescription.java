@@ -67,14 +67,14 @@ public class HaskellBinaryDescription implements
   private static final FlavorDomain<Type> BINARY_TYPE =
       FlavorDomain.from("Haskell Binary Type", Type.class);
 
-  private final HaskellBuckConfig haskellBuckConfig;
+  private final HaskellConfig haskellConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
 
   public HaskellBinaryDescription(
-      HaskellBuckConfig haskellBuckConfig,
+      HaskellConfig haskellConfig,
       FlavorDomain<CxxPlatform> cxxPlatforms, CxxPlatform defaultCxxPlatform) {
-    this.haskellBuckConfig = haskellBuckConfig;
+    this.haskellConfig = haskellConfig;
     this.cxxPlatforms = cxxPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
   }
@@ -168,11 +168,12 @@ public class HaskellBinaryDescription implements
                 resolver,
                 pathResolver,
                 cxxPlatform,
-                haskellBuckConfig,
+                haskellConfig,
                 depType == Linker.LinkableDepType.STATIC ?
                     CxxSourceRuleFactory.PicType.PDC :
                     CxxSourceRuleFactory.PicType.PIC,
                 args.main,
+                args.compilerFlags.or(ImmutableList.<String>of()),
                 args.srcs.or(ImmutableList.<SourcePath>of())));
     linkArgsBuilder.add(GlobArg.of(pathResolver, compileRule.getObjectDirPath(), "**/*.o"));
 
@@ -187,7 +188,7 @@ public class HaskellBinaryDescription implements
             resolver,
             pathResolver,
             cxxPlatform,
-            haskellBuckConfig,
+            haskellConfig,
             Linker.LinkType.EXECUTABLE,
             linkFlags,
             linkArgs,
@@ -216,7 +217,7 @@ public class HaskellBinaryDescription implements
       Function<Optional<String>, Path> cellRoots,
       Arg constructorArg) {
     return HaskellDescriptionUtils.getParseTimeDeps(
-        haskellBuckConfig,
+        haskellConfig,
         ImmutableList.of(
             cxxPlatforms
                 .getValue(buildTarget.getFlavors())
@@ -267,6 +268,7 @@ public class HaskellBinaryDescription implements
   @SuppressFieldNotInitialized
   public static class Arg {
     public Optional<ImmutableList<SourcePath>> srcs;
+    public Optional<ImmutableList<String>> compilerFlags;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<String> main;
     public Optional<Linker.LinkableDepType> linkStyle;

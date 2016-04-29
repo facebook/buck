@@ -66,9 +66,10 @@ public class HaskellDescriptionUtils {
       final BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
       final CxxPlatform cxxPlatform,
-      HaskellBuckConfig haskellBuckConfig,
+      HaskellConfig haskellConfig,
       final CxxSourceRuleFactory.PicType picType,
       Optional<String> main,
+      ImmutableList<String> flags,
       ImmutableList<SourcePath> sources)
       throws NoSuchBuildTargetException {
 
@@ -91,7 +92,7 @@ public class HaskellDescriptionUtils {
       }
     }.start();
 
-    Tool compiler = haskellBuckConfig.getCompiler().resolve(resolver);
+    Tool compiler = haskellConfig.getCompiler().resolve(resolver);
     ImmutableList<Arg> args =
         ImmutableList.<Arg>builder()
             .addAll(SourcePathArg.from(pathResolver, sources))
@@ -99,7 +100,8 @@ public class HaskellDescriptionUtils {
 
     ImmutableList<String> compileFlags =
         ImmutableList.<String>builder()
-            .addAll(haskellBuckConfig.getCompilerFlags())
+            .addAll(haskellConfig.getCompilerFlags())
+            .addAll(flags)
             .addAll(Iterables.concat(depFlags.values()))
             .build();
 
@@ -119,7 +121,7 @@ public class HaskellDescriptionUtils {
                     .build()),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
-        haskellBuckConfig.getCompiler().resolve(resolver),
+        haskellConfig.getCompiler().resolve(resolver),
         compileFlags,
         picType,
         main,
@@ -127,22 +129,29 @@ public class HaskellDescriptionUtils {
         args);
   }
 
+  protected static BuildTarget getCompileBuildTarget(
+      BuildTarget target,
+      CxxPlatform cxxPlatform,
+      CxxSourceRuleFactory.PicType picType) {
+    return target.withFlavors(
+            cxxPlatform.getFlavor(),
+            ImmutableFlavor.of(
+                "objects" + (picType == CxxSourceRuleFactory.PicType.PIC ? "-pic" : "")));
+  }
+
   public static HaskellCompileRule requireCompileRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
-      HaskellBuckConfig haskellBuckConfig,
+      HaskellConfig haskellConfig,
       CxxSourceRuleFactory.PicType picType,
       Optional<String> main,
+      ImmutableList<String> flags,
       ImmutableList<SourcePath> srcs)
       throws NoSuchBuildTargetException {
 
-    BuildTarget target =
-        params.getBuildTarget().withFlavors(
-            cxxPlatform.getFlavor(),
-            ImmutableFlavor.of(
-                "objects" + (picType == CxxSourceRuleFactory.PicType.PIC ? "-pic" : "")));
+    BuildTarget target = getCompileBuildTarget(params.getBuildTarget(), cxxPlatform, picType);
 
     // If this rule has already been generated, return it.
     Optional<HaskellCompileRule> existing =
@@ -158,9 +167,10 @@ public class HaskellDescriptionUtils {
             resolver,
             pathResolver,
             cxxPlatform,
-            haskellBuckConfig,
+            haskellConfig,
             picType,
             main,
+            flags,
             srcs));
   }
 
@@ -174,7 +184,7 @@ public class HaskellDescriptionUtils {
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
-      HaskellBuckConfig haskellBuckConfig,
+      HaskellConfig haskellConfig,
       Linker.LinkType linkType,
       ImmutableList<String> extraFlags,
       Iterable<Arg> linkerInputs,
@@ -182,14 +192,14 @@ public class HaskellDescriptionUtils {
       Linker.LinkableDepType depType)
       throws NoSuchBuildTargetException {
 
-    Tool linker = haskellBuckConfig.getLinker().resolve(resolver);
+    Tool linker = haskellConfig.getLinker().resolve(resolver);
     String name = target.getShortName();
 
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
 
     // Add the base flags from the `.buckconfig` first.
-    argsBuilder.addAll(StringArg.from(haskellBuckConfig.getLinkerFlags()));
+    argsBuilder.addAll(StringArg.from(haskellConfig.getLinkerFlags()));
 
     // Pass in the appropriate flags to link a shared library.
     if (linkType.equals(Linker.LinkType.SHARED)) {
@@ -238,9 +248,10 @@ public class HaskellDescriptionUtils {
                 resolver,
                 pathResolver,
                 cxxPlatform,
-                haskellBuckConfig,
+                haskellConfig,
                 CxxSourceRuleFactory.PicType.PIC,
                 Optional.<String>absent(),
+                ImmutableList.<String>of(),
                 ImmutableList.<SourcePath>of(
                     new BuildTargetSourcePath(emptyModule.getBuildTarget()))));
     BuildTarget emptyArchiveTarget =
@@ -282,24 +293,24 @@ public class HaskellDescriptionUtils {
             name,
             args,
             linkerArgs,
-            haskellBuckConfig.shouldCacheLinks()));
+            haskellConfig.shouldCacheLinks()));
   }
 
   /**
    * @return parse-time deps needed by Haskell descriptions.
    */
   public static Iterable<BuildTarget> getParseTimeDeps(
-      HaskellBuckConfig haskellBuckConfig,
+      HaskellConfig haskellConfig,
       Iterable<CxxPlatform> cxxPlatforms) {
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
 
     // Since this description generates haskell link rules, make sure the parsed includes any
     // of the linkers parse time deps.
-    deps.addAll(haskellBuckConfig.getLinker().getParseTimeDeps());
+    deps.addAll(haskellConfig.getLinker().getParseTimeDeps());
 
     // Since this description generates haskell compile rules, make sure the parsed includes any
     // of the compilers parse time deps.
-    deps.addAll(haskellBuckConfig.getCompiler().getParseTimeDeps());
+    deps.addAll(haskellConfig.getCompiler().getParseTimeDeps());
 
     // We use the C/C++ linker's Linker object to find out how to pass in the soname, so just add
     // all C/C++ platform parse time deps.

@@ -1,6 +1,9 @@
-java_library(
+java_immutables_library(
   name = 'testutil',
   srcs = glob(['*.java'], excludes=['*Test.java']),
+  immutable_types = [
+    'FakeHaskellConfig',
+  ],
   autodeps = True,
 )
 
