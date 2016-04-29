@@ -285,6 +285,12 @@ public class InterCellIntegrationTest {
   }
 
   @Test
+  public void xCellVisibilityPatternsBasedOnPublicBuildTargetsWork()
+      throws InterruptedException, BuildFileParseException, IOException, BuildTargetException {
+    parseTargetForXCellVisibility("//:public-target");
+  }
+
+  @Test
   public void xCellVisibilityPatternsBasedOnExplicitBuildTargetsWork()
       throws InterruptedException, BuildFileParseException, IOException, BuildTargetException {
     parseTargetForXCellVisibility("//:visible-target");

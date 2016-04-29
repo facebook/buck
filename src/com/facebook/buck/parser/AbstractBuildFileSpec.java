@@ -61,16 +61,20 @@ abstract class AbstractBuildFileSpec {
   @Value.Parameter
   abstract boolean isRecursive();
 
-  public static BuildFileSpec fromRecursivePath(Path basePath) {
-    return BuildFileSpec.of(basePath, /* recursive */ true);
+  // The absolute cell path in which the build spec exists
+  @Value.Parameter
+  abstract Path getCellPath();
+
+  public static BuildFileSpec fromRecursivePath(Path basePath, Path cellPath) {
+    return BuildFileSpec.of(basePath, /* recursive */ true, cellPath);
   }
 
-  public static BuildFileSpec fromPath(Path basePath) {
-    return BuildFileSpec.of(basePath, /* recursive */ false);
+  public static BuildFileSpec fromPath(Path basePath, Path cellPath) {
+    return BuildFileSpec.of(basePath, /* recursive */ false, cellPath);
   }
 
   public static BuildFileSpec fromBuildTarget(BuildTarget target) {
-    return fromPath(target.getBasePath());
+    return fromPath(target.getBasePath(), target.getCellPath());
   }
 
   /**

@@ -146,7 +146,9 @@ public class ParserBenchmark {
         ImmutableList.of(
             TargetNodePredicateSpec.of(
                 Predicates.alwaysTrue(),
-                BuildFileSpec.fromRecursivePath(Paths.get("")))),
+                BuildFileSpec.fromRecursivePath(
+                    Paths.get(""),
+                    cell.getRoot()))),
         /* ignoreBuckAutodepsFiles */ false);
   }
 }

@@ -8,3 +8,9 @@ export_file(
     'primary//sub2:',
   ],
 )
+
+export_file(
+  name = 'public',
+  src = 'hello-world.txt',
+  visibility = ['PUBLIC'],
+)

@@ -1057,6 +1057,7 @@ public class ProjectCommand extends BuildCommand {
       ImmutableSet<BuildTarget> passedInTargets,
       boolean needsFullRecursiveParse
   ) throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
+
     if (needsFullRecursiveParse) {
       return params.getParser()
           .buildTargetGraphForTargetNodeSpecs(
@@ -1067,7 +1068,9 @@ public class ProjectCommand extends BuildCommand {
               ImmutableList.of(
                   TargetNodePredicateSpec.of(
                       Predicates.<TargetNode<?>>alwaysTrue(),
-                      BuildFileSpec.fromRecursivePath(Paths.get("")))),
+                      BuildFileSpec.fromRecursivePath(
+                          Paths.get(""),
+                          params.getCell().getRoot()))),
               /* ignoreBuckAutodepsFiles */ false)
           .getTargetGraph();
     }

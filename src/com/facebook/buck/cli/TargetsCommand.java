@@ -346,7 +346,8 @@ public class TargetsCommand extends AbstractCommand {
                   TargetNodePredicateSpec.of(
                       Predicates.<TargetNode<?>>alwaysTrue(),
                       BuildFileSpec.fromRecursivePath(
-                          Paths.get("")))),
+                          Paths.get(""),
+                          params.getCell().getRoot()))),
               false,
               Parser.ApplyDefaultFlavorsMode.ENABLED);
       SortedMap<String, TargetNode<?>> matchingNodes = getMatchingNodes(
@@ -453,7 +454,8 @@ public class TargetsCommand extends AbstractCommand {
                         TargetNodePredicateSpec.of(
                             Predicates.<TargetNode<?>>alwaysTrue(),
                             BuildFileSpec.fromRecursivePath(
-                                Paths.get("")))),
+                                Paths.get(""),
+                                params.getCell().getRoot()))),
                     ignoreBuckAutodepsFiles,
                     Parser.ApplyDefaultFlavorsMode.ENABLED).getTargetGraph()).build());
       } else {

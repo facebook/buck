@@ -9,3 +9,7 @@ export_file(
   src = 'secondary//:hello',
 )
 
+export_file(
+  name = 'public-target',
+  src = 'secondary//:public',
+)

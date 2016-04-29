@@ -467,6 +467,7 @@ public class Parser {
     ImmutableList.Builder<ListenableFuture<ImmutableSet<BuildTarget>>>
         targetFutures = ImmutableList.builder();
     for (final TargetNodeSpec spec : specs) {
+      Cell cell = rootCell.getCell(spec.getBuildFileSpec().getCellPath());
       ImmutableSet<Path> buildFiles;
       try (SimplePerfEvent.Scope perfEventScope = SimplePerfEvent.scope(
           eventBus,
@@ -475,21 +476,21 @@ public class Parser {
           spec)) {
         // Iterate over the build files the given target node spec returns.
         buildFiles = spec.getBuildFileSpec().findBuildFiles(
-            rootCell,
+            cell,
             buildFileSearchMethod);
       }
 
       for (Path buildFile : buildFiles) {
         // Format a proper error message for non-existent build files.
-        if (!rootCell.getFilesystem().isFile(buildFile)) {
+        if (!cell.getFilesystem().isFile(buildFile)) {
           throw new MissingBuildFileException(
               spec,
-              rootCell.getFilesystem().getRootPath().relativize(buildFile));
+              cell.getFilesystem().getRootPath().relativize(buildFile));
         }
         // Build up a list of all target nodes from the build file.
         targetFutures.add(
             Futures.transform(
-                state.getAllTargetNodesJob(rootCell, buildFile),
+                state.getAllTargetNodesJob(cell, buildFile),
                 new Function<ImmutableSet<TargetNode<?>>,
                              ImmutableSet<BuildTarget>>() {
                   @Override

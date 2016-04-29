@@ -391,7 +391,7 @@ public class TestCommand extends BuildCommand {
                           return input.getType().isTestRule();
                         }
                       },
-                      BuildFileSpec.fromRecursivePath(Paths.get("")))),
+                      BuildFileSpec.fromRecursivePath(Paths.get(""), params.getCell().getRoot()))),
               ignoreBuckAutodepsFiles,
               Parser.ApplyDefaultFlavorsMode.ENABLED).getTargetGraph();
           explicitBuildTargets = ImmutableSet.of();

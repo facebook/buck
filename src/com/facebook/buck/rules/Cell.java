@@ -213,6 +213,22 @@ public class Cell {
     return enforceBuckPackageBoundaries;
   }
 
+  public Cell getCell(Path path) {
+    final Path cellPath = path;
+
+    try {
+      return cells.get(cellPath, new Callable<Cell>() {
+        @Override
+        public Cell call() throws Exception {
+          return cellLoader.load(cellPath);
+        }
+      });
+    } catch (ExecutionException | UncheckedExecutionException e) {
+      Throwables.propagateIfInstanceOf(e.getCause(), HumanReadableException.class);
+      throw Throwables.propagate(e);
+    }
+  }
+
   public Cell getCell(BuildTarget target) {
     final Path cellPath = target.getCellPath();
 

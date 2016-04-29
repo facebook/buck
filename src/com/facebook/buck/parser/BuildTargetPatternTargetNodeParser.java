@@ -37,14 +37,14 @@ public class BuildTargetPatternTargetNodeParser
   public TargetNodeSpec createForDescendants(Path cellPath, Path basePath) {
     return TargetNodePredicateSpec.of(
         Predicates.alwaysTrue(),
-        BuildFileSpec.fromRecursivePath(cellPath.resolve(basePath)));
+        BuildFileSpec.fromRecursivePath(cellPath.resolve(basePath), cellPath));
   }
 
   @Override
   public TargetNodeSpec createForChildren(Path cellPath, Path basePath) {
     return TargetNodePredicateSpec.of(
         Predicates.alwaysTrue(),
-        BuildFileSpec.fromPath(cellPath.resolve(basePath)));
+        BuildFileSpec.fromPath(cellPath.resolve(basePath), cellPath));
   }
 
   @Override

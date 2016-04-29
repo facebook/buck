@@ -2032,10 +2032,14 @@ public class ParserTest {
         ImmutableList.of(
             TargetNodePredicateSpec.of(
                 Predicates.alwaysTrue(),
-                BuildFileSpec.fromRecursivePath(Paths.get("bar"))),
+                BuildFileSpec.fromRecursivePath(
+                    Paths.get("bar"),
+                    cell.getRoot())),
             TargetNodePredicateSpec.of(
                 Predicates.alwaysTrue(),
-                BuildFileSpec.fromRecursivePath(Paths.get("foo")))),
+                BuildFileSpec.fromRecursivePath(
+                    Paths.get("foo"),
+                    cell.getRoot()))),
         SpeculativeParsing.of(true),
         Parser.ApplyDefaultFlavorsMode.ENABLED);
   }
@@ -2209,7 +2213,9 @@ public class ParserTest {
                 ImmutableList.of(
                     TargetNodePredicateSpec.of(
                         filter,
-                        BuildFileSpec.fromRecursivePath(Paths.get("")))),
+                        BuildFileSpec.fromRecursivePath(
+                            Paths.get(""),
+                            cell.getRoot()))),
                 /* ignoreBuckAutodepsFiles */ false)
                 .getTargetGraph().getNodes())
         .filter(filter)

@@ -62,7 +62,9 @@ public class BuildFileSpecTest {
     filesystem.touch(nestedBuildFile);
 
     // Test a non-recursive spec.
-    BuildFileSpec nonRecursiveSpec = BuildFileSpec.fromPath(buildFile.getParent());
+    BuildFileSpec nonRecursiveSpec = BuildFileSpec.fromPath(
+        buildFile.getParent(),
+        filesystem.getRootPath());
     ImmutableSet<Path> expectedBuildFiles = ImmutableSet.of(filesystem.resolve(buildFile));
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
     ImmutableSet<Path> actualBuildFiles = nonRecursiveSpec.findBuildFiles(
@@ -71,7 +73,9 @@ public class BuildFileSpecTest {
     assertEquals(expectedBuildFiles, actualBuildFiles);
 
     // Test a recursive spec.
-    BuildFileSpec recursiveSpec = BuildFileSpec.fromRecursivePath(buildFile.getParent());
+    BuildFileSpec recursiveSpec = BuildFileSpec.fromRecursivePath(
+        buildFile.getParent(),
+        filesystem.getRootPath());
     expectedBuildFiles =
         ImmutableSet.of(filesystem.resolve(buildFile), filesystem.resolve(nestedBuildFile));
     actualBuildFiles = recursiveSpec.findBuildFiles(
@@ -97,7 +101,9 @@ public class BuildFileSpecTest {
 
     // Test a recursive spec with an ignored dir.
 
-    BuildFileSpec recursiveSpec = BuildFileSpec.fromRecursivePath(buildFile.getParent());
+    BuildFileSpec recursiveSpec = BuildFileSpec.fromRecursivePath(
+        buildFile.getParent(),
+        filesystem.getRootPath());
     ImmutableSet<Path> expectedBuildFiles = ImmutableSet.of(filesystem.resolve(buildFile));
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
     ImmutableSet<Path> actualBuildFiles = recursiveSpec.findBuildFiles(
@@ -111,7 +117,9 @@ public class BuildFileSpecTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path buildFile = Paths.get("a", "BUCK");
 
-    BuildFileSpec recursiveSpec = BuildFileSpec.fromRecursivePath(buildFile.getParent());
+    BuildFileSpec recursiveSpec = BuildFileSpec.fromRecursivePath(
+        buildFile.getParent(),
+        filesystem.getRootPath());
     ImmutableSet<Path> expectedBuildFiles = ImmutableSet.of(filesystem.resolve(buildFile));
     FakeWatchmanClient fakeWatchmanClient = new FakeWatchmanClient(
         0,
@@ -157,7 +165,9 @@ public class BuildFileSpecTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path buildFile = Paths.get("a", "BUCK");
 
-    BuildFileSpec recursiveSpec = BuildFileSpec.fromRecursivePath(buildFile.getParent());
+    BuildFileSpec recursiveSpec = BuildFileSpec.fromRecursivePath(
+        buildFile.getParent(),
+        filesystem.getRootPath());
     FakeWatchmanClient fakeWatchmanClient = new FakeWatchmanClient(
         0,
         ImmutableMap.of(
@@ -212,7 +222,9 @@ public class BuildFileSpecTest {
     filesystem.mkdirs(nestedBuildFile.getParent());
     filesystem.touch(nestedBuildFile);
 
-    BuildFileSpec recursiveSpec = BuildFileSpec.fromRecursivePath(buildFile.getParent());
+    BuildFileSpec recursiveSpec = BuildFileSpec.fromRecursivePath(
+        buildFile.getParent(),
+        filesystem.getRootPath());
     FakeWatchmanClient timingOutWatchmanClient = new FakeWatchmanClient(
         // Pretend the query takes a very very long time.
         TimeUnit.SECONDS.toNanos(Long.MAX_VALUE),
