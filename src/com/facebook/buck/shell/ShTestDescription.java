@@ -30,6 +30,8 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
+import com.facebook.buck.rules.macros.ClasspathMacroExpander;
+import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroException;
 import com.facebook.buck.rules.macros.MacroExpander;
@@ -59,7 +61,9 @@ public class ShTestDescription implements
   private static final MacroHandler MACRO_HANDLER =
       new MacroHandler(
           ImmutableMap.<String, MacroExpander>of(
-              "location", new LocationMacroExpander()));
+              "location", new LocationMacroExpander(),
+              "classpath", new ClasspathMacroExpander(),
+              "exe", new ExecutableMacroExpander()));
 
   private final Optional<Long> defaultTestRuleTimeoutMs;
 
