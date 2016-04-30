@@ -16,13 +16,12 @@
 
 package com.facebook.buck.util;
 
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CoderResult;
-
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 
 /**
  * Implementation of {@link ListeningProcessExecutor.ProcessListener} which decodes
@@ -139,7 +138,7 @@ public abstract class AbstractCharsetProcessListener
    * @param result The {@link CoderResult} indicating encoder error
    */
   protected void onStdinEncoderError(CoderResult result) {
-
+    throw new RuntimeException(result.toString());
   }
 
   /**
