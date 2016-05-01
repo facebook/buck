@@ -61,6 +61,7 @@ public class UnixDomainSocket extends Socket {
   private final ReferenceCountedFileDescriptor fd;
   private final InputStream is;
   private final OutputStream os;
+  private boolean isConnected;
 
   /**
    * Creates a Unix domain socket bound to a path.
@@ -91,6 +92,12 @@ public class UnixDomainSocket extends Socket {
     this.fd = fd;
     this.is = new UnixDomainSocketInputStream();
     this.os = new UnixDomainSocketOutputStream();
+    this.isConnected = true;
+  }
+
+  @Override
+  public boolean isConnected() {
+    return isConnected;
   }
 
   @Override
@@ -123,6 +130,7 @@ public class UnixDomainSocket extends Socket {
       throw new IOException(e);
     } finally {
       fd.release();
+      isConnected = false;
     }
   }
 
