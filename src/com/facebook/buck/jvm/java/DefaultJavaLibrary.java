@@ -430,6 +430,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         ImmutableSetMultimap.<JavaLibrary, Path>builder()
             .putAll(getDeclaredClasspathEntries())
             .putAll(this, additionalClasspathEntries)
+            .put(this, Paths.get(System.getProperty("java.home")).resolve("lib").resolve("rt.jar"))
             .build();
 
 
