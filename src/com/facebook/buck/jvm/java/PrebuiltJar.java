@@ -35,6 +35,7 @@ import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -55,7 +56,7 @@ import java.nio.file.Path;
 @BuildsAnnotationProcessor
 public class PrebuiltJar extends AbstractBuildRule
     implements AndroidPackageable, ExportDependencies, HasClasspathEntries,
-    InitializableFromDisk<JavaLibrary.Data>, JavaLibrary {
+    InitializableFromDisk<JavaLibrary.Data>, JavaLibrary, SupportsInputBasedRuleKey {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 

@@ -90,6 +90,41 @@ public class PrebuiltJarIntegrationTest {
     assertTrue(Files.exists(workspace.getPath("buck-out/gen/jar_from_gen.jar")));
   }
 
+  @Test
+  public void testPrebuiltJarRebuildsWhenItsInputsChange() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "prebuilt",
+        temp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:jar_from_gen").assertSuccess();
+    assertTrue(Files.exists(workspace.getPath("buck-out/gen/jar_from_gen.jar")));
+
+    workspace.copyFile("tiny.jar", "junit.jar");
+
+    workspace.runBuckBuild("//:jar_from_gen").assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:genjar");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:jar_from_gen");
+  }
+
+  @Test
+  public void testPrebuiltJarDoesNotRebuildWhenDependentRulesChangeWhileProducingSameOutput()
+      throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "prebuilt",
+        temp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:jar_from_gen").assertSuccess();
+    assertTrue(Files.exists(workspace.getPath("buck-out/gen/jar_from_gen.jar")));
+
+    workspace.replaceFileContents("BUCK", "cp ", "cp  ");
+
+    workspace.runBuckBuild("//:jar_from_gen").assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:genjar");
+    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey("//:jar_from_gen");
+  }
+
   private BuildRuleEvent.Finished getRuleFinished(List<BuckEvent> capturedEvents) {
     BuildRuleEvent.Finished finished = null;
     for (BuckEvent capturedEvent : capturedEvents) {
