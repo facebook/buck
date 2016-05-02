@@ -244,7 +244,8 @@ public class PythonBinaryDescription implements
             // as runtime deps, so that we make to include other things we depend on in
             // the build.
             ImmutableSortedSet.copyOf(
-                Sets.difference(params.getDeclaredDeps().get(), componentDeps)));
+                Sets.difference(params.getDeclaredDeps().get(), componentDeps)),
+            pythonBuckConfig.shouldCacheBinaries());
 
       default:
         throw new IllegalStateException();

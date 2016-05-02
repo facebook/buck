@@ -291,6 +291,16 @@ public class PythonBinaryIntegrationTest {
     workspace.runBuckCommand("run", "//:main_module_bin").assertSuccess();
   }
 
+  @Test
+  public void disableCachingForPackagedBinaries() throws IOException {
+    assumeThat(packageStyle, Matchers.is(PythonBuckConfig.PackageStyle.STANDALONE));
+    workspace.enableDirCache();
+    workspace.runBuckBuild("-c", "python.cache_binaries=false", ":bin").assertSuccess();
+    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckBuild("-c", "python.cache_binaries=false", ":bin").assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:bin");
+  }
+
   private PythonBuckConfig getPythonBuckConfig() throws IOException {
     Config rawConfig = Configs.createDefaultConfig(tmp.getRootPath(), RawConfig.of());
     BuckConfig buckConfig =

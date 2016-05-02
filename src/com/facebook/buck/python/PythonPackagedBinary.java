@@ -58,6 +58,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   @AddToRuleKey
   private final ImmutableSet<String> preloadLibraries;
   private final ImmutableSortedSet<BuildRule> runtimeDeps;
+  private final boolean cache;
 
   protected PythonPackagedBinary(
       BuildRuleParams params,
@@ -71,7 +72,8 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
       String mainModule,
       PythonPackageComponents components,
       ImmutableSet<String> preloadLibraries,
-      ImmutableSortedSet<BuildRule> runtimeDeps) {
+      ImmutableSortedSet<BuildRule> runtimeDeps,
+      boolean cache) {
     super(params, resolver, pythonPlatform, mainModule, components, preloadLibraries, pexExtension);
     this.builder = builder;
     this.buildArgs = buildArgs;
@@ -81,6 +83,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     this.components = components;
     this.preloadLibraries = preloadLibraries;
     this.runtimeDeps = runtimeDeps;
+    this.cache = cache;
   }
 
   @Override
@@ -143,6 +146,11 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     return runtimeDeps;
+  }
+
+  @Override
+  public boolean isCacheable() {
+    return cache;
   }
 
 }

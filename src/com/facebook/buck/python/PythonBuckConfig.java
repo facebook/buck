@@ -282,6 +282,10 @@ public class PythonBuckConfig {
     }
   }
 
+  public boolean shouldCacheBinaries() {
+    return delegate.getBooleanValue(SECTION, "cache_binaries", true);
+  }
+
   public PackageStyle getPackageStyle() {
     return delegate.getEnum(SECTION, "package_style", PackageStyle.class)
         .or(PackageStyle.STANDALONE);
