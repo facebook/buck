@@ -130,7 +130,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   private final boolean trackClassUsage;
   @AddToRuleKey
   @SuppressWarnings("PMD.UnusedPrivateField")
-  private final JarArchiveDependencySupplier abiClasspath;
+  private final Supplier<ImmutableSortedSet<SourcePath>> abiClasspath;
   private final ImmutableSortedSet<BuildRule> deps;
   @Nullable private DependencyFileInputListBuilder depFileListBuilder;
 
@@ -201,15 +201,13 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         providedDeps,
         abiJar,
         trackClassUsage,
-        new JarArchiveDependencySupplier(
-            Suppliers.memoize(
+        Suppliers.memoize(
                 new Supplier<ImmutableSortedSet<SourcePath>>() {
                   @Override
                   public ImmutableSortedSet<SourcePath> get() {
                     return JavaLibraryRules.getAbiInputs(params.getDeps());
                   }
                 }),
-            params.getProjectFilesystem()),
         additionalClasspathEntries,
         compileStepFactory,
         resourcesRoot,
@@ -229,7 +227,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSortedSet<BuildRule> providedDeps,
       SourcePath abiJar,
       boolean trackClassUsage,
-      final JarArchiveDependencySupplier abiClasspath,
+      final Supplier<ImmutableSortedSet<SourcePath>> abiClasspath,
       ImmutableSet<Path> additionalClasspathEntries,
       CompileToJarStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
@@ -273,7 +271,12 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
     this.abiJar = abiJar;
     this.trackClassUsage = trackClassUsage;
-    this.abiClasspath = abiClasspath;
+
+    if (this.trackClassUsage) {
+      this.abiClasspath = new JarArchiveDependencySupplier(abiClasspath, getProjectFilesystem());
+    } else {
+      this.abiClasspath = abiClasspath;
+    }
     this.deps = params.getDeps();
     if (!srcs.isEmpty() || !resources.isEmpty()) {
       this.outputJar = Optional.of(getOutputJarPath(getBuildTarget()));
@@ -631,7 +634,10 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() throws IOException {
-    return Optional.<ImmutableSet<SourcePath>>of(abiClasspath.getArchiveMembers(getResolver()));
+    Preconditions.checkState(useDependencyFileRuleKeys());
+
+    return Optional.<ImmutableSet<SourcePath>>of(
+        ((JarArchiveDependencySupplier) abiClasspath).getArchiveMembers(getResolver()));
   }
 
   @Override
