@@ -153,9 +153,12 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
   private void createDirectory(String name) throws IOException {
     JavaFileObject fileObject = createJavaMemoryFileObject(name, JavaFileObject.Kind.OTHER);
     jarFileSemaphore.acquireUninterruptibly();
-    jarOutputStream.putNextEntry(createEntry(fileObject.getName()));
-    jarOutputStream.closeEntry();
-    jarFileSemaphore.release();
+    try {
+      jarOutputStream.putNextEntry(createEntry(fileObject.getName()));
+      jarOutputStream.closeEntry();
+    } finally {
+      jarFileSemaphore.release();
+    }
   }
 
   private JavaFileObject createJavaMemoryFileObject(String path, JavaFileObject.Kind kind) {
