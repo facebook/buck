@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY e17b9fa26c33b2339b9bff1202ea38aac4b9216c #@#
+#@# GENERATED FILE: DO NOT MODIFY 430752b15036d64f4979ac06e8f575b08ba4254b #@#
 {
   "aar-integration" : {
     "deps" : [
@@ -65,6 +65,7 @@
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:Sha1HashCode",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/util:constants",
@@ -91,6 +92,7 @@
       "//src/com/facebook/buck/dalvik:dalvik",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:Sha1HashCode",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/step:step",
@@ -159,6 +161,7 @@
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
+      "//src/com/facebook/buck/rules:Sha1HashCode",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules:rules",

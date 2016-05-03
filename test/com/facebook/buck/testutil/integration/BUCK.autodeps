@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY a0b0cef59e12d449aee82ab41fbaf4fe91d7bec9 #@#
+#@# GENERATED FILE: DO NOT MODIFY 3997de0b310adc2f1a3e89aa524df1836b254676 #@#
 {
   "integration" : {
     "deps" : [
@@ -31,6 +31,7 @@
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:Sha1HashCode",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:types",
       "//src/com/facebook/buck/test:test",

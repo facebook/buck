@@ -1,9 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY d66c0d8c60bdd82676a263f66f84485bd9a83909 #@#
+#@# GENERATED FILE: DO NOT MODIFY bb763b8964a5e6c6565115a34527a90555d4b6a2 #@#
 {
   "keys" : {
     "deps" : [
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:Sha1HashCode",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules:rules",

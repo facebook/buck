@@ -44,7 +44,7 @@ public interface HasAndroidResourceDeps extends HasBuildTarget {
             hasher.putUnencodedChars(dep.getRDotJavaPackage());
             hasher.putChar('\0');
           }
-          return Sha1HashCode.of(hasher.hash().toString());
+          return Sha1HashCode.fromHashCode(hasher.hash());
         }
       };
 

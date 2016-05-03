@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 2b88232e3b5a05f40bf51387fcd82c9d42974501 #@#
+#@# GENERATED FILE: DO NOT MODIFY ff9ab4bda9e03045be03ab264944801001c7bb5d #@#
 {
   "keys" : {
     "deps" : [
@@ -8,6 +8,7 @@
     "exported_deps" : [
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:Sha1HashCode",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/util/cache:cache",

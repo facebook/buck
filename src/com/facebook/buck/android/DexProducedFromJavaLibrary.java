@@ -246,6 +246,6 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
       hasher.putUnencodedChars(entry.getValue().toString());
       hasher.putByte((byte) 0);
     }
-    return Sha1HashCode.of(hasher.hash().toString());
+    return Sha1HashCode.fromHashCode(hasher.hash());
   }
 }

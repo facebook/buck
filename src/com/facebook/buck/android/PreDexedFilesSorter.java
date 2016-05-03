@@ -261,7 +261,7 @@ public class PreDexedFilesSorter {
         // The only thing unique to canary classes is the index, which is captured by canaryDirName.
         Hasher hasher = Hashing.sha1().newHasher();
         hasher.putString(canaryDirName, Charsets.UTF_8);
-        return Sha1HashCode.of(hasher.hash().toString());
+        return Sha1HashCode.fromHashCode(hasher.hash());
       }
     };
   }

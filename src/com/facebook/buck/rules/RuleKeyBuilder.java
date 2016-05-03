@@ -381,7 +381,7 @@ public class RuleKeyBuilder {
       }
     } else if (val instanceof Sha1HashCode) {
       Sha1HashCode hashCode = (Sha1HashCode) val;
-      setSingleValue(hashCode.getHash());
+      feed(hashCode.getBytes());
     } else if (val instanceof byte[]) {
       byte[] bytes = (byte[]) val;
       ruleKeyLogger.addValue(bytes);

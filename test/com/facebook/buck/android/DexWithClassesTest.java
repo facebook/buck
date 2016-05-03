@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
@@ -56,7 +57,7 @@ public class DexWithClassesTest {
             /* linearAllocEstimate */ 1600,
             /* classNamesToHashes */ ImmutableSortedMap.of(
                 "com/example/Main",
-                HashCode.fromString("cafebabe"))));
+                HashCode.fromString(Strings.repeat("cafebabe", 5)))));
 
     DexWithClasses dexWithClasses = DexWithClasses.TO_DEX_WITH_CLASSES.apply(dexFromJavaLibrary);
     assertEquals(

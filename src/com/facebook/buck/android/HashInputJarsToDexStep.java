@@ -95,7 +95,7 @@ public class HashInputJarsToDexStep extends AbstractExecutionStep
                 }
               }
             });
-        dexInputsToHashes.put(path, Sha1HashCode.of(hasher.hash().toString()));
+        dexInputsToHashes.put(path, Sha1HashCode.fromHashCode(hasher.hash()));
       } catch (IOException e) {
         context.logError(e, "Error hashing smart dex input: %s", path);
         return 1;

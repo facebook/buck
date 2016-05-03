@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 94bee50a1ec37ba9aeb40904cf9332c9ddd90340 #@#
+#@# GENERATED FILE: DO NOT MODIFY 3fda2b577926f95c48eb324059fcdec559780bed #@#
 {
   "exceptions" : {
     "deps" : [
@@ -90,6 +90,7 @@
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
+      "//src/com/facebook/buck/rules:Sha1HashCode",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules/args:args",
@@ -147,6 +148,7 @@
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/jvm/java/classes:classes",
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:Sha1HashCode",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/shell:steps",
