@@ -84,14 +84,6 @@ public class MorePaths {
     return pathWithUnixSeparators(path) + "/";
   }
 
-  /**
-   * @param toMakeAbsolute The {@link Path} to act upon.
-   * @return The Path, made absolute and normalized.
-   */
-  public static Path absolutify(Path toMakeAbsolute) {
-    return toMakeAbsolute.toAbsolutePath().normalize();
-  }
-
   public static Path getParentOrEmpty(Path path) {
     Path parent = path.getParent();
     if (parent == null) {

@@ -619,14 +619,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
   }
 
-  protected int getHttpUploadFinishedCount() {
-    return httpArtifactUploadedCount.get() + httpArtifactUploadFailedCount.get();
-  }
-
-  protected int getHttpUploadScheduledCount() {
-    return httpArtifactUploadsScheduledCount.get();
-  }
-
   protected Optional<String> renderHttpUploads() {
     int scheduled = httpArtifactUploadsScheduledCount.get();
     int complete = httpArtifactUploadedCount.get();

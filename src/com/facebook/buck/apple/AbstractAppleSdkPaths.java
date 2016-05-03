@@ -103,15 +103,6 @@ abstract class AbstractAppleSdkPaths {
     return sourceTreeRootsFunction().apply(path.getSourceTree()).resolve(path.getPath());
   }
 
-  public Function<SourceTreePath, Path> resolveFunction() {
-    return new Function<SourceTreePath, Path>() {
-      @Override
-      public Path apply(SourceTreePath input) {
-        return resolve(input);
-      }
-    };
-  }
-
   public Function<String, String> replaceSourceTreeReferencesFunction() {
     return new Function<String, String>() {
       @Override

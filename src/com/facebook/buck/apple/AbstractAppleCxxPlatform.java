@@ -21,13 +21,12 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
+
+import org.immutables.value.Value;
 
 import java.nio.file.Path;
 import java.util.Set;
-
-import org.immutables.value.Value;
 
 /**
  * Adds Apple-specific tools to {@link CxxPlatform}.
@@ -35,14 +34,6 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractAppleCxxPlatform implements FlavorConvertible {
-
-  public static final Function<AppleCxxPlatform, AppleSdkPaths> TO_APPLE_SDK_PATHS =
-      new Function<AppleCxxPlatform, AppleSdkPaths>() {
-        @Override
-        public AppleSdkPaths apply(AppleCxxPlatform platform) {
-          return platform.getAppleSdkPaths();
-        }
-      };
 
   public abstract CxxPlatform getCxxPlatform();
 

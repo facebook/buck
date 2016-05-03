@@ -16,10 +16,7 @@
 
 package com.facebook.buck.model;
 
-import com.google.common.collect.ComparisonChain;
-
 import java.lang.ref.WeakReference;
-import java.util.Comparator;
 import java.util.Objects;
 
 /**
@@ -98,23 +95,4 @@ public class Pair<FIRST, SECOND> {
     return string;
   }
 
-  /**
-   * Provides a comparison using the natural ordering of contained types (which my be comparable).
-   */
-  public static <FIRST extends Comparable<FIRST>, SECOND extends Comparable<SECOND>>
-      Comparator<Pair<FIRST, SECOND>> comparator() {
-    return new Comparator<Pair<FIRST, SECOND>>() {
-      @Override
-      public int compare(Pair<FIRST, SECOND> o1, Pair<FIRST, SECOND> o2) {
-        if (o1 == o2) {
-          return 0;
-        }
-
-        return ComparisonChain.start()
-            .compare(o1.first, o2.first)
-            .compare(o1.second, o2.second)
-            .result();
-      }
-    };
-  }
 }

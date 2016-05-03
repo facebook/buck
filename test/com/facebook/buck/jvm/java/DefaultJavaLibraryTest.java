@@ -20,6 +20,8 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -35,7 +37,6 @@ import com.facebook.buck.io.HashingDeterministicJarWriter;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.jvm.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -229,8 +230,10 @@ public class DefaultJavaLibraryTest {
         parameters.indexOf(annotationScenarioGenPath));
 
     for (String parameter : parameters) {
-      assertTrue("Expected no custom annotation options.", !parameter.startsWith("-A") ||
-          parameter.startsWith("-A" + AbiWriterProtocol.PARAM_ABI_OUTPUT_FILE));
+      assertThat(
+          "Expected no custom annotation options.",
+          parameter.startsWith("-A"),
+          is(false));
     }
   }
 
@@ -358,7 +361,7 @@ public class DefaultJavaLibraryTest {
 
     assertThat(
         ((HasClasspathEntries) parent).getTransitiveClasspathDeps(),
-        Matchers.equalTo(
+        equalTo(
             ImmutableSet.of(
                 getJavaLibrary(libraryOne),
                 getJavaLibrary(libraryTwo),
@@ -588,7 +591,7 @@ public class DefaultJavaLibraryTest {
 
     assertThat(
         getJavaLibrary(parent).getTransitiveClasspathDeps(),
-        Matchers.equalTo(
+        equalTo(
             ImmutableSet.<JavaLibrary>builder()
                 .add(getJavaLibrary(included))
                 .add(getJavaLibrary(notIncluded))
@@ -627,7 +630,6 @@ public class DefaultJavaLibraryTest {
     try {
       createDefaultJavaLibraryRuleWithAbiKey(
           buildTarget,
-          // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
           /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
           /* deps */ ImmutableSortedSet.<BuildRule>of(),
           /* exportedDeps */ ImmutableSortedSet.of(genrule),
@@ -770,7 +772,7 @@ public class DefaultJavaLibraryTest {
             pathResolver,
             unaffectedRuleKeyBuilderFactory);
     RuleKey unaffectedRuleKey = factory.build(library);
-    assertThat(originalRuleKey, Matchers.equalTo(unaffectedRuleKey));
+    assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
     // Now actually modify the source, which should make the input-based rule key change.
     resolver =
@@ -794,7 +796,7 @@ public class DefaultJavaLibraryTest {
             pathResolver,
             affectedRuleKeyBuilderFactory);
     RuleKey affectedRuleKey = factory.build(library);
-    assertThat(originalRuleKey, Matchers.not(Matchers.equalTo(affectedRuleKey)));
+    assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
 
   /**
@@ -856,7 +858,7 @@ public class DefaultJavaLibraryTest {
             pathResolver,
             unaffectedRuleKeyBuilderFactory);
     RuleKey unaffectedRuleKey = factory.build(library);
-    assertThat(originalRuleKey, Matchers.equalTo(unaffectedRuleKey));
+    assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
     // Now actually change the Java library dependency's ABI JAR.  This *should* affect the
     // input-based rule key of the consuming java library.
@@ -884,7 +886,7 @@ public class DefaultJavaLibraryTest {
             pathResolver,
             affectedRuleKeyBuilderFactory);
     RuleKey affectedRuleKey = factory.build(library);
-    assertThat(originalRuleKey, Matchers.not(Matchers.equalTo(affectedRuleKey)));
+    assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
 
   /**
@@ -957,7 +959,7 @@ public class DefaultJavaLibraryTest {
             pathResolver,
             unaffectedRuleKeyBuilderFactory);
     RuleKey unaffectedRuleKey = factory.build(library);
-    assertThat(originalRuleKey, Matchers.equalTo(unaffectedRuleKey));
+    assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
     // Now actually change the exproted Java library dependency's ABI JAR.  This *should* affect
     // the input-based rule key of the consuming java library.
@@ -989,7 +991,7 @@ public class DefaultJavaLibraryTest {
             pathResolver,
             affectedRuleKeyBuilderFactory);
     RuleKey affectedRuleKey = factory.build(library);
-    assertThat(originalRuleKey, Matchers.not(Matchers.equalTo(affectedRuleKey)));
+    assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
 
   /**
@@ -1070,7 +1072,7 @@ public class DefaultJavaLibraryTest {
             pathResolver,
             unaffectedRuleKeyBuilderFactory);
     RuleKey unaffectedRuleKey = factory.build(library);
-    assertThat(originalRuleKey, Matchers.equalTo(unaffectedRuleKey));
+    assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
     // Now actually change the exproted Java library dependency's ABI JAR.  This *should* affect
     // the input-based rule key of the consuming java library.
@@ -1106,7 +1108,7 @@ public class DefaultJavaLibraryTest {
             pathResolver,
             affectedRuleKeyBuilderFactory);
     RuleKey affectedRuleKey = factory.build(library);
-    assertThat(originalRuleKey, Matchers.not(Matchers.equalTo(affectedRuleKey)));
+    assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
 
   private static BuildRule createDefaultJavaLibraryRuleWithAbiKey(

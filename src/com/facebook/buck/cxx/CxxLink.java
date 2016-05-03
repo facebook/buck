@@ -146,10 +146,6 @@ public class CxxLink
     return linker;
   }
 
-  public Path getOutput() {
-    return output;
-  }
-
   public ImmutableList<Arg> getArgs() {
     return args;
   }

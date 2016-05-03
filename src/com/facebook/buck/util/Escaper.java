@@ -269,18 +269,6 @@ public final class Escaper {
   }
 
   /**
-   * Platform-aware Path escaping {@link com.google.common.base.Function Function} which can be
-   * passed to {@link com.google.common.collect.Iterables#transform Iterables.transform()}
-   */
-  public static final Function<Path, String> PATH_FOR_C_INCLUDE_STRING_ESCAPER =
-      new Function<Path, String>() {
-        @Override
-        public String apply(Path input) {
-          return escapePathForCIncludeString(input);
-        }
-      };
-
-  /**
    * Escapes forward slashes in a Path as a String that is safe to consume with other tools (such
    * as gcc).  On Unix systems, this is equivalent to {@link java.nio.file.Path Path.toString()}.
    * @param path the Path to escape

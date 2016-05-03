@@ -41,16 +41,6 @@ public class FileFinder {
   };
 
   /**
-   * Filter that tests if a file is executable.
-   */
-  public static final Function<Path, Boolean> IS_EXECUTABLE = new Function<Path, Boolean>() {
-    @Override
-    public Boolean apply(Path path) {
-      return Files.isExecutable(path);
-    }
-  };
-
-  /**
    * Filter that tests if a file is a regular file.
    */
   public static final Function<Path, Boolean> IS_REGULAR_FILE = new Function<Path, Boolean>() {

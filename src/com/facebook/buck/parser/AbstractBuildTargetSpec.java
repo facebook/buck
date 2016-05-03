@@ -19,7 +19,6 @@ package com.facebook.buck.parser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
@@ -33,14 +32,6 @@ import org.immutables.value.Value;
 @Value.Immutable(builder = false)
 @BuckStyleImmutable
 abstract class AbstractBuildTargetSpec implements TargetNodeSpec {
-
-  public static final Function<BuildTarget, BuildTargetSpec> TO_BUILD_TARGET_SPEC =
-      new Function<BuildTarget, BuildTargetSpec>() {
-        @Override
-        public BuildTargetSpec apply(BuildTarget target) {
-          return BuildTargetSpec.from(target);
-        }
-      };
 
   @Value.Parameter
   public abstract BuildTarget getBuildTarget();

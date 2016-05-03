@@ -37,6 +37,7 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -678,6 +679,7 @@ public class TypeCoercerTest {
             invalidListOfStrings));
   }
 
+  @SuppressFieldNotInitialized
   static class TestFields {
     public ImmutableMap<String, ImmutableList<Integer>> stringMapOfLists;
     public ImmutableList<ImmutableSet<Integer>> listOfSets;

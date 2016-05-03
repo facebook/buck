@@ -20,7 +20,6 @@ import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -41,11 +40,6 @@ abstract class AbstractDependencyFileEntry {
 
   @Value.Parameter
   public abstract Optional<Path> pathWithinArchive();
-
-  @JsonIgnore
-  public boolean isArchiveMember() {
-    return pathWithinArchive().isPresent();
-  }
 
   @Value.Check
   protected void check() {

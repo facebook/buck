@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 962b0950e96c3ee698ddba247e66470c1341a1e4 #@#
+#@# GENERATED FILE: DO NOT MODIFY e9e68b59ecf75009fccf728e38353f1e845fd347 #@#
 {
   "io" : {
     "deps" : [
@@ -27,12 +27,9 @@
     "exported_deps" : [ ]
   },
   "testutil" : {
-    "deps" : [
-      "//third-party/java/jsr:jsr305"
-    ],
+    "deps" : [ ],
     "exported_deps" : [
       "//src/com/facebook/buck/io:executable-finder",
-      "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/io:watchman",
       "//third-party/java/guava:guava"
     ]

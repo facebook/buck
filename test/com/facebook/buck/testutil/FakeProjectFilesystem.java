@@ -85,9 +85,6 @@ import java.util.zip.ZipInputStream;
 
 import javax.annotation.Nullable;
 
-import okio.Buffer;
-import okio.BufferedSource;
-
 // TODO(natthu): Implement methods that throw UnsupportedOperationException.
 public class FakeProjectFilesystem extends ProjectFilesystem {
 
@@ -585,13 +582,6 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     return new ByteArrayInputStream(contents);
   }
 
-
-  @Override
-  public BufferedSource newSource(Path pathRelativeToProjectRoot) throws IOException {
-    Buffer buffer = new Buffer();
-    buffer.write(fileContents.get(normalizePathToProjectRoot(pathRelativeToProjectRoot)));
-    return buffer;
-  }
 
   private Path normalizePathToProjectRoot(Path pathRelativeToProjectRoot)
     throws NoSuchFileException {

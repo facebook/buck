@@ -94,10 +94,6 @@ public class VersionedTool implements Tool {
         .setReflectively("version", version);
   }
 
-  public static Function<Path, VersionedTool> fromPath(final String name, final String version) {
-    return fromPathWithParams(name, version, ImmutableList.<String>of());
-  }
-
   public static Function<Path, VersionedTool> fromPathWithParams(
       final String name,
       final String version,

@@ -184,11 +184,6 @@ public class TargetsCommand extends AbstractCommand {
     return arguments;
   }
 
-  @VisibleForTesting
-  void setArguments(List<String> arguments) {
-    this.arguments = arguments;
-  }
-
   public ImmutableSet<String> getTypes() {
     return types.get();
   }

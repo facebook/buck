@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY cef25da0f2b30713c69ad3113127d7990d656d10 #@#
+#@# GENERATED FILE: DO NOT MODIFY a54849c76ac7995507cb4dcfbb1c05089619d7bf #@#
 {
   "fakepackagefinder" : {
     "deps" : [ ],
@@ -36,7 +36,6 @@
       "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/jvm/java:steps",
       "//src/com/facebook/buck/jvm/java:support",
-      "//src/com/facebook/buck/jvm/java/abi:protocol",
       "//src/com/facebook/buck/jvm/java/runner:runner",
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/model:model",

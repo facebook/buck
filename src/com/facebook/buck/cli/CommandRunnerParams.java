@@ -182,17 +182,4 @@ class CommandRunnerParams {
     return actionGraphCache;
   }
 
-  protected ExecutionContext createExecutionContext() {
-    return ExecutionContext.builder()
-        .setConsole(console)
-        .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
-        .setEventBus(eventBus)
-        .setPlatform(platform)
-        .setEnvironment(environment)
-        .setJavaPackageFinder(javaPackageFinder)
-        .setObjectMapper(objectMapper)
-        .setExecutors(executors)
-        .build();
-  }
-
 }

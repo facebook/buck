@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 4600a3c2c8140db1610282904eb047ac55893b80 #@#
+#@# GENERATED FILE: DO NOT MODIFY ba37bcc5aa2e901eb6316305dba0ea2528aff101 #@#
 {
   "rules" : {
     "deps" : [
@@ -13,7 +13,8 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/step:step",
-      "//third-party/java/guava:guava"
+      "//third-party/java/guava:guava",
+      "//third-party/java/infer-annotations:infer-annotations"
     ]
   },
   "steps" : {

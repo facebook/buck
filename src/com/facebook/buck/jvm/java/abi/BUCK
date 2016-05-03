@@ -1,10 +1,6 @@
-PROTOCOL_SRCS = [
-  'AbiWriterProtocol.java',
-]
-
 java_library(
   name = 'abi',
-  srcs = glob(['*.java'], excludes = PROTOCOL_SRCS + ['ApiStubber.java']),
+  srcs = glob(['*.java'], excludes = ['ApiStubber.java']),
   tests = [
     '//test/com/facebook/buck/jvm/java/abi:abi',
   ],
@@ -12,14 +8,6 @@ java_library(
   visibility = [
     '//src/com/facebook/buck/jvm/java:steps',
     '//test/com/facebook/buck/jvm/java/abi:abi'
-  ],
-)
-
-java_library(
-  name = 'protocol',
-  srcs = PROTOCOL_SRCS,
-  visibility = [
-    'PUBLIC',
   ],
 )
 

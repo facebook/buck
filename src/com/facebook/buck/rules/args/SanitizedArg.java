@@ -103,8 +103,4 @@ public class SanitizedArg extends Arg {
     return converted.build();
   }
 
-  public static ImmutableList<Arg> from(Function<String, String> sanitizer, String... args) {
-    return from(sanitizer, ImmutableList.copyOf(args));
-  }
-
 }

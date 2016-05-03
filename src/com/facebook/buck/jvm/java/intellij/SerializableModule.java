@@ -157,7 +157,6 @@ final class SerializableModule {
   public static class SourceFolder {
 
     static final SourceFolder SRC = new SourceFolder("file://$MODULE_DIR$/src", false);
-    static final SourceFolder TESTS = new SourceFolder("file://$MODULE_DIR$/tests", true);
     static final SourceFolder GEN = new SourceFolder("file://$MODULE_DIR$/gen", false);
 
     @JsonProperty

@@ -46,24 +46,6 @@ public class FindAndReplaceStep implements Step {
     this.replacer = replacer;
   }
 
-  public FindAndReplaceStep(
-      ProjectFilesystem filesystem,
-      Path input,
-      Path output,
-      final String pattern,
-      final String replace) {
-    this(
-        filesystem,
-        input,
-        output,
-        new Function<String, String>() {
-          @Override
-          public String apply(String input) {
-            return input.replace(pattern, replace);
-          }
-        });
-  }
-
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
     try (BufferedReader reader = new BufferedReader(

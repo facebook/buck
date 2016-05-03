@@ -24,8 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.util.Map;
-
 /**
  * A {@link Tool} based on a list of arguments formed by {@link SourcePath}s.
  *
@@ -159,14 +157,6 @@ public class CommandTool implements Tool {
 
     public Builder addEnv(String key, String val) {
       return addEnv(key, new StringArg(val));
-    }
-
-    /**
-     * Adds a map of env vars.
-     */
-    public Builder addAllEnv(Map<String, ? extends Arg> env) {
-      environment.putAll(env);
-      return this;
     }
 
     /**

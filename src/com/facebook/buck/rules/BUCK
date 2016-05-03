@@ -102,7 +102,6 @@ java_immutables_library(
     'SourcePaths.java',
     'SourceRoot.java',
     'TargetGraph.java',
-    'TargetGraphTransformer.java',
     'TargetName.java',
     'TargetNode.java',
     'TargetNodeToBuildRuleTransformer.java',

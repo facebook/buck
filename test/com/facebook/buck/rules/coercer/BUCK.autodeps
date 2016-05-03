@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 28d76117eb5392208462d1670ae6de6b0b1398f4 #@#
+#@# GENERATED FILE: DO NOT MODIFY 8ab07761f839da6ed36726edc33feb5cb73b9652 #@#
 {
   "coercer" : {
     "deps" : [
@@ -17,6 +17,7 @@
       "//third-party/java/easymock:easymock",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/infer-annotations:infer-annotations",
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]

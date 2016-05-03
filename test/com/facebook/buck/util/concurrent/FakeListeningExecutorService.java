@@ -29,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 public class FakeListeningExecutorService extends AbstractListeningExecutorService {
 
   private boolean wasShutdownInvoked = false;
-  private boolean wasShutdownNowInvoked = false;
 
   @Override
   public void shutdown() {
@@ -38,23 +37,18 @@ public class FakeListeningExecutorService extends AbstractListeningExecutorServi
 
   @Override
   public List<Runnable> shutdownNow() {
-    wasShutdownNowInvoked = true;
+    wasShutdownInvoked = true;
     return null;
-  }
-
-  /** @return {@code true} if this object's {@link #shutdownNow()} method was invoked. */
-  public boolean wasShutdownNowInvoked() {
-    return wasShutdownNowInvoked;
   }
 
   @Override
   public boolean isShutdown() {
-    return wasShutdownInvoked || wasShutdownNowInvoked;
+    return wasShutdownInvoked;
   }
 
   @Override
   public boolean isTerminated() {
-    return wasShutdownInvoked || wasShutdownNowInvoked;
+    return wasShutdownInvoked;
   }
 
   @Override

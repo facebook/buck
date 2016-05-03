@@ -55,7 +55,6 @@ public class CxxBuckConfig {
 
   public static final String DEFAULT_FLAVOR_LIBRARY_TYPE = "type";
   public static final String DEFAULT_FLAVOR_PLATFORM = "platform";
-  public static final String DEFAULT_FLAVOR_DEBUG_FORMAT = "debug_format";
 
   /**
    * Constructs set of flavors given in a .buckconfig file, as is specified by section names

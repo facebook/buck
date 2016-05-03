@@ -56,14 +56,6 @@ public final class HiveRowFormatter {
     return new HiveRowFormatter();
   }
 
-  public HiveRowFormatter appendLong(long value) {
-    return appendString(value);
-  }
-
-  public HiveRowFormatter appendBoolean(boolean requestSuccessful) {
-    return appendString(requestSuccessful);
-  }
-
   public <T> HiveRowFormatter appendString(T value) {
     if (row.length() > 0) {
       row.append(COLUMN_SEPARATOR);

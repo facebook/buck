@@ -245,15 +245,6 @@ public class Project {
   }
 
   @VisibleForTesting
-  Map<String, SerializableModule> buildNameToModuleMap(List<SerializableModule> modules) {
-    Map<String, SerializableModule> nameToModule = Maps.newHashMap();
-    for (SerializableModule module : modules) {
-      nameToModule.put(module.name, module);
-    }
-    return nameToModule;
-  }
-
-  @VisibleForTesting
   static String createPathToProjectDotPropertiesFileFor(SerializableModule module) {
     return module.getModuleDirectoryPath().resolve("project.properties").toString();
   }

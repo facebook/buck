@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 09bac0a221ad7de07aa1d4d286331e59016e4dbe #@#
+#@# GENERATED FILE: DO NOT MODIFY 237f2ef27787cb985bdffedf142d188de58ab06a #@#
 {
   "executable-finder" : {
     "deps" : [
@@ -27,8 +27,7 @@
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
-      "//third-party/java/jsr:jsr305",
-      "//third-party/java/okio:okio"
+      "//third-party/java/jsr:jsr305"
     ]
   },
   "watchman" : {

@@ -93,9 +93,6 @@ import java.util.zip.ZipFile;
 
 import javax.annotation.Nullable;
 
-import okio.BufferedSource;
-import okio.Okio;
-
 /**
  * An injectable service for interacting with the filesystem relative to the project root.
  */
@@ -785,10 +782,6 @@ public class ProjectFilesystem {
     throws IOException {
     return new BufferedInputStream(
         Files.newInputStream(getPathForRelativePath(pathRelativeToProjectRoot)));
-  }
-
-  public BufferedSource   newSource(Path pathRelativeToProjectRoot) throws IOException {
-    return Okio.buffer(Okio.source(getPathForRelativePath(pathRelativeToProjectRoot)));
   }
 
   /**

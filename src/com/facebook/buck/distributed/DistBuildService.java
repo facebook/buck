@@ -75,10 +75,6 @@ public class DistBuildService {
     this.frontendUrl = frontendUrl;
   }
 
-  public String getFrontendUrl()  {
-    return this.frontendUrl;
-  }
-
   public void submitJob() {
     LOG.verbose(String.format("DistBuildConfig: [%s]", distBuildConfig.toString()));
 

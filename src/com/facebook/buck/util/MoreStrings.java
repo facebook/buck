@@ -107,10 +107,4 @@ public final class MoreStrings {
         Optional.<String>absent();
   }
 
-  public static Optional<String> stripSuffix(String s, String suffix) {
-    return s.endsWith(suffix) ?
-        Optional.of(s.substring(0, s.length() - suffix.length())) :
-        Optional.<String>absent();
-  }
-
 }
