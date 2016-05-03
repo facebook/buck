@@ -186,7 +186,7 @@ public class AppleLibraryDescription implements
     }
     if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
       return resolver.requireRule(
-          params.getBuildTarget().withAppendedFlavor(
+          params.getBuildTarget().withAppendedFlavors(
               AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR));
     }
     AppleDebugFormat debugFormat = AppleDebugFormat.FLAVOR_DOMAIN
@@ -194,7 +194,7 @@ public class AppleLibraryDescription implements
         .or(defaultDebugFormat);
     if (!params.getBuildTarget().getFlavors().contains(debugFormat.getFlavor())) {
       return resolver.requireRule(
-          params.getBuildTarget().withAppendedFlavor(debugFormat.getFlavor()));
+          params.getBuildTarget().withAppendedFlavors(debugFormat.getFlavor()));
     }
 
     return AppleDescriptions.createAppleBundle(
@@ -338,7 +338,7 @@ public class AppleLibraryDescription implements
     if (existingTarget.getFlavors().contains(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR)) {
       existingTarget = existingTarget
           .withoutFlavors(ImmutableSet.of(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR))
-          .withAppendedFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR);
+          .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
     }
 
     Optional<BuildRule> existingRule = resolver.getRuleOptional(existingTarget);

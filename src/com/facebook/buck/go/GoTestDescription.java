@@ -147,7 +147,7 @@ public class GoTestDescription implements
     SourcePathResolver sourceResolver = new SourcePathResolver(resolver);
     GoTestMain generatedTestMain = new GoTestMain(
         params.copyWithChanges(
-            params.getBuildTarget().withAppendedFlavor(ImmutableFlavor.of("test-main-src")),
+            params.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("test-main-src")),
             Suppliers.ofInstance(ImmutableSortedSet.copyOf(
                 testMainGenerator.getDeps(sourceResolver))),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())
@@ -207,7 +207,7 @@ public class GoTestDescription implements
     Path packageName = getGoPackageName(resolver, params.getBuildTarget(), args);
 
     BuildRuleParams testTargetParams = params.copyWithBuildTarget(
-        params.getBuildTarget().withAppendedFlavor(TEST_LIBRARY_FLAVOR));
+        params.getBuildTarget().withAppendedFlavors(TEST_LIBRARY_FLAVOR));
     BuildRule testLibrary = new NoopBuildRule(testTargetParams, new SourcePathResolver(resolver));
     resolver.addToIndex(testLibrary);
 
@@ -215,7 +215,7 @@ public class GoTestDescription implements
         params, resolver, args.srcs, packageName);
     GoBinary testMain = GoDescriptors.createGoBinaryRule(
         params.copyWithChanges(
-            params.getBuildTarget().withAppendedFlavor(ImmutableFlavor.of("test-main")),
+            params.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("test-main")),
             Suppliers.ofInstance(ImmutableSortedSet.of(testLibrary)),
             Suppliers.ofInstance(ImmutableSortedSet.of(generatedTestMain))),
         resolver,

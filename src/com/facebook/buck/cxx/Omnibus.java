@@ -227,7 +227,7 @@ public class Omnibus {
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags) {
     BuildTarget dummyOmnibusTarget =
-        params.getBuildTarget().withAppendedFlavor(DUMMY_OMNIBUS_FLAVOR);
+        params.getBuildTarget().withAppendedFlavors(DUMMY_OMNIBUS_FLAVOR);
     String omnibusSoname = getOmnibusSoname(cxxPlatform);
     ruleResolver.addToIndex(
         CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
@@ -363,7 +363,7 @@ public class Omnibus {
                 params,
                 ruleResolver,
                 pathResolver,
-                params.getBuildTarget().withAppendedFlavor(
+                params.getBuildTarget().withAppendedFlavors(
                     ImmutableFlavor.of("omnibus-undefined-symbols-file")),
                 linkerInputs);
     return cxxPlatform.getLd().resolve(ruleResolver)
@@ -371,7 +371,7 @@ public class Omnibus {
             params,
             ruleResolver,
             pathResolver,
-            params.getBuildTarget().withAppendedFlavor(
+            params.getBuildTarget().withAppendedFlavors(
                 ImmutableFlavor.of("omnibus-undefined-symbols-args")),
             ImmutableList.of(undefinedSymbolsFile));
   }
@@ -459,7 +459,7 @@ public class Omnibus {
     }
 
     // Create the merged omnibus library using the arguments assembled above.
-    BuildTarget omnibusTarget = params.getBuildTarget().withAppendedFlavor(OMNIBUS_FLAVOR);
+    BuildTarget omnibusTarget = params.getBuildTarget().withAppendedFlavors(OMNIBUS_FLAVOR);
     String omnibusSoname = getOmnibusSoname(cxxPlatform);
     ruleResolver.addToIndex(
         CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(

@@ -201,10 +201,6 @@ abstract class AbstractBuildTarget
     return withAppendedFlavors(ImmutableSet.copyOf(flavors));
   }
 
-  public BuildTarget withAppendedFlavor(Flavor flavor) {
-    return withAppendedFlavors(ImmutableSet.of(flavor));
-  }
-
   public BuildTarget withoutCell() {
     return BuildTarget.builder(
         getUnflavoredBuildTarget().getCellPath(),

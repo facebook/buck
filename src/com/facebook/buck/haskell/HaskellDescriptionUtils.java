@@ -231,7 +231,7 @@ public class HaskellDescriptionUtils {
     // Since we use `-optl` to pass all linker inputs directly to the linker, the haskell linker
     // will complain about not having any input files.  So, create a dummy archive with an empty
     // module and pass that in normally to work around this.
-    BuildTarget emptyModuleTarget = target.withAppendedFlavor(ImmutableFlavor.of("empty-module"));
+    BuildTarget emptyModuleTarget = target.withAppendedFlavors(ImmutableFlavor.of("empty-module"));
     WriteFile emptyModule =
         resolver.addToIndex(
             new WriteFile(

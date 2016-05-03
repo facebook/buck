@@ -174,7 +174,7 @@ public class BuildTargetTest {
         .builder(ROOT, "//foo/bar", "baz")
         .addFlavors(biz)
         .build();
-    BuildTarget appendedFlavor = flavoredTarget.withAppendedFlavor(aaa);
+    BuildTarget appendedFlavor = flavoredTarget.withAppendedFlavors(aaa);
     assertThat(appendedFlavor, Matchers.not(Matchers.equalTo(flavoredTarget)));
     ImmutableSortedSet<Flavor> expectedFlavors = ImmutableSortedSet.of(biz, aaa);
     assertThat(appendedFlavor.getFlavors(), Matchers.equalTo(expectedFlavors));

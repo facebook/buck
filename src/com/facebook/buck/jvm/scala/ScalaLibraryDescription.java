@@ -92,7 +92,7 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
         rawParams.getExtraDeps()
     );
 
-    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavor(CalculateAbi.FLAVOR);
+    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
     DefaultJavaLibrary defaultJavaLibrary =
         resolver.addToIndex(

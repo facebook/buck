@@ -100,11 +100,11 @@ public class AndroidPrebuiltAarDescription
               }
             }));
 
-    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavor(CalculateAbi.FLAVOR);
+    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
     SourcePath abiJar = new BuildTargetSourcePath(abiJarTarget);
     buildRuleResolver.addToIndex(
         CalculateAbi.of(
-            params.getBuildTarget().withAppendedFlavor(CalculateAbi.FLAVOR),
+            params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR),
             pathResolver,
             params,
             new BuildTargetSourcePath(

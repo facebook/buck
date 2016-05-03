@@ -333,7 +333,7 @@ public class AppleDescriptions {
     }
 
     BuildRuleParams assetCatalogParams = params.copyWithChanges(
-        params.getBuildTarget().withAppendedFlavor(AppleAssetCatalog.FLAVOR),
+        params.getBuildTarget().withAppendedFlavors(AppleAssetCatalog.FLAVOR),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
@@ -399,7 +399,7 @@ public class AppleDescriptions {
           .withoutFlavors(ImmutableSet.of(CxxStrip.RULE_FLAVOR))
           .withoutFlavors(StripStyle.FLAVOR_DOMAIN.getFlavors())
           .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
-          .withAppendedFlavor(AppleDsym.RULE_FLAVOR);
+          .withAppendedFlavors(AppleDsym.RULE_FLAVOR);
       Optional<BuildRule> dsymRule = resolver.getRuleOptional(dsymBuildTarget);
       if (!dsymRule.isPresent()) {
         dsymRule = Optional.<BuildRule>of(
@@ -544,10 +544,10 @@ public class AppleDescriptions {
     if (unstrippedTarget.getFlavors().contains(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR)) {
       unstrippedTarget = unstrippedTarget
           .withoutFlavors(ImmutableSet.of(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR))
-          .withAppendedFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR);
+          .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
     }
     if (unstrippedTarget.getFlavors().contains(AppleTestDescription.BUNDLE_FLAVOR)) {
-      unstrippedTarget = unstrippedTarget.withAppendedFlavor(AppleDebuggableBinary.RULE_FLAVOR);
+      unstrippedTarget = unstrippedTarget.withAppendedFlavors(AppleDebuggableBinary.RULE_FLAVOR);
     }
     BuildRule unstrippedBinaryRule = resolver.requireRule(unstrippedTarget);
 
@@ -695,7 +695,7 @@ public class AppleDescriptions {
     }
 
     if (!StripStyle.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors())) {
-      buildTarget = buildTarget.withAppendedFlavor(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor());
+      buildTarget = buildTarget.withAppendedFlavors(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor());
     }
 
     return resolver.requireRule(buildTarget);

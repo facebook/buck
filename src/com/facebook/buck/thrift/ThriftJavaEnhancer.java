@@ -146,7 +146,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
                 .build()),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
-    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavor(CalculateAbi.FLAVOR);
+    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
     DefaultJavaLibrary library =
         resolver.addToIndex(

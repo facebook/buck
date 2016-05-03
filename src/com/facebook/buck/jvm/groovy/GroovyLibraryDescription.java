@@ -76,7 +76,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
-    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavor(CalculateAbi.FLAVOR);
+    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
     ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps.get());
     DefaultJavaLibrary defaultJavaLibrary =

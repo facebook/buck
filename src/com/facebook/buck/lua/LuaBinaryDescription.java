@@ -442,7 +442,7 @@ public class LuaBinaryDescription implements
       SourcePathResolver pathResolver,
       Flavor flavor,
       ImmutableMap<String, SourcePath> components) {
-    BuildTarget linkTreeTarget = params.getBuildTarget().withAppendedFlavor(flavor);
+    BuildTarget linkTreeTarget = params.getBuildTarget().withAppendedFlavors(flavor);
     Path linkTreeRoot =
         params.getProjectFilesystem().resolve(
             BuildTargets.getGenPath(linkTreeTarget, "%s"));

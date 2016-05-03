@@ -504,8 +504,8 @@ public class AppleBinaryIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance(
         "//:DemoAppBinary#iphonesimulator-i386,iphonesimulator-x86_64");
     BuildTarget targetToBuild = target
-        .withAppendedFlavor(AppleDebugFormat.DWARF_AND_DSYM.getFlavor());
-    BuildTarget dsymTarget = target.withAppendedFlavor(AppleDsym.RULE_FLAVOR);
+        .withAppendedFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor());
+    BuildTarget dsymTarget = target.withAppendedFlavors(AppleDsym.RULE_FLAVOR);
     workspace.runBuckCommand("build", targetToBuild.getFullyQualifiedName()).assertSuccess();
     Path output = workspace.getPath(AppleDsym.getDsymOutputPath(dsymTarget));
     AppleDsymTestUtil

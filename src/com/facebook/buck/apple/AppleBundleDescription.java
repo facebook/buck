@@ -127,11 +127,11 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         .or(defaultDebugFormat);
     if (!params.getBuildTarget().getFlavors().contains(flavoredDebugFormat.getFlavor())) {
       return (BuildRuleWithAppleBundle) resolver.requireRule(
-          params.getBuildTarget().withAppendedFlavor(flavoredDebugFormat.getFlavor()));
+          params.getBuildTarget().withAppendedFlavors(flavoredDebugFormat.getFlavor()));
     }
     if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
       return (BuildRuleWithAppleBundle) resolver.requireRule(
-          params.getBuildTarget().withAppendedFlavor(
+          params.getBuildTarget().withAppendedFlavors(
               AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR));
     }
     return AppleDescriptions.createAppleBundle(

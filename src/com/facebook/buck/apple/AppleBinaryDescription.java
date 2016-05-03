@@ -240,7 +240,7 @@ public class AppleBinaryDescription implements
         .or(defaultDebugFormat);
     if (!params.getBuildTarget().getFlavors().contains(flavoredDebugFormat.getFlavor())) {
       return resolver.requireRule(
-          params.getBuildTarget().withAppendedFlavor(flavoredDebugFormat.getFlavor()));
+          params.getBuildTarget().withAppendedFlavors(flavoredDebugFormat.getFlavor()));
     }
     if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
       CxxPlatform cxxPlatform =
@@ -252,11 +252,11 @@ public class AppleBinaryDescription implements
               .getApplePlatform();
       if (applePlatform.getAppIncludesFrameworks()) {
         return resolver.requireRule(
-            params.getBuildTarget().withAppendedFlavor(
+            params.getBuildTarget().withAppendedFlavors(
                 AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR));
       }
       return resolver.requireRule(
-          params.getBuildTarget().withAppendedFlavor(
+          params.getBuildTarget().withAppendedFlavors(
               AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR));
     }
     BuildTarget binaryTarget = params.withoutFlavor(APP_FLAVOR).getBuildTarget();

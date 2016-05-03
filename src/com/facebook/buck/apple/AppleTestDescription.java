@@ -229,7 +229,7 @@ public class AppleTestDescription implements
 
     BuildTarget libraryTarget = params.getBuildTarget()
         .withAppendedFlavors(extraFlavorsBuilder.build())
-        .withAppendedFlavor(debugFormat.getFlavor());
+        .withAppendedFlavors(debugFormat.getFlavor());
     BuildRule library = createTestLibraryRule(
         params,
         resolver,
@@ -404,7 +404,7 @@ public class AppleTestDescription implements
       BuildTarget libraryTarget) throws NoSuchBuildTargetException {
     BuildTarget existingLibraryTarget = libraryTarget
         .withAppendedFlavors(AppleDebuggableBinary.RULE_FLAVOR, CxxStrip.RULE_FLAVOR)
-        .withAppendedFlavor(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor());
+        .withAppendedFlavors(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor());
     Optional<BuildRule> existingLibrary = resolver.getRuleOptional(existingLibraryTarget);
     BuildRule library;
     if (existingLibrary.isPresent()) {

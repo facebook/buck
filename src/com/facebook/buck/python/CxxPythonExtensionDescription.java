@@ -361,7 +361,7 @@ public class CxxPythonExtensionDescription implements
 
           @Override
           public BuildTarget getBuildTarget() {
-            return params.getBuildTarget().withAppendedFlavor(pythonPlatform.getFlavor());
+            return params.getBuildTarget().withAppendedFlavors(pythonPlatform.getFlavor());
           }
 
           @Override

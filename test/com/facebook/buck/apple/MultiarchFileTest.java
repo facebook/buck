@@ -85,7 +85,7 @@ public class MultiarchFileTest {
               @Override
               public AbstractNodeBuilder<?> getNodeBuilder(BuildTarget target) {
                 return AppleLibraryBuilder
-                    .createBuilder(target.withAppendedFlavor(ImmutableFlavor.of("static")))
+                    .createBuilder(target.withAppendedFlavors(ImmutableFlavor.of("static")))
                     .setSrcs(Optional.of(ImmutableSortedSet.of(
                         SourceWithFlags.of(new FakeSourcePath("foo.c")))));
               }
@@ -98,7 +98,7 @@ public class MultiarchFileTest {
               @Override
               public AbstractNodeBuilder<?> getNodeBuilder(BuildTarget target) {
                 return AppleLibraryBuilder
-                    .createBuilder(target.withAppendedFlavor(ImmutableFlavor.of("shared")))
+                    .createBuilder(target.withAppendedFlavors(ImmutableFlavor.of("shared")))
                     .setSrcs(Optional.of(ImmutableSortedSet.of(
                         SourceWithFlags.of(new FakeSourcePath("foo.c")))));
               }
