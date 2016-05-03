@@ -24,10 +24,7 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleTuple
 interface AbstractWorkerJobResult {
-  @Value.Parameter
   int getExitCode();
-  @Value.Parameter
   Optional<String> getStdout();
-  @Value.Parameter
   Optional<String> getStderr();
 }

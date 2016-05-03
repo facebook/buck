@@ -334,7 +334,7 @@ public class AppleLibraryDescription implements
     // remove all debug format related flavors from cxx rule so it always ends up in the same output
     BuildTarget unstrippedTarget = params.getBuildTarget()
         .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
-    BuildTarget existingTarget = BuildTarget.copyOf(unstrippedTarget);
+    BuildTarget existingTarget = unstrippedTarget;
     if (existingTarget.getFlavors().contains(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR)) {
       existingTarget = existingTarget
           .withoutFlavors(ImmutableSet.of(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR))

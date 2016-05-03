@@ -24,10 +24,7 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleTuple
 interface AbstractWorkerJobParams {
-  @Value.Parameter
   ImmutableList<String> getStartupCommand();
-  @Value.Parameter
   String getStartupArgs();
-  @Value.Parameter
   String getJobArgs();
 }
