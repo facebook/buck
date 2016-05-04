@@ -333,6 +333,9 @@ public class TestCommand extends BuildCommand {
             .addAllCommand(withDashArguments)
             .setEnvironment(params.getEnvironment())
             .addCommand("--buck-test-info", infoFile.toString())
+            .addCommand(
+                "--jobs",
+                String.valueOf(getConcurrencyLimit(params.getBuckConfig()).threadLimit))
             .setDirectory(params.getCell().getFilesystem().getRootPath().toFile())
             .build();
     ForwardingProcessListener processListener =

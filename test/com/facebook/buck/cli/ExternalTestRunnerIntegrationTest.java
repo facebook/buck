@@ -133,4 +133,18 @@ public class ExternalTestRunnerIntegrationTest {
                 "</testcase>") + System.lineSeparator()));
   }
 
+  @Test
+  public void numberOfJobsIsPassedToExternalRunner() throws IOException {
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "-c", "test.external_runner=" + workspace.getPath("test_runner_echo_jobs.py"),
+            "//:pass",
+            "-j", "13");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout().trim(),
+        is(equalTo("13")));
+  }
+
 }

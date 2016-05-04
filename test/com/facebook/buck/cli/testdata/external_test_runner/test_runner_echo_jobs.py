@@ -1,9 +1,6 @@
 #!/usr/bin/python -u
 
-import json
 import optparse
-import sys
-import subprocess
 
 
 parser = optparse.OptionParser()
@@ -12,5 +9,4 @@ parser.add_option('--jobs', type=int)
 (options, args) = parser.parse_args()
 
 
-for arg in args:
-    print(arg)
+print(options.jobs)
