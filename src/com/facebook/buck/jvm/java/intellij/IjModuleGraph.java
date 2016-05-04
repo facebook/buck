@@ -144,8 +144,7 @@ public class IjModuleGraph {
         .filter(IjModuleFactory.SUPPORTED_MODULE_TYPES_PREDICATE)
         .toSet();
 
-    final ImmutableSet<Path> aggregationHaltPoints =
-        createAggregationHaltPoints(targetGraph);
+    final BlockedPathNode blockedPathTree = createAggregationHaltPoints(targetGraph);
 
     ImmutableListMultimap<Path, TargetNode<?>> baseTargetPathMultimap =
         FluentIterable.from(supportedTargets).index(
@@ -158,7 +157,7 @@ public class IjModuleGraph {
                   return basePath;
                 }
 
-                return simplifyPath(basePath, minimumPathDepth, aggregationHaltPoints);
+                return simplifyPath(basePath, minimumPathDepth, blockedPathTree);
               }
             });
 
@@ -181,39 +180,42 @@ public class IjModuleGraph {
   static Path simplifyPath(
       Path basePath,
       int minimumPathDepth,
-      ImmutableSet<Path> aggregationHaltPoints) {
-    Path parent = basePath.getParent();
-    while (parent != null &&
-        basePath.getNameCount() > minimumPathDepth &&
-        !aggregationHaltPoints.contains(basePath)) {
-      basePath = parent;
-      parent = basePath.getParent();
-    }
-
-    return basePath;
+      BlockedPathNode blockedPathTree) {
+    int depthForPath = calculatePathDepth(basePath, minimumPathDepth, blockedPathTree);
+    return basePath.subpath(0, depthForPath);
   }
 
-  /**
-   * Create the set of paths which should terminate coalesing.
-   */
+  static int calculatePathDepth(
+      Path basePath,
+      int minimumPathDepth,
+      BlockedPathNode blockedPathTree) {
+    int maxDepth = basePath.getNameCount();
+    if (minimumPathDepth >= maxDepth) {
+      return maxDepth;
+    }
 
-  private static ImmutableSet<Path> createAggregationHaltPoints(TargetGraph targetGraph) {
-    return
-        FluentIterable
-            .from(targetGraph.getNodes())
-            .filter(new Predicate<TargetNode<?>>() {
-              @Override
-              public boolean apply(TargetNode<?> input) {
-                return input.getConstructorArg() instanceof AndroidResourceDescription.Arg;
-              }
-            })
-            .transform(new Function<TargetNode<?>, Path>() {
-              @Override
-              public Path apply(TargetNode<?> input) {
-                return input.getBuildTarget().getBasePath();
-              }
-            })
-            .toSet();
+    int depthForPath =
+        blockedPathTree.findLowestPotentialBlockedOnPath(basePath, 0, maxDepth);
+
+    return depthForPath < minimumPathDepth ? minimumPathDepth : depthForPath;
+  }
+
+    /**
+     * Create the set of paths which should terminate aggregation.
+     */
+
+  private static BlockedPathNode createAggregationHaltPoints(TargetGraph targetGraph) {
+    BlockedPathNode blockRoot = new BlockedPathNode();
+
+    for (TargetNode<?> node : targetGraph.getNodes()) {
+      if (!(node.getConstructorArg() instanceof AndroidResourceDescription.Arg)) {
+        continue;
+      }
+      Path blockedPath = node.getBuildTarget().getBasePath();
+      blockRoot.markAsBlocked(blockedPath, 0, blockedPath.getNameCount());
+    }
+
+    return blockRoot;
   }
 
   /**
@@ -372,5 +374,74 @@ public class IjModuleGraph {
       ImmutableMap<IjProjectElement, ImmutableMap<IjProjectElement, DependencyType>> deps) {
     this.deps = deps;
     checkNamesAreUnique(deps);
+  }
+
+
+  static class BlockedPathNode {
+    private static final Optional<BlockedPathNode> EMPTY_CHILD = Optional.absent();
+
+    private boolean isBlocked;
+
+    // The key is a path component to allow traversing down a hierarchy
+    // to find blocks rather than doing simple path comparison.
+    @Nullable
+    private Map<Path, BlockedPathNode> children;
+
+    BlockedPathNode() {
+      this.isBlocked = false;
+    }
+
+    void putChild(Path path, BlockedPathNode node) {
+      if (children == null) {
+        children = new HashMap<Path, BlockedPathNode>();
+      }
+      children.put(path, node);
+    }
+
+    private Optional<BlockedPathNode> getChild(Path path) {
+      return children == null ? EMPTY_CHILD : Optional.fromNullable(children.get(path));
+    }
+
+    private void clearAllChildren() {
+      children = null;
+    }
+
+    void markAsBlocked(Path path, int currentIdx, int pathNameCount) {
+      if (currentIdx == pathNameCount) {
+        isBlocked = true;
+        clearAllChildren();
+        return;
+      }
+
+      Path component = path.getName(currentIdx);
+      Optional<BlockedPathNode> blockedPathNodeOptional = getChild(component);
+      BlockedPathNode blockedPathNode;
+
+      if (blockedPathNodeOptional.isPresent()) {
+        blockedPathNode = blockedPathNodeOptional.get();
+        if (blockedPathNode.isBlocked) {
+          return;
+        }
+      } else {
+        blockedPathNode = new BlockedPathNode();
+        putChild(component, blockedPathNode);
+      }
+
+      blockedPathNode.markAsBlocked(path, ++currentIdx, pathNameCount);
+    }
+
+    int findLowestPotentialBlockedOnPath(Path path, int currentIdx, int pathNameCount) {
+      if (isBlocked || currentIdx == pathNameCount) {
+        return currentIdx;
+      }
+
+      Path thisComponent = path.getName(currentIdx);
+      Optional<BlockedPathNode> nextNode = getChild(thisComponent);
+      if (nextNode.isPresent()) {
+        return nextNode.get().findLowestPotentialBlockedOnPath(path, ++currentIdx, pathNameCount);
+      }
+
+      return currentIdx;
+    }
   }
 }

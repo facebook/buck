@@ -485,7 +485,7 @@ public class IjModuleGraphTest {
         Paths.get("a"),
         Paths.get(""));
 
-    ImmutableSet<Path> dummyAggregationStops = ImmutableSet.of();
+    IjModuleGraph.BlockedPathNode dummyAggregationStops = new IjModuleGraph.BlockedPathNode();
     int minimumDepth = aggregationMode.getGraphMinimumDepth(graphSize);
     ImmutableList.Builder<Path> transformedPaths = ImmutableList.builder();
     for (Path path : originalPaths) {
@@ -602,6 +602,104 @@ public class IjModuleGraphTest {
         blah1Module.getModuleBasePath(),
         Matchers.not(Matchers.equalTo(blah2Module.getModuleBasePath())));
   }
+
+  @Test
+  public void testBlockedPathDepthCalculation() {
+    IjModuleGraph.BlockedPathNode rootNode = new IjModuleGraph.BlockedPathNode();
+
+    Path blockedPath = Paths.get("/a/b/c/block");
+    int blockedPathNameCount = blockedPath.getNameCount();
+    rootNode.markAsBlocked(blockedPath, 0, blockedPathNameCount);
+
+    Path blockedChild = Paths.get("/a/b/c/block/e/f");
+    assertThat(
+        IjModuleGraph.calculatePathDepth(blockedChild, 2, rootNode),
+        Matchers.equalTo(blockedPathNameCount));
+  }
+
+  @Test
+  public void testUnblockedDivergentPathDepthCalculation() {
+    IjModuleGraph.BlockedPathNode rootNode = new IjModuleGraph.BlockedPathNode();
+
+    Path blockedPath = Paths.get("/a/b/c/block");
+    int blockedPathNameCount = blockedPath.getNameCount();
+    rootNode.markAsBlocked(blockedPath, 0, blockedPathNameCount);
+
+    // Paths diverge one level above the block
+    Path unblockedPath = Paths.get("/a/b/c/noblock/e/f");
+    assertThat(
+        IjModuleGraph.calculatePathDepth(unblockedPath, 2, rootNode),
+        Matchers.equalTo(blockedPathNameCount - 1));
+
+
+    // Paths diverge two levels above the block
+    Path unblockedPath2 = Paths.get("/a/b/x/noblock/e/f");
+    assertThat(
+        IjModuleGraph.calculatePathDepth(unblockedPath2, 2, rootNode),
+        Matchers.equalTo(blockedPathNameCount - 2));
+  }
+
+  @Test
+  public void testUnblockedPathDepthCalculation() {
+    IjModuleGraph.BlockedPathNode rootNode = new IjModuleGraph.BlockedPathNode();
+
+    Path blockedPath = Paths.get("/a/b/c/block");
+    int blockedPathNameCount = blockedPath.getNameCount();
+    rootNode.markAsBlocked(blockedPath, 0, blockedPathNameCount);
+
+    Path unblockedPath = Paths.get("/z/y/x/w/v");
+
+    assertThat(
+        IjModuleGraph.calculatePathDepth(unblockedPath, 2, rootNode),
+        Matchers.equalTo(2));
+  }
+
+  @Test
+  public void testPathBlockerBlocksExactMatch() {
+    IjModuleGraph.BlockedPathNode rootNode = new IjModuleGraph.BlockedPathNode();
+
+    Path blockedPath = Paths.get("/a/b/c/block");
+    int blockedPathNameCount = blockedPath.getNameCount();
+    rootNode.markAsBlocked(blockedPath, 0, blockedPathNameCount);
+
+    assertThat(
+        rootNode.findLowestPotentialBlockedOnPath(blockedPath, 0, blockedPathNameCount),
+        Matchers.equalTo(blockedPathNameCount));
+  }
+
+  @Test
+  public void testPathBlockerBlocksSubpathAtRightPlace() {
+    IjModuleGraph.BlockedPathNode rootNode = new IjModuleGraph.BlockedPathNode();
+
+    Path blockedPath = Paths.get("/a/b/c/block");
+    int blockedPathNameCount = blockedPath.getNameCount();
+    rootNode.markAsBlocked(blockedPath, 0, blockedPathNameCount);
+
+    Path subPath = Paths.get("/a/b/c/block/e/f");
+    int subPathNameCount = subPath.getNameCount();
+
+    assertThat(
+        rootNode.findLowestPotentialBlockedOnPath(subPath, 0, subPathNameCount),
+        Matchers.equalTo(blockedPathNameCount));
+  }
+
+  @Test
+  public void testPathBlockerBlockingOfChildOfSibling() {
+    IjModuleGraph.BlockedPathNode rootNode = new IjModuleGraph.BlockedPathNode();
+
+    Path blockedPath = Paths.get("/a/b/c/block");
+    int blockedPathNameCount = blockedPath.getNameCount();
+    rootNode.markAsBlocked(blockedPath, 0, blockedPathNameCount);
+
+    // Paths diverge one level above the block
+    Path subPath = Paths.get("/a/b/c/noblock/f/g");
+    int subPathNameCount = subPath.getNameCount();
+
+    assertThat(
+        rootNode.findLowestPotentialBlockedOnPath(subPath, 0, subPathNameCount),
+        Matchers.equalTo(blockedPathNameCount - 1));
+  }
+
 
   public static IjModuleGraph createModuleGraph(ImmutableSet<TargetNode<?>> targets) {
     return createModuleGraph(targets, ImmutableMap.<TargetNode<?>, Path>of(),
