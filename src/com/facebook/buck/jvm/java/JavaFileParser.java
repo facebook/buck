@@ -945,7 +945,6 @@ public class JavaFileParser {
     parser.setSource(code.toCharArray());
     parser.setKind(ASTParser.K_COMPILATION_UNIT);
 
-    @SuppressWarnings("unchecked")
     Map<String, String> options = JavaCore.getOptions();
     JavaCore.setComplianceOptions(javaVersion, options);
     parser.setCompilerOptions(options);

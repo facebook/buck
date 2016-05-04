@@ -96,14 +96,14 @@
     <include name="commons-logging/commons-logging-1.2.jar" />
     <include name="concurrent-locks/concurrent-locks-1.0.0.jar" />
     <include name="dd-plist/dd-plist.jar" />
-    <include name="eclipse/org.eclipse.core.contenttype_3.4.200.v20140207-1251.jar"/>
-    <include name="eclipse/org.eclipse.core.jobs_3.6.1.v20141014-1248.jar"/>
-    <include name="eclipse/org.eclipse.core.resources_3.9.1.v20140825-1431.jar"/>
-    <include name="eclipse/org.eclipse.core.runtime_3.10.0.v20140318-2214.jar"/>
-    <include name="eclipse/org.eclipse.equinox.common_3.6.200.v20130402-1505.jar"/>
-    <include name="eclipse/org.eclipse.equinox.preferences_3.5.200.v20140224-1527.jar"/>
-    <include name="eclipse/org.eclipse.jdt.core_3.10.2.v20150120-1634.jar"/>
-    <include name="eclipse/org.eclipse.osgi_3.10.2.v20150203-1939.jar"/>
+    <include name="eclipse/org.eclipse.core.contenttype_3.5.100.v20160418-1621.jar"/>
+    <include name="eclipse/org.eclipse.core.jobs_3.8.0.v20160319-0610.jar"/>
+    <include name="eclipse/org.eclipse.core.resources_3.11.0.v20160422-0304.jar"/>
+    <include name="eclipse/org.eclipse.core.runtime_3.12.0.v20160427-1901.jar"/>
+    <include name="eclipse/org.eclipse.equinox.common_3.8.0.v20160422-1942.jar"/>
+    <include name="eclipse/org.eclipse.equinox.preferences_3.6.0.v20160120-1756.jar"/>
+    <include name="eclipse/org.eclipse.jdt.core_3.12.0.v20160426-1326.jar"/>
+    <include name="eclipse/org.eclipse.osgi_3.11.0.v20160427-2120.jar"/>
     <include name="guice/guice-3.0.jar" />
     <include name="guice/guice-assistedinject-3.0.jar" />
     <include name="guice/guice-multibindings-3.0.jar" />
@@ -362,7 +362,9 @@
         <compilerarg value="-Xlint:serial" />
         <compilerarg value="-time" />
         <compilerclasspath>
-          <pathelement location="${eclipse.dir}/ecj-4.6M6.jar" />
+          <pathelement location="${eclipse.dir}/ecj-4.6M7.jar" />
+          <pathelement location="${eclipse.dir}/org.eclipse.jdt.core_3.12.0.v20160426-1326.jar" />
+          <pathelement location="${eclipse.dir}/jdtCompilerAdapter.jar" />
         </compilerclasspath>
         <compilerarg value="-processorpath" />
         <compilerarg value="${immutables-value-standalone.jar}" />
