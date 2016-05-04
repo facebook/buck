@@ -601,4 +601,9 @@ public class Parser {
   public ImmutableList<Counter> getCounters() {
     return permState.getCounters();
   }
+
+  @VisibleForTesting
+  DaemonicParserState getPermState() {
+    return permState;
+  }
 }

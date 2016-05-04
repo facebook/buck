@@ -26,6 +26,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.BuckConfig;
@@ -1800,6 +1801,48 @@ public class ParserTest {
         false,
         executorService,
         buildTargets);
+  }
+
+  @Test
+  public void whenSymlinksAreInReadOnlyPathsCachingIsNotDisabled()
+      throws Exception {
+    // This test depends on creating symbolic links which we cannot do on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    Path rootPath = tempDir.getRoot().toRealPath();
+    BuckConfig config = FakeBuckConfig.builder()
+        .setFilesystem(filesystem)
+        .setSections(
+            "[project]",
+            "read_only_paths = " + rootPath + "/foo")
+        .build();
+    cell = new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem).build();
+
+    tempDir.newFolder("bar");
+    tempDir.newFile("bar/Bar.java");
+    tempDir.newFolder("foo");
+
+    Files.createSymbolicLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
+
+    Path testBuckFile = rootPath.resolve("foo").resolve("BUCK");
+    Files.write(
+        testBuckFile,
+        "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
+
+    BuildTarget libTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
+    Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
+
+    parser.buildTargetGraph(
+        eventBus,
+        cell,
+        false,
+        executorService,
+        buildTargets);
+
+    DaemonicParserState permState = parser.getPermState();
+    for (BuildTarget target : buildTargets) {
+      assertTrue(permState.lookupTargetNode(cell, target).isPresent());
+    }
   }
 
   @Test

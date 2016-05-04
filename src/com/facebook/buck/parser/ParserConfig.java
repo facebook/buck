@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
@@ -25,6 +26,9 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -101,6 +105,24 @@ public class ParserConfig {
               @Override
               public Pattern apply(String input) {
                 return Pattern.compile(input);
+              }
+            })
+        .toSet();
+  }
+
+  public ImmutableSet<Path> getReadOnlyPaths() {
+    return FluentIterable
+        .from(delegate.getListWithoutComments("project", "read_only_paths"))
+        .transform(
+            new Function<String, Path>() {
+              @Override
+              public Path apply(String input) {
+                Path path = Paths.get(input);
+                if (Files.notExists(path)) {
+                  throw new HumanReadableException("Path %s, specified under read_only_paths " +
+                      "does not exist.", path);
+                }
+                return path;
               }
             })
         .toSet();

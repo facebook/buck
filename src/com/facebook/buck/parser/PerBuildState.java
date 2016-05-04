@@ -239,6 +239,25 @@ class PerBuildState implements AutoCloseable {
             node.getBuildTarget(),
             newSymlinksEncountered);
       }
+
+      ImmutableSet<Path> readOnlyPaths =
+          new ParserConfig(getCell(node.getBuildTarget()).getBuckConfig()).getReadOnlyPaths();
+
+      if (!readOnlyPaths.isEmpty()) {
+        for (Path readOnlyPath : readOnlyPaths) {
+          if (buildFile.startsWith(readOnlyPath)) {
+            LOG.debug(
+                "Target %s is under a symlink (%s). It will be cached because it belongs " +
+                    "under %s, a read-only path white listed in .buckconfing. under [project]" +
+                    " read_only_paths",
+                node.getBuildTarget(),
+                newSymlinksEncountered,
+                readOnlyPath);
+            return;
+          }
+        }
+      }
+
       LOG.warn(
           "Disabling caching for target %s, because one or more input files are under a " +
               "symbolic link (%s). This will severely impact performance! To resolve this, use " +
