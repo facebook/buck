@@ -22,10 +22,10 @@ import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleTestDescription;
-import com.facebook.buck.apple.project_generator.ProjectGenerator;
 import com.facebook.buck.apple.SchemeActionType;
-import com.facebook.buck.apple.project_generator.WorkspaceAndProjectGenerator;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
+import com.facebook.buck.apple.project_generator.ProjectGenerator;
+import com.facebook.buck.apple.project_generator.WorkspaceAndProjectGenerator;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.event.ConsoleEvent;
@@ -55,7 +55,6 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.python.PythonBuckConfig;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.AssociatedTargetNodePredicate;
@@ -665,16 +664,14 @@ public class ProjectCommand extends BuildCommand {
         ActionGraphCache.getFreshActionGraph(
             params.getBuckEventBus(),
             targetGraphAndTargets.getTargetGraph()));
-    ActionGraph actionGraph = result.getActionGraph();
 
     try (ExecutionContext executionContext = createExecutionContext(params)) {
       Project project = new Project(
           new SourcePathResolver(result.getResolver()),
           FluentIterable
-              .from(actionGraph.getNodes())
+              .from(result.getActionGraph().getNodes())
               .filter(ProjectConfig.class)
               .toSortedSet(Ordering.natural()),
-          actionGraph,
           getBasePathToAliasMap(params.getBuckConfig()),
           getJavaPackageFinder(params.getBuckConfig()),
           executionContext,

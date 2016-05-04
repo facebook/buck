@@ -27,7 +27,6 @@ import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidResourceRuleBuilder;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.android.NdkLibraryBuilder;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
@@ -42,9 +41,9 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.ProjectConfig;
@@ -802,8 +801,6 @@ public class ProjectTest {
       intellijConfig = new IntellijConfig(FakeBuckConfig.builder().build());
     }
 
-    ActionGraph actionGraph = new ActionGraph(ruleResolver.getBuildRules());
-
     // Create the Project.
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
@@ -828,13 +825,12 @@ public class ProjectTest {
     Project project = new Project(
         new SourcePathResolver(ruleResolver),
         projectConfigs,
-        actionGraph,
         basePathToAliasMap,
         javaPackageFinder,
         executionContext,
         new InMemoryBuildFileTree(
             Iterables.transform(
-                actionGraph.getNodes(),
+                ruleResolver.getBuildRules(),
                 BuildTarget.TO_TARGET)),
         projectFilesystem,
         /* pathToDefaultAndroidManifest */ Optional.<String>absent(),

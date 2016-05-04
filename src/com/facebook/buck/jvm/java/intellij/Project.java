@@ -41,7 +41,6 @@ import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.PathSourcePath;
@@ -134,7 +133,6 @@ public class Project {
 
   private final SourcePathResolver resolver;
   private final ImmutableSortedSet<ProjectConfig> rules;
-  private final ActionGraph actionGraph;
   private final BuildFileTree buildFileTree;
   private final ImmutableMap<Path, String> basePathToAliasMap;
   private final JavaPackageFinder javaPackageFinder;
@@ -152,7 +150,6 @@ public class Project {
   public Project(
       SourcePathResolver resolver,
       ImmutableSortedSet<ProjectConfig> rules,
-      ActionGraph actionGraph,
       Map<Path, String> basePathToAliasMap,
       JavaPackageFinder javaPackageFinder,
       ExecutionContext executionContext,
@@ -166,7 +163,6 @@ public class Project {
       boolean turnOffAutoSourceGeneration) {
     this.resolver = resolver;
     this.rules = rules;
-    this.actionGraph = actionGraph;
     this.buildFileTree = buildFileTree;
     this.basePathToAliasMap = ImmutableMap.copyOf(basePathToAliasMap);
     this.javaPackageFinder = javaPackageFinder;
@@ -247,11 +243,6 @@ public class Project {
   @VisibleForTesting
   static String createPathToProjectDotPropertiesFileFor(SerializableModule module) {
     return module.getModuleDirectoryPath().resolve("project.properties").toString();
-  }
-
-  @VisibleForTesting
-  ActionGraph getActionGraph() {
-    return actionGraph;
   }
 
   /**
