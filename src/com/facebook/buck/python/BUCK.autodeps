@@ -1,8 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY fb312efc1992e40a07e4a27a8f5870af149e0818 #@#
+#@# GENERATED FILE: DO NOT MODIFY 48416a126a48fd0c6702ff2620575ed6d8655f22 #@#
 {
   "config" : {
     "deps" : [
-      "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",
       "//third-party/java/jsr:jsr305"

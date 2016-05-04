@@ -48,6 +48,7 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -64,6 +65,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.io.Files;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -332,7 +334,7 @@ public class CxxDescriptionEnhancer {
         platformSrcs.getMatchingValues(cxxPlatform.getFlavor().toString())) {
       putAllSources(sourcesWithFlags, sources, resolver, buildTarget);
     }
-    return CxxCompilableEnhancer.resolveCxxSources(sources.build());
+    return resolveCxxSources(sources.build());
   }
 
   private static void putAllSources(
@@ -1138,4 +1140,33 @@ public class CxxDescriptionEnhancer {
         String.format("Unsupported LinkableDepType: '%s'", linkableDepType));
   }
 
+  /**
+   * Resolve the map of names to SourcePaths to a map of names to CxxSource objects.
+   */
+  private static ImmutableMap<String, CxxSource> resolveCxxSources(
+      ImmutableMap<String, SourceWithFlags> sources) {
+
+    ImmutableMap.Builder<String, CxxSource> cxxSources = ImmutableMap.builder();
+
+    // For each entry in the input C/C++ source, build a CxxSource object to wrap
+    // it's name, input path, and output object file path.
+    for (ImmutableMap.Entry<String, SourceWithFlags> ent : sources.entrySet()) {
+      String extension = Files.getFileExtension(ent.getKey());
+      Optional<CxxSource.Type> type = CxxSource.Type.fromExtension(extension);
+      if (!type.isPresent()) {
+        throw new HumanReadableException(
+            "invalid extension \"%s\": %s",
+            extension,
+            ent.getKey());
+      }
+      cxxSources.put(
+          ent.getKey(),
+          CxxSource.of(
+              type.get(),
+              ent.getValue().getSourcePath(),
+              ent.getValue().getFlags()));
+    }
+
+    return cxxSources.build();
+  }
 }

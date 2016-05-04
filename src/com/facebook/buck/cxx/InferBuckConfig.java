@@ -21,6 +21,7 @@ import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;

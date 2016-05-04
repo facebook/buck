@@ -3,7 +3,6 @@ PLATFORM_SRCS = [
   'AbstractNativeLinkableInput.java',
   'Archiver.java',
   'BsdArchiver.java',
-  'ByteBufferReplacer.java',
   'CanProvideSharedNativeLinkTarget.java',
   'ClangCompiler.java',
   'ClangPreprocessor.java',
@@ -29,7 +28,6 @@ PLATFORM_SRCS = [
   'PreprocessorProvider.java',
   'SharedNativeLinkTarget.java',
   'SymbolNameTool.java',
-  'VersionedTool.java',
   'WindowsLinker.java',
 ]
 java_immutables_library(

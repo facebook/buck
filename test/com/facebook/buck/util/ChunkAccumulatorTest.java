@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.util;
 
 import static org.junit.Assert.assertThat;
 

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 1ec3eacb55fbf14bba17a81abef95ee0834d428d #@#
+#@# GENERATED FILE: DO NOT MODIFY 884fd559ff021e1af6244a3975223c237e4bd5a5 #@#
 {
   "testutil" : {
     "deps" : [
@@ -21,8 +21,7 @@
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/jsr:jsr305",
-      "//third-party/java/junit:junit",
-      "//third-party/java/okio:okio"
+      "//third-party/java/junit:junit"
     ]
   },
   "testutil_test" : {

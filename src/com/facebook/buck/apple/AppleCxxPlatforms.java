@@ -32,7 +32,7 @@ import com.facebook.buck.cxx.DefaultLinkerProvider;
 import com.facebook.buck.cxx.LinkerProvider;
 import com.facebook.buck.cxx.Linkers;
 import com.facebook.buck.cxx.PreprocessorProvider;
-import com.facebook.buck.cxx.VersionedTool;
+import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.ImmutableFlavor;

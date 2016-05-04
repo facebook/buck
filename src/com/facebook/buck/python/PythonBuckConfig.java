@@ -17,7 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cxx.VersionedTool;
+import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuckVersion;

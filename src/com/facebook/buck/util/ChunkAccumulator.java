@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

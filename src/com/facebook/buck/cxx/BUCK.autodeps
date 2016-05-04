@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY e14c3351d9f76b8e7a32d0cc90b6f42fef289db6 #@#
+#@# GENERATED FILE: DO NOT MODIFY a38d13eebacb6869d304b758115a0896a1f6e65c #@#
 {
   "framework_path_arg" : {
     "deps" : [ ],
@@ -17,6 +17,7 @@
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:util",
       "//third-party/java/immutables:processor",
       "//third-party/java/jsr:jsr305"
     ],
