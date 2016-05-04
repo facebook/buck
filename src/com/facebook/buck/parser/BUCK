@@ -14,7 +14,6 @@ java_immutables_library(
   srcs = [
     'AbstractBuildFileSpec.java',
     'AbstractBuildTargetSpec.java',
-    'AbstractPatternAndMessage.java',
     'AbstractTargetNodePredicateSpec.java',
     'BuildTargetPatternTargetNodeParser.java',
     'ConcurrentMapCache.java',
@@ -33,7 +32,6 @@ java_immutables_library(
     'BuildFileSpec',
     'BuildTargetSpec',
     'TargetNodePredicateSpec',
-    'PatternAndMessage',
   ],
   tests = [
     '//test/com/facebook/buck/parser:integration',

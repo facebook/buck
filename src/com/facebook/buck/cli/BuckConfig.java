@@ -43,6 +43,7 @@ import com.facebook.buck.util.SampleRate;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.PatternAndMessage;
 import com.facebook.buck.util.network.HostnameFetching;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
@@ -61,6 +62,7 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -589,6 +591,20 @@ public class BuckConfig {
       return SampleRate.of(sampleRate.get());
     }
     return SampleRate.of(0.75f);
+  }
+
+  public Optional<ImmutableSet<PatternAndMessage>> getUnexpectedFlavorsMessages() {
+    ImmutableMap<String, String> entries = config.get("unknown_flavors_messages");
+    if (!entries.isEmpty()) {
+      Set<PatternAndMessage> patternAndMessages = new HashSet<>();
+      for (Map.Entry<String, String> entry : entries.entrySet()) {
+        patternAndMessages.add(
+            PatternAndMessage.of(Pattern.compile(entry.getKey()), entry.getValue()));
+      }
+      return Optional.of(ImmutableSet.<PatternAndMessage>copyOf(patternAndMessages));
+    }
+
+    return Optional.absent();
   }
 
   public boolean hasUserDefinedValue(String sectionName, String propertyName) {

@@ -181,6 +181,10 @@ public class ParserTest {
     } else {
       configSectionsBuilder.put("project", ImmutableMap.of("temp_files", ".*\\.swp$"));
     }
+
+    configSectionsBuilder.put("unknown_flavors_messages",
+        ImmutableMap.of("macosx*", "This is an error message read by the .buckconfig"));
+
     BuckConfig config = FakeBuckConfig.builder()
         .setFilesystem(filesystem)
         .setSections(configSectionsBuilder.build())
@@ -374,7 +378,7 @@ public class ParserTest {
   }
 
   @Test
-  public void shouldThrowAnExceptionWhenAnUnknownFlavorIsSeenAndShowSuggestions()
+  public void shouldThrowAnExceptionWhenAnUnknownFlavorIsSeenAndShowSuggestionsDefault()
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     BuildTarget flavored = BuildTarget.builder(cellRoot, "//java/com/facebook", "foo")
         .addFlavors(ImmutableFlavor.of("android-unknown"))
@@ -387,6 +391,27 @@ public class ParserTest {
             "flavors to work::\nandroid-unknown : Make sure you have the Android SDK/NDK " +
             "installed and set up. " +
             "See https://buckbuild.com/setup/install.html#locate-android-sdk\n");
+    parser.buildTargetGraph(
+        eventBus,
+        cell,
+        false,
+        executorService,
+        ImmutableSortedSet.of(flavored));
+  }
+
+  @Test
+  public void shouldThrowAnExceptionWhenAnUnknownFlavorIsSeenAndShowSuggestionsFromConfig()
+      throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
+    BuildTarget flavored = BuildTarget.builder(cellRoot, "//java/com/facebook", "foo")
+        .addFlavors(ImmutableFlavor.of("macosx109sdk"))
+        .build();
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "Unrecognized flavor in target //java/com/facebook:foo#macosx109sdk while parsing " +
+            "//java/com/facebook/BUCK\nHere are some things you can try to get the following " +
+            "flavors to work::\nmacosx109sdk : This is an error message read by the .buckconfig");
+
     parser.buildTargetGraph(
         eventBus,
         cell,

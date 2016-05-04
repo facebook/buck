@@ -22,6 +22,8 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.PatternAndMessage;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.regex.Pattern;
@@ -32,7 +34,22 @@ public class UnexpectedFlavorException extends HumanReadableException {
       ImmutableSet.of(
           PatternAndMessage.of(Pattern.compile("android-*"),
               "Make sure you have the Android SDK/NDK installed and set up. See " +
-                  "https://buckbuild.com/setup/install.html#locate-android-sdk"));
+                  "https://buckbuild.com/setup/install.html#locate-android-sdk"),
+          PatternAndMessage.of(Pattern.compile("macosx*"),
+              "Make sure you have the Mac OSX SDK installed and set up."),
+          PatternAndMessage.of(Pattern.compile("iphoneos*"),
+              "Make sure you have the iPhone SDK installed and set up."),
+          PatternAndMessage.of(Pattern.compile("iphonesimulator*"),
+              "Make sure you have the iPhone Simulator installed and set up."),
+          PatternAndMessage.of(Pattern.compile("watchos*"),
+              "Make sure you have the Apple Watch SDK installed and set up."),
+          PatternAndMessage.of(Pattern.compile("watchsimulator*"),
+              "Make sure you have the Watch Simulator installed and set up."),
+          PatternAndMessage.of(Pattern.compile("appletvos*"),
+              "Make sure you have the Apple TV SDK installed and set up."),
+          PatternAndMessage.of(Pattern.compile("appletvsimulator*"),
+              "Make sure you have the Apple TV Simulator installed and set up.")
+      );
 
   private UnexpectedFlavorException(String message) {
     super(message);
@@ -45,13 +62,28 @@ public class UnexpectedFlavorException extends HumanReadableException {
     String exceptionMessage = createDefaultMessage(cell, target);
     // Get some suggestions on how to solve it.
     String suggestions = "";
+    Optional<ImmutableSet<PatternAndMessage>> configMessagesForFlavors =
+        cell.getBuckConfig().getUnexpectedFlavorsMessages();
+
     for (Flavor flavor : target.getFlavors()) {
-      for (PatternAndMessage flavorPattern : suggestedMessagesForFlavors) {
-        if (flavorPattern.getPattern().matcher(flavor.getName()).find()) {
-          suggestions += flavor.getName() + " : " + flavorPattern.getMessage() + "\n";
+      boolean foundInConfig = false;
+      if (configMessagesForFlavors.isPresent()) {
+        for (PatternAndMessage flavorPattern : configMessagesForFlavors.get()) {
+          if (flavorPattern.getPattern().matcher(flavor.getName()).find()) {
+            foundInConfig = true;
+            suggestions += flavor.getName() + " : " + flavorPattern.getMessage() + "\n";
+          }
+        }
+      }
+      if (!foundInConfig){
+        for (PatternAndMessage flavorPattern : suggestedMessagesForFlavors) {
+          if (flavorPattern.getPattern().matcher(flavor.getName()).find()) {
+            suggestions += flavor.getName() + " : " + flavorPattern.getMessage() + "\n";
+          }
         }
       }
     }
+
     if (!suggestions.isEmpty()) {
       exceptionMessage += "\nHere are some things you can try to get the following " +
           "flavors to work::\n" + suggestions;

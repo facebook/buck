@@ -124,6 +124,7 @@ The following sections are recognized by Buck:
     'thrift',
     'tools',
     'ui',
+    'unknown_flavors_messages',
     ]}
   <a href="#{$name}"><code>[{$name}]</code></a><br>
 {/foreach}
@@ -2276,6 +2277,22 @@ your <code>.buckjavaargs</code> file</a>:
     during building and testing after an error is reported. Only effective
     when the super console is used. The value has to be a positive number.
     Defaults to the value of {call buckconfig.ui_thread_line_limit /}.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'unknown_flavors_messages' /}
+  {param name: 'unknown_flavors_messages' /}
+  {param description}
+    Specify messages for flavors. The message is used in case of an error with the flavors and
+    it can be used to help debugging or provide suggestions for a fix. The name is a common Java
+    Regex pattern like <code>android-*</code> and the value is the message that will be shown.
+    Messages in <code>.buckconfig</code> have priority over Buck's defaults and suggestions will be
+    shown for all the matches.
+    <pre class="prettyprint lang-ini">
+        [unknown_flavors_messages]{\n}{sp}{sp}
+            android-* = Make sure you have Android SDK & NDK installed and set up.
+    </pre>
   {/param}
 {/call}
 
