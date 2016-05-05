@@ -1,12 +1,12 @@
-#@# GENERATED FILE: DO NOT MODIFY 485c7562fac5a623126b7722047bf3bd79596b42 #@#
+#@# GENERATED FILE: DO NOT MODIFY 3aa631a99113aae903b09c1509cfa53c3aaecbe4 #@#
 {
   "platform" : {
     "deps" : [
+      "//src/com/facebook/buck/apple/xcode:xcode",
       "//src/com/facebook/buck/util:exceptions",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
-      "//src/com/facebook/buck/apple/xcode:xcode",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",

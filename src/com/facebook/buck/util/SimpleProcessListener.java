@@ -17,19 +17,24 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CoderResult;
 import java.nio.charset.StandardCharsets;
+import java.util.Iterator;
+
+import javax.annotation.Nullable;
 
 /**
  * Implementation of {@link ListeningProcessExecutor.ProcessListener} which decodes
  * bytes to and from Java String data and stores the result in memory.
  */
 public class SimpleProcessListener extends AbstractCharsetProcessListener {
-  private ListeningProcessExecutor.LaunchedProcess process;
-  private final CharBuffer stdinToWrite;
+  private @Nullable ListeningProcessExecutor.LaunchedProcess process;
+  private @Nullable Iterator<CharBuffer> nextStdInToWrite;
+  private @Nullable CharBuffer stdInToWrite;
   private final StringBuilder stdout;
   private final StringBuilder stderr;
 
@@ -38,11 +43,11 @@ public class SimpleProcessListener extends AbstractCharsetProcessListener {
    * and stores UTF-8 data received on stdout and stderr in memory.
    */
   public SimpleProcessListener() {
-    this(null, StandardCharsets.UTF_8);
+    this((Iterator<CharBuffer>) null, StandardCharsets.UTF_8);
   }
 
   /**
-   * Constructs a {@link SimpleProcessListener} which writes {@code stdinToWrite}
+   * Constructs a {@link SimpleProcessListener} which writes {@code nextStdInToWrite}
    * to stdin encoded in UTF-8, closes it, and stores UTF-8 data
    * received on stdout and stderr in memory.
    */
@@ -51,17 +56,23 @@ public class SimpleProcessListener extends AbstractCharsetProcessListener {
   }
 
   /**
-   * Constructs a {@link SimpleProcessListener} which writes {@code stdinToWrite}
+   * Constructs a {@link SimpleProcessListener} which writes {@code nextStdInToWrite}
    * to stdin encoded using {@code charset}, closes it, and stores data
    * decoded using {@code charset} received on stdout and stderr in memory.
    */
   public SimpleProcessListener(CharSequence stdinToWrite, Charset charset) {
+    this(ImmutableList.of(CharBuffer.wrap(stdinToWrite)).iterator(), charset);
+  }
+
+  /**
+   * Constructs a {@link SimpleProcessListener} which writes data from {@code nextStdInToWrite}
+   * to stdin encoded using {@code charset}, closes it, and stores data
+   * decoded using {@code charset} received on stdout and stderr in memory.
+   */
+  public SimpleProcessListener(@Nullable Iterator<CharBuffer> stdinToWrite, Charset charset) {
     super(charset);
-    if (stdinToWrite != null) {
-      this.stdinToWrite = CharBuffer.wrap(stdinToWrite);
-    } else {
-      this.stdinToWrite = null;
-    }
+    this.process = null;
+    this.nextStdInToWrite = stdinToWrite;
     this.stdout = new StringBuilder();
     this.stderr = new StringBuilder();
   }
@@ -89,36 +100,53 @@ public class SimpleProcessListener extends AbstractCharsetProcessListener {
   @Override
   public void onStart(ListeningProcessExecutor.LaunchedProcess process) {
     this.process = process;
-    if (stdinToWrite == null) {
+    if (nextStdInToWrite == null) {
       this.process.closeStdin(/* force */ true);
     }
   }
 
+  protected static boolean pushBytes(CharBuffer from, CharBuffer to) {
+    int bytesAvailable = to.remaining();
+
+    if (from.remaining() <= bytesAvailable) {
+      // This updates the position of both 'buffer' and 'nextStdInToWrite'.
+      to.put(from);
+      return false;
+    }
+
+    int oldLimit = from.limit();
+    from.limit(from.position() + bytesAvailable);
+    // Same as above wrt updating position.
+    to.put(from);
+    from.limit(oldLimit);
+    return true;
+  }
+
   @Override
   protected boolean onStdinCharsReady(CharBuffer buffer) {
-    if (stdinToWrite == null) {
+    if (nextStdInToWrite == null) {
       buffer.flip();
       return false;
     }
 
-    int bytesAvailable = buffer.remaining();
-    boolean wantMore;
-    if (stdinToWrite.remaining() <= bytesAvailable) {
-      // This updates the position of both 'buffer' and 'stdinToWrite'.
-      buffer.put(stdinToWrite);
-      wantMore = false;
+    if (stdInToWrite == null && nextStdInToWrite.hasNext()) {
+      stdInToWrite = nextStdInToWrite.next();
+    }
+
+    if (stdInToWrite != null) {
+      boolean hasMoreToWrite = pushBytes(stdInToWrite, buffer);
+      if (!hasMoreToWrite) {
+        stdInToWrite = nextStdInToWrite.hasNext() ? nextStdInToWrite.next() : null;
+      }
+    }
+
+    if (stdInToWrite == null) {
       process.closeStdin(/* force */ false);
-    } else {
-      int oldLimit = stdinToWrite.limit();
-      stdinToWrite.limit(stdinToWrite.position() + bytesAvailable);
-      // Same as above wrt updating position.
-      buffer.put(stdinToWrite);
-      stdinToWrite.limit(oldLimit);
-      wantMore = true;
+      nextStdInToWrite = null;
     }
 
     buffer.flip();
-    return wantMore;
+    return stdInToWrite != null;
   }
 
   @Override

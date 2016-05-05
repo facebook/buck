@@ -22,9 +22,12 @@ import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.is;
 
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
+import java.nio.CharBuffer;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -71,6 +74,34 @@ public class SimpleProcessListenerTest {
     int returnCode = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
     assertThat(returnCode, equalTo(0));
     assertThat(listener.getStdout(), equalTo(String.format("Meow%n")));
+    assertThat(listener.getStderr(), is(emptyString()));
+  }
+
+  @Test
+  public void supplierBasedInput() throws Exception {
+    ProcessExecutorParams params;
+    if (Platform.detect() == Platform.WINDOWS) {
+      params = ProcessExecutorParams.ofCommand(
+          "python",
+          "-c",
+          "import sys, shutil; shutil.copyfileobj(sys.stdin, sys.stdout)");
+    } else {
+      params = ProcessExecutorParams.ofCommand("cat");
+    }
+    ListeningProcessExecutor executor = new ListeningProcessExecutor();
+    SimpleProcessListener listener = new SimpleProcessListener(
+        ImmutableList.of(
+            CharBuffer.wrap("Meow"),
+            CharBuffer.wrap("Wow")
+        ).iterator(),
+        Charsets.UTF_8);
+    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(
+        params,
+        listener);
+    process.wantWrite();
+    int returnCode = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
+    assertThat(returnCode, equalTo(0));
+    assertThat(listener.getStdout(), equalTo(String.format("MeowWow")));
     assertThat(listener.getStderr(), is(emptyString()));
   }
 }
