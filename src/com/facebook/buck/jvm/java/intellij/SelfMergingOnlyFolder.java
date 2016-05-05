@@ -30,10 +30,6 @@ public abstract class SelfMergingOnlyFolder extends InclusiveFolder {
     super(path, wantsPackagePrefix, inputs);
   }
 
-  SelfMergingOnlyFolder(Path path, boolean wantsPackagePrefix) {
-    super(path, wantsPackagePrefix);
-  }
-
   SelfMergingOnlyFolder(Path path) {
     super(path);
   }

@@ -76,10 +76,6 @@ class SerializableDependentModule {
     return LIBRARY_DEPENDENCY_TYPE.equals(type);
   }
 
-  boolean isModule() {
-    return MODULE_DEPENDENCY_TYPE.equals(type);
-  }
-
   String getLibraryName() {
     Preconditions.checkState(isLibrary());
     return Preconditions.checkNotNull(name);

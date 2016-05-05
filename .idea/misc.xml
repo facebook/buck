@@ -16,15 +16,16 @@
       <entry_point TYPE="field" FQNAME="com.facebook.buck.util.environment.MacWifiSsidFinder CORE_WLAN_INSTANCE" />
       <entry_point TYPE="method" FQNAME="com.facebook.buck.cli.Main void nailMain(com.martiansoftware.nailgun.NGContext context)" />
     </entry_points>
-    <list size="8">
+    <list size="9">
       <item index="0" class="java.lang.String" itemvalue="com.facebook.buck.cli.AdditionalOptions" />
       <item index="1" class="java.lang.String" itemvalue="com.facebook.buck.rules.AddToRuleKey" />
       <item index="2" class="java.lang.String" itemvalue="com.facebook.infer.annotation.SuppressFieldNotInitialized" />
       <item index="3" class="java.lang.String" itemvalue="com.fasterxml.jackson.annotation.JsonProperty" />
       <item index="4" class="java.lang.String" itemvalue="com.google.common.eventbus.Subscribe" />
       <item index="5" class="java.lang.String" itemvalue="org.easymock.Mock" />
-      <item index="6" class="java.lang.String" itemvalue="org.junit.runners.Parameterized.Parameter" />
-      <item index="7" class="java.lang.String" itemvalue="org.kohsuke.args4j.Option" />
+      <item index="6" class="java.lang.String" itemvalue="org.immutables.value.Value.Check" />
+      <item index="7" class="java.lang.String" itemvalue="org.junit.runners.Parameterized.Parameter" />
+      <item index="8" class="java.lang.String" itemvalue="org.kohsuke.args4j.Option" />
     </list>
   </component>
   <component name="FrameworkDetectionExcludesConfiguration">
