@@ -90,6 +90,9 @@ public class CxxLink
       BuildContext context,
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
+    if (linker instanceof HasLinkerMap) {
+      buildableContext.recordArtifact(((HasLinkerMap) linker).linkerMapPath(output));
+    }
     Path scratchDir = BuildTargets.getScratchPath(getBuildTarget(), "%s-tmp");
     Path argFilePath = getProjectFilesystem().getRootPath().resolve(
         BuildTargets.getScratchPath(getBuildTarget(), "%s__argfile.txt"));

@@ -62,6 +62,7 @@ import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.PathMatcher;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -975,6 +976,31 @@ public class CxxBinaryIntegrationTest {
       assertTrue("Path must be absolute", path.isAbsolute());
       assertTrue("Path must exist", Files.exists(path));
     }
+  }
+
+  @Test
+  public void testLinkMapIsCached() throws Exception {
+    // Currently we only support Apple platforms for generating link maps.
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple", tmp);
+    workspace.setUp();
+    workspace.enableDirCache(); // enable the cache
+
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:simple");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path outputPath = workspace.getPath(BuildTargets.getGenPath(target, "%s"));
+
+    /*
+     * Check that building after clean will use the cache
+     */
+    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("build", target.toString()).assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetWasFetchedFromCache(target.toString());
+    assertThat(Files.exists(Paths.get(outputPath.toString() + "-LinkMap.txt")), is(true));
   }
 
   public void doTestSimpleCxxBinaryBuilds(

@@ -44,7 +44,7 @@ import java.util.Set;
 /**
  * A specialization of {@link Linker} containing information specific to the Darwin implementation.
  */
-public class DarwinLinker implements Linker {
+public class DarwinLinker implements Linker, HasLinkerMap {
 
   private final Tool tool;
 
@@ -91,11 +91,13 @@ public class DarwinLinker implements Linker {
   @Override
   public Iterable<Arg> linkerMap(Path output) {
     // Build up the arguments to pass to the linker.
-    ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
+    return StringArg.from(
+        "-Xlinker", "-map", "-Xlinker", linkerMapPath(output).toString());
+  }
 
-    Path linkMapPath = Paths.get(output + "-LinkMap.txt");
-    argsBuilder.addAll(StringArg.from("-Xlinker", "-map", "-Xlinker", linkMapPath.toString()));
-    return argsBuilder.build();
+  @Override
+  public Path linkerMapPath(Path output) {
+    return Paths.get(output + "-LinkMap.txt");
   }
 
   @Override
