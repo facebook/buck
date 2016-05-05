@@ -25,7 +25,6 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
@@ -48,7 +47,7 @@ public abstract class AbstractNodeBuilder<A> {
   protected final BuildRuleFactoryParams factoryParams;
   protected final BuildTarget target;
   protected final A arg;
-  private final Function<Optional<String>, Path> cellRoots;
+  private final CellPathResolver cellRoots;
   @Nullable
   private final HashCode rawHashCode;
 
@@ -68,9 +67,9 @@ public abstract class AbstractNodeBuilder<A> {
     this.target = target;
     this.rawHashCode = hashCode;
 
-    this.cellRoots = new Function<Optional<String>, Path>() {
+    this.cellRoots = new CellPathResolver() {
       @Override
-      public Path apply(Optional<String> input) {
+      public Path getCellPath(Optional<String> input) {
         if (input.isPresent()) {
           throw new HumanReadableException("Can't find the cell");
         }

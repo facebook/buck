@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -314,7 +315,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
-    Function<Optional<String>, Path> cellRoots = TestCellBuilder.createCellRoots(filesystem);
+    CellPathResolver cellRoots = TestCellBuilder.createCellRoots(filesystem);
     Optional<String> libName = Optional.of("test");
     Optional<String> libDir = Optional.of("$(location //other:gen_lib)/");
 
@@ -436,7 +437,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
-    Function<Optional<String>, Path> cellRoots = TestCellBuilder.createCellRoots(filesystem);
+    CellPathResolver cellRoots = TestCellBuilder.createCellRoots(filesystem);
 
     CxxPlatform platform1 =
         CxxPlatformUtils.DEFAULT_PLATFORM

@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -36,12 +37,9 @@ import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import java.nio.file.Path;
 
 public class WorkerToolDescription implements Description<WorkerToolDescription.Arg>,
     ImplicitDepsInferringDescription<WorkerToolDescription.Arg> {
@@ -101,7 +99,7 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
   @Override
   public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      Function<Optional<String>, Path> cellRoots,
+      CellPathResolver cellRoots,
       WorkerToolDescription.Arg constructorArg) {
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
     if (constructorArg.args.isPresent()) {

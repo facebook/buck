@@ -21,7 +21,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
-import com.google.common.base.Function;
+import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -62,7 +62,7 @@ public abstract class BuildTargetPatternParser<T> {
    * For case 2 and 3, parseContext is expected to be
    * {@link BuildTargetPatternParser#forVisibilityArgument()}.
    */
-  public final T parse(Function<Optional<String>, Path> cellNames, String buildTargetPattern) {
+  public final T parse(CellPathResolver cellNames, String buildTargetPattern) {
     Preconditions.checkArgument(
         buildTargetPattern.contains(BUILD_RULE_PREFIX),
         String.format(
@@ -83,15 +83,15 @@ public abstract class BuildTargetPatternParser<T> {
   }
 
   private T createWildCardPattern(
-      Function<Optional<String>, Path> cellNames,
+      CellPathResolver cellNames,
       String buildTargetPattern) {
     Path cellPath;
     int index = buildTargetPattern.indexOf(BUILD_RULE_PREFIX);
     if (index > 0) {
-      cellPath = cellNames.apply(Optional.of(buildTargetPattern.substring(0, index)));
+      cellPath = cellNames.getCellPath(Optional.of(buildTargetPattern.substring(0, index)));
       buildTargetPattern = buildTargetPattern.substring(index);
     } else {
-      cellPath = cellNames.apply(Optional.<String>absent());
+      cellPath = cellNames.getCellPath(Optional.<String>absent());
     }
 
     if (isWildCardAllowed()) {

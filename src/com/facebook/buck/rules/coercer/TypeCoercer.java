@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.google.common.base.Function;
+import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
@@ -53,7 +53,7 @@ public interface TypeCoercer<T> {
    * @throws CoerceFailedException Input object cannot be coerced into the given type.
    */
   T coerce(
-      Function<Optional<String>, Path> cellRoots,
+      CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException;

@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Console;
@@ -56,7 +57,6 @@ import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -96,7 +96,7 @@ public class JavaDepsFinder {
 
   public static JavaDepsFinder createJavaDepsFinder(
       BuckConfig buckConfig,
-      final Function<Optional<String>, Path> cellNames,
+      final CellPathResolver cellNames,
       ObjectMapper objectMapper,
       BuildContext buildContext,
       BuildEngine buildEngine) {

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 5b400118c1047d85ad8836de513937d7b6aeff2c #@#
+#@# GENERATED FILE: DO NOT MODIFY c6c1c0b13e3b1cd4a9944aca89dbc5844e353fae #@#
 {
   "Sha1HashCode" : {
     "deps" : [ ],
@@ -52,6 +52,7 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:Sha1HashCode",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules/coercer:types",
       "//src/com/facebook/buck/step:step",
@@ -73,6 +74,12 @@
     "exported_deps" : [
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules/args:args",
+      "//third-party/java/guava:guava"
+    ]
+  },
+  "interfaces" : {
+    "deps" : [ ],
+    "exported_deps" : [
       "//third-party/java/guava:guava"
     ]
   },
@@ -186,6 +193,7 @@
       "//src/com/facebook/buck/json:json",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:io",
       "//third-party/java/guava:guava"

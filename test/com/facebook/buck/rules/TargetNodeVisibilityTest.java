@@ -29,7 +29,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
@@ -37,8 +36,6 @@ import com.google.common.hash.Hashing;
 import org.junit.Test;
 
 import java.nio.file.Path;
-
-import javax.annotation.Nullable;
 
 public class TargetNodeVisibilityTest {
 
@@ -225,12 +222,12 @@ public class TargetNodeVisibilityTest {
       throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
     VisibilityPatternParser parser = new VisibilityPatternParser();
     ImmutableSet.Builder<VisibilityPattern> builder = ImmutableSet.builder();
-    Function<Optional<String>, Path> cellNames = new Function<Optional<String>, Path>() {
-          @Override
-          public Path apply(@Nullable Optional<String> input) {
-            return filesystem.getRootPath();
-          }
-        };
+    CellPathResolver cellNames = new CellPathResolver() {
+      @Override
+      public Path getCellPath(Optional<String> input) {
+        return filesystem.getRootPath();
+      }
+    };
     for (String visibility : visibilities) {
       builder.add(parser.parse(cellNames, visibility));
     }

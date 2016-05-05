@@ -23,11 +23,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -42,7 +42,7 @@ import java.nio.file.Paths;
 
 public class SourcePathTypeCoercerTest {
   private FakeProjectFilesystem projectFilesystem;
-  private Function<Optional<String>, Path> cellRoots;
+  private CellPathResolver cellRoots;
   private final Path pathRelativeToProjectRoot = Paths.get("");
   private final SourcePathTypeCoercer sourcePathTypeCoercer =
       new SourcePathTypeCoercer(new BuildTargetTypeCoercer(), new PathTypeCoercer());
@@ -51,9 +51,9 @@ public class SourcePathTypeCoercerTest {
   public void setUp() {
     projectFilesystem = new FakeProjectFilesystem();
 
-    cellRoots = new Function<Optional<String>, Path>() {
+    cellRoots = new CellPathResolver() {
       @Override
-      public Path apply(Optional<String> cellName) {
+      public Path getCellPath(Optional<String> cellName) {
         if (cellName.isPresent()) {
           throw new HumanReadableException("Boom");
         }
@@ -130,9 +130,9 @@ public class SourcePathTypeCoercerTest {
   public void coerceCrossRepoBuildTarget() throws CoerceFailedException, IOException {
     final Path helloRoot = Paths.get("/opt/src/hello");
 
-    cellRoots = new Function<Optional<String>, Path>() {
+    cellRoots = new CellPathResolver() {
       @Override
-      public Path apply(Optional<String> input) {
+      public Path getCellPath(Optional<String> input) {
         if (!input.isPresent()) {
           return projectFilesystem.getRootPath();
         }

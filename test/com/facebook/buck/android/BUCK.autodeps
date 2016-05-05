@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 430752b15036d64f4979ac06e8f575b08ba4254b #@#
+#@# GENERATED FILE: DO NOT MODIFY 46c0dc89da43fc2b780102823edb292f654c3356 #@#
 {
   "aar-integration" : {
     "deps" : [
@@ -163,6 +163,7 @@
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:Sha1HashCode",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules/args:args",

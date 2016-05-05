@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.google.common.base.Function;
+import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
@@ -60,7 +60,7 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
 
   @Override
   public ImmutableMap<K, V> coerce(
-      Function<Optional<String>, Path> cellRoots,
+      CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object)

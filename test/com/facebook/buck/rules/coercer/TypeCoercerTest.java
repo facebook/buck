@@ -30,6 +30,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.python.NeededCoverageSpec;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
@@ -38,7 +39,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -66,16 +66,16 @@ public class TypeCoercerTest {
   private final TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
       ObjectMappers.newDefaultInstance());
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private Function<Optional<String>, Path> cellRoots;
+  private CellPathResolver cellRoots;
 
   @Rule
   public ExpectedException exception = ExpectedException.none();
 
   @Before
   public void setUpCellRoots() {
-    cellRoots = new Function<Optional<String>, Path>() {
+    cellRoots = new CellPathResolver() {
       @Override
-      public Path apply(Optional<String> cellName) {
+      public Path getCellPath(Optional<String> cellName) {
         if (cellName.isPresent()) {
           throw new HumanReadableException("Boom");
         }

@@ -29,7 +29,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.ProcessExecutor;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
 import java.io.IOException;
@@ -124,13 +123,13 @@ public class TestCellBuilder {
     return (Cell) enhancer.create();
   }
 
-  public static Function<Optional<String>, Path> createCellRoots(
+  public static CellPathResolver createCellRoots(
       @Nullable ProjectFilesystem filesystem) {
     final ProjectFilesystem toUse = filesystem == null ? new FakeProjectFilesystem() : filesystem;
 
-    return new Function<Optional<String>, Path>() {
+    return new CellPathResolver() {
       @Override
-      public Path apply(Optional<String> cellName) {
+      public Path getCellPath(Optional<String> cellName) {
         if (cellName.isPresent() && !cellName.get().equals("@")) {
           throw new RuntimeException("No known cell with the name: " + cellName);
         }

@@ -22,6 +22,7 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -31,12 +32,12 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
-import com.facebook.buck.rules.macros.MavenCoordinatesMacroExpander;
-import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroException;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.macros.MavenCoordinatesMacroExpander;
+import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
@@ -48,7 +49,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
 
 public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescription.Arg>
     implements Description<T>, ImplicitDepsInferringDescription<T> {
@@ -117,7 +117,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
   @Override
   public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      Function<Optional<String>, Path> cellRoots,
+      CellPathResolver cellRoots,
       T constructorArg) {
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
     if (constructorArg.bash.isPresent()) {
@@ -134,7 +134,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
 
   private void addDepsFromParam(
       BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
+      CellPathResolver cellNames,
       String paramValue,
       ImmutableSet.Builder<BuildTarget> targets) {
     try {

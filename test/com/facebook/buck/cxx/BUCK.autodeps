@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 0cfee2e3a41b7ec6fb87bb221dffc762d65af895 #@#
+#@# GENERATED FILE: DO NOT MODIFY 283f457b2824408dab1c2a19332a1f9296217e98 #@#
 {
   "cxx" : {
     "deps" : [
@@ -14,6 +14,7 @@
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:command_tool",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules/args:args",

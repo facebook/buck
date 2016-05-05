@@ -27,7 +27,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.google.common.base.Function;
+import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.base.Optional;
 
 import org.junit.Before;
@@ -183,9 +183,9 @@ public class BuildTargetParserTest {
   public void testParseWithRepoName() {
     final Path localRepoRoot = Paths.get("/opt/local/repo");
 
-    Function<Optional<String>, Path> cellRoots = new Function<Optional<String>, Path>() {
+    CellPathResolver cellRoots = new CellPathResolver() {
       @Override
-      public Path apply(Optional<String> cellName) {
+      public Path getCellPath(Optional<String> cellName) {
         if (!"localreponame".equals(cellName.orNull())) {
           throw new RuntimeException("Path should have been present");
         }

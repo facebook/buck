@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -27,11 +28,9 @@ import com.facebook.buck.rules.macros.MacroException;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
-import java.nio.file.Path;
 import java.util.Objects;
 
 /**
@@ -41,14 +40,14 @@ public class MacroArg extends Arg {
 
   private final MacroHandler expander;
   private final BuildTarget target;
-  private final Function<Optional<String>, Path> cellNames;
+  private final CellPathResolver cellNames;
   private final BuildRuleResolver resolver;
   private final String unexpanded;
 
   public MacroArg(
       MacroHandler expander,
       BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
+      CellPathResolver cellNames,
       BuildRuleResolver resolver,
       String unexpanded) {
     this.expander = expander;
@@ -130,7 +129,7 @@ public class MacroArg extends Arg {
   public static Function<String, Arg> toMacroArgFunction(
       final MacroHandler expander,
       final BuildTarget target,
-      final Function<Optional<String>, Path> cellNames,
+      final CellPathResolver cellNames,
       final BuildRuleResolver resolver) {
     return new Function<String, Arg>() {
       @Override

@@ -18,10 +18,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-
-import java.nio.file.Path;
 
 public class VisibilityPatternParser {
   private static final String VISIBILITY_PUBLIC = "PUBLIC";
@@ -30,7 +26,7 @@ public class VisibilityPatternParser {
       BuildTargetPatternParser.forVisibilityArgument();
 
   public VisibilityPattern parse(
-      Function<Optional<String>, Path> cellNames,
+      CellPathResolver cellNames,
       String buildTargetPattern) {
     if (VISIBILITY_PUBLIC.equals(buildTargetPattern)) {
       return PublicVisibilityPattern.INSTANCE;

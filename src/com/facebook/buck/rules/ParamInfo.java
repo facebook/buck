@@ -22,7 +22,6 @@ import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Types;
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
 import java.lang.reflect.Field;
@@ -124,7 +123,7 @@ public class ParamInfo implements Comparable<ParamInfo> {
   }
 
   public void setFromParams(
-      Function<Optional<String>, Path> cellRoots,
+      CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       BuildRuleFactoryParams params,
       Object arg,
@@ -140,14 +139,15 @@ public class ParamInfo implements Comparable<ParamInfo> {
 
   /**
    * Sets a single property of the {@code dto}, coercing types as necessary.
-   * @param filesystem {@link com.facebook.buck.io.ProjectFilesystem} used to ensure
-   *        {@link java.nio.file.Path}s exist.
+   * @param cellRoots
+   * @param filesystem {@link ProjectFilesystem} used to ensure
+   *        {@link Path}s exist.
    * @param pathRelativeToProjectRoot The path relative to the project root that this DTO is for.
    * @param dto The constructor DTO on which the value should be set.
    * @param value The value, which may be coerced depending on the type on {@code dto}.
    */
   public void set(
-      Function<Optional<String>, Path> cellRoots,
+      CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object dto,

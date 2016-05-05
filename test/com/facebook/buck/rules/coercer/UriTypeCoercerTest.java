@@ -20,9 +20,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
 import org.junit.Before;
@@ -37,13 +37,13 @@ public class UriTypeCoercerTest {
 
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
   private Path pathFromRoot = Paths.get("third-party/java");
-  private Function<Optional<String>, Path> cellRoots;
+  private CellPathResolver cellRoots;
 
   @Before
   public void setUpCellRoots() {
-    cellRoots = new Function<Optional<String>, Path>() {
+    cellRoots = new CellPathResolver() {
       @Override
-      public Path apply(Optional<String> cellName) {
+      public Path getCellPath(Optional<String> cellName) {
         if (cellName.isPresent()) {
           throw new HumanReadableException("Boom");
         }

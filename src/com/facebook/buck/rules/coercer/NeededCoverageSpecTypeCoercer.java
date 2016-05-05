@@ -19,7 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.python.NeededCoverageSpec;
-import com.google.common.base.Function;
+import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
@@ -72,7 +72,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
 
   @Override
   public NeededCoverageSpec coerce(
-      Function<Optional<String>, Path> cellRoots,
+      CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {

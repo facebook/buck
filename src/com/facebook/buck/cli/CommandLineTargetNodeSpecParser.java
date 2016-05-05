@@ -18,12 +18,10 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.TargetNodeSpec;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
-
-import java.nio.file.Path;
 
 public class CommandLineTargetNodeSpecParser {
 
@@ -83,7 +81,7 @@ public class CommandLineTargetNodeSpecParser {
     return cellName + "//" + target;
   }
 
-  public TargetNodeSpec parse(Function<Optional<String>, Path> cellNames, String arg) {
+  public TargetNodeSpec parse(CellPathResolver cellNames, String arg) {
     arg = Optional.fromNullable(config.getBuildTargetForAliasAsString(arg)).or(arg);
     arg = normalizeBuildTargetString(arg);
     return parser.parse(cellNames, arg);

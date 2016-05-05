@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY a38d13eebacb6869d304b758115a0896a1f6e65c #@#
+#@# GENERATED FILE: DO NOT MODIFY b75a41a7c82f7e4b9554a367e288f92fec049c1c #@#
 {
   "framework_path_arg" : {
     "deps" : [ ],
@@ -60,6 +60,7 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules/args:args",
       "//src/com/facebook/buck/rules/coercer:coercer",

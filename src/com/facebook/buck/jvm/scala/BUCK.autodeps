@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY cc348e40239a1f0aa13943bb40969affb4584e58 #@#
+#@# GENERATED FILE: DO NOT MODIFY dc25b109fed694b0437a61cb2892e6777666b73f #@#
 {
   "scala" : {
     "deps" : [
@@ -19,6 +19,7 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step:step",
       "//third-party/java/guava:guava",

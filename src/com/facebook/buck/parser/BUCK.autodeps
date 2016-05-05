@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY aaa2dfe4a9f75d34a49e90b2ca36db5b00f2ae16 #@#
+#@# GENERATED FILE: DO NOT MODIFY b53b29ca0af593930b50542327cf27978eb91c39 #@#
 {
   "config" : {
     "deps" : [
@@ -41,11 +41,13 @@
     ]
   },
   "rule_pattern" : {
-    "deps" : [ ],
+    "deps" : [
+      "//third-party/java/guava:guava"
+    ],
     "exported_deps" : [
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/util:exceptions",
-      "//third-party/java/guava:guava",
       "//third-party/java/jsr:jsr305"
     ]
   }

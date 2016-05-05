@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 4bd746dbb9cbdddcc55dbadd17ad4406402a7330 #@#
+#@# GENERATED FILE: DO NOT MODIFY a9855f29fd61331a3deaff7960c6ef76f5e6999b #@#
 {
   "rules" : {
     "deps" : [
@@ -22,6 +22,7 @@
       "//src/com/facebook/buck/rules:action_graph_cache",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:command_tool",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules:target_graph_hashing",
@@ -103,6 +104,7 @@
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:Sha1HashCode",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules:types",

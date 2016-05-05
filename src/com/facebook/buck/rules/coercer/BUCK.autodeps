@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY db3ef40bcadc31edebb54dd27dbb98c77273a326 #@#
+#@# GENERATED FILE: DO NOT MODIFY 43318b59311bb62009c612bdafb9a5447947618c #@#
 {
   "coercer" : {
     "deps" : [
@@ -12,6 +12,7 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/python:support",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules/coercer:types",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
@@ -22,6 +23,7 @@
     "deps" : [ ],
     "exported_deps" : [
       "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/rules:interfaces",
       "//third-party/java/guava:guava"
     ]
   }

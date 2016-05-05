@@ -23,8 +23,8 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
 import org.junit.Test;
@@ -104,9 +104,9 @@ public class BuildTargetPatternParserTest {
 
     final ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-    Function<Optional<String>, Path> cellNames = new Function<Optional<String>, Path>() {
+    CellPathResolver cellNames = new CellPathResolver() {
       @Override
-      public Path apply(Optional<String> input) {
+      public Path getCellPath(Optional<String> input) {
         if (input.get().equals("other")) {
           return filesystem.getRootPath();
         }

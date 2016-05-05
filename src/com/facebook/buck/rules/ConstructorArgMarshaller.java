@@ -21,7 +21,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -81,7 +80,7 @@ public class ConstructorArgMarshaller {
    * @param visibilityPatterns A builder to be populated with the visibility patterns.
    */
   public void populate(
-      Function<Optional<String>, Path> cellRoots,
+      CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       BuildRuleFactoryParams params,
       Object dto,
@@ -108,7 +107,7 @@ public class ConstructorArgMarshaller {
    */
   @VisibleForTesting
   void populateDefaults(
-      Function<Optional<String>, Path> cellRoots,
+      CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       BuildRuleFactoryParams params,
       Object dto) throws ConstructorArgMarshalException {
@@ -146,7 +145,7 @@ public class ConstructorArgMarshaller {
 
   @SuppressWarnings("unchecked")
   private void populateVisibilityPatterns(
-      Function<Optional<String>, Path> cellNames,
+      CellPathResolver cellNames,
       ImmutableSet.Builder<VisibilityPattern> visibilityPatterns,
       Map<String, ?> instance) throws NoSuchBuildTargetException {
     Object value = instance.get("visibility");

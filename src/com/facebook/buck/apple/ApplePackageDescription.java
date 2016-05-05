@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -47,7 +48,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Sets;
 
-import java.nio.file.Path;
 import java.util.Set;
 
 public class ApplePackageDescription implements
@@ -136,7 +136,7 @@ public class ApplePackageDescription implements
   @Override
   public ImmutableSet<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      Function<Optional<String>, Path> cellRoots,
+      CellPathResolver cellRoots,
       ApplePackageDescription.Arg constructorArg) {
     ImmutableSet.Builder<BuildTarget> builder = ImmutableSet.builder();
     builder.add(propagateFlavorsToTarget(buildTarget, constructorArg.bundle));
@@ -207,7 +207,7 @@ public class ApplePackageDescription implements
   private void addDepsFromParam(
       ImmutableSet.Builder<BuildTarget> builder,
       BuildTarget target,
-      Function<Optional<String>, Path> cellNames) {
+      CellPathResolver cellNames) {
     Set<Flavor> platformFlavors = Sets.intersection(
         appleCxxPlatformFlavorDomain.getFlavors(),
         target.getFlavors());

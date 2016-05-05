@@ -23,10 +23,10 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.TargetNodeSpec;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -196,11 +196,13 @@ public abstract class AbstractCommand implements Command {
   }
 
   /**
+   *
+   * @param cellNames
    * @param buildTargetNames The build targets to parse, represented as strings.
    * @return A set of {@link BuildTarget}s for the input buildTargetNames.
    */
   protected ImmutableSet<BuildTarget> getBuildTargets(
-      Function<Optional<String>, Path> cellNames,
+      CellPathResolver cellNames,
       Iterable<String> buildTargetNames) {
     ImmutableSet.Builder<BuildTarget> buildTargets = ImmutableSet.builder();
 

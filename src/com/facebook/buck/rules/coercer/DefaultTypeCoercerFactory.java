@@ -23,14 +23,13 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.python.NeededCoverageSpec;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -74,7 +73,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         new IdentityTypeCoercer<BuildTargetPattern>(BuildTargetPattern.class) {
           @Override
           public BuildTargetPattern coerce(
-              Function<Optional<String>, Path> cellRoots,
+              CellPathResolver cellRoots,
               ProjectFilesystem filesystem,
               Path pathRelativeToProjectRoot,
               Object object)

@@ -1,3 +1,18 @@
+
+
+# This is here to break circular dependencies, since this interface is
+# threaded through almost everything.
+java_library(
+  name = 'interfaces',
+  srcs = [
+    'CellPathResolver.java',
+  ],
+  autodeps = True,
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
 java_library(
   name = 'types',
   srcs = [
@@ -10,10 +25,7 @@ java_library(
   ],
   autodeps = True,
   visibility = [
-    '//src/com/facebook/buck/apple/project_generator:project_generator',
-    '//src/com/facebook/buck/cli:cli',
-    '//src/com/facebook/buck/parser:parser',
-    '//test/...',
+    'PUBLIC',
   ],
 )
 

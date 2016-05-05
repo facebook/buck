@@ -37,7 +37,6 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -111,7 +110,7 @@ public class Cell {
     roots.add(filesystem.getRootPath());
     for (String cellName : allCells.keySet()) {
       // Added the precondition check, though the resolve call can never return null.
-      Path cellRoot = Preconditions.checkNotNull(getCellRoots().apply(Optional.of(cellName)));
+      Path cellRoot = Preconditions.checkNotNull(getCellRoots().getCellPath(Optional.of(cellName)));
       roots.add(cellRoot);
     }
     this.knownRoots = roots.build();
@@ -355,7 +354,7 @@ public class Cell {
     return tempFilePatterns;
   }
 
-  public Function<Optional<String>, Path> getCellRoots() {
+  public CellPathResolver getCellRoots() {
     return config.getCellRoots();
   }
 

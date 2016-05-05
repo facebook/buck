@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 784af492c97fbf1823fc3d81d376f0bdac3f8173 #@#
+#@# GENERATED FILE: DO NOT MODIFY 4a16928c244a27c6da1d30af634ec3d1daa3caee #@#
 {
   "lua" : {
     "deps" : [
@@ -19,6 +19,7 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/step:step",

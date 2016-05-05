@@ -17,8 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
+import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.collect.ImmutableCollection;
 
 import java.nio.file.Path;
@@ -49,7 +48,7 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
    * Helper method to add coerced elements to the builder.
    */
   protected void fill(
-      Function<Optional<String>, Path> cellRoots,
+      CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       C.Builder<T> builder,

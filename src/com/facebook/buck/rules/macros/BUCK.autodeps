@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 2bdf254e410d620afc5fa21dbf5a567d47894da4 #@#
+#@# GENERATED FILE: DO NOT MODIFY f039c0a443d4d7b1ad5e866173eb0633f32d4c79 #@#
 {
   "macros" : {
     "deps" : [
@@ -13,6 +13,7 @@
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",

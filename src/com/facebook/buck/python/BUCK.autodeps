@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 48416a126a48fd0c6702ff2620575ed6d8655f22 #@#
+#@# GENERATED FILE: DO NOT MODIFY 038a9bb43ee9088dc19d0801c6c31e49b40e24e2 #@#
 {
   "config" : {
     "deps" : [
@@ -41,6 +41,7 @@
       "//src/com/facebook/buck/python:config",
       "//src/com/facebook/buck/python:support",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/rules/macros:macros",

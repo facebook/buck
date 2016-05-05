@@ -31,6 +31,7 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -45,8 +46,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Path;
 
 public class AppleBundleDescription implements Description<AppleBundleDescription.Arg>,
     Flavored,
@@ -159,7 +158,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   @Override
   public ImmutableSet<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      Function<Optional<String>, Path> cellRoots,
+      CellPathResolver cellRoots,
       AppleBundleDescription.Arg constructorArg) {
     if (!constructorArg.deps.isPresent()) {
       return ImmutableSet.of();

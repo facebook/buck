@@ -39,6 +39,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -66,7 +67,6 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -125,7 +125,7 @@ public class ApkGenruleTest {
         parser.parse(
             EasyMock.eq(":fb4a"),
             EasyMock.anyObject(BuildTargetPatternParser.class),
-            EasyMock.<Function<Optional<String>, Path>>anyObject()))
+            EasyMock.<CellPathResolver>anyObject()))
         .andStubReturn(apkTarget);
     EasyMock.replay(parser);
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//src/com/facebook:sign_fb4a");

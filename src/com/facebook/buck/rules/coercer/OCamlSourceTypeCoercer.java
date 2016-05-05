@@ -17,8 +17,8 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
@@ -56,7 +56,7 @@ public class OCamlSourceTypeCoercer implements TypeCoercer<OCamlSource> {
 
   @Override
   public OCamlSource coerce(
-      Function<Optional<String>, Path> cellRoots,
+      CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {

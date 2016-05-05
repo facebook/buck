@@ -19,17 +19,14 @@ package com.facebook.buck.rules.args;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.macros.MacroException;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.MacroMatchResult;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.shell.WorkerTool;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-
-import java.nio.file.Path;
 
 public class WorkerMacroArg extends MacroArg {
 
@@ -40,7 +37,7 @@ public class WorkerMacroArg extends MacroArg {
   public WorkerMacroArg(
       MacroHandler macroHandler,
       BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
+      CellPathResolver cellNames,
       BuildRuleResolver resolver,
       String unexpanded) throws MacroException {
     super(macroHandler, target, cellNames, resolver, unexpanded);

@@ -18,10 +18,7 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-
-import java.nio.file.Path;
+import com.facebook.buck.rules.CellPathResolver;
 
 /**
  * {@link MacroExpander}s that also implement this interface can provide different output when
@@ -34,7 +31,7 @@ public interface MacroExpanderWithCustomFileOutput {
    */
   String expandForFile(
       BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
+      CellPathResolver cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException;

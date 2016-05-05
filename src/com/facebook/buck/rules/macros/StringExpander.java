@@ -19,11 +19,8 @@ package com.facebook.buck.rules.macros;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
+import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.collect.ImmutableList;
-
-import java.nio.file.Path;
 
 public class StringExpander implements MacroExpander {
 
@@ -36,7 +33,7 @@ public class StringExpander implements MacroExpander {
   @Override
   public String expand(
       BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
+      CellPathResolver cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException {
@@ -46,7 +43,7 @@ public class StringExpander implements MacroExpander {
   @Override
   public ImmutableList<BuildRule> extractBuildTimeDeps(
       BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
+      CellPathResolver cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException {
@@ -56,7 +53,7 @@ public class StringExpander implements MacroExpander {
   @Override
   public ImmutableList<BuildTarget> extractParseTimeDeps(
       BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
+      CellPathResolver cellNames,
       String input)
       throws MacroException {
     return ImmutableList.of();
@@ -65,7 +62,7 @@ public class StringExpander implements MacroExpander {
   @Override
   public Object extractRuleKeyAppendables(
       BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
+      CellPathResolver cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException {

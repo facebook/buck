@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BinaryBuildRuleToolProvider;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CachingBuildEngine;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.PathSourcePath;
@@ -110,10 +111,10 @@ public class BuckConfig {
     }
   };
 
-  private final Function<Optional<String>, Path> cellToPath =
-      new Function<Optional<String>, Path>() {
+  private final CellPathResolver cellToPath =
+      new CellPathResolver() {
         @Override
-        public Path apply(Optional<String> cellName) {
+        public Path getCellPath(Optional<String> cellName) {
           if (!cellName.isPresent()) {
             return projectFilesystem.getRootPath();
           }
@@ -217,7 +218,7 @@ public class BuckConfig {
     return config.getListWithoutComments(section, field, splitChar);
   }
 
-  public Function<Optional<String>, Path> getCellRoots() {
+  public CellPathResolver getCellRoots() {
     return cellToPath;
   }
 

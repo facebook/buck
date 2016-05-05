@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY d6756bcfe620edbd7b0f45533a7c460f90591f25 #@#
+#@# GENERATED FILE: DO NOT MODIFY 294aa647ea281f8167b04bf76ab31e4a22046d37 #@#
 {
   "autodeps" : {
     "deps" : [
@@ -19,6 +19,7 @@
       "//src/com/facebook/buck/jvm/java:autodeps",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/util:io",

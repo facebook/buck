@@ -17,8 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
+import com.facebook.buck.rules.CellPathResolver;
 
 import java.nio.file.Path;
 
@@ -36,7 +35,7 @@ public class IdentityTypeCoercer<T> extends LeafTypeCoercer<T> {
 
   @Override
   public T coerce(
-      Function<Optional<String>, Path> cellRoots,
+      CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object)

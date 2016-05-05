@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY eb690c9d18f70e79904899c7d725adb6055bd972 #@#
+#@# GENERATED FILE: DO NOT MODIFY e1fc380aadc01717ec1ef7b94d12ced84c82ecfd #@#
 {
   "args" : {
     "deps" : [
@@ -10,6 +10,7 @@
     "exported_deps" : [
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules/macros:macros",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava"

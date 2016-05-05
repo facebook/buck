@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 0081dc2b3fd917398998a84f71233d4d49326e78 #@#
+#@# GENERATED FILE: DO NOT MODIFY 509e5a8a2420cc48aaeca8a47780d260db9211b3 #@#
 {
   "benchmarks" : {
     "deps" : [
@@ -81,6 +81,7 @@
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/python:config",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:types",
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/rules/coercer:types",

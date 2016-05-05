@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 58478fdf7284f6b35d9033b22714dd82fd6df432 #@#
+#@# GENERATED FILE: DO NOT MODIFY 74af1b9675894739e6b253c4dc5114b036f8c6a3 #@#
 {
   "go" : {
     "deps" : [
@@ -21,6 +21,7 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step:step",

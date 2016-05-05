@@ -24,7 +24,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -45,7 +44,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
   private final HashCode rawInputsHashCode;
   private final TypeCoercerFactory typeCoercerFactory;
   private final BuildRuleFactoryParams ruleFactoryParams;
-  private final Function<Optional<String>, Path> cellRoots;
+  private final CellPathResolver cellRoots;
 
   private final Description<T> description;
 
@@ -64,7 +63,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
       BuildRuleFactoryParams params,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
-      Function<Optional<String>, Path> cellRoots)
+      CellPathResolver cellRoots)
       throws NoSuchBuildTargetException, InvalidSourcePathInputException {
     this.rawInputsHashCode = rawInputsHashCode;
     this.description = description;
@@ -326,7 +325,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     }
   }
 
-  public Function<Optional<String>, Path> getCellNames() {
+  public CellPathResolver getCellNames() {
     return cellRoots;
   }
 

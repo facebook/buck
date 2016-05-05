@@ -19,13 +19,12 @@ package com.facebook.buck.rules.macros;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -43,7 +42,7 @@ public class MacroHandler {
 
   public Function<String, String> getExpander(
       final BuildTarget target,
-      final Function<Optional<String>, Path> cellNames,
+      final CellPathResolver cellNames,
       final BuildRuleResolver resolver) {
     return new Function<String, String>() {
       @Override
@@ -85,7 +84,7 @@ public class MacroHandler {
 
   public String expand(
       final BuildTarget target,
-      final Function<Optional<String>, Path> cellNames,
+      final CellPathResolver cellNames,
       final BuildRuleResolver resolver,
       String blob)
       throws MacroException {
@@ -98,7 +97,7 @@ public class MacroHandler {
 
   public ImmutableMap<String, MacroReplacer> getMacroReplacers(
       final BuildTarget target,
-      final Function<Optional<String>, Path> cellNames, final BuildRuleResolver resolver) {
+      final CellPathResolver cellNames, final BuildRuleResolver resolver) {
     ImmutableMap.Builder<String, MacroReplacer> replacers = ImmutableMap.builder();
     for (final Map.Entry<String, MacroExpander> entry : expanders.entrySet()) {
       replacers.put(
@@ -119,7 +118,7 @@ public class MacroHandler {
 
   public ImmutableList<BuildRule> extractBuildTimeDeps(
       BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
+      CellPathResolver cellNames,
       BuildRuleResolver resolver,
       String blob)
       throws MacroException {
@@ -141,7 +140,7 @@ public class MacroHandler {
 
   public ImmutableList<BuildTarget> extractParseTimeDeps(
       BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
+      CellPathResolver cellNames,
       String blob)
       throws MacroException {
 
@@ -162,7 +161,7 @@ public class MacroHandler {
 
   public ImmutableList<Object> extractRuleKeyAppendables(
       BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
+      CellPathResolver cellNames,
       BuildRuleResolver resolver,
       String blob)
       throws MacroException {

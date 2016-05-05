@@ -23,12 +23,10 @@ import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-
-import java.nio.file.Path;
 
 /**
  * Abstract expander which resolves using a references to another {@link BuildRule}.
@@ -45,7 +43,7 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
 
   protected BuildRule resolve(
       BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
+      CellPathResolver cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException {
@@ -69,7 +67,7 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
   @Override
   public String expand(
       BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
+      CellPathResolver cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException {
@@ -88,7 +86,7 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
   @Override
   public ImmutableList<BuildRule> extractBuildTimeDeps(
       BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
+      CellPathResolver cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException {
@@ -98,7 +96,7 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
   @Override
   public ImmutableList<BuildTarget> extractParseTimeDeps(
       BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
+      CellPathResolver cellNames,
       String input) {
     return ImmutableList.of(
         BuildTargetParser.INSTANCE.parse(
@@ -110,7 +108,7 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
   @Override
   public Object extractRuleKeyAppendables(
       BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
+      CellPathResolver cellNames,
       BuildRuleResolver resolver,
       String input) throws MacroException {
     return new BuildTargetSourcePath(
