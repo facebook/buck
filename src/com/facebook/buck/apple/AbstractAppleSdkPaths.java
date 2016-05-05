@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
-import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
@@ -97,10 +96,6 @@ abstract class AbstractAppleSdkPaths {
         throw new HumanReadableException("Unsupported source tree: '%s'", sourceTree);
       }
     };
-  }
-
-  public Path resolve(SourceTreePath path) {
-    return sourceTreeRootsFunction().apply(path.getSourceTree()).resolve(path.getPath());
   }
 
   public Function<String, String> replaceSourceTreeReferencesFunction() {
