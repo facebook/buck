@@ -21,12 +21,14 @@ import com.facebook.buck.intellij.plugin.file.BuckFileType;
 import com.facebook.buck.intellij.plugin.ui.BuckEventsConsumer;
 import com.facebook.buck.intellij.plugin.ui.BuckToolWindowFactory;
 import com.facebook.buck.intellij.plugin.ui.BuckUIManager;
+import com.facebook.buck.intellij.plugin.ui.utils.BuckPluginNotifications;
 import com.facebook.buck.intellij.plugin.ws.BuckClient;
 import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventsHandler;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckEventsConsumerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ui.ConsoleViewContentType;
+import com.intellij.ide.ui.UISettings;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.diagnostic.Logger;
@@ -36,7 +38,6 @@ import com.intellij.openapi.fileTypes.FileTypeManager;
 import com.intellij.openapi.fileTypes.UnknownFileType;
 import com.intellij.openapi.fileTypes.impl.FileTypeManagerImpl;
 import com.intellij.openapi.project.Project;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -85,6 +86,10 @@ public final class BuckModule implements ProjectComponent {
                 }
             }
         );
+
+        if (!UISettings.getInstance().SHOW_MAIN_TOOLBAR) {
+            BuckPluginNotifications.notifyActionToolbar(mProject);
+        }
     }
 
     @Override
@@ -171,7 +176,6 @@ public final class BuckModule implements ProjectComponent {
                     .getFileTypeByFileName(BuckFileType.INSTANCE.getDefaultExtension());
               }
             }
-
         });
     }
 

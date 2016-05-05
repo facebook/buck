@@ -29,6 +29,7 @@ import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.execution.ui.RunnerLayoutUi;
 import com.intellij.execution.ui.layout.PlaceInGrid;
 import com.intellij.ide.DataManager;
+import com.intellij.ide.ui.UISettings;
 import com.intellij.openapi.actionSystem.ActionPlaces;
 import com.intellij.openapi.actionSystem.ActionGroup;
 import com.intellij.openapi.actionSystem.ActionManager;
@@ -71,6 +72,17 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
     if (target != null) {
       toolWindow.setTitle("Target: " + target);
     }
+  }
+
+  public static void showMainToolbar(final Project project) {
+    ApplicationManager.getApplication().invokeLater(new Runnable() {
+      @Override
+      public void run() {
+        UISettings uiSettings = UISettings.getInstance();
+        uiSettings.SHOW_MAIN_TOOLBAR = true;
+        uiSettings.fireUISettingsChanged();
+      }
+    });
   }
 
   public static void showToolWindow(final Project project) {

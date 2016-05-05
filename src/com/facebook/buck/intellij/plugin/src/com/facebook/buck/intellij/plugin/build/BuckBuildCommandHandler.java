@@ -18,13 +18,12 @@ package com.facebook.buck.intellij.plugin.build;
 
 import com.facebook.buck.intellij.plugin.ui.BuckEventsConsumer;
 import com.facebook.buck.intellij.plugin.ui.BuckToolWindowFactory;
+import com.facebook.buck.intellij.plugin.ui.utils.BuckPluginNotifications;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.ui.SystemNotifications;
 
 public class BuckBuildCommandHandler extends BuckCommandHandler {
 
@@ -65,9 +64,8 @@ public class BuckBuildCommandHandler extends BuckCommandHandler {
   protected void afterCommand() {
     BuckBuildManager.getInstance(project()).setBuilding(project, false);
 
-    SystemNotifications.getInstance().notify(
-        "Buck",
-        StringUtil.capitalize(command.name()) + " Finished",
-        this.processExitSuccesfull() ? "Successful" : "Failed");
+    BuckPluginNotifications.notifySystemCommandFinished(
+        command.name(),
+        this.processExitSuccesfull());
   }
 }
