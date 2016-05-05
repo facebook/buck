@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Verbosity;
@@ -112,7 +113,10 @@ public class AaptStepTest {
     ImmutableList<String> command = aaptStep.getShellCommandInternal(mockContext);
 
     assertTrue(command.contains("-G"));
-    assertTrue(command.contains("/java/com/facebook/buck/example/mock_proguard.txt"));
+    String proguardConfigPath = MorePaths.pathWithPlatformSeparators(
+        "/java/com/facebook/buck/example/mock_proguard.txt"
+    );
+    assertTrue(command.contains(proguardConfigPath));
   }
 
   @Test
