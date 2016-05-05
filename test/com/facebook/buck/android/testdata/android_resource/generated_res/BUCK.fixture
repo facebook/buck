@@ -1,7 +1,8 @@
 genrule(
   name = 'gen-res',
   out = 'res',
-  cmd = 'cp -r $SRCS $OUT',
+  bash = 'cp -r $SRCS $OUT',
+  cmd_exe = 'xcopy %SRCS% %OUT% /E /I',
   srcs = [
     'input_res',
   ],
