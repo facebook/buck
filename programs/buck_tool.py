@@ -239,7 +239,7 @@ class BuckTool(object):
                     ngserver_output_path),
             ]
 
-            if is_java8():
+            if is_java8_or_9():
                 extra_default_options.extend([
                     "-XX:+UseG1GC",
                     "-XX:MaxHeapFreeRatio=40",
@@ -367,7 +367,7 @@ class BuckTool(object):
         return []
 
     def _get_java_args(self, version_uid, extra_default_options=[]):
-        java_args = [] if is_java8() else ["-XX:MaxPermSize=256m"]
+        java_args = [] if is_java8_or_9() else ["-XX:MaxPermSize=256m"]
         java_args.extend([
             "-Xmx{0}m".format(JAVA_MAX_HEAP_SIZE_MB),
             "-Djava.awt.headless=true",
@@ -482,19 +482,19 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None):
                     return name
     return None
 
-_java8 = None
+_java8_or_9 = None
 
-def is_java8():
-    global _java8
-    if _java8 is not None:
-        return _java8
+def is_java8_or_9():
+    global _java8_or_9
+    if _java8_or_9 is not None:
+        return _java8_or_9
     try:
         cmd = ['java', '-Xms64m', '-version']
         output = check_output(cmd, stderr=subprocess.STDOUT)
         version_line = output.strip().splitlines()[0]
-        m = re.compile('(openjdk|java) version "1\.8\..*').match(version_line)
-        _java8 = bool(m)
-        return _java8
+        m = re.compile('(openjdk|java) version "(1\.(8|9)\.|9).*').match(version_line)
+        _java8_or_9 = bool(m)
+        return _java8_or_9
     except CalledProcessError as e:
         print(e.output, file=sys.stderr)
         raise e
