@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
@@ -153,7 +154,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   }
 
   /**
-   * Propagate the bundle's platform flavors to its dependents.
+   * Propagate the bundle's platform, debug symbol and strip flavors to its dependents
+   * which are other bundles (e.g. extensions)
    */
   @Override
   public ImmutableSet<BuildTarget> findDepsForTargetFromConstructorArgs(
@@ -196,37 +198,54 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     FluentIterable<BuildTarget> depsExcludingBinary = FluentIterable.from(constructorArg.deps.get())
         .filter(Predicates.not(Predicates.equalTo(constructorArg.binary)));
 
-    FluentIterable<BuildTarget> targetsWithPlatformFlavors = depsExcludingBinary.filter(
-        BuildTargets.containsFlavors(cxxPlatformFlavorDomain));
+    // Propagate platform flavors.  Need special handling for watch to map the pseudo-flavor
+    // watch to the actual watch platform (simulator or device) so can't use
+    // BuildTargets.propagateFlavorsInDomainIfNotPresent()
+    {
+      FluentIterable<BuildTarget> targetsWithPlatformFlavors = depsExcludingBinary.filter(
+          BuildTargets.containsFlavors(cxxPlatformFlavorDomain));
 
-    FluentIterable<BuildTarget> targetsWithoutPlatformFlavors = depsExcludingBinary.filter(
-        Predicates.not(BuildTargets.containsFlavors(cxxPlatformFlavorDomain)));
+      FluentIterable<BuildTarget> targetsWithoutPlatformFlavors = depsExcludingBinary.filter(
+          Predicates.not(BuildTargets.containsFlavors(cxxPlatformFlavorDomain)));
 
-    FluentIterable<BuildTarget> watchTargets = targetsWithoutPlatformFlavors
-        .filter(BuildTargets.containsFlavor(WATCH))
-        .transform(
-            new Function<BuildTarget, BuildTarget>() {
-              @Override
-              public BuildTarget apply(BuildTarget input) {
-                return BuildTarget.builder(
-                    input.withoutFlavors(ImmutableSet.of(WATCH)))
-                    .addFlavors(actualWatchFlavor)
-                    .build();
-              }
-            });
+      FluentIterable<BuildTarget> watchTargets = targetsWithoutPlatformFlavors
+          .filter(BuildTargets.containsFlavor(WATCH))
+          .transform(
+              new Function<BuildTarget, BuildTarget>() {
+                @Override
+                public BuildTarget apply(BuildTarget input) {
+                  return BuildTarget.builder(
+                      input.withoutFlavors(ImmutableSet.of(WATCH)))
+                      .addFlavors(actualWatchFlavor)
+                      .build();
+                }
+              });
 
-    targetsWithoutPlatformFlavors = targetsWithoutPlatformFlavors
-        .filter(Predicates.not(BuildTargets.containsFlavor(WATCH)));
+      targetsWithoutPlatformFlavors = targetsWithoutPlatformFlavors
+          .filter(Predicates.not(BuildTargets.containsFlavor(WATCH)));
 
-    return ImmutableSet.<BuildTarget>builder()
-        .addAll(targetsWithPlatformFlavors)
-        .addAll(watchTargets)
-        .addAll(
-            BuildTargets.propagateFlavorDomains(
-                buildTarget,
-                ImmutableSet.<FlavorDomain<?>>of(cxxPlatformFlavorDomain),
-                targetsWithoutPlatformFlavors))
-        .build();
+      // Gather all the deps now that we've added platform flavors to everything.
+      depsExcludingBinary = targetsWithPlatformFlavors
+          .append(watchTargets)
+          .append(BuildTargets.propagateFlavorDomains(
+              buildTarget,
+              ImmutableSet.<FlavorDomain<?>>of(cxxPlatformFlavorDomain),
+              targetsWithoutPlatformFlavors));
+    }
+
+    // Propagate debug symbol flavor if defined.
+    depsExcludingBinary = BuildTargets.propagateFlavorsInDomainIfNotPresent(
+        StripStyle.FLAVOR_DOMAIN,
+        buildTarget,
+        depsExcludingBinary);
+
+    // Propagate debug symbol flavor if defined.
+    depsExcludingBinary = BuildTargets.propagateFlavorsInDomainIfNotPresent(
+        AppleDebugFormat.FLAVOR_DOMAIN,
+        buildTarget,
+        depsExcludingBinary);
+
+    return ImmutableSet.copyOf(depsExcludingBinary);
   }
 
   @Override

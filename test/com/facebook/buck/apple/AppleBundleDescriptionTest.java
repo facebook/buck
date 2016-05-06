@@ -83,4 +83,65 @@ public class AppleBundleDescriptionTest {
             .build(),
         ImmutableSet.copyOf(results));
   }
+
+  @Test
+  public void depsHaveStripAndDebugFlavorsPropagated() {
+    BuildTarget bundleTargetWithStripFlavor =
+        BuildTargetFactory.newInstance("//bar:bundle#iphoneos-x86_64,strip-all,dwarf-and-dsym");
+
+    BuildTarget unflavoredDep = BuildTargetFactory.newInstance("//bar:dep1");
+    BuildTarget unflavoredDepAfterPropagation =
+        BuildTargetFactory.newInstance("//bar:dep1#iphoneos-x86_64,strip-all,dwarf-and-dsym");
+
+    BuildTarget flavoredDep = BuildTargetFactory.newInstance(
+        "//bar:dep2#iphoneos-i386,strip-debug,dwarf");
+
+    BuildTarget flavoredDepNotInDomain =
+        BuildTargetFactory.newInstance("//bar:dep3#otherflavor");
+    BuildTarget flavoredDepNotInDomainAfterPropagation =
+        BuildTargetFactory.newInstance(
+            "//bar:dep3#iphoneos-x86_64,strip-all,dwarf-and-dsym,otherflavor");
+
+    BuildTarget stripFlavorOnly =
+        BuildTargetFactory.newInstance("//bar:dep4#strip-debug");
+    BuildTarget stripFlavorOnlyAfterPropagation =
+        BuildTargetFactory.newInstance("//bar:dep4#iphoneos-x86_64,strip-debug,dwarf-and-dsym");
+
+    BuildTarget debugFlavorOnly =
+        BuildTargetFactory.newInstance("//bar:dep5#dwarf");
+    BuildTarget debugFlavorOnlyAfterPropagation =
+        BuildTargetFactory.newInstance("//bar:dep5#iphoneos-x86_64,strip-all,dwarf");
+
+    BuildTarget binary =
+        BuildTargetFactory.newInstance("//bar:binary");
+
+    AppleBundleDescription desc = FakeAppleRuleDescriptions.BUNDLE_DESCRIPTION;
+    AppleBundleDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();
+    constructorArg.binary = binary;
+    constructorArg.deps = Optional.of(
+        ImmutableSortedSet.<BuildTarget>naturalOrder()
+            .add(binary)
+            .add(unflavoredDep)
+            .add(flavoredDep)
+            .add(flavoredDepNotInDomain)
+            .add(stripFlavorOnly)
+            .add(debugFlavorOnly)
+            .build());
+
+    // Now call the find deps methods and verify it returns the targets with flavors.
+    Iterable<BuildTarget> results = desc.findDepsForTargetFromConstructorArgs(
+        bundleTargetWithStripFlavor,
+        createCellRoots(filesystem),
+        constructorArg);
+
+    assertEquals(
+        ImmutableSortedSet.<BuildTarget>naturalOrder()
+            .add(unflavoredDepAfterPropagation)
+            .add(flavoredDep)
+            .add(flavoredDepNotInDomainAfterPropagation)
+            .add(stripFlavorOnlyAfterPropagation)
+            .add(debugFlavorOnlyAfterPropagation)
+            .build(),
+        ImmutableSet.copyOf(results));
+  }
 }

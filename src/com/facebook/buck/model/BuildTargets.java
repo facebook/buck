@@ -20,6 +20,8 @@ import com.facebook.buck.io.BuckPaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -183,5 +185,37 @@ public class BuildTargets {
     }
 
     return flavoredDeps.build();
+  }
+
+
+  /**
+   * Propagate a build target's flavors in a certain domain to a list of other build targets.
+   *
+   * @param domain the flavor domain to be propagated.
+   * @param buildTarget the build target containing the flavors to be propagated
+   * @param deps list of BuildTargets to propagate the flavors to.  If a target already contains
+   *             one or more flavors in domain, it is left unchanged.
+   * @return the list of BuildTargets with any flavors propagated.
+   */
+  public static FluentIterable<BuildTarget> propagateFlavorsInDomainIfNotPresent(
+      FlavorDomain<?> domain,
+      BuildTarget buildTarget,
+      FluentIterable<BuildTarget> deps) {
+    if (domain.containsAnyOf(buildTarget.getFlavors())) {
+      FluentIterable<BuildTarget> targetsWithFlavorsAlready = deps.filter(
+          BuildTargets.containsFlavors(domain));
+
+      FluentIterable<BuildTarget> targetsWithoutFlavors = deps.filter(
+          Predicates.not(BuildTargets.containsFlavors(domain)));
+
+      deps = targetsWithFlavorsAlready
+          .append(
+              BuildTargets.propagateFlavorDomains(
+                  buildTarget,
+                  ImmutableSet.<FlavorDomain<?>>of(domain),
+                  targetsWithoutFlavors));
+    }
+
+    return deps;
   }
 }
