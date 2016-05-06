@@ -7,9 +7,9 @@ import os
 DIR = os.path.dirname(__file__)
 
 # The location of the plugin directory
-PLUGIN_PATH = os.path.join(DIR, "../src/com/facebook/buck/intellij/plugin/")
+PLUGIN_PATH = os.path.join(DIR, "../../src/com/facebook/buck/intellij/plugin/")
 # The location of the grammar-kit directory
-GRAMMAR_KIT = os.path.join(DIR, "../third-party/java/grammar-kit/")
+GRAMMAR_KIT = os.path.join(DIR, "../../third-party/java/grammar-kit/")
 
 OUT_DIR = os.path.join(PLUGIN_PATH, "gen")
 FLEX_OUT_DIR = os.path.join(OUT_DIR, "com/facebook/buck/intellij/plugin/lang")

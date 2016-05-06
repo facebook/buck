@@ -1,5 +1,4 @@
 import argparse
-import json
 import os
 import re
 import requests  # Install with easy_install or pip install
@@ -8,6 +7,8 @@ import subprocess
 import sys
 import tempfile
 from contextlib import contextmanager
+from updatecommon import get_release
+from updatecommon import upload_release
 
 
 BOTTLE_TARGET = 'yosemite_or_later'
@@ -73,19 +74,6 @@ def build_bottle(version_tag, tap_repo_location):
     return os.path.join(tap_repo_location, dest_name)
 
 
-def get_release(version_tag):
-    print('Getting release metadata for {version_tag}...'.format(
-        version_tag=version_tag))
-    releases = requests.get(
-        'https://api.github.com/repos/facebook/buck/releases').json()
-    for data in releases:
-        if 'tag_name' in data and data['tag_name'] == version_tag:
-            return data
-    raise RuntimeError(
-        'Unable to find release for version {version_tag}!'.format(
-            version_tag=version_tag))
-
-
 def fetch_tarball(url):
     print('Fetching tarball from `{url}`...'.format(url=url))
     r = requests.get(url, stream=True)
@@ -95,21 +83,6 @@ def fetch_tarball(url):
             if chunk:
                 os.write(handle, chunk)
     return path
-
-
-def upload_release(bottle_file, upload_url, github_token):
-    fname = os.path.basename(bottle_file)
-    upload_url = upload_url.replace('{?name,label}', '?name=') + fname
-    print('Uploading release bottle to {url}...'.format(url=upload_url))
-    with open(bottle_file, 'rb') as bottle_bin:
-        r = requests.post(
-            upload_url,
-            auth=('token', github_token),
-            headers={
-                'Content-Type': 'application/x-tar',
-            },
-            data=bottle_bin)
-        print(json.dumps(r.json(), indent=2))
 
 
 def validate():
@@ -155,7 +128,13 @@ def update_bottle(version_tag, github_token, tap_repo_location):
     # Now, build the bottle's binary, and update the file with the new sha.
     bottle_file = build_bottle(version_tag, tap_repo_location)
     bottle_sha256 = sha256(bottle_file)
-    upload_release(bottle_file, release_data['upload_url'], github_token)
+    upload_release(
+            bottle_file,
+            release_data['upload_url'],
+            github_token,
+            {
+                'Content-Type': 'application/x-tar',
+            })
     os.remove(bottle_file)
 
     temp_handle, temp_path = tempfile.mkstemp(text=True)
