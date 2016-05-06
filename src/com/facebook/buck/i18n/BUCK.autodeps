@@ -1,8 +1,11 @@
-#@# GENERATED FILE: DO NOT MODIFY 3ed0d84696285fc2111d4f150a8e2bf43984528d #@#
+#@# GENERATED FILE: DO NOT MODIFY d75bd23dee4b9be786a3e1e5aececf50255f2973 #@#
 {
   "i18n" : {
-    "deps" : [ ],
+    "deps" : [
+      "//third-party/java/immutables:processor"
+    ],
     "exported_deps" : [
+      "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
       "//third-party/java/jsr:jsr305"
     ]

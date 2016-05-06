@@ -25,13 +25,8 @@ import java.text.FieldPosition;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.ParsePosition;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
-import javax.annotation.concurrent.NotThreadSafe;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -40,79 +35,37 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public class NumberFormatter {
   // Instead of a ThreadLocal<NumberFormat> (which leaks memory),
-  // we'll use a BlockingQueue to hold O(num cores) NumberFormats per
-  // locale and stash it in a LoadingCache, which can evict itself if needed.
-  private final LoadingCache<Locale, BlockingQueue<NumberFormat>> numberFormatCache;
-
-  // try-with-resources wrapper to take an item from a queue and put it back when done.
-  @NotThreadSafe
-  private static class BlockingQueueTaker<T> implements AutoCloseable {
-    private final BlockingQueue<T> blockingQueue;
-    private T item;
-
-    public BlockingQueueTaker(BlockingQueue<T> blockingQueue) {
-      this.blockingQueue = blockingQueue;
-    }
-
-    public T take() {
-      try {
-        item = blockingQueue.take();
-        return item;
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        throw new RuntimeException(e);
-      }
-    }
-
-    @Override
-    public void close() {
-      if (item != null) {
-        try {
-          blockingQueue.put(item);
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-          throw new RuntimeException(e);
-        } finally {
-          item = null;
-        }
-      }
-    }
-  }
+  // we'll use a LoadingCache of <thread+locale: numberformat> pairs
+  // which evicts itself as necessary.
+  private final LoadingCache<NumberFormatterCacheKey, NumberFormat> numberFormatCache;
 
   /**
    * Given a function which creates {@link NumberFormat} objects for a {@link Locale},
    * returns a wrapper providing thread-safe access to the formatter for that locale.
    */
   public NumberFormatter(final Function<Locale, NumberFormat> numberFormatCreator) {
-    numberFormatCache = CacheBuilder.newBuilder().build(
-        new CacheLoader<Locale, BlockingQueue<NumberFormat>>() {
-            @Override
-            public BlockingQueue<NumberFormat> load(Locale locale) throws Exception {
-              List<NumberFormat> numberFormats = new ArrayList<>();
-              // Add one NumberFormat for each thread so we can format a number
-              // in parallel on each thread simulataneously without blocking
-              // on the queue.
-              int capacity = Runtime.getRuntime().availableProcessors();
-              for (int i = 0; i < capacity; i++) {
-                numberFormats.add(numberFormatCreator.apply(locale));
-              }
-              // We pass false for fair since we don't expect to block normally.
-              return new ArrayBlockingQueue<>(capacity, /* fair */ false, numberFormats);
-            }
-        });
+    numberFormatCache = CacheBuilder
+        .newBuilder()
+        .maximumSize(1000)
+        .build(
+            new CacheLoader<NumberFormatterCacheKey, NumberFormat>() {
+                @Override
+                public NumberFormat load(NumberFormatterCacheKey key) {
+                    return numberFormatCreator.apply(key.getLocale());
+                }
+            });
   }
 
-  private BlockingQueueTaker<NumberFormat> numberFormatTaker(Locale locale) {
-    return new BlockingQueueTaker<>(numberFormatCache.getUnchecked(locale));
+  private NumberFormat getFormatter(Locale locale) {
+    return numberFormatCache.getUnchecked(
+        NumberFormatterCacheKey.of(Thread.currentThread().getId(), locale));
   }
 
   /**
    * @see NumberFormat#format(double)
    */
   public String format(Locale locale, double number) {
-    try (BlockingQueueTaker<NumberFormat> formatTaker = numberFormatTaker(locale)) {
-      return formatTaker.take().format(number);
-    }
+    return getFormatter(locale).format(number);
   }
 
   /**
@@ -123,27 +76,21 @@ public class NumberFormatter {
       double number,
       StringBuffer toAppendTo,
       FieldPosition pos) {
-    try (BlockingQueueTaker<NumberFormat> formatTaker = numberFormatTaker(locale)) {
-      return formatTaker.take().format(number, toAppendTo, pos);
-    }
+    return getFormatter(locale).format(number, toAppendTo, pos);
   }
 
   /**
    * @see NumberFormat#format(long)
    */
   public String format(Locale locale, long number) {
-    try (BlockingQueueTaker<NumberFormat> formatTaker = numberFormatTaker(locale)) {
-      return formatTaker.take().format(number);
-    }
+    return getFormatter(locale).format(number);
   }
 
   /**
    * @see NumberFormat#format(Object)
    */
   public String format(Locale locale, Object object) {
-    try (BlockingQueueTaker<NumberFormat> formatTaker = numberFormatTaker(locale)) {
-      return formatTaker.take().format(object);
-    }
+    return getFormatter(locale).format(object);
   }
 
   /**
@@ -154,35 +101,27 @@ public class NumberFormatter {
       Object object,
       StringBuffer toAppendTo,
       FieldPosition pos) {
-    try (BlockingQueueTaker<NumberFormat> formatTaker = numberFormatTaker(locale)) {
-      return formatTaker.take().format(object, toAppendTo, pos);
-    }
+    return getFormatter(locale).format(object, toAppendTo, pos);
   }
 
   /**
    * @see NumberFormat#parse(String)
    */
   public Number parse(Locale locale, String source) throws ParseException {
-    try (BlockingQueueTaker<NumberFormat> formatTaker = numberFormatTaker(locale)) {
-      return formatTaker.take().parse(source);
-    }
+    return getFormatter(locale).parse(source);
   }
 
   /**
    * @see NumberFormat#parse(String, ParsePosition)
    */
   public Number parse(Locale locale, String source, ParsePosition pos) throws ParseException {
-    try (BlockingQueueTaker<NumberFormat> formatTaker = numberFormatTaker(locale)) {
-      return formatTaker.take().parse(source, pos);
-    }
+    return getFormatter(locale).parse(source, pos);
   }
 
   /**
    * @see NumberFormat#parseObject(String, ParsePosition)
    */
   public Object parseObject(Locale locale, String source, ParsePosition pos) throws ParseException {
-    try (BlockingQueueTaker<NumberFormat> formatTaker = numberFormatTaker(locale)) {
-      return formatTaker.take().parseObject(source, pos);
-    }
+    return getFormatter(locale).parseObject(source, pos);
   }
 }
