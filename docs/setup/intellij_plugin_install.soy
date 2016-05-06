@@ -1,0 +1,207 @@
+{namespace buck.intellij_plugin_install.soy}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'Installing and using the IntelliJ Plugin' /}
+    {param prettify: true /}
+    {param description}
+      How to install and use the Intellij Buck plugin for your project.
+    {/param}
+    {param content}
+<p>
+  To use the Buck Intellij Plugin you will have to install Buck, by following the guide from{sp}
+  {call buck.setup_install /}.
+</p>
+<h2 id="manual-install-buck">Installing the plugin </h2>
+You can download the plugin from here or manually build it by following the guide from{sp}
+{call buck.setup_build_intellij_plugin/}. After that, you can install it by following the{sp}
+<a href="https://www.jetbrains.com/idea/help/installing-plugin-from-disk.html">
+Installing Plugin from Disk</a> guide.
+<h2 id="manual-use-intellij">Using the plugin</h2>
+<p>
+  After you have installed it, you can view the Buck Plugin Tool Window
+  by accessing <code>View > Tool Windows > Buck</code>.
+</p>
+<h3 id="buck-plugin-utility">Utility Functions</h3>
+<ol>
+  <li>
+    Buck Code Completion
+    <p>
+      Helps you complete the names of keywords and buck rule names within the visibility scope.
+    </p>
+  </li>
+  <li>
+    Go to Buck File
+    <p>
+      Jump to the BUCK file of current source file.
+      To access it you can:
+      <ul>
+        <li><code>Tools > Buck > Go to Buck file</code></li>
+        <li><code>Right click > Buck > Go to Buck file</code></li>
+        <li><code>&#x21E7; + &#x2318; + P</code></li>
+      </ul>
+    </p>
+  </li>
+  <li>
+    Go to Buck Dependencies
+    <p>
+      Quickly jump to other BUCK files with <code>&#x2318; + Click</code>{sp}
+      or <code>&#x2318; + B</code>.
+    </p>
+  </li>
+
+  <li>
+    Reformat BUCK files
+    <p>
+      The Buck Plugin lets you reformat source code to meet the requirements of your code style.
+      The plugin also supports customized spacing and indenting in the buck code style settings.
+      You can access it by going to <code>Code > Reformat Code</code>{sp}
+      or by pressing <code>&#x2325; + &#x2318; + L</code>.
+    </p>
+  </li>
+  <li>
+    Sort buck dependencies
+    <p>
+      You can access it by going to <code>Code > Optimise Imports</code>{sp}
+      or by pressing <code>^ + &#x2325; + O</code>.
+    </p>
+  </li>
+  <li>
+    Automatically Convert to Buck Dependencies after Paste in BUCK file
+    <p>
+      For example:
+      <ul>
+        <li>
+          "import com.example.activity.MyFirstActivity"  ->  "//java/com/example/activity:activity"
+        </li>
+        <li>
+          "package com.example.activity;"  ->  "//java/com/example/activity:activity"
+        </li>
+        <li>
+          "com.example.activity.MyFirstActivity"  ->  "//java/com/example/activity:activity"
+        </li>
+      </ul>
+    </p>
+  </li>
+  <li>
+    Error Annotation
+    <p>
+      If a Buck dependency does not exist, it will be marked with red.
+    </p>
+  </li>
+  <li>
+    Commenting and Uncommenting
+    <p>
+      You can comment or uncomment selected lines of a BUCK file by accessing{sp}
+      <code>Code > Comment with Line Comment</code> or by pressing <code>&#x2318; + /</code>.
+    </p>
+  </li>
+</ol>
+
+<h3 id="buck-plugin-commands">Executing Buck Commands</h3>
+<ol>
+  <li>
+    Select target
+    <p>
+      Before you start doing any of the below mentioned actions you will have to select a
+      buck target.
+    </p>
+    <p>
+      You can start selecting the buck target either by pressing the associated icon from the
+      Buck Plugin tool window or by using <code>&#x21E7; + &#x2318; + J</code>.
+    </p>
+    <p>
+      If you have an alias, you can just search for it.
+      If you don't have an alias you have to write the whole path to the BUCK file.
+      Once you are at the directory with the BUCK file, the plugin will search for all
+      the available targets, which may take some time.
+    </p>
+      You can use autocomplete by pressing &rarr; and navigate through the search
+      by pressing &uarr; and &darr;.
+  </li>
+  <li>
+    Build target
+    <p>
+      Once you selected the target you can start a buck build either by
+      pressing the associated icon from the Buck Plugin tool window or by using{sp}
+      <code>&#x21E7; + &#x2318; + S</code>.
+    </p>
+  </li>
+  <li>
+    Show Buck/compiler errors and easily go through them
+    <p>
+      When building, you may receive compiler errors. You can easily navigate through them and
+      on double click you will be sent to the appropriate column and line.
+    </p>
+  </li>
+  <li>
+    Install target
+    <p>
+      Once you selected the target you can start a buck install either by
+      pressing the associated icon from the Buck Plugin tool window or by using{sp}
+      <code>&#x21E7; + &#x2318; + X</code>.
+    </p>
+  </li>
+  <li>
+    Uninstall target
+    <p>
+      Once you selected the target you can start a buck uninstall either by
+      pressing the associated icon from the Buck Plugin tool window or by using{sp}
+      <code>&#x21E7; + &#x2318; + M</code>.
+    </p>
+  </li>
+  <li>
+    Test target
+    <p>
+      Once you selected the target you can start a buck test either by
+      pressing the associated icon from the Buck Plugin tool window or by using{sp}
+      <code>&#x21E7; + &#x2318; + Y</code>.
+    </p>
+  </li>
+  <li>
+    Buck project target
+    <p>
+      Once you selected the target you can start a buck project either by
+      pressing the associated icon from the Buck Plugin tool window or by using{sp}
+      <code>&#x21E7; + &#x2318; + B</code>.
+    </p>
+  </li>
+  <li>
+    Buck kill
+    <p>
+      Once you started one of the above mentioned actions you can stop it either by
+      pressing the associated icon from the Buck Plugin tool window or by using{sp}
+      <code>&#x21E7; + &#x2318; + L</code>.
+    </p>
+  </li>
+</ol>
+
+<h3 id="buck-plugin-settings">Settings</h3>
+<ol>
+  <li>
+    Buck Settings
+    <p>
+      You can set your buck executable path and other install settings by going to {sp}
+      <code>Preferences > Tools > Buck</code>.
+    </p>
+  </li>
+  <li>
+    Code Style Settings
+    <p>
+      You can set code style settings by going to {sp}
+      <code>Preferences > Editor > Code Style > Buck</code>.
+    </p>
+  </li>
+  <li>
+    Colors & Font Settings
+    <p>
+      You can set the syntax highlighting colors from{sp}
+      <code>Preferences > Editor > Colors & Fonts > Buck</code>.
+    </p>
+  </li>
+</ol>
+        {/param}
+    {/call}
+{/template}
+

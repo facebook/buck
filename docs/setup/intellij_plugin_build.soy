@@ -1,0 +1,88 @@
+{namespace buck.intellij_plugin_build.soy}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'Building the IntelliJ Plugin' /}
+    {param prettify: true /}
+    {param description}
+      How to build and setup the Intellij Buck plugin for your project.
+    {/param}
+    {param content}
+<p>
+  To build the Buck Intellij Plugin you will have to install Buck, by following the guide from{sp}
+  {call buck.setup_install /}, the manual build process to get the repo.
+</p>
+<h2 id="manual-build-buck">Building with Buck</h2>
+{literal}<pre>
+cd third-party/java/intellij/
+sh get_jars.sh "PathToYourIntellijLib" #for unix systems
+get_jars.bat "PathToYourIntellijLib"   #for windows systems
+buck build //src/com/facebook/buck/intellij/plugin:ideabuck
+</pre>
+{/literal}
+Once you have built the plugin, you can install it by following the{sp}
+<a href="https://www.jetbrains.com/idea/help/installing-plugin-from-disk.html">
+Installing Plugin from Disk</a> guide.
+In order to access it you have to go to <code>View > Tool Windows > Buck</code>.
+<h2 id="manual-build-intellij">Building with Intellij</h2>
+<p>
+  The Buck Intellij plugin can also be built with intellij. A big advantage of this, when working
+  on the plugin, is the fact that you can easily debug it by creating a new Run/Debug Configuration.
+</p>
+<ol>
+  <li>Generate the grammar and the lexer with the Grammar-Kit plugin.
+
+    <ul>
+      <li>
+        You can install the grammar kit plugin from{sp}
+        <code>third-party/java/grammar-kit/grammar-kit.jar</code> by following the{sp}
+        <a href="https://www.jetbrains.com/idea/help/installing-plugin-from-disk.html">
+        Installing Plugin from Disk</a> guide.
+        After you installed Grammar-Kit you can generate the files by navigating in Intellij to
+        {literal}
+          <pre>
+src/com/facebook/buck/intellij/plugin/src/com/facebook/buck/intellij/plugin/lang/Buck.bnf
+src/com/facebook/buck/intellij/plugin/src/com/facebook/buck/intellij/plugin/lang/Buck.flex
+          </pre>
+        {/literal}
+        and pressing <code>ctrl-shift-G / meta-shift-G</code>.
+      </li>
+      <li>
+        If you don't want to install the Grammar-Kit plugin you can run
+        {literal}
+          <pre>
+python scripts/intellij/generate_grammar_kit.py
+          </pre>
+        {/literal}
+        <p>
+          The above mentioned commands will create a <code>gen</code> directory in {sp}
+          <code>src/com/facebook/buck/intellij/plugin</code>.
+        </p>
+      </li>
+    </ul>
+  </li>
+
+  <li>
+    <a href="https://www.jetbrains.com/idea/help/configuring-intellij-platform-plugin-sdk.html">
+    Configure the Intellij Platform Plugin SDK</a> and set it as the{sp}
+    <a href="https://www.jetbrains.com/idea/help/configuring-global-project-and-module-sdks.html">
+    plugin's module sdk</a>.
+  </li>
+  <li>
+    Remove the Buck Intellij Plugin, <code>buck/src/com/facebook/buck/intellij/plugin</code> from{sp}
+    <a href="https://www.jetbrains.com/help/idea/15.0/compiler-excludes.html?origin=old_help">
+    the Compiler Excludes list</a>.
+  </li>
+  <li>
+    <a href="https://www.jetbrains.com/idea/help/creating-and-editing-run-debug-configurations.html#createExplicitly">
+    Create a new Plugin Run/Debug configuration</a> for the Buck Intellij Plugin.</li>
+  <li>
+    Run/Debug the plugin or create a new release of it by going to
+    <code> Build > Prepare all plugin modules for deployment</code>.
+  </li>
+</ol>
+        {/param}
+    {/call}
+{/template}
+
