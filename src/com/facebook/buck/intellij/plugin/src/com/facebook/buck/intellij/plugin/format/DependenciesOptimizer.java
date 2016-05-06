@@ -104,10 +104,22 @@ public class DependenciesOptimizer {
    * e.g :inner, //world:empty, //world/asia:jp, @mars, @moon
    */
   private static int compareDependencyStrings(String baseString, String anotherString) {
-    for (int i = 0; i < Math.min(baseString.length(), anotherString.length()); ++i) {
+    int endBaseString = baseString.length();
+    int endAnotherString = anotherString.length();
+    int i = 0;
+    int j = 0;
+    while (i < endBaseString && j < endAnotherString) {
       char c1 = baseString.charAt(i);
-      char c2 = anotherString.charAt(i);
-      if (c1 == c2) {
+      char c2 = anotherString.charAt(j);
+      if (c1 == ' ') {
+        i++;
+        continue;
+      } else if (c2 == ' ') {
+        j++;
+        continue;
+      } else if (c1 == c2) {
+        i++;
+        j++;
         continue;
       } else if (c1 == ':') {
         return -1;

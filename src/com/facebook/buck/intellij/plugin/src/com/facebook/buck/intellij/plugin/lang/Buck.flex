@@ -61,6 +61,9 @@ IDENTIFIER=[:jletter:] [:jletterdigit:]*
   "["                         { return L_BRACKET; }
   ")"                         { return R_PARENTHESES; }
   "]"                         { return R_BRACKET; }
+  "}"                         { return R_CURLY; }
+  "{"                         { return L_CURLY; }
+  ":"                         { return COLUMN; }
 
   {BOOLEAN}                   { return BOOLEAN; }
   {LINE_COMMENT}              { return LINE_COMMENT; }

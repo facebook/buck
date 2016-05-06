@@ -35,6 +35,7 @@
     COMMA = ','
     EQUAL = '='
     SLASH = '\'
+    COLUMN = ':'
     PLUS = '+'
 
     LINE_COMMENT = 'regexp:#.*'
@@ -68,11 +69,11 @@ property ::= property_lvalue '=' expression
 
 // Only support "+" as operator right now.
 private operator ::= PLUS
-expression ::= (value operator)* [value]
+expression ::= (value operator)* [value | IDENTIFIER ]
 
 private string ::= DOUBLE_QUOTED_STRING | SINGLE_QUOTED_STRING
 
-value ::= NONE | BOOLEAN | NUMBER | MACROS | string | value_array | list | object | glob_block
+value ::= NONE | BOOLEAN | NUMBER | MACROS | string | value_array | list | object | glob_block | function_call
 
 list ::= '(' list_elements ')'
 list_elements ::= (value ',')* [value [',']]
@@ -92,3 +93,6 @@ glob_block ::= GLOB_KEYWORD '(' glob_elements ')'
 glob_elements ::= value_array [',' GLOB_EXCLUDES_KEYWORD '=' expression]
 
 rule_call ::= rule_name '(' list_elements ')'
+
+function_call ::= IDENTIFIER '(' ((string [',']) | (dictionary [',']))* ')'
+dictionary ::= L_CURLY value COLUMN value [','] R_CURLY

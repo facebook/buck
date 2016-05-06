@@ -44,6 +44,8 @@ public class BuckSyntaxHighlighter extends SyntaxHighlighterBase {
       "BUCK_RULE_NAME", DefaultLanguageHighlighterColors.FUNCTION_DECLARATION);
   public static final TextAttributesKey BUCK_GLOB = createTextAttributesKey(
       "BUCK_GLOB", CodeInsightColors.ANNOTATION_NAME_ATTRIBUTES);
+  public static final TextAttributesKey FUNCTION_CALL = createTextAttributesKey(
+      "FUNCTION_CALL", CodeInsightColors.ANNOTATION_NAME_ATTRIBUTES);
   public static final TextAttributesKey BUCK_STRING = createTextAttributesKey(
       "BUCK_STRING", DefaultLanguageHighlighterColors.STRING);
   public static final TextAttributesKey BUCK_MACRO = createTextAttributesKey(
@@ -54,6 +56,8 @@ public class BuckSyntaxHighlighter extends SyntaxHighlighterBase {
   private static final TextAttributesKey[] KEY_KEYS = new TextAttributesKey[]{BUCK_KEYWORD};
   private static final TextAttributesKey[] NUMBER_KEYS = new TextAttributesKey[]{BUCK_NUMBER};
   private static final TextAttributesKey[] GLOB_KEYS = new TextAttributesKey[]{BUCK_GLOB};
+  private static final TextAttributesKey[] FUNCTION_CALL_KEY =
+      new TextAttributesKey[]{FUNCTION_CALL};
   private static final TextAttributesKey[] COMMENT_KEYS = new TextAttributesKey[]{BUCK_COMMENT};
   private static final TextAttributesKey[] STRING_KEYS = new TextAttributesKey[]{BUCK_STRING};
   private static final TextAttributesKey[] MACROS_KEYS = new TextAttributesKey[]{BUCK_MACRO};
@@ -81,6 +85,8 @@ public class BuckSyntaxHighlighter extends SyntaxHighlighterBase {
       return COMMENT_KEYS;
     } else if (tokenType.equals(BuckTypes.MACROS)) {
       return MACROS_KEYS;
+    } else if (tokenType.equals(BuckTypes.FUNCTION_CALL)) {
+      return FUNCTION_CALL_KEY;
     } else if (tokenType.equals(TokenType.BAD_CHARACTER)) {
       return BAD_CHAR_KEYS;
     } else {
