@@ -35,8 +35,9 @@ import java.util.List;
  * A utility class for sorting buck dependencies alphabetically.
  */
 public class DependenciesOptimizer {
-
   private static final String DEPENDENCIES_KEYWORD = "deps";
+  private static final String PROVIDED_DEPENDENCIES_KEYWORD = "provided_deps";
+  private static final String EXPORTED_DEPENDENCIES_KEYWORD = "exported_deps";
 
   private DependenciesOptimizer() {
   }
@@ -60,7 +61,10 @@ public class DependenciesOptimizer {
     @Override
     public void visitProperty(@NotNull BuckProperty property) {
       BuckPropertyLvalue lValue = property.getPropertyLvalue();
-      if (lValue == null || !lValue.getText().equals(DEPENDENCIES_KEYWORD)) {
+      if (lValue == null ||
+          (!DEPENDENCIES_KEYWORD.equals(lValue.getText()) &&
+          !PROVIDED_DEPENDENCIES_KEYWORD.equals(lValue.getText()) &&
+          !EXPORTED_DEPENDENCIES_KEYWORD.equals(lValue.getText()))) {
         return;
       }
 
