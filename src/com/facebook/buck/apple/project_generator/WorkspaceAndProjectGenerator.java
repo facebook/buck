@@ -217,7 +217,6 @@ public class WorkspaceAndProjectGenerator {
         ungroupedTestsBuilder = ImmutableSetMultimap.builder();
 
     buildWorkspaceSchemes(
-        getTargetToBuildWithBuck(),
         projectGraph,
         projectGeneratorOptions.contains(ProjectGenerator.Option.INCLUDE_TESTS),
         projectGeneratorOptions.contains(ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
@@ -482,7 +481,6 @@ public class WorkspaceAndProjectGenerator {
   }
 
   private static void buildWorkspaceSchemes(
-      Optional<BuildTarget> mainTarget,
       TargetGraph projectGraph,
       boolean includeProjectTests,
       boolean includeDependenciesTests,
@@ -521,7 +519,7 @@ public class WorkspaceAndProjectGenerator {
     ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg>>
         selectedTestsBuilder = ImmutableSetMultimap.builder();
     buildWorkspaceSchemeTests(
-        mainTarget,
+        workspaceArguments.srcTarget,
         projectGraph,
         includeProjectTests,
         includeDependenciesTests,
