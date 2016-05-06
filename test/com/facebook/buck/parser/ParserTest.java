@@ -1814,7 +1814,7 @@ public class ParserTest {
         .setFilesystem(filesystem)
         .setSections(
             "[project]",
-            "read_only_paths = " + rootPath + "/foo")
+            "read_only_paths = " + rootPath.resolve("foo"))
         .build();
     cell = new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem).build();
 

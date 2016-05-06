@@ -242,10 +242,12 @@ class PerBuildState implements AutoCloseable {
 
       ImmutableSet<Path> readOnlyPaths =
           new ParserConfig(getCell(node.getBuildTarget()).getBuckConfig()).getReadOnlyPaths();
+      Cell currentCell = cells.get(node.getBuildTarget().getCellPath());
 
-      if (!readOnlyPaths.isEmpty()) {
+      if (!readOnlyPaths.isEmpty() && currentCell != null) {
+        Path cellRootPath = currentCell.getFilesystem().getRootPath();
         for (Path readOnlyPath : readOnlyPaths) {
-          if (buildFile.startsWith(readOnlyPath)) {
+          if (buildFile.startsWith(cellRootPath.resolve(readOnlyPath))) {
             LOG.debug(
                 "Target %s is under a symlink (%s). It will be cached because it belongs " +
                     "under %s, a read-only path white listed in .buckconfing. under [project]" +
@@ -305,9 +307,11 @@ class PerBuildState implements AutoCloseable {
     parsePipeline.close();
     projectBuildFileParserPool.close();
 
-    LOG.debug(
-        "Cleaning cache of build files with inputs under symlink %s",
-        buildInputPathsUnderSymlink);
+    if (!buildInputPathsUnderSymlink.isEmpty()) {
+      LOG.debug(
+          "Cleaning cache of build files with inputs under symlink %s",
+          buildInputPathsUnderSymlink);
+    }
     Set<Path> buildInputPathsUnderSymlinkCopy = new HashSet<>(buildInputPathsUnderSymlink);
     buildInputPathsUnderSymlink.clear();
     for (Path buildFilePath : buildInputPathsUnderSymlinkCopy) {
