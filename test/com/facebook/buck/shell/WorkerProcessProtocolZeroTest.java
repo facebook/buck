@@ -136,7 +136,7 @@ public class WorkerProcessProtocolZeroTest {
     try {
       protocol.receiveHandshake(123);
     } catch (HumanReadableException e) {
-      assertThat(e.getMessage(), Matchers.containsString("Error parsing JSON"));
+      assertThat(e.getMessage(), Matchers.containsString("Error receiving handshake response"));
     }
   }
 
@@ -254,7 +254,7 @@ public class WorkerProcessProtocolZeroTest {
     try {
       protocol.receiveCommandResponse(123);
     } catch (HumanReadableException e) {
-      assertThat(e.getMessage(), Matchers.containsString("Error while parsing JSON"));
+      assertThat(e.getMessage(), Matchers.containsString("Error receiving command response"));
     }
   }
 

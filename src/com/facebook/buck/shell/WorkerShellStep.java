@@ -69,29 +69,20 @@ public class WorkerShellStep implements Step {
       // Use the process's startup command as the key.
       String key = Joiner.on(' ').join(getCommand(context.getPlatform()));
       WorkerProcess process = getWorkerProcessForKey(key, context);
+      process.ensureLaunchAndHandshake();
+      WorkerJobResult result = process.submitAndWaitForJob(getExpandedJobArgs(context));
       Verbosity verbosity = context.getVerbosity();
-      try {
-        process.ensureLaunchAndHandshake();
-        WorkerJobResult result = process.submitAndWaitForJob(getExpandedJobArgs(context));
-        if (result.getStdout().isPresent() && !result.getStdout().get().isEmpty() &&
-            verbosity.shouldPrintOutput()) {
-          context.postEvent(ConsoleEvent.info("%s", result.getStdout().get()));
-        }
-        if (result.getStderr().isPresent() && !result.getStderr().get().isEmpty() &&
-            verbosity.shouldPrintStandardInformation()) {
-          context.postEvent(ConsoleEvent.warning("%s", result.getStderr().get()));
-        }
-        return result.getExitCode();
-      } finally {
-        String errorMessage = process.getStdErrorOutput();
-        if (!errorMessage.equals("") && verbosity.shouldPrintStandardInformation()) {
-          context.postEvent(
-              ConsoleEvent.warning("Stderr from external process:\n%s", errorMessage));
-        }
+      if (result.getStdout().isPresent() && !result.getStdout().get().isEmpty() &&
+          verbosity.shouldPrintOutput()) {
+        context.postEvent(ConsoleEvent.info("%s", result.getStdout().get()));
       }
+      if (result.getStderr().isPresent() && !result.getStderr().get().isEmpty() &&
+          verbosity.shouldPrintStandardInformation()) {
+        context.postEvent(ConsoleEvent.warning("%s", result.getStderr().get()));
+      }
+      return result.getExitCode();
     } catch (IOException e) {
-      e.printStackTrace(context.getStdErr());
-      return 1;
+      throw new HumanReadableException(e, "Error communicating with external process.");
     }
   }
 

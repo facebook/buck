@@ -141,16 +141,4 @@ public class WorkerProcess {
   void setProtocol(WorkerProcessProtocol protocolMock) {
     this.protocol = protocolMock;
   }
-
-  public String getStdErrorOutput() throws IOException {
-    StringBuilder sb = new StringBuilder();
-    if (launchedProcess != null) {
-      BufferedReader errorReader = new BufferedReader(
-          new InputStreamReader(launchedProcess.getErrorStream()));
-      while (errorReader.ready()) {
-        sb.append(errorReader.readLine() + "\n");
-      }
-    }
-    return sb.toString();
-  }
 }

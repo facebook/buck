@@ -20,7 +20,9 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 
 public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
@@ -112,7 +114,9 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
       processStdoutReader.endObject();
     } catch (IOException e) {
       throw new HumanReadableException(e,
-          "Error parsing JSON handshake response from external process");
+          "Error receiving handshake response from external process.\n" +
+          "Stderr from external process:\n%s",
+          getStdErrorOutput());
     }
 
     if (id != handshakeID) {
@@ -203,7 +207,9 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
       processStdoutReader.endObject();
     } catch (IOException e) {
       throw new HumanReadableException(e,
-          "Error while parsing JSON response from external process");
+          "Error receiving command response from external process.\n" +
+          "Stderr from external process:\n%s",
+          getStdErrorOutput());
     }
 
     if (id != messageID) {
@@ -234,5 +240,15 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
     } finally {
       executor.destroyLaunchedProcess(launchedProcess);
     }
+  }
+
+  private String getStdErrorOutput() throws IOException {
+    StringBuilder sb = new StringBuilder();
+    BufferedReader errorReader = new BufferedReader(
+        new InputStreamReader(launchedProcess.getErrorStream()));
+    while (errorReader.ready()) {
+      sb.append("\t" + errorReader.readLine() + "\n");
+    }
+    return sb.toString();
   }
 }
