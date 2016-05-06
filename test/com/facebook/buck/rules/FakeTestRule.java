@@ -97,16 +97,15 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   }
 
   @Override
-  public boolean hasTestResultFiles(ExecutionContext executionContext) {
+  public boolean hasTestResultFiles() {
     return false;
   }
 
   @Override
   public ImmutableList<Step> runTests(
-      BuildContext buildContext,
       ExecutionContext executionContext,
       TestRunningOptions options,
-      TestRule.TestReportingCallback testReportingCallback) {
+      TestReportingCallback testReportingCallback) {
     return testSteps;
   }
 

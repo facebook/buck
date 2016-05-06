@@ -18,7 +18,6 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
@@ -106,17 +105,16 @@ public class ShTest
   }
 
   @Override
-  public boolean hasTestResultFiles(ExecutionContext executionContext) {
+  public boolean hasTestResultFiles() {
     // If result.json was not written, then the test needs to be run.
     return getProjectFilesystem().isFile(getPathToTestOutputResult());
   }
 
   @Override
   public ImmutableList<Step> runTests(
-      BuildContext buildContext,
       ExecutionContext executionContext,
       TestRunningOptions options,
-      TestRule.TestReportingCallback testReportingCallback) {
+      TestReportingCallback testReportingCallback) {
     if (options.isDryRun()) {
       // Stop now if we are a dry-run: sh-tests have no concept of dry-run inside the test itself.
       return ImmutableList.of();

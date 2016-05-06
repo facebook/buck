@@ -20,12 +20,10 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.Label;
@@ -119,7 +117,6 @@ public class CxxTestTest {
 
         };
 
-    BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     TestRunningOptions options =
         TestRunningOptions.builder()
@@ -127,7 +124,6 @@ public class CxxTestTest {
             .setTestSelectorList(TestSelectorList.empty())
             .build();
     ImmutableList<Step> actualSteps = cxxTest.runTests(
-        buildContext,
         executionContext,
         options,
         FakeTestRule.NOOP_REPORTING_CALLBACK);

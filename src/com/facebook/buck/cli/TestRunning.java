@@ -23,23 +23,22 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.GenerateCodeCoverageReportStep;
-import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.HasTests;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.IndividualTestEvent;
-import com.facebook.buck.rules.TestStatusMessageEvent;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.TestRunEvent;
+import com.facebook.buck.rules.TestStatusMessageEvent;
 import com.facebook.buck.rules.TestSummaryEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -124,7 +123,6 @@ public class TestRunning {
   public static int runTests(
       final CommandRunnerParams params,
       Iterable<TestRule> tests,
-      BuildContext buildContext,
       ExecutionContext executionContext,
       final TestRunningOptions options,
       ListeningExecutorService service,
@@ -282,7 +280,6 @@ public class TestRunning {
         ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
         Preconditions.checkState(buildEngine.isRuleBuilt(test.getBuildTarget()));
         List<Step> testSteps = test.runTests(
-            buildContext,
             executionContext,
             options,
             testReportingCallback);
@@ -607,7 +604,7 @@ public class TestRunning {
         test.getBuildTarget())) != null) &&
             result.getSuccess() == BuildRuleSuccessType.MATCHING_RULE_KEY &&
             isResultsCacheEnabled &&
-            test.hasTestResultFiles(executionContext) &&
+            test.hasTestResultFiles() &&
             testRuleKeyFileHelper.isRuleKeyInDir(test)) {
       // If this build rule's artifacts (which includes the rule's output and its test result
       // files) are up to date, then no commands are necessary to run the tests. The test result

@@ -276,10 +276,9 @@ public class JavaTest
    */
   @Override
   public ImmutableList<Step> runTests(
-      BuildContext buildContext,
       ExecutionContext executionContext,
       TestRunningOptions options,
-      TestRule.TestReportingCallback testReportingCallback) {
+      TestReportingCallback testReportingCallback) {
 
     // If no classes were generated, then this is probably a java_test() that declares a number of
     // other java_test() rules as deps, functioning as a test suite. In this case, simply return an
@@ -354,7 +353,7 @@ public class JavaTest
   }
 
   @Override
-  public boolean hasTestResultFiles(ExecutionContext executionContext) {
+  public boolean hasTestResultFiles() {
     // It is possible that this rule was not responsible for running any tests because all tests
     // were run by its deps. In this case, return an empty TestResults.
     Set<String> testClassNames = getClassNamesForSources();

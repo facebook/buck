@@ -30,7 +30,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -145,7 +144,6 @@ public class CxxTestDescriptionTest {
             .build();
     ImmutableList<Step> steps =
         cxxTest.runTests(
-            FakeBuildContext.NOOP_CONTEXT,
             TestExecutionContext.newInstance(),
             options,
             TestRule.NOOP_REPORTING_CALLBACK);
@@ -180,7 +178,6 @@ public class CxxTestDescriptionTest {
           .build();
     ImmutableList<Step> steps =
         cxxTest.runTests(
-            FakeBuildContext.NOOP_CONTEXT,
             TestExecutionContext.newInstance(),
             testOptions,
             TestRule.NOOP_REPORTING_CALLBACK);

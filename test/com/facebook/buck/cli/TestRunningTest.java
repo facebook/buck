@@ -43,7 +43,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildEngine;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeTestRule;
@@ -500,7 +499,7 @@ public class TestRunningTest {
         ImmutableSortedSet.<BuildRule>of()) {
 
       @Override
-      public boolean hasTestResultFiles(ExecutionContext context) {
+      public boolean hasTestResultFiles() {
         return true;
       }
     };
@@ -648,7 +647,6 @@ public class TestRunningTest {
     int ret = TestRunning.runTests(
         commandRunnerParams,
         ImmutableList.<TestRule>of(separateTest1, separateTest2, separateTest3),
-        FakeBuildContext.NOOP_CONTEXT,
         fakeExecutionContext,
         DEFAULT_OPTIONS,
         service,
@@ -893,7 +891,6 @@ public class TestRunningTest {
             parallelTest2,
             separateTest3,
             parallelTest3),
-        FakeBuildContext.NOOP_CONTEXT,
         fakeExecutionContext,
         DEFAULT_OPTIONS,
         service,
@@ -1017,7 +1014,6 @@ public class TestRunningTest {
     int ret = TestRunning.runTests(
         commandRunnerParams,
         ImmutableList.<TestRule>of(failingTest),
-        FakeBuildContext.NOOP_CONTEXT,
         fakeExecutionContext,
         DEFAULT_OPTIONS,
         service,

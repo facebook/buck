@@ -237,7 +237,7 @@ public class AppleTest
   }
 
   @Override
-  public boolean hasTestResultFiles(ExecutionContext executionContext) {
+  public boolean hasTestResultFiles() {
     return getProjectFilesystem().exists(testOutputPath);
   }
 
@@ -363,7 +363,6 @@ public class AppleTest
 
   @Override
   public ImmutableList<Step> runTests(
-      BuildContext buildContext,
       ExecutionContext executionContext,
       TestRunningOptions options,
       TestReportingCallback testReportingCallback) {

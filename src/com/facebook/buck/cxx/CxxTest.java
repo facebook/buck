@@ -140,16 +140,15 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule, Has
   protected abstract ImmutableList<String> getShellCommand(Path output);
 
   @Override
-  public boolean hasTestResultFiles(ExecutionContext executionContext) {
+  public boolean hasTestResultFiles() {
     return getProjectFilesystem().isFile(getPathToTestResults());
   }
 
   @Override
   public ImmutableList<Step> runTests(
-      BuildContext buildContext,
       ExecutionContext executionContext,
       TestRunningOptions options,
-      TestRule.TestReportingCallback testReportingCallback) {
+      TestReportingCallback testReportingCallback) {
     return ImmutableList.of(
         new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToTestOutputDirectory()),
         new TouchStep(getProjectFilesystem(), getPathToTestResults()),

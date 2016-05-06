@@ -19,7 +19,6 @@ package com.facebook.buck.go;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
@@ -103,13 +102,12 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
   }
 
   @Override
-  public boolean hasTestResultFiles(ExecutionContext executionContext) {
+  public boolean hasTestResultFiles() {
     return getProjectFilesystem().isFile(getPathToTestResults());
   }
 
   @Override
   public ImmutableList<Step> runTests(
-      BuildContext buildContext,
       ExecutionContext executionContext,
       TestRunningOptions options,
       TestReportingCallback testReportingCallback) {
@@ -220,7 +218,9 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext executionContext, boolean isUsingTestSelectors, final boolean isDryRun) {
+      ExecutionContext executionContext,
+      boolean isUsingTestSelectors,
+      final boolean isDryRun) {
     return new Callable<TestResults>() {
       @Override
       public TestResults call() throws Exception {

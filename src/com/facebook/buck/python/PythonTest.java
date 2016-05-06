@@ -116,10 +116,9 @@ public class PythonTest
 
   @Override
   public ImmutableList<Step> runTests(
-      BuildContext buildContext,
       ExecutionContext executionContext,
       TestRunningOptions options,
-      TestRule.TestReportingCallback testReportingCallback) {
+      TestReportingCallback testReportingCallback) {
     return ImmutableList.of(
         new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToTestOutputDirectory()),
         new PythonRunTestsStep(
@@ -149,7 +148,7 @@ public class PythonTest
   }
 
   @Override
-  public boolean hasTestResultFiles(ExecutionContext executionContext) {
+  public boolean hasTestResultFiles() {
     return getProjectFilesystem().isFile(getPathToTestOutputResult());
   }
 

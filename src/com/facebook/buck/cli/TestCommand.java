@@ -282,7 +282,6 @@ public class TestCommand extends BuildCommand {
       return TestRunning.runTests(
           params,
           testRules,
-          Preconditions.checkNotNull(build.getBuildContext()),
           build.getExecutionContext(),
           getTestRunningOptions(params),
           testPool.getExecutor(),

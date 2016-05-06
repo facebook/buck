@@ -126,10 +126,9 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
 
   @Override
   public ImmutableList<Step> runTests(
-      BuildContext buildContext,
       ExecutionContext executionContext,
       TestRunningOptions options,
-      TestRule.TestReportingCallback testReportingCallback) {
+      TestReportingCallback testReportingCallback) {
     Preconditions.checkArgument(executionContext.getAdbOptions().isPresent());
 
     if (executionContext.getAdbOptions().get().isMultiInstallModeEnabled()) {
@@ -208,7 +207,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
   }
 
   @Override
-  public boolean hasTestResultFiles(ExecutionContext context) {
+  public boolean hasTestResultFiles() {
     Path testResultPath = getProjectFilesystem().resolve(
         getPathToTestOutputDirectory().resolve(TEST_RESULT_FILE));
     return testResultPath.toFile().exists();

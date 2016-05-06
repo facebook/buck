@@ -19,12 +19,12 @@ package com.facebook.buck.shell;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -33,7 +33,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -75,13 +74,12 @@ public class ShTestTest extends EasyMockSupport {
         /* labels */ ImmutableSet.<Label>of());
 
     EasyMock.expect(filesystem.isFile(shTest.getPathToTestOutputResult())).andReturn(true);
-    ExecutionContext executionContext = createMock(ExecutionContext.class);
 
     replayAll();
 
     assertTrue(
         "hasTestResultFiles() should return true if result.json exists.",
-        shTest.hasTestResultFiles(executionContext));
+        shTest.hasTestResultFiles());
   }
 
   @Test

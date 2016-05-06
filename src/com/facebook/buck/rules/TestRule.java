@@ -20,16 +20,16 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestCaseSummary;
-import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestResultSummary;
+import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.TestStatusMessage;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
-import java.util.concurrent.Callable;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * A {@link BuildRule} that is designed to run tests.
@@ -80,7 +80,7 @@ public interface TestRule extends HasBuildTarget, BuildRule {
    * {@link #interpretTestResults(ExecutionContext, boolean, boolean)}
    * should be able to be called directly.
    */
-  boolean hasTestResultFiles(ExecutionContext executionContext);
+  boolean hasTestResultFiles();
 
   /**
    * Returns the commands required to run the tests.
@@ -89,15 +89,11 @@ public interface TestRule extends HasBuildTarget, BuildRule {
    * {@link BuildEngine#build(BuildContext, BuildRule)} having been run. This happens if the user
    * has built [and ran] the test previously and then re-runs it using the {@code --debug} flag.
    *
-   * @param buildContext Because this method may be run without
-   *     {@link BuildEngine#build(BuildContext, BuildRule)} having been run, this is supplied in
-   *     case any non-cacheable build work needs to be done.
-   * @param options The runtime testing options.
    * @param executionContext Provides context for creating {@link Step}s.
+   * @param options The runtime testing options.
    * @return the commands required to run the tests
    */
   ImmutableList<Step> runTests(
-      BuildContext buildContext,
       ExecutionContext executionContext,
       TestRunningOptions options,
       TestReportingCallback testReportingCallback);
