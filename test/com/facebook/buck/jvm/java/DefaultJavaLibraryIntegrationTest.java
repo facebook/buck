@@ -33,6 +33,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -528,8 +529,12 @@ public class DefaultJavaLibraryIntegrationTest {
 
     assertEquals("Expected just one line of JSON", 1, lines.size());
 
+    final String utilJarPath =
+        MorePaths.pathWithPlatformSeparators("buck-out/gen/lib__util__output/util.jar");
+    final String utilClassPath =
+        MorePaths.pathWithPlatformSeparators("com/example/Util.class");
     final String expected =
-        "{\"buck-out/gen/lib__util__output/util.jar\":[\"com/example/Util.class\"]}";
+        "{\"" + utilJarPath + "\":[\"" + utilClassPath + "\"]}";
     final String actual = lines.get(0);
 
     assertEquals(expected, actual);
