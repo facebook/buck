@@ -57,12 +57,15 @@ public class VersionStringComparatorTest {
         {"4", "5"},
         {"4.2.2", "4.2.2.2"},
         {"4.2.3", "4.3.2"},
-        {"4", "4_rc1"},
+        {"17.0.0-rc2", "17.0.0"},
+        {"4_rc1", "4"},
+        {"4.2.2_rc5", "4.3.2_rc3"},
         {"4.2.2_rc1", "4.2.2_rc2"},
         {"4.2.2_rc1", "4.2.2_rc2-preview"},
         // Android NDK versions
+        {"r9c", "r10e"},
         {"r9c", "r10e-rc4"},
-        {"r10e", "r10e-rc4"},
+        {"r10e-rc4", "r10e"},
         {"r10e-rc3", "r10e-rc4"},
         {"r10ab-rc3", "r10ae-rc4"}
     };
@@ -89,7 +92,6 @@ public class VersionStringComparatorTest {
           higher + " not higher than " + lower,
           comparator.compare(higher, lower), greaterThan(0)
       );
-
     }
   }
 

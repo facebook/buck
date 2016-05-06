@@ -34,8 +34,10 @@ public class VersionStringComparator implements Comparator<String> {
           "^[rR]?(\\d+)[a-zA-Z]*(\\.\\d+)*?([-_]rc\\d+)*?(?:-preview)?$"
   );
   private static final Pattern IGNORED_FIELDS_PATTERN = Pattern.compile("(?:^[rR])|(?:-preview)");
-  private static final Pattern DELIMITER_PATTERN = Pattern.compile("\\.|(?:[-_]rc)");
+  private static final Pattern DELIMITER_PATTERN = Pattern.compile("\\.|(?:[-_]rc[0-9]+)");
+  private static final Pattern RC_DELIMITER_PATTERN = Pattern.compile("(\\.|\\d+|[a-zA-Z])*[-_]rc");
   private static final Pattern NUMBER_ALPHA_PATTERN = Pattern.compile("(\\d+)([a-zA-Z]+)");
+  private static final String RC_DETECTION_PATTERN = ".*[-_]rc\\d+";
 
   public static boolean isValidVersionString(String str) {
     return VERSION_STRING_PATTERN.matcher(str).matches();
@@ -71,7 +73,26 @@ public class VersionStringComparator implements Comparator<String> {
       }
     }
 
-    return valuesB.hasNext() ? -1 : 0;
+    if (valuesB.hasNext()) {
+      return -1;
+    }
+
+    boolean isRcA = cleanedA.matches(RC_DETECTION_PATTERN);
+    boolean isRcB = cleanedB.matches(RC_DETECTION_PATTERN);
+    if (isRcA && isRcB) {
+      int rcVersionA = Integer.parseInt(RC_DELIMITER_PATTERN.matcher(cleanedA).replaceAll(""));
+      int rcVersionB = Integer.parseInt(RC_DELIMITER_PATTERN.matcher(cleanedB).replaceAll(""));
+      if (rcVersionA == rcVersionB) {
+        return 0;
+      }
+      return (rcVersionA > rcVersionB) ? 1 : -1;
+    } else if (isRcA) {
+      return -1;
+    } else if (isRcB) {
+      return 1;
+    }
+
+    return 0;
   }
 
   private ImmutableList<Integer> partsToValues(String[] stringParts) {
