@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rage.AbstractReport;
 import com.facebook.buck.rage.AutomatedReport;
 import com.facebook.buck.rage.DefectReporter;
 import com.facebook.buck.rage.DefectSubmitResult;
@@ -58,27 +59,26 @@ public class RageCommand extends AbstractCommand {
             new VersionControlBuckConfig(buckConfig),
             buckConfig.getEnvironment());
 
-    DefectSubmitResult defectSubmitResult;
-    Optional<VcsInfoCollector> vcsInfoHelper =
+    AbstractReport report;
+    Optional<VcsInfoCollector> vcsInfoCollector =
         VcsInfoCollector.create(vcsFactory.createCmdLineInterface());
     if (params.getConsole().getAnsi().isAnsiTerminal() && !nonInteractive) {
-      InteractiveReport interactiveReport = new InteractiveReport(
+      report = new InteractiveReport(
           new DefectReporter(filesystem, params.getObjectMapper(), rageConfig),
           filesystem,
           stdOut,
           params.getStdIn(),
           params.getBuildEnvironmentDescription(),
-          vcsInfoHelper);
-      defectSubmitResult = interactiveReport.collectAndSubmitResult();
+          vcsInfoCollector);
     } else {
-      AutomatedReport automatedReport = new AutomatedReport(
+      report = new AutomatedReport(
           new DefectReporter(filesystem, params.getObjectMapper(), rageConfig),
           filesystem,
           stdOut,
           params.getBuildEnvironmentDescription(),
-          gatherVcsInfo ? vcsInfoHelper : Optional.<VcsInfoCollector>absent());
-      defectSubmitResult = automatedReport.collectAndSubmitResult();
+          gatherVcsInfo ? vcsInfoCollector : Optional.<VcsInfoCollector>absent());
     }
+    DefectSubmitResult defectSubmitResult = report.collectAndSubmitResult();
 
     stdOut.printf("Report saved to %s\n", defectSubmitResult.getReportSubmitLocation());
     if (defectSubmitResult.getReportSubmitMessage().isPresent()) {
