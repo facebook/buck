@@ -19,7 +19,11 @@ package com.facebook.buck.apple;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.util.environment.Platform;
+
+import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.file.Paths;
@@ -28,6 +32,11 @@ import java.nio.file.Paths;
  * Unit tests for {@link AppleSdkPaths}.
  */
 public class AppleSdkPathsTest {
+
+  @Before
+  public void setUp() {
+    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+  }
 
   @Test
   public void stringWithNoReferencesIsUnchanged() throws Exception {

@@ -19,12 +19,14 @@ package com.facebook.buck.apple.simulator;
 import static org.junit.Assert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -38,12 +40,18 @@ import java.io.OutputStream;
 
 import java.nio.file.Paths;
 
+import org.junit.Before;
 import org.junit.Test;
 
 /**
  * Unit tests for {@link AppleSimulatorDiscovery}.
  */
 public class AppleSimulatorDiscoveryTest {
+  @Before
+  public void setUp() {
+    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+  }
+
   @Test
   public void appleSimulatorsDiscoveredFromSimctlList() throws IOException, InterruptedException {
     ImmutableSet<AppleSimulator> simulators;

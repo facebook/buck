@@ -1,8 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 723d308a338c7e4bb705f9365623600e0f09361c #@#
+#@# GENERATED FILE: DO NOT MODIFY 6cdd3af4609fbdd5c4e6f635b589b67e005e76c8 #@#
 {
   "headermap" : {
     "deps" : [
       "//src/com/facebook/buck/apple/clang:headermap",
+      "//src/com/facebook/buck/util/environment:platform",
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]

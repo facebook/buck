@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 99f386afb4cb0804520bd467cb8475cb0f812cc2 #@#
+#@# GENERATED FILE: DO NOT MODIFY 9390dfd2a4cbf0f800efa793d9573ad3ccf4ad9c #@#
 {
   "project_generator" : {
     "deps" : [
@@ -22,6 +22,7 @@
       "//src/com/facebook/buck/shell:rules",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/apple:testutil",
       "//test/com/facebook/buck/apple/project_generator:testutil",
       "//test/com/facebook/buck/cli:FakeBuckConfig",

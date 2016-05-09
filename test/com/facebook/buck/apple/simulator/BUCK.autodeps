@@ -1,9 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY 7b4cc90a673aa2d5fc3ed1ee3b5f47e043aa7c43 #@#
+#@# GENERATED FILE: DO NOT MODIFY ad767a7c51650d423cdcd38ac82e31a86aa4aaec #@#
 {
   "simulator" : {
     "deps" : [
       "//src/com/facebook/buck/apple/simulator:simulator",
       "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/testutil/integration:integration",
       "//test/com/facebook/buck/util:testutil",
       "//third-party/java/guava:guava",

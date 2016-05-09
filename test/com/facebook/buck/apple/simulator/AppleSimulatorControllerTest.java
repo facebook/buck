@@ -20,11 +20,13 @@ import static org.junit.Assert.assertThat;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -38,6 +40,7 @@ import java.util.Map;
 
 import java.util.AbstractMap.SimpleImmutableEntry;
 
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -53,6 +56,11 @@ public class AppleSimulatorControllerTest {
                   SIMCTL_PATH.toString(),
                   "list"))
           .build();
+
+  @Before
+  public void setUp() {
+    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+  }
 
   @Test
   public void canStartSimulatorWhenNoSimulatorBooted()

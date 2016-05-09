@@ -41,6 +41,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -53,6 +54,12 @@ public class AppleBinaryIntegrationTest {
 
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
+
+  @Before
+  public void setUp() {
+    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+  }
+
 
   @Test
   public void testAppleBinaryBuildsBinary() throws Exception {
@@ -290,7 +297,7 @@ public class AppleBinaryIntegrationTest {
         this, "apple_binary_with_library_dependency_builds_something", tmp);
     workspace.setUp();
     ProjectWorkspace.ProcessResult buildResult =
-      workspace.runBuckCommand("build", "//Apps/TestApp:BadTestApp");
+        workspace.runBuckCommand("build", "//Apps/TestApp:BadTestApp");
     buildResult.assertFailure();
     String stderr = buildResult.getStderr();
     assertTrue(stderr.contains("bad-flag"));
@@ -305,7 +312,7 @@ public class AppleBinaryIntegrationTest {
     workspace.setUp();
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp#default," +
-            CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
+        CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         buildTarget.getFullyQualifiedName());
@@ -348,13 +355,13 @@ public class AppleBinaryIntegrationTest {
 
     String expectedError =
         "Apps/TestApp/main.c:2:3: error: use of undeclared identifier 'SomeType'\n" +
-        "  SomeType a;\n" +
-        "  ^\n";
+            "  SomeType a;\n" +
+            "  ^\n";
     String expectedWarning =
         "Apps/TestApp/main.c:3:10: warning: implicit conversion from 'double' to 'int' changes " +
-        "value from 0.42 to 0 [-Wliteral-conversion]\n" +
-        "  return 0.42;\n" +
-        "  ~~~~~~ ^~~~\n";
+            "value from 0.42 to 0 [-Wliteral-conversion]\n" +
+            "  return 0.42;\n" +
+            "  ~~~~~~ ^~~~\n";
     String expectedSummary = "1 warning and 1 error generated.\n";
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -368,8 +375,8 @@ public class AppleBinaryIntegrationTest {
 
     assertTrue(
         stderr.contains(expectedError) &&
-        stderr.contains(expectedWarning) &&
-        stderr.contains(expectedSummary));
+            stderr.contains(expectedWarning) &&
+            stderr.contains(expectedSummary));
   }
 
   @Test
