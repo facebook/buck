@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ArchiveMemberPath;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
@@ -106,13 +107,16 @@ public class DefaultRuleKeyLoggerTest {
 
     fixture.getRuleKeyBuilderFactory().build(fakeRule);
 
+    String expectedPath = "path(" +
+        MorePaths.pathWithPlatformSeparators("foo/bar/path/1") +
+        ":f1134a34c0de):";
     assertThat(
         fixture.getLogger().getCurrentLogElements(),
         Matchers.contains(
             "string(\"//:foo\"):", "key(name):",
             "string(\"test_rule\"):", "key(buck.type):",
             "string(\"N/A\"):", "key(buckVersionUid):",
-            "path(foo/bar/path/1:f1134a34c0de):", "key(pathField):",
+            expectedPath, "key(pathField):",
             "string(\"testString\"):", "key(stringField):"));
   }
 
@@ -129,13 +133,16 @@ public class DefaultRuleKeyLoggerTest {
 
     fixture.getRuleKeyBuilderFactory().build(fakeRule);
 
+    String expectedArchiveMember = "archiveMember(" +
+        MorePaths.pathWithPlatformSeparators("foo/bar/path/1") +
+        "!/member:f1134a34c0de):";
     assertThat(
         fixture.getLogger().getCurrentLogElements(),
         Matchers.contains(
             "string(\"//:foo\"):", "key(name):",
             "string(\"test_rule\"):", "key(buck.type):",
             "string(\"N/A\"):", "key(buckVersionUid):",
-            "archiveMember(foo/bar/path/1!/member:f1134a34c0de):", "key(pathField):"));
+            expectedArchiveMember, "key(pathField):"));
 
   }
 

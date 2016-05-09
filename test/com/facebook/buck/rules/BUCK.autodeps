@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY a9855f29fd61331a3deaff7960c6ef76f5e6999b #@#
+#@# GENERATED FILE: DO NOT MODIFY 5456a1f7298c9369245aebe8417c37a59098cdef #@#
 {
   "rules" : {
     "deps" : [
@@ -44,6 +44,7 @@
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/concurrent:concurrent",
+      "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/zip:stream",
       "//test/com/facebook/buck/android:utils",
       "//test/com/facebook/buck/artifact_cache:testutil",

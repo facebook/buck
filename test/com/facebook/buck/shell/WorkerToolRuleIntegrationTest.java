@@ -16,11 +16,14 @@
 
 package com.facebook.buck.shell;
 
+import static org.junit.Assume.assumeTrue;
+
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -38,6 +41,7 @@ public class WorkerToolRuleIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "worker_tool_test",

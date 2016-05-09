@@ -24,6 +24,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
@@ -73,8 +74,12 @@ public class TargetsCommandIntegrationTest {
         "//:another-test");
     result.assertSuccess();
     assertEquals(
-        "//:another-test buck-out/gen/another-test/test-output\n" +
-            "//:test buck-out/gen/test/test-output\n",
+        "//:another-test " +
+            MorePaths.pathWithPlatformSeparators("buck-out/gen/another-test/test-output") +
+            "\n" +
+            "//:test " +
+            MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output") +
+            "\n",
         result.getStdout());
   }
 
@@ -123,7 +128,9 @@ public class TargetsCommandIntegrationTest {
         "//:test");
     result.assertSuccess();
     assertEquals(
-        "//:test 12c109cdbab186fbb8fdd785853d8bcb4538aed2 buck-out/gen/test/test-output\n",
+        "//:test 12c109cdbab186fbb8fdd785853d8bcb4538aed2 " +
+            MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output") +
+            "\n",
         result.getStdout());
   }
 
@@ -138,8 +145,12 @@ public class TargetsCommandIntegrationTest {
         "--show-output");
     result.assertSuccess();
     assertEquals(
-        "//:another-test buck-out/gen/another-test/test-output\n" +
-            "//:test buck-out/gen/test/test-output\n",
+        "//:another-test " +
+            MorePaths.pathWithPlatformSeparators("buck-out/gen/another-test/test-output") +
+            "\n" +
+            "//:test " +
+            MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output") +
+            "\n",
         result.getStdout());
   }
 

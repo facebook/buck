@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
@@ -136,8 +137,8 @@ public class ParserConfigTest {
         .build());
 
     thrown.expect(HumanReadableException.class);
-    thrown.expectMessage("Path " + notExistingDir + ", specified under read_only_paths does " +
-        "not exist.");
+    thrown.expectMessage("Path " + MorePaths.pathWithPlatformSeparators(notExistingDir) +
+        ", specified under read_only_paths does not exist.");
     parserConfig.getReadOnlyPaths();
   }
 }

@@ -34,6 +34,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.json.HasJsonField;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -44,6 +45,9 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ObjectMappers;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
@@ -51,6 +55,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Ordering;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -533,11 +538,12 @@ public class DefaultJavaLibraryIntegrationTest {
         MorePaths.pathWithPlatformSeparators("buck-out/gen/lib__util__output/util.jar");
     final String utilClassPath =
         MorePaths.pathWithPlatformSeparators("com/example/Util.class");
-    final String expected =
-        "{\"" + utilJarPath + "\":[\"" + utilClassPath + "\"]}";
-    final String actual = lines.get(0);
 
-    assertEquals(expected, actual);
+    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
+    JsonNode jsonNode = objectMapper.readTree(lines.get(0));
+    assertThat(jsonNode,
+        new HasJsonField(objectMapper, utilJarPath,
+            Matchers.equalTo(objectMapper.valueToTree(new String[]{utilClassPath}))));
   }
 
   @Test

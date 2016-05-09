@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY a54849c76ac7995507cb4dcfbb1c05089619d7bf #@#
+#@# GENERATED FILE: DO NOT MODIFY 841bb231e0bb6fd1ea0f6ba513641b1ff0a3aec7 #@#
 {
   "fakepackagefinder" : {
     "deps" : [ ],
@@ -66,6 +66,7 @@
       "//test/com/facebook/buck/cli:testutil",
       "//test/com/facebook/buck/event:testutil",
       "//test/com/facebook/buck/io:testutil",
+      "//test/com/facebook/buck/json:testutil",
       "//test/com/facebook/buck/jvm/java:javac-env",
       "//test/com/facebook/buck/jvm/java:testutil",
       "//test/com/facebook/buck/model:testutil",
@@ -81,6 +82,7 @@
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:hamcrest-junit",
       "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/jackson:jackson-databind",
       "//third-party/java/jimfs:jimfs",
       "//third-party/java/jsr:jsr305",
       "//third-party/java/junit:junit"

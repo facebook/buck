@@ -20,6 +20,7 @@ import static com.facebook.buck.android.AndroidResource.BuildOutput;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -121,10 +122,10 @@ public class DummyRDotJavaTest {
         BuildTargets.getGenPath(dummyRDotJava.getBuildTarget(), "__%s_dummyrdotjava_output__")
             .toString();
     String rDotJavaOutputJar =
-        String.format(
+        MorePaths.pathWithPlatformSeparators(String.format(
             "%s/%s.jar",
             rDotJavaOutputFolder,
-            dummyRDotJava.getBuildTarget().getShortNameAndFlavorPostfix());
+            dummyRDotJava.getBuildTarget().getShortNameAndFlavorPostfix()));
     String genFolder = Paths.get("buck-out/gen/java/base/").toString();
 
     List<String> sortedSymbolsFiles = FluentIterable.from(ImmutableList.of(
