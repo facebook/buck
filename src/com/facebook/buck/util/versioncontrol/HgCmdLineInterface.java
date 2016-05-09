@@ -27,6 +27,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -61,6 +62,9 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
 
   private static final ImmutableList<String> STATUS_COMMAND =
       ImmutableList.of(HG_CMD_TEMPLATE, "status");
+
+  private static final ImmutableList<String> CHANGED_FILES_COMMAND =
+      ImmutableList.of(HG_CMD_TEMPLATE, "status", "-0", "--rev", REVISION_ID_TEMPLATE);
 
   private static final ImmutableList<String> COMMON_ANCESTOR_COMMAND_TEMPLATE =
       ImmutableList.of(
@@ -149,6 +153,16 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     // e.g. 1440601290 -7200 (for France, which is UTC + 2H)
     // We only care about the UTC bit.
     return extractUnixTimestamp(hgTimeString);
+  }
+
+  @Override
+  public ImmutableSet<String> changedFiles(String fromRevisionId)
+      throws VersionControlCommandFailedException, InterruptedException {
+    String hgChangedFilesString = executeCommand(replaceTemplateValue(
+        CHANGED_FILES_COMMAND,
+        REVISION_ID_TEMPLATE,
+        fromRevisionId));
+    return ImmutableSet.copyOf(hgChangedFilesString.split("\0"));
   }
 
   private String executeCommand(Iterable<String> command)

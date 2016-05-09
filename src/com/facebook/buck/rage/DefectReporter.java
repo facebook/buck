@@ -157,5 +157,6 @@ public class DefectReporter {
     ImmutableSet<BuildId> getHighlightedBuildIds();
     ImmutableSet<Path> getIncludedPaths();
     BuildEnvironmentDescription getBuildEnvironmentDescription();
+    Optional<SourceControlInfo> getSourceControlInfo();
   }
 }

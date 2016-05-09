@@ -16,6 +16,8 @@
 
 package com.facebook.buck.util.versioncontrol;
 
+import com.google.common.collect.ImmutableSet;
+
 /***
  * Provides meta-data about the version control repository the project being built is using.
  */
@@ -51,6 +53,16 @@ public interface VersionControlCmdLineInterface {
    * @throws InterruptedException
    */
   String commonAncestor(String revisionIdOne, String revisionIdTwo)
+      throws VersionControlCommandFailedException, InterruptedException;
+
+  /**
+   *
+   * @param fromRevisionId
+   * @return files changed from the given revision.
+   * @throws VersionControlCommandFailedException
+   * @throws InterruptedException
+   */
+  ImmutableSet<String> changedFiles(String fromRevisionId)
       throws VersionControlCommandFailedException, InterruptedException;
 
   /***

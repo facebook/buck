@@ -18,6 +18,7 @@ package com.facebook.buck.rage;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.BufferedReader;
@@ -48,6 +49,25 @@ public class UserInput {
     output.flush();
 
     return reader.readLine();
+  }
+
+  public boolean confirm(String question) throws IOException {
+    ImmutableMap<String, Boolean> supportedResponses = ImmutableMap.of(
+        "", true,
+        "y", true,
+        "n", false);
+    for (;;) {
+      output.println();
+      output.println(question + " (Y/n)?");
+      output.flush();
+
+      String response = reader.readLine().trim().toLowerCase();
+      if (supportedResponses.containsKey(response)) {
+        return supportedResponses.get(response);
+      } else {
+        output.println("Please answer 'y' or 'n'.");
+      }
+    }
   }
 
   public static ImmutableSet<Integer> parseRange(String input) {

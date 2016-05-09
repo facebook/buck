@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 49453aa509d48fe4560d5a726a1be20b05ed6233 #@#
+#@# GENERATED FILE: DO NOT MODIFY ec158973696b26ba2cea5cd1be5df2d508b4a1a0 #@#
 {
   "config" : {
     "deps" : [
@@ -12,6 +12,7 @@
   },
   "rage" : {
     "deps" : [
+      "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
@@ -25,6 +26,7 @@
       "//src/com/facebook/buck/rage:config",
       "//src/com/facebook/buck/util/environment:environment",
       "//src/com/facebook/buck/util/immutables:immutables",
+      "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
       "//third-party/java/guava:guava",
       "//third-party/java/jackson:jackson-databind"
     ]

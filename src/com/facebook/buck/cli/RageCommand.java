@@ -23,7 +23,13 @@ import com.facebook.buck.rage.DefectSubmitResult;
 import com.facebook.buck.rage.InteractiveReport;
 import com.facebook.buck.rage.RageBuckConfig;
 import com.facebook.buck.rage.RageConfig;
+import com.facebook.buck.rage.VcsInfoCollector;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
+import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
+import com.facebook.buck.util.versioncontrol.DefaultVersionControlCmdLineInterfaceFactory;
+import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
+import com.facebook.buck.util.versioncontrol.VersionControlCmdLineInterfaceFactory;
+import com.google.common.base.Optional;
 
 import org.kohsuke.args4j.Option;
 
@@ -34,27 +40,43 @@ public class RageCommand extends AbstractCommand {
   @Option(name = "--non-interactive", usage = "Force the command to run in non-interactive mode.")
   private boolean nonInteractive = false;
 
+  @Option(name = "--gather-vcs-info", usage = "Gather information from the Version Control " +
+      "System in non-interactive mode.")
+  private boolean gatherVcsInfo = false;
+
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     ProjectFilesystem filesystem = params.getCell().getFilesystem();
-    RageConfig rageConfig = RageBuckConfig.create(params.getBuckConfig());
+    BuckConfig buckConfig = params.getBuckConfig();
+    RageConfig rageConfig = RageBuckConfig.create(buckConfig);
     DirtyPrintStreamDecorator stdOut = params.getConsole().getStdOut();
 
+    VersionControlCmdLineInterfaceFactory vcsFactory =
+        new DefaultVersionControlCmdLineInterfaceFactory(
+            params.getCell().getFilesystem().getRootPath(),
+            new PrintStreamProcessExecutorFactory(),
+            new VersionControlBuckConfig(buckConfig),
+            buckConfig.getEnvironment());
+
     DefectSubmitResult defectSubmitResult;
+    Optional<VcsInfoCollector> vcsInfoHelper =
+        VcsInfoCollector.create(vcsFactory.createCmdLineInterface());
     if (params.getConsole().getAnsi().isAnsiTerminal() && !nonInteractive) {
       InteractiveReport interactiveReport = new InteractiveReport(
           new DefectReporter(filesystem, params.getObjectMapper(), rageConfig),
           filesystem,
           stdOut,
           params.getStdIn(),
-          params.getBuildEnvironmentDescription());
+          params.getBuildEnvironmentDescription(),
+          vcsInfoHelper);
       defectSubmitResult = interactiveReport.collectAndSubmitResult();
     } else {
       AutomatedReport automatedReport = new AutomatedReport(
           new DefectReporter(filesystem, params.getObjectMapper(), rageConfig),
           filesystem,
           stdOut,
-          params.getBuildEnvironmentDescription());
+          params.getBuildEnvironmentDescription(),
+          gatherVcsInfo ? vcsInfoHelper : Optional.<VcsInfoCollector>absent());
       defectSubmitResult = automatedReport.collectAndSubmitResult();
     }
 

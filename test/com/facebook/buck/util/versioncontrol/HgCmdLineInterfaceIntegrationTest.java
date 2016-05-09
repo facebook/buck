@@ -27,7 +27,9 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.TestProcessExecutorFactory;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -145,6 +147,21 @@ public class HgCmdLineInterfaceIntegrationTest {
         MASTER_THREE_BOOKMARK);
 
     assertThat(commonAncestor.startsWith(MASTER_THREE_ID), is(true));
+  }
+
+  @Test
+  public void testChangedFilesFromHead()
+      throws VersionControlCommandFailedException, InterruptedException {
+    ImmutableSet<String> changedFiles = repoThreeCmdLine.changedFiles(".");
+    assertThat(changedFiles, Matchers.contains("? local_change"));
+  }
+
+  @Test
+  public void testChangedFilesFromCommonAncestor()
+      throws VersionControlCommandFailedException, InterruptedException {
+    ImmutableSet<String> changedFiles = repoThreeCmdLine.changedFiles("ancestor(., master3)");
+    assertThat(changedFiles,
+        Matchers.containsInAnyOrder("A change3", "A change3-2", "? local_change"));
   }
 
   @Test

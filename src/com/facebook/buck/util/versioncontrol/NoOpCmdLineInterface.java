@@ -16,6 +16,8 @@
 
 package com.facebook.buck.util.versioncontrol;
 
+import com.google.common.collect.ImmutableSet;
+
 /***
  * This is used if the project being built doesn't use a supported VCS.
  */
@@ -55,5 +57,11 @@ public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
   public long timestampSeconds(String revisionId)
       throws VersionControlCommandFailedException, InterruptedException {
     return 0;
+  }
+
+  @Override
+  public ImmutableSet<String> changedFiles(String fromRevisionId)
+      throws VersionControlCommandFailedException, InterruptedException {
+    return ImmutableSet.of();
   }
 }

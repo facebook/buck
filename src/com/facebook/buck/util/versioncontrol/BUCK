@@ -6,6 +6,7 @@ PUBLIC_SRCS = [
   'VersionControlStats.java',
   'VersionControlStatsEvent.java',
   'VersionControlStatsGenerator.java',
+  'NoOpCmdLineInterface.java',
 ]
 
 java_immutables_library(

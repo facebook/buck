@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 6fa6dfd65dec8798f4964cd6ec5828ccc6d0f558 #@#
+#@# GENERATED FILE: DO NOT MODIFY 7b2b1384ca020c60fd6cba716ad9dc1d9fb7f12d #@#
 {
   "rage" : {
     "deps" : [
@@ -14,6 +14,7 @@
       "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util:tristate",
       "//src/com/facebook/buck/util/environment:environment",
+      "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",

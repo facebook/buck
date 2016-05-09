@@ -22,7 +22,9 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.unit.SizeUnit;
+import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -46,6 +48,7 @@ public class InteractiveReport {
   private final BuildEnvironmentDescription buildEnvironmentDescription;
   private final BuildLogHelper buildLogHelper;
   private final PrintStream output;
+  private final Optional<VcsInfoCollector> vcsInfoHelper;
   private final UserInput input;
 
   public InteractiveReport(
@@ -53,11 +56,13 @@ public class InteractiveReport {
       ProjectFilesystem filesystem,
       PrintStream output,
       InputStream stdin,
-      BuildEnvironmentDescription buildEnvironmentDescription) {
+      BuildEnvironmentDescription buildEnvironmentDescription,
+      Optional<VcsInfoCollector> vcsInfoHelper) {
     this.defectReporter = defectReporter;
     this.output = output;
     this.buildEnvironmentDescription = buildEnvironmentDescription;
     this.buildLogHelper = new BuildLogHelper(filesystem);
+    this.vcsInfoHelper = vcsInfoHelper;
     this.input = new UserInput(output, new BufferedReader(new InputStreamReader(stdin)));
   }
 
@@ -82,19 +87,31 @@ public class InteractiveReport {
         });
   }
 
-  public DefectSubmitResult collectAndSubmitResult() throws IOException {
-    final String issueDescription = input.ask("Please describe the problem you wish to report:");
+  public DefectSubmitResult collectAndSubmitResult() throws IOException, InterruptedException {
+    UserReport.Builder userReport = UserReport.builder();
+
+    userReport.setUserIssueDescription(
+        input.ask("Please describe the problem you wish to report:"));
+
     ImmutableSet<BuildLogEntry> hightlghtedBuilds = promptForBuildSelection();
     ImmutableSet.Builder<Path> logsAndTraces = ImmutableSet.builder();
     for (BuildLogEntry hightlghtedBuild : hightlghtedBuilds) {
       logsAndTraces.add(hightlghtedBuild.getRelativePath());
     }
 
-    UserReport userReport = UserReport.builder()
-        .setUserIssueDescription(issueDescription)
-        .build();
+    Optional<SourceControlInfo> sourceControlInfo = Optional.absent();
+    if (vcsInfoHelper.isPresent() &&
+        input.confirm("Would you like to attach source control information (this includes " +
+        "information about commits and changed files)?")) {
+      try {
+        sourceControlInfo = Optional.of(vcsInfoHelper.get().gatherScmInformation());
+      } catch (VersionControlCommandFailedException e) {
+        output.printf("Failed to get source control information: %s, proceeding regardless.\n", e);
+      }
+    }
+
     DefectReport defectReport = DefectReport.builder()
-        .setUserReport(userReport)
+        .setUserReport(userReport.build())
         .setHighlightedBuildIds(
             FluentIterable.from(hightlghtedBuilds)
                 .transformAndConcat(
@@ -105,6 +122,7 @@ public class InteractiveReport {
                       }
                     }))
         .setBuildEnvironmentDescription(buildEnvironmentDescription)
+        .setSourceControlInfo(sourceControlInfo)
         .setIncludedPaths(
             FluentIterable.from(hightlghtedBuilds)
                 .transform(
@@ -123,7 +141,8 @@ public class InteractiveReport {
 
   @Value.Immutable
   @BuckStyleImmutable
-  abstract static class AbstractUserReport {
-    public abstract String getUserIssueDescription();
+  interface AbstractUserReport {
+    String getUserIssueDescription();
   }
+
 }

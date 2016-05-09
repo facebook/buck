@@ -29,6 +29,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.io.ByteStreams;
@@ -110,7 +111,8 @@ public class RageCommandIntegrationTest {
           reporter,
           filesystem,
           new CapturingPrintStream(),
-          TestBuildEnvironmentDescription.INSTANCE);
+          TestBuildEnvironmentDescription.INSTANCE,
+          VcsInfoCollector.create(new NoOpCmdLineInterface()));
       DefectSubmitResult defectSubmitResult = automatedReport.collectAndSubmitResult();
 
       assertThat(
@@ -167,7 +169,8 @@ public class RageCommandIntegrationTest {
           reporter,
           filesystem,
           new CapturingPrintStream(),
-          TestBuildEnvironmentDescription.INSTANCE);
+          TestBuildEnvironmentDescription.INSTANCE,
+          VcsInfoCollector.create(new NoOpCmdLineInterface()));
 
       expectedException.expect(HumanReadableException.class);
       automatedReport.collectAndSubmitResult();

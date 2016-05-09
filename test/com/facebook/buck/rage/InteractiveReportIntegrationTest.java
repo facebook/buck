@@ -25,6 +25,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.Rule;
@@ -61,7 +62,8 @@ public class InteractiveReportIntegrationTest {
             filesystem,
             outputStream,
             inputStream,
-            TestBuildEnvironmentDescription.INSTANCE);
+            TestBuildEnvironmentDescription.INSTANCE,
+            VcsInfoCollector.create(new NoOpCmdLineInterface()));
     DefectSubmitResult defectSubmitResult = interactiveReport.collectAndSubmitResult();
     Path reportFile = filesystem.resolve(defectSubmitResult.getReportLocalLocation().get());
 
