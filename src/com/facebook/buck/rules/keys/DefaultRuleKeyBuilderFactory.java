@@ -63,11 +63,9 @@ public class DefaultRuleKeyBuilderFactory extends ReflectiveRuleKeyBuilderFactor
         hashCache,
         getDefaultRuleKeyBuilderFactory()) {
       @Override
-      protected RuleKey getAppendableRuleKey(
-          SourcePathResolver resolver,
-          FileHashCache hashCache,
-          RuleKeyAppendable appendable) {
-        return ruleKeyCache.getUnchecked(appendable);
+      public RuleKeyBuilder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
+        RuleKey subKey = ruleKeyCache.getUnchecked(appendable);
+        return setAppendableRuleKey(key, subKey);
       }
     };
   }

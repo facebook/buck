@@ -154,26 +154,19 @@ public class RuleKeyBuilder {
 
   /**
    * Implementations can override this to provide context-specific caching.
-   *
-   * @return the {@link RuleKey} to be used for the given {@code appendable}.
    */
-  protected RuleKey getAppendableRuleKey(
-      SourcePathResolver resolver,
-      FileHashCache hashCache,
-      RuleKeyAppendable appendable) {
+  public RuleKeyBuilder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
     RuleKeyBuilder subKeyBuilder = new RuleKeyBuilder(
         resolver,
         hashCache,
         defaultRuleKeyBuilderFactory);
     appendable.appendToRuleKey(subKeyBuilder);
-    return subKeyBuilder.build();
+    RuleKey subKey = subKeyBuilder.build();
+    return setAppendableRuleKey(key, subKey);
   }
 
-  public RuleKeyBuilder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
-    setReflectively(
-        key + ".appendableSubKey",
-        getAppendableRuleKey(resolver, hashCache, appendable));
-    return this;
+  protected RuleKeyBuilder setAppendableRuleKey(String key, RuleKey ruleKey) {
+    return setReflectively(key + ".appendableSubKey", ruleKey);
   }
 
   public RuleKeyBuilder setReflectively(String key, @Nullable Object val) {

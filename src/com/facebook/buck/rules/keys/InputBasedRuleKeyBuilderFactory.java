@@ -116,14 +116,11 @@ public class InputBasedRuleKeyBuilderFactory
     }
 
     @Override
-    protected RuleKey getAppendableRuleKey(
-        SourcePathResolver resolver,
-        FileHashCache hashCache,
-        RuleKeyAppendable appendable) {
+    public RuleKeyBuilder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
       Result result = cache.getUnchecked(appendable);
       deps.add(result.getDeps());
       inputs.add(result.getInputs());
-      return result.getRuleKey();
+      return setAppendableRuleKey(key, result.getRuleKey());
     }
 
     @Override
