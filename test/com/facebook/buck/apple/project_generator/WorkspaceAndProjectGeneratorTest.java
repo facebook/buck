@@ -49,8 +49,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -63,8 +61,10 @@ import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -431,6 +431,56 @@ public class WorkspaceAndProjectGeneratorTest {
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
         barProjectGenerator.getGeneratedProject(),
         "//bar:lib");
+  }
+
+  @Test
+  public void workspaceAndProjectsWithoutDependenciesTests() throws IOException {
+    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
+        rootCell,
+        targetGraph,
+        workspaceNode.getConstructorArg(),
+        workspaceNode.getBuildTarget(),
+        ImmutableSet.<ProjectGenerator.Option>of(ProjectGenerator.Option.INCLUDE_TESTS),
+        false /* combinedProject */,
+        false /* buildWithBuck */,
+        ImmutableList.<String>of(),
+        ImmutableList.<BuildTarget>of(),
+        false /* parallelizeBuild */,
+        false /* attemptToDetermineBestCxxPlatform */,
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.<String, String>of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
+        "BUCK",
+        getSourcePathResolverForNodeFunction(targetGraph),
+        getFakeBuckEventBus(),
+        halideBuckConfig,
+        cxxBuckConfig);
+
+    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
+    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+
+    Optional<XCScheme> scheme = Iterables
+        .getOnlyElement(generator.getSchemeGenerators().values())
+        .getOutputScheme();
+
+    assertThat(scheme.isPresent(), is(true));
+
+    assertThat(
+        "Test for project FooBin should have been generated",
+        scheme.get().getBuildAction().get().getBuildActionEntries(),
+        hasItem(
+            withNameAndBuildingFor(
+                "bin-xctest",
+                equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY))));
+
+    assertThat(
+        "Test for project FooLib should not be generated at all",
+        scheme.get().getBuildAction().get().getBuildActionEntries(),
+        not(hasItem(
+            withNameAndBuildingFor(
+                "lib-xctest",
+                equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY)))));
   }
 
   @Test
