@@ -1402,8 +1402,6 @@ public final class Main {
     loadListenersFromBuckConfig(eventListenersBuilder, projectFilesystem, config);
 
 
-
-
     Optional<URI> remoteLogUrl = config.getRemoteLogUrl();
     boolean shouldSample = config.getRemoteLogSampleRate()
         .transform(BuildIdSampler.CREATE_FUNCTION)
