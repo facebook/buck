@@ -252,6 +252,11 @@ public class OCamlRuleBuilder {
     allDepsBuilder.addAll(
         pathResolver.filterBuildRuleInputs(
             ocamlBuckConfig.getCxxCompiler().resolve(resolver).getInputs()));
+
+    // The bulk rule will do preprocessing on sources, and so needs deps from the preprocessor
+    // input object.
+    allDepsBuilder.addAll(cxxPreprocessorInputFromDeps.getDeps(resolver, pathResolver));
+
     ImmutableSortedSet<BuildRule> allDeps = allDepsBuilder.build();
 
     BuildTarget buildTarget =
