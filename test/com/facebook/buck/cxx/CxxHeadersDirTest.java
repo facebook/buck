@@ -18,14 +18,15 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.UncachedRuleKeyBuilder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
@@ -46,7 +47,7 @@ public class CxxHeadersDirTest {
     FileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     DefaultRuleKeyBuilderFactory factory =
         new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
-    RuleKeyBuilder builder = new RuleKeyBuilder(pathResolver, fileHashCache, factory);
+    RuleKeyBuilder builder = new UncachedRuleKeyBuilder(pathResolver, fileHashCache, factory);
     cxxHeaders.appendToRuleKey(builder);
     return builder.build();
   }

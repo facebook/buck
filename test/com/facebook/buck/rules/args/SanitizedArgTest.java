@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.UncachedRuleKeyBuilder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
@@ -40,7 +41,7 @@ public class SanitizedArgTest {
     SourcePathResolver resolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
      );
-    return new RuleKeyBuilder(
+    return new UncachedRuleKeyBuilder(
         resolver,
         new DefaultFileHashCache(projectFilesystem),
         new DefaultRuleKeyBuilderFactory(fileHashCache, resolver));

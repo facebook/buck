@@ -144,7 +144,7 @@ public class CommandToolTest {
             "input", Strings.repeat("a", 40)));
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(hashCache, pathResolver);
-    RuleKey ruleKey = new RuleKeyBuilder(
+    RuleKey ruleKey = new UncachedRuleKeyBuilder(
         pathResolver,
         hashCache,
         ruleKeyBuilderFactory)
@@ -156,7 +156,7 @@ public class CommandToolTest {
             "input", Strings.repeat("b", 40)));
     ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(hashCache, pathResolver);
-    RuleKey changedRuleKey = new RuleKeyBuilder(
+    RuleKey changedRuleKey = new UncachedRuleKeyBuilder(
         pathResolver,
         hashCache,
         ruleKeyBuilderFactory)

@@ -701,7 +701,7 @@ public class RuleKeyTest {
 
   @Test
   public void subclassWithNoopSetter() {
-    class NoopSetterRuleKeyBuilder extends RuleKeyBuilder {
+    class NoopSetterRuleKeyBuilder extends UncachedRuleKeyBuilder {
 
       public NoopSetterRuleKeyBuilder(
           SourcePathResolver pathResolver,

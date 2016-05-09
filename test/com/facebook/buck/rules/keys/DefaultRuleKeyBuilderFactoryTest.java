@@ -34,6 +34,7 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.UncachedRuleKeyBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -159,7 +160,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
         new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
     RuleKey subKey =
-        new RuleKeyBuilder(pathResolver, fileHashCache, factory)
+        new UncachedRuleKeyBuilder(pathResolver, fileHashCache, factory)
             .setReflectively("cheese", "brie")
             .build();
 
@@ -210,7 +211,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
     AppendableRule appendableRule = new AppendableRule(depTarget);
 
     RuleKey subKey =
-        new RuleKeyBuilder(pathResolver, fileHashCache, factory)
+        new UncachedRuleKeyBuilder(pathResolver, fileHashCache, factory)
             .setReflectively("cheese", "brie")
             .build();
 

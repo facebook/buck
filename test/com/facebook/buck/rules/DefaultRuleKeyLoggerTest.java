@@ -208,7 +208,7 @@ public class DefaultRuleKeyLoggerTest {
       ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver) {
         @Override
         protected RuleKeyBuilder newBuilder(BuildRule rule) {
-          return new RuleKeyBuilder(pathResolver, hashCache, this, logger);
+          return new UncachedRuleKeyBuilder(pathResolver, hashCache, this, logger);
         }
       };
     }

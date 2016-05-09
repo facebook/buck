@@ -53,7 +53,7 @@ public class FakeRuleKeyBuilderFactory
     SourcePathResolver resolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
      );
-    return new RuleKeyBuilder(resolver, fileHashCache, this) {
+    return new UncachedRuleKeyBuilder(resolver, fileHashCache, this) {
 
       @Override
       public RuleKeyBuilder setReflectively(String key, @Nullable Object val) {

@@ -46,7 +46,7 @@ import java.util.Stack;
 
 import javax.annotation.Nullable;
 
-public class RuleKeyBuilder {
+public abstract class RuleKeyBuilder {
 
   @VisibleForTesting
   static final byte SEPARATOR = '\0';
@@ -155,15 +155,7 @@ public class RuleKeyBuilder {
   /**
    * Implementations can override this to provide context-specific caching.
    */
-  public RuleKeyBuilder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
-    RuleKeyBuilder subKeyBuilder = new RuleKeyBuilder(
-        resolver,
-        hashCache,
-        defaultRuleKeyBuilderFactory);
-    appendable.appendToRuleKey(subKeyBuilder);
-    RuleKey subKey = subKeyBuilder.build();
-    return setAppendableRuleKey(key, subKey);
-  }
+  public abstract RuleKeyBuilder setAppendableRuleKey(String key, RuleKeyAppendable appendable);
 
   protected RuleKeyBuilder setAppendableRuleKey(String key, RuleKey ruleKey) {
     return setReflectively(key + ".appendableSubKey", ruleKey);
