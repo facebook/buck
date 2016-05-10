@@ -37,10 +37,10 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.args.GlobArg;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -100,7 +100,11 @@ public class HaskellLibraryDescription implements
         picType,
         Optional.<String>absent(),
         args.compilerFlags.or(ImmutableList.<String>of()),
-        args.srcs.or(ImmutableList.<SourcePath>of()));
+        HaskellSources.from(
+            params.getBuildTarget(),
+            pathResolver,
+            "srcs",
+            args.srcs.or(SourceList.EMPTY)));
   }
 
   private HaskellCompileRule createInterfaces(
@@ -141,7 +145,7 @@ public class HaskellLibraryDescription implements
             params.getBuildTarget(),
             cxxPlatform.getFlavor(),
             picType),
-        ImmutableList.of(compileRule.getObjectDirPath()));
+        compileRule.getObjects());
   }
 
   private HaskellLinkRule createSharedLibrary(
@@ -169,8 +173,7 @@ public class HaskellLibraryDescription implements
         haskellConfig,
         Linker.LinkType.SHARED,
         ImmutableList.<String>of(),
-        ImmutableList.<com.facebook.buck.rules.args.Arg>of(
-            GlobArg.of(pathResolver, compileRule.getObjectDirPath(), "**/*.o")),
+        ImmutableList.copyOf(SourcePathArg.from(pathResolver, compileRule.getObjects())),
         Iterables.filter(params.getDeps(), NativeLinkable.class),
         Linker.LinkableDepType.SHARED);
   }
@@ -282,7 +285,7 @@ public class HaskellLibraryDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg {
-    public Optional<ImmutableList<SourcePath>> srcs;
+    public Optional<SourceList> srcs;
     public Optional<ImmutableList<String>> compilerFlags;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }

@@ -70,7 +70,7 @@ public class HaskellDescriptionUtils {
       final CxxSourceRuleFactory.PicType picType,
       Optional<String> main,
       ImmutableList<String> flags,
-      ImmutableList<SourcePath> sources)
+      HaskellSources sources)
       throws NoSuchBuildTargetException {
 
     final Map<BuildTarget, ImmutableList<String>> depFlags = new TreeMap<>();
@@ -93,10 +93,6 @@ public class HaskellDescriptionUtils {
     }.start();
 
     Tool compiler = haskellConfig.getCompiler().resolve(resolver);
-    ImmutableList<Arg> args =
-        ImmutableList.<Arg>builder()
-            .addAll(SourcePathArg.from(pathResolver, sources))
-            .build();
 
     ImmutableList<String> compileFlags =
         ImmutableList.<String>builder()
@@ -115,9 +111,7 @@ public class HaskellDescriptionUtils {
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(compiler.getDeps(pathResolver))
                     .addAll(pathResolver.filterBuildRuleInputs(includes))
-                    .addAll(
-                        FluentIterable.from(args)
-                            .transformAndConcat(Arg.getDepsFunction(pathResolver)))
+                    .addAll(sources.getDeps(pathResolver))
                     .build()),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
@@ -126,7 +120,7 @@ public class HaskellDescriptionUtils {
         picType,
         main,
         includes,
-        args);
+        sources);
   }
 
   protected static BuildTarget getCompileBuildTarget(
@@ -148,7 +142,7 @@ public class HaskellDescriptionUtils {
       CxxSourceRuleFactory.PicType picType,
       Optional<String> main,
       ImmutableList<String> flags,
-      ImmutableList<SourcePath> srcs)
+      HaskellSources srcs)
       throws NoSuchBuildTargetException {
 
     BuildTarget target = getCompileBuildTarget(params.getBuildTarget(), cxxPlatform, picType);
@@ -252,8 +246,9 @@ public class HaskellDescriptionUtils {
                 CxxSourceRuleFactory.PicType.PIC,
                 Optional.<String>absent(),
                 ImmutableList.<String>of(),
-                ImmutableList.<SourcePath>of(
-                    new BuildTargetSourcePath(emptyModule.getBuildTarget()))));
+                HaskellSources.builder()
+                    .putModuleMap("Unused", new BuildTargetSourcePath(emptyModule.getBuildTarget()))
+                    .build()));
     BuildTarget emptyArchiveTarget =
         target.withAppendedFlavors(ImmutableFlavor.of("empty-archive"));
     Archive emptyArchive =
@@ -266,7 +261,7 @@ public class HaskellDescriptionUtils {
                 cxxPlatform.getRanlib(),
                 Archive.Contents.NORMAL,
                 BuildTargets.getGenPath(emptyArchiveTarget, "%s/libempty.a"),
-                ImmutableList.of(emptyCompiledModule.getObjectDirPath())));
+                emptyCompiledModule.getObjects()));
     argsBuilder.add(
         new SourcePathArg(pathResolver, new BuildTargetSourcePath(emptyArchive.getBuildTarget())));
 

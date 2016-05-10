@@ -33,6 +33,9 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractSourceList {
 
+  public static final SourceList EMPTY =
+      SourceList.ofUnnamedSources(ImmutableSortedSet.<SourcePath>of());
+
   public enum Type {
     UNNAMED,
     NAMED,

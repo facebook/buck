@@ -22,7 +22,7 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -48,7 +48,7 @@ public class HaskellLibraryBuilder
         CxxPlatformUtils.DEFAULT_PLATFORMS);
   }
 
-  public HaskellLibraryBuilder setSrcs(ImmutableList<SourcePath> srcs) {
+  public HaskellLibraryBuilder setSrcs(SourceList srcs) {
     arg.srcs = Optional.of(srcs);
     return this;
   }

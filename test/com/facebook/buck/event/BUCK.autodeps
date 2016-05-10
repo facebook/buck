@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY bd88d7e3c8293a1e81812729a5b7958f79e88e83 #@#
+#@# GENERATED FILE: DO NOT MODIFY 9cbbba344111c3da4e94b06a0033987bcc713e5f #@#
 {
   "event" : {
     "deps" : [
@@ -15,7 +15,6 @@
       "//src/com/facebook/buck/test/selectors:selectors",
       "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:object_mapper",
-      "//src/com/facebook/buck/util/concurrent:concurrent",
       "//test/com/facebook/buck/event:testutil",
       "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/rules:testutil",

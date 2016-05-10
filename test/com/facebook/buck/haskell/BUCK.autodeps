@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 0ccbf382c1b496906b9faab88c28adb7e73785f8 #@#
+#@# GENERATED FILE: DO NOT MODIFY dc7bbcb7a4182b87bb9fa948aa4881a577b17030 #@#
 {
   "haskell" : {
     "deps" : [
@@ -36,6 +36,7 @@
       "//src/com/facebook/buck/haskell:haskell",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//test/com/facebook/buck/rules:testutil",
       "//third-party/java/guava:guava"

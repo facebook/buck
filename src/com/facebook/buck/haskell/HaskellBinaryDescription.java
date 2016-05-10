@@ -39,13 +39,12 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.args.GlobArg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -174,8 +173,12 @@ public class HaskellBinaryDescription implements
                     CxxSourceRuleFactory.PicType.PIC,
                 args.main,
                 args.compilerFlags.or(ImmutableList.<String>of()),
-                args.srcs.or(ImmutableList.<SourcePath>of())));
-    linkArgsBuilder.add(GlobArg.of(pathResolver, compileRule.getObjectDirPath(), "**/*.o"));
+                HaskellSources.from(
+                    params.getBuildTarget(),
+                    pathResolver,
+                    "srcs",
+                    args.srcs.or(SourceList.EMPTY))));
+    linkArgsBuilder.addAll(SourcePathArg.from(pathResolver, compileRule.getObjects()));
 
     ImmutableList<String> linkFlags = linkFlagsBuilder.build();
     ImmutableList<com.facebook.buck.rules.args.Arg> linkArgs = linkArgsBuilder.build();
@@ -267,7 +270,7 @@ public class HaskellBinaryDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg {
-    public Optional<ImmutableList<SourcePath>> srcs;
+    public Optional<SourceList> srcs;
     public Optional<ImmutableList<String>> compilerFlags;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<String> main;

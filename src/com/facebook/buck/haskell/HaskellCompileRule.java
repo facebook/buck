@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -42,6 +41,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
+import java.io.File;
 import java.nio.file.Path;
 
 public class HaskellCompileRule extends AbstractBuildRule {
@@ -62,7 +62,7 @@ public class HaskellCompileRule extends AbstractBuildRule {
   private final ImmutableList<SourcePath> includes;
 
   @AddToRuleKey
-  private final ImmutableList<Arg> args;
+  private final HaskellSources sources;
 
   public HaskellCompileRule(
       BuildRuleParams buildRuleParams,
@@ -72,14 +72,14 @@ public class HaskellCompileRule extends AbstractBuildRule {
       CxxSourceRuleFactory.PicType picType,
       Optional<String> main,
       ImmutableList<SourcePath> includes,
-      ImmutableList<Arg> args) {
+      HaskellSources sources) {
     super(buildRuleParams, resolver);
     this.compiler = compiler;
     this.flags = flags;
     this.picType = picType;
     this.main = main;
     this.includes = includes;
-    this.args = args;
+    this.sources = sources;
   }
 
   private Path getObjectDir() {
@@ -129,7 +129,10 @@ public class HaskellCompileRule extends AbstractBuildRule {
                     FluentIterable.from(includes)
                         .transform(getResolver().getAbsolutePathFunction())
                         .transform(Functions.toStringFunction())))
-                .addAll(Arg.stringify(args))
+                .addAll(
+                    FluentIterable.from(sources.getSourcePaths())
+                        .transform(getResolver().getAbsolutePathFunction())
+                        .transform(Functions.toStringFunction()))
                 .build();
           }
 
@@ -153,8 +156,15 @@ public class HaskellCompileRule extends AbstractBuildRule {
     return getInterfaceDir();
   }
 
-  public SourcePath getObjectDirPath() {
-    return new BuildTargetSourcePath(getBuildTarget(), getObjectDir());
+  public ImmutableList<SourcePath> getObjects() {
+    ImmutableList.Builder<SourcePath> objects = ImmutableList.builder();
+    for (String module : sources.getModuleNames()) {
+      objects.add(
+          new BuildTargetSourcePath(
+              getBuildTarget(),
+              getObjectDir().resolve(module.replace('.', File.separatorChar) + ".o")));
+    }
+    return objects.build();
   }
 
   @VisibleForTesting
