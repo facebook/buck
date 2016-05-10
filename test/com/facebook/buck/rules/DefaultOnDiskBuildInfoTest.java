@@ -21,25 +21,23 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
-import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Paths;
 
 public class DefaultOnDiskBuildInfoTest {
 
   @Test
-  public void whenMetadataEmptyStringThenGetValueReturnsEmptyString() {
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(
-        projectFilesystem.readFileIfItExists(Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY")))
-        .andReturn(Optional.of(""));
-    EasyMock.replay(projectFilesystem);
+  public void whenMetadataEmptyStringThenGetValueReturnsEmptyString() throws IOException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem.writeContentsToPath("", Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -50,17 +48,14 @@ public class DefaultOnDiskBuildInfoTest {
     assertThat(
         onDiskBuildInfo.getValue("KEY"),
         Matchers.equalTo(Optional.of("")));
-
-    EasyMock.verify(projectFilesystem);
   }
 
   @Test
-   public void whenMetaDataJsonListThenGetValuesReturnsList() {
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(
-        projectFilesystem.readFileIfItExists(Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY")))
-        .andReturn(Optional.of("[\"bar\",\"biz\",\"baz\"]"));
-    EasyMock.replay(projectFilesystem);
+   public void whenMetaDataJsonListThenGetValuesReturnsList() throws IOException {
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem.writeContentsToPath(
+        "[\"bar\",\"biz\",\"baz\"]",
+        Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -71,17 +66,14 @@ public class DefaultOnDiskBuildInfoTest {
     assertThat(
         onDiskBuildInfo.getValues("KEY"),
         Matchers.equalTo(Optional.of(ImmutableList.of("bar", "biz", "baz"))));
-
-    EasyMock.verify(projectFilesystem);
   }
 
   @Test
-  public void whenMetaDataEmptyJsonListThenGetValuesReturnsEmptyList() {
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(
-        projectFilesystem.readFileIfItExists(Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY")))
-        .andReturn(Optional.of("[]"));
-    EasyMock.replay(projectFilesystem);
+  public void whenMetaDataEmptyJsonListThenGetValuesReturnsEmptyList() throws IOException {
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem.writeContentsToPath(
+        "[]",
+        Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -92,17 +84,12 @@ public class DefaultOnDiskBuildInfoTest {
     assertThat(
         onDiskBuildInfo.getValues("KEY"),
         Matchers.equalTo(Optional.of(ImmutableList.<String>of())));
-
-    EasyMock.verify(projectFilesystem);
   }
 
   @Test
-  public void whenMetadataEmptyStringThenGetValuesReturnsAbsent() {
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(
-        projectFilesystem.readFileIfItExists(Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY")))
-        .andReturn(Optional.of(""));
-    EasyMock.replay(projectFilesystem);
+  public void whenMetadataEmptyStringThenGetValuesReturnsAbsent() throws IOException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem.writeContentsToPath("", Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -113,17 +100,14 @@ public class DefaultOnDiskBuildInfoTest {
     assertThat(
         onDiskBuildInfo.getValues("KEY"),
         Matchers.equalTo(Optional.<ImmutableList<String>>absent()));
-
-    EasyMock.verify(projectFilesystem);
   }
 
   @Test
-  public void whenMetadataInvalidJsonThenGetValuesReturnsAbsent() {
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(
-        projectFilesystem.readFileIfItExists(Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY")))
-        .andReturn(Optional.of("Some Invalid Json"));
-    EasyMock.replay(projectFilesystem);
+  public void whenMetadataInvalidJsonThenGetValuesReturnsAbsent() throws IOException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem.writeContentsToPath(
+        "Some Invalid Json",
+        Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -134,18 +118,15 @@ public class DefaultOnDiskBuildInfoTest {
     assertThat(
         onDiskBuildInfo.getValues("KEY"),
         Matchers.equalTo(Optional.<ImmutableList<String>>absent()));
-
-    EasyMock.verify(projectFilesystem);
   }
 
   @Test
-  public void whenMetadataValidHashThenGetHashReturnsHash() {
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
+  public void whenMetadataValidHashThenGetHashReturnsHash() throws IOException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     String hash = "fac0fac1fac2fac3fac4fac5fac6fac7fac8fac9";
-    EasyMock.expect(
-        projectFilesystem.readFileIfItExists(Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY")))
-        .andReturn(Optional.of(hash));
-    EasyMock.replay(projectFilesystem);
+    projectFilesystem.writeContentsToPath(
+        hash,
+        Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -156,17 +137,12 @@ public class DefaultOnDiskBuildInfoTest {
     assertThat(
         onDiskBuildInfo.getHash("KEY"),
         Matchers.equalTo(Optional.of(Sha1HashCode.of(hash))));
-
-    EasyMock.verify(projectFilesystem);
   }
 
   @Test
-  public void whenMetadataEmptyStringThenGetHashReturnsAbsent() {
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(
-        projectFilesystem.readFileIfItExists(Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY")))
-        .andReturn(Optional.of(""));
-    EasyMock.replay(projectFilesystem);
+  public void whenMetadataEmptyStringThenGetHashReturnsAbsent() throws IOException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem.writeContentsToPath("", Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -177,17 +153,14 @@ public class DefaultOnDiskBuildInfoTest {
     assertThat(
         onDiskBuildInfo.getHash("KEY"),
         Matchers.equalTo(Optional.<Sha1HashCode>absent()));
-
-    EasyMock.verify(projectFilesystem);
   }
 
   @Test
-  public void whenMetadataInvalidHashThenGetHashReturnsAbsent() {
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(
-        projectFilesystem.readFileIfItExists(Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY")))
-        .andReturn(Optional.of("Not A Valid Hash"));
-    EasyMock.replay(projectFilesystem);
+  public void whenMetadataInvalidHashThenGetHashReturnsAbsent() throws IOException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem.writeContentsToPath(
+        "Not A Valid Hash",
+        Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -198,19 +171,15 @@ public class DefaultOnDiskBuildInfoTest {
     assertThat(
         onDiskBuildInfo.getHash("KEY"),
         Matchers.equalTo(Optional.<Sha1HashCode>absent()));
-
-    EasyMock.verify(projectFilesystem);
   }
 
   @Test
-     public void whenMetadataValidRuleKeyThenGetRuleKeyReturnsKey() {
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
+  public void whenMetadataValidRuleKeyThenGetRuleKeyReturnsKey() throws IOException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     String key = "fa";
-    EasyMock.expect(
-        projectFilesystem.readFileIfItExists(
-            Paths.get("buck-out/bin/foo/bar/.baz/metadata/" + BuildInfo.METADATA_KEY_FOR_RULE_KEY)))
-        .andReturn(Optional.of(key));
-    EasyMock.replay(projectFilesystem);
+    projectFilesystem.writeContentsToPath(
+        key,
+        Paths.get("buck-out/bin/foo/bar/.baz/metadata/" + BuildInfo.METADATA_KEY_FOR_RULE_KEY));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -221,18 +190,14 @@ public class DefaultOnDiskBuildInfoTest {
     assertThat(
         onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY),
         Matchers.equalTo(Optional.of(new RuleKey(key))));
-
-    EasyMock.verify(projectFilesystem);
   }
 
   @Test
-  public void whenMetadataEmptyStringThenGetRuleKeyReturnsAbsent() {
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(
-        projectFilesystem.readFileIfItExists(
-            Paths.get("buck-out/bin/foo/bar/.baz/metadata/" + BuildInfo.METADATA_KEY_FOR_RULE_KEY)))
-        .andReturn(Optional.of(""));
-    EasyMock.replay(projectFilesystem);
+  public void whenMetadataEmptyStringThenGetRuleKeyReturnsAbsent() throws IOException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem.writeContentsToPath(
+        "",
+        Paths.get("buck-out/bin/foo/bar/.baz/metadata/" + BuildInfo.METADATA_KEY_FOR_RULE_KEY));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -243,18 +208,14 @@ public class DefaultOnDiskBuildInfoTest {
     assertThat(
         onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY),
         Matchers.equalTo(Optional.<RuleKey>absent()));
-
-    EasyMock.verify(projectFilesystem);
   }
 
   @Test
-  public void whenMetadataInvalidRuleKeyThenGetRuleKeyReturnsAbsent() {
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(
-        projectFilesystem.readFileIfItExists(
-            Paths.get("buck-out/bin/foo/bar/.baz/metadata/" + BuildInfo.METADATA_KEY_FOR_RULE_KEY)))
-        .andReturn(Optional.of("Not A Valid Rule Key"));
-    EasyMock.replay(projectFilesystem);
+  public void whenMetadataInvalidRuleKeyThenGetRuleKeyReturnsAbsent() throws IOException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem.writeContentsToPath(
+        "Not A Valid Rule Key",
+        Paths.get("buck-out/bin/foo/bar/.baz/metadata/" + BuildInfo.METADATA_KEY_FOR_RULE_KEY));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -265,8 +226,6 @@ public class DefaultOnDiskBuildInfoTest {
     assertThat(
         onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY),
         Matchers.equalTo(Optional.<RuleKey>absent()));
-
-    EasyMock.verify(projectFilesystem);
   }
 
 }

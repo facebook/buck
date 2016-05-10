@@ -430,7 +430,7 @@ public class Project {
             basePath);
         KeystoreProperties keystoreProperties = KeystoreProperties.createFromPropertiesFile(
             resolver.getAbsolutePath(androidBinary.getKeystore().getPathToStore()),
-            resolver.getAbsolutePath(androidBinary.getKeystore().getPathToPropertiesFile()),
+            resolver.getRelativePath(androidBinary.getKeystore().getPathToPropertiesFile()),
             projectFilesystem);
 
         // getKeystore() returns an absolute path, but an IntelliJ module

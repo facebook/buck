@@ -73,7 +73,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 import java.util.jar.JarEntry;
@@ -343,11 +342,6 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     } else {
       return false;
     }
-  }
-
-  @Override
-  public Properties readPropertiesFile(Path pathToPropertiesFile) throws IOException {
-    throw new UnsupportedOperationException();
   }
 
   @Override

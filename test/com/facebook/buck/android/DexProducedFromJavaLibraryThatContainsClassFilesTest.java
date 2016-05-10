@@ -174,7 +174,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     BuildContext context = createMock(BuildContext.class);
     FakeBuildableContext buildableContext = new FakeBuildableContext();
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     replayAll();
 
@@ -196,10 +196,6 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     resetAll();
 
     Path dexOutput = BuildTargets.getGenPath(buildTarget, "%s.dex.jar");
-    expect(projectFilesystem.resolve(dexOutput.getParent()))
-        .andReturn(Paths.get("/home/user/").resolve(dexOutput.getParent()));
-    expect(projectFilesystem.resolve(dexOutput))
-        .andReturn(Paths.get("/home/user/").resolve(dexOutput));
     replayAll();
 
     ExecutionContext executionContext = TestExecutionContext
@@ -208,8 +204,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     MoreAsserts.assertSteps("Do not generate a .dex.jar file.",
         ImmutableList.of(
-          String.format("rm -f %s", Paths.get("/home/user/").resolve(dexOutput)),
-          String.format("mkdir -p %s", Paths.get("/home/user/").resolve(dexOutput.getParent())),
+          String.format("rm -f %s", projectFilesystem.resolve(dexOutput)),
+          String.format("mkdir -p %s", projectFilesystem.resolve(dexOutput.getParent())),
           "record_empty_dx"),
         steps,
         executionContext);

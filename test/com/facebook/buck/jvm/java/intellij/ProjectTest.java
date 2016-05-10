@@ -53,8 +53,8 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.BuckTestConstant;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -68,6 +68,7 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -804,23 +805,17 @@ public class ProjectTest {
 
     // Create the Project.
     ExecutionContext executionContext = TestExecutionContext.newInstance();
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.getRelativizer()).andStubReturn(
-        new Function<Path, Path>() {
-          @Override
-          public Path apply(@Nullable Path input) {
-            return Paths.get("").toAbsolutePath().relativize(input);
-          }
-        });
-    EasyMock.expect(projectFilesystem.getRootPath()).andStubReturn(Paths.get("").toAbsolutePath());
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     Properties keystoreProperties = new Properties();
     keystoreProperties.put("key.alias", "androiddebugkey");
     keystoreProperties.put("key.store.password", "android");
     keystoreProperties.put("key.alias.password", "android");
-    EasyMock.expect(projectFilesystem.readPropertiesFile(
-        Paths.get("keystore/debug.keystore.properties").toAbsolutePath()))
-        .andReturn(keystoreProperties).anyTimes();
+    try (OutputStream output =
+             projectFilesystem.newFileOutputStream(
+                 Paths.get("keystore/debug.keystore.properties"))) {
+      keystoreProperties.store(output, "");
+    }
 
     ImmutableMap<Path, String> basePathToAliasMap = ImmutableMap.of();
     Project project = new Project(
@@ -842,9 +837,7 @@ public class ProjectTest {
         true);
 
     // Execute Project's business logic.
-    EasyMock.replay(projectFilesystem);
     List<SerializableModule> modules = new ArrayList<>(project.createModulesForProjectConfigs());
-    EasyMock.verify(projectFilesystem);
 
     return new ProjectWithModules(project, ImmutableList.copyOf(modules));
   }
@@ -871,7 +864,7 @@ public class ProjectTest {
     //   src_target = ':foo-jni',
     // )
 
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget fooJni = BuildTargetFactory.newInstance("//third_party/java/foo/jni:foo-jni");
     NdkLibrary ndkLibrary =
         (NdkLibrary) new NdkLibraryBuilder(fooJni)

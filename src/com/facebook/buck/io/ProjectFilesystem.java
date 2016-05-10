@@ -448,12 +448,15 @@ public class ProjectFilesystem {
     Files.delete(getPathForRelativePath(pathRelativeToProjectRoot));
   }
 
-  public Properties readPropertiesFile(Path pathToPropertiesFileRelativeToProjectRoot)
+  public Properties readPropertiesFile(Path propertiesFile)
       throws IOException {
     Properties properties = new Properties();
-    Path propertiesFile = getPathForRelativePath(pathToPropertiesFileRelativeToProjectRoot);
-    if (Files.exists(propertiesFile)) {
-      properties.load(Files.newBufferedReader(propertiesFile, Charsets.UTF_8));
+    if (exists(propertiesFile)) {
+      try (BufferedReader reader =
+               new BufferedReader(
+                   new InputStreamReader(newFileInputStream(propertiesFile), Charsets.UTF_8))) {
+        properties.load(reader);
+      }
       return properties;
     } else {
       throw new FileNotFoundException(propertiesFile.toString());
