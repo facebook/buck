@@ -48,7 +48,7 @@ public class DefaultStepRunnerTest {
     eventBus.register(listener);
 
     ExecutionContext context = TestExecutionContext.newBuilder()
-        .setEventBus(eventBus)
+        .setBuckEventBus(eventBus)
         .build();
     DefaultStepRunner runner = new DefaultStepRunner(context);
     runner.runStepForBuildTarget(passingStep, Optional.<BuildTarget>absent());

@@ -123,7 +123,7 @@ public class AutodepsCommand extends AbstractCommand {
       ExecutionContext executionContext = ExecutionContext.builder()
           .setConsole(params.getConsole())
           .setConcurrencyLimit(concurrencyLimit)
-          .setEventBus(eventBus)
+          .setBuckEventBus(eventBus)
           .setEnvironment(/* environment */ ImmutableMap.<String, String>of())
           .setExecutors(
               ImmutableMap.<ExecutionContext.ExecutorPool, ListeningExecutorService>of(

@@ -21,8 +21,8 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.TestExecutionContext;
 
-import org.easymock.EasyMock;
 import org.junit.Test;
 
 /**
@@ -39,13 +39,10 @@ public class AbstractExecutionStepTest {
         return 0;
       }
     };
-    ExecutionContext context = EasyMock.createMock(ExecutionContext.class);
-    EasyMock.replay(context);
+    ExecutionContext context = TestExecutionContext.newInstance();
 
     assertEquals(description, step.getShortName());
     assertEquals(description, step.getDescription(context));
-
-    EasyMock.verify(context);
   }
 
 }

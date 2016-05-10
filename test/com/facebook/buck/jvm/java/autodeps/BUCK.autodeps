@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 76b0c7364d30a8d08fa7132be72d943da363d16e #@#
+#@# GENERATED FILE: DO NOT MODIFY fe934129cbfbdc26a5ba6124f2dbe88354927de4 #@#
 {
   "autodeps" : {
     "deps" : [
@@ -17,6 +17,7 @@
       "//src/com/facebook/buck/zip:stream",
       "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/rules:testutil",
+      "//test/com/facebook/buck/step:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
       "//test/com/facebook/buck/timing:testutil",

@@ -49,7 +49,8 @@ class CxxPreprocessorOutputTransformerFactory {
       ExecutionContext context,
       InputStream inputStream,
       OutputStream outputStream) {
-    return new LineProcessorRunnable(context.getExecutorService(ExecutionContext.ExecutorPool.CPU),
+    return new LineProcessorRunnable(
+        context.getExecutorService(ExecutionContext.ExecutorPool.CPU),
         inputStream,
         outputStream) {
       @Override

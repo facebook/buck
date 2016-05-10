@@ -222,7 +222,7 @@ public abstract class AbstractCommand implements Command {
     return ExecutionContext.builder()
         .setConsole(params.getConsole())
         .setAndroidPlatformTargetSupplier(params.getAndroidPlatformTargetSupplier())
-        .setEventBus(params.getBuckEventBus())
+        .setBuckEventBus(params.getBuckEventBus())
         .setPlatform(params.getPlatform())
         .setEnvironment(params.getEnvironment())
         .setJavaPackageFinder(params.getJavaPackageFinder())

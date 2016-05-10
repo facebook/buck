@@ -16,14 +16,8 @@
 
 package com.facebook.buck.shell;
 
-import static org.easymock.EasyMock.anyObject;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.EasyMock.getCurrentArguments;
-import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -39,12 +33,12 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.eventbus.Subscribe;
 
-import org.easymock.EasyMock;
-import org.easymock.IAnswer;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -66,26 +60,21 @@ public class ShellStepTest {
 
   private static ExecutionContext createContext(
       ImmutableMap<ProcessExecutorParams, FakeProcess> processes,
-      final Console console) {
-    ExecutionContext context = EasyMock.createMock(ExecutionContext.class);
-    expect(context.getProcessExecutor())
-        .andReturn(new FakeProcessExecutor(processes, console))
-        .anyTimes();
-    expect(context.getConsole()).andReturn(console).anyTimes();
-    expect(context.getVerbosity()).andReturn(console.getVerbosity()).anyTimes();
-    context.postEvent(anyObject(BuckEvent.class));
-    expectLastCall().andStubAnswer(
-        new IAnswer<Void>() {
-          @Override
-          public Void answer() throws Throwable {
-            ConsoleEvent event = (ConsoleEvent) getCurrentArguments()[0];
-            if (event.getLevel().equals(Level.WARNING)) {
-              console.getStdErr().write(event.getMessage().getBytes(Charsets.US_ASCII));
-            }
-            return null;
-          }
-        });
-    replay(context);
+      final Console console) throws IOException {
+    ExecutionContext context = TestExecutionContext.newBuilder()
+        .setConsole(console)
+        .setProcessExecutor(new FakeProcessExecutor(processes, console))
+        .build();
+
+    context.getBuckEventBus().register(new Object() {
+      @Subscribe
+      public void logEvent(ConsoleEvent event) throws IOException {
+        if (event.getLevel().equals(Level.WARNING)) {
+          console.getStdErr().write(event.getMessage().getBytes(Charsets.US_ASCII));
+        }
+      }
+    });
+
     return context;
   }
 

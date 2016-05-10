@@ -233,15 +233,13 @@ public class InstallCommand extends BuildCommand {
       BuildRule buildRule = build.getRuleResolver().requireRule(buildTarget);
 
       if (buildRule instanceof InstallableApk) {
-        ExecutionContext.Builder builder = ExecutionContext.builder()
-            .setExecutionContext(build.getExecutionContext())
+        ExecutionContext executionContext = ExecutionContext.builder()
+            .from(build.getExecutionContext())
             .setAdbOptions(Optional.of(adbOptions(params.getBuckConfig())))
             .setTargetDeviceOptions(Optional.of(targetDeviceOptions()))
-            .setExecutors(params.getExecutors());
-        exitCode = installApk(
-            params,
-            (InstallableApk) buildRule,
-            builder.build());
+            .setExecutors(params.getExecutors())
+            .build();
+        exitCode = installApk(params, (InstallableApk) buildRule, executionContext);
         if (exitCode != 0) {
           return exitCode;
         }

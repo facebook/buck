@@ -1088,7 +1088,7 @@ public class Project {
         Ansi.withoutTty());
     int exitCode;
     try (ExecutionContext childContext = ExecutionContext.builder()
-        .setExecutionContext(executionContext)
+        .from(executionContext)
         .setConsole(childConsole)
         .setExecutors(executionContext.getExecutors())
         .build()) {

@@ -42,13 +42,13 @@ public class StepFailedExceptionTest {
     TestConsole silentConsole = new TestConsole(Verbosity.SILENT);
 
     verboseContext = ExecutionContext.builder()
-        .setExecutionContext(context)
+        .from(context)
         .setConsole(verboseConsole)
         .setExecutors(context.getExecutors())
         .build();
 
     silentContext = ExecutionContext.builder()
-        .setExecutionContext(context)
+        .from(context)
         .setConsole(silentConsole)
         .setExecutors(context.getExecutors())
         .build();

@@ -24,7 +24,6 @@ import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;
@@ -105,6 +104,7 @@ public class SplitZipStepTest {
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     EasyMock.expect(projectFilesystem.readLines(primaryDexClassesFile))
         .andReturn(linesInManifestFile);
+    EasyMock.replay(projectFilesystem);
 
     SplitZipStep splitZipStep = new SplitZipStep(
         projectFilesystem,
@@ -133,9 +133,6 @@ public class SplitZipStepTest {
         Optional.<Path>absent(),
         /* pathToReportDir */ Paths.get(""));
 
-    ExecutionContext context = EasyMock.createMock(ExecutionContext.class);
-    EasyMock.replay(projectFilesystem, context);
-
     Predicate<String> requiredInPrimaryZipPredicate = splitZipStep
         .createRequiredInPrimaryZipPredicate(
             ProguardTranslatorFactory.createForTest(Optional.<Map<String, String>>absent()),
@@ -162,7 +159,7 @@ public class SplitZipStepTest {
         "Substring matching is case-sensitive.",
         requiredInPrimaryZipPredicate.apply("shiny/Glistener.class"));
 
-    EasyMock.verify(projectFilesystem, context);
+    EasyMock.verify(projectFilesystem);
   }
 
   @Test
@@ -194,6 +191,7 @@ public class SplitZipStepTest {
         .andReturn(ImmutableList.<String>of());
     EasyMock.expect(projectFilesystem.readLines(proguardMappingFile))
         .andReturn(linesInMappingFile);
+    EasyMock.replay(projectFilesystem);
 
     SplitZipStep splitZipStep = new SplitZipStep(
         projectFilesystem,
@@ -221,9 +219,6 @@ public class SplitZipStepTest {
         Optional.<Path>absent(),
         Optional.<Path>absent(),
         /* pathToReportDir */ Paths.get(""));
-
-    ExecutionContext context = EasyMock.createMock(ExecutionContext.class);
-    EasyMock.replay(projectFilesystem, context);
 
     ProguardTranslatorFactory translatorFactory = ProguardTranslatorFactory.create(
         projectFilesystem,
@@ -255,7 +250,7 @@ public class SplitZipStepTest {
         "Map class with obfuscated name substring should not be in primary.",
         requiredInPrimaryZipPredicate.apply("x/b.class"));
 
-    EasyMock.verify(projectFilesystem, context);
+    EasyMock.verify(projectFilesystem);
   }
 
   @Test
@@ -266,6 +261,7 @@ public class SplitZipStepTest {
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     EasyMock.expect(projectFilesystem.readLines(proguardConfigFile))
         .andReturn(ImmutableList.of("-dontobfuscate"));
+    EasyMock.replay(projectFilesystem);
 
     SplitZipStep splitZipStep = new SplitZipStep(
         projectFilesystem,
@@ -294,9 +290,6 @@ public class SplitZipStepTest {
         Optional.<Path>absent(),
         /* pathToReportDir */ Paths.get(""));
 
-    ExecutionContext context = EasyMock.createMock(ExecutionContext.class);
-    EasyMock.replay(projectFilesystem, context);
-
     ProguardTranslatorFactory translatorFactory = ProguardTranslatorFactory.create(
         projectFilesystem,
         Optional.of(proguardConfigFile), Optional.of(proguardMappingFile));
@@ -312,7 +305,7 @@ public class SplitZipStepTest {
         "Secondary class should be in secondary.",
         requiredInPrimaryZipPredicate.apply("secondary.class"));
 
-    EasyMock.verify(projectFilesystem, context);
+    EasyMock.verify(projectFilesystem);
   }
 
   @Test

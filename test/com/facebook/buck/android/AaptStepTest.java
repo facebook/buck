@@ -25,8 +25,11 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -70,36 +73,35 @@ public class AaptStepTest {
    * The mock context returned has not been replayed, so the calling code
    * may add additional expectations, and is responsible for calling replay().
    */
-  private ExecutionContext makeMockExecutionContext(Verbosity verbosity) {
-    ExecutionContext mockContext = createMock(ExecutionContext.class);
-    expect(mockContext.getVerbosity()).andReturn(verbosity);
+  private ExecutionContext createTestExecutionContext(Verbosity verbosity) {
+    final AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
+    expect(androidPlatformTarget.getAaptExecutable()).andReturn(basePath.resolve("mock_aapt_bin"));
+    expect(androidPlatformTarget.getAndroidJar()).andReturn(basePath.resolve("mock_android.jar"));
+    replay(androidPlatformTarget);
 
-    AndroidPlatformTarget mockTarget = createMock(AndroidPlatformTarget.class);
-    expect(mockTarget.getAaptExecutable()).andReturn(basePath.resolve("mock_aapt_bin"));
-    expect(mockTarget.getAndroidJar()).andReturn(basePath.resolve("mock_android.jar"));
-    replay(mockTarget);
-    expect(mockContext.getAndroidPlatformTarget()).andReturn(mockTarget);
+    ExecutionContext executionContext = TestExecutionContext.newBuilder()
+        .setConsole(new TestConsole(verbosity))
+        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
+        .build();
 
-    return mockContext;
+    return executionContext;
   }
 
   @Test
   public void shouldEmitVerbosityFlagWithVerboseContext() throws Exception {
     AaptStep aaptStep = buildAaptStep(Optional.<Path>absent(), false, ManifestEntries.empty());
-    ExecutionContext mockContext = makeMockExecutionContext(Verbosity.ALL);
-    replay(mockContext);
+    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
-    ImmutableList<String> command = aaptStep.getShellCommandInternal(mockContext);
+    ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
     assertTrue(command.contains("-v"));
   }
 
   @Test
   public void shouldNotEmitVerbosityFlagWithQuietContext() throws Exception {
     AaptStep aaptStep = buildAaptStep(Optional.<Path>absent(), false, ManifestEntries.empty());
-    ExecutionContext mockContext = makeMockExecutionContext(Verbosity.SILENT);
-    replay(mockContext);
+    ExecutionContext executionContext = createTestExecutionContext(Verbosity.SILENT);
 
-    ImmutableList<String> command = aaptStep.getShellCommandInternal(mockContext);
+    ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
     assertFalse(command.contains("-v"));
   }
 
@@ -107,10 +109,9 @@ public class AaptStepTest {
   public void shouldEmitGFlagIfProguardConfigPresent() throws Exception {
     Path proguardConfig = basePath.resolve("mock_proguard.txt");
     AaptStep aaptStep = buildAaptStep(Optional.of(proguardConfig), false, ManifestEntries.empty());
-    ExecutionContext mockContext = makeMockExecutionContext(Verbosity.ALL);
-    replay(mockContext);
+    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
-    ImmutableList<String> command = aaptStep.getShellCommandInternal(mockContext);
+    ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
 
     assertTrue(command.contains("-G"));
     String proguardConfigPath = MorePaths.pathWithPlatformSeparators(
@@ -122,10 +123,9 @@ public class AaptStepTest {
   @Test
   public void shouldEmitNoCrunchFlagIfNotCrunch() throws Exception {
     AaptStep aaptStep = buildAaptStep(Optional.<Path>absent(), false, ManifestEntries.empty());
-    ExecutionContext mockContext = makeMockExecutionContext(Verbosity.ALL);
-    replay(mockContext);
+    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
-    ImmutableList<String> command = aaptStep.getShellCommandInternal(mockContext);
+    ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
 
     assertTrue(command.contains("--no-crunch"));
   }
@@ -133,10 +133,9 @@ public class AaptStepTest {
   @Test
   public void shouldNotEmitNoCrunchFlagIfCrunch() throws Exception {
     AaptStep aaptStep = buildAaptStep(Optional.<Path>absent(), true, ManifestEntries.empty());
-    ExecutionContext mockContext = makeMockExecutionContext(Verbosity.ALL);
-    replay(mockContext);
+    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
-    ImmutableList<String> command = aaptStep.getShellCommandInternal(mockContext);
+    ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
 
     assertFalse(command.contains("--no-crunch"));
   }
@@ -151,10 +150,8 @@ public class AaptStepTest {
         .setDebugMode(true)
         .build();
     AaptStep aaptStep = buildAaptStep(Optional.<Path>absent(), true, entries);
-    ExecutionContext mockContext = makeMockExecutionContext(Verbosity.ALL);
-    replay(mockContext);
-
-    ImmutableList<String> command = aaptStep.getShellCommandInternal(mockContext);
+    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
+    ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
 
     assertTrue(command.contains("--min-sdk-version"));
     assertEquals("3", command.get(command.indexOf("--min-sdk-version") + 1));
@@ -176,9 +173,8 @@ public class AaptStepTest {
   @Test
   public void shouldNotEmitFailOnInsertWithoutManifestEntries() throws Exception {
     AaptStep aaptStep = buildAaptStep(Optional.<Path>absent(), true, ManifestEntries.empty());
-    ExecutionContext mockContext = makeMockExecutionContext(Verbosity.ALL);
-    replay(mockContext);
-    ImmutableList<String> command = aaptStep.getShellCommandInternal(mockContext);
+    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
+    ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
     assertFalse(command.contains("--error-on-failed-insert"));
   }
 }

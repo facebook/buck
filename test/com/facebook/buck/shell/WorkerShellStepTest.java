@@ -210,7 +210,7 @@ public class WorkerShellStepTest {
         .setPlatform(Platform.LINUX)
         .setWorkerProcesses(workerProcessMap)
         .setConsole(console)
-        .setEventBus(eventBus)
+        .setBuckEventBus(eventBus)
         .build();
 
     int exitCode = step.execute(context);

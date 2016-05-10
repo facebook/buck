@@ -237,7 +237,7 @@ public class JavaTest
 
     ImmutableList<String> properVmArgs = amendVmArgs(
         this.vmArgs,
-        executionContext.getTargetDeviceOptional());
+        executionContext.getTargetDevice());
 
     BuckEventBus buckEventBus = executionContext.getBuckEventBus();
     BuildId buildId = buckEventBus.getBuildId();

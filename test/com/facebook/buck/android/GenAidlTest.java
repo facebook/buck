@@ -24,13 +24,13 @@ import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -39,8 +39,10 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.base.Suppliers;
 
 import org.junit.Test;
 
@@ -85,14 +87,15 @@ public class GenAidlTest {
     final String pathToAidlExecutable = Paths.get("/usr/local/bin/aidl").toString();
     final String pathToFrameworkAidl = Paths.get(
         "/home/root/android/platforms/android-16/framework.aidl").toString();
-    AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
+    final AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
     expect(androidPlatformTarget.getAidlExecutable()).andReturn(Paths.get(pathToAidlExecutable));
     expect(androidPlatformTarget.getAndroidFrameworkIdlFile())
         .andReturn(Paths.get(pathToFrameworkAidl));
-
-    ExecutionContext executionContext = createMock(ExecutionContext.class);
-    expect(executionContext.getAndroidPlatformTarget()).andReturn(androidPlatformTarget);
-    replay(androidPlatformTarget, executionContext);
+    replay(androidPlatformTarget);
+    ExecutionContext executionContext = TestExecutionContext.newBuilder()
+        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
+        .build();
+    assertEquals(executionContext.getAndroidPlatformTarget(), androidPlatformTarget);
 
     Path outputDirectory = BuildTargets.getScratchPath(target, "__%s.aidl");
     MakeCleanDirectoryStep mkdirStep = (MakeCleanDirectoryStep) steps.get(1);
@@ -114,6 +117,6 @@ public class GenAidlTest {
 
     assertEquals(5, steps.size());
 
-    verify(androidPlatformTarget, executionContext);
+    verify(androidPlatformTarget);
   }
 }

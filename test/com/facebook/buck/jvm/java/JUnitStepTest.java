@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.io.File;
@@ -87,10 +86,12 @@ public class JUnitStepTest {
         new ExternalJavaRuntimeLauncher("/foo/bar/custom/java"),
         args);
 
-    ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
-    EasyMock.expect(executionContext.getVerbosity()).andReturn(Verbosity.ALL);
-    EasyMock.expect(executionContext.getDefaultTestTimeoutMillis()).andReturn(5000L);
-    EasyMock.replay(executionContext);
+    ExecutionContext executionContext = TestExecutionContext.newBuilder()
+        .setConsole(new TestConsole(Verbosity.ALL))
+        .setDefaultTestTimeoutMillis(5000L)
+        .build();
+    assertEquals(executionContext.getVerbosity(), Verbosity.ALL);
+    assertEquals(executionContext.getDefaultTestTimeoutMillis(), 5000L);
 
     List<String> observedArgs = junit.getShellCommand(executionContext);
     MoreAsserts.assertListEquals(
@@ -114,8 +115,6 @@ public class JUnitStepTest {
             testClass1,
             testClass2),
         observedArgs);
-
-    EasyMock.verify(executionContext);
   }
 
   @Test

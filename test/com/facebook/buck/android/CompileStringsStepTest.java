@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.android.StringResources.Gender;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.XmlDomParser;
@@ -406,7 +407,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
     final Path destinationDir = Paths.get("");
     Path rDotJavaSrcDir = Paths.get("");
 
-    ExecutionContext context = createMock(ExecutionContext.class);
+    ExecutionContext context = TestExecutionContext.newInstance();
     FakeProjectFileSystem fileSystem = new FakeProjectFileSystem();
 
     ImmutableList<Path> stringFiles = ImmutableList.of(

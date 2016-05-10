@@ -16,14 +16,12 @@
 
 package com.facebook.buck.jvm.java;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
@@ -69,9 +67,7 @@ public class  GenerateCodeCoverageReportStepTest {
         CoverageReportFormat.HTML,
         "TitleFoo");
 
-    context = createMock(ExecutionContext.class);
-
-    replay(context);
+    context = TestExecutionContext.newInstance();
   }
 
   @Test
@@ -91,7 +87,6 @@ public class  GenerateCodeCoverageReportStepTest {
     List<String> expectedShellCommand = shellCommandBuilder.build();
 
     MoreAsserts.assertListEquals(expectedShellCommand, step.getShellCommand(context));
-    verify(context);
   }
 
   @Test

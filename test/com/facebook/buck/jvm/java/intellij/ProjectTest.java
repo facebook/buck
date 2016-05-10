@@ -51,6 +51,7 @@ import com.facebook.buck.rules.ProjectConfigBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Function;
@@ -802,7 +803,7 @@ public class ProjectTest {
     }
 
     // Create the Project.
-    ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     EasyMock.expect(projectFilesystem.getRelativizer()).andStubReturn(
         new Function<Path, Path>() {
@@ -841,9 +842,9 @@ public class ProjectTest {
         true);
 
     // Execute Project's business logic.
-    EasyMock.replay(executionContext, projectFilesystem);
+    EasyMock.replay(projectFilesystem);
     List<SerializableModule> modules = new ArrayList<>(project.createModulesForProjectConfigs());
-    EasyMock.verify(executionContext, projectFilesystem);
+    EasyMock.verify(projectFilesystem);
 
     return new ProjectWithModules(project, ImmutableList.copyOf(modules));
   }

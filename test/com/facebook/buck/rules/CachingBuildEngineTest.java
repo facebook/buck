@@ -3261,7 +3261,7 @@ public class CachingBuildEngineTest {
 
   private static StepRunner createStepRunner(@Nullable BuckEventBus eventBus) {
     ExecutionContext executionContext = TestExecutionContext.newBuilder()
-        .setEventBus(eventBus == null ? BuckEventBusFactory.newInstance() : eventBus)
+        .setBuckEventBus(eventBus == null ? BuckEventBusFactory.newInstance() : eventBus)
         .build();
 
     return new DefaultStepRunner(executionContext);

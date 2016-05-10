@@ -1,6 +1,6 @@
 standard_java_library(
   immutable_types = [
-    'ImmutableExecutionContext',
+    'ExecutionContext',
   ],
   tests = [
     '//test/com/facebook/buck/step:step',

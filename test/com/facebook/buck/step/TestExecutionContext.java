@@ -46,7 +46,7 @@ public class TestExecutionContext {
         Executors.newCachedThreadPool()));
     return ExecutionContext.builder()
         .setConsole(new TestConsole())
-        .setEventBus(BuckEventBusFactory.newInstance())
+        .setBuckEventBus(BuckEventBusFactory.newInstance())
         .setPlatform(Platform.detect())
         .setEnvironment(ImmutableMap.copyOf(System.getenv()))
         .setJavaPackageFinder(new FakeJavaPackageFinder())

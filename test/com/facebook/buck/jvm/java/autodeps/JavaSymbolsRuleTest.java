@@ -16,10 +16,6 @@
 
 package com.facebook.buck.jvm.java.autodeps;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -35,6 +31,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
@@ -104,16 +101,12 @@ public class JavaSymbolsRuleTest {
         /* context */ null,
         /* buildableContext */ null);
 
-    ExecutionContext executionContext = createMock(ExecutionContext.class);
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
     ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-    expect(executionContext.getObjectMapper()).andReturn(objectMapper);
-    replay(executionContext);
 
     for (Step step : buildSteps) {
       step.execute(executionContext);
     }
-
-    verify(executionContext);
 
     JsonNode jsonNode = objectMapper.readTree(
         projectFilesystem

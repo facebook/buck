@@ -132,7 +132,7 @@ public class Build implements Closeable {
         .setCodeCoverageEnabled(isCodeCoverageEnabled)
         .setDebugEnabled(isDebugEnabled)
         .setShouldReportAbsolutePaths(shouldReportAbsolutePaths)
-        .setEventBus(eventBus)
+        .setBuckEventBus(eventBus)
         .setPlatform(platform)
         .setEnvironment(environment)
         .setJavaPackageFinder(javaPackageFinder)

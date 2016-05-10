@@ -392,10 +392,10 @@ public class TestRunningTest {
   @Test
   public void testIsTestRunRequiredForTestInDebugMode()
       throws IOException, ExecutionException, InterruptedException {
-    ExecutionContext executionContext = createMock(ExecutionContext.class);
-    expect(executionContext.isDebugEnabled()).andReturn(true);
-
-    replay(executionContext);
+    ExecutionContext executionContext = TestExecutionContext.newBuilder()
+        .setDebugEnabled(true)
+        .build();
+    assertTrue(executionContext.isDebugEnabled());
 
     assertTrue(
         "In debug mode, test should always run regardless of any cached results since " +
@@ -407,15 +407,13 @@ public class TestRunningTest {
             createMock(TestRuleKeyFileHelper.class),
             true,
             false));
-
-    verify(executionContext);
   }
 
   @Test
   public void testIsTestRunRequiredForTestBuiltFromCacheIfHasTestResultFiles()
       throws IOException, ExecutionException, InterruptedException {
-    ExecutionContext executionContext = createMock(ExecutionContext.class);
-    expect(executionContext.isDebugEnabled()).andReturn(false);
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    assertFalse(executionContext.isDebugEnabled());
 
     FakeTestRule testRule = new FakeTestRule(
         ImmutableSet.of(Label.of("windows")),
@@ -431,7 +429,7 @@ public class TestRunningTest {
     BuildResult result = BuildResult.success(testRule, FETCHED_FROM_CACHE, CacheResult.hit("dir"));
     expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
         .andReturn(result);
-    replay(executionContext, cachingBuildEngine);
+    replay(cachingBuildEngine);
 
     assertTrue(
         "A cache hit updates the build artifact but not the test results. " +
@@ -444,14 +442,14 @@ public class TestRunningTest {
             /* results cache enabled */ true,
             /* running with test selectors */ false));
 
-    verify(executionContext, cachingBuildEngine);
+    verify(cachingBuildEngine);
   }
 
   @Test
   public void testIsTestRunRequiredForTestBuiltLocally()
       throws IOException, ExecutionException, InterruptedException {
-    ExecutionContext executionContext = createMock(ExecutionContext.class);
-    expect(executionContext.isDebugEnabled()).andReturn(false);
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    assertFalse(executionContext.isDebugEnabled());
 
     FakeTestRule testRule = new FakeTestRule(
         ImmutableSet.of(Label.of("windows")),
@@ -467,7 +465,7 @@ public class TestRunningTest {
     BuildResult result = BuildResult.success(testRule, BUILT_LOCALLY, CacheResult.miss());
     expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
         .andReturn(result);
-    replay(executionContext, cachingBuildEngine);
+    replay(cachingBuildEngine);
 
     assertTrue(
         "A test built locally should always run regardless of any cached result. ",
@@ -479,14 +477,14 @@ public class TestRunningTest {
             /* results cache enabled */ true,
             /* running with test selectors */ false));
 
-    verify(executionContext, cachingBuildEngine);
+    verify(cachingBuildEngine);
   }
 
   @Test
   public void testIsTestRunRequiredIfRuleKeyNotPresent()
       throws IOException, ExecutionException, InterruptedException {
-    ExecutionContext executionContext = createMock(ExecutionContext.class);
-    expect(executionContext.isDebugEnabled()).andReturn(false);
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    assertFalse(executionContext.isDebugEnabled());
 
     FakeTestRule testRule = new FakeTestRule(
         ImmutableSet.of(Label.of("windows")),
@@ -511,7 +509,7 @@ public class TestRunningTest {
     BuildResult result = BuildResult.success(testRule, MATCHING_RULE_KEY, CacheResult.miss());
     expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
         .andReturn(result);
-    replay(executionContext, cachingBuildEngine, testRuleKeyFileHelper);
+    replay(cachingBuildEngine, testRuleKeyFileHelper);
 
     assertTrue(
         "A cached build should run the tests if the test output directory\'s rule key is not " +
@@ -524,7 +522,7 @@ public class TestRunningTest {
             /* results cache enabled */ true,
             /* running with test selectors */ false));
 
-    verify(executionContext, cachingBuildEngine, testRuleKeyFileHelper);
+    verify(cachingBuildEngine, testRuleKeyFileHelper);
   }
 
   @Test

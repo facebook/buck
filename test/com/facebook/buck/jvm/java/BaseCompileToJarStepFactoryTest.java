@@ -22,11 +22,11 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.ImmutableList;
 
-import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -40,7 +40,7 @@ public class BaseCompileToJarStepFactoryTest {
   public void testAddPostprocessClassesCommands() {
     ImmutableList<String> postprocessClassesCommands = ImmutableList.of("tool arg1", "tool2");
     Path outputDirectory = BuckConstant.getScratchPath().resolve("android/java/lib__java__classes");
-    ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     commands.addAll(
         BaseCompileToJarStepFactory.addPostprocessClassesCommands(
