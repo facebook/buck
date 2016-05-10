@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 
 public class CopyResourcesStep implements Step {
@@ -130,7 +129,9 @@ public class CopyResourcesStep implements Step {
         resource = MorePaths.pathWithUnixSeparators(relativePathToResource);
       }
 
-      Path javaPackageAsPath = javaPackageFinder.findJavaPackageFolder(Paths.get(resource));
+      Path javaPackageAsPath =
+          javaPackageFinder.findJavaPackageFolder(
+              outputDirectory.getFileSystem().getPath(resource));
 
       Path relativeSymlinkPath;
       if ("".equals(javaPackageAsPath.toString())) {
@@ -148,14 +149,16 @@ public class CopyResourcesStep implements Step {
               javaPackageAsPath);
           // Handle the case where we depend on the output of another BuildRule. In that case, just
           // grab the output and put in the same package as this target would be in.
-          relativeSymlinkPath = Paths.get(
-              String.format(
-                  "%s%s%s",
-                  targetPackageDir,
-                  targetPackageDir.isEmpty() ? "" : "/",
-                  resolver.getRelativePath(rawResource).getFileName()));
+          relativeSymlinkPath =
+              outputDirectory.getFileSystem().getPath(
+                  String.format(
+                      "%s%s%s",
+                      targetPackageDir,
+                      targetPackageDir.isEmpty() ? "" : "/",
+                      resolver.getRelativePath(rawResource).getFileName()));
         } else {
-          relativeSymlinkPath = Paths.get(resource.substring(lastIndex));
+          relativeSymlinkPath =
+              outputDirectory.getFileSystem().getPath(resource.substring(lastIndex));
         }
       }
       Path target = outputDirectory.resolve(relativeSymlinkPath);

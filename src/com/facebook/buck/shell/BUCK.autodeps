@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 5c98c90d37df975dbcefd7490a97ebe3868f7954 #@#
+#@# GENERATED FILE: DO NOT MODIFY 6b88a8544c4daec6c6fcc4d8231f04bfe418fec9 #@#
 {
   "rules" : {
     "deps" : [
@@ -7,7 +7,6 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/step/fs:fs",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
       "//third-party/java/jackson:jackson-databind",

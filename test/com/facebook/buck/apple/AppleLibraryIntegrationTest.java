@@ -34,7 +34,6 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 
@@ -326,6 +325,7 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_builds_something", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
@@ -335,7 +335,7 @@ public class AppleLibraryIntegrationTest {
     result.assertSuccess();
 
     Path dsymPath = tmp.getRootPath()
-        .resolve(BuckConstant.getGenDir())
+        .resolve(filesystem.getBuckPaths().getGenDir())
         .resolve("Libraries/TestLibrary/" +
             "TestLibrary#dwarf-and-dsym,framework,include-frameworks,macosx-x86_64/" +
             "TestLibrary.framework.dSYM");
@@ -351,6 +351,7 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_shared", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
@@ -360,7 +361,7 @@ public class AppleLibraryIntegrationTest {
     result.assertSuccess();
 
     Path output = tmp.getRootPath()
-        .resolve(BuckConstant.getGenDir())
+        .resolve(filesystem.getBuckPaths().getGenDir())
         .resolve("Libraries/TestLibrary/TestLibrary#macosx-x86_64,shared")
         .resolve("libLibraries_TestLibrary_TestLibrary.dylib");
     assertThat(Files.exists(output), is(true));
@@ -374,6 +375,7 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_shared", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
@@ -383,13 +385,13 @@ public class AppleLibraryIntegrationTest {
     result.assertSuccess();
 
     Path output = tmp.getRootPath()
-        .resolve(BuckConstant.getGenDir())
+        .resolve(filesystem.getBuckPaths().getGenDir())
         .resolve("Libraries/TestLibrary/TestLibrary#macosx-x86_64,shared")
         .resolve("libLibraries_TestLibrary_TestLibrary.dylib");
     assertThat(Files.exists(output), is(true));
 
     Path dsymPath = tmp.getRootPath()
-        .resolve(BuckConstant.getGenDir())
+        .resolve(filesystem.getBuckPaths().getGenDir())
         .resolve("Libraries/TestLibrary")
         .resolve("TestLibrary#apple-dsym,macosx-x86_64,shared.dSYM");
     assertThat(Files.exists(dsymPath), is(true));

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY ac8dad6ac373e43d7c8abd4bee31253330af682c #@#
+#@# GENERATED FILE: DO NOT MODIFY 40821f4e4f12cf34b0969f921c4e1fa6b7b471ee #@#
 {
   "apple" : {
     "deps" : [
@@ -53,7 +53,6 @@
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/environment:platform",

@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.intellij.Project;
-import com.facebook.buck.util.BuckConstant;
 
 import org.kohsuke.args4j.Option;
 
@@ -60,13 +59,16 @@ public class CleanCommand extends AbstractCommand {
       // TODO(bolinfest): Unify these two directories under a single buck-ide directory,
       // which is distinct from the buck-out directory.
       projectFilesystem.deleteRecursivelyIfExists(Project.ANDROID_GEN_PATH);
-      projectFilesystem.deleteRecursivelyIfExists(BuckConstant.getAnnotationPath());
+      projectFilesystem.deleteRecursivelyIfExists(
+          projectFilesystem.getBuckPaths().getAnnotationDir());
     } else {
       // On Windows, you have to close all files that will be deleted.
       // Because buck clean will delete build.log, you must close it first.
       JavaUtilsLoggingBuildListener.closeLogFile();
-      projectFilesystem.deleteRecursivelyIfExists(BuckConstant.getScratchPath());
-      projectFilesystem.deleteRecursivelyIfExists(BuckConstant.getGenPath());
+      projectFilesystem.deleteRecursivelyIfExists(
+          projectFilesystem.getBuckPaths().getScratchDir());
+      projectFilesystem.deleteRecursivelyIfExists(
+          projectFilesystem.getBuckPaths().getGenDir());
     }
 
     return 0;

@@ -20,6 +20,7 @@ import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -40,7 +41,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -55,7 +55,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 
@@ -162,16 +161,12 @@ public class Genrule extends AbstractBuildRule
           out);
     }
 
-    this.pathToTmpDirectory = Paths.get(
-        BuckConstant.getGenDir(),
-        target.getBasePathWithSlash(),
-        String.format("%s__tmp", target.getShortNameAndFlavorPostfix()));
+    this.pathToTmpDirectory =
+        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__tmp");
     this.absolutePathToTmpDirectory = getProjectFilesystem().resolve(pathToTmpDirectory);
 
-    this.pathToSrcDirectory = Paths.get(
-        BuckConstant.getGenDir(),
-        target.getBasePathWithSlash(),
-        String.format("%s__srcs", target.getShortNameAndFlavorPostfix()));
+    this.pathToSrcDirectory =
+        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__srcs");
     this.absolutePathToSrcDirectory = getProjectFilesystem().resolve(pathToSrcDirectory);
     this.isWorkerGenrule = this.isWorkerGenrule();
   }
@@ -208,7 +203,9 @@ public class Genrule extends AbstractBuildRule
     }
 
     environmentVariablesBuilder.put(
-        "GEN_DIR", getProjectFilesystem().resolve(BuckConstant.getGenPath()).toString());
+        "GEN_DIR",
+        getProjectFilesystem().resolve(getProjectFilesystem().getBuckPaths().getGenDir())
+            .toString());
     environmentVariablesBuilder.put("DEPS", Joiner.on(' ').skipNulls().join(depFiles));
     environmentVariablesBuilder.put("SRCDIR", absolutePathToSrcDirectory.toString());
     environmentVariablesBuilder.put("TMP", absolutePathToTmpDirectory.toString());
@@ -257,9 +254,11 @@ public class Genrule extends AbstractBuildRule
       // it with a shell variable. This way the character count is much lower when run
       // from the shell but anyone reading the environment variable will get the
       // full paths due to variable interpolation
-      if (output.startsWith(BuckConstant.getGenPath())) {
+      if (output.startsWith(getProjectFilesystem().getBuckPaths().getGenDir())) {
         Path relativePath =
-            output.subpath(BuckConstant.getGenPath().getNameCount(), output.getNameCount());
+            output.subpath(
+                getProjectFilesystem().getBuckPaths().getGenDir().getNameCount(),
+                output.getNameCount());
         appendTo.add("$GEN_DIR/" + relativePath);
       } else {
         appendTo.add(getProjectFilesystem().resolve(output).toString());

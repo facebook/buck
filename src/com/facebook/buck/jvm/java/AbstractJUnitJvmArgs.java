@@ -173,7 +173,7 @@ abstract class AbstractJUnitJvmArgs {
     if (isCodeCoverageEnabled()) {
       args.add(String.format("-javaagent:%s=destfile=%s/%s,append=true",
           JacocoConstants.PATH_TO_JACOCO_AGENT_JAR,
-          JacocoConstants.JACOCO_OUTPUT_DIR,
+          JacocoConstants.getJacocoOutputDir(filesystem),
           JacocoConstants.JACOCO_EXEC_COVERAGE_FILE));
     }
 

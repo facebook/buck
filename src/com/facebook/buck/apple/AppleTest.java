@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -59,8 +60,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -427,21 +426,20 @@ public class AppleTest
   @Override
   public Path getPathToTestOutputDirectory() {
     // TODO(bhamiltoncx): Refactor the JavaTest implementation; this is identical.
-
-    List<String> pathsList = new ArrayList<>();
-    pathsList.add(getBuildTarget().getBaseNameWithSlash());
-    pathsList.add(
-        String.format("__apple_test_%s_output__", getBuildTarget().getShortNameAndFlavorPostfix()));
+    Path path =
+        BuildTargets.getGenPath(
+            getProjectFilesystem(),
+            getBuildTarget(),
+            "__apple_test_%s_output__");
 
     // Putting the one-time test-sub-directory below the usual directory has the nice property that
     // doing a test run without "--one-time-output" will tidy up all the old one-time directories!
     String subdir = BuckConstant.oneTimeTestSubdirectory;
     if (subdir != null && !subdir.isEmpty()) {
-      pathsList.add(subdir);
+      path = path.resolve(subdir);
     }
 
-    String[] pathsArray = pathsList.toArray(new String[pathsList.size()]);
-    return Paths.get(BuckConstant.getGenDir(), pathsArray);
+    return path;
   }
 
   @Override

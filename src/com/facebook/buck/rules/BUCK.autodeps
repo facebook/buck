@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY c6c1c0b13e3b1cd4a9944aca89dbc5844e353fae #@#
+#@# GENERATED FILE: DO NOT MODIFY c618183f742fcb543953c72df817aa7ecfabb463 #@#
 {
   "Sha1HashCode" : {
     "deps" : [ ],
@@ -37,7 +37,6 @@
     "deps" : [
       "//src/com/facebook/buck/android:exceptions",
       "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util/hash:hash",
       "//third-party/java/immutables:processor"
     ],

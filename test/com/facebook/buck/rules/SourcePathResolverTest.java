@@ -31,7 +31,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.packaged_resource.PackagedResourceTestUtil;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PackagedResource;
 import com.google.common.base.Optional;
@@ -373,6 +372,7 @@ public class SourcePathResolverTest {
 
   @Test
   public void getSourcePathNameExplicitPath() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -382,12 +382,13 @@ public class SourcePathResolverTest {
             rule.getBuildTarget(),
             new BuildTargetSourcePath(
                 rule.getBuildTarget(),
-                BuckConstant.getGenPath().resolve("foo").resolve("something.cpp"))),
+                filesystem.getBuckPaths().getGenDir().resolve("foo").resolve("something.cpp"))),
         Matchers.equalTo("something.cpp"));
   }
 
   @Test
   public void getSourcePathNamesWithExplicitPathsAvoidesDuplicates() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -395,11 +396,11 @@ public class SourcePathResolverTest {
     SourcePath sourcePath1 =
         new BuildTargetSourcePath(
             rule.getBuildTarget(),
-            BuckConstant.getGenPath().resolve("foo").resolve("name1"));
+            filesystem.getBuckPaths().getGenDir().resolve("foo").resolve("name1"));
     SourcePath sourcePath2 =
         new BuildTargetSourcePath(
             rule.getBuildTarget(),
-            BuckConstant.getGenPath().resolve("foo").resolve("name2"));
+            filesystem.getBuckPaths().getGenDir().resolve("foo").resolve("name2"));
     pathResolver.getSourcePathNames(
         rule.getBuildTarget(),
         "srcs",
@@ -421,12 +422,13 @@ public class SourcePathResolverTest {
 
   @Test
   public void testGetRelativePathForArchiveMemberSourcePath() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     BuildRule rule = resolver.addToIndex(new FakeBuildRule("//foo:bar", pathResolver));
-    Path archivePath = BuckConstant.getGenPath().resolve("foo.jar");
+    Path archivePath = filesystem.getBuckPaths().getGenDir().resolve("foo.jar");
     SourcePath archiveSourcePath =
         new BuildTargetSourcePath(
             rule.getBuildTarget(),
@@ -449,7 +451,7 @@ public class SourcePathResolverTest {
 
     BuildRule rule = resolver.addToIndex(
         new FakeBuildRule(BuildTargetFactory.newInstance("//foo:bar"), filesystem, pathResolver));
-    Path archivePath = BuckConstant.getGenPath().resolve("foo.jar");
+    Path archivePath = filesystem.getBuckPaths().getGenDir().resolve("foo.jar");
     Path archiveAbsolutePath = filesystem.resolve(archivePath);
     SourcePath archiveSourcePath =
         new BuildTargetSourcePath(

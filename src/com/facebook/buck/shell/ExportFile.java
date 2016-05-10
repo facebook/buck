@@ -30,7 +30,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -100,7 +99,9 @@ public class ExportFile extends AbstractBuildRule implements HasOutputName {
           target.getBasePath().resolve(target.getShortNameAndFlavorPostfix()));
     }
 
-    this.out = BuckConstant.getGenPath().resolve(target.getBasePath()).resolve(this.name);
+    this.out =
+        getProjectFilesystem().getBuckPaths().getGenDir()
+            .resolve(target.getBasePath()).resolve(this.name);
   }
 
   @VisibleForTesting

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 46772ec456356c2c7df969ce3e5ebec65228758c #@#
+#@# GENERATED FILE: DO NOT MODIFY 043895fddd0eceb2232e3f52607f7770ac032782 #@#
 {
   "constants" : {
     "deps" : [
@@ -52,7 +52,6 @@
   "util" : {
     "deps" : [
       "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/zip:unzip",
       "//third-party/java/aosp:aosp",

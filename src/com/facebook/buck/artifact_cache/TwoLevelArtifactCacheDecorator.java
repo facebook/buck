@@ -26,7 +26,6 @@ import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
@@ -89,16 +88,17 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
     this.performTwoLevelStores = performTwoLevelStores;
     this.minimumTwoLevelStoredArtifactSize = minimumTwoLevelStoredArtifactSize;
     this.maximumTwoLevelStoredArtifactSize = maximumTwoLevelStoredArtifactSize;
+    Path scratchDir = projectFilesystem.getBuckPaths().getScratchDir();
     try {
-      projectFilesystem.mkdirs(BuckConstant.getScratchPath());
+      projectFilesystem.mkdirs(scratchDir);
       this.emptyFilePath = projectFilesystem.resolve(
           projectFilesystem.createTempFile(
-              BuckConstant.getScratchPath(),
+              scratchDir,
               ".buckcache",
               ".empty"));
     } catch (IOException e) {
-      throw new HumanReadableException("Could not create file in " +
-          projectFilesystem.resolve(BuckConstant.getScratchPath()));
+      throw new HumanReadableException(
+          "Could not create file in " + projectFilesystem.resolve(scratchDir));
     }
 
     secondLevelCacheHitTypes = new TagSetCounter(

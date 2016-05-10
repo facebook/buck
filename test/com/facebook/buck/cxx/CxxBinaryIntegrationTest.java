@@ -41,7 +41,6 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.InferHelper;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -1476,6 +1475,7 @@ public class CxxBinaryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "resolved", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     workspace.writeContentsToPath("", "lib2.h");
 
@@ -1496,8 +1496,13 @@ public class CxxBinaryIntegrationTest {
             CxxSource.Type.CXX,
             "bin.cpp");
     String contents = workspace.getFileContents(output.toString());
-    assertThat(contents, Matchers.not(Matchers.containsString(BuckConstant.getScratchDir())));
-    assertThat(contents, Matchers.not(Matchers.containsString(BuckConstant.getGenDir())));
+    assertThat(
+        contents,
+        Matchers.not(
+            Matchers.containsString(filesystem.getBuckPaths().getScratchDir().toString())));
+    assertThat(
+        contents,
+        Matchers.not(Matchers.containsString(filesystem.getBuckPaths().getGenDir().toString())));
     assertThat(contents, Matchers.containsString("# 1 \"bin.h"));
     assertThat(contents, Matchers.containsString("# 1 \"lib1.h"));
     assertThat(contents, Matchers.containsString("# 1 \"lib2.h"));
@@ -1508,6 +1513,7 @@ public class CxxBinaryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "resolved", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     workspace.writeContentsToPath("#invalid_pragma", "lib2.h");
 
@@ -1518,8 +1524,13 @@ public class CxxBinaryIntegrationTest {
     // Verify that the preprocessed source contains no references to the symlink tree used to
     // setup the headers.
     String error = result.getStderr();
-    assertThat(error, Matchers.not(Matchers.containsString(BuckConstant.getScratchDir())));
-    assertThat(error, Matchers.not(Matchers.containsString(BuckConstant.getGenDir())));
+    assertThat(
+        error,
+        Matchers.not(
+            Matchers.containsString(filesystem.getBuckPaths().getScratchDir().toString())));
+    assertThat(
+        error,
+        Matchers.not(Matchers.containsString(filesystem.getBuckPaths().getGenDir().toString())));
     assertThat(error, Matchers.containsString("In file included from lib1.h:1"));
     assertThat(error, Matchers.containsString("from bin.h:1"));
     assertThat(error, Matchers.containsString("from bin.cpp:1:"));

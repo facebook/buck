@@ -43,7 +43,6 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -316,7 +315,9 @@ public class AndroidBinaryTest {
     Set<Path> classpath = Sets.newHashSet();
     ImmutableSet.Builder<Path> secondaryDexDirectories = ImmutableSet.builder();
     ImmutableList.Builder<Step> commandsBuilder = ImmutableList.builder();
-    Path primaryDexPath = BuckConstant.getScratchPath().resolve(".dex/classes.dex");
+    Path primaryDexPath =
+        splitDexRule.getProjectFilesystem().getBuckPaths().getScratchDir()
+            .resolve(".dex/classes.dex");
     splitDexRule.addDexingSteps(
         classpath,
         Suppliers.<Map<String, HashCode>>ofInstance(ImmutableMap.<String, HashCode>of()),
@@ -358,7 +359,9 @@ public class AndroidBinaryTest {
     Set<Path> classpath = Sets.newHashSet();
     ImmutableSet.Builder<Path> secondaryDexDirectories = ImmutableSet.builder();
     ImmutableList.Builder<Step> commandsBuilder = ImmutableList.builder();
-    Path primaryDexPath = BuckConstant.getScratchPath().resolve(".dex/classes.dex");
+    Path primaryDexPath =
+        splitDexRule.getProjectFilesystem().getBuckPaths().getScratchDir()
+            .resolve(".dex/classes.dex");
     splitDexRule.addDexingSteps(
         classpath,
         Suppliers.<Map<String, HashCode>>ofInstance(ImmutableMap.<String, HashCode>of()),

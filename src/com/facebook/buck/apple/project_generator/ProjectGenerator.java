@@ -2584,7 +2584,9 @@ public class ProjectGenerator {
   }
 
   private Path emptyFileWithExtension(String extension) {
-    Path path = BuckConstant.getGenPath().resolve("xcode-scripts/emptyFile." + extension);
+    Path path =
+        projectFilesystem.getBuckPaths().getGenDir()
+            .resolve("xcode-scripts/emptyFile." + extension);
     if (!projectFilesystem.exists(path)) {
       try {
         projectFilesystem.createParentDirs(path);

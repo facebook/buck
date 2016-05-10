@@ -64,7 +64,6 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.timing.Clock;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Functions;
@@ -161,7 +160,7 @@ public class ApkGenruleTest {
     String expectedApkOutput =
         MorePathsForTests.rootRelativePath(
             "/opt/src/buck/" +
-                BuckConstant.getGenDir() +
+                projectFilesystem.getBuckPaths().getGenDir().toString() +
             "/src/com/facebook/sign_fb4a/sign_fb4a.apk").toString();
     assertEquals(expectedApkOutput,
         apkGenrule.getAbsoluteOutputFilePath());
@@ -209,8 +208,9 @@ public class ApkGenruleTest {
     Step secondStep = steps.get(1);
     assertTrue(secondStep instanceof MkdirStep);
     MkdirStep mkdirCommand = (MkdirStep) secondStep;
-    Path mkdirDir = projectFilesystem.resolve(BuckConstant.getGenDir() +
-        "/src/com/facebook/sign_fb4a");
+    Path mkdirDir =
+        projectFilesystem.resolve(
+            projectFilesystem.getBuckPaths().getGenDir().resolve("src/com/facebook/sign_fb4a"));
     assertEquals(
         "Second command should make sure the output directory exists.",
         mkdirDir,
@@ -219,7 +219,7 @@ public class ApkGenruleTest {
     Step thirdStep = steps.get(2);
     assertTrue(thirdStep instanceof MakeCleanDirectoryStep);
     MakeCleanDirectoryStep secondMkdirCommand = (MakeCleanDirectoryStep) thirdStep;
-    Path relativePathToTmpDir = BuckConstant.getGenPath().resolve(
+    Path relativePathToTmpDir = projectFilesystem.getBuckPaths().getGenDir().resolve(
         "src/com/facebook/sign_fb4a__tmp");
     assertEquals(
         "Third command should make sure the temp directory exists.",
@@ -229,7 +229,7 @@ public class ApkGenruleTest {
     Step fourthStep = steps.get(3);
     assertTrue(fourthStep instanceof MakeCleanDirectoryStep);
     MakeCleanDirectoryStep thirdMkdirCommand = (MakeCleanDirectoryStep) fourthStep;
-    Path relativePathToSrcDir = BuckConstant.getGenPath().resolve(
+    Path relativePathToSrcDir = projectFilesystem.getBuckPaths().getGenDir().resolve(
         "src/com/facebook/sign_fb4a__srcs");
     assertEquals(
         "Fourth command should make sure the temp directory exists.",
@@ -238,11 +238,13 @@ public class ApkGenruleTest {
 
     MkdirAndSymlinkFileStep linkSource1 = (MkdirAndSymlinkFileStep) steps.get(4);
     assertEquals(fileSystem.getPath("src/com/facebook/signer.py"), linkSource1.getSource());
-    assertEquals(Paths.get(relativePathToSrcDir + "/signer.py"), linkSource1.getTarget());
+    assertEquals(fileSystem.getPath(relativePathToSrcDir + "/signer.py"), linkSource1.getTarget());
 
     MkdirAndSymlinkFileStep linkSource2 = (MkdirAndSymlinkFileStep) steps.get(5);
     assertEquals(fileSystem.getPath("src/com/facebook/key.properties"), linkSource2.getSource());
-    assertEquals(Paths.get(relativePathToSrcDir + "/key.properties"), linkSource2.getTarget());
+    assertEquals(
+        fileSystem.getPath(relativePathToSrcDir + "/key.properties"),
+        linkSource2.getTarget());
 
     Step seventhStep = steps.get(6);
     assertTrue(seventhStep instanceof ShellStep);

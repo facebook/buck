@@ -72,7 +72,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
@@ -118,8 +117,6 @@ import javax.annotation.Nullable;
 public class DefaultJavaLibraryTest {
   private static final String ANNOTATION_SCENARIO_TARGET =
       "//android/java/src/com/facebook:fb";
-  private static final String ANNOTATION_SCENARIO_GEN_PATH_POSTIX =
-      BuckConstant.getAnnotationDir() + "/android/java/src/com/facebook/__fb_gen__";
 
   @Rule
   public TemporaryFolder tmp = new TemporaryFolder();
@@ -127,13 +124,17 @@ public class DefaultJavaLibraryTest {
 
   @Before
   public void stubOutBuildContext() {
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
     StepRunner stepRunner = createNiceMock(StepRunner.class);
     JavaPackageFinder packageFinder = createNiceMock(JavaPackageFinder.class);
     replay(packageFinder, stepRunner);
 
-    annotationScenarioGenPath = new File(
-        tmp.getRoot(),
-        ANNOTATION_SCENARIO_GEN_PATH_POSTIX).getAbsolutePath();
+    annotationScenarioGenPath =
+        filesystem
+            .resolve(filesystem.getBuckPaths().getAnnotationDir())
+            .resolve("android/java/src/com/facebook/__fb_gen__")
+            .toAbsolutePath()
+            .toString();
   }
 
   /** Make sure that when isAndroidLibrary is true, that the Android bootclasspath is used. */

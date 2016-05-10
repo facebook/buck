@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 5e529d75d5e8ef66dd6958c29630b9f5055a0b60 #@#
+#@# GENERATED FILE: DO NOT MODIFY d65bc7a966e2f652f49f481c8d08705e60329673 #@#
 {
   "shell" : {
     "deps" : [
@@ -24,7 +24,6 @@
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/timing:timing",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",

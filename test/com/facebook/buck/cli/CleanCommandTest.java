@@ -16,9 +16,8 @@
 
 package com.facebook.buck.cli;
 
-import static org.easymock.EasyMock.capture;
-import static org.easymock.EasyMock.newCapture;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.ArtifactCache;
@@ -32,9 +31,9 @@ import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.cache.NullFileHashCache;
@@ -44,16 +43,12 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import org.easymock.Capture;
-import org.easymock.EasyMock;
 import org.easymock.EasyMockSupport;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 
 /**
@@ -70,45 +65,36 @@ public class CleanCommandTest extends EasyMockSupport {
   @Test
   public void testCleanCommandNoArguments()
       throws CmdLineException, IOException, InterruptedException {
-    // Set up mocks.
     CommandRunnerParams params = createCommandRunnerParams();
-    Capture<Path> binDir = newCapture();
-    projectFilesystem.deleteRecursivelyIfExists(capture(binDir));
-    Capture<Path> genDir = newCapture();
-    projectFilesystem.deleteRecursivelyIfExists(capture(genDir));
 
-    replayAll();
+    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getScratchDir());
+    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getGenDir());
 
     // Simulate `buck clean`.
     CleanCommand cleanCommand = createCommandFromArgs();
     int exitCode = cleanCommand.run(params);
     assertEquals(0, exitCode);
-    assertEquals(BuckConstant.getScratchPath(), binDir.getValue());
-    assertEquals(BuckConstant.getGenPath(), genDir.getValue());
 
-    verifyAll();
+    assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getScratchDir()));
+    assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getGenDir()));
   }
 
   @Test
   public void testCleanCommandWithProjectArgument()
       throws CmdLineException, IOException, InterruptedException {
-    // Set up mocks.
     CommandRunnerParams params = createCommandRunnerParams();
-    Capture<Path> androidGenDir = newCapture();
-    projectFilesystem.deleteRecursivelyIfExists(capture(androidGenDir));
-    Capture<Path> annotationDir = newCapture();
-    projectFilesystem.deleteRecursivelyIfExists(capture(annotationDir));
 
-    replayAll();
+    // Set up mocks.
+    projectFilesystem.mkdirs(Project.ANDROID_GEN_PATH);
+    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getAnnotationDir());
 
     // Simulate `buck clean --project`.
     CleanCommand cleanCommand = createCommandFromArgs("--project");
     int exitCode = cleanCommand.run(params);
     assertEquals(0, exitCode);
-    assertEquals(Project.ANDROID_GEN_PATH, androidGenDir.getValue());
-    assertEquals(BuckConstant.getAnnotationPath(), annotationDir.getValue());
 
-    verifyAll();
+    assertFalse(projectFilesystem.exists(Project.ANDROID_GEN_PATH));
+    assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getAnnotationDir()));
   }
 
   private CleanCommand createCommandFromArgs(String... args) throws CmdLineException {
@@ -118,14 +104,9 @@ public class CleanCommandTest extends EasyMockSupport {
   }
 
   private CommandRunnerParams createCommandRunnerParams() throws InterruptedException, IOException {
-    projectFilesystem = createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.getRootPath()).andStubReturn(Paths.get("/opt/foo"));
-
-    EasyMock.replay(projectFilesystem);
+    projectFilesystem = new FakeProjectFilesystem();
 
     Cell cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
-
-    EasyMock.reset(projectFilesystem);
 
     Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
         AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;

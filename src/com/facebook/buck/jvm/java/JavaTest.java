@@ -377,20 +377,20 @@ public class JavaTest
 
   @Override
   public Path getPathToTestOutputDirectory() {
-    List<String> pathsList = Lists.newArrayList();
-    pathsList.add(getBuildTarget().getBaseNameWithSlash());
-    pathsList.add(
-        String.format("__java_test_%s_output__", getBuildTarget().getShortNameAndFlavorPostfix()));
+    Path path =
+        BuildTargets.getGenPath(
+            getProjectFilesystem(),
+            getBuildTarget(),
+            "__java_test_%s_output__");
 
     // Putting the one-time test-sub-directory below the usual directory has the nice property that
     // doing a test run without "--one-time-output" will tidy up all the old one-time directories!
     String subdir = BuckConstant.oneTimeTestSubdirectory;
     if (subdir != null && !subdir.isEmpty()) {
-      pathsList.add(subdir);
+      path = path.resolve(subdir);
     }
 
-    String[] pathsArray = pathsList.toArray(new String[pathsList.size()]);
-    return Paths.get(BuckConstant.getGenDir(), pathsArray);
+    return path;
   }
 
   private Path getPathToTmpDirectory() {

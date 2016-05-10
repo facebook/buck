@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 4b7761bf156c75932243faaa433b7481b1a1c3b8 #@#
+#@# GENERATED FILE: DO NOT MODIFY 6d46c3a150c3d4c643cac82ada1e337e61030f0e #@#
 {
   "aar-integration" : {
     "deps" : [
@@ -176,7 +176,6 @@
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/timing:timing",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",

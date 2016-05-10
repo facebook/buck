@@ -16,6 +16,7 @@
 
 package com.facebook.buck.model;
 
+import com.facebook.buck.io.BuckPaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Predicate;
@@ -36,8 +37,8 @@ public class BuildTargets {
 
   /**
    * Return a path to a file in the buck-out/bin/ directory. {@code format} will be prepended with
-   * the {@link com.facebook.buck.util.BuckConstant#SCRATCH_DIR} and the target base path, then
-   * formatted with the target short name.
+   * the {@link BuckPaths#getScratchDir()} and the target base path, then formatted with the target
+   * short name.
    *
    * @param target The {@link BuildTarget} to scope this path to.
    * @param format {@link String#format} string for the path name.  It should contain one "%s",
@@ -56,8 +57,8 @@ public class BuildTargets {
 
   /**
    * Return a path to a file in the buck-out/annotation/ directory. {@code format} will be prepended
-   * with the {@link com.facebook.buck.util.BuckConstant#ANNOTATION_DIR} and the target base path,
-   * then formatted with the target short name.
+   * with the {@link BuckPaths#getAnnotationDir()} and the target base path, then formatted with the
+   * target short name.
    *
    * @param target The {@link BuildTarget} to scope this path to.
    * @param format {@link String#format} string for the path name.  It should contain one "%s",
@@ -76,8 +77,8 @@ public class BuildTargets {
 
   /**
    * Return a path to a file in the buck-out/gen/ directory. {@code format} will be prepended with
-   * the {@link com.facebook.buck.util.BuckConstant#GEN_DIR} and the target base path, then
-   * formatted with the target short name.
+   * the {@link BuckPaths#getGenDir()} and the target base path, then formatted with the target
+   * short name.
    *
    * @param target The {@link BuildTarget} to scope this path to.
    * @param format {@link String#format} string for the path name.  It should contain one "%s",

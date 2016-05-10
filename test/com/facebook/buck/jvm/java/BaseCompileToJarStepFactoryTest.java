@@ -19,12 +19,12 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
@@ -38,8 +38,10 @@ public class BaseCompileToJarStepFactoryTest {
 
   @Test
   public void testAddPostprocessClassesCommands() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ImmutableList<String> postprocessClassesCommands = ImmutableList.of("tool arg1", "tool2");
-    Path outputDirectory = BuckConstant.getScratchPath().resolve("android/java/lib__java__classes");
+    Path outputDirectory =
+        filesystem.getBuckPaths().getScratchDir().resolve("android/java/lib__java__classes");
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     commands.addAll(

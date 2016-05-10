@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 8484f787bf5b73818e374a35262ff3af1d34a63f #@#
+#@# GENERATED FILE: DO NOT MODIFY bb18d9ef5153b4fb5c22fd1816cd068b346d87eb #@#
 {
   "autodeps" : {
     "deps" : [
@@ -104,7 +104,6 @@
       "//src/com/facebook/buck/rules:Sha1HashCode",
       "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/step/fs:fs",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util/environment:platform",
       "//third-party/java/immutables:processor",
       "//third-party/java/jsr:jsr305"

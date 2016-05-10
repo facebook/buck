@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.io.ProjectFilesystem;
 
 import java.nio.file.Path;
 
@@ -29,5 +29,9 @@ public final class JacocoConstants {
           "buck.jacoco_agent_jar",
           "third-party/java/jacoco/jacocoagent.jar");
   public static final String JACOCO_EXEC_COVERAGE_FILE = "jacoco.exec";
-  public static final Path JACOCO_OUTPUT_DIR = BuckConstant.getGenPath().resolve("jacoco");
+
+  public static Path getJacocoOutputDir(ProjectFilesystem filesystem) {
+    return filesystem.getBuckPaths().getGenDir().resolve("jacoco");
+  }
+
 }

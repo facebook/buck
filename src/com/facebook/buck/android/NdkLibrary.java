@@ -37,7 +37,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -207,7 +206,10 @@ public class NdkLibrary extends AbstractBuildRule
    *     can be referenced via a {@link com.facebook.buck.rules.BuildTargetSourcePath} or somesuch.
    */
   private Path getBuildArtifactsDirectory(BuildTarget target, boolean isScratchDir) {
-    Path base = isScratchDir ? BuckConstant.getScratchPath() : BuckConstant.getGenPath();
+    Path base =
+        isScratchDir ?
+            getProjectFilesystem().getBuckPaths().getScratchDir() :
+            getProjectFilesystem().getBuckPaths().getGenDir();
     return base.resolve(target.getBasePath()).resolve(lastPathComponent);
   }
 

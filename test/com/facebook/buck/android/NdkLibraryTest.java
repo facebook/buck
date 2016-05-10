@@ -34,7 +34,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
@@ -94,12 +93,15 @@ public class NdkLibraryTest {
 
     assertTrue(ndkLibrary.getProperties().is(ANDROID));
     assertTrue(ndkLibrary.isAsset());
-    assertEquals(Paths.get(BuckConstant.getGenDir(), basePath, "__libbase"),
+    assertEquals(
+        projectFilesystem.getBuckPaths().getGenDir().resolve(basePath).resolve("__libbase"),
         ndkLibrary.getLibraryPath());
 
     List<Step> steps = ndkLibrary.getBuildSteps(context, new FakeBuildableContext());
 
-    String libbase = Paths.get(BuckConstant.getScratchDir(), basePath, "__libbase").toString();
+    String libbase =
+        projectFilesystem.getBuckPaths().getScratchDir().resolve(basePath).resolve("__libbase")
+            .toString();
     MoreAsserts.assertShellCommands(
         "ndk_library() should invoke ndk-build on the given path with some -j value",
         ImmutableList.of(

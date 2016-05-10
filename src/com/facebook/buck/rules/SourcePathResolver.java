@@ -21,7 +21,6 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -277,8 +276,8 @@ public class SourcePathResolver {
     Optional<Path> explicitPath = sourcePath.getResolvedPath();
     if (explicitPath.isPresent()) {
       Path path = explicitPath.get();
-      if (path.startsWith(BuckConstant.getGenPath())) {
-        path = BuckConstant.getGenPath().relativize(path);
+      if (path.startsWith(rule.getProjectFilesystem().getBuckPaths().getGenDir())) {
+        path = rule.getProjectFilesystem().getBuckPaths().getGenDir().relativize(path);
       }
       if (path.startsWith(rule.getBuildTarget().getBasePath())) {
         return rule.getBuildTarget().getBasePath().relativize(path).toString();

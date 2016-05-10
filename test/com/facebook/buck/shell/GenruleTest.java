@@ -55,7 +55,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
@@ -141,8 +140,8 @@ public class GenruleTest {
             "src/com/facebook/katana/katana_manifest/AndroidManifest.xml"),
         genrule.getPathToOutput());
     assertEquals(
-        filesystem.resolve(BuckConstant.getGenDir() +
-            "/src/com/facebook/katana/katana_manifest/AndroidManifest.xml")
+        filesystem.resolve(filesystem.getBuckPaths().getGenDir().resolve(
+            "src/com/facebook/katana/katana_manifest/AndroidManifest.xml"))
             .toString(),
         ((Genrule) genrule).getAbsoluteOutputFilePath());
     BuildContext buildContext = null; // unused since there are no deps
@@ -171,7 +170,7 @@ public class GenruleTest {
             "rm",
             "-r",
             "-f",
-            "/opt/src/buck/" + BuckConstant.getGenDir() +
+            "/opt/src/buck/" + filesystem.getBuckPaths().getGenDir() +
             "/src/com/facebook/katana/katana_manifest/AndroidManifest.xml"),
         rmCommand.getShellCommand());
 
@@ -180,13 +179,14 @@ public class GenruleTest {
     MkdirStep mkdirCommand = (MkdirStep) secondStep;
     assertEquals(
         "Second command should make sure the output directory exists.",
-        filesystem.resolve(BuckConstant.getGenDir() + "/src/com/facebook/katana/katana_manifest"),
+        filesystem.resolve(filesystem.getBuckPaths().getGenDir() +
+            "/src/com/facebook/katana/katana_manifest"),
         mkdirCommand.getPath());
 
     Step mkTmpDir = steps.get(2);
     assertTrue(mkTmpDir instanceof MakeCleanDirectoryStep);
     MakeCleanDirectoryStep secondMkdirCommand = (MakeCleanDirectoryStep) mkTmpDir;
-    Path pathToTmpDir = BuckConstant.getGenPath().resolve(
+    Path pathToTmpDir = filesystem.getBuckPaths().getGenDir().resolve(
         "src/com/facebook/katana/katana_manifest__tmp");
     assertEquals(
         "Third command should create the temp directory to be written by the genrule.",
@@ -196,7 +196,7 @@ public class GenruleTest {
     Step mkSrcDir = steps.get(3);
     assertTrue(mkSrcDir instanceof MakeCleanDirectoryStep);
     MakeCleanDirectoryStep thirdMkdirCommand = (MakeCleanDirectoryStep) mkTmpDir;
-    Path pathToSrcDir = BuckConstant.getGenPath().resolve(
+    Path pathToSrcDir = filesystem.getBuckPaths().getGenDir().resolve(
         "src/com/facebook/katana/katana_manifest__srcs");
     assertEquals(
         "Fourth command should create the temp source directory to be written by the genrule.",
@@ -208,14 +208,18 @@ public class GenruleTest {
         filesystem.getRootPath().getFileSystem().getPath(
             "src/com/facebook/katana/convert_to_katana.py"),
         linkSource1.getSource());
-    assertEquals(Paths.get(pathToSrcDir + "/convert_to_katana.py"), linkSource1.getTarget());
+    assertEquals(
+        filesystem.getRootPath().getFileSystem().getPath(pathToSrcDir + "/convert_to_katana.py"),
+        linkSource1.getTarget());
 
     MkdirAndSymlinkFileStep linkSource2 = (MkdirAndSymlinkFileStep) steps.get(5);
     assertEquals(
         filesystem.getRootPath().getFileSystem().getPath(
             "src/com/facebook/katana/AndroidManifest.xml"),
         linkSource2.getSource());
-    assertEquals(Paths.get(pathToSrcDir + "/AndroidManifest.xml"), linkSource2.getTarget());
+    assertEquals(
+        filesystem.getRootPath().getFileSystem().getPath(pathToSrcDir + "/AndroidManifest.xml"),
+        linkSource2.getTarget());
 
     Step sixthStep = steps.get(6);
     assertTrue(sixthStep instanceof ShellStep);
@@ -224,8 +228,8 @@ public class GenruleTest {
     assertEquals(ImmutableMap.<String, String>builder()
         .put("OUT",
             filesystem.resolve(
-                BuckConstant.getGenDir() +
-                    "/src/com/facebook/katana/katana_manifest/AndroidManifest.xml")
+                filesystem.getBuckPaths().getGenDir().resolve(
+                    "src/com/facebook/katana/katana_manifest/AndroidManifest.xml"))
                 .toString())
         .build(),
         genruleCommand.getEnvironmentVariables(executionContext));
@@ -282,6 +286,7 @@ public class GenruleTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule genrule = createGenruleBuilderThatUsesWorkerMacro(ruleResolver).build(ruleResolver);
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     List<Step> steps = genrule.getBuildSteps(
         null, // BuildContext is unused because there are no deps
@@ -298,8 +303,9 @@ public class GenruleTest {
         workerShellStep.getEnvironmentVariables(executionContext),
         Matchers.hasEntry(
             "OUT",
-            new FakeProjectFilesystem()
-                .resolve(BuckConstant.getGenDir() + "/genrule_with_worker/output.txt")
+            filesystem
+                .resolve(filesystem.getBuckPaths().getGenDir())
+                .resolve("genrule_with_worker/output.txt")
                 .toString()));
   }
 
@@ -348,7 +354,7 @@ public class GenruleTest {
     BuildRule dep = new FakeBuildRule(depTarget, new SourcePathResolver(resolver)) {
       @Override
       public Path getPathToOutput() {
-        return Paths.get("buck-out/gen/foo/bar.jar");
+        return filesystem.getBuckPaths().getGenDir().resolve("foo/bar.jar");
       }
     };
     resolver.addToIndex(dep);
@@ -413,7 +419,8 @@ public class GenruleTest {
     ((Genrule) rule).addSymlinkCommands(builder);
     ImmutableList<Step> commands = builder.build();
 
-    String baseTmpPath = BuckConstant.getGenDir() + "/example__srcs/";
+    String baseTmpPath =
+        projectFilesystem.getBuckPaths().getGenDir().toString() + "/example__srcs/";
 
     assertEquals(3, commands.size());
     MkdirAndSymlinkFileStep linkCmd = (MkdirAndSymlinkFileStep) commands.get(0);

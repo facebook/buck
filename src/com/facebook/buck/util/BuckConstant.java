@@ -35,17 +35,6 @@ public class BuckConstant {
   // com.facebook.buck.shell package, but these values should be injected into shell commands rather
   // than hardcoded therein. This ensures that shell commands stay build-rule-agnostic.
 
-  private static final String GEN_DIR = getBuckOutputDirectory() + "/gen";
-  private static final Path GEN_PATH = getBuckOutputPath().resolve("gen");
-
-  private static final Path RES_PATH = getBuckOutputPath().resolve("res");
-
-  private static final String SCRATCH_DIR = getBuckOutputDirectory() + "/bin";
-  private static final Path SCRATCH_PATH = getBuckOutputPath().resolve("bin");
-
-  private static final String ANNOTATION_DIR = getBuckOutputDirectory() + "/annotation";
-  private static final Path ANNOTATION_PATH = getBuckOutputPath().resolve("annotation");
-
   private static final Path LOG_PATH = getBuckOutputPath().resolve("log");
 
   private static final Path BUCK_TRACE_DIR = getBuckOutputPath().resolve("log/traces");
@@ -90,34 +79,6 @@ public class BuckConstant {
    */
   public static Path getCurrentVersionFile() {
     return CURRENT_VERSION_FILE;
-  }
-
-  public static String getGenDir() {
-    return GEN_DIR;
-  }
-
-  public static Path getGenPath() {
-    return GEN_PATH;
-  }
-
-  public static Path getResPath() {
-    return RES_PATH;
-  }
-
-  public static String getScratchDir() {
-    return SCRATCH_DIR;
-  }
-
-  public static Path getScratchPath() {
-    return SCRATCH_PATH;
-  }
-
-  public static String getAnnotationDir() {
-    return ANNOTATION_DIR;
-  }
-
-  public static Path getAnnotationPath() {
-    return ANNOTATION_PATH;
   }
 
   public static Path getLogPath() {

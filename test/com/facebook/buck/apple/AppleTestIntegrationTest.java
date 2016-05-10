@@ -32,7 +32,6 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
@@ -397,7 +396,7 @@ public class AppleTestIntegrationTest {
         containsString("1 Passed   0 Skipped   0 Failed   AppTest"));
 
     Path appTestDsym = tmp.getRootPath()
-        .resolve(BuckConstant.getGenDir())
+        .resolve(filesystem.getBuckPaths().getGenDir())
         .resolve("AppTest#apple-test-bundle,dwarf-and-dsym,no-include-frameworks")
         .resolve("AppTest.xctest.dSYM");
     AppleDsymTestUtil.checkDsymFileHasDebugSymbol(
@@ -406,7 +405,7 @@ public class AppleTestIntegrationTest {
         appTestDsym);
 
     Path hostAppDsym = tmp.getRootPath()
-        .resolve(BuckConstant.getGenDir())
+        .resolve(filesystem.getBuckPaths().getGenDir())
         .resolve("TestHostApp#dwarf-and-dsym,no-include-frameworks")
         .resolve("TestHostApp.app.dSYM");
     AppleDsymTestUtil.checkDsymFileHasDebugSymbol(

@@ -100,7 +100,9 @@ public class PackagedResource implements Supplier<Path> {
         BufferedInputStream stream = new BufferedInputStream(inner)) {
 
       Path outputPath =
-          BuckConstant.getResPath().resolve(relativeTo.getCanonicalName()).resolve(filename);
+          filesystem.getBuckPaths().getResDir()
+              .resolve(relativeTo.getCanonicalName())
+              .resolve(filename);
 
       // If the path already exists, delete it.
       if (filesystem.exists(outputPath)) {

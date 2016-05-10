@@ -203,7 +203,7 @@ public class Project {
     }
 
     // Write out the .idea/compiler.xml file (the .idea/ directory is guaranteed to exist).
-    CompilerXml compilerXml = new CompilerXml(modules);
+    CompilerXml compilerXml = new CompilerXml(projectFilesystem, modules);
     final String pathToCompilerXml = ".idea/compiler.xml";
     File compilerXmlFile = projectFilesystem.getFileForRelativePath(pathToCompilerXml);
     if (compilerXml.write(compilerXmlFile)) {
@@ -686,8 +686,8 @@ public class Project {
         // ignore (which makes sense for other parts of Buck, such as Watchman), then we will ignore
         // only the appropriate subfolders of buck-out instead.
         if (BuckConstant.getBuckOutputPath().equals(path)) {
-          addRootExclude(module, BuckConstant.getScratchPath());
-          addRootExclude(module, BuckConstant.getLogPath());
+          addRootExclude(module, projectFilesystem.getBuckPaths().getScratchDir());
+          addRootExclude(module, projectFilesystem.getBuckPaths().getLogDir());
           addRootExclude(module, TMP_PATH);
         } else {
           addRootExclude(module, path);

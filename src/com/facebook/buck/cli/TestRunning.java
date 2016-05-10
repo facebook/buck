@@ -16,13 +16,12 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.jvm.java.JacocoConstants.JACOCO_OUTPUT_DIR;
-
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.GenerateCodeCoverageReportStep;
+import com.facebook.buck.jvm.java.JacocoConstants;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
@@ -146,7 +145,9 @@ public class TestRunning {
           // TODO(t8220837): Support tests in multiple repos
           JavaLibrary library = rulesUnderTest.iterator().next();
           stepRunner.runStepForBuildTarget(
-              new MakeCleanDirectoryStep(library.getProjectFilesystem(), JACOCO_OUTPUT_DIR),
+              new MakeCleanDirectoryStep(
+                  library.getProjectFilesystem(),
+                  JacocoConstants.getJacocoOutputDir(library.getProjectFilesystem())),
               Optional.<BuildTarget>absent());
         } catch (StepFailedException e) {
           params.getBuckEventBus().post(
@@ -449,7 +450,7 @@ public class TestRunning {
                     .getDefaultJavaOptions()
                     .getJavaRuntimeLauncher(),
                 params.getCell().getFilesystem(),
-                JACOCO_OUTPUT_DIR,
+                JacocoConstants.getJacocoOutputDir(params.getCell().getFilesystem()),
                 options.getCoverageReportFormat(),
                 options.getCoverageReportTitle()),
             Optional.<BuildTarget>absent());
@@ -823,7 +824,7 @@ public class TestRunning {
     Set<String> srcFolders = Sets.newHashSet();
     loopThroughSourcePath:
     for (Path javaSrcPath : javaSrcs) {
-      if (MorePaths.isGeneratedFile(javaSrcPath)) {
+      if (MorePaths.isGeneratedFile(filesystem, javaSrcPath)) {
         continue;
       }
 

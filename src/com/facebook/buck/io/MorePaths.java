@@ -16,7 +16,6 @@
 
 package com.facebook.buck.io;
 
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
@@ -235,8 +234,10 @@ public class MorePaths {
   /**
    * @return Whether the input path directs to a file in the buck generated files folder.
    */
-  public static boolean isGeneratedFile(Path pathRelativeToProjectRoot) {
-    return pathRelativeToProjectRoot.startsWith(BuckConstant.getGenPath());
+  public static boolean isGeneratedFile(
+      ProjectFilesystem filesystem,
+      Path pathRelativeToProjectRoot) {
+    return pathRelativeToProjectRoot.startsWith(filesystem.getBuckPaths().getGenDir());
   }
 
   /**

@@ -74,18 +74,19 @@ import java.util.concurrent.Callable;
 
 public class ExportFileTest {
 
+  private ProjectFilesystem projectFilesystem;
   private BuildContext context;
   private BuildTarget target;
 
   @Before
   public void createFixtures() {
-    target = BuildTargetFactory.newInstance("//:example.html");
+    projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    target = BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:example.html");
     context = getBuildContext();
   }
 
   @Test
   public void shouldSetSrcAndOutToNameParameterIfNeitherAreSet() throws Exception {
-    ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
         .build(
             new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
@@ -101,12 +102,13 @@ public class ExportFileTest {
             "cp " + projectFilesystem.resolve("example.html") + " buck-out/gen/example.html"),
         steps,
         TestExecutionContext.newInstance());
-    assertEquals(Paths.get("buck-out/gen/example.html"), exportFile.getPathToOutput());
+    assertEquals(
+        projectFilesystem.getBuckPaths().getGenDir().resolve("example.html"),
+        exportFile.getPathToOutput());
   }
 
   @Test
   public void shouldSetOutToNameParamValueIfSrcIsSet() throws Exception {
-    ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
         .setOut("fish")
         .build(
@@ -123,12 +125,13 @@ public class ExportFileTest {
             "cp " + projectFilesystem.resolve("example.html") + " buck-out/gen/fish"),
         steps,
         TestExecutionContext.newInstance());
-    assertEquals(Paths.get("buck-out/gen/fish"), exportFile.getPathToOutput());
+    assertEquals(
+        projectFilesystem.getBuckPaths().getGenDir().resolve("fish"),
+        exportFile.getPathToOutput());
   }
 
   @Test
   public void shouldSetOutAndSrcAndNameParametersSeparately() throws Exception {
-    ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
         .setSrc(new PathSourcePath(projectFilesystem, Paths.get("chips")))
         .setOut("fish")
@@ -146,7 +149,9 @@ public class ExportFileTest {
             "cp " + projectFilesystem.resolve("chips") + " buck-out/gen/fish"),
         steps,
         TestExecutionContext.newInstance());
-    assertEquals(Paths.get("buck-out/gen/fish"), exportFile.getPathToOutput());
+    assertEquals(
+        projectFilesystem.getBuckPaths().getGenDir().resolve("fish"),
+        exportFile.getPathToOutput());
   }
 
   @Test
@@ -159,7 +164,8 @@ public class ExportFileTest {
         .build(
             new BuildRuleResolver(
                 TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer()));
+                new DefaultTargetNodeToBuildRuleTransformer()),
+            projectFilesystem);
 
     assertIterablesEquals(singleton(Paths.get("chips")), exportFile.getSource());
 
@@ -172,14 +178,17 @@ public class ExportFileTest {
                 new SourcePathResolver(ruleResolver)));
 
     builder.setSrc(new BuildTargetSourcePath(rule.getBuildTarget()));
-    exportFile = (ExportFile) builder.build(ruleResolver);
+    exportFile = (ExportFile) builder.build(ruleResolver, projectFilesystem);
     assertTrue(Iterables.isEmpty(exportFile.getSource()));
 
     builder.setSrc(null);
-    exportFile = (ExportFile) builder.build(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    exportFile =
+        (ExportFile) builder.build(
+            new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
+            projectFilesystem);
     assertIterablesEquals(
-        singleton(Paths.get("example.html")), exportFile.getSource());
+        singleton(projectFilesystem.getRootPath().getFileSystem().getPath("example.html")),
+        exportFile.getSource());
   }
 
   @Test
@@ -189,7 +198,8 @@ public class ExportFileTest {
         .build(
             new BuildRuleResolver(
                 TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer()));
+                new DefaultTargetNodeToBuildRuleTransformer()),
+            projectFilesystem);
 
     assertEquals("cake", exportFile.getOutputName());
   }

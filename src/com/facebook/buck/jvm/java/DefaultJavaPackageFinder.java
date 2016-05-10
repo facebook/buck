@@ -27,7 +27,6 @@ import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Deque;
 
 public class DefaultJavaPackageFinder implements JavaPackageFinder {
@@ -58,7 +57,9 @@ public class DefaultJavaPackageFinder implements JavaPackageFinder {
     for (String pathFromRoot : pathsFromRoot) {
       if (pathRelativeToProjectRoot.startsWith(pathFromRoot)) {
         return MorePaths.getParentOrEmpty(
-            MorePaths.relativize(Paths.get(pathFromRoot), pathRelativeToProjectRoot));
+            MorePaths.relativize(
+                pathRelativeToProjectRoot.getFileSystem()
+                    .getPath(pathFromRoot), pathRelativeToProjectRoot));
       }
     }
 
@@ -70,9 +71,10 @@ public class DefaultJavaPackageFinder implements JavaPackageFinder {
     }
 
     if (!parts.isEmpty()) {
-      return Paths.get(Joiner.on(File.separatorChar).join(parts));
+      return pathRelativeToProjectRoot.getFileSystem()
+          .getPath(Joiner.on(File.separatorChar).join(parts));
     } else {
-      return Paths.get("");
+      return pathRelativeToProjectRoot.getFileSystem().getPath("");
     }
   }
 

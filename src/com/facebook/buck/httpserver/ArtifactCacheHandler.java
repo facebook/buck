@@ -25,7 +25,6 @@ import com.facebook.buck.artifact_cache.StoreResponseReadResult;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSource;
@@ -104,9 +103,9 @@ public class ArtifactCacheHandler extends AbstractHandler {
 
     Path temp = null;
     try {
-      projectFilesystem.mkdirs(BuckConstant.getScratchPath());
+      projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getScratchDir());
       temp = projectFilesystem.createTempFile(
-          BuckConstant.getScratchPath(),
+          projectFilesystem.getBuckPaths().getScratchDir(),
           "outgoing_rulekey",
           ".tmp");
       CacheResult fetchResult = artifactCache.get().fetch(ruleKey, LazyPath.ofInstance(temp));
@@ -143,9 +142,9 @@ public class ArtifactCacheHandler extends AbstractHandler {
 
     Path temp = null;
     try {
-      projectFilesystem.mkdirs(BuckConstant.getScratchPath());
+      projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getScratchDir());
       temp = projectFilesystem.createTempFile(
-          BuckConstant.getScratchPath(),
+          projectFilesystem.getBuckPaths().getScratchDir(),
           "incoming_upload",
           ".tmp");
 

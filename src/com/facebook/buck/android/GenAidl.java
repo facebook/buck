@@ -34,13 +34,11 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * Buildable for generating a .java file from an .aidl file. Example:
@@ -119,7 +117,7 @@ public class GenAidl extends AbstractBuildRule {
     commands.add(command);
 
     // Files must ultimately be written to GEN_DIR to be used as source paths.
-    Path genDirectory = Paths.get(BuckConstant.getGenDir(), importPath);
+    Path genDirectory = getProjectFilesystem().getBuckPaths().getGenDir().resolve(importPath);
 
     // Warn the user if the genDirectory is not under the output directory.
     if (!importPath.startsWith(target.getBasePath().toString())) {

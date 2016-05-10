@@ -900,11 +900,8 @@ public class ProjectTest {
     SourcePathResolver resolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
      );
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    ImmutableSet<Path> ignorePaths = ImmutableSet.of(Paths.get("buck-out"), Paths.get(".git"));
-    EasyMock.expect(projectFilesystem.getRootPath()).andStubReturn(Paths.get("/opt/src/buck"));
-    EasyMock.expect(projectFilesystem.getIgnorePaths()).andReturn(ignorePaths);
-    EasyMock.replay(projectFilesystem);
+    ProjectFilesystem projectFilesystem =
+        FakeProjectFilesystem.createJavaOnlyFilesystem("/opt/src/buck");
 
     BuildTarget buildTarget = BuildTarget.builder(
         projectFilesystem.getRootPath(),
@@ -915,17 +912,14 @@ public class ProjectTest {
 
     Project.addRootExcludes(module, buildRule, projectFilesystem);
 
-    ImmutableSortedSet<SourceFolder> expectedExcludeFolders =
-        ImmutableSortedSet.orderedBy(SerializableModule.ALPHABETIZER)
-        .add(new SourceFolder("file://$MODULE_DIR$/.git", /* isTestSource */ false))
-        .add(new SourceFolder("file://$MODULE_DIR$/buck-out/bin", /* isTestSource */ false))
-        .add(new SourceFolder("file://$MODULE_DIR$/buck-out/log", /* isTestSource */ false))
-        .add(new SourceFolder("file://$MODULE_DIR$/buck-out/tmp", /* isTestSource */ false))
-        .build();
+    ImmutableSortedSet.Builder<SourceFolder> expectedExcludeFolders =
+        ImmutableSortedSet.orderedBy(SerializableModule.ALPHABETIZER);
+    for (Path ignorePath : projectFilesystem.getIgnorePaths()) {
+      expectedExcludeFolders.add(
+          new SourceFolder("file://$MODULE_DIR$/" + ignorePath, /* isTestSource */ false));
+    }
     assertEquals("Specific subfolders of buck-out should be excluded rather than all of buck-out.",
-        expectedExcludeFolders,
+        expectedExcludeFolders.build(),
         module.excludeFolders);
-
-    EasyMock.verify(projectFilesystem);
   }
 }

@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
+import com.facebook.buck.io.BuckPaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.core.SuggestBuildRules;
@@ -420,8 +421,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   /**
    * Building a java_library() rule entails compiling the .java files specified in the srcs
-   * attribute. They are compiled into a directory under
-   * {@link com.facebook.buck.util.BuckConstant#SCRATCH_DIR}.
+   * attribute. They are compiled into a directory under {@link BuckPaths#getScratchDir()}.
    */
   @Override
   public final ImmutableList<Step> getBuildSteps(

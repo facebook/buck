@@ -740,10 +740,10 @@ public final class Main {
               filesystem,
               console,
               buildId,
-              BuckConstant.getAnnotationPath(),
-              BuckConstant.getGenPath(),
-              BuckConstant.getScratchPath(),
-              BuckConstant.getResPath());
+              filesystem.getBuckPaths().getAnnotationDir(),
+              filesystem.getBuckPaths().getGenDir(),
+              filesystem.getBuckPaths().getScratchDir(),
+              filesystem.getBuckPaths().getResDir());
           shouldCleanUpTrash = true;
           filesystem.mkdirs(BuckConstant.getCurrentVersionFile().getParent());
           filesystem.writeContentsToPath(
