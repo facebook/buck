@@ -180,7 +180,7 @@ public class JavaBinary extends AbstractBuildRule
   }
 
   private Path getOutputDirectory() {
-    return BuildTargets.getGenPath(getBuildTarget(), "%s").getParent();
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s").getParent();
   }
 
   @Override

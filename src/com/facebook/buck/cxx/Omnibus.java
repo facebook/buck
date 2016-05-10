@@ -237,7 +237,8 @@ public class Omnibus {
             ruleResolver,
             pathResolver,
             dummyOmnibusTarget,
-            BuildTargets.getGenPath(dummyOmnibusTarget, "%s").resolve(omnibusSoname),
+            BuildTargets.getGenPath(params.getProjectFilesystem(), dummyOmnibusTarget, "%s")
+                .resolve(omnibusSoname),
             Optional.of(omnibusSoname),
             extraLdflags));
     return new BuildTargetSourcePath(dummyOmnibusTarget);
@@ -338,7 +339,7 @@ public class Omnibus {
             ruleResolver,
             pathResolver,
             rootTarget,
-            BuildTargets.getGenPath(rootTarget, "%s")
+            BuildTargets.getGenPath(params.getProjectFilesystem(), rootTarget, "%s")
                 .resolve(
                     rootSoname.or(
                         String.format(
@@ -469,7 +470,8 @@ public class Omnibus {
             ruleResolver,
             pathResolver,
             omnibusTarget,
-            BuildTargets.getGenPath(omnibusTarget, "%s").resolve(omnibusSoname),
+            BuildTargets.getGenPath(params.getProjectFilesystem(), omnibusTarget, "%s")
+                .resolve(omnibusSoname),
             Optional.of(omnibusSoname),
             argsBuilder.build()));
 

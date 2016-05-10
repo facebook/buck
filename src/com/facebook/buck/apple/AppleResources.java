@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
 import com.facebook.buck.js.ReactNativeBundle;
 import com.facebook.buck.js.ReactNativeLibraryArgs;
@@ -76,6 +77,8 @@ public class AppleResources {
             targetNode,
             Optional.of(types));
 
+    ProjectFilesystem filesystem = targetNode.getRuleFactoryParams().getProjectFilesystem();
+
     for (TargetNode<?> resourceNode : resourceNodes) {
       Object constructorArg = resourceNode.getConstructorArg();
       if (constructorArg instanceof AppleResourceDescription.Arg) {
@@ -91,10 +94,10 @@ public class AppleResources {
         builder.addDirsContainingResourceDirs(
             new BuildTargetSourcePath(
                 buildTarget,
-                ReactNativeBundle.getPathToJSBundleDir(buildTarget)),
+                ReactNativeBundle.getPathToJSBundleDir(buildTarget, filesystem)),
             new BuildTargetSourcePath(
                 buildTarget,
-                ReactNativeBundle.getPathToResources(buildTarget)));
+                ReactNativeBundle.getPathToResources(buildTarget, filesystem)));
       }
     }
     return builder.build();

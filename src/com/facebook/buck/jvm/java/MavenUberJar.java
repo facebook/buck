@@ -125,7 +125,7 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
 
   @Override
   public Path getPathToOutput() {
-    return DefaultJavaLibrary.getOutputJarPath(getBuildTarget());
+    return DefaultJavaLibrary.getOutputJarPath(getBuildTarget(), getProjectFilesystem());
   }
 
   @Override

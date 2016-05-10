@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.google.common.annotations.VisibleForTesting;
@@ -89,7 +90,7 @@ public class BuildInfo {
    * @return A path relative to the project root that includes a trailing slash.
    */
   @VisibleForTesting
-  public static Path getPathToMetadataDirectory(BuildTarget target) {
-    return BuildTargets.getScratchPath(target, ".%s/metadata/");
+  public static Path getPathToMetadataDirectory(BuildTarget target, ProjectFilesystem filesystem) {
+    return BuildTargets.getScratchPath(filesystem, target, ".%s/metadata/");
   }
 }

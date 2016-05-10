@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -57,7 +58,10 @@ public class AndroidPrebuiltAarIntegrationTest {
     workspace.runBuckBuild(target).assertSuccess();
     ZipInspector zipInspector = new ZipInspector(
         workspace.getPath(
-            BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk")));
+            BuildTargets.getGenPath(
+                new ProjectFilesystem(workspace.getDestPath()),
+                BuildTargetFactory.newInstance(target),
+                "%s.apk")));
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("resources.arsc");
     zipInspector.assertFileExists("classes.dex");
@@ -88,6 +92,7 @@ public class AndroidPrebuiltAarIntegrationTest {
 
     String rDotTxt = workspace.getFileContents(
         BuildTargets.getScratchPath(
+            new ProjectFilesystem(workspace.getDestPath()),
             BuildTargetFactory.newInstance(target)
                 .withFlavors(AndroidPrebuiltAarDescription.AAR_UNZIP_FLAVOR),
             "__unpack_%s__/R.txt"));

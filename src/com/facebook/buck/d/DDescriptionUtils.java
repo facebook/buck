@@ -150,7 +150,10 @@ abstract class DDescriptionUtils {
         buildTarget,
         Linker.LinkType.EXECUTABLE,
         Optional.<String>absent(),
-        BuildTargets.getGenPath(buildTarget, "%s/" + buildTarget.getShortName()),
+        BuildTargets.getGenPath(
+            params.getProjectFilesystem(),
+            buildTarget,
+            "%s/" + buildTarget.getShortName()),
         Linker.LinkableDepType.STATIC,
         FluentIterable.from(params.getDeps())
             .filter(NativeLinkable.class),
@@ -182,7 +185,9 @@ abstract class DDescriptionUtils {
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
         baseParams.getProjectFilesystem().resolve(
-            BuildTargets.getGenPath(baseParams.getBuildTarget(), "%s")),
+            BuildTargets.getGenPath(
+                baseParams.getProjectFilesystem(),
+                baseParams.getBuildTarget(), "%s")),
         MoreMaps.transformKeys(
             sources.toNameMap(
                 baseParams.getBuildTarget(),

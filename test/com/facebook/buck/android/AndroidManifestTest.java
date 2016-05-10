@@ -31,6 +31,7 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -52,7 +53,9 @@ public class AndroidManifestTest {
 
     assertEquals(
         BuildTargets.getGenPath(
-            BuildTargetFactory.newInstance(MANIFEST_TARGET), "AndroidManifest__%s__.xml"),
+            new FakeProjectFilesystem(),
+            BuildTargetFactory.newInstance(MANIFEST_TARGET),
+            "AndroidManifest__%s__.xml"),
         androidManifest.getPathToOutput());
   }
 
@@ -74,7 +77,9 @@ public class AndroidManifestTest {
             filesystem.resolve("java/com/example/AndroidManifestSkeleton.xml"),
             /* libraryManifestPaths */ ImmutableSet.<Path>of(),
             BuildTargets.getGenPath(
-                BuildTargetFactory.newInstance(MANIFEST_TARGET), "AndroidManifest__%s__.xml")),
+                filesystem,
+                BuildTargetFactory.newInstance(MANIFEST_TARGET),
+                "AndroidManifest__%s__.xml")),
         generateManifestStep);
 
     EasyMock.verify(buildContext);

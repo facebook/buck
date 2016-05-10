@@ -273,7 +273,7 @@ public class AndroidBinary
     this.preprocessJavaClassesBash = preprocessJavaClassesBash;
     this.rulesToExcludeFromDex = rulesToExcludeFromDex;
     this.enhancementResult = enhancementResult;
-    this.primaryDexPath = getPrimaryDexPath(params.getBuildTarget());
+    this.primaryDexPath = getPrimaryDexPath(params.getBuildTarget(), getProjectFilesystem());
     this.reorderClassesIntraDex = reorderClassesIntraDex;
     this.dexReorderToolFile = dexReorderToolFile;
     this.dexReorderDataDumpFile = dexReorderDataDumpFile;
@@ -296,8 +296,8 @@ public class AndroidBinary
     }
   }
 
-  public static Path getPrimaryDexPath(BuildTarget buildTarget) {
-    return BuildTargets.getScratchPath(buildTarget, ".dex/%s/classes.dex");
+  public static Path getPrimaryDexPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    return BuildTargets.getScratchPath(filesystem, buildTarget, ".dex/%s/classes.dex");
   }
 
   @Override
@@ -798,7 +798,8 @@ public class AndroidBinary
   }
 
   public String getUnsignedApkPath() {
-    return BuildTargets.getGenPath(getBuildTarget(), "%s.unsigned.apk").toString();
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.unsigned.apk")
+        .toString();
   }
 
   /** The APK at this path will be signed, but not zipaligned. */
@@ -812,7 +813,7 @@ public class AndroidBinary
   }
 
   private Path getBinPath(String format) {
-    return BuildTargets.getScratchPath(getBuildTarget(), format);
+    return BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), format);
   }
 
   @VisibleForTesting
@@ -1078,7 +1079,10 @@ public class AndroidBinary
 
   @Override
   public Path getManifestPath() {
-    return BuildTargets.getGenPath(getBuildTarget(), "%s/AndroidManifest.xml");
+    return BuildTargets.getGenPath(
+        getProjectFilesystem(),
+        getBuildTarget(),
+        "%s/AndroidManifest.xml");
   }
 
   boolean shouldSplitDex() {

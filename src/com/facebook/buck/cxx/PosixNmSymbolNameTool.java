@@ -110,7 +110,10 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
     }
 
     private Path getUndefinedSymbolsPath() {
-      return BuildTargets.getGenPath(getBuildTarget(), "%s/undefined_symbols.txt");
+      return BuildTargets.getGenPath(
+          getProjectFilesystem(),
+          getBuildTarget(),
+          "%s/undefined_symbols.txt");
     }
 
     @Override

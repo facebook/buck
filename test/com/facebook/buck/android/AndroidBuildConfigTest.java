@@ -56,12 +56,13 @@ public class AndroidBuildConfigTest {
 
   public static final BuildTarget BUILD_TARGET =
       BuildTargetFactory.newInstance("//java/com/example:build_config");
+  private static final ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
   @Test
   public void testGetPathToOutput() {
     AndroidBuildConfig buildConfig = createSimpleBuildConfigRule();
     assertEquals(
-        BuildTargets.getGenPath(BUILD_TARGET, "__%s__/BuildConfig.java"),
+        BuildTargets.getGenPath(filesystem, BUILD_TARGET, "__%s__/BuildConfig.java"),
         buildConfig.getPathToOutput());
   }
 
@@ -78,7 +79,7 @@ public class AndroidBuildConfigTest {
         /* javaPackage */ "com.example",
         /* useConstantExpressions */ false,
         /* constants */ Suppliers.ofInstance(BuildConfigFields.empty()),
-        BuildTargets.getGenPath(BUILD_TARGET, "__%s__/BuildConfig.java"));
+        BuildTargets.getGenPath(filesystem, BUILD_TARGET, "__%s__/BuildConfig.java"));
     assertEquals(expectedStep, generateBuildConfigStep);
   }
 

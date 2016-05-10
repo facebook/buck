@@ -55,7 +55,9 @@ public class GoTestMain extends AbstractBuildRule {
     this.testSources = testSources;
     this.testPackage = testPackage;
     this.output = BuildTargets.getScratchPath(
-        getBuildTarget(), "%s/" + getBuildTarget().getShortName() + "_test_main.go");
+        getProjectFilesystem(),
+        getBuildTarget(),
+        "%s/" + getBuildTarget().getShortName() + "_test_main.go");
   }
 
   @Override

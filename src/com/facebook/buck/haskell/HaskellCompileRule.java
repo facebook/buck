@@ -83,11 +83,13 @@ public class HaskellCompileRule extends AbstractBuildRule {
   }
 
   private Path getObjectDir() {
-    return BuildTargets.getGenPath(getBuildTarget(), "%s").resolve("objects");
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
+        .resolve("objects");
   }
 
   private Path getInterfaceDir() {
-    return BuildTargets.getGenPath(getBuildTarget(), "%s").resolve("interfaces");
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
+        .resolve("interfaces");
   }
 
   @Override

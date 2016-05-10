@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY d51577c38f86365b0f279ef96daee4e61ac2956c #@#
+#@# GENERATED FILE: DO NOT MODIFY 9ca2dbe894c16c07c0b803f496e9844e38b06f33 #@#
 {
   "js" : {
     "deps" : [
+      "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/js:js",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/util/environment:platform",

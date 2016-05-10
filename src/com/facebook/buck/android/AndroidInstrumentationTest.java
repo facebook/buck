@@ -216,6 +216,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
   @Override
   public Path getPathToTestOutputDirectory() {
     return BuildTargets.getGenPath(
+        getProjectFilesystem(),
         getBuildTarget(),
         "__android_instrumentation_test_%s_output__");
   }

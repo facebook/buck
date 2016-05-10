@@ -119,7 +119,8 @@ public class AndroidInstrumentationApkDescription
             resourceDetails.getResourcesWithNonEmptyResDir(),
             resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()));
 
-    Path primaryDexPath = AndroidBinary.getPrimaryDexPath(params.getBuildTarget());
+    Path primaryDexPath =
+        AndroidBinary.getPrimaryDexPath(params.getBuildTarget(), params.getProjectFilesystem());
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
         params,
         resolver,

@@ -44,7 +44,9 @@ public class RustLibrary extends RustLinkable {
             .build(),
         features,
         BuildTargets.getGenPath(
-            params.getBuildTarget(), "%s/lib" + params.getBuildTarget().getShortName() + ".rlib"),
+            params.getProjectFilesystem(),
+            params.getBuildTarget(),
+            "%s/lib" + params.getBuildTarget().getShortName() + ".rlib"),
         compiler);
   }
 

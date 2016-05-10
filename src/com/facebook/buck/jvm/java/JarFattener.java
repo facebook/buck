@@ -94,7 +94,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
     this.innerJar = innerJar;
     this.nativeLibraries = nativeLibraries;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
-    this.output = BuildTargets.getScratchPath(getBuildTarget(), "%s")
+    this.output = BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s")
         .resolve(getBuildTarget().getShortName() + ".jar");
   }
 
@@ -164,7 +164,8 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
         ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
         fatJarDir);
 
-    Path pathToSrcsList = BuildTargets.getGenPath(getBuildTarget(), "__%s__srcs");
+    Path pathToSrcsList =
+        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__srcs");
     steps.add(new MkdirStep(getProjectFilesystem(), pathToSrcsList.getParent()));
 
     CompileToJarStepFactory compileStepFactory =

@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -56,7 +57,7 @@ public class JavaLibraryRules {
       ImmutableList.Builder<Step> steps) {
 
     Path pathToClassHashes = JavaLibraryRules.getPathToClassHashes(
-        javaLibrary.getBuildTarget());
+        javaLibrary.getBuildTarget(), javaLibrary.getProjectFilesystem());
     steps.add(new MkdirStep(javaLibrary.getProjectFilesystem(), pathToClassHashes.getParent()));
     steps.add(
         new AccumulateClassNamesStep(
@@ -68,6 +69,7 @@ public class JavaLibraryRules {
 
   static JavaLibrary.Data initializeFromDisk(
       BuildTarget buildTarget,
+      ProjectFilesystem filesystem,
       OnDiskBuildInfo onDiskBuildInfo)
       throws IOException {
     Optional<Sha1HashCode> abiKeyHash = onDiskBuildInfo.getHash(AbiRule.ABI_KEY_ON_DISK_METADATA);
@@ -78,15 +80,15 @@ public class JavaLibraryRules {
     }
 
     List<String> lines =
-        onDiskBuildInfo.getOutputFileContentsByLine(getPathToClassHashes(buildTarget));
+        onDiskBuildInfo.getOutputFileContentsByLine(getPathToClassHashes(buildTarget, filesystem));
     ImmutableSortedMap<String, HashCode> classHashes = AccumulateClassNamesStep.parseClassHashes(
         lines);
 
     return new JavaLibrary.Data(classHashes);
   }
 
-  private static Path getPathToClassHashes(BuildTarget buildTarget) {
-    return BuildTargets.getGenPath(buildTarget, "%s.classes.txt");
+  private static Path getPathToClassHashes(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    return BuildTargets.getGenPath(filesystem, buildTarget, "%s.classes.txt");
   }
 
   /**

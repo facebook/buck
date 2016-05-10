@@ -91,7 +91,9 @@ public class GoCompile extends AbstractBuildRule {
     this.packer = packer;
     this.platform = platform;
     this.output = BuildTargets.getGenPath(
-        getBuildTarget(), "%s/" + getBuildTarget().getShortName() + ".a");
+        getProjectFilesystem(),
+        getBuildTarget(),
+        "%s/" + getBuildTarget().getShortName() + ".a");
   }
 
   @Override
@@ -124,7 +126,9 @@ public class GoCompile extends AbstractBuildRule {
 
     if (!asmSrcs.isEmpty()) {
       asmHeaderPath = Optional.of(BuildTargets.getScratchPath(
-          getBuildTarget(), "%s/" + getBuildTarget().getShortName() + "__asm_hdr")
+          getProjectFilesystem(),
+          getBuildTarget(),
+          "%s/" + getBuildTarget().getShortName() + "__asm_hdr")
           .resolve("go_asm.h"));
 
       steps.add(new MkdirStep(getProjectFilesystem(), asmHeaderPath.get().getParent()));
@@ -150,7 +154,9 @@ public class GoCompile extends AbstractBuildRule {
 
     if (!asmSrcs.isEmpty()) {
       Path asmIncludeDir = BuildTargets.getScratchPath(
-          getBuildTarget(), "%s/" + getBuildTarget().getShortName() + "__asm_includes");
+          getProjectFilesystem(),
+          getBuildTarget(),
+          "%s/" + getBuildTarget().getShortName() + "__asm_includes");
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), asmIncludeDir));
 
       if (!headerSrcs.isEmpty()) {
@@ -165,7 +171,9 @@ public class GoCompile extends AbstractBuildRule {
       }
 
       Path asmOutputDir = BuildTargets.getScratchPath(
-          getBuildTarget(), "%s/" + getBuildTarget().getShortName() + "__asm_compile");
+          getProjectFilesystem(),
+          getBuildTarget(),
+          "%s/" + getBuildTarget().getShortName() + "__asm_compile");
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), asmOutputDir));
 
       ImmutableList.Builder<Path> asmOutputs = ImmutableList.builder();

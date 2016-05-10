@@ -44,7 +44,8 @@ public class CxxInferCaptureTransitive extends AbstractBuildRule implements HasR
       ImmutableSet<CxxInferCapture> captureRules) {
     super(params, pathResolver);
     this.captureRules = captureRules;
-    this.outputDirectory = BuildTargets.getGenPath(this.getBuildTarget(), "infer-%s");
+    this.outputDirectory =
+        BuildTargets.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-%s");
     this.depsOutput = this.outputDirectory.resolve("infer-deps.txt");
   }
 

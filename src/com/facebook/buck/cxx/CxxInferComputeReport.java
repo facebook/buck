@@ -53,7 +53,7 @@ public class CxxInferComputeReport extends AbstractBuildRule {
     super(buildRuleParams, sourcePathResolver);
     this.analysisToReport = analysisToReport;
     this.outputDirectory =
-        BuildTargets.getGenPath(this.getBuildTarget(), "infer-%s");
+        BuildTargets.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-%s");
     this.depsOutput = this.outputDirectory.resolve("infer-deps.txt");
     this.reportOutput = this.outputDirectory.resolve("report.json");
     this.projectFilesystem = getProjectFilesystem();

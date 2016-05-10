@@ -99,7 +99,7 @@ public class SymlinkTreeTest {
 
     // The output path used by the buildable for the link tree.
     outputPath = projectFilesystem.resolve(
-        BuildTargets.getGenPath(buildTarget, "%s/symlink-tree-root"));
+        BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root"));
 
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule = new SymlinkTree(

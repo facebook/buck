@@ -303,6 +303,7 @@ public class DefaultJavaLibraryTest {
   public void testGetClasspathEntriesMap() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
     BuildRule libraryOne = JavaLibraryBuilder.createBuilder(libraryOneTarget)
@@ -327,11 +328,11 @@ public class DefaultJavaLibraryTest {
     assertEquals(
         ImmutableSetMultimap.of(
             getJavaLibrary(libraryOne),
-            root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget)),
+            root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget, filesystem)),
             getJavaLibrary(libraryTwo),
-            root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryTwoTarget)),
+            root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryTwoTarget, filesystem)),
             getJavaLibrary(parent),
-            root.resolve(DefaultJavaLibrary.getOutputJarPath(parentTarget))),
+            root.resolve(DefaultJavaLibrary.getOutputJarPath(parentTarget, filesystem))),
         ((HasClasspathEntries) parent).getTransitiveClasspathEntries());
   }
 
@@ -486,6 +487,7 @@ public class DefaultJavaLibraryTest {
   public void testExportedDeps() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildTarget nonIncludedTarget = BuildTargetFactory.newInstance("//:not_included");
     BuildRule notIncluded = JavaLibraryBuilder
@@ -529,23 +531,23 @@ public class DefaultJavaLibraryTest {
             "classpath when compiling itself.",
         ImmutableSetMultimap.of(
             getJavaLibrary(notIncluded),
-            root.resolve(DefaultJavaLibrary.getOutputJarPath(nonIncludedTarget))),
+            root.resolve(DefaultJavaLibrary.getOutputJarPath(nonIncludedTarget, filesystem))),
         getJavaLibrary(notIncluded).getOutputClasspathEntries());
 
     assertEquals(
         ImmutableSetMultimap.of(
             getJavaLibrary(included),
-            root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget))),
+            root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem))),
         getJavaLibrary(included).getOutputClasspathEntries());
 
     assertEquals(
         ImmutableSetMultimap.of(
             getJavaLibrary(included),
-            root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget)),
+            root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem)),
             getJavaLibrary(libraryOne),
-            root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget)),
+            root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget, filesystem)),
             getJavaLibrary(libraryOne),
-            root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget))),
+            root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem))),
         getJavaLibrary(libraryOne).getOutputClasspathEntries());
 
     assertEquals(
@@ -553,15 +555,15 @@ public class DefaultJavaLibraryTest {
             "both libone.jar and libtwo.jar in its classpath when compiling itself.",
         ImmutableSetMultimap.of(
             getJavaLibrary(libraryOne),
-            root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget)),
+            root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget, filesystem)),
             getJavaLibrary(libraryOne),
-            root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget)),
+            root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem)),
             getJavaLibrary(libraryTwo),
-            root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget)),
+            root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget, filesystem)),
             getJavaLibrary(libraryTwo),
-            root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryTwoTarget)),
+            root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryTwoTarget, filesystem)),
             getJavaLibrary(libraryTwo),
-            root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget))),
+            root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem))),
         getJavaLibrary(libraryTwo).getOutputClasspathEntries());
 
     assertEquals(
@@ -570,22 +572,22 @@ public class DefaultJavaLibraryTest {
         ImmutableSetMultimap.<JavaLibrary, Path>builder()
             .put(
                 getJavaLibrary(included),
-                root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget)))
+                root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem)))
             .put(
                 getJavaLibrary(notIncluded),
-                root.resolve(DefaultJavaLibrary.getOutputJarPath(nonIncludedTarget)))
+                root.resolve(DefaultJavaLibrary.getOutputJarPath(nonIncludedTarget, filesystem)))
             .putAll(
                 getJavaLibrary(libraryOne),
-                root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget)),
-                root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget)))
+                root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem)),
+                root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget, filesystem)))
             .putAll(
                 getJavaLibrary(libraryTwo),
-                root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget)),
-                root.resolve(DefaultJavaLibrary.getOutputJarPath(nonIncludedTarget)),
-                root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget)),
-                root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryTwoTarget)))
+                root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem)),
+                root.resolve(DefaultJavaLibrary.getOutputJarPath(nonIncludedTarget, filesystem)),
+                root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget, filesystem)),
+                root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryTwoTarget, filesystem)))
             .put(getJavaLibrary(parent),
-                root.resolve(DefaultJavaLibrary.getOutputJarPath(parentTarget)))
+                root.resolve(DefaultJavaLibrary.getOutputJarPath(parentTarget, filesystem)))
             .build(),
         getJavaLibrary(parent).getTransitiveClasspathEntries());
 
@@ -605,7 +607,7 @@ public class DefaultJavaLibraryTest {
             "-classpath when compiling itself.",
         ImmutableSetMultimap.of(
             getJavaLibrary(parent),
-            root.resolve(DefaultJavaLibrary.getOutputJarPath(parentTarget))),
+            root.resolve(DefaultJavaLibrary.getOutputJarPath(parentTarget, filesystem))),
         getJavaLibrary(parent).getOutputClasspathEntries());
   }
 

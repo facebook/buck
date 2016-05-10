@@ -1,17 +1,17 @@
 /*
  * Copyright 2015-present Facebook, Inc.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License. You may obtain
- *  a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- *  License for the specific language governing permissions and limitations
- *  under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
  */
 
 package com.facebook.buck.android;
@@ -74,11 +74,14 @@ public class UnzipAar extends AbstractBuildRule
     super(buildRuleParams, resolver);
     this.aarFile = aarFile;
     BuildTarget buildTarget = buildRuleParams.getBuildTarget();
-    this.unpackDirectory = BuildTargets.getScratchPath(buildTarget, "__unpack_%s__");
+    this.unpackDirectory =
+        BuildTargets.getScratchPath(getProjectFilesystem(), buildTarget, "__unpack_%s__");
     this.uberClassesJar = BuildTargets.getScratchPath(
+        getProjectFilesystem(),
         buildTarget,
         "__uber_classes_%s__/classes.jar");
-    pathToTextSymbolsDir = BuildTargets.getGenPath(buildTarget, "__%s_text_symbols__");
+    pathToTextSymbolsDir =
+        BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__%s_text_symbols__");
     pathToTextSymbolsFile = pathToTextSymbolsDir.resolve("R.txt");
     pathToRDotJavaPackageFile = pathToTextSymbolsDir.resolve("RDotJavaPackage.txt");
     this.outputInitializer = new BuildOutputInitializer<>(buildTarget, this);

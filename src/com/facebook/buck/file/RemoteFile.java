@@ -60,6 +60,7 @@ public class RemoteFile extends AbstractBuildRule {
     this.downloader = downloader;
 
     output = BuildTargets.getGenPath(
+        getProjectFilesystem(),
         params.getBuildTarget(),
         String.format("%%s/%s", out));
   }
@@ -70,7 +71,9 @@ public class RemoteFile extends AbstractBuildRule {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Path tempFile = BuildTargets.getScratchPath(
-        getBuildTarget(), String.format("%%s/%s", output.getFileName()));
+        getProjectFilesystem(),
+        getBuildTarget(),
+        String.format("%%s/%s", output.getFileName()));
 
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), tempFile.getParent()));
     steps.add(new DownloadStep(getProjectFilesystem(), downloader, uri, sha1, tempFile));

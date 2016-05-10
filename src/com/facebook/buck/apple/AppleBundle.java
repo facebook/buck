@@ -27,6 +27,7 @@ import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.NativeTestable;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -190,7 +191,8 @@ public class AppleBundle
     this.ibtool = appleCxxPlatform.getIbtool();
     this.assetCatalog = assetCatalog;
     this.binaryName = getBinaryName(getBuildTarget(), this.productName);
-    this.bundleRoot = getBundleRoot(getBuildTarget(), this.binaryName, this.extension);
+    this.bundleRoot =
+        getBundleRoot(getProjectFilesystem(), getBuildTarget(), this.binaryName, this.extension);
     this.binaryPath = this.destinations.getExecutablesPath()
         .resolve(this.binaryName);
     this.tests = ImmutableSortedSet.copyOf(tests);
@@ -227,9 +229,13 @@ public class AppleBundle
     }
   }
 
-  public static Path getBundleRoot(BuildTarget buildTarget, String binaryName, String extension) {
+  public static Path getBundleRoot(
+      ProjectFilesystem filesystem,
+      BuildTarget buildTarget,
+      String binaryName,
+      String extension) {
     return BuildTargets
-        .getGenPath(buildTarget, "%s")
+        .getGenPath(filesystem, buildTarget, "%s")
         .resolve(binaryName + "." + extension);
   }
 
@@ -279,7 +285,7 @@ public class AppleBundle
 
     Path infoPlistInputPath = getResolver().getAbsolutePath(infoPlist);
     Path infoPlistSubstitutionTempPath =
-        BuildTargets.getScratchPath(getBuildTarget(), "%s.plist");
+        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.plist");
     Path infoPlistOutputPath = metadataPath.resolve("Info.plist");
 
     stepsBuilder.add(
@@ -414,7 +420,7 @@ public class AppleBundle
       }
 
       final Path signingEntitlementsTempPath =
-          BuildTargets.getScratchPath(getBuildTarget(), "%s.xcent");
+          BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.xcent");
 
       final ProvisioningProfileCopyStep provisioningProfileCopyStep =
           new ProvisioningProfileCopyStep(
@@ -546,7 +552,9 @@ public class AppleBundle
     stepsBuilder.add(new MoveStep(getProjectFilesystem(), dsymSourcePath, dsymDestinationPath));
 
     String dwarfFilename =
-        AppleDsym.getDwarfFilenameForDsymTarget(appleDsym.get().getBuildTarget());
+        AppleDsym.getDwarfFilenameForDsymTarget(
+            appleDsym.get().getBuildTarget(),
+            appleDsym.get().getProjectFilesystem());
     if (unstrippedBinaryRule.isPresent()) {
       Path unstrippedOutput = unstrippedBinaryRule.get().getPathToOutput();
       Preconditions.checkNotNull(
@@ -662,7 +670,10 @@ public class AppleBundle
       stepsBuilder.add(
           new SwiftStdlibStep(
               getProjectFilesystem().getRootPath(),
-              BuildTargets.getScratchPath(getBuildTarget(), "__swift_temp__%s"),
+              BuildTargets.getScratchPath(
+                  getProjectFilesystem(),
+                  getBuildTarget(),
+                  "__swift_temp__%s"),
               bundleRoot.resolve(Paths.get("Frameworks")),
               swiftStdlibCommand.build(),
               codeSignIdentitySupplier)
@@ -680,7 +691,7 @@ public class AppleBundle
           destinationPath);
 
       Path compiledStoryboardPath =
-          BuildTargets.getScratchPath(getBuildTarget(), "%s.storyboardc");
+          BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.storyboardc");
       stepsBuilder.add(
           new IbtoolStep(
               getProjectFilesystem(),

@@ -17,6 +17,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.StripStyle;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -80,15 +81,20 @@ public class AppleDsym
     checkFlavorCorrectness(params.getBuildTarget());
   }
 
-  public static Path getDsymOutputPath(BuildTarget target) {
+  public static Path getDsymOutputPath(BuildTarget target, ProjectFilesystem filesystem) {
     AppleDsym.checkFlavorCorrectness(target);
-    return BuildTargets.getGenPath(target, "%s." + AppleBundleExtension.DSYM.toFileExtension());
+    return BuildTargets.getGenPath(
+        filesystem,
+        target,
+        "%s." + AppleBundleExtension.DSYM.toFileExtension());
   }
 
-  public static String getDwarfFilenameForDsymTarget(BuildTarget dsymTarget) {
+  public static String getDwarfFilenameForDsymTarget(
+      BuildTarget dsymTarget,
+      ProjectFilesystem filesystem) {
     AppleDsym.checkFlavorCorrectness(dsymTarget);
     BuildTarget target = dsymTarget.withoutFlavors(ImmutableSet.of(AppleDsym.RULE_FLAVOR));
-    return BuildTargets.getGenPath(target, "%s").getFileName().toString();
+    return BuildTargets.getGenPath(filesystem, target, "%s").getFileName().toString();
   }
 
   private static void checkFlavorCorrectness(BuildTarget buildTarget) {

@@ -55,7 +55,8 @@ public class StripLinkable extends AbstractBuildRule {
     this.stripTool = stripTool;
     this.strippedObjectName = strippedObjectName;
     this.sourcePathToStrip = sourcePathToStrip;
-    this.resultDir = BuildTargets.getGenPath(buildRuleParams.getBuildTarget(), "%s");
+    this.resultDir =
+        BuildTargets.getGenPath(getProjectFilesystem(), buildRuleParams.getBuildTarget(), "%s");
   }
 
   @Override

@@ -119,6 +119,7 @@ public class DTest extends AbstractBuildRule implements
   @Override
   public Path getPathToTestOutputDirectory() {
     return BuildTargets.getGenPath(
+        getProjectFilesystem(),
         getBuildTarget(),
         "__test_%s_output__");
   }

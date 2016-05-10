@@ -35,6 +35,7 @@ import com.facebook.buck.cxx.Linkers;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.SharedNativeLinkTarget;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -123,8 +124,13 @@ public class CxxPythonExtensionDescription implements
   }
 
   @VisibleForTesting
-  protected Path getExtensionPath(BuildTarget target, Flavor pythonPlatform, Flavor platform) {
-    return BuildTargets.getGenPath(getExtensionTarget(target, pythonPlatform, platform), "%s")
+  protected Path getExtensionPath(
+      ProjectFilesystem filesystem,
+      BuildTarget target,
+      Flavor pythonPlatform,
+      Flavor platform) {
+    return BuildTargets
+        .getGenPath(filesystem, getExtensionTarget(target, pythonPlatform, platform), "%s")
         .resolve(getExtensionName(target));
   }
 
@@ -250,6 +256,7 @@ public class CxxPythonExtensionDescription implements
     String extensionName = getExtensionName(params.getBuildTarget());
     Path extensionPath =
         getExtensionPath(
+            params.getProjectFilesystem(),
             params.getBuildTarget(),
             pythonPlatform.getFlavor(),
             cxxPlatform.getFlavor());

@@ -17,7 +17,6 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
@@ -25,7 +24,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Set;
 
 /**
@@ -47,15 +45,6 @@ public class BuildTargets {
    * @return A {@link java.nio.file.Path} under buck-out/bin, scoped to the base path of
    * {@code target}.
    */
-  public static Path getScratchPath(BuildTarget target, String format) {
-    return Paths.get(
-        String.format(
-            "%s/%s" + format,
-            BuckConstant.getScratchDir(),
-            target.getBasePathWithSlash(),
-            target.getShortNameAndFlavorPostfix()));
-  }
-
   public static Path getScratchPath(
       ProjectFilesystem filesystem,
       BuildTarget target,
@@ -76,15 +65,6 @@ public class BuildTargets {
    * @return A {@link java.nio.file.Path} under buck-out/annotation, scoped to the base path of
    * {@code target}.
    */
-  public static Path getAnnotationPath(BuildTarget target, String format) {
-    return Paths.get(
-        String.format(
-            "%s/%s" + format,
-            BuckConstant.getAnnotationDir(),
-            target.getBasePathWithSlash(),
-            target.getShortNameAndFlavorPostfix()));
-  }
-
   public static Path getAnnotationPath(
       ProjectFilesystem filesystem,
       BuildTarget target,
@@ -105,13 +85,6 @@ public class BuildTargets {
    * @return A {@link java.nio.file.Path} under buck-out/gen, scoped to the base path of
    * {@code target}.
    */
-  public static Path getGenPath(BuildTarget target, String format) {
-    return Paths.get(String.format("%s/%s" + format,
-        BuckConstant.getGenDir(),
-        target.getBasePathWithSlash(),
-        target.getShortNameAndFlavorPostfix()));
-  }
-
   public static Path getGenPath(ProjectFilesystem filesystem, BuildTarget target, String format) {
     return filesystem.getBuckPaths().getGenDir()
         .resolve(target.getBasePath())

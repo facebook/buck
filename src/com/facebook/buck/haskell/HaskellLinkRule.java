@@ -16,6 +16,7 @@
 
 package com.facebook.buck.haskell;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -69,12 +70,12 @@ public class HaskellLinkRule extends AbstractBuildRule {
     this.cacheable = cacheable;
   }
 
-  protected static Path getOutputDir(BuildTarget target) {
-    return BuildTargets.getGenPath(target, "%s");
+  protected static Path getOutputDir(BuildTarget target, ProjectFilesystem filesystem) {
+    return BuildTargets.getGenPath(filesystem, target, "%s");
   }
 
   private Path getOutput() {
-    return getOutputDir(getBuildTarget()).resolve(name);
+    return getOutputDir(getBuildTarget(), getProjectFilesystem()).resolve(name);
   }
 
   @Override
@@ -83,7 +84,9 @@ public class HaskellLinkRule extends AbstractBuildRule {
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(getOutput());
     return ImmutableList.of(
-        new MakeCleanDirectoryStep(getProjectFilesystem(), getOutputDir(getBuildTarget())),
+        new MakeCleanDirectoryStep(
+            getProjectFilesystem(),
+            getOutputDir(getBuildTarget(), getProjectFilesystem())),
         new ShellStep(getProjectFilesystem().getRootPath()) {
 
           @Override

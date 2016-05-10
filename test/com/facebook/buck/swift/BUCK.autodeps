@@ -1,9 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY db91e5e7e9a1753cbbb03bff13b0aa55bc325940 #@#
+#@# GENERATED FILE: DO NOT MODIFY 1415e540600bb023264da7d2a8d623c91d151159 #@#
 {
   "swift" : {
     "deps" : [
       "//src/com/facebook/buck/apple:platform",
       "//src/com/facebook/buck/apple:rules",
+      "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//test/com/facebook/buck/apple:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",

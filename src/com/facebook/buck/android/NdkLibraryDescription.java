@@ -150,8 +150,8 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
   }
 
   @VisibleForTesting
-  protected static Path getGeneratedMakefilePath(BuildTarget target) {
-    return BuildTargets.getGenPath(target, "Android.%s.mk");
+  protected static Path getGeneratedMakefilePath(BuildTarget target, ProjectFilesystem filesystem) {
+    return BuildTargets.getGenPath(filesystem, target, "Android.%s.mk");
   }
 
   /**
@@ -335,7 +335,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
                 .addAll(makefilePair.getSecond())
                 .build()),
         new SourcePathResolver(resolver),
-        getGeneratedMakefilePath(params.getBuildTarget()),
+        getGeneratedMakefilePath(params.getBuildTarget(), params.getProjectFilesystem()),
         makefilePair.getFirst(),
         findSources(params.getProjectFilesystem(), params.getBuildTarget().getBasePath()),
         args.flags.get(),

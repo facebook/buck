@@ -144,6 +144,7 @@ public class PythonBinaryDescription implements
         params.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("__init__"));
     Path emptyInitPath =
         BuildTargets.getGenPath(
+            params.getProjectFilesystem(),
             params.getBuildTarget(),
             "%s/__init__.py");
     resolver.addToIndex(
@@ -163,7 +164,7 @@ public class PythonBinaryDescription implements
     BuildTarget linkTreeTarget =
         params.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("link-tree"));
     Path linkTreeRoot = params.getProjectFilesystem().resolve(
-        BuildTargets.getGenPath(linkTreeTarget, "%s"));
+        BuildTargets.getGenPath(params.getProjectFilesystem(), linkTreeTarget, "%s"));
     SymlinkTree linkTree =
         resolver.addToIndex(
             new SymlinkTree(

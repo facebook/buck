@@ -80,6 +80,7 @@ public class Pom {
   private static Path getPomPath(HasMavenCoordinates rule) {
     return rule.getProjectFilesystem().resolve(
         BuildTargets.getGenPath(
+            rule.getProjectFilesystem(),
             rule.getBuildTarget(),
             "%s.pom"));
   }

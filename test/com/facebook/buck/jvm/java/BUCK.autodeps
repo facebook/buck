@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 841bb231e0bb6fd1ea0f6ba513641b1ff0a3aec7 #@#
+#@# GENERATED FILE: DO NOT MODIFY 78ffd9b9a7ef4e498e7c5dbeb84372727d062711 #@#
 {
   "fakepackagefinder" : {
     "deps" : [ ],
@@ -105,6 +105,7 @@
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/android:packageable",
+      "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/model:model",

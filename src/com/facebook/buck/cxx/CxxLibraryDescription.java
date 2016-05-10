@@ -305,6 +305,7 @@ public class CxxLibraryDescription implements
         params.getBuildTarget(),
         cxxPlatform);
     Path sharedLibraryPath = CxxDescriptionEnhancer.getSharedLibraryPath(
+        params.getProjectFilesystem(),
         params.getBuildTarget(),
         sharedLibrarySoname,
         cxxPlatform);
@@ -480,6 +481,7 @@ public class CxxLibraryDescription implements
 
     Path staticLibraryPath =
         CxxDescriptionEnhancer.getStaticLibraryPath(
+            params.getProjectFilesystem(),
             params.getBuildTarget(),
             cxxPlatform.getFlavor(),
             pic);

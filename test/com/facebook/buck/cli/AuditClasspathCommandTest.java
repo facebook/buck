@@ -142,12 +142,18 @@ public class AuditClasspathCommandTest {
         Arrays.asList(
             root.resolve(
                 BuildTargets
-                    .getGenPath(androidLibraryTarget, "lib__%s__output")
+                    .getGenPath(
+                        params.getCell().getFilesystem(),
+                        androidLibraryTarget,
+                        "lib__%s__output")
                     .resolve(androidLibraryTarget.getShortName() + ".jar"))
                 .toString(),
             root.resolve(
                 BuildTargets
-                    .getGenPath(javaLibraryTarget, "lib__%s__output")
+                    .getGenPath(
+                        params.getCell().getFilesystem(),
+                        javaLibraryTarget,
+                        "lib__%s__output")
                     .resolve(javaLibraryTarget.getShortName() + ".jar"))
                 .toString()));
     String expectedClasspath = Joiner.on("\n").join(expectedPaths) + "\n";
@@ -178,7 +184,10 @@ public class AuditClasspathCommandTest {
     expectedPaths.add(
         root.resolve(
             BuildTargets
-                .getGenPath(testJavaTarget, "lib__%s__output")
+                .getGenPath(
+                    params.getCell().getFilesystem(),
+                    testJavaTarget,
+                    "lib__%s__output")
                 .resolve(testJavaTarget.getShortName() + ".jar"))
             .toString());
     expectedClasspath = Joiner.on("\n").join(expectedPaths) + "\n";
@@ -230,15 +239,24 @@ public class AuditClasspathCommandTest {
     String expected = String.format(EXPECTED_JSON,
         root.resolve(
             BuildTargets
-                .getGenPath(javaTarget, "lib__%s__output")
+                .getGenPath(
+                    params.getCell().getFilesystem(),
+                    javaTarget,
+                    "lib__%s__output")
                 .resolve(javaTarget.getShortName() + ".jar")),
         root.resolve(
             BuildTargets
-                .getGenPath(androidTarget, "lib__%s__output")
+                .getGenPath(
+                    params.getCell().getFilesystem(),
+                    androidTarget,
+                    "lib__%s__output")
                 .resolve(androidTarget.getShortName() + ".jar")),
         root.resolve(
             BuildTargets
-                .getGenPath(javaTarget, "lib__%s__output")
+                .getGenPath(
+                    params.getCell().getFilesystem(),
+                    javaTarget,
+                    "lib__%s__output")
                 .resolve(javaTarget.getShortName() + ".jar")));
     assertEquals(expected, console.getTextWrittenToStdOut());
 

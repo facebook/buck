@@ -195,11 +195,14 @@ public class HalideLibraryDescription
         platform.getRanlib(),
         cxxBuckConfig.getArchiveContents(),
         CxxDescriptionEnhancer.getStaticLibraryPath(
+            params.getProjectFilesystem(),
             params.getBuildTarget(),
             platform.getFlavor(),
             CxxSourceRuleFactory.PicType.PIC),
         ImmutableList.<SourcePath>of(
-            new BuildTargetSourcePath(buildTarget, HalideCompile.objectOutputPath(buildTarget))));
+            new BuildTargetSourcePath(
+                buildTarget,
+                HalideCompile.objectOutputPath(buildTarget, params.getProjectFilesystem()))));
   }
 
   private BuildRule createHalideCompile(
@@ -231,7 +234,8 @@ public class HalideLibraryDescription
       BuildTarget compileTarget = resolver
           .requireRule(target.withFlavors(HALIDE_COMPILE_FLAVOR, cxxPlatform.getFlavor()))
           .getBuildTarget();
-      Path outputPath = HalideCompile.headerOutputPath(compileTarget);
+      Path outputPath =
+          HalideCompile.headerOutputPath(compileTarget, params.getProjectFilesystem());
       headersBuilder.put(
           outputPath.getFileName(),
           new BuildTargetSourcePath(compileTarget, outputPath));

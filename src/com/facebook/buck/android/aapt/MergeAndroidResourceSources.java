@@ -45,6 +45,7 @@ public class MergeAndroidResourceSources extends AbstractBuildRule {
     super(buildRuleParams, resolver);
     this.originalDirectories = directories;
     this.destinationDirectory = BuildTargets.getGenPath(
+        getProjectFilesystem(),
         buildRuleParams.getBuildTarget(),
         "__merged_resources_%s__");
   }

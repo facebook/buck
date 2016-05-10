@@ -1,9 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY df12358f8278f2d9b35378cf46888eb5702896f3 #@#
+#@# GENERATED FILE: DO NOT MODIFY b8150d29a24de5a59fc83409a30d276e94665bed #@#
 {
   "thrift" : {
     "deps" : [
       "//src/com/facebook/buck/graph:graph",
-      "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/java:steps",
       "//src/com/facebook/buck/python:support",
       "//src/com/facebook/buck/step/fs:fs",
@@ -15,6 +14,7 @@
     "exported_deps" : [
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:rules",
+      "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/model:model",

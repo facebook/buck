@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 46c0dc89da43fc2b780102823edb292f654c3356 #@#
+#@# GENERATED FILE: DO NOT MODIFY 4b7761bf156c75932243faaa433b7481b1a1c3b8 #@#
 {
   "aar-integration" : {
     "deps" : [
@@ -48,6 +48,7 @@
   },
   "instrumentation-integration" : {
     "deps" : [
+      "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//test/com/facebook/buck/android:testutil",
       "//test/com/facebook/buck/model:testutil",
@@ -74,6 +75,7 @@
       "//test/com/facebook/buck/android:testutil",
       "//test/com/facebook/buck/artifact_cache:testutil",
       "//test/com/facebook/buck/model:testutil",
+      "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",

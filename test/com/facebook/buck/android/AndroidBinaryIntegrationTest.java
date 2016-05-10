@@ -78,6 +78,8 @@ public class AndroidBinaryIntegrationTest {
 
   private ProjectWorkspace workspace;
 
+  private ProjectFilesystem filesystem;
+
   private static final String SIMPLE_TARGET = "//apps/multidex:app";
   private static final String RAW_DEX_TARGET = "//apps/multidex:app-art";
 
@@ -98,13 +100,17 @@ public class AndroidBinaryIntegrationTest {
     workspace = new ProjectWorkspace(
         projectFolderWithPrebuiltTargets.getRoot(), tmpFolder.getRoot());
     workspace.setUp();
+    filesystem = new ProjectFilesystem(workspace.getDestPath());
   }
 
   @Test
   public void testNonExopackageHasSecondary() throws IOException {
     ZipInspector zipInspector = new ZipInspector(
         workspace.getPath(
-            BuildTargets.getGenPath(BuildTargetFactory.newInstance(SIMPLE_TARGET), "%s.apk")));
+            BuildTargets.getGenPath(
+                filesystem,
+                BuildTargetFactory.newInstance(SIMPLE_TARGET),
+                "%s.apk")));
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/metadata.txt");
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary-1.dex.jar");
     zipInspector.assertFileDoesNotExist("classes2.dex");
@@ -121,7 +127,10 @@ public class AndroidBinaryIntegrationTest {
 
     ZipInspector zipInspector = new ZipInspector(
         workspace.getPath(
-            BuildTargets.getGenPath(BuildTargetFactory.newInstance(RAW_DEX_TARGET), "%s.apk")));
+            BuildTargets.getGenPath(
+                filesystem,
+                BuildTargetFactory.newInstance(RAW_DEX_TARGET),
+                "%s.apk")));
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/metadata.txt");
 
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/secondary-1.dex.jar");
@@ -135,7 +144,10 @@ public class AndroidBinaryIntegrationTest {
   public void testDisguisedExecutableIsRenamed() throws IOException {
     ZipInspector zipInspector = new ZipInspector(
         workspace.getPath(
-            BuildTargets.getGenPath(BuildTargetFactory.newInstance(SIMPLE_TARGET), "%s.apk")));
+            BuildTargets.getGenPath(
+                filesystem,
+                BuildTargetFactory.newInstance(SIMPLE_TARGET),
+                "%s.apk")));
 
     zipInspector.assertFileExists("lib/armeabi/libmybinary.so");
   }
@@ -194,7 +206,7 @@ public class AndroidBinaryIntegrationTest {
 
     ZipInspector zipInspector = new ZipInspector(
         workspace.getPath(
-            BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk")));
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
     zipInspector.assertFileExists("lib/armeabi/libgnustl_shared.so");
     zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
@@ -217,6 +229,7 @@ public class AndroidBinaryIntegrationTest {
     ZipInspector zipInspector = new ZipInspector(
         workspace.getPath(
             BuildTargets.getGenPath(
+                filesystem,
                 BuildTargetFactory.newInstance(target),
                 "%s.apk")));
     zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
@@ -234,7 +247,7 @@ public class AndroidBinaryIntegrationTest {
 
     ZipInspector zipInspector = new ZipInspector(
         workspace.getPath(
-            BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk")));
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
     zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_lib.so");
@@ -247,7 +260,7 @@ public class AndroidBinaryIntegrationTest {
 
     ZipInspector zipInspector = new ZipInspector(
         workspace.getPath(
-            BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk")));
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileDoesNotExist("lib/armeabi/libgnustl_shared.so");
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libgnustl_shared.so");
     zipInspector.assertFileDoesNotExist("lib/x86/libgnustl_shared.so");
@@ -260,6 +273,7 @@ public class AndroidBinaryIntegrationTest {
 
     Path mapping = workspace.getPath(
         BuildTargets.getGenPath(
+            filesystem,
             BuildTargetFactory.newInstance(target)
                 .withFlavors(AndroidBinaryGraphEnhancer.AAPT_PACKAGE_FLAVOR),
             "__%s__proguard__/.proguard/mapping.txt"));
@@ -273,7 +287,7 @@ public class AndroidBinaryIntegrationTest {
 
     ZipInspector zipInspector = new ZipInspector(
         workspace.getPath(
-            BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk")));
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("lib/x86/libnative_cxx_foo1.so");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_foo2.so");
     zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_bar.so");
@@ -384,7 +398,7 @@ public class AndroidBinaryIntegrationTest {
     workspace.runBuckCommand("build", target).assertSuccess();
     ZipInspector zipInspector = new ZipInspector(
         workspace.getPath(
-            BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk")));
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_headeronly.so");
   }
 
@@ -394,7 +408,7 @@ public class AndroidBinaryIntegrationTest {
     workspace.runBuckCommand("build", target).assertSuccess();
     ZipInspector zipInspector = new ZipInspector(
         workspace.getPath(
-            BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk")));
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libnative_cxx_x86-only.so");
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libgnustl_shared.so");
     zipInspector.assertFileDoesNotExist("lib/armeabi/libnative_cxx_x86-only.so");
@@ -411,7 +425,7 @@ public class AndroidBinaryIntegrationTest {
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Path apk = workspace.getPath(
-        BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk"));
+        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
     try (ZipInputStream is = new ZipInputStream(Files.newInputStream(apk))) {
       for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
@@ -426,7 +440,7 @@ public class AndroidBinaryIntegrationTest {
     workspace.runBuckCommand("build", target).assertSuccess();
     ZipInspector zipInspector = new ZipInspector(
         workspace.getPath(
-            BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk")));
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("assets/lib/x86/libnative_cxx_libasset.so");
     zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_libasset.so");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_foo1.so");
@@ -441,7 +455,7 @@ public class AndroidBinaryIntegrationTest {
     workspace.runBuckCommand("build", target).assertSuccess();
     ZipInspector zipInspector = new ZipInspector(
         workspace.getPath(
-            BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk")));
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset.so");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_libasset.so");
   }
@@ -452,7 +466,7 @@ public class AndroidBinaryIntegrationTest {
     workspace.runBuckCommand("build", target).assertSuccess();
     ZipInspector zipInspector = new ZipInspector(
         workspace.getPath(
-            BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk")));
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("assets/lib/libs.xzs");
     zipInspector.assertFileExists("assets/lib/metadata.txt");
     zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset.so");
@@ -468,7 +482,7 @@ public class AndroidBinaryIntegrationTest {
     String target = "//apps/sample:app_cxx_lib_asset";
     workspace.runBuckCommand("build", target).assertSuccess();
     Path pathToZip = workspace.getPath(
-        BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk"));
+        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipFile file = new ZipFile(pathToZip.toFile());
     ZipEntry metadata = file.getEntry("assets/lib/metadata.txt");
     assertNotNull(metadata);

@@ -204,7 +204,8 @@ public class AndroidResource extends AbstractBuildRule
       pathToTextSymbolsFile = null;
       pathToRDotJavaPackageFile = null;
     } else {
-      pathToTextSymbolsDir = BuildTargets.getGenPath(buildTarget, "__%s_text_symbols__");
+      pathToTextSymbolsDir =
+          BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__%s_text_symbols__");
       pathToTextSymbolsFile = pathToTextSymbolsDir.resolve("R.txt");
       pathToRDotJavaPackageFile = pathToTextSymbolsDir.resolve("RDotJavaPackage.txt");
     }

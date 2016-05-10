@@ -16,6 +16,7 @@
 
 package com.facebook.buck.thrift;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.Javac;
@@ -91,9 +92,12 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
                 name.replace('/', '-').replace('.', '-').replace('+', '-').replace(' ', '-'))));
   }
 
-  private Path getSourceZipOutputPath(UnflavoredBuildTarget target, String name) {
+  private Path getSourceZipOutputPath(
+      ProjectFilesystem filesystem,
+      UnflavoredBuildTarget target,
+      String name) {
     BuildTarget flavoredTarget = getSourceZipBuildTarget(target, name);
-    return BuildTargets.getScratchPath(flavoredTarget, "%s" + Javac.SRC_ZIP);
+    return BuildTargets.getScratchPath(filesystem, flavoredTarget, "%s" + Javac.SRC_ZIP);
   }
 
   @Override
@@ -117,7 +121,8 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
       Path sourceDirectory = ent.getValue().getOutputDir().resolve("gen-java");
 
       BuildTarget sourceZipTarget = getSourceZipBuildTarget(unflavoredBuildTarget, name);
-      Path sourceZip = getSourceZipOutputPath(unflavoredBuildTarget, name);
+      Path sourceZip =
+          getSourceZipOutputPath(params.getProjectFilesystem(), unflavoredBuildTarget, name);
 
       sourceZipsBuilder.add(
           new SrcZip(

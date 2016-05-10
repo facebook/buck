@@ -80,7 +80,8 @@ public class CxxInferCapture
     this.output = output;
     this.preprocessorDelegate = preprocessorDelegate;
     this.inferConfig = inferConfig;
-    this.resultsDir = BuildTargets.getGenPath(this.getBuildTarget(), "infer-out-%s");
+    this.resultsDir =
+        BuildTargets.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-out-%s");
     this.sanitizer = sanitizer;
   }
 

@@ -142,7 +142,8 @@ public class HaskellBinaryDescription implements
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
       Path absBinaryDir =
-          params.getBuildTarget().getCellPath().resolve(HaskellLinkRule.getOutputDir(binaryTarget));
+          params.getBuildTarget().getCellPath()
+              .resolve(HaskellLinkRule.getOutputDir(binaryTarget, params.getProjectFilesystem()));
       linkFlagsBuilder.addAll(
           MoreIterables.zipAndConcat(
               Iterables.cycle("-optl"),

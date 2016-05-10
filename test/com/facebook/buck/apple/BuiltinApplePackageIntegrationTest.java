@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -37,6 +38,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -50,6 +52,13 @@ import java.util.Set;
 public class BuiltinApplePackageIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+
+  private ProjectFilesystem filesystem;
+
+  @Before
+  public void setUp() {
+    filesystem = new ProjectFilesystem(tmp.getRootPath());
+  }
 
   private static boolean isDirEmpty(final Path directory) throws IOException {
     try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(directory)) {
@@ -88,7 +97,7 @@ public class BuiltinApplePackageIntegrationTest {
         "simple_application_bundle_no_debug");
 
     ZipInspector zipInspector = new ZipInspector(
-        workspace.getPath(BuildTargets.getGenPath(packageTarget, "%s.ipa")));
+        workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")));
     zipInspector.assertFileExists("Payload/DemoApp.app/DemoApp");
     zipInspector.assertFileDoesNotExist("WatchKitSupport");
     zipInspector.assertFileDoesNotExist("WatchKitSupport2");
@@ -135,7 +144,7 @@ public class BuiltinApplePackageIntegrationTest {
 
     Path destination = workspace.getDestPath();
     Unzip.extractZipFile(
-        workspace.getPath(BuildTargets.getGenPath(packageTarget, "%s.ipa")),
+        workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")),
         destination,
         Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
@@ -168,7 +177,7 @@ public class BuiltinApplePackageIntegrationTest {
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
 
     Unzip.extractZipFile(
-        workspace.getPath(BuildTargets.getGenPath(packageTarget, "%s.ipa")),
+        workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")),
         workspace.getDestPath(),
         Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 

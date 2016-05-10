@@ -64,7 +64,10 @@ public class GenAidlTest {
         "java/com/example/base/IWhateverService.aidl");
     String importPath = Paths.get("java/com/example/base").toString();
 
-    BuildTarget target = BuildTargetFactory.newInstance("//java/com/example/base:IWhateverService");
+    BuildTarget target =
+        BuildTargetFactory.newInstance(
+            stubFilesystem.getRootPath(),
+            "//java/com/example/base:IWhateverService");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
         .setProjectFilesystem(stubFilesystem)
         .build();
@@ -97,7 +100,7 @@ public class GenAidlTest {
         .build();
     assertEquals(executionContext.getAndroidPlatformTarget(), androidPlatformTarget);
 
-    Path outputDirectory = BuildTargets.getScratchPath(target, "__%s.aidl");
+    Path outputDirectory = BuildTargets.getScratchPath(stubFilesystem, target, "__%s.aidl");
     MakeCleanDirectoryStep mkdirStep = (MakeCleanDirectoryStep) steps.get(1);
     assertEquals("gen_aidl() should make a directory at " + outputDirectory,
         outputDirectory,

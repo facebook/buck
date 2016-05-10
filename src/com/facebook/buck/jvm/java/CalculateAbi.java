@@ -69,7 +69,7 @@ public class CalculateAbi extends AbstractBuildRule implements SupportsInputBase
   }
 
   private Path getAbiJarPath() {
-    return BuildTargets.getGenPath(getBuildTarget(), "%s")
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
         .resolve(String.format("%s-abi.jar", getBuildTarget().getShortName()));
   }
 

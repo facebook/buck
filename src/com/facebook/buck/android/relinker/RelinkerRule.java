@@ -210,7 +210,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
 
   private Path getScratchPath() {
     // ld doesn't seem to like commas in the version script path so we construct one without commas.
-    Path path = BuildTargets.getScratchPath(getBuildTarget(), "%s");
+    Path path = BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
     String dirname = path.getFileName().toString().replace(",", ".");
     return path.getParent().resolve(dirname);
   }

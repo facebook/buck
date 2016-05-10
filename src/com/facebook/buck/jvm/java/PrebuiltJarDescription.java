@@ -127,6 +127,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
         this.source = source;
         BuildTarget target = params.getBuildTarget();
         this.output = BuildTargets.getGenPath(
+            getProjectFilesystem(),
             target,
             String.format("%s/%%s-gwt.jar", target.getShortName()));
       }

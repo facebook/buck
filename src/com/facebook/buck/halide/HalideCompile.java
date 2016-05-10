@@ -56,8 +56,8 @@ public class HalideCompile extends AbstractBuildRule {
       BuildableContext buildableContext) {
     Path outputDir = getPathToOutput();
     String shortName = getBuildTarget().getShortName();
-    buildableContext.recordArtifact(objectOutputPath(getBuildTarget()));
-    buildableContext.recordArtifact(headerOutputPath(getBuildTarget()));
+    buildableContext.recordArtifact(objectOutputPath(getBuildTarget(), getProjectFilesystem()));
+    buildableContext.recordArtifact(headerOutputPath(getBuildTarget(), getProjectFilesystem()));
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
@@ -75,19 +75,19 @@ public class HalideCompile extends AbstractBuildRule {
 
   @Override
   public Path getPathToOutput() {
-    return pathToOutput(getBuildTarget());
+    return pathToOutput(getBuildTarget(), getProjectFilesystem());
   }
 
-  private static Path pathToOutput(BuildTarget buildTarget) {
-    return BuildTargets.getGenPath(buildTarget, "%s");
+  private static Path pathToOutput(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    return BuildTargets.getGenPath(filesystem, buildTarget, "%s");
   }
 
-  public static Path objectOutputPath(BuildTarget buildTarget) {
-    return pathToOutput(buildTarget).resolve(buildTarget.getShortName() + ".o");
+  public static Path objectOutputPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    return pathToOutput(buildTarget, filesystem).resolve(buildTarget.getShortName() + ".o");
   }
 
-  public static Path headerOutputPath(BuildTarget buildTarget) {
-    return pathToOutput(buildTarget).resolve(buildTarget.getShortName() + ".h");
+  public static Path headerOutputPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    return pathToOutput(buildTarget, filesystem).resolve(buildTarget.getShortName() + ".h");
   }
 
 }

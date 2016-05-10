@@ -33,6 +33,7 @@ import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -99,8 +100,12 @@ public class CxxLuaExtensionDescription implements
   }
 
   @VisibleForTesting
-  protected Path getExtensionPath(BuildTarget target, CxxPlatform cxxPlatform) {
-    return BuildTargets.getGenPath(getExtensionTarget(target, cxxPlatform.getFlavor()), "%s")
+  protected Path getExtensionPath(
+      ProjectFilesystem filesystem,
+      BuildTarget target,
+      CxxPlatform cxxPlatform) {
+    return BuildTargets
+        .getGenPath(filesystem, getExtensionTarget(target, cxxPlatform.getFlavor()), "%s")
         .resolve(getExtensionName(target, cxxPlatform));
   }
 
@@ -192,6 +197,7 @@ public class CxxLuaExtensionDescription implements
     String extensionName = getExtensionName(params.getBuildTarget(), cxxPlatform);
     Path extensionPath =
         getExtensionPath(
+            params.getProjectFilesystem(),
             params.getBuildTarget(),
             cxxPlatform);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(

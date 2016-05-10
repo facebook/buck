@@ -148,7 +148,7 @@ public class MultiarchFileInfos {
         pathResolver,
         info.getRepresentativePlatform().getLipo(),
         inputs,
-        BuildTargets.getGenPath(params.getBuildTarget(), "%s"));
+        BuildTargets.getGenPath(params.getProjectFilesystem(), params.getBuildTarget(), "%s"));
     resolver.addToIndex(multiarchFile);
     return multiarchFile;
   }

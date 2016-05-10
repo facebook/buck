@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -51,6 +52,7 @@ public class DLibraryIntegrationTest {
         workspace
             .resolve(
                 BuildTargets.getGenPath(
+                    new FakeProjectFilesystem(),
                     BuildTargetFactory.newInstance("//:greet#binary"),
                     "%s/greet"))
             .toString());

@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.JsonConcatenate;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -114,6 +115,7 @@ public class CxxDescriptionEnhancer {
             headerVisibility);
     Path headerSymlinkTreeRoot =
         CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+            params.getProjectFilesystem(),
             params.getBuildTarget(),
             cxxPlatform.getFlavor(),
             headerVisibility);
@@ -123,6 +125,7 @@ public class CxxDescriptionEnhancer {
       headerMapLocation =
           Optional.of(
               getHeaderMapPath(
+                  params.getProjectFilesystem(),
                   params.getBuildTarget(),
                   cxxPlatform.getFlavor(),
                   headerVisibility));
@@ -189,13 +192,15 @@ public class CxxDescriptionEnhancer {
    * @return the absolute {@link Path} to use for the symlink tree of headers.
    */
   public static Path getHeaderSymlinkTreePath(
+      ProjectFilesystem filesystem,
       BuildTarget target,
       Flavor platform,
       HeaderVisibility headerVisibility) {
     return target.getCellPath().resolve(
         BuildTargets.getGenPath(
-        createHeaderSymlinkTreeTarget(target, platform, headerVisibility),
-        "%s"));
+            filesystem,
+            createHeaderSymlinkTreeTarget(target, platform, headerVisibility),
+            "%s"));
   }
 
   public static Flavor getHeaderSymlinkTreeFlavor(HeaderVisibility headerVisibility) {
@@ -213,10 +218,12 @@ public class CxxDescriptionEnhancer {
    * @return the {@link Path} to use for the header map for the given symlink tree.
    */
   public static Path getHeaderMapPath(
+      ProjectFilesystem filesystem,
       BuildTarget target,
       Flavor platform,
       HeaderVisibility headerVisibility) {
     return BuildTargets.getGenPath(
+        filesystem,
         createHeaderSymlinkTreeTarget(target, platform, headerVisibility),
         "%s.hmap");
   }
@@ -425,11 +432,13 @@ public class CxxDescriptionEnhancer {
   }
 
   public static Path getStaticLibraryPath(
+      ProjectFilesystem filesystem,
       BuildTarget target,
       Flavor platform,
       CxxSourceRuleFactory.PicType pic) {
     String name = String.format("lib%s.a", target.getShortName());
-    return BuildTargets.getGenPath(createStaticLibraryBuildTarget(target, platform, pic), "%s")
+    return BuildTargets
+        .getGenPath(filesystem, createStaticLibraryBuildTarget(target, platform, pic), "%s")
         .resolve(name);
   }
 
@@ -483,17 +492,19 @@ public class CxxDescriptionEnhancer {
   }
 
   public static Path getSharedLibraryPath(
+      ProjectFilesystem filesystem,
       BuildTarget target,
       String soname,
       CxxPlatform platform) {
     return BuildTargets.getGenPath(
+        filesystem,
         createSharedLibraryBuildTarget(target, platform.getFlavor()),
         "%s/" + soname);
   }
 
   @VisibleForTesting
-  protected static Path getLinkOutputPath(BuildTarget target) {
-    return BuildTargets.getGenPath(target, "%s");
+  protected static Path getLinkOutputPath(BuildTarget target, ProjectFilesystem filesystem) {
+    return BuildTargets.getGenPath(filesystem, target, "%s");
   }
 
   @VisibleForTesting
@@ -594,7 +605,7 @@ public class CxxDescriptionEnhancer {
       Optional<Linker.CxxRuntimeType> cxxRuntimeType)
       throws NoSuchBuildTargetException {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
-    Path linkOutput = getLinkOutputPath(params.getBuildTarget());
+    Path linkOutput = getLinkOutputPath(params.getBuildTarget(), params.getProjectFilesystem());
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
@@ -823,7 +834,9 @@ public class CxxDescriptionEnhancer {
           stripStyle,
           new BuildTargetSourcePath(unstrippedBinaryRule.getBuildTarget()),
           stripTool,
-          CxxDescriptionEnhancer.getLinkOutputPath(stripRuleParams.getBuildTarget()));
+          CxxDescriptionEnhancer.getLinkOutputPath(
+              stripRuleParams.getBuildTarget(),
+              params.getProjectFilesystem()));
       resolver.addToIndex(cxxStrip);
       return cxxStrip;
     }
@@ -1093,9 +1106,11 @@ public class CxxDescriptionEnhancer {
    * @return the {@link Path} to use for the symlink tree of headers.
    */
   public static Path getSharedLibrarySymlinkTreePath(
+      ProjectFilesystem filesystem,
       BuildTarget target,
       Flavor platform) {
     return target.getCellPath().resolve(BuildTargets.getGenPath(
+        filesystem,
         createSharedLibrarySymlinkTreeTarget(target, platform),
         "%s"));
   }
@@ -1116,6 +1131,7 @@ public class CxxDescriptionEnhancer {
             cxxPlatform.getFlavor());
     Path symlinkTreeRoot =
         getSharedLibrarySymlinkTreePath(
+            params.getProjectFilesystem(),
             params.getBuildTarget(),
             cxxPlatform.getFlavor());
 

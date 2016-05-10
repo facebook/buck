@@ -331,7 +331,10 @@ public class AppleBinaryDescription implements
                 params,
                 new SourcePathResolver(resolver),
                 Files.readAllBytes(stubBinaryPath.get()),
-                BuildTargets.getGenPath(params.getBuildTarget(), "%s"),
+                BuildTargets.getGenPath(
+                    params.getProjectFilesystem(),
+                    params.getBuildTarget(),
+                    "%s"),
                 true));
       } catch (IOException e) {
         throw new HumanReadableException("Could not read stub binary " + stubBinaryPath.get());

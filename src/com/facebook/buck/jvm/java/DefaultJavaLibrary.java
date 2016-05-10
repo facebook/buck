@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.model.BuildTarget;
@@ -279,7 +280,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     }
     this.deps = params.getDeps();
     if (!srcs.isEmpty() || !resources.isEmpty()) {
-      this.outputJar = Optional.of(getOutputJarPath(getBuildTarget()));
+      this.outputJar = Optional.of(getOutputJarPath(getBuildTarget(), getProjectFilesystem()));
     } else {
       this.outputJar = Optional.absent();
     }
@@ -331,35 +332,35 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   }
 
   private Path getPathToAbiOutputDir() {
-    return BuildTargets.getGenPath(getBuildTarget(), "lib__%s__abi");
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "lib__%s__abi");
   }
 
-  public static Path getOutputJarDirPath(BuildTarget target) {
-    return BuildTargets.getGenPath(target, "lib__%s__output");
+  public static Path getOutputJarDirPath(BuildTarget target, ProjectFilesystem filesystem) {
+    return BuildTargets.getGenPath(filesystem, target, "lib__%s__output");
   }
 
   private Optional<SourcePath> sourcePathForOutputJar() {
     return outputJar.transform(SourcePaths.getToBuildTargetSourcePath(getBuildTarget()));
   }
 
-  static Path getOutputJarPath(BuildTarget target) {
+  static Path getOutputJarPath(BuildTarget target, ProjectFilesystem filesystem) {
     return Paths.get(
         String.format(
             "%s/%s.jar",
-            getOutputJarDirPath(target),
+            getOutputJarDirPath(target, filesystem),
             target.getShortNameAndFlavorPostfix()));
   }
 
-  static Path getUsedClassesFilePath(BuildTarget target) {
-    return getOutputJarDirPath(target).resolve("used-classes.json");
+  static Path getUsedClassesFilePath(BuildTarget target, ProjectFilesystem filesystem) {
+    return getOutputJarDirPath(target, filesystem).resolve("used-classes.json");
   }
 
   /**
    * @return directory path relative to the project root where .class files will be generated.
    *     The return value does not end with a slash.
    */
-  public static Path getClassesDir(BuildTarget target) {
-    return BuildTargets.getScratchPath(target, "lib__%s__classes");
+  public static Path getClassesDir(BuildTarget target, ProjectFilesystem filesystem) {
+    return BuildTargets.getScratchPath(filesystem, target, "lib__%s__classes");
   }
 
   @Override
@@ -439,7 +440,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.
     BuildTarget target = getBuildTarget();
-    Path outputDirectory = getClassesDir(target);
+    Path outputDirectory = getClassesDir(target, getProjectFilesystem());
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDirectory));
 
     SuggestBuildRules suggestBuildRule =
@@ -489,13 +490,17 @@ public class DefaultJavaLibrary extends AbstractBuildRule
             outputDirectory,
             finder));
 
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), getOutputJarDirPath(target)));
+    steps.add(
+        new MakeCleanDirectoryStep(
+            getProjectFilesystem(),
+            getOutputJarDirPath(target, getProjectFilesystem())));
 
     // Only run javac if there are .java files to compile.
     if (!getJavaSrcs().isEmpty()) {
       ClassUsageFileWriter usedClassesFileWriter;
       if (trackClassUsage) {
-        final Path usedClassesFilePath = getUsedClassesFilePath(getBuildTarget());
+        final Path usedClassesFilePath =
+            getUsedClassesFilePath(getBuildTarget(), getProjectFilesystem());
         ClassUsageTracker classUsageTracker = new ClassUsageTracker();
         depFileListBuilder = new DependencyFileInputListBuilder(deps, classUsageTracker);
         usedClassesFileWriter = new DefaultClassUsageFileWriter(
@@ -508,10 +513,12 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       }
 
       // This adds the javac command, along with any supporting commands.
-      Path pathToSrcsList = BuildTargets.getGenPath(getBuildTarget(), "__%s__srcs");
+      Path pathToSrcsList =
+          BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__srcs");
       steps.add(new MkdirStep(getProjectFilesystem(), pathToSrcsList.getParent()));
 
-      Path scratchDir = BuildTargets.getGenPath(target, "lib__%s____working_directory");
+      Path scratchDir =
+          BuildTargets.getGenPath(getProjectFilesystem(), target, "lib__%s____working_directory");
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
       Optional<Path> workingDirectory = Optional.of(scratchDir);
 
@@ -538,7 +545,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     }
 
 
-    Path abiJar = getOutputJarDirPath(target)
+    Path abiJar = getOutputJarDirPath(target, getProjectFilesystem())
         .resolve(String.format("%s-abi.jar", target.getShortNameAndFlavorPostfix()));
 
     if (outputJar.isPresent()) {
@@ -561,6 +568,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       steps.add(new CalculateAbiStep(buildableContext, getProjectFilesystem(), output, abiJar));
     } else {
       Path scratch = BuildTargets.getScratchPath(
+          getProjectFilesystem(),
           target,
           String.format("%%s/%s-temp-abi.jar", target.getShortNameAndFlavorPostfix()));
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratch.getParent()));
@@ -578,7 +586,10 @@ public class DefaultJavaLibrary extends AbstractBuildRule
    */
   @Override
   public JavaLibrary.Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
-    return JavaLibraryRules.initializeFromDisk(getBuildTarget(), onDiskBuildInfo);
+    return JavaLibraryRules.initializeFromDisk(
+        getBuildTarget(),
+        getProjectFilesystem(),
+        onDiskBuildInfo);
   }
 
   @Override

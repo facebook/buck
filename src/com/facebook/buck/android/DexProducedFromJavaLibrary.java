@@ -211,7 +211,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
   }
 
   public Path getPathToDex() {
-    return BuildTargets.getGenPath(getBuildTarget(), "%s.dex.jar");
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.dex.jar");
   }
 
   public boolean hasOutput() {

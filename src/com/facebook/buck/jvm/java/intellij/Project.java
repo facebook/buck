@@ -278,14 +278,14 @@ public class Project {
         BuildTarget dummyRDotJavaTarget =
             AndroidLibraryGraphEnhancer.getDummyRDotJavaTarget(
                 androidLibrary.getBuildTarget());
-        Path src = DummyRDotJava.getRDotJavaSrcFolder(dummyRDotJavaTarget);
+        Path src = DummyRDotJava.getRDotJavaSrcFolder(dummyRDotJavaTarget, projectFilesystem);
         rJava = Optional.of(src);
       } else if (srcRule instanceof AndroidResource) {
         AndroidResource androidResource = (AndroidResource) srcRule;
         BuildTarget dummyRDotJavaTarget =
             AndroidLibraryGraphEnhancer.getDummyRDotJavaTarget(
                 androidResource.getBuildTarget());
-        Path src = DummyRDotJava.getRDotJavaSrcFolder(dummyRDotJavaTarget);
+        Path src = DummyRDotJava.getRDotJavaSrcFolder(dummyRDotJavaTarget, projectFilesystem);
         rJava = Optional.of(src);
       } else {
         rJava = Optional.absent();

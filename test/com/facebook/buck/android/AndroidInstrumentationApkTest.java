@@ -137,16 +137,29 @@ public class AndroidInstrumentationApkTest {
     assertEquals(
         "//apps:app should have three JAR files to dex.",
         ImmutableSet.of(
-            BuildTargets.getGenPath(javaLibrary1.getBuildTarget(), "%s.jar"),
-            BuildTargets.getGenPath(javaLibrary2.getBuildTarget(), "%s.jar"),
-            BuildTargets.getGenPath(javaLibrary3.getBuildTarget(), "%s.jar")),
+            BuildTargets.getGenPath(
+                javaLibrary1.getProjectFilesystem(),
+                javaLibrary1.getBuildTarget(),
+                "%s.jar"),
+            BuildTargets.getGenPath(
+                javaLibrary2.getProjectFilesystem(),
+                javaLibrary2.getBuildTarget(),
+                "%s.jar"),
+            BuildTargets.getGenPath(
+                javaLibrary3.getProjectFilesystem(),
+                javaLibrary3.getBuildTarget(),
+                "%s.jar")),
         FluentIterable
             .from(androidBinary.getAndroidPackageableCollection().getClasspathEntriesToDex())
             .transform(pathResolver.deprecatedPathFunction())
             .toSet());
     assertEquals(
         "//apps:instrumentation should have one JAR file to dex.",
-        ImmutableSet.of(BuildTargets.getGenPath(javaLibrary4.getBuildTarget(), "%s.jar")),
+        ImmutableSet.of(
+            BuildTargets.getGenPath(
+                javaLibrary4.getProjectFilesystem(),
+                javaLibrary4.getBuildTarget(),
+                "%s.jar")),
         FluentIterable
             .from(
                 androidInstrumentationApk

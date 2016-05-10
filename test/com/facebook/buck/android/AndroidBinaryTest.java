@@ -122,7 +122,10 @@ public class AndroidBinaryTest {
     BuildTarget aaptPackageTarget = binaryBuildTarget
         .withFlavors(AndroidBinaryGraphEnhancer.AAPT_PACKAGE_FLAVOR);
     Path proguardOutputDir =
-        BuildTargets.getGenPath(aaptPackageTarget, "__%s__proguard__/.proguard/");
+        BuildTargets.getGenPath(
+            androidBinary.getProjectFilesystem(),
+            aaptPackageTarget,
+            "__%s__proguard__/.proguard/");
     ImmutableSet<Path> expectedRecordedArtifacts = ImmutableSet.of(
         proguardOutputDir.resolve("configuration.txt"),
         proguardOutputDir.resolve("mapping.txt"),
@@ -146,16 +149,28 @@ public class AndroidBinaryTest {
         ProGuardObfuscateStep.SdkProguardType.DEFAULT,
         Optional.<Integer>absent(),
         ImmutableMap.of(
-            BuildTargets.getGenPath(libraryOneRule.getBuildTarget(), "lib__%s__output")
+            BuildTargets
+                .getGenPath(
+                    libraryOneRule.getProjectFilesystem(),
+                    libraryOneRule.getBuildTarget(),
+                    "lib__%s__output")
                 .resolve(libraryOneRule.getBuildTarget().getShortName() + ".jar"),
             proguardOutputDir.resolve(
-                BuildTargets.getGenPath(libraryOneRule.getBuildTarget(), "lib__%s__output/")
+                BuildTargets
+                    .getGenPath(
+                        libraryOneRule.getProjectFilesystem(),
+                        libraryOneRule.getBuildTarget(),
+                        "lib__%s__output/")
                     .resolve(
                         libraryOne.getBuildTarget().getShortNameAndFlavorPostfix() +
                             "-obfuscated.jar"))),
         ImmutableSet.of(
             libraryTwo.getBuildTarget().getUnflavoredBuildTarget().getCellPath().resolve(
-                BuildTargets.getGenPath(libraryTwoRule.getBuildTarget(), "lib__%s__output")
+                BuildTargets
+                    .getGenPath(
+                        libraryTwoRule.getProjectFilesystem(),
+                        libraryTwoRule.getBuildTarget(),
+                        "lib__%s__output")
                     .resolve(
                         libraryTwoRule.getBuildTarget().getShortNameAndFlavorPostfix() + ".jar"))),
         proguardOutputDir,
@@ -217,7 +232,10 @@ public class AndroidBinaryTest {
         .setKeystore(keystore.getBuildTarget())
         .build(ruleResolver);
     assertEquals(
-        BuildTargets.getGenPath(targetInRootDirectory, "%s.apk"),
+        BuildTargets.getGenPath(
+            ruleInRootDirectory.getProjectFilesystem(),
+            targetInRootDirectory,
+            "%s.apk"),
         ruleInRootDirectory.getApkPath());
 
     BuildTarget targetInNonRootDirectory =
@@ -228,7 +246,10 @@ public class AndroidBinaryTest {
         .setKeystore(keystore.getBuildTarget())
         .build(ruleResolver);
     assertEquals(
-        BuildTargets.getGenPath(targetInNonRootDirectory, "%s.apk"),
+        BuildTargets.getGenPath(
+            ruleInNonRootDirectory.getProjectFilesystem(),
+            targetInNonRootDirectory,
+            "%s.apk"),
         ruleInNonRootDirectory.getApkPath());
   }
 
@@ -247,13 +268,20 @@ public class AndroidBinaryTest {
     BuildTarget libBaseTarget =
         BuildTargetFactory.newInstance("//first-party/orca/lib-base:lib-base");
     Path proguardDir = rule.getProguardOutputFromInputClasspath(
-        BuildTargets.getScratchPath(libBaseTarget, "lib__%s__classes"));
+        BuildTargets.getScratchPath(
+            rule.getProjectFilesystem(),
+            libBaseTarget,
+            "lib__%s__classes"));
     assertEquals(
         BuildTargets.getGenPath(
+            rule.getProjectFilesystem(),
             target.withFlavors(AndroidBinaryGraphEnhancer.AAPT_PACKAGE_FLAVOR),
             "__%s__proguard__/.proguard")
             .resolve(
-                BuildTargets.getScratchPath(libBaseTarget, "lib__%s__classes-obfuscated.jar")),
+                BuildTargets.getScratchPath(
+                    rule.getProjectFilesystem(),
+                    libBaseTarget,
+                    "lib__%s__classes-obfuscated.jar")),
         proguardDir);
   }
 
@@ -380,9 +408,11 @@ public class AndroidBinaryTest {
     assertEquals(
         ImmutableList.of(
             BuildTargets.getScratchPath(
+                buildRule.getProjectFilesystem(),
                 target.withFlavors(AndroidBinaryGraphEnhancer.RESOURCES_FILTER_FLAVOR),
                 "__filtered__%s__/0"),
             BuildTargets.getScratchPath(
+                buildRule.getProjectFilesystem(),
                 target.withFlavors(AndroidBinaryGraphEnhancer.RESOURCES_FILTER_FLAVOR),
                 "__filtered__%s__/1")),
         filteredDirs.build());

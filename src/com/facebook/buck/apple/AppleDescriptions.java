@@ -96,6 +96,7 @@ public class AppleDescriptions {
       TargetNode<? extends CxxLibraryDescription.Arg> targetNode,
       HeaderVisibility headerVisibility) {
     return BuildTargets.getGenPath(
+        targetNode.getRuleFactoryParams().getProjectFilesystem(),
         BuildTarget.of(targetNode.getBuildTarget().getUnflavoredBuildTarget()),
         "%s" + AppleHeaderVisibilities.getHeaderSymlinkTreeSuffix(headerVisibility));
   }
@@ -441,7 +442,7 @@ public class AppleDescriptions {
         appleCxxPlatform.getDsymutil(),
         appleCxxPlatform.getLldb(),
         new BuildTargetSourcePath(unstrippedBinaryBuildRule.getBuildTarget()),
-        AppleDsym.getDsymOutputPath(params.getBuildTarget()));
+        AppleDsym.getDsymOutputPath(params.getBuildTarget(), params.getProjectFilesystem()));
     resolver.addToIndex(appleDsym);
     return appleDsym;
   }

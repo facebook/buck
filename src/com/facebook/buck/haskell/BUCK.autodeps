@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 5656940bdd828596b975dfbded2207fab8cd84f0 #@#
+#@# GENERATED FILE: DO NOT MODIFY 65b2e9ea4b48e4144857d736b0b596cd3c2e8417 #@#
 {
   "haskell" : {
     "deps" : [
@@ -16,6 +16,7 @@
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/io:executable-finder",
+      "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",

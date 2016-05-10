@@ -82,7 +82,7 @@ public class GenAidl extends AbstractBuildRule {
     this.aidlFilePath = aidlFilePath;
     this.importPath = importPath;
     BuildTarget buildTarget = params.getBuildTarget();
-    this.genPath = BuildTargets.getGenPath(buildTarget, "%s");
+    this.genPath = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s");
     this.output = genPath.resolve(
         String.format("lib%s%s", buildTarget.getShortNameAndFlavorPostfix(), SRC_ZIP));
   }
@@ -107,7 +107,7 @@ public class GenAidl extends AbstractBuildRule {
     commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), genPath));
 
     BuildTarget target = getBuildTarget();
-    Path outputDirectory = BuildTargets.getScratchPath(target, "__%s.aidl");
+    Path outputDirectory = BuildTargets.getScratchPath(getProjectFilesystem(), target, "__%s.aidl");
     commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDirectory));
 
     AidlStep command = new AidlStep(

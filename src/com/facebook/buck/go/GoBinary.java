@@ -71,7 +71,9 @@ public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
     this.mainObject = mainObject;
     this.platform = platform;
     this.output = BuildTargets.getGenPath(
-        params.getBuildTarget(), "%s/" + params.getBuildTarget().getShortName());
+        getProjectFilesystem(),
+        params.getBuildTarget(),
+        "%s/" + params.getBuildTarget().getShortName());
     this.linkerFlags = linkerFlags;
   }
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CalculateAbiStep;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
@@ -79,7 +80,7 @@ public class DummyRDotJava extends AbstractBuildRule
     this.androidResourceDeps = FluentIterable.from(androidResourceDeps)
         .toSortedList(HasBuildTarget.BUILD_TARGET_COMPARATOR);
     this.abiJar = abiJar;
-    this.outputJar = getOutputJarPath(getBuildTarget());
+    this.outputJar = getOutputJarPath(getBuildTarget(), getProjectFilesystem());
     this.javacOptions = javacOptions;
     this.forceFinalResourceIds = forceFinalResourceIds;
     this.unionPackage = unionPackage;
@@ -90,7 +91,7 @@ public class DummyRDotJava extends AbstractBuildRule
       BuildContext context,
       final BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    final Path rDotJavaSrcFolder = getRDotJavaSrcFolder(getBuildTarget());
+    final Path rDotJavaSrcFolder = getRDotJavaSrcFolder(getBuildTarget(), getProjectFilesystem());
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotJavaSrcFolder));
 
     // Generate the .java files and record where they will be written in javaSourceFilePaths.
@@ -127,14 +128,15 @@ public class DummyRDotJava extends AbstractBuildRule
     final Path rDotJavaClassesFolder = getRDotJavaBinFolder();
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotJavaClassesFolder));
 
-    Path pathToAbiOutputDir = getPathToAbiOutputDir(getBuildTarget());
+    Path pathToAbiOutputDir = getPathToAbiOutputDir(getBuildTarget(), getProjectFilesystem());
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToAbiOutputDir));
     Path pathToAbiOutputFile = pathToAbiOutputDir.resolve("abi.jar");
 
     Path pathToJarOutputDir = outputJar.getParent();
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToJarOutputDir));
 
-    Path pathToSrcsList = BuildTargets.getGenPath(getBuildTarget(), "__%s__srcs");
+    Path pathToSrcsList =
+        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__srcs");
     steps.add(new MkdirStep(getProjectFilesystem(), pathToSrcsList.getParent()));
 
     // Compile the .java files.
@@ -174,24 +176,24 @@ public class DummyRDotJava extends AbstractBuildRule
     return HasAndroidResourceDeps.ABI_HASHER.apply(androidResourceDeps);
   }
 
-  public static Path getRDotJavaSrcFolder(BuildTarget buildTarget) {
-    return BuildTargets.getScratchPath(buildTarget, "__%s_rdotjava_src__");
+  public static Path getRDotJavaSrcFolder(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    return BuildTargets.getScratchPath(filesystem, buildTarget, "__%s_rdotjava_src__");
   }
 
-  public static Path getRDotJavaBinFolder(BuildTarget buildTarget) {
-    return BuildTargets.getScratchPath(buildTarget, "__%s_rdotjava_bin__");
+  public static Path getRDotJavaBinFolder(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    return BuildTargets.getScratchPath(filesystem, buildTarget, "__%s_rdotjava_bin__");
   }
 
-  private static Path getPathToAbiOutputDir(BuildTarget buildTarget) {
-    return BuildTargets.getGenPath(buildTarget, "__%s_dummyrdotjava_abi__");
+  private static Path getPathToAbiOutputDir(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    return BuildTargets.getGenPath(filesystem, buildTarget, "__%s_dummyrdotjava_abi__");
   }
 
-  private static Path getPathToOutputDir(BuildTarget buildTarget) {
-    return BuildTargets.getGenPath(buildTarget, "__%s_dummyrdotjava_output__");
+  private static Path getPathToOutputDir(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    return BuildTargets.getGenPath(filesystem, buildTarget, "__%s_dummyrdotjava_output__");
   }
 
-  private static Path getOutputJarPath(BuildTarget buildTarget) {
-    return getPathToOutputDir(buildTarget).resolve(
+  private static Path getOutputJarPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    return getPathToOutputDir(buildTarget, filesystem).resolve(
         String.format("%s.jar", buildTarget.getShortNameAndFlavorPostfix()));
   }
 
@@ -201,7 +203,7 @@ public class DummyRDotJava extends AbstractBuildRule
   }
 
   public Path getRDotJavaBinFolder() {
-    return getRDotJavaBinFolder(getBuildTarget());
+    return getRDotJavaBinFolder(getBuildTarget(), getProjectFilesystem());
   }
 
   public ImmutableList<HasAndroidResourceDeps> getAndroidResourceDeps() {

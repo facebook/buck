@@ -48,7 +48,9 @@ public class RustBinary extends RustLinkable implements BinaryBuildRule {
             .build(),
         features,
         BuildTargets.getGenPath(
-            params.getBuildTarget(), "%s/" + params.getBuildTarget().getShortName()),
+            params.getProjectFilesystem(),
+            params.getBuildTarget(),
+            "%s/" + params.getBuildTarget().getShortName()),
         compiler);
   }
 

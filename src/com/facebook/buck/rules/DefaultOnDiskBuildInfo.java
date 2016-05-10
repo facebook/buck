@@ -48,7 +48,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
       ProjectFilesystem projectFilesystem,
       ObjectMapper objectMapper) {
     this.projectFilesystem = projectFilesystem;
-    this.metadataDirectory = BuildInfo.getPathToMetadataDirectory(target);
+    this.metadataDirectory = BuildInfo.getPathToMetadataDirectory(target, projectFilesystem);
     this.objectMapper = objectMapper;
   }
 

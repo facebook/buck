@@ -23,8 +23,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -51,6 +53,7 @@ public class ParserIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = workspace.newBuildTarget("//:base_genrule");
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     ProjectWorkspace.ProcessResult buildResult = workspace.runBuckCommand(
         "build", "", "-v", "2");
@@ -58,7 +61,7 @@ public class ParserIntegrationTest {
 
     workspace.verify(
         Paths.get("base_genrule_output.expected"),
-        BuildTargets.getGenPath(target, "%s"));
+        BuildTargets.getGenPath(filesystem, target, "%s"));
   }
 
   /**

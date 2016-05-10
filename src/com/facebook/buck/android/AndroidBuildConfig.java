@@ -152,7 +152,11 @@ public class AndroidBuildConfig extends AbstractBuildRule {
     this.defaultValues = defaultValues;
     this.valuesFile = valuesFile;
     this.useConstantExpressions = useConstantExpressions;
-    this.pathToOutputFile = BuildTargets.getGenPath(buildRuleParams.getBuildTarget(), "__%s__")
+    this.pathToOutputFile = BuildTargets
+        .getGenPath(
+            buildRuleParams.getProjectFilesystem(),
+            buildRuleParams.getBuildTarget(),
+            "__%s__")
         .resolve("BuildConfig.java");
   }
 

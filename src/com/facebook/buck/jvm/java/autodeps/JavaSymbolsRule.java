@@ -78,7 +78,7 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
     this.generatedSymbols = generatedSymbols;
     this.objectMapper = objectMapper;
     this.projectFilesystem = projectFilesystem;
-    this.outputPath = BuildTargets.getGenPath(buildTarget, "__%s__.json");
+    this.outputPath = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__%s__.json");
     this.outputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
 

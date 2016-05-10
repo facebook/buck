@@ -1,22 +1,23 @@
 /*
  * Copyright 2015-present Facebook, Inc.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License. You may obtain
- *  a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- *  License for the specific language governing permissions and limitations
- *  under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
  */
 
 package com.facebook.buck.js;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -40,6 +41,8 @@ public class AndroidReactNativeLibraryIntegrationTest {
 
   private ProjectWorkspace workspace;
 
+  private ProjectFilesystem filesystem;
+
   @BeforeClass
   public static void setupOnce() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
@@ -50,6 +53,7 @@ public class AndroidReactNativeLibraryIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "android_rn", tmpFolder);
     workspace.setUp();
+    filesystem = new ProjectFilesystem(workspace.getDestPath());
   }
 
   @Test
@@ -57,7 +61,7 @@ public class AndroidReactNativeLibraryIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//apps/sample:app");
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     ZipInspector zipInspector = new ZipInspector(
-        workspace.getPath(BuildTargets.getGenPath(target, "%s.apk")));
+        workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s.apk")));
     zipInspector.assertFileExists("assets/SampleBundle.js");
     zipInspector.assertFileExists("res/drawable-mdpi-v4/image.png");
     zipInspector.assertFileExists("res/drawable-hdpi-v4/image.png");
@@ -69,7 +73,7 @@ public class AndroidReactNativeLibraryIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//apps/sample:app-unbundle");
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     ZipInspector zipInspector = new ZipInspector(
-        workspace.getPath(BuildTargets.getGenPath(target, "%s.apk")));
+        workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s.apk")));
     zipInspector.assertFileExists("assets/SampleBundle.js");
     zipInspector.assertFileExists("assets/js/helpers.js");
     zipInspector.assertFileExists("res/drawable-mdpi-v4/image.png");
@@ -83,7 +87,7 @@ public class AndroidReactNativeLibraryIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//apps/sample:app-without-rn-res");
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     ZipInspector zipInspector = new ZipInspector(
-        workspace.getPath(BuildTargets.getGenPath(target, "%s.apk")));
+        workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s.apk")));
     zipInspector.assertFileExists("assets/SampleBundle.js");
 
     workspace.runBuckCommand("clean");
@@ -94,7 +98,7 @@ public class AndroidReactNativeLibraryIntegrationTest {
 
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     zipInspector = new ZipInspector(
-        workspace.getPath(BuildTargets.getGenPath(target, "%s.apk")));
+        workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s.apk")));
     zipInspector.assertFileExists("assets/SampleBundle.js");
   }
 

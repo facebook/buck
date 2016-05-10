@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -36,6 +37,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -52,6 +54,13 @@ public class AppleTestIntegrationTest {
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
+
+  private ProjectFilesystem filesystem;
+
+  @Before
+  public void setUp() {
+    filesystem = new ProjectFilesystem(tmp.getRootPath());
+  }
 
   @Test
   public void testAppleTestHeaderSymlinkTree() throws IOException {
@@ -73,7 +82,7 @@ public class AppleTestIntegrationTest {
     Path inputPath = projectRoot.resolve(
         buildTarget.getBasePath());
     Path outputPath = projectRoot.resolve(
-        BuildTargets.getGenPath(buildTarget, "%s"));
+        BuildTargets.getGenPath(filesystem, buildTarget, "%s"));
 
     assertIsSymbolicLink(
         outputPath.resolve("Header.h"),
@@ -107,6 +116,7 @@ public class AppleTestIntegrationTest {
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path outputPath = projectRoot.resolve(
         BuildTargets.getGenPath(
+            filesystem,
             appleTestBundleFlavoredBuildTarget,
             "%s"));
     Path bundlePath = outputPath.resolve("foo.xctest");
@@ -140,6 +150,7 @@ public class AppleTestIntegrationTest {
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path outputPath = projectRoot.resolve(
         BuildTargets.getGenPath(
+            filesystem,
             appleTestBundleFlavoredBuildTarget,
             "%s"));
     Path bundlePath = outputPath.resolve("foo.xctest");
@@ -163,6 +174,7 @@ public class AppleTestIntegrationTest {
     workspace.verify(
         Paths.get("foo_output.expected"),
         BuildTargets.getGenPath(
+            filesystem,
             BuildTarget.builder(target)
                 .addFlavors(AppleDebugFormat.DWARF.getFlavor())
                 .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
@@ -185,6 +197,7 @@ public class AppleTestIntegrationTest {
     workspace.verify(
         Paths.get("foo_output.expected"),
         BuildTargets.getGenPath(
+            filesystem,
             BuildTarget.builder(target)
                 .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
                 .addFlavors(AppleDebugFormat.DWARF.getFlavor())
@@ -207,6 +220,7 @@ public class AppleTestIntegrationTest {
     workspace.verify(
         Paths.get("foo_output.expected"),
         BuildTargets.getGenPath(
+            filesystem,
             BuildTarget.builder(buildTarget)
                 .addFlavors(AppleDebugFormat.DWARF.getFlavor())
                 .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
@@ -222,6 +236,7 @@ public class AppleTestIntegrationTest {
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path outputPath = projectRoot.resolve(
         BuildTargets.getGenPath(
+            filesystem,
             appleTestBundleFlavoredBuildTarget,
             "%s"));
     Path bundlePath = outputPath.resolve("foo.xctest");
@@ -269,6 +284,7 @@ public class AppleTestIntegrationTest {
     workspace.verify(
         Paths.get("foo_output.expected"),
         BuildTargets.getGenPath(
+            filesystem,
             BuildTarget.builder(target)
                 .addFlavors(AppleDebugFormat.DWARF.getFlavor())
                 .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
@@ -538,6 +554,7 @@ public class AppleTestIntegrationTest {
         workspace
             .getPath(
                 BuildTargets.getGenPath(
+                    filesystem,
                     workspace.newBuildTarget(
                         "//:AppTests#apple-test-library,iphonesimulator-x86_64,shared"),
                     "%s/libAppTests#apple-test-library.dylib"))

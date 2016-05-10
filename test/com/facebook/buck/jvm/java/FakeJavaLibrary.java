@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
@@ -47,6 +48,14 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
   private ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
+
+  public FakeJavaLibrary(
+      BuildTarget target,
+      SourcePathResolver resolver,
+      ProjectFilesystem filesystem,
+      ImmutableSortedSet<BuildRule> deps) {
+    super(target, filesystem, resolver, deps.toArray(new BuildRule[deps.size()]));
+  }
 
   public FakeJavaLibrary(
       BuildTarget target,
@@ -93,7 +102,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
 
   @Override
   public Path getPathToOutput() {
-    return BuildTargets.getGenPath(getBuildTarget(), "%s.jar");
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.jar");
   }
 
   @Override

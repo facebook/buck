@@ -33,6 +33,7 @@ import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -118,8 +119,11 @@ public class LuaBinaryDescription implements
     return new Arg();
   }
 
-  private Path getOutputPath(BuildTarget target) {
-    return BuildTargets.getGenPath(target, "%s" + luaConfig.getExtension());
+  private Path getOutputPath(BuildTarget target, ProjectFilesystem filesystem) {
+    return BuildTargets.getGenPath(
+        filesystem,
+        target,
+        "%s" + luaConfig.getExtension());
   }
 
   private CxxSource getNativeStarterCxxSource(
@@ -133,7 +137,8 @@ public class LuaBinaryDescription implements
         BuildTarget.builder(baseParams.getBuildTarget())
             .addFlavors(ImmutableFlavor.of("native-starter-cxx-source"))
             .build();
-    Path output = BuildTargets.getGenPath(target, "%s/native-starter.cpp");
+    Path output =
+        BuildTargets.getGenPath(baseParams.getProjectFilesystem(), target, "%s/native-starter.cpp");
     ruleResolver.addToIndex(
         WriteStringTemplateRule.from(
             baseParams,
@@ -212,7 +217,7 @@ public class LuaBinaryDescription implements
             .build();
     Iterable<? extends AbstractCxxLibrary> nativeStarterDeps =
         getNativeStarterDeps(ruleResolver, nativeStarterLibrary);
-    Path output = getOutputPath(baseParams.getBuildTarget());
+    Path output = getOutputPath(baseParams.getBuildTarget(), baseParams.getProjectFilesystem());
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
         CxxSourceRuleFactory.requirePreprocessAndCompileRules(
             baseParams,
@@ -289,7 +294,8 @@ public class LuaBinaryDescription implements
         BuildTarget.builder(baseParams.getBuildTarget())
             .addFlavors(ImmutableFlavor.of("pure-starter"))
             .build();
-    final Path output = getOutputPath(baseParams.getBuildTarget());
+    final Path output =
+        getOutputPath(baseParams.getBuildTarget(), baseParams.getProjectFilesystem());
     final Tool lua = luaConfig.getLua(ruleResolver);
     ruleResolver.addToIndex(
         WriteStringTemplateRule.from(
@@ -445,7 +451,7 @@ public class LuaBinaryDescription implements
     BuildTarget linkTreeTarget = params.getBuildTarget().withAppendedFlavors(flavor);
     Path linkTreeRoot =
         params.getProjectFilesystem().resolve(
-            BuildTargets.getGenPath(linkTreeTarget, "%s"));
+            BuildTargets.getGenPath(params.getProjectFilesystem(), linkTreeTarget, "%s"));
     return resolver.addToIndex(
         SymlinkTree.from(
             params.copyWithChanges(
@@ -467,7 +473,7 @@ public class LuaBinaryDescription implements
       String mainModule,
       final LuaPackageComponents components)
       throws NoSuchBuildTargetException {
-    Path output = getOutputPath(params.getBuildTarget());
+    Path output = getOutputPath(params.getBuildTarget(), params.getProjectFilesystem());
 
     final SymlinkTree modulesLinkTree =
         resolver.addToIndex(
@@ -582,7 +588,7 @@ public class LuaBinaryDescription implements
     return new LuaBinary(
         params.appendExtraDeps(binary.getDeps(pathResolver)),
         pathResolver,
-        getOutputPath(params.getBuildTarget()),
+        getOutputPath(params.getBuildTarget(), params.getProjectFilesystem()),
         binary,
         args.mainModule,
         components,

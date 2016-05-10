@@ -63,6 +63,7 @@ public class CxxInferAnalyze extends AbstractBuildRule {
     super(buildRuleParams, pathResolver);
     this.captureAndAnalyzeRules = captureAndAnalyzeRules;
     this.resultsDir = BuildTargets.getGenPath(
+        getProjectFilesystem(),
         this.getBuildTarget(),
         "infer-analysis-%s");
     this.reportFile = this.resultsDir.resolve("report.json");

@@ -29,11 +29,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.HasJsonField;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -46,6 +48,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
@@ -56,6 +59,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Ordering;
 
 import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -90,6 +94,14 @@ public class DefaultJavaLibraryIntegrationTest {
 
   private ProjectWorkspace workspace;
 
+  private ProjectFilesystem filesystem;
+
+  @Before
+  public void setUp() {
+    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    filesystem = new ProjectFilesystem(tmp.getRootPath());
+  }
+
   @Test
   public void testBuildJavaLibraryWithoutSrcsAndVerifyAbi() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -102,7 +114,10 @@ public class DefaultJavaLibraryIntegrationTest {
     ProcessResult buildResult = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     buildResult.assertSuccess("Successful build should exit with 0.");
     Path outputPath =
-        BuildTargets.getGenPath(target, "lib__%s__output/" + target.getShortName() + ".jar");
+        BuildTargets.getGenPath(
+            filesystem,
+            target,
+            "lib__%s__output/" + target.getShortName() + ".jar");
     Path outputFile = workspace.getPath(outputPath);
     assertTrue(Files.exists(outputFile));
     // TODO(bolinfest): When we produce byte-for-byte identical JAR files across builds, do:
@@ -256,7 +271,10 @@ public class DefaultJavaLibraryIntegrationTest {
     buildResult.assertSuccess();
 
     Path outputFile = workspace.getPath(
-        BuildTargets.getGenPath(target, "lib__%s__output/" + target.getShortName() + ".jar"));
+        BuildTargets.getGenPath(
+            filesystem,
+            target,
+            "lib__%s__output/" + target.getShortName() + ".jar"));
     assertTrue(Files.exists(outputFile));
 
     ImmutableSet.Builder<String> jarContents = ImmutableSet.builder();
@@ -290,23 +308,27 @@ public class DefaultJavaLibraryIntegrationTest {
         workspace.runBuckCommand("build", bizTarget.getFullyQualifiedName());
     buildResult.assertSuccess("Successful build should exit with 0.");
 
-    Path utilRuleKeyPath = BuildTargets.getScratchPath(utilTarget, ".%s/metadata/RULE_KEY");
+    Path utilRuleKeyPath =
+        BuildTargets.getScratchPath(filesystem, utilTarget, ".%s/metadata/RULE_KEY");
     String utilRuleKey = getContents(utilRuleKeyPath);
     Path utilAbiRuleKeyPath =
-        BuildTargets.getScratchPath(utilTarget, ".%s/metadata/INPUT_BASED_RULE_KEY");
+        BuildTargets.getScratchPath(filesystem, utilTarget, ".%s/metadata/INPUT_BASED_RULE_KEY");
     String utilAbiRuleKey = getContents(utilAbiRuleKeyPath);
 
-    Path bizRuleKeyPath = BuildTargets.getScratchPath(bizTarget, ".%s/metadata/RULE_KEY");
+    Path bizRuleKeyPath =
+        BuildTargets.getScratchPath(filesystem, bizTarget, ".%s/metadata/RULE_KEY");
     String bizRuleKey = getContents(bizRuleKeyPath);
     Path bizAbiRuleKeyPath =
-        BuildTargets.getScratchPath(bizTarget, ".%s/metadata/INPUT_BASED_RULE_KEY");
+        BuildTargets.getScratchPath(filesystem, bizTarget, ".%s/metadata/INPUT_BASED_RULE_KEY");
     String bizAbiRuleKey = getContents(bizAbiRuleKeyPath);
 
     Path utilOutputPath = BuildTargets.getGenPath(
+        filesystem,
         utilTarget,
         "lib__%s__output/" + utilTarget.getShortName() + ".jar");
     long utilJarSize = Files.size(workspace.getPath(utilOutputPath));
     Path bizOutputPath = BuildTargets.getGenPath(
+        filesystem,
         bizTarget,
         "lib__%s__output/" + bizTarget.getShortName() + ".jar");
     FileTime bizJarLastModified = Files.getLastModifiedTime(workspace.getPath(bizOutputPath));
@@ -526,6 +548,7 @@ public class DefaultJavaLibraryIntegrationTest {
     buildResult.assertSuccess("Successful build should exit with 0.");
 
     Path bizClassUsageFilePath = BuildTargets.getGenPath(
+        filesystem,
         bizTarget,
         "lib__%s__output/used-classes.json");
 
@@ -586,8 +609,8 @@ public class DefaultJavaLibraryIntegrationTest {
 
     for (Path filename :
         new Path[]{
-            BuildTargets.getGenPath(binaryTarget, "%s.jar"),
-            BuildTargets.getGenPath(binary2Target, "%s.jar")}) {
+            BuildTargets.getGenPath(filesystem, binaryTarget, "%s.jar"),
+            BuildTargets.getGenPath(filesystem, binary2Target, "%s.jar")}) {
       Path file = workspace.getPath(filename);
       try (Zip zip = new Zip(file, /* for writing? */ false)) {
         Set<String> allNames = zip.getFileNames();
@@ -649,7 +672,8 @@ public class DefaultJavaLibraryIntegrationTest {
 
     result.assertSuccess();
 
-    Path classesDir = workspace.getPath(BuildTargets.getScratchPath(target, "lib__%s__classes"));
+    Path classesDir =
+        workspace.getPath(BuildTargets.getScratchPath(filesystem, target, "lib__%s__classes"));
     assertTrue(Files.exists(classesDir));
     assertTrue(Files.isDirectory(classesDir));
     ArrayList<String> classFiles = new ArrayList<>();
@@ -676,14 +700,16 @@ public class DefaultJavaLibraryIntegrationTest {
 
     result.assertSuccess();
 
-    Path classesDir = workspace.getPath(BuildTargets.getScratchPath(target, "lib__%s__classes"));
+    Path classesDir =
+        workspace.getPath(BuildTargets.getScratchPath(filesystem, target, "lib__%s__classes"));
 
     assertThat(Files.exists(classesDir), is(Boolean.TRUE));
     assertThat(
         "There should be no class files in disk",
         ImmutableList.copyOf(classesDir.toFile().listFiles()), hasSize(0));
 
-    Path jarPath = workspace.getPath(BuildTargets.getGenPath(target, "lib__%s__output/a.jar"));
+    Path jarPath =
+        workspace.getPath(BuildTargets.getGenPath(filesystem, target, "lib__%s__output/a.jar"));
     assertTrue(Files.exists(jarPath));
     ZipInputStream zip = new ZipInputStream(new FileInputStream(jarPath.toFile()));
     assertThat(zip.getNextEntry().getName(), is("A.class"));
@@ -704,19 +730,22 @@ public class DefaultJavaLibraryIntegrationTest {
 
     result.assertSuccess();
 
-    Path classesDir = workspace.getPath(BuildTargets.getScratchPath(target, "lib__%s__classes"));
+    Path classesDir =
+        workspace.getPath(BuildTargets.getScratchPath(filesystem, target, "lib__%s__classes"));
     assertThat(Files.exists(classesDir), is(Boolean.TRUE));
     assertThat(
         "There should be no class files in disk",
         ImmutableList.copyOf(classesDir.toFile().listFiles()), hasSize(0));
 
-    Path sourcesDir = workspace.getPath(BuildTargets.getAnnotationPath(target, "__%s_gen__"));
+    Path sourcesDir =
+        workspace.getPath(BuildTargets.getAnnotationPath(filesystem, target, "__%s_gen__"));
     assertThat(Files.exists(sourcesDir), is(Boolean.TRUE));
     assertThat(
         "There should one source file in disk, from the Immutable class.",
         ImmutableList.copyOf(sourcesDir.toFile().listFiles()), hasSize(1));
 
-    Path jarPath = workspace.getPath(BuildTargets.getGenPath(target, "lib__%s__output/a.jar"));
+    Path jarPath =
+        workspace.getPath(BuildTargets.getGenPath(filesystem, target, "lib__%s__output/a.jar"));
     assertTrue(Files.exists(jarPath));
 
     ZipInspector zipInspector = new ZipInspector(jarPath);

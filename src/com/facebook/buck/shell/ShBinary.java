@@ -77,6 +77,7 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
 
     BuildTarget target = params.getBuildTarget();
     this.output = BuildTargets.getGenPath(
+        getProjectFilesystem(),
         target,
         String.format("__%%s__/%s.sh", target.getShortNameAndFlavorPostfix()));
   }

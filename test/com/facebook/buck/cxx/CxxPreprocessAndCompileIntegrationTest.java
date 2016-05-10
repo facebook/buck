@@ -22,10 +22,12 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleSuccessType;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -90,8 +92,9 @@ public class CxxPreprocessAndCompileIntegrationTest {
   @Test
   public void sanitizeWorkingDirectory() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//:simple#default,static");
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
-    Path lib = workspace.getPath(BuildTargets.getGenPath(target, "%s/libsimple.a"));
+    Path lib = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s/libsimple.a"));
     String contents =
         Files.asByteSource(lib.toFile())
             .asCharSource(Charsets.ISO_8859_1)
@@ -102,8 +105,10 @@ public class CxxPreprocessAndCompileIntegrationTest {
   @Test
   public void sanitizeWorkingDirectoryWhenBuildingAssembly() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//:simple_assembly#default,static");
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
-    Path lib = workspace.getPath(BuildTargets.getGenPath(target, "%s/libsimple_assembly.a"));
+    Path lib =
+        workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s/libsimple_assembly.a"));
     String contents =
         Files.asByteSource(lib.toFile())
             .asCharSource(Charsets.ISO_8859_1)
@@ -115,6 +120,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   public void sanitizeSymlinkedWorkingDirectory() throws IOException {
     TemporaryFolder folder = new TemporaryFolder();
     folder.create();
+    ProjectFilesystem filesystem = new ProjectFilesystem(folder.getRoot().toPath());
 
     // Setup up a symlink to our working directory.
     Path symlinkedRoot = folder.getRoot().toPath().resolve("symlinked-root");
@@ -135,7 +141,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
         .assertSuccess();
 
     // Verify that we still sanitized this path correctly.
-    Path lib = workspace.getPath(BuildTargets.getGenPath(target, "%s/libsimple.a"));
+    Path lib = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s/libsimple.a"));
     String contents =
         Files.asByteSource(lib.toFile())
             .asCharSource(Charsets.ISO_8859_1)

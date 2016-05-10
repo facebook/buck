@@ -102,7 +102,7 @@ public class DCompileBuildRule extends AbstractBuildRule {
 
   @Override
   public Path getPathToOutput() {
-    return BuildTargets.getGenPath(getBuildTarget(), "%s/" + name + ".o");
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/" + name + ".o");
   }
 
   @Override

@@ -23,6 +23,7 @@ import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -108,6 +109,7 @@ public class CxxLibraryIntegrationTest {
         Files.isRegularFile(
             workspace.getPath(
                 BuildTargets.getGenPath(
+                    new ProjectFilesystem(workspace.getDestPath()),
                     BuildTargetFactory.newInstance("//subdir:library#default,shared"),
                     "%s/libsubdir_library.so"))));
     result.assertSuccess();

@@ -93,11 +93,12 @@ public class CxxLink
     if (linker instanceof HasLinkerMap) {
       buildableContext.recordArtifact(((HasLinkerMap) linker).linkerMapPath(output));
     }
-    Path scratchDir = BuildTargets.getScratchPath(getBuildTarget(), "%s-tmp");
+    Path scratchDir =
+        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s-tmp");
     Path argFilePath = getProjectFilesystem().getRootPath().resolve(
-        BuildTargets.getScratchPath(getBuildTarget(), "%s__argfile.txt"));
+        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s__argfile.txt"));
     Path fileListPath = getProjectFilesystem().getRootPath().resolve(
-        BuildTargets.getScratchPath(getBuildTarget(), "%s__filelist.txt"));
+        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s__filelist.txt"));
 
     // Try to find all the cell roots used during the link.  This isn't technically correct since,
     // in theory not all inputs need to come from build rules, but it probably works in practice.

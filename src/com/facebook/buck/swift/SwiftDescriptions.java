@@ -69,7 +69,7 @@ public class SwiftDescriptions {
         new SourcePathResolver(resolver),
         swiftCompiler.get(),
         moduleName,
-        BuildTargets.getGenPath(params.getBuildTarget(), "%s"),
+        BuildTargets.getGenPath(params.getProjectFilesystem(), params.getBuildTarget(), "%s"),
         sources);
   }
 }

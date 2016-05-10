@@ -52,8 +52,8 @@ public class BuiltinApplePackage extends AbstractBuildRule {
     super(params, resolver);
     BuildTarget buildTarget = params.getBuildTarget();
     // TODO(ryu2): This will be different for Mac apps.
-    this.pathToOutputFile = BuildTargets.getGenPath(buildTarget, "%s.ipa");
-    this.temp = BuildTargets.getScratchPath(buildTarget, "__temp__%s");
+    this.pathToOutputFile = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s.ipa");
+    this.temp = BuildTargets.getScratchPath(getProjectFilesystem(), buildTarget, "__temp__%s");
     this.bundle = bundle;
   }
 

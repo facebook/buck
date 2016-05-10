@@ -163,12 +163,13 @@ public class NdkCxxPlatformIntegrationTest {
   @Test
   public void testWorkingDirectoryAndNdkHeaderPathsAreSanitized() throws IOException {
     ProjectWorkspace workspace = setupWorkspace("ndk_debug_paths");
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
     BuildTarget target =
         BuildTargetFactory.newInstance(String.format("//:lib#android-%s,static", arch));
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     Path lib =
         workspace.getPath(
-            BuildTargets.getGenPath(target, "%s/lib" + target.getShortName() + ".a"));
+            BuildTargets.getGenPath(filesystem, target, "%s/lib" + target.getShortName() + ".a"));
     String contents =
         MorePaths.asByteSource(lib)
             .asCharSource(Charsets.ISO_8859_1)

@@ -189,7 +189,10 @@ public class GnuLinker implements Linker {
     }
 
     private Path getLinkerScript() {
-      return BuildTargets.getGenPath(getBuildTarget(), "%s/linker_script.txt");
+      return BuildTargets.getGenPath(
+          getProjectFilesystem(),
+          getBuildTarget(),
+          "%s/linker_script.txt");
     }
 
     @Override

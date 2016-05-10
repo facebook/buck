@@ -80,7 +80,8 @@ public class AndroidManifest extends AbstractBuildRule {
     this.skeletonFile = skeletonFile;
     this.manifestFiles = ImmutableSortedSet.copyOf(manifestFiles);
     BuildTarget buildTarget = params.getBuildTarget();
-    this.pathToOutputFile = BuildTargets.getGenPath(buildTarget, "AndroidManifest__%s__.xml");
+    this.pathToOutputFile =
+        BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "AndroidManifest__%s__.xml");
   }
 
   @Override

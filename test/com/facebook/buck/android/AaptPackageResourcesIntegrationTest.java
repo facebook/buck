@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertNotEquals;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildInfo;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -58,7 +59,8 @@ public class AaptPackageResourcesIntegrationTest {
     // test the files directly for now.
     Path pathRelativeToProjectRoot = BuildInfo
         .getPathToMetadataDirectory(
-            BuildTargetFactory.newInstance("//apps/sample:app#aapt_package"))
+            BuildTargetFactory.newInstance("//apps/sample:app#aapt_package"),
+            new ProjectFilesystem(workspace.getDestPath()))
         .resolve(AaptPackageResources.RESOURCE_PACKAGE_HASH_KEY);
     String firstHash = workspace.getFileContents(pathRelativeToProjectRoot);
 

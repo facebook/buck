@@ -1193,7 +1193,10 @@ public class CachingBuildEngine implements BuildEngine {
       if (cacheResult.getType() == CacheResultType.HIT) {
 
         // If we have a hit, also write out the build metadata.
-        Path metadataDir = BuildInfo.getPathToMetadataDirectory(rule.getBuildTarget());
+        Path metadataDir =
+            BuildInfo.getPathToMetadataDirectory(
+                rule.getBuildTarget(),
+                rule.getProjectFilesystem());
         for (Map.Entry<String, String> ent : cacheResult.getMetadata().entrySet()) {
           Path dest = metadataDir.resolve(ent.getKey());
           filesystem.createParentDirs(dest);
@@ -1369,7 +1372,8 @@ public class CachingBuildEngine implements BuildEngine {
 
   @VisibleForTesting
   protected Path getManifestPath(BuildRule rule) {
-    return BuildInfo.getPathToMetadataDirectory(rule.getBuildTarget()).resolve(BuildInfo.MANIFEST);
+    return BuildInfo.getPathToMetadataDirectory(rule.getBuildTarget(), rule.getProjectFilesystem())
+        .resolve(BuildInfo.MANIFEST);
   }
 
   @VisibleForTesting

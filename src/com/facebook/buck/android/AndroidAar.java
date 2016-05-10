@@ -74,8 +74,9 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
       ImmutableSet<SourcePath> nativeLibAssetsDirectories) {
     super(params, resolver);
     BuildTarget buildTarget = params.getBuildTarget();
-    this.pathToOutputFile = BuildTargets.getGenPath(buildTarget, AAR_FORMAT);
-    this.temp = BuildTargets.getScratchPath(buildTarget, "__temp__%s");
+    this.pathToOutputFile =
+        BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, AAR_FORMAT);
+    this.temp = BuildTargets.getScratchPath(getProjectFilesystem(), buildTarget, "__temp__%s");
     this.manifest = manifest;
     this.androidResource = androidResource;
     this.assembledAssetsDirectory = assembledAssetsDirectory;

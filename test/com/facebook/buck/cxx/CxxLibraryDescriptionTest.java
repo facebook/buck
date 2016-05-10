@@ -79,6 +79,7 @@ import java.util.regex.Pattern;
 public class CxxLibraryDescriptionTest {
 
   private static Optional<SourcePath> getHeaderMaps(
+      ProjectFilesystem filesystem,
       BuildTarget target,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
@@ -92,6 +93,7 @@ public class CxxLibraryDescriptionTest {
                   cxxPlatform.getFlavor(),
                   headerVisibility),
               CxxDescriptionEnhancer.getHeaderMapPath(
+                  filesystem,
                   target,
                   cxxPlatform.getFlavor(),
                   headerVisibility)));
@@ -210,6 +212,7 @@ public class CxxLibraryDescriptionTest {
         publicHeaders.getHeaderMap(),
         Matchers.equalTo(
             getHeaderMaps(
+                filesystem,
                 target,
                 resolver,
                 cxxPlatform,
@@ -242,6 +245,7 @@ public class CxxLibraryDescriptionTest {
         privateHeaders.getHeaderMap(),
         Matchers.equalTo(
             getHeaderMaps(
+                filesystem,
                 target,
                 resolver,
                 cxxPlatform,
@@ -526,6 +530,7 @@ public class CxxLibraryDescriptionTest {
         publicHeaders.getHeaderMap(),
         Matchers.equalTo(
             getHeaderMaps(
+                filesystem,
                 target,
                 resolver,
                 cxxPlatform,

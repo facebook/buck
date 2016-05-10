@@ -63,6 +63,8 @@ public class AndroidResourceFilterIntegrationTest {
 
   private ProjectWorkspace workspace;
 
+  private ProjectFilesystem filesystem;
+
   @BeforeClass
   public static void findBuildToolsVersion() {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
@@ -84,6 +86,7 @@ public class AndroidResourceFilterIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "android_project", tmpFolder);
     workspace.setUp();
+    filesystem = new ProjectFilesystem(workspace.getDestPath());
   }
 
   @Test
@@ -93,7 +96,7 @@ public class AndroidResourceFilterIntegrationTest {
     result.assertSuccess();
 
     Path apkFile = workspace.getPath(
-        BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk"));
+        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
     if (isBuildToolsNew) {
@@ -114,7 +117,7 @@ public class AndroidResourceFilterIntegrationTest {
     result.assertSuccess();
 
     Path apkFile = workspace.getPath(
-        BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk"));
+        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
     if (isBuildToolsNew) {
@@ -135,7 +138,7 @@ public class AndroidResourceFilterIntegrationTest {
     result.assertSuccess();
 
     Path apkFile = workspace.getPath(
-        BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk"));
+        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     String iconPath = isBuildToolsNew
         ? "res/drawable-mdpi-v4/app_icon.png"
         : "res/drawable-mdpi/app_icon.png";
@@ -153,7 +156,7 @@ public class AndroidResourceFilterIntegrationTest {
     buildLog.assertTargetBuiltLocally(target);
 
     apkFile = workspace.getPath(
-        BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk"));
+        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     long secondImageCrc = new ZipInspector(apkFile).getCrc(iconPath);
 
     assertNotEquals(firstImageCrc, secondImageCrc);
@@ -166,7 +169,7 @@ public class AndroidResourceFilterIntegrationTest {
     result.assertSuccess();
 
     Path apkFile = workspace.getPath(
-        BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk"));
+        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
     if (isBuildToolsNew) {
@@ -187,7 +190,7 @@ public class AndroidResourceFilterIntegrationTest {
     result.assertSuccess();
 
     Path apkFile = workspace.getPath(
-        BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk"));
+        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
     zipInspector.assertFileExists("assets/strings/fr.fbstr");
@@ -220,7 +223,7 @@ public class AndroidResourceFilterIntegrationTest {
     result.assertSuccess();
 
     Path apkFile = workspace.getPath(
-        BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk"));
+        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
     zipInspector.assertFileExists("assets/strings/fr.fbstr");
@@ -243,7 +246,7 @@ public class AndroidResourceFilterIntegrationTest {
     workspace.runBuckBuild(target).assertSuccess();
 
     Path apkFile = workspace.getPath(
-        BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk"));
+        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
     long firstCrc = zipInspector.getCrc("assets/asset_file.txt");
@@ -255,7 +258,7 @@ public class AndroidResourceFilterIntegrationTest {
     workspace.runBuckBuild(target).assertSuccess();
 
     apkFile = workspace.getPath(
-        BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk"));
+        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     zipInspector = new ZipInspector(apkFile);
 
     long secondCrc = zipInspector.getCrc("assets/asset_file.txt");
@@ -269,7 +272,7 @@ public class AndroidResourceFilterIntegrationTest {
     String target = "//apps/sample:app";
     workspace.runBuckBuild(target).assertSuccess();
     Path apkFile = workspace.getPath(
-        BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk"));
+        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
 
     int matchingLines = runAaptDumpResources(apkFile);
     assertEquals(2, matchingLines);
@@ -277,7 +280,7 @@ public class AndroidResourceFilterIntegrationTest {
     target = "//apps/sample:app_en";
     workspace.runBuckBuild(target).assertSuccess();
     apkFile = workspace.getPath(
-        BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk"));
+        BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
 
     matchingLines = runAaptDumpResources(apkFile);
     assertEquals(1, matchingLines);

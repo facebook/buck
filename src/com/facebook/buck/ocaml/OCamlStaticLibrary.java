@@ -79,8 +79,14 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
             new BuildTargetSourcePath(
                 ocamlLibraryBuild.getBuildTarget(),
                 isBytecode
-                ? OCamlBuildContext.getBytecodeOutputPath(staticBuildTarget, /* isLibrary */ true)
-                : OCamlBuildContext.getNativeOutputPath(staticBuildTarget, /* isLibrary */ true))));
+                ? OCamlBuildContext.getBytecodeOutputPath(
+                    staticBuildTarget,
+                    getProjectFilesystem(),
+                    /* isLibrary */ true)
+                : OCamlBuildContext.getNativeOutputPath(
+                    staticBuildTarget,
+                    getProjectFilesystem(),
+                    /* isLibrary */ true))));
 
     // Add args and inputs for C object files.
     for (SourcePath objFile : objFiles) {
@@ -104,6 +110,7 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
   public Path getIncludeLibDir() {
     return OCamlBuildContext.getCompileNativeOutputDir(
         staticLibraryTarget.getUnflavoredBuildTarget(),
+        getProjectFilesystem(),
         true);
   }
 

@@ -276,7 +276,8 @@ public class CxxPreprocessAndCompile
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    Path scratchDir = BuildTargets.getScratchPath(getBuildTarget(), "%s-tmp");
+    Path scratchDir =
+        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s-tmp");
     buildableContext.recordArtifact(output);
     return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),

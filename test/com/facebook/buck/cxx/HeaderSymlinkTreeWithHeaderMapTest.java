@@ -102,8 +102,9 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
 
     // The output path used by the buildable for the link tree.
     symlinkTreeRoot = projectFilesystem.resolve(
-        BuildTargets.getGenPath(buildTarget, "%s/symlink-tree-root"));
-    headerMapPath = BuildTargets.getGenPath(buildTarget, "%s/symlink-tree-root.hmap");
+        BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root"));
+    headerMapPath =
+        BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root.hmap");
 
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule = new HeaderSymlinkTreeWithHeaderMap(

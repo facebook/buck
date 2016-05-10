@@ -24,10 +24,12 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.clang.HeaderMap;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -84,14 +86,16 @@ public class CxxCompilationDatabaseIntegrationTest {
   public void binaryWithDependenciesCompilationDatabase() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_dep#compilation-database");
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     Path rootPath = tmp.getRootPath();
     assertEquals(
-        BuildTargets.getGenPath(target, "__%s.json"),
+        BuildTargets.getGenPath(filesystem, target, "__%s.json"),
         rootPath.relativize(compilationDatabase));
 
     Path binaryHeaderSymlinkTreeFolder =
         BuildTargets.getGenPath(
+            filesystem,
             target.withFlavors(
                 ImmutableFlavor.of("default"),
                 CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
@@ -101,6 +105,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:library_with_header");
     Path libraryExportedHeaderSymlinkTreeFolder =
         BuildTargets.getGenPath(
+            filesystem,
             libraryTarget.withFlavors(
                 ImmutableFlavor.of("default"),
                 CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
@@ -132,6 +137,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add(
                 BuildTargets
                     .getGenPath(
+                        filesystem,
                         target.withFlavors(
                             ImmutableFlavor.of("default"),
                             ImmutableFlavor.of("compile-" + sanitize("foo.cpp.o"))),
@@ -146,22 +152,25 @@ public class CxxCompilationDatabaseIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "compilation_database", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target =
         BuildTargetFactory.newInstance("//:library_with_header#default,compilation-database");
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
     Path rootPath = tmp.getRootPath();
     assertEquals(
-        BuildTargets.getGenPath(target, "__%s.json"),
+        BuildTargets.getGenPath(filesystem, target, "__%s.json"),
         rootPath.relativize(compilationDatabase));
 
     Path headerSymlinkTreeFolder =
         BuildTargets.getGenPath(
+            filesystem,
             target.withFlavors(
                 ImmutableFlavor.of("default"),
                 CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
             "%s");
     Path exportedHeaderSymlinkTreeFolder =
         BuildTargets.getGenPath(
+            filesystem,
             target.withFlavors(
                 ImmutableFlavor.of("default"),
                 CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
@@ -194,6 +203,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add(
                 BuildTargets
                     .getGenPath(
+                        filesystem,
                         target.withFlavors(
                             ImmutableFlavor.of("default"),
                             ImmutableFlavor.of("compile-pic-" + sanitize("bar.cpp.o"))),
@@ -209,20 +219,23 @@ public class CxxCompilationDatabaseIntegrationTest {
         this, "compilation_database", tmp);
     workspace.setUp();
     BuildTarget target = BuildTargetFactory.newInstance("//:test#default,compilation-database");
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
     Path rootPath = tmp.getRootPath();
     assertEquals(
-        BuildTargets.getGenPath(target, "__%s.json"),
+        BuildTargets.getGenPath(filesystem, target, "__%s.json"),
         rootPath.relativize(compilationDatabase));
 
     Path binaryHeaderSymlinkTreeFolder =
         BuildTargets.getGenPath(
+            filesystem,
             target.withFlavors(
                 ImmutableFlavor.of("default"),
                 CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
             "%s");
     Path binaryExportedHeaderSymlinkTreeFolder =
         BuildTargets.getGenPath(
+            filesystem,
             target.withFlavors(
                 ImmutableFlavor.of("default"),
                 CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
@@ -251,6 +264,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add(
                 BuildTargets
                     .getGenPath(
+                        filesystem,
                         target.withFlavors(
                             ImmutableFlavor.of("default"),
                             ImmutableFlavor.of("compile-pic-" + sanitize("test.cpp.o"))),
@@ -266,6 +280,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "compilation_database", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     // This test only fails if the directory cache is enabled and we don't update
     // the header map/symlink tree correctly when fetching from the cache.
@@ -281,12 +296,14 @@ public class CxxCompilationDatabaseIntegrationTest {
 
     Path headerSymlinkTreeFolder =
         BuildTargets.getGenPath(
+            filesystem,
             target.withFlavors(
                 ImmutableFlavor.of("default"),
                 CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
             "%s");
     Path exportedHeaderSymlinkTreeFolder =
         BuildTargets.getGenPath(
+            filesystem,
             target.withFlavors(
                 ImmutableFlavor.of("default"),
                 CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
@@ -340,6 +357,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "compilation_database_with_deps", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     // This test only fails if the directory cache is enabled and we don't update
     // the header map/symlink tree correctly when fetching from the cache.
@@ -355,10 +373,12 @@ public class CxxCompilationDatabaseIntegrationTest {
 
     Path dep1ExportedSymlinkTreeFolder =
         BuildTargets.getGenPath(
+            filesystem,
             BuildTargetFactory.newInstance("//dep1:dep1#default,headers"),
             "%s");
     Path dep2ExportedSymlinkTreeFolder =
         BuildTargets.getGenPath(
+            filesystem,
             BuildTargetFactory.newInstance("//dep2:dep2#default,headers"),
             "%s");
 

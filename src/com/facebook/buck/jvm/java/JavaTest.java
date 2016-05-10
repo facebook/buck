@@ -221,7 +221,7 @@ public class JavaTest
   }
 
   private Path getClassPathFile() {
-    return BuildTargets.getGenPath(getBuildTarget(), "%s/classpath-file");
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/classpath-file");
   }
 
   private JUnitStep getJUnitStep(
@@ -404,7 +404,11 @@ public class JavaTest
                   getBuildTarget().getShortNameAndFlavorPostfix()));
       LOG.debug("Using overridden test temp dir base %s", base);
     } else {
-      base = BuildTargets.getScratchPath(getBuildTarget(), "__java_test_%s_tmp__");
+      base =
+          BuildTargets.getScratchPath(
+              getProjectFilesystem(),
+              getBuildTarget(),
+              "__java_test_%s_tmp__");
       LOG.debug("Using standard test temp dir base %s", base);
     }
     String subdir = BuckConstant.oneTimeTestSubdirectory;

@@ -88,7 +88,7 @@ public class HalideLibraryDescriptionTest {
     BuildTarget flavoredLibTarget = libTarget.withFlavors(
         HalideLibraryDescription.HALIDE_COMPILE_FLAVOR,
         cxxPlatform.getFlavor());
-    Path headerPath = HalideCompile.headerOutputPath(flavoredLibTarget);
+    Path headerPath = HalideCompile.headerOutputPath(flavoredLibTarget, lib.getProjectFilesystem());
     CxxSymlinkTreeHeaders publicHeaders =
         (CxxSymlinkTreeHeaders) lib.getCxxPreprocessorInput(
             cxxPlatform,

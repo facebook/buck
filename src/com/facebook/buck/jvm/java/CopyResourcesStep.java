@@ -113,9 +113,9 @@ public class CopyResourcesStep implements Step {
                   ((HasOutputName) underlyingRule.get()).getOutputName()));
         } else {
           Path genOutputParent =
-              BuildTargets.getGenPath(underlyingTarget, "%s").getParent();
+              BuildTargets.getGenPath(filesystem, underlyingTarget, "%s").getParent();
           Path scratchOutputParent =
-              BuildTargets.getScratchPath(underlyingTarget, "%s").getParent();
+              BuildTargets.getScratchPath(filesystem, underlyingTarget, "%s").getParent();
           Optional<Path> outputPath =
               MorePaths.stripPrefix(relativePathToResource, genOutputParent)
                   .or(MorePaths.stripPrefix(relativePathToResource, scratchOutputParent));

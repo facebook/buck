@@ -151,7 +151,7 @@ public class Genrule extends AbstractBuildRule
 
     this.out = out;
     BuildTarget target = params.getBuildTarget();
-    this.pathToOutDirectory = BuckConstant.getGenPath()
+    this.pathToOutDirectory = getProjectFilesystem().getBuckPaths().getGenDir()
         .resolve(target.getBasePath())
         .resolve(target.getShortName());
     this.pathToOutFile = this.pathToOutDirectory.resolve(out);

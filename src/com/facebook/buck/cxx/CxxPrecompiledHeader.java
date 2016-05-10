@@ -113,7 +113,8 @@ public class CxxPrecompiledHeader
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    Path scratchDir = BuildTargets.getScratchPath(getBuildTarget(), "%s_tmp");
+    Path scratchDir =
+        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s_tmp");
     return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
         new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),

@@ -18,6 +18,7 @@ package com.facebook.buck.thrift;
 
 import com.facebook.buck.cxx.HeaderSymlinkTree;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -83,8 +84,8 @@ public class ThriftLibraryDescription
    * included by other rules.
    */
   @VisibleForTesting
-  protected Path getIncludeRoot(BuildTarget target) {
-    return BuildTargets.getScratchPath(target, "%s/include-symlink-tree");
+  protected Path getIncludeRoot(BuildTarget target, ProjectFilesystem filesystem) {
+    return BuildTargets.getScratchPath(filesystem, target, "%s/include-symlink-tree");
   }
 
   @VisibleForTesting
@@ -115,10 +116,13 @@ public class ThriftLibraryDescription
    * thrift source for the given language.
    */
   @VisibleForTesting
-  protected Path getThriftCompilerOutputDir(BuildTarget target, String name) {
+  protected Path getThriftCompilerOutputDir(
+      ProjectFilesystem filesystem,
+      BuildTarget target,
+      String name) {
     Preconditions.checkArgument(target.isFlavored());
     BuildTarget flavoredTarget = createThriftCompilerBuildTarget(target, name);
-    return BuildTargets.getGenPath(flavoredTarget, "%s/sources");
+    return BuildTargets.getGenPath(filesystem, flavoredTarget, "%s/sources");
   }
 
   // Find all transitive thrift library dependencies of this rule.
@@ -185,7 +189,8 @@ public class ThriftLibraryDescription
       ImmutableSortedSet<String> genSrcs = Preconditions.checkNotNull(generatedSources.get(name));
 
       BuildTarget target = createThriftCompilerBuildTarget(params.getBuildTarget(), name);
-      Path outputDir = getThriftCompilerOutputDir(params.getBuildTarget(), name);
+      Path outputDir =
+          getThriftCompilerOutputDir(params.getProjectFilesystem(), params.getBuildTarget(), name);
 
       compileRules.put(
           name,
@@ -279,7 +284,9 @@ public class ThriftLibraryDescription
       ImmutableMap<Path, SourcePath> includes = includesBuilder.build();
 
       // Create the symlink tree build rule and add it to the resolver.
-      Path includeRoot = params.getProjectFilesystem().resolve(getIncludeRoot(target));
+      Path includeRoot =
+          params.getProjectFilesystem()
+              .resolve(getIncludeRoot(target, params.getProjectFilesystem()));
       BuildTarget symlinkTreeTarget = createThriftIncludeSymlinkTreeTarget(target);
       HeaderSymlinkTree symlinkTree =
         new HeaderSymlinkTree(
@@ -373,7 +380,7 @@ public class ThriftLibraryDescription
           new ThriftSource(
               compilerRule,
               services,
-              getThriftCompilerOutputDir(target, ent.getKey())));
+              getThriftCompilerOutputDir(params.getProjectFilesystem(), target, ent.getKey())));
     }
     ImmutableMap<String, ThriftSource> thriftSources = thriftSourceBuilder.build();
 

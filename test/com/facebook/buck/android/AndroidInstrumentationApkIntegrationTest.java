@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -43,13 +44,14 @@ public class AndroidInstrumentationApkIntegrationTest {
         "android_instrumentation_apk_integration_test",
         tmpFolder);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     String target = "//:app_cxx_lib_dep";
     workspace.runBuckCommand("build", target).assertSuccess();
 
     ZipInspector zipInspector = new ZipInspector(
         workspace.getPath(
-            BuildTargets.getGenPath(BuildTargetFactory.newInstance(target), "%s.apk")));
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("lib/armeabi/libcxx.so");
     zipInspector.assertFileExists("lib/armeabi/libgnustl_shared.so");
     zipInspector.assertFileExists("lib/armeabi-v7a/libcxx.so");

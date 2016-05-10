@@ -135,8 +135,8 @@ public class AndroidPackageableCollectorTest {
     assertEquals(
         "Because guava was passed to no_dx, it should not be in the classpathEntriesToDex list",
         ImmutableSet.of(
-            BuildTargets.getGenPath(jsr305Target, "%s.jar"),
-            BuildTargets.getGenPath(libraryRuleTarget, "lib__%s__output/")
+            BuildTargets.getGenPath(projectFilesystem, jsr305Target, "%s.jar"),
+            BuildTargets.getGenPath(projectFilesystem, libraryRuleTarget, "lib__%s__output/")
                 .resolve(libraryRuleTarget.getShortNameAndFlavorPostfix() + ".jar")),
         FluentIterable.from(packageableCollection.getClasspathEntriesToDex())
             .transform(pathResolver.deprecatedPathFunction())
@@ -150,7 +150,7 @@ public class AndroidPackageableCollectorTest {
             "longer. Specifically, this was observed to take over one second longer to load " +
             "the resource in fb4a. Because the resource was loaded on startup, this introduced a " +
             "substantial regression in the startup time for the fb4a app.",
-        ImmutableSet.of(BuildTargets.getGenPath(jsr305Target, "%s.jar")),
+        ImmutableSet.of(BuildTargets.getGenPath(projectFilesystem, jsr305Target, "%s.jar")),
         FluentIterable.from(packageableCollection.getPathsToThirdPartyJars())
             .transform(pathResolver.deprecatedPathFunction())
             .toSet());
@@ -324,7 +324,11 @@ public class AndroidPackageableCollectorTest {
     assertEquals(
         "Classpath entries should include facebook/base but not keystore/base.",
         ImmutableSet.of(
-            BuildTargets.getGenPath(androidLibraryTarget, "lib__%s__output/")
+            BuildTargets
+                .getGenPath(
+                    androidBinary.getProjectFilesystem(),
+                    androidLibraryTarget,
+                    "lib__%s__output/")
                 .resolve(androidLibraryTarget.getShortNameAndFlavorPostfix() + ".jar")),
         FluentIterable.from(packageableCollection.getClasspathEntriesToDex())
             .transform(pathResolver.deprecatedPathFunction())

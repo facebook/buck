@@ -126,7 +126,8 @@ public class IjProject {
                 buildRuleResolver.getRuleOptional(dummyRDotJavaTarget);
             if (dummyRDotJavaRule.isPresent()) {
               requiredBuildTargets.add(dummyRDotJavaTarget);
-              return Optional.of(DummyRDotJava.getRDotJavaBinFolder(dummyRDotJavaTarget));
+              return Optional.of(
+                  DummyRDotJava.getRDotJavaBinFolder(dummyRDotJavaTarget, projectFilesystem));
             }
             return Optional.absent();
           }

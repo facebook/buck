@@ -69,7 +69,8 @@ abstract class RustLinkable extends AbstractBuildRule {
     this.features = features;
     this.output = output;
     this.compiler = compiler;
-    this.scratchDir = BuildTargets.getScratchPath(getBuildTarget(), "container");
+    this.scratchDir =
+        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "container");
 
     for (String feature : features) {
       if (feature.contains("\"")) {

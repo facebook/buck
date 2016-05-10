@@ -112,6 +112,7 @@ public class JavaSymbolsRuleTest {
         projectFilesystem
             .resolve(
                 BuildTargets.getGenPath(
+                    javaSymbolsRule.getProjectFilesystem(),
                     buildTarget.withFlavors(JavaSymbolsRule.JAVA_SYMBOLS),
                     "__%s__.json"))
             .toFile());

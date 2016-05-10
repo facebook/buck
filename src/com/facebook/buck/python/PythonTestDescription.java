@@ -19,6 +19,7 @@ package com.facebook.buck.python;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.file.WriteFile;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -119,8 +120,10 @@ public class PythonTestDescription implements
   }
 
   @VisibleForTesting
-  protected static Path getTestModulesListPath(BuildTarget buildTarget) {
-    return BuildTargets.getGenPath(buildTarget, "%s").resolve(getTestModulesListName());
+  protected static Path getTestModulesListPath(
+      BuildTarget buildTarget,
+      ProjectFilesystem filesystem) {
+    return BuildTargets.getGenPath(filesystem, buildTarget, "%s").resolve(getTestModulesListName());
   }
 
   @VisibleForTesting
@@ -239,7 +242,7 @@ public class PythonTestDescription implements
     BuildRule testModulesBuildRule = createTestModulesSourceBuildRule(
         params,
         resolver,
-        getTestModulesListPath(params.getBuildTarget()),
+        getTestModulesListPath(params.getBuildTarget(), params.getProjectFilesystem()),
         testModules);
     resolver.addToIndex(testModulesBuildRule);
 

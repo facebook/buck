@@ -141,6 +141,7 @@ public class ShTest
   @Override
   public Path getPathToTestOutputDirectory() {
     return BuildTargets.getGenPath(
+        getProjectFilesystem(),
         getBuildTarget(),
         "__java_test_%s_output__");
   }

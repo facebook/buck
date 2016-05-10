@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -45,6 +46,8 @@ public class IosReactNativeLibraryIntegrationTest {
 
   private ProjectWorkspace workspace;
 
+  private ProjectFilesystem filesystem;
+
   @BeforeClass
   public static void setupOnce() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
@@ -54,6 +57,7 @@ public class IosReactNativeLibraryIntegrationTest {
   public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "ios_rn", tmpFolder);
     workspace.setUp();
+    filesystem = new ProjectFilesystem(workspace.getDestPath());
   }
 
   @Test
@@ -62,6 +66,7 @@ public class IosReactNativeLibraryIntegrationTest {
     workspace.verify(
         workspace.getPath(
             BuildTargets.getGenPath(
+                filesystem,
                 BuildTargetFactory.newInstance(
                     "//:DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks"),
                 "%s")));
@@ -73,6 +78,7 @@ public class IosReactNativeLibraryIntegrationTest {
     workspace.verify(
         workspace.getPath(
             BuildTargets.getGenPath(
+                filesystem,
                 BuildTargetFactory.newInstance(
                     "//:DemoApp-Unbundle#iphonesimulator-x86_64,no-debug,no-include-frameworks"),
                 "%s")));
@@ -86,6 +92,7 @@ public class IosReactNativeLibraryIntegrationTest {
 
     Path appDir = workspace.getPath(
         BuildTargets.getGenPath(
+            filesystem,
             BuildTargetFactory.newInstance(
                 "//:DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks"),
             "%s/DemoApp.app"));
@@ -102,6 +109,7 @@ public class IosReactNativeLibraryIntegrationTest {
         "targets", "--show-output", target);
     result.assertSuccess();
     Path path = BuildTargets.getGenPath(
+        filesystem,
         BuildTargetFactory.newInstance(target),
         ReactNativeBundle.JS_BUNDLE_OUTPUT_DIR_FORMAT);
     assertThat(

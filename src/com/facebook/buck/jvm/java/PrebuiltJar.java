@@ -101,7 +101,8 @@ public class PrebuiltJar extends AbstractBuildRule
     this.mavenCoords = mavenCoords;
     this.provided = provided;
 
-    this.internalAbiJar = BuildTargets.getGenPath(getBuildTarget(), "%s-abi.jar");
+    this.internalAbiJar =
+        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s-abi.jar");
 
     transitiveClasspathEntriesSupplier =
         Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
@@ -133,7 +134,7 @@ public class PrebuiltJar extends AbstractBuildRule
               }
             });
 
-    copiedBinaryJar = BuildTargets.getGenPath(getBuildTarget(), "%s.jar");
+    copiedBinaryJar = BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.jar");
 
     buildOutputInitializer =
         new BuildOutputInitializer<>(params.getBuildTarget(), this);
@@ -164,7 +165,10 @@ public class PrebuiltJar extends AbstractBuildRule
 
   @Override
   public JavaLibrary.Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
-    return JavaLibraryRules.initializeFromDisk(getBuildTarget(), onDiskBuildInfo);
+    return JavaLibraryRules.initializeFromDisk(
+        getBuildTarget(),
+        getProjectFilesystem(),
+        onDiskBuildInfo);
   }
 
   @Override

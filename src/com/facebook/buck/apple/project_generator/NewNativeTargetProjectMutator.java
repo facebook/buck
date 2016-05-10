@@ -680,13 +680,14 @@ class NewNativeTargetProjectMutator {
 
     ProjectFilesystem filesystem = targetNode.getRuleFactoryParams().getProjectFilesystem();
     BuildTarget buildTarget = targetNode.getBuildTarget();
-    Path jsOutput = ReactNativeBundle.getPathToJSBundleDir(buildTarget).resolve(args.bundleName);
+    Path jsOutput =
+        ReactNativeBundle.getPathToJSBundleDir(buildTarget, filesystem).resolve(args.bundleName);
     template.add("built_bundle_path", filesystem.resolve(jsOutput));
 
-    Path resourceOutput = ReactNativeBundle.getPathToResources(buildTarget);
+    Path resourceOutput = ReactNativeBundle.getPathToResources(buildTarget, filesystem);
     template.add("built_resources_path", filesystem.resolve(resourceOutput));
 
-    Path sourceMap = ReactNativeBundle.getPathToSourceMap(buildTarget);
+    Path sourceMap = ReactNativeBundle.getPathToSourceMap(buildTarget, filesystem);
     template.add("built_source_map_path", filesystem.resolve(sourceMap));
 
     return template.render();

@@ -232,7 +232,10 @@ public class HaskellDescriptionUtils {
                 baseParams.copyWithBuildTarget(emptyModuleTarget),
                 pathResolver,
                 "module Unused where",
-                BuildTargets.getGenPath(emptyModuleTarget, "%s/Unused.hs"),
+                BuildTargets.getGenPath(
+                    baseParams.getProjectFilesystem(),
+                    emptyModuleTarget,
+                    "%s/Unused.hs"),
                 /* executable */ false));
     HaskellCompileRule emptyCompiledModule =
         resolver.addToIndex(
@@ -260,7 +263,10 @@ public class HaskellDescriptionUtils {
                 cxxPlatform.getAr(),
                 cxxPlatform.getRanlib(),
                 Archive.Contents.NORMAL,
-                BuildTargets.getGenPath(emptyArchiveTarget, "%s/libempty.a"),
+                BuildTargets.getGenPath(
+                    baseParams.getProjectFilesystem(),
+                    emptyArchiveTarget,
+                    "%s/libempty.a"),
                 emptyCompiledModule.getObjects()));
     argsBuilder.add(
         new SourcePathArg(pathResolver, new BuildTargetSourcePath(emptyArchive.getBuildTarget())));

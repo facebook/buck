@@ -24,6 +24,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -56,6 +57,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
@@ -72,17 +74,23 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
   @Test
   public void testGetBuildStepsWhenThereAreClassesToDex() throws IOException, InterruptedException {
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem("/home/user");
+
     SourcePathResolver pathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
     FakeJavaLibrary javaLibraryRule = new FakeJavaLibrary(
-        BuildTargetFactory.newInstance("//foo:bar"), pathResolver) {
+        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar"),
+        pathResolver,
+        filesystem,
+        ImmutableSortedSet.<BuildRule>of()) {
       @Override
       public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
         return ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe"));
       }
     };
-    Path jarOutput = BuildTargets.getGenPath(javaLibraryRule.getBuildTarget(), "%s.jar");
+    Path jarOutput =
+        BuildTargets.getGenPath(filesystem, javaLibraryRule.getBuildTarget(), "%s.jar");
     javaLibraryRule.setOutputFile(jarOutput.toString());
 
     BuildContext context = createMock(BuildContext.class);
@@ -90,9 +98,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     replayAll();
 
-    String rootPath = "/home/user";
-    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem(rootPath);
     Path dexOutput = BuildTargets.getGenPath(
+        filesystem,
         javaLibraryRule.getBuildTarget().withFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR),
         "%s.dex.jar");
     createFiles(
@@ -100,7 +107,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         dexOutput.toString(),
         jarOutput.toString());
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#dex");
+    BuildTarget buildTarget =
+        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar#dex");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
         .setProjectFilesystem(filesystem)
         .build();
@@ -124,14 +132,14 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     String expectedDxCommand = String.format(
         "%s --dex --no-optimize --force-jumbo --output %s %s",
         Paths.get("/usr/bin/dx"),
-        Paths.get(rootPath).resolve(dexOutput),
-        Paths.get(rootPath).resolve(jarOutput));
+        filesystem.resolve(dexOutput),
+        filesystem.resolve(jarOutput));
     MoreAsserts.assertSteps("Generate bar.dex.jar.",
         ImmutableList.of(
-            String.format("rm -f %s", Paths.get(rootPath).resolve(dexOutput)),
-            String.format("mkdir -p %s", Paths.get(rootPath).resolve(dexOutput).getParent()),
+            String.format("rm -f %s", filesystem.resolve(dexOutput)),
+            String.format("mkdir -p %s", filesystem.resolve(dexOutput).getParent()),
             "estimate_linear_alloc",
-            "(cd /home/user && " + expectedDxCommand + ")",
+            "(cd " + filesystem.getRootPath() + " && " + expectedDxCommand + ")",
             String.format("zip-scrub %s", dexOutput),
             "record_dx_success"),
         steps,
@@ -147,7 +155,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     int exitCode = recordArtifactAndMetadataStep.execute(executionContext);
     assertEquals(0, exitCode);
     assertEquals("The generated .dex.jar file should be in the set of recorded artifacts.",
-        ImmutableSet.of(BuildTargets.getGenPath(buildTarget, "%s.dex.jar")),
+        ImmutableSet.of(BuildTargets.getGenPath(filesystem, buildTarget, "%s.dex.jar")),
         buildableContext.getRecordedArtifacts());
 
     buildableContext.assertContainsMetadataMapping(
@@ -195,7 +203,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     verifyAll();
     resetAll();
 
-    Path dexOutput = BuildTargets.getGenPath(buildTarget, "%s.dex.jar");
+    Path dexOutput = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s.dex.jar");
     replayAll();
 
     ExecutionContext executionContext = TestExecutionContext
@@ -244,7 +252,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
             accumulateClassNames);
     assertNull(preDexWithClasses.getPathToOutput());
     assertEquals(
-        BuildTargets.getGenPath(buildTarget, "%s.dex.jar"),
+        BuildTargets.getGenPath(params.getProjectFilesystem(), buildTarget, "%s.dex.jar"),
         preDexWithClasses.getPathToDex());
 
     verifyAll();

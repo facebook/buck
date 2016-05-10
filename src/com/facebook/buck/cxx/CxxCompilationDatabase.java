@@ -103,7 +103,11 @@ public class CxxCompilationDatabase extends AbstractBuildRule
         runtimeDeps);
     this.compileRules = compileRules;
     this.preprocessMode = preprocessMode;
-    this.outputJsonFile = BuildTargets.getGenPath(buildRuleParams.getBuildTarget(), "__%s.json");
+    this.outputJsonFile =
+        BuildTargets.getGenPath(
+            getProjectFilesystem(),
+            buildRuleParams.getBuildTarget(),
+            "__%s.json");
     this.runtimeDeps = runtimeDeps;
   }
 

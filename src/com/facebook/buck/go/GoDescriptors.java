@@ -376,6 +376,7 @@ abstract class GoDescriptors {
         pathResolver.filterBuildRuleInputs(treeMap.values()));
 
     Path root = params.getBuildTarget().getCellPath().resolve(BuildTargets.getScratchPath(
+        params.getProjectFilesystem(),
         params.getBuildTarget(),
         "__%s__tree"));
 

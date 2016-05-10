@@ -199,7 +199,7 @@ public class AndroidBinaryDescription
         ImmutableSet.copyOf(args.cpuFilters.get()),
         args.buildStringSourceMap.or(false),
         shouldPreDex,
-        AndroidBinary.getPrimaryDexPath(params.getBuildTarget()),
+        AndroidBinary.getPrimaryDexPath(params.getBuildTarget(), params.getProjectFilesystem()),
         dexSplitMode,
         ImmutableSet.copyOf(args.noDx.or(ImmutableSet.<BuildTarget>of())),
         /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),

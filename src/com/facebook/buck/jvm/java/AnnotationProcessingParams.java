@@ -88,7 +88,9 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
 
   private Path getGeneratedSrcFolder() {
     Preconditions.checkNotNull(filesystem);
-    return BuildTargets.getAnnotationPath(Preconditions.checkNotNull(ownerTarget), "__%s_gen__");
+    return BuildTargets.getAnnotationPath(
+        filesystem,
+        Preconditions.checkNotNull(ownerTarget), "__%s_gen__");
   }
 
   public boolean isEmpty() {

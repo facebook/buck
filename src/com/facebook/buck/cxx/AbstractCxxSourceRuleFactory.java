@@ -195,7 +195,8 @@ abstract class AbstractCxxSourceRuleFactory {
    */
   @VisibleForTesting
   Path getPreprocessOutputPath(BuildTarget target, CxxSource.Type type, String name) {
-    return BuildTargets.getGenPath(target, "%s").resolve(getPreprocessOutputName(type, name));
+    return BuildTargets.getGenPath(getParams().getProjectFilesystem(), target, "%s")
+        .resolve(getPreprocessOutputName(type, name));
   }
 
   @VisibleForTesting
@@ -264,7 +265,8 @@ abstract class AbstractCxxSourceRuleFactory {
    */
   @VisibleForTesting
   Path getCompileOutputPath(BuildTarget target, String name) {
-    return BuildTargets.getGenPath(target, "%s").resolve(getCompileOutputName(name));
+    return BuildTargets.getGenPath(getParams().getProjectFilesystem(), target, "%s")
+        .resolve(getCompileOutputName(name));
   }
 
   /**
@@ -578,7 +580,7 @@ abstract class AbstractCxxSourceRuleFactory {
     if (existingRule.isPresent()) {
       return existingRule.get();
     }
-    Path output = BuildTargets.getGenPath(target, "%s.gch");
+    Path output = BuildTargets.getGenPath(getParams().getProjectFilesystem(), target, "%s.gch");
     SourcePath path = Preconditions.checkNotNull(preprocessorDelegate.getPrefixHeader().get());
     CxxPrecompiledHeader rule = new CxxPrecompiledHeader(
         getParams().copyWithChanges(

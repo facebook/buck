@@ -81,7 +81,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
     this.applePlatformName = applePlatformName;
     this.actool = actool;
     this.assetCatalogDirs = ImmutableSortedSet.copyOf(assetCatalogDirs);
-    this.outputDir = BuildTargets.getGenPath(params.getBuildTarget(), "%s")
+    this.outputDir = BuildTargets.getGenPath(getProjectFilesystem(), params.getBuildTarget(), "%s")
         .resolve(bundleName + BUNDLE_DIRECTORY_EXTENSION);
   }
 

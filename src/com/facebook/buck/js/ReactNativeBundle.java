@@ -16,6 +16,7 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
@@ -93,8 +94,8 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
     this.platform = platform;
     this.depsFinder = depsFinder;
     BuildTarget buildTarget = ruleParams.getBuildTarget();
-    this.jsOutputDir = getPathToJSBundleDir(buildTarget);
-    this.resource = getPathToResources(buildTarget);
+    this.jsOutputDir = getPathToJSBundleDir(buildTarget, getProjectFilesystem());
+    this.resource = getPathToResources(buildTarget, getProjectFilesystem());
   }
 
   @Override
@@ -105,7 +106,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
     final Path jsOutput = jsOutputDir.resolve(bundleName);
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), jsOutput.getParent()));
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), resource));
-    final Path sourceMapOutput = getPathToSourceMap(getBuildTarget());
+    final Path sourceMapOutput = getPathToSourceMap(getBuildTarget(), getProjectFilesystem());
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), sourceMapOutput.getParent()));
 
     appendWorkerSteps(steps, jsOutput, sourceMapOutput);
@@ -120,7 +121,8 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
       ImmutableList.Builder<Step> stepBuilder,
       Path outputFile,
       Path sourceMapOutput) {
-    final Path tmpDir = BuildTargets.getScratchPath(getBuildTarget(), "%s__tmp");
+    final Path tmpDir =
+        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s__tmp");
     stepBuilder.add(new MakeCleanDirectoryStep(getProjectFilesystem(), tmpDir));
     ReactNativeBundleWorkerStep workerStep = new ReactNativeBundleWorkerStep(
         getProjectFilesystem(),
@@ -145,16 +147,16 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
     return resource;
   }
 
-  public static Path getPathToJSBundleDir(BuildTarget target) {
-    return BuildTargets.getGenPath(target, JS_BUNDLE_OUTPUT_DIR_FORMAT);
+  public static Path getPathToJSBundleDir(BuildTarget target, ProjectFilesystem filesystem) {
+    return BuildTargets.getGenPath(filesystem, target, JS_BUNDLE_OUTPUT_DIR_FORMAT);
   }
 
-  public static Path getPathToResources(BuildTarget target) {
-    return BuildTargets.getGenPath(target, RESOURCES_OUTPUT_DIR_FORMAT);
+  public static Path getPathToResources(BuildTarget target, ProjectFilesystem filesystem) {
+    return BuildTargets.getGenPath(filesystem, target, RESOURCES_OUTPUT_DIR_FORMAT);
   }
 
-  public static Path getPathToSourceMap(BuildTarget target) {
-    return BuildTargets.getGenPath(target, SOURCE_MAP_OUTPUT_FORMAT);
+  public static Path getPathToSourceMap(BuildTarget target, ProjectFilesystem filesystem) {
+    return BuildTargets.getGenPath(filesystem, target, SOURCE_MAP_OUTPUT_FORMAT);
   }
 
   @Override

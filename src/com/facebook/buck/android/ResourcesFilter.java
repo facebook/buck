@@ -227,7 +227,8 @@ public class ResourcesFilter extends AbstractBuildRule
   }
 
   private String getResDestinationBasePath() {
-    return BuildTargets.getScratchPath(getBuildTarget(), "__filtered__%s__").toString();
+    return BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "__filtered__%s__")
+        .toString();
   }
 
   @Override

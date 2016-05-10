@@ -248,7 +248,7 @@ public class ThriftLibraryDescriptionTest {
         rule.getDeps());
 
     // Lets do this again, but pass in a ThriftLibrary deps, wrapping some includes we need.
-    Path includeRoot = filesystem.resolve(desc.getIncludeRoot(unflavoredTarget));
+    Path includeRoot = filesystem.resolve(desc.getIncludeRoot(unflavoredTarget, filesystem));
     HeaderSymlinkTree thriftIncludeSymlinkTree = createFakeSymlinkTree(
         desc.createThriftIncludeSymlinkTreeTarget(unflavoredTarget),
         pathResolver,
@@ -374,7 +374,7 @@ public class ThriftLibraryDescriptionTest {
 
     // Create a dep and verify it gets attached.
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
-    Path depIncludeRoot = filesystem.resolve(desc.getIncludeRoot(depTarget));
+    Path depIncludeRoot = filesystem.resolve(desc.getIncludeRoot(depTarget, filesystem));
     HeaderSymlinkTree depIncludeSymlinkTree =
         createFakeSymlinkTree(depTarget, pathResolver, depIncludeRoot);
     ThriftLibrary dep = new ThriftLibrary(
@@ -400,7 +400,7 @@ public class ThriftLibraryDescriptionTest {
         ImmutableSortedSet.of(dep),
         me.getThriftDeps());
     assertEquals(
-        filesystem.resolve(desc.getIncludeRoot(unflavoredTarget)),
+        filesystem.resolve(desc.getIncludeRoot(unflavoredTarget, filesystem)),
         me.getIncludeTreeRule().getIncludePath());
   }
 

@@ -105,7 +105,8 @@ public class BuildInfoRecorder {
       ObjectMapper objectMapper,
       ImmutableMap<String, String> environment) {
     this.buildTarget = buildTarget;
-    this.pathToMetadataDirectory = BuildInfo.getPathToMetadataDirectory(buildTarget);
+    this.pathToMetadataDirectory =
+        BuildInfo.getPathToMetadataDirectory(buildTarget, projectFilesystem);
     this.projectFilesystem = projectFilesystem;
     this.clock = clock;
     this.buildId = buildId;
@@ -162,7 +163,7 @@ public class BuildInfoRecorder {
 
   /**
    * Writes the metadata currently stored in memory to the directory returned by
-   * {@link BuildInfo#getPathToMetadataDirectory(BuildTarget)}.
+   * {@link BuildInfo#getPathToMetadataDirectory(BuildTarget, ProjectFilesystem)}.
    */
   public void writeMetadataToDisk(boolean clearExistingMetadata) throws IOException {
     if (clearExistingMetadata) {

@@ -193,7 +193,7 @@ public class WorkspaceAndProjectGenerator {
     if (combinedProject) {
       workspaceName += "-Combined";
       outputDirectory =
-          BuildTargets.getGenPath(workspaceBuildTarget, "%s")
+          BuildTargets.getGenPath(rootCell.getFilesystem(), workspaceBuildTarget, "%s")
               .getParent()
               .resolve(workspaceName + ".xcodeproj");
     } else {
@@ -384,7 +384,10 @@ public class WorkspaceAndProjectGenerator {
             projectGraph,
             ImmutableSortedSet.<BuildTarget>of(),
             rootCell,
-            BuildTargets.getGenPath(workspaceBuildTarget, "%s-CombinedTestBundles"),
+            BuildTargets.getGenPath(
+                rootCell.getFilesystem(),
+                workspaceBuildTarget,
+                "%s-CombinedTestBundles"),
             "_CombinedTestBundles",
             buildFileName,
             projectGeneratorOptions,
@@ -859,7 +862,10 @@ public class WorkspaceAndProjectGenerator {
         String binaryName = AppleBundle.getBinaryName(targetToBuildWithBuck.get(), productName);
         runnablePath = Optional.of(
             rootCell.getFilesystem().resolve(
-                ProjectGenerator.getScratchPathForAppBundle(targetToBuildWithBuck.get(), binaryName)
+                ProjectGenerator.getScratchPathForAppBundle(
+                    rootCell.getFilesystem(),
+                    targetToBuildWithBuck.get(),
+                    binaryName)
             ).toString());
       }
       Optional<String> remoteRunnablePath;

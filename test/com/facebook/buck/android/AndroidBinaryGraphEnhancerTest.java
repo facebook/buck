@@ -125,7 +125,10 @@ public class AndroidBinaryGraphEnhancerTest {
         /* cpuFilters */ ImmutableSet.< TargetCpuType>of(),
         /* shouldBuildStringSourceMap */ false,
         /* shouldPreDex */ true,
-        BuildTargets.getScratchPath(apkTarget, "%s/classes.dex"),
+        BuildTargets.getScratchPath(
+            originalParams.getProjectFilesystem(),
+            apkTarget,
+            "%s/classes.dex"),
         DexSplitMode.NO_SPLIT,
         buildRulesToExcludeFromDex,
         /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
@@ -247,7 +250,10 @@ public class AndroidBinaryGraphEnhancerTest {
         /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
         /* shouldBuildStringSourceMap */ false,
         /* shouldPreDex */ false,
-        BuildTargets.getScratchPath(apkTarget, "%s/classes.dex"),
+        BuildTargets.getScratchPath(
+            originalParams.getProjectFilesystem(),
+            apkTarget,
+            "%s/classes.dex"),
         DexSplitMode.NO_SPLIT,
         /* buildRulesToExcludeFromDex */ ImmutableSet.<BuildTarget>of(),
         /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
@@ -277,7 +283,11 @@ public class AndroidBinaryGraphEnhancerTest {
         "The only classpath entry to dex should be the one from the AndroidBuildConfigJavaLibrary" +
             " created via graph enhancement.",
         ImmutableSet.of(
-            BuildTargets.getGenPath(enhancedBuildConfigTarget, "lib__%s__output")
+            BuildTargets
+                .getGenPath(
+                    originalParams.getProjectFilesystem(),
+                    enhancedBuildConfigTarget,
+                    "lib__%s__output")
                 .resolve(enhancedBuildConfigTarget.getShortNameAndFlavorPostfix() + ".jar")),
         FluentIterable
             .from(result.getClasspathEntriesToDex())
@@ -374,7 +384,10 @@ public class AndroidBinaryGraphEnhancerTest {
         /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
         /* shouldBuildStringSourceMap */ false,
         /* shouldPreDex */ false,
-        BuildTargets.getScratchPath(target, "%s/classes.dex"),
+        BuildTargets.getScratchPath(
+            originalParams.getProjectFilesystem(),
+            target,
+            "%s/classes.dex"),
         DexSplitMode.NO_SPLIT,
         /* buildRulesToExcludeFromDex */ ImmutableSet.<BuildTarget>of(),
         /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
@@ -421,7 +434,10 @@ public class AndroidBinaryGraphEnhancerTest {
         /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
         /* shouldBuildStringSourceMap */ false,
         /* shouldPreDex */ false,
-        BuildTargets.getScratchPath(target, "%s/classes.dex"),
+        BuildTargets.getScratchPath(
+            originalParams.getProjectFilesystem(),
+            target,
+            "%s/classes.dex"),
         DexSplitMode.NO_SPLIT,
         /* buildRulesToExcludeFromDex */ ImmutableSet.<BuildTarget>of(),
         /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
@@ -495,7 +511,10 @@ public class AndroidBinaryGraphEnhancerTest {
         /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
         /* shouldBuildStringSourceMap */ false,
         /* shouldPreDex */ false,
-        BuildTargets.getScratchPath(target, "%s/classes.dex"),
+        BuildTargets.getScratchPath(
+            originalParams.getProjectFilesystem(),
+            target,
+            "%s/classes.dex"),
         DexSplitMode.NO_SPLIT,
         /* buildRulesToExcludeFromDex */ ImmutableSet.<BuildTarget>of(),
         /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),

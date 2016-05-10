@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -56,6 +57,7 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_builds_something", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary#static,default");
@@ -63,7 +65,7 @@ public class AppleLibraryIntegrationTest {
         workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
-    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(target, "%s"))));
+    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))));
   }
 
   @Test
@@ -72,6 +74,7 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_builds_something", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
     workspace.writeContentsToPath(
         "[defaults.apple_library]\n  platform = iphonesimulator-x86_64\n  type = shared\n",
         ".buckconfig.local");
@@ -86,7 +89,8 @@ public class AppleLibraryIntegrationTest {
         ImmutableFlavor.of("shared"),
         ImmutableFlavor.of("iphonesimulator-x86_64")
     );
-    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(implicitTarget, "%s"))));
+    assertTrue(
+        Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, implicitTarget, "%s"))));
   }
 
   @Test
@@ -95,6 +99,7 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_with_platform_and_type", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary");
@@ -106,7 +111,7 @@ public class AppleLibraryIntegrationTest {
         ImmutableFlavor.of("shared"),
         ImmutableFlavor.of("iphoneos-arm64")
     );
-    Path outputPath = workspace.getPath(BuildTargets.getGenPath(implicitTarget, "%s"));
+    Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, implicitTarget, "%s"));
     assertTrue(Files.exists(outputPath));
   }
   @Test
@@ -116,6 +121,7 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_builds_something", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = BuildTargetFactory.newInstance(
         "//Libraries/TestLibrary:TestLibrary#watchos-armv7k,static");
@@ -124,7 +130,7 @@ public class AppleLibraryIntegrationTest {
         target.getFullyQualifiedName());
     result.assertSuccess();
 
-    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(target, "%s"))));
+    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))));
   }
 
   @Test
@@ -135,6 +141,7 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_builds_something", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = BuildTargetFactory.newInstance(
         "//Libraries/TestLibrary:TestLibrary#watchsimulator-i386,static");
@@ -143,7 +150,7 @@ public class AppleLibraryIntegrationTest {
         target.getFullyQualifiedName());
     result.assertSuccess();
 
-    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(target, "%s"))));
+    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))));
   }
 
   @Test
@@ -153,6 +160,7 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_builds_something", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = BuildTargetFactory.newInstance(
         "//Libraries/TestLibrary:TestLibrary#appletvos-arm64,static");
@@ -161,7 +169,7 @@ public class AppleLibraryIntegrationTest {
         target.getFullyQualifiedName());
     result.assertSuccess();
 
-    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(target, "%s"))));
+    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))));
   }
 
   @Test
@@ -172,6 +180,7 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_builds_something", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = BuildTargetFactory.newInstance(
         "//Libraries/TestLibrary:TestLibrary#appletvsimulator-x86_64,static");
@@ -180,7 +189,7 @@ public class AppleLibraryIntegrationTest {
         target.getFullyQualifiedName());
     result.assertSuccess();
 
-    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(target, "%s"))));
+    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))));
   }
 
   @Test
@@ -191,6 +200,7 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_builds_something", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = BuildTargetFactory.newInstance(
         "//Libraries/TestLibrary:TestLibrary#static,macosx-x86_64");
@@ -199,7 +209,7 @@ public class AppleLibraryIntegrationTest {
         target.getFullyQualifiedName());
     result.assertSuccess();
 
-    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(target, "%s"))));
+    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))));
   }
 
   @Test
@@ -209,6 +219,7 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_header_symlink_tree", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance(
         "//Libraries/TestLibrary:TestLibrary#" +
@@ -219,7 +230,8 @@ public class AppleLibraryIntegrationTest {
     result.assertSuccess();
 
     Path inputPath = workspace.getPath(buildTarget.getBasePath()).toRealPath();
-    Path outputPath = workspace.getPath(BuildTargets.getGenPath(buildTarget, "%s")).toRealPath();
+    Path outputPath =
+        workspace.getPath(BuildTargets.getGenPath(filesystem, buildTarget, "%s")).toRealPath();
 
     assertIsSymbolicLink(
         outputPath.resolve("PrivateHeader.h"),
@@ -240,6 +252,7 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_builds_something", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = BuildTargetFactory.newInstance(
         "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64,no-debug");
@@ -251,6 +264,7 @@ public class AppleLibraryIntegrationTest {
     Path frameworkPath = workspace.getPath(
         BuildTargets
             .getGenPath(
+                filesystem,
                 BuildTarget.builder(target)
                     .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
                     .build(),
@@ -273,6 +287,7 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_builds_something", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = BuildTargetFactory.newInstance(
         "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64,macosx-i386,no-debug");
@@ -284,6 +299,7 @@ public class AppleLibraryIntegrationTest {
     Path frameworkPath = workspace.getPath(
         BuildTargets
             .getGenPath(
+                filesystem,
                 BuildTarget.builder(target)
                     .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
                     .build(),
@@ -388,6 +404,7 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_with_library_dependencies", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = BuildTargetFactory.newInstance(
         "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64");
@@ -399,6 +416,7 @@ public class AppleLibraryIntegrationTest {
     Path frameworkPath = workspace.getPath(
         BuildTargets
             .getGenPath(
+                filesystem,
                 BuildTarget.builder(target)
                     .addFlavors(AppleDebugFormat.DWARF.getFlavor())
                     .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
@@ -431,6 +449,7 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_with_library_dependencies", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = BuildTargetFactory.newInstance(
         "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64");
@@ -442,6 +461,7 @@ public class AppleLibraryIntegrationTest {
     Path frameworkPath = workspace.getPath(
         BuildTargets
             .getGenPath(
+                filesystem,
                 BuildTarget.builder(target)
                     .addFlavors(AppleDebugFormat.DWARF.getFlavor())
                     .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
@@ -464,6 +484,7 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_with_library_dependencies", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = BuildTargetFactory.newInstance(
         "//Libraries/TestLibrary:TestLibrary#" +
@@ -473,7 +494,7 @@ public class AppleLibraryIntegrationTest {
         target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path frameworkPath = workspace.getPath(BuildTargets.getGenPath(target, "%s")
+    Path frameworkPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s")
         .resolve("TestLibrary.framework"));
     assertThat(Files.exists(frameworkPath), is(true));
     assertThat(Files.exists(frameworkPath.resolve("Contents/Info.plist")), is(true));
@@ -493,6 +514,7 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_header_symlink_tree", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance(
         "//Libraries/TestLibrary:TestLibrary#" +
@@ -503,7 +525,8 @@ public class AppleLibraryIntegrationTest {
     result.assertSuccess();
 
     Path inputPath = workspace.getPath(buildTarget.getBasePath()).toRealPath();
-    Path outputPath = workspace.getPath(BuildTargets.getGenPath(buildTarget, "%s")).toRealPath();
+    Path outputPath =
+        workspace.getPath(BuildTargets.getGenPath(filesystem, buildTarget, "%s")).toRealPath();
 
     assertIsSymbolicLink(
         outputPath.resolve("TestLibrary/PublicHeader.h"),
@@ -516,6 +539,7 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_is_hermetic", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = BuildTargetFactory.newInstance(
         "//Libraries/TestLibrary:TestLibrary#static,iphonesimulator-x86_64");
@@ -533,6 +557,7 @@ public class AppleLibraryIntegrationTest {
 
     Path objectPath = BuildTargets
         .getGenPath(
+            filesystem,
             target.withFlavors(
                 ImmutableFlavor.of("compile-" + sanitize("TestClass.m.o")),
                 ImmutableFlavor.of("iphonesimulator-x86_64")),
@@ -541,7 +566,8 @@ public class AppleLibraryIntegrationTest {
     MoreAsserts.assertContentsEqual(
         workspace.getPath(Paths.get("first").resolve(objectPath)),
         workspace.getPath(Paths.get("second").resolve(objectPath)));
-    Path libraryPath = BuildTargets.getGenPath(target, "%s").resolve("libTestLibrary.a");
+    Path libraryPath =
+        BuildTargets.getGenPath(filesystem, target, "%s").resolve("libTestLibrary.a");
     MoreAsserts.assertContentsEqual(
         workspace.getPath(Paths.get("first").resolve(libraryPath)),
         workspace.getPath(Paths.get("second").resolve(libraryPath)));

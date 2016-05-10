@@ -116,7 +116,9 @@ public class GenruleTest {
 //    EasyMock.replay(parser);
 
     BuildTarget buildTarget =
-        BuildTargetFactory.newInstance("//src/com/facebook/katana:katana_manifest");
+        BuildTargetFactory.newInstance(
+            filesystem.getRootPath(),
+            "//src/com/facebook/katana:katana_manifest");
     BuildRule genrule = GenruleBuilder
         .newGenruleBuilder(buildTarget)
         .setCmd("python convert_to_katana.py AndroidManifest.xml > $OUT")
@@ -125,15 +127,17 @@ public class GenruleTest {
             ImmutableList.<SourcePath>of(
                 new PathSourcePath(
                     filesystem,
-                    Paths.get("src/com/facebook/katana/convert_to_katana.py")),
+                    filesystem.getRootPath().getFileSystem().getPath(
+                        "src/com/facebook/katana/convert_to_katana.py")),
                 new PathSourcePath(
                     filesystem,
-                    Paths.get("src/com/facebook/katana/AndroidManifest.xml"))))
+                    filesystem.getRootPath().getFileSystem().getPath(
+                        "src/com/facebook/katana/AndroidManifest.xml"))))
         .build(ruleResolver, filesystem);
 
     // Verify all of the observers of the Genrule.
     assertEquals(
-        BuckConstant.getGenPath().resolve(
+        filesystem.getBuckPaths().getGenDir().resolve(
             "src/com/facebook/katana/katana_manifest/AndroidManifest.xml"),
         genrule.getPathToOutput());
     assertEquals(
@@ -143,8 +147,10 @@ public class GenruleTest {
         ((Genrule) genrule).getAbsoluteOutputFilePath());
     BuildContext buildContext = null; // unused since there are no deps
     ImmutableList<Path> inputsToCompareToOutputs = ImmutableList.of(
-        Paths.get("src/com/facebook/katana/convert_to_katana.py"),
-        Paths.get("src/com/facebook/katana/AndroidManifest.xml"));
+        filesystem.getRootPath().getFileSystem().getPath(
+            "src/com/facebook/katana/convert_to_katana.py"),
+        filesystem.getRootPath().getFileSystem().getPath(
+            "src/com/facebook/katana/AndroidManifest.xml"));
     assertEquals(
         inputsToCompareToOutputs,
         ((Genrule) genrule).getSrcs());
@@ -199,12 +205,16 @@ public class GenruleTest {
 
     MkdirAndSymlinkFileStep linkSource1 = (MkdirAndSymlinkFileStep) steps.get(4);
     assertEquals(
-        Paths.get("src/com/facebook/katana/convert_to_katana.py"),
+        filesystem.getRootPath().getFileSystem().getPath(
+            "src/com/facebook/katana/convert_to_katana.py"),
         linkSource1.getSource());
     assertEquals(Paths.get(pathToSrcDir + "/convert_to_katana.py"), linkSource1.getTarget());
 
     MkdirAndSymlinkFileStep linkSource2 = (MkdirAndSymlinkFileStep) steps.get(5);
-    assertEquals(Paths.get("src/com/facebook/katana/AndroidManifest.xml"), linkSource2.getSource());
+    assertEquals(
+        filesystem.getRootPath().getFileSystem().getPath(
+            "src/com/facebook/katana/AndroidManifest.xml"),
+        linkSource2.getSource());
     assertEquals(Paths.get(pathToSrcDir + "/AndroidManifest.xml"), linkSource2.getTarget());
 
     Step sixthStep = steps.get(6);
@@ -306,7 +316,8 @@ public class GenruleTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule genrule = GenruleBuilder
-        .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule_no_worker"))
+        .newGenruleBuilder(
+            BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:genrule_no_worker"))
         .setCmd("echo hello >> $OUT")
         .setOut("output.txt")
         .build(ruleResolver, filesystem);
@@ -333,7 +344,7 @@ public class GenruleTest {
   public void testDepsEnvironmentVariableIsComplete() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    BuildTarget depTarget = BuildTargetFactory.newInstance("//foo:bar");
+    BuildTarget depTarget = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar");
     BuildRule dep = new FakeBuildRule(depTarget, new SourcePathResolver(resolver)) {
       @Override
       public Path getPathToOutput() {
@@ -344,7 +355,7 @@ public class GenruleTest {
 
     BuildRule genrule = GenruleBuilder
         .newGenruleBuilder(
-            BuildTargetFactory.newInstance("//foo:baz"))
+            BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:baz"))
         .setBash("cat $DEPS > $OUT")
         .setOut("deps.txt")
         .setSrcs(

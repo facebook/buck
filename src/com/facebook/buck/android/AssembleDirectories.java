@@ -45,6 +45,7 @@ public class AssembleDirectories extends AbstractBuildRule {
     super(buildRuleParams, resolver);
     this.originalDirectories = directories;
     this.destinationDirectory = BuildTargets.getGenPath(
+        getProjectFilesystem(),
         buildRuleParams.getBuildTarget(),
         "__assembled_%s__");
   }

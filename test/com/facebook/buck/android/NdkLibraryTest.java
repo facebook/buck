@@ -117,7 +117,7 @@ public class NdkLibraryTest {
                 Paths.get(basePath).toString(),
                 /* APP_PROJECT_PATH */ projectFilesystem.resolve(libbase) + File.separator,
                 /* APP_BUILD_SCRIPT */ projectFilesystem.resolve(
-                    NdkLibraryDescription.getGeneratedMakefilePath(target)),
+                    NdkLibraryDescription.getGeneratedMakefilePath(target, projectFilesystem)),
                 /* NDK_OUT */ projectFilesystem.resolve(libbase) + File.separator,
                 /* NDK_LIBS_OUT */ projectFilesystem.resolve(Paths.get(libbase, "libs")),
                 /* host-echo-build-step */ Platform.detect() == Platform.WINDOWS ? "@REM" : "@#")

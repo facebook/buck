@@ -23,6 +23,7 @@ import static org.junit.Assume.assumeThat;
 import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.ApplePlatform;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -50,6 +51,7 @@ public class SwiftIOSBundleIntegrationTest {
         "simple_swift_application_bundle",
         tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
@@ -57,6 +59,7 @@ public class SwiftIOSBundleIntegrationTest {
     workspace.verify(
         Paths.get("DemoApp_output.expected"),
         BuildTargets.getGenPath(
+            filesystem,
             BuildTarget.builder(target)
                 .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                 .build(),
@@ -65,6 +68,7 @@ public class SwiftIOSBundleIntegrationTest {
     Path appPath = workspace.getPath(
         BuildTargets
             .getGenPath(
+                filesystem,
                 BuildTarget.builder(target)
                     .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                     .build(),

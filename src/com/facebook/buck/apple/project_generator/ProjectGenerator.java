@@ -623,8 +623,10 @@ public class ProjectGenerator {
 
     Optional<String> productName = getProductNameForTargetNode(targetNode);
     String binaryName = AppleBundle.getBinaryName(targetNode.getBuildTarget(), productName);
-    Path bundleDestination = getScratchPathForAppBundle(targetNode.getBuildTarget(), binaryName);
-    Path dsymDestination = getScratchPathForDsymBundle(targetNode.getBuildTarget(), binaryName);
+    Path bundleDestination =
+        getScratchPathForAppBundle(projectFilesystem, targetNode.getBuildTarget(), binaryName);
+    Path dsymDestination =
+        getScratchPathForDsymBundle(projectFilesystem, targetNode.getBuildTarget(), binaryName);
     Path resolvedBundleDestination = projectFilesystem.resolve(bundleDestination);
     Path resolvedDsymDestination = projectFilesystem.resolve(dsymDestination);
     Path fixUUIDScriptPath = getFixUUIDScriptPath(projectFilesystem);
@@ -662,7 +664,8 @@ public class ProjectGenerator {
 
     Optional<String> productName = getProductNameForTargetNode(targetNode);
     String binaryName = AppleBundle.getBinaryName(targetNode.getBuildTarget(), productName);
-    Path bundleDestination = getScratchPathForAppBundle(targetNode.getBuildTarget(), binaryName);
+    Path bundleDestination =
+        getScratchPathForAppBundle(projectFilesystem, targetNode.getBuildTarget(), binaryName);
     Path resolvedBundleDestination = projectFilesystem.resolve(bundleDestination);
 
     template.add("root_path", projectFilesystem.getRootPath());
@@ -672,15 +675,21 @@ public class ProjectGenerator {
     return template.render();
   }
 
-  static Path getScratchPathForAppBundle(BuildTarget targetToBuildWithBuck, String binaryName) {
+  static Path getScratchPathForAppBundle(
+      ProjectFilesystem filesystem,
+      BuildTarget targetToBuildWithBuck,
+      String binaryName) {
     return BuildTargets
-        .getScratchPath(targetToBuildWithBuck, "/%s-unsanitised")
+        .getScratchPath(filesystem, targetToBuildWithBuck, "/%s-unsanitised")
         .resolve(binaryName + ".app");
   }
 
-  static Path getScratchPathForDsymBundle(BuildTarget targetToBuildWithBuck, String binaryName) {
+  static Path getScratchPathForDsymBundle(
+      ProjectFilesystem filesystem,
+      BuildTarget targetToBuildWithBuck,
+      String binaryName) {
     return BuildTargets
-        .getScratchPath(targetToBuildWithBuck, "/%s-unsanitised")
+        .getScratchPath(filesystem, targetToBuildWithBuck, "/%s-unsanitised")
         .resolve(binaryName + ".dSYM");
   }
 
@@ -786,7 +795,7 @@ public class ProjectGenerator {
 
     BuildTarget compilerTarget =
         HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget);
-    Path compilerPath = BuildTargets.getGenPath(compilerTarget, "%s");
+    Path compilerPath = BuildTargets.getGenPath(projectFilesystem, compilerTarget, "%s");
     ImmutableMap<String, String> appendedConfig = ImmutableMap.<String, String>of();
     ImmutableMap<String, String> extraSettings = ImmutableMap.<String, String>of();
     ImmutableMap.Builder<String, String> defaultSettingsBuilder =
@@ -1526,7 +1535,7 @@ public class ProjectGenerator {
     return new Function<String, Path>() {
       @Override
       public Path apply(String input) {
-        return BuildTargets.getGenPath(buildTarget, "%s-" + input + ".xcconfig");
+        return BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s-" + input + ".xcconfig");
       }
     };
   }
@@ -2172,7 +2181,8 @@ public class ProjectGenerator {
                   .headerOutputPath(
                       buildTarget.withFlavors(
                           HalideLibraryDescription.HALIDE_COMPILE_FLAVOR,
-                          defaultCxxPlatform.getFlavor()))
+                          defaultCxxPlatform.getFlavor()),
+                      projectFilesystem)
                   .getParent()));
     }
     return builder.build();

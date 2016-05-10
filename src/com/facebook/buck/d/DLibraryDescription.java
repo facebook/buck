@@ -150,6 +150,7 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
 
     Path staticLibraryPath =
         CxxDescriptionEnhancer.getStaticLibraryPath(
+            params.getProjectFilesystem(),
             params.getBuildTarget(),
             cxxPlatform.getFlavor(),
             pic);

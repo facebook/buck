@@ -239,7 +239,7 @@ public class CxxCompilationDatabaseTest {
 
     assertEquals(
         "getPathToOutput() should be a function of the build target.",
-        BuildTargets.getGenPath(testBuildTarget, "__%s.json"),
+        BuildTargets.getGenPath(filesystem, testBuildTarget, "__%s.json"),
         compilationDatabase.getPathToOutput());
 
     BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;

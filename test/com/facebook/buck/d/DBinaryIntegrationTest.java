@@ -18,6 +18,7 @@ package com.facebook.buck.d;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -26,12 +27,20 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class DBinaryIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+
+  private ProjectFilesystem filesystem;
+
+  @Before
+  public void setUp() {
+    filesystem = new ProjectFilesystem(tmp.getRootPath());
+  }
 
   @Test
   public void cxx() throws Exception {
@@ -50,6 +59,7 @@ public class DBinaryIntegrationTest {
         workspace
             .resolve(
                 BuildTargets.getGenPath(
+                    filesystem,
                     BuildTargetFactory.newInstance("//:test#binary"),
                     "%s/test"))
             .toString());
@@ -75,6 +85,7 @@ public class DBinaryIntegrationTest {
         workspace
             .resolve(
                 BuildTargets.getGenPath(
+                    filesystem,
                     BuildTargetFactory.newInstance("//:xyzzy#binary"),
                     "%s/xyzzy"))
             .toString());

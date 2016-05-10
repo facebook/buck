@@ -52,7 +52,10 @@ public class JsonConcatenate extends AbstractBuildRule {
     super(buildRuleParams, sourcePathResolver);
     this.inputs = inputs;
     this.outputDirectory =
-        BuildTargets.getGenPath(this.getBuildTarget(), outputDirectoryPrefix + "-%s");
+        BuildTargets.getGenPath(
+            getProjectFilesystem(),
+            this.getBuildTarget(),
+            outputDirectoryPrefix + "-%s");
     this.output = this.outputDirectory.resolve(outputName);
     this.stepShortName = stepShortName;
     this.stepDescription = stepDescription;

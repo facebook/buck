@@ -314,7 +314,8 @@ public class AppleTestDescription implements
           BuildTarget.builder(xctoolZipBuildRule.getBuildTarget())
               .addFlavors(UNZIP_XCTOOL_FLAVOR)
               .build();
-      final Path outputDirectory = BuildTargets.getGenPath(unzipXctoolTarget, "%s/unzipped");
+      final Path outputDirectory =
+          BuildTargets.getGenPath(params.getProjectFilesystem(), unzipXctoolTarget, "%s/unzipped");
       if (!resolver.getRuleOptional(unzipXctoolTarget).isPresent()) {
         BuildRuleParams unzipXctoolParams =
             params.copyWithChanges(

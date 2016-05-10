@@ -117,7 +117,9 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     steps.add(new RmStep(getProjectFilesystem(), binPath, /* force */ true, /* recurse */ true));
 
     Path workingDirectory = BuildTargets.getGenPath(
-        getBuildTarget(), "__%s__working_directory");
+        getProjectFilesystem(),
+        getBuildTarget(),
+        "__%s__working_directory");
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), workingDirectory));
 
     // Generate and return the PEX build step.

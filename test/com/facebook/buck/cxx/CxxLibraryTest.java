@@ -188,7 +188,10 @@ public class CxxLibraryTest {
             cxxPlatform.getAr(),
             cxxPlatform.getRanlib(),
             Archive.Contents.NORMAL,
-            BuildTargets.getGenPath(staticPicLibraryTarget, "%s/libfoo.a"),
+            BuildTargets.getGenPath(
+                params.getProjectFilesystem(),
+                staticPicLibraryTarget,
+                "%s/libfoo.a"),
             ImmutableList.<SourcePath>of()));
 
     // Construct a CxxLibrary object to test.

@@ -178,6 +178,9 @@ public class PackageStringAssets extends AbstractBuildRule
   }
 
   private Path getPathToStringAssetsDir() {
-    return BuildTargets.getScratchPath(getBuildTarget(), STRING_ASSETS_DIR_FORMAT);
+    return BuildTargets.getScratchPath(
+        getProjectFilesystem(),
+        getBuildTarget(),
+        STRING_ASSETS_DIR_FORMAT);
   }
 }

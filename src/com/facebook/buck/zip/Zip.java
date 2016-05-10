@@ -50,8 +50,9 @@ public class Zip extends AbstractBuildRule {
     super(params, resolver);
     this.sources = Preconditions.checkNotNull(sources);
 
-    this.output = BuildTargets.getGenPath(getBuildTarget(), outputName);
-    this.scratchDir = BuildTargets.getScratchPath(getBuildTarget(), "%s.zip.scratch");
+    this.output = BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), outputName);
+    this.scratchDir =
+        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.zip.scratch");
   }
 
   @Override

@@ -61,7 +61,7 @@ public class DexWithClassesTest {
 
     DexWithClasses dexWithClasses = DexWithClasses.TO_DEX_WITH_CLASSES.apply(dexFromJavaLibrary);
     assertEquals(
-        BuildTargets.getGenPath(buildTarget, "%s.dex.jar"),
+        BuildTargets.getGenPath(javaLibrary.getProjectFilesystem(), buildTarget, "%s.dex.jar"),
         dexWithClasses.getPathToDexFile());
     assertEquals(ImmutableSet.of("com/example/Main"), dexWithClasses.getClassNames());
     assertEquals(1600, dexWithClasses.getSizeEstimate());
