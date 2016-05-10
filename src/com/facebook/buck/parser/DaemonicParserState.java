@@ -721,7 +721,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
     }
   }
 
-  private synchronized boolean invalidateAllCaches() {
+  public synchronized boolean invalidateAllCaches() {
     LOG.debug("Starting to invalidate all caches..");
     try (AutoCloseableLock writeLock = nodesAndTargetsLock.writeLock()) {
       boolean invalidated = false;

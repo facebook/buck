@@ -61,6 +61,7 @@ class PerBuildState implements AutoCloseable {
   private final ConstructorArgMarshaller marshaller;
   private final BuckEventBus eventBus;
   private final boolean enableProfiling;
+  private final boolean ignoreBuckAutodepsFiles;
 
   private final PrintStream stdout;
   private final PrintStream stderr;
@@ -97,6 +98,8 @@ class PerBuildState implements AutoCloseable {
     this.marshaller = marshaller;
     this.eventBus = eventBus;
     this.enableProfiling = enableProfiling;
+    this.ignoreBuckAutodepsFiles = ignoreBuckAutodepsFiles;
+
     this.cells = new ConcurrentHashMap<>();
     this.cellSymlinkAllowability = new ConcurrentHashMap<>();
     this.buildInputPathsUnderSymlink = Sets.newConcurrentHashSet();
@@ -306,6 +309,12 @@ class PerBuildState implements AutoCloseable {
     stderr.close();
     parsePipeline.close();
     projectBuildFileParserPool.close();
+
+    if (ignoreBuckAutodepsFiles) {
+      LOG.debug("Invalidating all caches because buck autodeps ran.");
+      permState.invalidateAllCaches();
+      return;
+    }
 
     if (!buildInputPathsUnderSymlink.isEmpty()) {
       LOG.debug(
