@@ -195,12 +195,12 @@ public class PythonTestDescriptionTest {
     PythonPlatform platform1 =
         PythonPlatform.of(
             ImmutableFlavor.of("pyPlat1"),
-            new PythonEnvironment(Paths.get("python2.6"), PythonVersion.of("2.6")),
+            new PythonEnvironment(Paths.get("python2.6"), PythonVersion.of("CPython", "2.6")),
             Optional.<BuildTarget>absent());
     PythonPlatform platform2 =
         PythonPlatform.of(
             ImmutableFlavor.of("pyPlat2"),
-            new PythonEnvironment(Paths.get("python2.7"), PythonVersion.of("2.7")),
+            new PythonEnvironment(Paths.get("python2.7"), PythonVersion.of("CPython", "2.7")),
             Optional.<BuildTarget>absent());
     PythonTestBuilder builder =
         PythonTestBuilder.create(

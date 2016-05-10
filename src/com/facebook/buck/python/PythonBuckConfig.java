@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
@@ -36,6 +37,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Splitter;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -46,8 +48,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 
@@ -57,9 +57,6 @@ public class PythonBuckConfig {
 
   private static final String SECTION = "python";
   private static final String PYTHON_PLATFORM_SECTION_PREFIX = "python#";
-
-  private static final Pattern PYTHON_VERSION_REGEX =
-      Pattern.compile(".*?(\\wy(thon|run) \\d+\\.\\d+).*");
 
   // Prefer "python2" where available (Linux), but fall back to "python" (Mac).
   private static final ImmutableList<String> PYTHON_INTERPRETER_NAMES =
@@ -213,6 +210,16 @@ public class PythonBuckConfig {
   }
 
   public Tool getPexTool(BuildRuleResolver resolver) {
+    CommandTool.Builder builder = new CommandTool.Builder(getRawPexTool(resolver));
+    for (String flag : Splitter.on(' ').omitEmptyStrings().split(
+        delegate.getValue(SECTION, "pex_flags").or(""))) {
+      builder.addArg(flag);
+    }
+
+    return builder.build();
+  }
+
+  private Tool getRawPexTool(BuildRuleResolver resolver) {
     Optional<Tool> executable = delegate.getTool(SECTION, "path_to_pex", resolver);
     if (executable.isPresent()) {
       return executable.get();
@@ -244,17 +251,31 @@ public class PythonBuckConfig {
   private static PythonVersion getPythonVersion(ProcessExecutor processExecutor, Path pythonPath)
       throws InterruptedException {
     try {
+      // Taken from pex's interpreter.py.
+      String versionId = "import sys\n" +
+          "\n" +
+          "if hasattr(sys, 'pypy_version_info'):\n" +
+          "  subversion = 'PyPy'\n" +
+          "elif sys.platform.startswith('java'):\n" +
+          "  subversion = 'Jython'\n" +
+          "else:\n" +
+          "  subversion = 'CPython'\n" +
+          "\n" +
+          "print('%s %s %s' % (subversion, sys.version_info[0], " +
+          "sys.version_info[1]))\n";
+
       ProcessExecutor.Result versionResult = processExecutor.launchAndExecute(
-          ProcessExecutorParams.builder().addCommand(pythonPath.toString(), "-V").build(),
-          EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_ERR),
-          /* stdin */ Optional.<String>absent(),
+          ProcessExecutorParams.builder().addCommand(pythonPath.toString(), "-").build(),
+          EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT,
+                     ProcessExecutor.Option.EXPECTING_STD_ERR),
+          Optional.of(versionId),
           /* timeOutMs */ Optional.<Long>absent(),
           /* timeoutHandler */ Optional.<Function<Process, Void>>absent());
       return extractPythonVersion(pythonPath, versionResult);
     } catch (IOException e) {
       throw new HumanReadableException(
           e,
-          "Could not run \"%s --version\": %s",
+          "Could not run \"%s - < [code]\": %s",
           pythonPath,
           e.getMessage());
     }
@@ -267,16 +288,21 @@ public class PythonBuckConfig {
     if (versionResult.getExitCode() == 0) {
       String versionString = CharMatcher.whitespace().trimFrom(
           CharMatcher.whitespace().trimFrom(versionResult.getStderr().get()) +
-          CharMatcher.whitespace().trimFrom(versionResult.getStdout().get())
-              .replaceAll("\u001B\\[[;\\d]*m", ""));
-      Matcher matcher = PYTHON_VERSION_REGEX.matcher(versionString.split("\\r?\\n")[0]);
-      if (!matcher.matches()) {
+              CharMatcher.whitespace().trimFrom(versionResult.getStdout().get())
+                  .replaceAll("\u001B\\[[;\\d]*m", ""));
+      String[] versionLines = versionString.split("\\r?\\n");
+
+      String[] compatibilityVersion = versionLines[0].split(" ");
+      if (compatibilityVersion.length != 3) {
         throw new HumanReadableException(
-            "`%s -V` returned an invalid version string %s",
+            "`%s - < [code]` returned an invalid version string %s",
             pythonPath,
             versionString);
       }
-      return PythonVersion.of(matcher.group(1));
+
+      return PythonVersion.of(
+          compatibilityVersion[0],
+          compatibilityVersion[1] + "." + compatibilityVersion[2]);
     } else {
       throw new HumanReadableException(versionResult.getStderr().get());
     }

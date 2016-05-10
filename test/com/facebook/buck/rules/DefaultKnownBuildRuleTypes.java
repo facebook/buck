@@ -52,9 +52,9 @@ public class DefaultKnownBuildRuleTypes {
 
   private static final ImmutableMap<String, String> PYTHONS =
       ImmutableMap.of(
-          "python", "2.6.5",
-          "python2", "2.6.5",
-          "python3", "3.5.0");
+          "python", "2.6",
+          "python2", "2.6",
+          "python3", "3.5");
 
   protected static ImmutableMap<ProcessExecutorParams, FakeProcess> getPythonProcessMap(
       List<String> paths) {
@@ -65,10 +65,11 @@ public class DefaultKnownBuildRuleTypes {
         for (String extension : new String[]{"", ".exe", ".EXE"}) {
           processMap.put(
               ProcessExecutorParams.builder()
-                  .setCommand(
-                      ImmutableList.of(path + File.separator + python.getKey() + extension, "-V"))
+                  .setCommand(ImmutableList.of(
+                      path + File.separator + python.getKey() + extension,
+                      "-"))
                   .build(),
-              new FakeProcess(0, "Python " + python.getValue(), ""));
+              new FakeProcess(0, "CPython " + python.getValue().replace('.', ' '), ""));
         }
       }
     }

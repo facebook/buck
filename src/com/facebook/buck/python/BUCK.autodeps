@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY 038a9bb43ee9088dc19d0801c6c31e49b40e24e2 #@#
+#@# GENERATED FILE: DO NOT MODIFY e0b47a7292070391bc59832b7465ddcffad738d4 #@#
 {
   "config" : {
     "deps" : [
+      "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",
       "//third-party/java/jsr:jsr305"
