@@ -32,6 +32,17 @@
         "name": "Ensuring that the 'buck targets' works correctly",
         "shell": ".\\bin\\buck targets"
       }
+    ],
+    "report" : [
+      {
+        "type" : "email",
+        "triggers" : [ "fail" ],
+        "emails": ["ilyaklyuchnikov@fb.com"]
+      },
+      {
+        "type" : "phcomment",
+        "triggers" : [ "fail" ]
+      }
     ]
   }
 ]
