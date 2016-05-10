@@ -16,7 +16,7 @@
 
 package com.facebook.buck.io;
 
-import static com.facebook.buck.util.concurrent.MoreExecutors.newSingleThreadExecutor;
+import static com.facebook.buck.util.concurrent.MostExecutors.newSingleThreadExecutor;
 
 import com.facebook.buck.log.Logger;
 

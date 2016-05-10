@@ -10,7 +10,7 @@ java_library(
 
 java_library(
   name = 'concurrent_for_junit_runner',
-  srcs = [ 'MoreExecutors.java' ],
+  srcs = [ 'MostExecutors.java' ],
   deps = [
     # IMPORTANT! This list is to remain empty. See src/com/facebook/buck/testrunner/BUCK.
   ],

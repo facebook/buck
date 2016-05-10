@@ -35,7 +35,7 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.concurrent.MoreExecutors;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -334,7 +334,7 @@ public class ParsePipelineTest {
     return new Fixture(
         scenario,
         com.google.common.util.concurrent.MoreExecutors.listeningDecorator(
-            MoreExecutors.newMultiThreadExecutor("ParsePipelineTest", 4)),
+            MostExecutors.newMultiThreadExecutor("ParsePipelineTest", 4)),
         SpeculativeParsing.of(true));
   }
 

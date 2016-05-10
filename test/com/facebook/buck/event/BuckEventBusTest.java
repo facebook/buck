@@ -24,7 +24,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.SettableFakeClock;
-import com.facebook.buck.util.concurrent.MoreExecutors;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.eventbus.Subscribe;
 
 import org.junit.Test;
@@ -40,7 +40,7 @@ public class BuckEventBusTest {
   public void testShutdownSuccess() throws Exception {
     BuckEventBus eb = new BuckEventBus(
         new DefaultClock(),
-        MoreExecutors.newSingleThreadExecutor(BuckEventBus.class.getSimpleName()),
+        MostExecutors.newSingleThreadExecutor(BuckEventBus.class.getSimpleName()),
         BuckEventBusFactory.BUILD_ID_FOR_TEST,
         timeoutMillis);
     eb.register(new SleepSubscriber());
@@ -57,7 +57,7 @@ public class BuckEventBusTest {
   public void testShutdownFailure() throws IOException {
     BuckEventBus eb = new BuckEventBus(
         new DefaultClock(),
-        MoreExecutors.newSingleThreadExecutor(BuckEventBus.class.getSimpleName()),
+        MostExecutors.newSingleThreadExecutor(BuckEventBus.class.getSimpleName()),
         BuckEventBusFactory.BUILD_ID_FOR_TEST,
         timeoutMillis);
     eb.register(new SleepSubscriber());
@@ -75,7 +75,7 @@ public class BuckEventBusTest {
   public void whenEventTimestampedThenEventCannotBePosted() throws IOException {
     BuckEventBus eb = new BuckEventBus(
         new DefaultClock(),
-        MoreExecutors.newSingleThreadExecutor(BuckEventBus.class.getSimpleName()),
+        MostExecutors.newSingleThreadExecutor(BuckEventBus.class.getSimpleName()),
         BuckEventBusFactory.BUILD_ID_FOR_TEST,
         timeoutMillis);
     TestEvent event = new TestEvent();
@@ -97,7 +97,7 @@ public class BuckEventBusTest {
   public void whenEventPostedWithAnotherThenTimestampCopiedToPostedEvent() throws IOException {
     BuckEventBus eb = new BuckEventBus(
         new DefaultClock(),
-        MoreExecutors.newSingleThreadExecutor(BuckEventBus.class.getSimpleName()),
+        MostExecutors.newSingleThreadExecutor(BuckEventBus.class.getSimpleName()),
         BuckEventBusFactory.BUILD_ID_FOR_TEST,
         timeoutMillis);
     TestEvent timestamp = new TestEvent();
@@ -114,7 +114,7 @@ public class BuckEventBusTest {
     SettableFakeClock fakeClock = new SettableFakeClock(49152, 64738);
     BuckEventBus eb = new BuckEventBus(
         fakeClock,
-        MoreExecutors.newSingleThreadExecutor(BuckEventBus.class.getSimpleName()),
+        MostExecutors.newSingleThreadExecutor(BuckEventBus.class.getSimpleName()),
         BuckEventBusFactory.BUILD_ID_FOR_TEST,
         timeoutMillis);
     TestEvent event = new TestEvent();

@@ -23,7 +23,7 @@ import com.facebook.buck.util.concurrent.ListeningSemaphore;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.LimitedThreadPoolExecutor;
-import com.facebook.buck.util.concurrent.MoreExecutors;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -109,7 +109,7 @@ public class CommandThreadManager implements AutoCloseable {
 
   @Override
   public void close() throws InterruptedException {
-    boolean shutdown = MoreExecutors.shutdown(
+    boolean shutdown = MostExecutors.shutdown(
         executor,
         shutdownTimeout,
         shutdownTimeoutUnit);

@@ -50,7 +50,7 @@ import com.facebook.buck.util.BestCompressionGZIPOutputStream;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
-import com.facebook.buck.util.concurrent.MoreExecutors;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -134,7 +134,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     };
     this.tracesToKeep = tracesToKeep;
     this.compressTraces = compressTraces;
-    this.outputExecutor = MoreExecutors.newSingleThreadExecutor(
+    this.outputExecutor = MostExecutors.newSingleThreadExecutor(
         new CommandThreadFactory(getClass().getName()));
     TracePathAndStream tracePathAndStream = createPathAndStream(buildId);
     this.tracePath = tracePathAndStream.getPath();

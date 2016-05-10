@@ -16,7 +16,7 @@
 
 package com.facebook.buck.log;
 
-import com.facebook.buck.util.concurrent.MoreExecutors;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.util.concurrent.ConcurrentMap;
@@ -39,7 +39,7 @@ public class CommandThreadFactory implements ThreadFactory {
   }
 
   public CommandThreadFactory(String threadName) {
-    this(new MoreExecutors.NamedThreadFactory(threadName));
+    this(new MostExecutors.NamedThreadFactory(threadName));
   }
 
   @VisibleForTesting

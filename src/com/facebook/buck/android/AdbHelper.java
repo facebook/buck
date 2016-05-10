@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
+import static com.facebook.buck.util.concurrent.MostExecutors.newMultiThreadExecutor;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
 import com.android.ddmlib.AdbCommandRejectedException;
@@ -45,7 +45,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.TriState;
-import com.facebook.buck.util.concurrent.MoreExecutors;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -345,7 +345,7 @@ public class AdbHelper {
       Thread.currentThread().interrupt();
       throw e;
     } finally {
-      MoreExecutors.shutdownOrThrow(
+      MostExecutors.shutdownOrThrow(
           executorService,
           10,
           TimeUnit.MINUTES,

@@ -27,7 +27,7 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyBuilderFactory;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.concurrent.MoreExecutors;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -80,7 +80,7 @@ public class ActionGraphCache {
         /* maximumPoolSize */ 1,
         /* keepAliveTime */ 0L, TimeUnit.MILLISECONDS,
         /* workQueue */ new LinkedBlockingQueue<Runnable>(),
-        /* threadFactory */ new MoreExecutors.NamedAndPriorityThreadFactory(
+        /* threadFactory */ new MostExecutors.NamedAndPriorityThreadFactory(
             "ActionGraphCache-RuleCheck",
             Thread.MIN_PRIORITY),
         /* handler */ new ThreadPoolExecutor.DiscardPolicy()));

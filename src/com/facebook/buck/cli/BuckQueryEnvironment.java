@@ -36,7 +36,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
-import com.facebook.buck.util.concurrent.MoreExecutors;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -139,7 +139,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     ListeningExecutorService executor = null;
     try {
       executor = com.google.common.util.concurrent.MoreExecutors.listeningDecorator(
-          MoreExecutors.newSingleThreadExecutor("buck query.getNode"));
+          MostExecutors.newSingleThreadExecutor("buck query.getNode"));
       return params.getParser().getTargetNode(
           params.getBuckEventBus(),
           params.getCell(),

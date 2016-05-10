@@ -21,7 +21,7 @@ import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.util.concurrent.MoreExecutors;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -277,7 +277,7 @@ class ProjectBuildFileParserPool implements AutoCloseable {
     // Using a direct executor means we run the chance of executing shutdown synchronously (which
     // we try to avoid).
     final ExecutorService executorService =
-        MoreExecutors.newSingleThreadExecutor("parser shutdown");
+        MostExecutors.newSingleThreadExecutor("parser shutdown");
 
     // It is possible that more requests for work are scheduled at this point, however they should
     // all early-out due to `closing` being set to true, so we don't really care about those.

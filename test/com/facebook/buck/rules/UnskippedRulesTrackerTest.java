@@ -31,7 +31,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.timing.FakeClock;
-import com.facebook.buck.util.concurrent.MoreExecutors;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.eventbus.Subscribe;
@@ -68,7 +68,7 @@ public class UnskippedRulesTrackerTest {
   @Before
   public void setUp() {
     ListeningExecutorService executor = listeningDecorator(
-        MoreExecutors.newMultiThreadExecutor(
+        MostExecutors.newMultiThreadExecutor(
             "UnskippedRulesTracker", 7));
     RuleDepsCache depsCache = new RuleDepsCache(executor);
     unskippedRulesTracker = new UnskippedRulesTracker(depsCache, executor);

@@ -25,9 +25,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class MoreExecutors {
+public class MostExecutors {
 
-  private MoreExecutors() {
+  private MostExecutors() {
     // Utility class.
   }
 

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.testrunner;
 
-import com.facebook.buck.util.concurrent.MoreExecutors;
+import com.facebook.buck.util.concurrent.MostExecutors;
 
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
@@ -49,7 +49,7 @@ class DelegateRunnerWithTimeout extends Runner {
   private static final ThreadLocal<ExecutorService> executor = new ThreadLocal<ExecutorService>() {
     @Override
     protected ExecutorService initialValue() {
-      return MoreExecutors.newSingleThreadExecutor(DelegateRunnerWithTimeout.class.getSimpleName());
+      return MostExecutors.newSingleThreadExecutor(DelegateRunnerWithTimeout.class.getSimpleName());
     }
   };
 

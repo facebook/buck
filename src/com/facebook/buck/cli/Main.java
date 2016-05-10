@@ -99,7 +99,7 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.cache.WatchedFileHashCache;
-import com.facebook.buck.util.concurrent.MoreExecutors;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.concurrent.TimeSpan;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
@@ -877,11 +877,11 @@ public final class Main {
         TestConfig testConfig = new TestConfig(buckConfig);
         ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig);
 
-        ExecutorService diskIoExecutorService = MoreExecutors.newSingleThreadExecutor("Disk I/O");
+        ExecutorService diskIoExecutorService = MostExecutors.newSingleThreadExecutor("Disk I/O");
         ListeningExecutorService httpWriteExecutorService =
             getHttpWriteExecutorService(cacheBuckConfig);
         ScheduledExecutorService counterAggregatorExecutor =
-            MoreExecutors.newSingleThreadScheduledExecutor("CounterAggregatorThread");
+            MostExecutors.newSingleThreadScheduledExecutor("CounterAggregatorThread");
         VersionControlStatsGenerator vcStatsGenerator;
 
         // Eventually, we'll want to get allow websocket and/or nailgun clients to specify locale
@@ -1179,7 +1179,7 @@ public final class Main {
   private static ListeningExecutorService getHttpWriteExecutorService(
       ArtifactCacheBuckConfig buckConfig) {
     if (buckConfig.hasAtLeastOneWriteableCache()) {
-      ExecutorService executorService = MoreExecutors.newMultiThreadExecutor(
+      ExecutorService executorService = MostExecutors.newMultiThreadExecutor(
           "HTTP Write",
           buckConfig.getHttpMaxConcurrentWrites());
 
