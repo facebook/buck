@@ -80,6 +80,7 @@ class XctoolRunTestsStep implements Step {
   private static final Logger LOG = Logger.get(XctoolRunTestsStep.class);
 
   private final ImmutableList<String> command;
+  private final ImmutableMap<String, String> environmentOverrides;
   private final Optional<Long> xctoolStutterTimeout;
   private final Path outputPath;
   private final Optional<? extends StdoutReadingCallback> stdoutReadingCallback;
@@ -151,6 +152,7 @@ class XctoolRunTestsStep implements Step {
   public XctoolRunTestsStep(
       ProjectFilesystem filesystem,
       Path xctoolPath,
+      ImmutableMap<String, String> environmentOverrides,
       Optional<Long> xctoolStutterTimeout,
       String sdkName,
       Optional<String> destinationSpecifier,
@@ -192,6 +194,7 @@ class XctoolRunTestsStep implements Step {
         destinationSpecifier,
         logicTestBundlePaths,
         appTestBundleToHostAppPaths);
+    this.environmentOverrides = environmentOverrides;
     this.xctoolStutterTimeout = xctoolStutterTimeout;
     this.outputPath = outputPath;
     this.stdoutReadingCallback = stdoutReadingCallback;
@@ -231,6 +234,7 @@ class XctoolRunTestsStep implements Step {
           logLevel.get());
     }
 
+    environment.putAll(this.environmentOverrides);
     return ImmutableMap.copyOf(environment);
   }
 

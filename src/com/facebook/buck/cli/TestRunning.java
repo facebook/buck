@@ -190,7 +190,8 @@ public class TestRunning {
           executionContext,
           testRuleKeyFileHelper,
           options.isResultsCacheEnabled(),
-          !options.getTestSelectorList().isEmpty());
+          !options.getTestSelectorList().isEmpty(),
+          !options.getEnvironmentOverrides().isEmpty());
 
       final Map<String, UUID> testUUIDMap = new HashMap<>();
       final AtomicReference<TestStatusMessageEvent.Started> currentTestStatusMessageEvent =
@@ -587,7 +588,8 @@ public class TestRunning {
       ExecutionContext executionContext,
       TestRuleKeyFileHelper testRuleKeyFileHelper,
       boolean isResultsCacheEnabled,
-      boolean isRunningWithTestSelectors)
+      boolean isRunningWithTestSelectors,
+      boolean hasEnvironmentOverrides)
       throws IOException, ExecutionException, InterruptedException {
     boolean isTestRunRequired;
     BuildResult result;
@@ -599,6 +601,9 @@ public class TestRunning {
       // As a feature to aid developers, we'll assume that when we are using test selectors,
       // we should always run each test (and never look at the cache.)
       // TODO(edwardspeyer) When #3090004 and #3436849 are closed we can respect the cache again.
+      isTestRunRequired = true;
+    } else if (hasEnvironmentOverrides) {
+      // This is rather obtuse, ideally the environment overrides can be hashed and compared...
       isTestRunRequired = true;
     } else if (((result = cachingBuildEngine.getBuildRuleResult(
         test.getBuildTarget())) != null) &&

@@ -406,7 +406,8 @@ public class TestRunningTest {
             executionContext,
             createMock(TestRuleKeyFileHelper.class),
             true,
-            false));
+            false,
+            /* hasEnvironmentOverrides */ false));
   }
 
   @Test
@@ -440,7 +441,8 @@ public class TestRunningTest {
             executionContext,
             createMock(TestRuleKeyFileHelper.class),
             /* results cache enabled */ true,
-            /* running with test selectors */ false));
+            /* running with test selectors */ false,
+            /* hasEnvironmentOverrides */ false));
 
     verify(cachingBuildEngine);
   }
@@ -475,7 +477,8 @@ public class TestRunningTest {
             executionContext,
             createMock(TestRuleKeyFileHelper.class),
             /* results cache enabled */ true,
-            /* running with test selectors */ false));
+            /* running with test selectors */ false,
+            /* hasEnvironmentOverrides */ false));
 
     verify(cachingBuildEngine);
   }
@@ -520,7 +523,63 @@ public class TestRunningTest {
             executionContext,
             testRuleKeyFileHelper,
             /* results cache enabled */ true,
-            /* running with test selectors */ false));
+            /* running with test selectors */ false,
+            /* hasEnvironmentOverrides */ false));
+
+    verify(cachingBuildEngine, testRuleKeyFileHelper);
+  }
+
+  @Test
+  public void testRunAlwaysRequiredIfEnvironmentOverridesPresent() throws Exception {
+    ExecutionContext executionContext = TestExecutionContext.newBuilder()
+        .setDebugEnabled(false)
+        .build();
+
+    FakeTestRule testRule = new FakeTestRule(
+        ImmutableSet.of(Label.of("windows")),
+        BuildTargetFactory.newInstance("//:lulz"),
+        new SourcePathResolver(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY,
+                new DefaultTargetNodeToBuildRuleTransformer())
+        ),
+        ImmutableSortedSet.<BuildRule>of()) {
+
+      @Override
+      public boolean hasTestResultFiles() {
+        return true;
+      }
+    };
+
+    TestRuleKeyFileHelper testRuleKeyFileHelper = createNiceMock(TestRuleKeyFileHelper.class);
+    expect(testRuleKeyFileHelper.isRuleKeyInDir(testRule)).andReturn(true).times(1);
+
+    CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
+    BuildResult result = BuildResult.success(testRule, MATCHING_RULE_KEY, CacheResult.miss());
+    expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
+        .andReturn(result).times(1);
+    replay(cachingBuildEngine, testRuleKeyFileHelper);
+
+    assertFalse(
+        "Test will normally not be rerun",
+        TestRunning.isTestRunRequiredForTest(
+            testRule,
+            cachingBuildEngine,
+            executionContext,
+            testRuleKeyFileHelper,
+            /* results cache enabled */ true,
+            /* running with test selectors */ false,
+            /* hasEnvironmentOverrides */ false));
+    assertTrue(
+        "Test will be rerun when environment overrides are present",
+        TestRunning.isTestRunRequiredForTest(
+            testRule,
+            cachingBuildEngine,
+            executionContext,
+            testRuleKeyFileHelper,
+            /* results cache enabled */ true,
+            /* running with test selectors */ false,
+            /* hasEnvironmentOverrides */ true));
 
     verify(cachingBuildEngine, testRuleKeyFileHelper);
   }

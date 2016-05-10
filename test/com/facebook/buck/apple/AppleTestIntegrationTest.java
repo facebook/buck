@@ -541,6 +541,53 @@ public class AppleTestIntegrationTest {
     assertThat(hasSymbol.getStdout().get(), containsString("U _OBJC_CLASS_$_Library"));
   }
 
+  @Test
+  public void environmentOverrideAffectsXctoolTest() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    // Our version of xctool doesn't pass through any environment variables, so just see if xctool
+    // itself crashes.
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_test_xctest", tmp);
+    workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(this).resolve("xctool"),
+        Paths.get("xctool"));
+    workspace.runBuckCommand(
+        "test",
+        "--config", "apple.xctool_path=xctool/bin/xctool",
+        "//:foo")
+        .assertSuccess("normally the test should succeed");
+    workspace.resetBuildLogFile();
+    workspace.runBuckCommand(
+        "test",
+        "--config", "apple.xctool_path=xctool/bin/xctool",
+        "--test-runner-env", "DYLD_INSERT_LIBRARIES=/non_existent_library_omg.dylib",
+        "//:foo")
+        .assertTestFailure("test should fail if i set incorrect dyld environment");
+  }
+
+  @Test
+  public void environmentOverrideAffectsXctestTest() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_test_env", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result;
+    result = workspace.runBuckCommand(
+        "test",
+        "--config", "apple.xctest_platforms=macosx",
+        "//:foo#macosx-x86_64");
+    result.assertTestFailure("normally the test should fail");
+    workspace.resetBuildLogFile();
+    result = workspace.runBuckCommand(
+        "test",
+        "--config", "apple.xctest_platforms=macosx",
+        "--test-runner-env", "FOO=bar",
+        "//:foo#macosx-x86_64");
+    result.assertSuccess("should pass when I pass correct environment");
+  }
+
   private static void assertIsSymbolicLink(
       Path link,
       Path target) throws IOException {

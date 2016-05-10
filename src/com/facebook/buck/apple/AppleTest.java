@@ -61,6 +61,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -178,7 +179,7 @@ public class AppleTest
       Optional<Long> xctoolStutterTimeout,
       Tool xctest,
       Optional<Tool> otest,
-      Boolean useXctest,
+      boolean useXctest,
       String platformName,
       Optional<String> defaultDestinationSpecifier,
       Optional<ImmutableMap<String, String>> destinationSpecifier,
@@ -312,6 +313,7 @@ public class AppleTest
           new XctoolRunTestsStep(
               getProjectFilesystem(),
               getResolver().getAbsolutePath(xctool.get()),
+              options.getEnvironmentOverrides(),
               xctoolStutterTimeout,
               platformName,
               destinationSpecifierArg,
@@ -342,10 +344,13 @@ public class AppleTest
             "Cannot run non-xctest bundle type %s (otest not present)",
             testBundleExtension);
       }
+      HashMap<String, String> environment = new HashMap<>();
+      environment.putAll(testRunningTool.getEnvironment(getResolver()));
+      environment.putAll(options.getEnvironmentOverrides());
       XctestRunTestsStep xctestStep =
           new XctestRunTestsStep(
               getProjectFilesystem(),
-              testRunningTool.getEnvironment(getResolver()),
+              ImmutableMap.copyOf(environment),
               testRunningTool.getCommandPrefix(getResolver()),
               (testBundleExtension.equals("xctest") ? "-XCTest" : "-SenTest"),
               resolvedTestBundleDirectory,

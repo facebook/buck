@@ -70,7 +70,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -157,6 +159,14 @@ public class TestCommand extends BuildCommand {
           "Only run the tests targets that were specified on the command line (without adding " +
           "more tests by following dependencies).")
   private boolean shouldExcludeTransitiveTests;
+
+  @Option(
+      name = "--test-runner-env",
+      usage =
+          "Add or override an environment variable passed to the test runner. Later occurrences " +
+          "override earlier occurrences. Currently this only support Apple(ios/osx) tests.",
+      handler = EnvironmentOverrideOptionHandler.class)
+  private Map<String, String> environmentOverrides = new HashMap<>();
 
   @AdditionalOptions
   @SuppressFieldNotInitialized
@@ -255,6 +265,7 @@ public class TestCommand extends BuildCommand {
         .setPathToJavaAgent(Optional.fromNullable(pathToJavaAgent))
         .setCoverageReportFormat(coverageReportFormat)
         .setCoverageReportTitle(coverageReportTitle)
+        .setEnvironmentOverrides(environmentOverrides)
         .build();
   }
 
@@ -597,5 +608,4 @@ public class TestCommand extends BuildCommand {
   public String getShortDescription() {
     return "builds and runs the tests for the specified target";
   }
-
 }

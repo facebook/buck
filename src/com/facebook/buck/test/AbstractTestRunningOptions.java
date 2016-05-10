@@ -19,6 +19,7 @@ package com.facebook.buck.test;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
 
@@ -79,4 +80,6 @@ abstract class AbstractTestRunningOptions {
   public String getCoverageReportTitle() {
     return "Code-Coverage Analysis";
   }
+
+  public abstract ImmutableMap<String, String> getEnvironmentOverrides();
 }

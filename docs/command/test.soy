@@ -177,6 +177,18 @@ contains a <code>tests = ['...']</code> field to specify its tests.</p>
 {/call}
 
 {call buck.param}
+  {param name: 'test-runner-env' /}
+  {param desc}
+    Add or override an environment variable passed to the test runner. Can be specified multiple
+    times for different environment variables. Later occurrences override earlier occurrences.
+
+    Currently this only support Apple(ios/osx) tests.
+
+    <pre>buck test --test-runner-env FOO=BAR --test-runner-env BAZ=QUUX //some:target</pre>
+  {/param}
+{/call}
+
+{call buck.param}
   {param name: 'verbose' /}
   {param alias: 'v'/}
   {param desc}
