@@ -1,0 +1,4 @@
+!com.facebook.buck.cxx.CxxSourceRuleFactoryTest
+!com.facebook.buck.cxx.CxxSourceRuleFactoryTest.*
+!com.facebook.buck.cxx.PrecompiledHeaderFeatureTest
+!com.facebook.buck.cxx.PrecompiledHeaderFeatureTest.*
