@@ -23,7 +23,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
-import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
 import java.util.List;
@@ -64,10 +63,6 @@ public class BuckEventBusFactory {
         BuckEventBus.DEFAULT_SHUTDOWN_TIMEOUT_MS);
     buckEventBus.register(new ErrorListener());
     return buckEventBus;
-  }
-
-  public static EventBus getEventBusFor(BuckEventBus buckEventBus) {
-    return buckEventBus.getEventBus();
   }
 
   /**

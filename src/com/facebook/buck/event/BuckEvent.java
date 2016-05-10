@@ -16,13 +16,17 @@
 
 package com.facebook.buck.event;
 
-import com.facebook.buck.model.BuildId;
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
+import com.facebook.buck.model.BuildId;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.annotations.VisibleForTesting;
 
 public interface BuckEvent extends BuckEventExternalInterface {
   @VisibleForTesting
   void configure(long timestamp, long nanoTime, long threadId, BuildId buildId);
+
+  @JsonIgnore
+  boolean isConfigured();
 
   long getNanoTime();
 

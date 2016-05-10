@@ -60,6 +60,11 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   }
 
   @Override
+  public boolean isConfigured() {
+    return isConfigured;
+  }
+
+  @Override
   public long getTimestamp() {
     Preconditions.checkState(isConfigured, "Event was not configured yet.");
     return timestamp;

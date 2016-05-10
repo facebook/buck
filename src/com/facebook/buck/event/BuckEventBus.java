@@ -22,6 +22,7 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -113,8 +114,9 @@ public class BuckEventBus implements Closeable {
   }
 
   @VisibleForTesting
-  EventBus getEventBus() {
-    return eventBus;
+  public void postWithoutConfiguring(BuckEvent event) {
+    Preconditions.checkState(event.isConfigured());
+    eventBus.post(event);
   }
 
   @VisibleForTesting

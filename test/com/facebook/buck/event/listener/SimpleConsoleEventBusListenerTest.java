@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ConsoleEvent;
@@ -39,6 +38,7 @@ import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -52,7 +52,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.eventbus.EventBus;
 import com.google.common.hash.HashCode;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
@@ -83,7 +82,6 @@ public class SimpleConsoleEventBusListenerTest {
     String expectedOutput = "";
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
-    EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
     TestConsole console = new TestConsole();
 
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
@@ -109,21 +107,25 @@ public class SimpleConsoleEventBusListenerTest {
     final long threadId = 0;
 
     BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs);
-    rawEventBus.post(
+    eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             buildEventStarted,
             0L,
             TimeUnit.MILLISECONDS,
             threadId));
     ParseEvent.Started parseStarted = ParseEvent.started(buildTargets);
-    rawEventBus.post(configureTestEventAtTime(
-            parseStarted, 0L, TimeUnit.MILLISECONDS, threadId));
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            parseStarted,
+            0L,
+            TimeUnit.MILLISECONDS,
+            threadId));
 
     assertOutput("", console);
 
-    rawEventBus.post(configureTestEventAtTime(
-        ParseEvent.finished(parseStarted,
-            Optional.<TargetGraph>absent()),
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            ParseEvent.finished(parseStarted, Optional.<TargetGraph>absent()),
             400L,
             TimeUnit.MILLISECONDS,
             threadId));
@@ -131,7 +133,7 @@ public class SimpleConsoleEventBusListenerTest {
     expectedOutput += "[-] PARSING BUCK FILES...FINISHED 0.4s\n";
     assertOutput(expectedOutput, console);
 
-    rawEventBus.post(
+    eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             BuildRuleEvent.started(fakeRule),
             600L,
@@ -139,15 +141,15 @@ public class SimpleConsoleEventBusListenerTest {
             threadId));
 
     HttpArtifactCacheEvent.Scheduled storeScheduledOne = postStoreScheduled(
-        rawEventBus, threadId, TARGET_ONE, 700L);
+        eventBus, threadId, TARGET_ONE, 700L);
 
     HttpArtifactCacheEvent.Scheduled storeScheduledTwo = postStoreScheduled(
-        rawEventBus, threadId, TARGET_TWO, 700L);
+        eventBus, threadId, TARGET_TWO, 700L);
 
     HttpArtifactCacheEvent.Started storeStartedOne =
-        postStoreStarted(rawEventBus, threadId, 710L, storeScheduledOne);
+        postStoreStarted(eventBus, threadId, 710L, storeScheduledOne);
 
-    rawEventBus.post(
+    eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             BuildRuleEvent.finished(
                 fakeRule,
@@ -160,48 +162,55 @@ public class SimpleConsoleEventBusListenerTest {
             1000L,
             TimeUnit.MILLISECONDS,
             threadId));
-    rawEventBus.post(configureTestEventAtTime(
-        BuildEvent.finished(buildEventStarted, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            BuildEvent.finished(buildEventStarted, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
 
     expectedOutput += "BUILT //banana:stand\n" +
         "[-] BUILDING...FINISHED 0.8s\n" +
         "WAITING FOR HTTP CACHE UPLOADS (0 COMPLETE/0 FAILED/1 UPLOADING/1 PENDING)\n";
     assertOutput(expectedOutput, console);
 
-    rawEventBus.post(configureTestEventAtTime(
-        ConsoleEvent.severe("I've made a huge mistake."), 1500L, TimeUnit.MILLISECONDS, threadId));
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            ConsoleEvent.severe("I've made a huge mistake."),
+            1500L,
+            TimeUnit.MILLISECONDS,
+            threadId));
 
     expectedOutput += "I've made a huge mistake.\n";
     assertOutput(expectedOutput, console);
 
     InstallEvent.Started installEventStarted = configureTestEventAtTime(
         InstallEvent.started(fakeTarget), 2500L, TimeUnit.MILLISECONDS, threadId);
-    rawEventBus.post(installEventStarted);
+    eventBus.postWithoutConfiguring(installEventStarted);
 
     assertOutput(expectedOutput, console);
 
-    rawEventBus.post(configureTestEventAtTime(
-        InstallEvent.finished(
-            installEventStarted,
-            true,
-            Optional.<Long>absent(),
-            Optional.<String>absent()),
-        4000L,
-        TimeUnit.MILLISECONDS,
-        threadId));
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            InstallEvent.finished(
+                installEventStarted,
+                true,
+                Optional.<Long>absent(),
+                Optional.<String>absent()),
+            4000L,
+            TimeUnit.MILLISECONDS,
+            threadId));
 
     expectedOutput += "[-] INSTALLING...FINISHED 1.5s\n";
     assertOutput(expectedOutput, console);
 
 
-    postStoreFinished(rawEventBus, threadId, 5015L, true, storeStartedOne);
+    postStoreFinished(eventBus, threadId, 5015L, true, storeStartedOne);
 
     HttpArtifactCacheEvent.Started storeStartedTwo =
-        postStoreStarted(rawEventBus, threadId, 5020L, storeScheduledTwo);
+        postStoreStarted(eventBus, threadId, 5020L, storeScheduledTwo);
 
-    postStoreFinished(rawEventBus, threadId, 5020L, false, storeStartedTwo);
+    postStoreFinished(eventBus, threadId, 5020L, false, storeStartedTwo);
 
-    rawEventBus.post(configureTestEventAtTime(
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
             HttpArtifactCacheEvent.newShutdownEvent(),
             6000L,
             TimeUnit.MILLISECONDS,
@@ -216,7 +225,6 @@ public class SimpleConsoleEventBusListenerTest {
   public void testBuildTimeDoesNotDisplayNegativeOffset() {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
-    EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
     TestConsole console = new TestConsole();
 
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
@@ -234,33 +242,49 @@ public class SimpleConsoleEventBusListenerTest {
     // Do a full parse and action graph cycle before the build event starts
     // This sequencing occurs when running `buck project`
     ParseEvent.Started parseStarted = ParseEvent.started(buildTargets);
-    rawEventBus.post(configureTestEventAtTime(
-        parseStarted,
-        100L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-    rawEventBus.post(configureTestEventAtTime(
-        ParseEvent.finished(parseStarted, Optional.<TargetGraph>absent()),
-        300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            parseStarted,
+            100L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            ParseEvent.finished(parseStarted, Optional.<TargetGraph>absent()),
+            300L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
 
     String expectedOutput = "[-] PARSING BUCK FILES...FINISHED 0.2s\n";
     assertOutput(expectedOutput, console);
 
     ActionGraphEvent.Started actionGraphStarted = ActionGraphEvent.started();
-    rawEventBus.post(configureTestEventAtTime(
-        actionGraphStarted,
-        300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-    rawEventBus.post(configureTestEventAtTime(
-        ActionGraphEvent.finished(actionGraphStarted),
-        500L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            actionGraphStarted,
+            300L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            ActionGraphEvent.finished(actionGraphStarted),
+            500L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
 
     BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs);
-    rawEventBus.post(
+    eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             buildEventStarted,
-            500L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-    rawEventBus.post(
+            500L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+    eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             BuildEvent.finished(buildEventStarted, 0),
-            600L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+            600L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
     expectedOutput += "[-] BUILDING...FINISHED 0.1s\n";
     assertOutput(expectedOutput, console);
   }

@@ -19,24 +19,28 @@ package com.facebook.buck.event.listener;
 import static com.facebook.buck.event.TestEventConfigerator.configureTestEventAtTime;
 
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.eventbus.EventBus;
 
 import java.util.concurrent.TimeUnit;
 
 public class ConsoleTestUtils {
-  private ConsoleTestUtils() {
-  }
+
+  private ConsoleTestUtils() {}
 
   public static HttpArtifactCacheEvent.Scheduled postStoreScheduled(
-      EventBus rawEventBus, long threadId, String target, long time) {
+      BuckEventBus eventBus,
+      long threadId,
+      String target,
+      long time) {
     HttpArtifactCacheEvent.Scheduled storeScheduled =
         HttpArtifactCacheEvent.newStoreScheduledEvent(
             Optional.of(target), ImmutableSet.<RuleKey>of());
 
-    rawEventBus.post(configureTestEventAtTime(
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
             storeScheduled,
             time,
             TimeUnit.MILLISECONDS,
@@ -45,14 +49,15 @@ public class ConsoleTestUtils {
   }
 
   public static HttpArtifactCacheEvent.Started postStoreStarted(
-      EventBus rawEventBus,
+      BuckEventBus eventBus,
       long threadId,
       long time,
       HttpArtifactCacheEvent.Scheduled storeScheduled) {
     HttpArtifactCacheEvent.Started storeStartedOne =
         HttpArtifactCacheEvent.newStoreStartedEvent(storeScheduled);
 
-    rawEventBus.post(configureTestEventAtTime(
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
             storeStartedOne,
             time,
             TimeUnit.MILLISECONDS,
@@ -61,7 +66,7 @@ public class ConsoleTestUtils {
   }
 
   public static void postStoreFinished(
-      EventBus rawEventBus,
+      BuckEventBus eventBus,
       long threadId,
       long time,
       boolean success,
@@ -71,7 +76,8 @@ public class ConsoleTestUtils {
             .setWasUploadSuccessful(success)
             .build();
 
-    rawEventBus.post(configureTestEventAtTime(
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
             storeFinished,
             time,
             TimeUnit.MILLISECONDS,
