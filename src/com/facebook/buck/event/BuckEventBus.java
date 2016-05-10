@@ -24,6 +24,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.eventbus.EventBus;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -54,21 +55,20 @@ public class BuckEventBus implements Closeable {
   private final int shutdownTimeoutMillis;
 
   public BuckEventBus(Clock clock, BuildId buildId) {
-    this(clock,
-        MostExecutors.newSingleThreadExecutor(
-            new CommandThreadFactory(BuckEventBus.class.getSimpleName())),
-        buildId,
-        DEFAULT_SHUTDOWN_TIMEOUT_MS);
+    this(clock, true, buildId, DEFAULT_SHUTDOWN_TIMEOUT_MS);
   }
 
   @VisibleForTesting
   public BuckEventBus(
       Clock clock,
-      ExecutorService executorService,
+      boolean async,
       BuildId buildId,
       int shutdownTimeoutMillis) {
     this.clock = clock;
-    this.executorService = executorService;
+    this.executorService = async ?
+        MostExecutors.newSingleThreadExecutor(
+            new CommandThreadFactory(BuckEventBus.class.getSimpleName())) :
+        MoreExecutors.newDirectExecutorService();
     this.eventBus = new EventBus("buck-build-events");
     this.threadIdSupplier = DEFAULT_THREAD_ID_SUPPLIER;
     this.buildId = buildId;
@@ -110,10 +110,6 @@ public class BuckEventBus implements Closeable {
 
   public void register(Object object) {
     eventBus.register(object);
-  }
-
-  public void unregister(Object object) {
-    eventBus.unregister(object);
   }
 
   @VisibleForTesting
@@ -172,4 +168,5 @@ public class BuckEventBus implements Closeable {
   public void timestamp(BuckEvent event) {
     event.configure(clock.currentTimeMillis(), clock.nanoTime(), threadIdSupplier.get(), buildId);
   }
+
 }

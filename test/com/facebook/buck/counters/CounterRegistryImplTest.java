@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.eventbus.Subscribe;
-import com.google.common.util.concurrent.MoreExecutors;
 
 import org.easymock.Capture;
 import org.easymock.EasyMock;
@@ -133,7 +132,7 @@ public class CounterRegistryImplTest {
   public void noEventsFlushedIfNoCountersRegistered() throws IOException {
     BuckEventBus fakeEventBus = new BuckEventBus(
         new FakeClock(0),
-        MoreExecutors.newDirectExecutorService(),
+        false,
         new BuildId("12345"),
         1000);
     SnapshotEventListener listener = new SnapshotEventListener();
@@ -161,7 +160,7 @@ public class CounterRegistryImplTest {
   public void noEventsFlushedIfCounterRegisteredButHasNoData() throws IOException {
     BuckEventBus fakeEventBus = new BuckEventBus(
         new FakeClock(0),
-        MoreExecutors.newDirectExecutorService(),
+        false,
         new BuildId("12345"),
         1000);
     SnapshotEventListener listener = new SnapshotEventListener();
@@ -190,7 +189,7 @@ public class CounterRegistryImplTest {
   public void eventIsFlushedIfCounterRegisteredWithData() throws IOException {
     BuckEventBus fakeEventBus = new BuckEventBus(
         new FakeClock(0),
-        MoreExecutors.newDirectExecutorService(),
+        false,
         new BuildId("12345"),
         1000);
     SnapshotEventListener listener = new SnapshotEventListener();
@@ -225,7 +224,7 @@ public class CounterRegistryImplTest {
   public void closingRegistryBeforeTimerFiresFlushesCounters() throws IOException {
     BuckEventBus fakeEventBus = new BuckEventBus(
         new FakeClock(0),
-        MoreExecutors.newDirectExecutorService(),
+        false,
         new BuildId("12345"),
         1000);
     SnapshotEventListener listener = new SnapshotEventListener();
