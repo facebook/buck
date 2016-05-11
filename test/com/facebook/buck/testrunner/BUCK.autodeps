@@ -1,11 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY 494620f541ad23113f4577eb81910de0c24be510 #@#
+#@# GENERATED FILE: DO NOT MODIFY a45ee7dd6af5c96d6268a6d5bbb766e8864bafa0 #@#
 {
   "testrunner" : {
     "deps" : [
-      "//src/com/facebook/buck/event:event",
-      "//src/com/facebook/buck/rules:rules",
-      "//src/com/facebook/buck/test:test",
-      "//src/com/facebook/buck/test/result/type:type",
       "//src/com/facebook/buck/testrunner:junit",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:util",

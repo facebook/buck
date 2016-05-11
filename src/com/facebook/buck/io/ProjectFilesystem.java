@@ -134,6 +134,7 @@ public class ProjectFilesystem {
   static final String BUCK_BUCKD_DIR_KEY = "buck.buckd_dir";
 
   private final Path projectRoot;
+  private final BuckPaths buckPaths;
 
   private final Function<Path, Path> pathAbsolutifier;
   private final Function<Path, Path> pathRelativizer;
@@ -151,7 +152,8 @@ public class ProjectFilesystem {
         root.getFileSystem(),
         root,
         Optional.<ImmutableSet<Path>>absent(),
-        ImmutableSet.<PathOrGlobMatcher>of());
+        ImmutableSet.<PathOrGlobMatcher>of(),
+        getDefaultBuckPaths(root));
   }
 
   /**
@@ -165,7 +167,8 @@ public class ProjectFilesystem {
         projectRoot.getFileSystem(),
         projectRoot,
         whiteListedPaths,
-        blackListedPaths);
+        blackListedPaths,
+        getDefaultBuckPaths(projectRoot));
   }
 
   public ProjectFilesystem(Path root, Config config) {
@@ -173,14 +176,16 @@ public class ProjectFilesystem {
         root.getFileSystem(),
         root,
         Optional.<ImmutableSet<Path>>absent(),
-        extractIgnorePaths(root, config));
+        extractIgnorePaths(root, config, getDefaultBuckPaths(root)),
+        getDefaultBuckPaths(root));
   }
 
   private ProjectFilesystem(
       FileSystem vfs,
       final Path root,
       Optional<ImmutableSet<Path>> whiteListedPaths,
-      ImmutableSet<PathOrGlobMatcher> blackListedPaths) {
+      ImmutableSet<PathOrGlobMatcher> blackListedPaths,
+      BuckPaths buckPaths) {
     Preconditions.checkArgument(Files.isDirectory(root));
     Preconditions.checkState(vfs.equals(root.getFileSystem()));
     Preconditions.checkArgument(root.isAbsolute());
@@ -206,6 +211,7 @@ public class ProjectFilesystem {
         });
     this.ignoreValidityOfPaths = false;
     this.blackListedPaths = blackListedPaths;
+    this.buckPaths = buckPaths;
 
     this.blackListedDirectories = FluentIterable.from(this.blackListedPaths)
         .filter(new Predicate<PathOrGlobMatcher>() {
@@ -219,7 +225,7 @@ public class ProjectFilesystem {
           public Path apply(PathOrGlobMatcher matcher) {
             Path path = matcher.getPath();
             ImmutableSet<Path> filtered = MorePaths.filterForSubpaths(
-                ImmutableSet.<Path>of(path),
+                ImmutableSet.of(path),
                 root);
             if (filtered.isEmpty()) {
               return path;
@@ -229,17 +235,22 @@ public class ProjectFilesystem {
         })
         // TODO(#10068334) So we claim to ignore this path to preserve existing behaviour, but we
         // really don't end up ignoring it in reality (see extractIgnorePaths).
-        .append(ImmutableSet.of(root.getFileSystem().getPath(
-            BuckConstant.getBuckOutputDirectory())))
+        .append(ImmutableSet.of(buckPaths.getBuckOut()))
         // "Path" is Iterable, so avoid adding each segment.
         // We use the default value here because that's what we've always done.
-        .append(ImmutableSet.of(getCacheDir(root, Optional.of(BuckConstant.getDefaultCacheDir()))))
-        .append(ImmutableSet.of(root.getFileSystem().getPath(BuckConstant.getTrashDir())))
+        .append(
+            ImmutableSet.of(
+                getCacheDir(root, Optional.of(buckPaths.getCacheDir().toString()), buckPaths)))
+        .append(ImmutableSet.of(buckPaths.getTrashDir()))
         .toSortedSet(Ordering.<Path>natural());
   }
 
-  private static Path getCacheDir(Path root, Optional<String> value) {
-      String cacheDir = value.or(root.resolve(BuckConstant.getDefaultCacheDir()).toString());
+  private static BuckPaths getDefaultBuckPaths(Path rootPath) {
+    return BuckPaths.of(rootPath.getFileSystem().getPath(BuckConstant.getBuckOutputDirectory()));
+  }
+
+  private static Path getCacheDir(Path root, Optional<String> value, BuckPaths buckPaths) {
+      String cacheDir = value.or(root.resolve(buckPaths.getCacheDir()).toString());
       Path toReturn = root.getFileSystem().getPath(cacheDir);
       toReturn = MorePaths.expandHomeDir(toReturn);
       if (toReturn.isAbsolute()) {
@@ -256,7 +267,8 @@ public class ProjectFilesystem {
 
   private static ImmutableSet<PathOrGlobMatcher> extractIgnorePaths(
       final Path root,
-      Config config) {
+      Config config,
+      final BuckPaths buckPaths) {
     ImmutableSet.Builder<PathOrGlobMatcher> builder = ImmutableSet.builder();
 
     builder.add(new PathOrGlobMatcher(root, ".idea"));
@@ -269,7 +281,7 @@ public class ProjectFilesystem {
       builder.add(new PathOrGlobMatcher(root, buckdDirProperty));
     }
 
-    Path cacheDir = getCacheDir(root, config.getValue("cache", "dir"));
+    Path cacheDir = getCacheDir(root, config.getValue("cache", "dir"), buckPaths);
     builder.add(new PathOrGlobMatcher(cacheDir));
 
     builder.addAll(FluentIterable.from(config.getListWithoutComments(projectKey, ignoreKey))
@@ -279,7 +291,7 @@ public class ProjectFilesystem {
           public PathOrGlobMatcher apply(String input) {
             // We don't really want to ignore the output directory when doing things like filesystem
             // walks, so return null
-            if (BuckConstant.getBuckOutputDirectory().equals(input)) {
+            if (buckPaths.getBuckOut().toString().equals(input)) {
               return null; //root.getFileSystem().getPathMatcher("glob:**");
             }
 
@@ -1111,6 +1123,10 @@ public class ProjectFilesystem {
     return Objects.hash(projectRoot, whiteListedPaths, blackListedPaths);
   }
 
+  public BuckPaths getBuckPaths() {
+    return buckPaths;
+  }
+
   private boolean isWhiteListed(Path path) {
     if (!whiteListedPaths.isPresent()) {
       return true;
@@ -1283,4 +1299,5 @@ public class ProjectFilesystem {
       return basePath.get();
     }
   }
+
 }

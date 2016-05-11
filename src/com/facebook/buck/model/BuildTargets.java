@@ -16,6 +16,7 @@
 
 package com.facebook.buck.model;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Predicate;
@@ -55,6 +56,15 @@ public class BuildTargets {
             target.getShortNameAndFlavorPostfix()));
   }
 
+  public static Path getScratchPath(
+      ProjectFilesystem filesystem,
+      BuildTarget target,
+      String format) {
+    return filesystem.getBuckPaths().getScratchDir()
+        .resolve(target.getBasePath())
+        .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
+  }
+
   /**
    * Return a path to a file in the buck-out/annotation/ directory. {@code format} will be prepended
    * with the {@link com.facebook.buck.util.BuckConstant#ANNOTATION_DIR} and the target base path,
@@ -75,6 +85,15 @@ public class BuildTargets {
             target.getShortNameAndFlavorPostfix()));
   }
 
+  public static Path getAnnotationPath(
+      ProjectFilesystem filesystem,
+      BuildTarget target,
+      String format) {
+    return filesystem.getBuckPaths().getAnnotationDir()
+        .resolve(target.getBasePath())
+        .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
+  }
+
   /**
    * Return a path to a file in the buck-out/gen/ directory. {@code format} will be prepended with
    * the {@link com.facebook.buck.util.BuckConstant#GEN_DIR} and the target base path, then
@@ -91,6 +110,12 @@ public class BuildTargets {
         BuckConstant.getGenDir(),
         target.getBasePathWithSlash(),
         target.getShortNameAndFlavorPostfix()));
+  }
+
+  public static Path getGenPath(ProjectFilesystem filesystem, BuildTarget target, String format) {
+    return filesystem.getBuckPaths().getGenDir()
+        .resolve(target.getBasePath())
+        .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
   }
 
   /**

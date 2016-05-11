@@ -36,6 +36,7 @@ java_immutables_library(
   ],
   immutable_types = [
     'ArchiveMemberPath',
+    'BuckPaths',
   ],
   autodeps = True,
   visibility = [ 'PUBLIC' ],

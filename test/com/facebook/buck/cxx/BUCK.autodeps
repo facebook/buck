@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 283f457b2824408dab1c2a19332a1f9296217e98 #@#
+#@# GENERATED FILE: DO NOT MODIFY 7ea5b60ea1f9ff5219223bc08db4560932fb717a #@#
 {
   "cxx" : {
     "deps" : [
@@ -8,7 +8,6 @@
       "//src/com/facebook/buck/cxx:framework_path_arg",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
-      "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",

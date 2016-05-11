@@ -1,0 +1,89 @@
+/*
+ * Copyright 2016-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.io;
+
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+
+import org.immutables.value.Value;
+
+import java.nio.file.Path;
+
+@Value.Immutable
+@BuckStyleImmutable
+abstract class AbstractBuckPaths {
+
+  /**
+   * The relative path to the directory where Buck will generate its files.
+   */
+  @Value.Parameter
+  public abstract Path getBuckOut();
+
+  /**
+   * The version the buck output directory was created for
+   */
+  @Value.Derived
+  public Path getCurrentVersionFile() {
+    return getBuckOut().resolve(".currentversion");
+  }
+
+  @Value.Derived
+  public Path getGenDir() {
+    return getBuckOut().resolve("gen");
+  }
+
+  @Value.Derived
+  public Path getResDir() {
+    return getBuckOut().resolve("res");
+  }
+
+  @Value.Derived
+  public Path getScratchDir() {
+    return getBuckOut().resolve("bin");
+  }
+
+  @Value.Derived
+  public Path getAnnotationDir() {
+    return getBuckOut().resolve("annotation");
+  }
+
+  @Value.Derived
+  public Path getLogDir() {
+    return getBuckOut().resolve("log");
+  }
+
+  @Value.Derived
+  public Path getTraceDir() {
+    return getLogDir().resolve("traces");
+  }
+
+  @Value.Derived
+  public Path getCacheDir() {
+    return getBuckOut().resolve("cache");
+  }
+
+  @Value.Derived
+  public Path getTmpDir() {
+    return getBuckOut().resolve("tmp");
+  }
+
+  @Value.Derived
+  public Path getTrashDir() {
+    // We put a . at the front of the name so Spotlight doesn't try to index the contents on OS X.
+    return getBuckOut().resolve(".trash");
+  }
+
+}
