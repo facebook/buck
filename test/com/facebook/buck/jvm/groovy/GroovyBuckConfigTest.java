@@ -22,6 +22,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.config.RawConfig;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.environment.Architecture;
@@ -31,6 +32,9 @@ import com.google.common.collect.ImmutableMap;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class GroovyBuckConfigTest {
   @Rule
@@ -55,10 +59,13 @@ public class GroovyBuckConfigTest {
 
   @Test
   public void refuseToContinueWhenInformationResultsInANonExistentGroovycPath() {
+    String invalidPath = temporaryFolder.getRoot().getAbsolutePath() + "DoesNotExist";
+    Path invalidDir = Paths.get(invalidPath);
+    Path invalidGroovyc = invalidDir.resolve(MorePaths.pathWithPlatformSeparators("bin/groovyc"));
     thrown.expectMessage(
-        containsString("Unable to locate /oops/bin/groovyc on PATH"));
+        containsString("Unable to locate " + invalidGroovyc + " on PATH"));
 
-    ImmutableMap<String, String> environment = ImmutableMap.of("GROOVY_HOME", "/oops");
+    ImmutableMap<String, String> environment = ImmutableMap.of("GROOVY_HOME", invalidPath);
     ImmutableMap<String, ImmutableMap<String, String>> rawConfig = ImmutableMap.of();
     final GroovyBuckConfig groovyBuckConfig =
         createGroovyConfig(environment, rawConfig);

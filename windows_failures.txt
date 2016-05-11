@@ -91,7 +91,6 @@
 !com.facebook.buck.io.WatchmanTest#successfulExecutionPopulatesAWatchmanInstance
 !com.facebook.buck.io.WatchmanTest#watchmanVersionTakingThirtySecondsReturnsEmpty
 !com.facebook.buck.io.WatchmanTest#watchmanWatchProjectTakingThirtySecondsReturnsEmpty
-!com.facebook.buck.jvm.groovy.GroovyBuckConfigTest#refuseToContinueWhenInformationResultsInANonExistentGroovycPath
 !com.facebook.buck.jvm.java.BuildTargetSourcePathAsSrcIntegrationTest#testNewGenfileIsIncludedInJar
 !com.facebook.buck.jvm.java.CachedTestIntegrationTest#testPullingJarFromCacheDoesNotResultInReportingStaleTestResults
 !com.facebook.buck.jvm.java.CachedTestIntegrationTest#testRunningTestAfterBuildingWithCacheHitDoesNotReportStaleTests
@@ -165,7 +164,6 @@
 !com.facebook.buck.testutil.FakeProjectFilesystemTest#testCreateZip
 !com.facebook.buck.testutil.ProjectWorkspaceTest#testCopyRecursively
 !com.facebook.buck.thrift.ThriftLibraryIntegrationTest#shouldBeAbleToConstructACxxLibraryFromThrift
-!com.facebook.buck.util.LicenseCheckTest#ensureAllSrcFilesHaveTheApacheLicense
 !com.facebook.buck.util.ListeningProcessExecutorTest#clearsEnvWhenExplicitlySet
 !com.facebook.buck.util.PropertyFinderTest#testSdkPathFromEnvironmentRaisesExceptionWhenDirectoryIsNotPresent
 !com.facebook.buck.util.PropertyFinderTest#testSdkPathFromPropertiesRaisesExceptionWhenDirectoryIsNotPresent
