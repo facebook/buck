@@ -25,7 +25,6 @@ import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
@@ -125,8 +124,9 @@ public class RageCommandIntegrationTest {
           requestPath.get(),
           Matchers.equalTo("/rage"));
 
-      filesystem.mkdirs(BuckConstant.getBuckOutputPath());
-      Path report = filesystem.createTempFile(BuckConstant.getBuckOutputPath(), "report", "zip");
+      filesystem.mkdirs(filesystem.getBuckPaths().getBuckOut());
+      Path report =
+          filesystem.createTempFile(filesystem.getBuckPaths().getBuckOut(), "report", "zip");
       filesystem.writeBytesToPath(requestBody.get(), report);
       ZipInspector zipInspector = new ZipInspector(filesystem.resolve(report));
       zipInspector.assertFileExists("report.json");

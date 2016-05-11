@@ -225,11 +225,13 @@ public class ProjectTest {
 
   @Test
   public void testGenerateRelativeGenPath() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path basePathOfModule = Paths.get("android_res/com/facebook/gifts/");
     Path expectedRelativePathToGen =
         Paths.get("../../../../buck-out/android/android_res/com/facebook/gifts/gen");
     assertEquals(
-        expectedRelativePathToGen, Project.generateRelativeGenPath(basePathOfModule));
+        expectedRelativePathToGen,
+        Project.generateRelativeGenPath(filesystem, basePathOfModule));
   }
 
   /**
@@ -914,11 +916,21 @@ public class ProjectTest {
 
     ImmutableSortedSet.Builder<SourceFolder> expectedExcludeFolders =
         ImmutableSortedSet.orderedBy(SerializableModule.ALPHABETIZER);
+    expectedExcludeFolders.add(
+        new SourceFolder("file://$MODULE_DIR$/buck-out/bin", /* isTestSource */ false));
+    expectedExcludeFolders.add(
+        new SourceFolder("file://$MODULE_DIR$/buck-out/log", /* isTestSource */ false));
+    expectedExcludeFolders.add(
+        new SourceFolder("file://$MODULE_DIR$/buck-out/tmp", /* isTestSource */ false));
     for (Path ignorePath : projectFilesystem.getIgnorePaths()) {
-      expectedExcludeFolders.add(
-          new SourceFolder("file://$MODULE_DIR$/" + ignorePath, /* isTestSource */ false));
+      if (!ignorePath.equals(projectFilesystem.getBuckPaths().getBuckOut()) &&
+          !ignorePath.equals(projectFilesystem.getBuckPaths().getGenDir())) {
+        expectedExcludeFolders.add(
+            new SourceFolder("file://$MODULE_DIR$/" + ignorePath, /* isTestSource */ false));
+      }
     }
-    assertEquals("Specific subfolders of buck-out should be excluded rather than all of buck-out.",
+    assertEquals(
+        "Specific subfolders of buck-out should be excluded rather than all of buck-out.",
         expectedExcludeFolders.build(),
         module.excludeFolders);
   }

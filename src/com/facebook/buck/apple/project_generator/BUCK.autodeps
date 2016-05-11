@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 24351946951b8e4f9eb9f0b5286e9e0c806eb7a3 #@#
+#@# GENERATED FILE: DO NOT MODIFY 8da60b63afeacaea8a07e8d15689e0c3184656b7 #@#
 {
   "project_generator" : {
     "deps" : [
@@ -7,7 +7,6 @@
       "//src/com/facebook/buck/js:js",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/shell:rules",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
       "//third-party/java/dd-plist:dd-plist",

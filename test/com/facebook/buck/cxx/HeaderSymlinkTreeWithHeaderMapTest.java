@@ -44,7 +44,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -152,11 +151,11 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
                 headerMapPath,
                 ImmutableMap.of(
                     Paths.get("file"),
-                    filesystem.resolve(BuckConstant.getBuckOutputPath())
+                    filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
                         .relativize(symlinkTreeRoot)
                         .resolve("file"),
                     Paths.get("directory/then/file"),
-                    filesystem.resolve(BuckConstant.getBuckOutputPath())
+                    filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
                         .relativize(symlinkTreeRoot)
                         .resolve("directory/then/file"))));
     ImmutableList<Step> actualBuildSteps =

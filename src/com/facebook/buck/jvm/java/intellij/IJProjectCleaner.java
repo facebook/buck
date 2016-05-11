@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java.intellij;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.BuckConstant;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -109,7 +108,7 @@ public class IJProjectCleaner {
     final Set<File> buckDirectories = new HashSet<>();
     buckDirectories.add(
         convertPathToFile(
-            projectFilesystem.resolve(BuckConstant.getBuckOutputPath())));
+            projectFilesystem.resolve(projectFilesystem.getBuckPaths().getBuckOut())));
     buckDirectories.add(
         convertPathToFile(
             projectFilesystem.resolve(

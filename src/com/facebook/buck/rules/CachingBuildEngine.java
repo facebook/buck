@@ -42,7 +42,6 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.util.ObjectMappers;
@@ -235,7 +234,7 @@ public class CachingBuildEngine implements BuildEngine {
             FileHashCache buckOutCache = new DefaultFileHashCache(
                 new ProjectFilesystem(
                     filesystem.getRootPath(),
-                    Optional.of(ImmutableSet.of(BuckConstant.getBuckOutputPath())),
+                    Optional.of(ImmutableSet.of(filesystem.getBuckPaths().getBuckOut())),
                     ImmutableSet.<ProjectFilesystem.PathOrGlobMatcher>of()));
             return new StackedFileHashCache(
                 ImmutableList.of(defaultCache, cellCache, buckOutCache));

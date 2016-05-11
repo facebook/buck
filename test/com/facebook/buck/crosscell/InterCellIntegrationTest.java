@@ -28,6 +28,7 @@ import static org.junit.Assume.assumeThat;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -43,7 +44,6 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
@@ -224,7 +224,8 @@ public class InterCellIntegrationTest {
 
   private ImmutableMap<String, HashCode> findObjectFiles(final ProjectWorkspace workspace)
       throws IOException {
-    final Path buckOut = workspace.getPath(BuckConstant.getBuckOutputDirectory());
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    final Path buckOut = workspace.getPath(filesystem.getBuckPaths().getBuckOut());
 
     final ImmutableMap.Builder<String, HashCode> objectHashCodes = ImmutableMap.builder();
     Files.walkFileTree(buckOut, new SimpleFileVisitor<Path>() {

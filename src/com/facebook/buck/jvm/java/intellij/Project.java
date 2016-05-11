@@ -51,7 +51,6 @@ import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.KeystoreProperties;
 import com.facebook.buck.util.ProcessExecutor;
@@ -102,12 +101,6 @@ import javax.annotation.Nullable;
  * time, the Facebook-specific logic will be removed.
  */
 public class Project {
-  /**
-   * Directory in buck-out which holds temporary files. This should be explicitly excluded
-   * from the IntelliJ project because it causes IntelliJ to try and index temporary files
-   * that buck creates whilst a build it taking place.
-   */
-  public static final Path TMP_PATH = BuckConstant.getBuckOutputPath().resolve("tmp");
 
   /**
    * This directory is analogous to the gen/ directory that IntelliJ would produce when building an
@@ -117,9 +110,17 @@ public class Project {
    * mess with the user's use of {@code glob(['**&#x2f;*.java'])}. For this reason, we encourage
    * users to target
    */
-  public static final String ANDROID_GEN_DIR = BuckConstant.getBuckOutputDirectory() + "/android";
-  public static final Path ANDROID_GEN_PATH = BuckConstant.getBuckOutputPath().resolve("android");
-  public static final String ANDROID_APK_DIR = BuckConstant.getBuckOutputDirectory() + "/gen";
+  public static String getAndroidGenDir(ProjectFilesystem filesystem) {
+    return filesystem.getBuckPaths().getBuckOut().resolve("android").toString();
+  }
+
+  public static Path getAndroidGenPath(ProjectFilesystem filesystem) {
+    return filesystem.getBuckPaths().getBuckOut().resolve("android");
+  }
+
+  public static String getAndroidApkDir(ProjectFilesystem filesystem) {
+    return filesystem.getBuckPaths().getGenDir().toString();
+  }
 
   private static final Logger LOG = Logger.get(Project.class);
 
@@ -391,7 +392,7 @@ public class Project {
     // so that it will not disturb our glob() rules.
     // To specify the location of gen, Intellij requires the relative path from
     // the base path of current build target.
-    module.moduleGenPath = generateRelativeGenPath(basePath);
+    module.moduleGenPath = generateRelativeGenPath(projectFilesystem, basePath);
     if (turnOffAutoSourceGeneration && rJava.isPresent()) {
       module.moduleRJavaPath = basePath.relativize(Paths.get("")).resolve(rJava.get());
     }
@@ -426,6 +427,7 @@ public class Project {
         module.assetFolder = intellijConfig.getAndroidAssets().orNull();
         module.isAndroidLibraryProject = false;
         module.binaryPath = generateRelativeAPKPath(
+            projectFilesystem,
             projectRule.getBuildTarget().getShortName(),
             basePath);
         KeystoreProperties keystoreProperties = KeystoreProperties.createFromPropertiesFile(
@@ -559,17 +561,20 @@ public class Project {
    *
    * @return the relative path of gen from the base path of current module.
    */
-  static Path generateRelativeGenPath(Path basePathOfModule) {
+  static Path generateRelativeGenPath(ProjectFilesystem filesystem, Path basePathOfModule) {
     return basePathOfModule
         .relativize(Paths.get(""))
-        .resolve(ANDROID_GEN_DIR)
+        .resolve(getAndroidGenDir(filesystem))
         .resolve(Paths.get("").relativize(basePathOfModule))
         .resolve("gen");
   }
 
-  static Path generateRelativeAPKPath(String targetName, Path basePathOfModule) {
+  static Path generateRelativeAPKPath(
+      ProjectFilesystem filesystem,
+      String targetName,
+      Path basePathOfModule) {
     return basePathOfModule
-        .relativize(Paths.get("")).resolve(ANDROID_APK_DIR)
+        .relativize(Paths.get("")).resolve(getAndroidApkDir(filesystem))
         .resolve(Paths.get("").relativize(basePathOfModule))
         .resolve(targetName + ".apk");
   }
@@ -685,10 +690,15 @@ public class Project {
         // cannot find them. Therefore, if "buck-out" is listed in the default list of paths to
         // ignore (which makes sense for other parts of Buck, such as Watchman), then we will ignore
         // only the appropriate subfolders of buck-out instead.
-        if (BuckConstant.getBuckOutputPath().equals(path)) {
+        if (projectFilesystem.getBuckPaths().getBuckOut().equals(path)) {
           addRootExclude(module, projectFilesystem.getBuckPaths().getScratchDir());
           addRootExclude(module, projectFilesystem.getBuckPaths().getLogDir());
-          addRootExclude(module, TMP_PATH);
+          /**
+           * Directory in buck-out which holds temporary files. This should be explicitly excluded
+           * from the IntelliJ project because it causes IntelliJ to try and index temporary files
+           * that buck creates whilst a build it taking place.
+           */
+          addRootExclude(module, projectFilesystem.getBuckPaths().getTmpDir());
         } else {
           addRootExclude(module, path);
         }

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 7ea5b60ea1f9ff5219223bc08db4560932fb717a #@#
+#@# GENERATED FILE: DO NOT MODIFY 997d63449754ec0740b0fb2e93ec7f0e09792efd #@#
 {
   "cxx" : {
     "deps" : [
@@ -24,7 +24,6 @@
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/test:test",
       "//src/com/facebook/buck/test/selectors:selectors",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",

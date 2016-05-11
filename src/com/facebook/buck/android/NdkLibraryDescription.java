@@ -41,7 +41,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.macros.EnvironmentVariableMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.environment.Platform;
@@ -103,7 +102,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
     return new Arg();
   }
 
-  private Iterable<String> escapeForMakefile(Iterable<String> args) {
+  private Iterable<String> escapeForMakefile(ProjectFilesystem filesystem, Iterable<String> args) {
     ImmutableList.Builder<String> escapedArgs = ImmutableList.builder();
 
     for (String arg : args) {
@@ -122,7 +121,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
 
       // We run ndk-build from the root of the NDK, so fixup paths that use the relative path to
       // the buck out directory.
-      if (arg.startsWith(BuckConstant.getBuckOutputDirectory())) {
+      if (arg.startsWith(filesystem.getBuckPaths().getBuckOut().toString())) {
         escapedArg = "$(BUCK_PROJECT_DIR)/" + escapedArg;
       }
 
@@ -192,7 +191,8 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
               cxxPreprocessorInput.getIncludes(),
               pathResolver,
               Optional.<Function<Path, Path>>absent()));
-      String localCflags = Joiner.on(' ').join(escapeForMakefile(ppFlags.build()));
+      String localCflags =
+          Joiner.on(' ').join(escapeForMakefile(params.getProjectFilesystem(), ppFlags.build()));
 
       // Collect the native linkable input for all C/C++ library deps.  We search *through* other
       // NDK library rules.
@@ -213,8 +213,9 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       // NDK build.
       String localLdflags =
           Joiner.on(' ').join(
-              escapeForMakefile(com.facebook.buck.rules.args.Arg.stringify(
-                      nativeLinkableInput.getArgs())));
+              escapeForMakefile(
+                  params.getProjectFilesystem(),
+                  com.facebook.buck.rules.args.Arg.stringify(nativeLinkableInput.getArgs())));
 
       // Write the relevant lines to the generated makefile.
       if (!localCflags.isEmpty() || !localLdflags.isEmpty()) {

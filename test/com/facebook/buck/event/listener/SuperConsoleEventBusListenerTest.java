@@ -74,7 +74,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.google.common.base.Functions;
@@ -2137,10 +2136,7 @@ public class SuperConsoleEventBusListenerTest {
 
   private Path getStorageForTest() throws IOException {
     tmp.create();
-    return tmp.getRootPath()
-        .resolve("/tmp/estimatortests/")
-        .resolve(BuckConstant.getBuckOutputPath())
-        .resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON);
+    return tmp.newFile().toPath();
   }
 
   @Test
@@ -2174,7 +2170,7 @@ public class SuperConsoleEventBusListenerTest {
             logPath,
             timeZone);
     ProgressEstimator e = new ProgressEstimator(
-        getStorageForTest(),
+        storagePath,
         eventBus,
         ObjectMappers.newDefaultInstance());
     listener.setProgressEstimator(e);

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 034b025e2c7ed22086e843acee6b1760cd3f4bd8 #@#
+#@# GENERATED FILE: DO NOT MODIFY cbcc5f598d9384052697d1d6a9bb140be9f58633 #@#
 {
   "crosscell" : {
     "deps" : [
@@ -12,7 +12,6 @@
       "//src/com/facebook/buck/rules:types",
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/rules/coercer:types",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util/environment:platform",

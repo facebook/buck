@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY fd66b862bf3ac91e18776480a934311d3c4c45ad #@#
+#@# GENERATED FILE: DO NOT MODIFY c63c80445e98b2ee3c03fa819a73a7d936f6e153 #@#
 {
   "intellij" : {
     "deps" : [
@@ -10,7 +10,6 @@
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/shell:steps",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",
       "//third-party/java/immutables:processor",

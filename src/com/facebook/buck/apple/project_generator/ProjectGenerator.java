@@ -94,7 +94,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.shell.ExportFileDescription;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreIterables;
@@ -759,8 +758,8 @@ public class ProjectGenerator {
     return result;
   }
 
-  private static Path getHalideOutputPath(BuildTarget target) {
-    return  BuckConstant.getBuckOutputPath()
+  private static Path getHalideOutputPath(ProjectFilesystem filesystem, BuildTarget target) {
+    return filesystem.getBuckPaths().getBuckOut()
         .resolve("halide")
         .resolve(target.getBasePath())
         .resolve(target.getShortName());
@@ -771,7 +770,8 @@ public class ProjectGenerator {
       TargetNode<HalideLibraryDescription.Arg> targetNode) throws IOException {
     final BuildTarget buildTarget = targetNode.getBuildTarget();
     String productName = getProductNameForBuildTarget(buildTarget);
-    Path outputPath = getHalideOutputPath(buildTarget);
+    Path outputPath =
+        getHalideOutputPath(targetNode.getRuleFactoryParams().getProjectFilesystem(), buildTarget);
 
     Path scriptPath = halideBuckConfig.getXcodeCompileScriptPath();
     Optional<String> script = projectFilesystem.readFileIfItExists(scriptPath);
@@ -1302,7 +1302,10 @@ public class ProjectGenerator {
     ImmutableSet<Path> recursiveHeaderSearchPaths = collectRecursiveHeaderSearchPaths(targetNode);
     ImmutableSet<Path> headerMapBases = recursiveHeaderSearchPaths.isEmpty() ?
         ImmutableSet.<Path>of() :
-        ImmutableSet.of(pathRelativizer.outputDirToRootRelative(BuckConstant.getBuckOutputPath()));
+        ImmutableSet.of(
+            pathRelativizer.outputDirToRootRelative(
+                buildTargetNode.getRuleFactoryParams().getProjectFilesystem()
+                    .getBuckPaths().getBuckOut()));
 
     appendConfigsBuilder
         .put(

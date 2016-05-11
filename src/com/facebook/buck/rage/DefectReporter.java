@@ -20,7 +20,6 @@ import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.OVERWRITE_
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -88,9 +87,9 @@ public class DefectReporter {
           .setReportSubmitMessage(response)
           .build();
     } else {
-      filesystem.mkdirs(BuckConstant.getBuckOutputPath());
+      filesystem.mkdirs(filesystem.getBuckPaths().getBuckOut());
       Path defectReportPath = filesystem.createTempFile(
-          BuckConstant.getBuckOutputPath(),
+          filesystem.getBuckPaths().getBuckOut(),
           "defect_report",
           ".zip");
       try (OutputStream outputStream = filesystem.newFileOutputStream(defectReportPath)) {

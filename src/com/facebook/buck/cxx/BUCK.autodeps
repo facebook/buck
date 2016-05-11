@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY b75a41a7c82f7e4b9554a367e288f92fec049c1c #@#
+#@# GENERATED FILE: DO NOT MODIFY 1716b129aea0622dc24d21a78e0266c8fe20a94c #@#
 {
   "framework_path_arg" : {
     "deps" : [ ],
@@ -45,7 +45,6 @@
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/test/result/type:type",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:io",
       "//third-party/java/immutables:processor",

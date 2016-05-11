@@ -85,7 +85,7 @@ public class CleanCommandTest extends EasyMockSupport {
     CommandRunnerParams params = createCommandRunnerParams();
 
     // Set up mocks.
-    projectFilesystem.mkdirs(Project.ANDROID_GEN_PATH);
+    projectFilesystem.mkdirs(Project.getAndroidGenPath(projectFilesystem));
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getAnnotationDir());
 
     // Simulate `buck clean --project`.
@@ -93,7 +93,7 @@ public class CleanCommandTest extends EasyMockSupport {
     int exitCode = cleanCommand.run(params);
     assertEquals(0, exitCode);
 
-    assertFalse(projectFilesystem.exists(Project.ANDROID_GEN_PATH));
+    assertFalse(projectFilesystem.exists(Project.getAndroidGenPath(projectFilesystem)));
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getAnnotationDir()));
   }
 

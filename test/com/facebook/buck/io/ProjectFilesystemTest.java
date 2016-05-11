@@ -29,7 +29,6 @@ import com.facebook.buck.config.ConfigBuilder;
 import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.zip.ZipConstants;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -602,16 +601,17 @@ public class ProjectFilesystemTest {
         "[project]",
         "ignore = .git, foo, bar/, baz//, a/b/c");
     Path rootPath = tmp.getRoot();
-    ImmutableSet<Path> ignorePaths = new ProjectFilesystem(rootPath, config).getIgnorePaths();
+    ProjectFilesystem filesystem = new ProjectFilesystem(rootPath, config);
+    ImmutableSet<Path> ignorePaths = filesystem.getIgnorePaths();
     assertThat(
         FluentIterable.from(ignorePaths).toSortedSet(Ordering.<Path>natural()),
         equalTo(
             ImmutableSortedSet.of(
-                BuckConstant.getBuckOutputPath(),
-                BuckConstant.getTrashPath(),
+                filesystem.getBuckPaths().getBuckOut(),
+                filesystem.getBuckPaths().getTrashDir(),
                 Paths.get(".idea"),
                 Paths.get(System.getProperty(ProjectFilesystem.BUCK_BUCKD_DIR_KEY, ".buckd")),
-                Paths.get(BuckConstant.getDefaultCacheDir()),
+                filesystem.getBuckPaths().getCacheDir(),
                 Paths.get(".git"),
                 Paths.get("foo"),
                 Paths.get("bar"),

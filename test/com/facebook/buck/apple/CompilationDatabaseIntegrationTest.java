@@ -33,7 +33,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -112,7 +111,7 @@ public class CompilationDatabaseIntegrationTest {
     Iterable<String> includes = ImmutableList.of(
         pathToPrivateHeaders,
         pathToPublicHeaders,
-        BuckConstant.getBuckOutputDirectory());
+        filesystem.getBuckPaths().getBuckOut().toString());
 
     // Verify the entries in the compilation database.
     assertFlags(
@@ -200,7 +199,7 @@ public class CompilationDatabaseIntegrationTest {
     Iterable<String> includes = ImmutableList.of(
         pathToPrivateHeaders,
         pathToPublicHeaders,
-        BuckConstant.getBuckOutputDirectory());
+        filesystem.getBuckPaths().getBuckOut().toString());
 
     assertFlags(
         "Apps/Weather/Weather/EXViewController.m",

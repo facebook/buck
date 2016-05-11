@@ -508,7 +508,7 @@ public class ChromeTraceBuildListenerTest {
     } catch (HumanReadableException e) {
       assertEquals(
           "Unable to write trace file: java.nio.file.AccessDeniedException: " +
-              projectFilesystem.resolve(BuckConstant.getBuckOutputPath()),
+              projectFilesystem.resolve(projectFilesystem.getBuckPaths().getBuckOut()),
           e.getMessage());
     }  finally {
       tmpDir.getRoot().setWritable(true);

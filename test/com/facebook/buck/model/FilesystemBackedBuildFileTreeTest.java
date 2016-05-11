@@ -167,19 +167,19 @@ public class FilesystemBackedBuildFileTreeTest {
   @Test
   public void shouldIgnoreBuckOutputDirectoriesByDefault() throws IOException {
     Path root = tmp.getRoot();
+    ProjectFilesystem filesystem = new ProjectFilesystem(root, new Config());
 
-    Path buckOut = root.resolve(BuckConstant.getBuckOutputPath());
+    Path buckOut = root.resolve(filesystem.getBuckPaths().getBuckOut());
     Files.createDirectories(buckOut);
     touch(buckOut.resolve("BUCK"));
     Path sibling = buckOut.resolve("someFile");
     touch(sibling);
 
     // Config doesn't set any "ignore" entries.
-    ProjectFilesystem filesystem = new ProjectFilesystem(root, new Config());
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
 
     Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(
-        BuckConstant.getBuckOutputPath().resolve("someFile"));
+        filesystem.getBuckPaths().getBuckOut().resolve("someFile"));
     assertFalse(ancestor.isPresent());
   }
 

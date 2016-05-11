@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 3fda2b577926f95c48eb324059fcdec559780bed #@#
+#@# GENERATED FILE: DO NOT MODIFY ea93d0cbfa7fed590d17166ce9b0898802170714 #@#
 {
   "exceptions" : {
     "deps" : [
@@ -62,7 +62,6 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/test/result/type:type",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",

@@ -64,7 +64,7 @@ class CompilerXml {
    */
   private ImmutableSet<String> getTopLevelExcludeDirs() {
     return ImmutableSet.of(
-        Project.ANDROID_GEN_DIR,
+        Project.getAndroidGenDir(filesystem),
         filesystem.getBuckPaths().getScratchDir().toString(),
         filesystem.getBuckPaths().getGenDir().toString());
   }

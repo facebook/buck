@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 40821f4e4f12cf34b0969f921c4e1fa6b7b471ee #@#
+#@# GENERATED FILE: DO NOT MODIFY 354ec99bce2f8430b7623b641f702b8fd7f8424b #@#
 {
   "apple" : {
     "deps" : [
@@ -21,7 +21,6 @@
       "//src/com/facebook/buck/test:test",
       "//src/com/facebook/buck/test/result/type:type",
       "//src/com/facebook/buck/test/selectors:selectors",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/environment:platform",

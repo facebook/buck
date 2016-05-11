@@ -270,7 +270,7 @@ public final class Main {
           new DefaultFileHashCache(
               new ProjectFilesystem(
                   cell.getFilesystem().getRootPath(),
-                  Optional.of(ImmutableSet.of(BuckConstant.getBuckOutputPath())),
+                  Optional.of(ImmutableSet.of(cell.getFilesystem().getBuckPaths().getBuckOut())),
                   ImmutableSet.<ProjectFilesystem.PathOrGlobMatcher>of()));
       this.fileEventBus = new EventBus("file-change-events");
 
@@ -828,7 +828,8 @@ public final class Main {
               new DefaultFileHashCache(
                   new ProjectFilesystem(
                       rootCell.getFilesystem().getRootPath(),
-                      Optional.of(ImmutableSet.of(BuckConstant.getBuckOutputPath())),
+                      Optional.of(
+                          ImmutableSet.of(rootCell.getFilesystem().getBuckPaths().getBuckOut())),
                       ImmutableSet.<ProjectFilesystem.PathOrGlobMatcher>of()));
         }
 

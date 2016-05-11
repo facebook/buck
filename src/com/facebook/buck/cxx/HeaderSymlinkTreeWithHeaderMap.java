@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -60,7 +59,8 @@ public class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
       BuildContext context,
       BuildableContext buildableContext) {
     LOG.debug("Generating post-build steps to write header map to %s", headerMapPath);
-    Path buckOut = getProjectFilesystem().resolve(BuckConstant.getBuckOutputPath());
+    Path buckOut =
+        getProjectFilesystem().resolve(getProjectFilesystem().getBuckPaths().getBuckOut());
     ImmutableMap.Builder<Path, Path> headerMapEntries = ImmutableMap.builder();
     for (Path key : getLinks().keySet()) {
       // The key is the path that will be referred to in headers. It can be anything. However, the
@@ -78,7 +78,7 @@ public class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
 
   @Override
   public Path getIncludePath() {
-    return getProjectFilesystem().resolve(BuckConstant.getBuckOutputPath());
+    return getProjectFilesystem().resolve(getProjectFilesystem().getBuckPaths().getBuckOut());
   }
 
   @Override

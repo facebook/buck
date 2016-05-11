@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY e9e68b59ecf75009fccf728e38353f1e845fd347 #@#
+#@# GENERATED FILE: DO NOT MODIFY c4288834a010b83ac020dacf42e60436faac39d2 #@#
 {
   "io" : {
     "deps" : [
@@ -7,7 +7,6 @@
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/io:watchman",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/zip:stream",

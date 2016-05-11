@@ -33,7 +33,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
@@ -128,7 +127,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add(headerSymlinkTreePath(binaryHeaderSymlinkTreeFolder).toString())
             .add("-I")
             .add(headerSymlinkTreePath(libraryExportedHeaderSymlinkTreeFolder).toString())
-            .addAll(getExtraFlagsForHeaderMaps())
+            .addAll(getExtraFlagsForHeaderMaps(filesystem))
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
             .add("c++")
@@ -194,7 +193,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add(headerSymlinkTreePath(headerSymlinkTreeFolder).toString())
             .add("-I")
             .add(headerSymlinkTreePath(exportedHeaderSymlinkTreeFolder).toString())
-            .addAll(getExtraFlagsForHeaderMaps())
+            .addAll(getExtraFlagsForHeaderMaps(filesystem))
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
             .add("c++")
@@ -255,7 +254,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add(headerSymlinkTreePath(binaryHeaderSymlinkTreeFolder).toString())
             .add("-I")
             .add(headerSymlinkTreePath(binaryExportedHeaderSymlinkTreeFolder).toString())
-            .addAll(getExtraFlagsForHeaderMaps())
+            .addAll(getExtraFlagsForHeaderMaps(filesystem))
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
             .add("c++")
@@ -481,10 +480,11 @@ public class CxxCompilationDatabaseIntegrationTest {
         entry.getCommand());
   }
 
-  private ImmutableList<String> getExtraFlagsForHeaderMaps() throws IOException {
+  private ImmutableList<String> getExtraFlagsForHeaderMaps(ProjectFilesystem filesystem)
+      throws IOException {
     // This works around OS X being amusing about the location of temp directories.
     return PREPROCESSOR_SUPPORTS_HEADER_MAPS ?
-        ImmutableList.of("-I", BuckConstant.getBuckOutputDirectory()) :
+        ImmutableList.of("-I", filesystem.getBuckPaths().getBuckOut().toString()) :
         ImmutableList.<String>of();
   }
 }
