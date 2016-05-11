@@ -20,14 +20,47 @@ import com.facebook.buck.util.BuckConstant;
 
 import java.io.IOException;
 import java.util.logging.FileHandler;
+import java.util.logging.LogManager;
 
 /**
  * A subclass of {@link FileHandler} using a predefined pattern to determine the Buck output logs.
  */
 public class BuckLogHandler extends FileHandler {
 
+  private static final String CLASS_NAME = BuckLogHandler.class.getName();
+
   public BuckLogHandler() throws IOException {
-    super(BuckConstant.getLogPath().resolve("buck-%g.log").toString());
+    super(getPattern(), getLimit(), getCount());
+  }
+
+  // The reason for replicating some of FileHandler.configure logic below is that it doesn't
+  // allow us to specify a default pattern in code (anything that's passed into the c'tor ends up
+  // overriding values specified in bucklogging.properties).
+  private static String getPattern() {
+    LogManager manager = LogManager.getLogManager();
+    String pattern = manager.getProperty(CLASS_NAME + ".pattern");
+    if (pattern == null) {
+      return BuckConstant.getLogPath().resolve("buck-%g.log").toString();
+    }
+    return pattern.trim();
+  }
+
+  private static int getIntProperty(String property, int defaultValue) {
+    LogManager manager = LogManager.getLogManager();
+    String limitString = manager.getProperty(CLASS_NAME + property);
+    try {
+      return Integer.parseInt(limitString.trim());
+    } catch (Exception ex) {
+      return defaultValue;
+    }
+  }
+
+  private static int getLimit() {
+    return Math.max(0, getIntProperty(".limit", 0));
+  }
+
+  private static int getCount() {
+    return Math.max(1, getIntProperty(".count", 1));
   }
 
 }

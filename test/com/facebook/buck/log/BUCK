@@ -1,1 +1,9 @@
 standard_java_test()
+
+python_test(
+  name = 'log_rotation_integration_test',
+  srcs = ['test_log_rotation.py'],
+  deps = [
+    '//test/com/facebook/buck/testutil/integration:integration-py'
+  ],
+)

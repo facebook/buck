@@ -13,3 +13,12 @@ java_library(
     '//test/...',
   ],
 )
+
+python_library(
+  name = 'integration-py',
+  base_module = '',
+  srcs = glob(['*.py']),
+  visibility = [
+    '//test/...',
+  ],
+)

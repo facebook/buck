@@ -45,8 +45,9 @@
   <property name="pywatchman.dir" value="${third-party.dir}/py/pywatchman" />
   <property name="nailgun.dir" value="${third-party.dir}/nailgun" />
   <property name="scandir.dir" value="${third-party.dir}/py/scandir" />
+  <property name="testutil.integration.dir" value="${test.dir}/com/facebook/buck/testutil/integration" />
 
-  <property name="buck.pythonpath" value="${pathlib.dir}:${pywatchman.dir}:${nailgun.dir}:${scandir.dir}" />
+  <property name="buck.pythonpath" value="${pathlib.dir}:${pywatchman.dir}:${nailgun.dir}:${scandir.dir}:${testutil.integration.dir}" />
 
   <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.1.18.jar" />
 
@@ -665,7 +666,7 @@
     <fail if="hasFailingTests" />
   </target>
 
-  <target name="py-test" description="runs the Python tests" depends="buck-py-test, class-loader-py-test, pathlib-py-test, zip-munger-py-test, buck-tool-py-test, scandir-py-test" />
+  <target name="py-test" description="runs the Python tests" depends="buck-py-test, class-loader-py-test, log-rotation-py-test, pathlib-py-test, zip-munger-py-test, buck-tool-py-test, scandir-py-test" />
 
   <target name="buck-py-test" description="tests the BUCK parser">
     <exec executable="python" failonerror="true">
@@ -679,6 +680,13 @@
           <env key="PYTHONPATH" path="${buck.pythonpath}" />
           <arg value="test/com/facebook/buck/cli/bootstrapper/class_loader_test.py" />
       </exec>
+  </target>
+
+  <target name="log-rotation-py-test" description="tests BUCK's logger setup">
+    <exec executable="python" failonerror="true">
+      <env key="PYTHONPATH" path="${buck.pythonpath}" />
+      <arg value="test/com/facebook/buck/log/test_log_rotation.py" />
+    </exec>
   </target>
 
   <target name="pathlib-py-test" description="tests pathlib.py">
