@@ -67,7 +67,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
@@ -252,23 +251,10 @@ public class AppleTestDescription implements
           cxxPlatform.getFlavor().getName());
     }
 
-    ImmutableSet.Builder<SourcePath> resourceDirsBuilder = ImmutableSet.builder();
-    ImmutableSet.Builder<SourcePath> dirsContainingResourceDirsBuilder = ImmutableSet.builder();
-    ImmutableSet.Builder<SourcePath> resourceFilesBuilder = ImmutableSet.builder();
-    ImmutableSet.Builder<SourcePath> resourceVariantFilesBuilder = ImmutableSet.builder();
-
-    AppleResources.collectResourceDirsAndFiles(
+    AppleBundleResources resources = AppleResources.collectResourceDirsAndFiles(
         targetGraph,
-        Preconditions.checkNotNull(targetGraph.get(params.getBuildTarget())),
-        resourceDirsBuilder,
-        dirsContainingResourceDirsBuilder,
-        resourceFilesBuilder,
-        resourceVariantFilesBuilder);
+        Preconditions.checkNotNull(targetGraph.get(params.getBuildTarget())));
 
-    ImmutableSet<SourcePath> resourceDirs = resourceDirsBuilder.build();
-    ImmutableSet<SourcePath> dirsContainingResourceDirs = dirsContainingResourceDirsBuilder.build();
-    ImmutableSet<SourcePath> resourceFiles = resourceFilesBuilder.build();
-    ImmutableSet<SourcePath> resourceVariantFiles = resourceVariantFilesBuilder.build();
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
 
     Optional<AppleAssetCatalog> assetCatalog =
@@ -286,6 +272,7 @@ public class AppleTestDescription implements
         defaultCxxPlatform,
         appleCxxPlatformFlavorDomain,
         targetGraph,
+        // TODO(t11213927): modifying the deps here seems to be duplicated in createAppleBundle
         params.copyWithChanges(
             params.getBuildTarget().withAppendedFlavors(
                 BUNDLE_FLAVOR,
@@ -302,12 +289,7 @@ public class AppleTestDescription implements
                         BuildRules.toBuildRulesFor(
                             params.getBuildTarget(),
                             resolver,
-                            SourcePaths.filterBuildTargetSourcePaths(
-                                Iterables.concat(
-                                    resourceFiles,
-                                    resourceDirs,
-                                    dirsContainingResourceDirs,
-                                    resourceVariantFiles))))
+                            SourcePaths.filterBuildTargetSourcePaths(resources.getAll())))
                     .build()),
             params.getExtraDeps()),
         resolver,

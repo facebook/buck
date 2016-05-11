@@ -475,21 +475,10 @@ public class AppleDescriptions {
         AppleBundleDestinations.platformDestinations(
             appleCxxPlatform.getAppleSdk().getApplePlatform());
 
-    ImmutableSet.Builder<SourcePath> bundleDirsBuilder = ImmutableSet.builder();
-    ImmutableSet.Builder<SourcePath> dirsContainingResourceDirsBuilder = ImmutableSet.builder();
-    ImmutableSet.Builder<SourcePath> bundleFilesBuilder = ImmutableSet.builder();
-    ImmutableSet.Builder<SourcePath> bundleVariantFilesBuilder = ImmutableSet.builder();
-    AppleResources.collectResourceDirsAndFiles(
+    AppleBundleResources collectedResources = AppleResources.collectResourceDirsAndFiles(
         targetGraph,
-        targetGraph.get(params.getBuildTarget()),
-        bundleDirsBuilder,
-        dirsContainingResourceDirsBuilder,
-        bundleFilesBuilder,
-        bundleVariantFilesBuilder);
-    ImmutableSet<SourcePath> bundleDirs = bundleDirsBuilder.build();
-    ImmutableSet<SourcePath> dirsContainingResourceDirs = dirsContainingResourceDirsBuilder.build();
-    ImmutableSet<SourcePath> bundleFiles = bundleFilesBuilder.build();
-    ImmutableSet<SourcePath> bundleVariantFiles = bundleVariantFilesBuilder.build();
+        targetGraph.get(params.getBuildTarget()));
+
     ImmutableSet.Builder<SourcePath> frameworksBuilder = ImmutableSet.builder();
     if (INCLUDE_FRAMEWORKS.getRequiredValue(params.getBuildTarget())) {
       for (BuildTarget dep : deps) {
@@ -590,10 +579,7 @@ public class AppleDescriptions {
                     SourcePaths.filterBuildTargetSourcePaths(
                         Iterables.concat(
                             ImmutableList.of(
-                                bundleFiles,
-                                bundleDirs,
-                                dirsContainingResourceDirs,
-                                bundleVariantFiles,
+                                collectedResources.getAll(),
                                 frameworks)))))
             .addAll(appleDsym.asSet())
             .build());
@@ -613,11 +599,8 @@ public class AppleDescriptions {
         Optional.of(unstrippedBinaryRule),
         appleDsym,
         destinations,
-        bundleDirs,
-        bundleFiles,
-        dirsContainingResourceDirs,
+        collectedResources,
         extensionBundlePaths,
-        Optional.of(bundleVariantFiles),
         frameworks,
         appleCxxPlatform,
         assetCatalog,

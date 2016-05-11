@@ -105,16 +105,7 @@ public class AppleBundle
   private final AppleBundleDestinations destinations;
 
   @AddToRuleKey
-  private final Set<SourcePath> resourceDirs;
-
-  @AddToRuleKey
-  private final Set<SourcePath> resourceFiles;
-
-  @AddToRuleKey
-  private final Set<SourcePath> dirsContainingResourceDirs;
-
-  @AddToRuleKey
-  private final Optional<ImmutableSet<SourcePath>> resourceVariantFiles;
+  private final AppleBundleResources resources;
 
   @AddToRuleKey
   private final Set<SourcePath> frameworks;
@@ -174,11 +165,8 @@ public class AppleBundle
       Optional<BuildRule> unstrippedBinaryRule,
       Optional<AppleDsym> appleDsym,
       AppleBundleDestinations destinations,
-      Set<SourcePath> resourceDirs,
-      Set<SourcePath> resourceFiles,
-      Set<SourcePath> dirsContainingResourceDirs,
+      AppleBundleResources resources,
       ImmutableMap<SourcePath, String> extensionBundlePaths,
-      Optional<ImmutableSet<SourcePath>> resourceVariantFiles,
       Set<SourcePath> frameworks,
       AppleCxxPlatform appleCxxPlatform,
       Optional<AppleAssetCatalog> assetCatalog,
@@ -196,11 +184,8 @@ public class AppleBundle
     this.unstrippedBinaryRule = unstrippedBinaryRule;
     this.appleDsym = appleDsym;
     this.destinations = destinations;
-    this.resourceDirs = resourceDirs;
-    this.resourceFiles = resourceFiles;
-    this.dirsContainingResourceDirs = dirsContainingResourceDirs;
+    this.resources = resources;
     this.extensionBundlePaths = extensionBundlePaths;
-    this.resourceVariantFiles = resourceVariantFiles;
     this.frameworks = frameworks;
     this.ibtool = appleCxxPlatform.getIbtool();
     this.assetCatalog = assetCatalog;
@@ -335,9 +320,12 @@ public class AppleBundle
     Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
     if (
         !Iterables.isEmpty(
-            Iterables.concat(resourceDirs, dirsContainingResourceDirs, resourceFiles))) {
+            Iterables.concat(
+                resources.getResourceDirs(),
+                resources.getDirsContainingResourceDirs(),
+                resources.getResourceFiles()))) {
       stepsBuilder.add(new MkdirStep(getProjectFilesystem(), resourcesDestinationPath));
-      for (SourcePath dir : resourceDirs) {
+      for (SourcePath dir : resources.getResourceDirs()) {
         stepsBuilder.add(
             CopyStep.forDirectory(
                 getProjectFilesystem(),
@@ -345,7 +333,7 @@ public class AppleBundle
                 resourcesDestinationPath,
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
       }
-      for (SourcePath dir : dirsContainingResourceDirs) {
+      for (SourcePath dir : resources.getDirsContainingResourceDirs()) {
         stepsBuilder.add(
             CopyStep.forDirectory(
                 getProjectFilesystem(),
@@ -353,7 +341,7 @@ public class AppleBundle
                 resourcesDestinationPath,
                 CopyStep.DirectoryMode.CONTENTS_ONLY));
       }
-      for (SourcePath file : resourceFiles) {
+      for (SourcePath file : resources.getResourceFiles()) {
         // TODO(shs96c): Check that this work cross-cell
         Path resolvedFilePath = getResolver().getRelativePath(file);
         Path destinationPath = resourcesDestinationPath.resolve(resolvedFilePath.getFileName());
@@ -363,26 +351,24 @@ public class AppleBundle
 
     addStepsToCopyExtensionBundlesDependencies(stepsBuilder);
 
-    if (resourceVariantFiles.isPresent()) {
-      for (SourcePath variantSourcePath : resourceVariantFiles.get()) {
-        // TODO(shs96c): Ensure this works cross-cell, as relative path begins with "buck-out"
-        Path variantFilePath = getResolver().getRelativePath(variantSourcePath);
+    for (SourcePath variantSourcePath : resources.getResourceVariantFiles()) {
+      // TODO(shs96c): Ensure this works cross-cell, as relative path begins with "buck-out"
+      Path variantFilePath = getResolver().getRelativePath(variantSourcePath);
 
-        Path variantDirectory = variantFilePath.getParent();
-        if (variantDirectory == null || !variantDirectory.toString().endsWith(".lproj")) {
-          throw new HumanReadableException(
-              "Variant files have to be in a directory with name ending in '.lproj', " +
-                  "but '%s' is not.",
-              variantFilePath);
-        }
-
-        Path bundleVariantDestinationPath =
-            resourcesDestinationPath.resolve(variantDirectory.getFileName());
-        stepsBuilder.add(new MkdirStep(getProjectFilesystem(), bundleVariantDestinationPath));
-
-        Path destinationPath = bundleVariantDestinationPath.resolve(variantFilePath.getFileName());
-        addResourceProcessingSteps(variantFilePath, destinationPath, stepsBuilder);
+      Path variantDirectory = variantFilePath.getParent();
+      if (variantDirectory == null || !variantDirectory.toString().endsWith(".lproj")) {
+        throw new HumanReadableException(
+            "Variant files have to be in a directory with name ending in '.lproj', " +
+                "but '%s' is not.",
+            variantFilePath);
       }
+
+      Path bundleVariantDestinationPath =
+          resourcesDestinationPath.resolve(variantDirectory.getFileName());
+      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), bundleVariantDestinationPath));
+
+      Path destinationPath = bundleVariantDestinationPath.resolve(variantFilePath.getFileName());
+      addResourceProcessingSteps(variantFilePath, destinationPath, stepsBuilder);
     }
 
     if (!frameworks.isEmpty()) {
