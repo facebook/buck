@@ -19,10 +19,8 @@ package com.facebook.buck.testutil.integration;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGConstants;
@@ -116,10 +114,6 @@ public class TestContext extends NGContext implements Closeable {
     }
   }
 
-  public ImmutableSet<NGClientListener> getListeners() {
-    return ImmutableSet.copyOf(listeners);
-  }
-
   /**
    * Generates heartbeat chunks at a given interval.
    */
@@ -164,7 +158,4 @@ public class TestContext extends NGContext implements Closeable {
     in.close();
   }
 
-  public String getServerLog() {
-    return serverLog.getContentsAsString(Charsets.US_ASCII);
-  }
 }

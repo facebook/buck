@@ -16,7 +16,6 @@
 
 package com.facebook.buck.testutil.integration;
 
-import com.facebook.buck.event.BuckEventListener;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
@@ -107,13 +106,11 @@ public class TestDataHelper {
     public ProcessResult runBuckCommandWithEnvironmentAndContext(
         Path repoRoot,
         Optional<NGContext> context,
-        Optional<BuckEventListener> eventListener,
         Optional<ImmutableMap<String, String>> env,
         String... args) throws IOException {
       ProcessResult result = super.runBuckCommandWithEnvironmentAndContext(
           repoRoot,
           context,
-          eventListener,
           env,
           args);
 

@@ -25,17 +25,16 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.Config;
 import com.facebook.buck.config.Configs;
 import com.facebook.buck.config.RawConfig;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.config.Config;
-import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
-import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -221,7 +220,6 @@ public class PythonBinaryIntegrationTest {
         workspace.runBuckCommandWithEnvironmentAndContext(
             workspace.getPath(""),
             Optional.<NGContext>absent(),
-            Optional.<BuckEventListener>absent(),
             Optional.of(
                 ImmutableMap.<String, String>builder()
                     .putAll(env)
@@ -241,7 +239,6 @@ public class PythonBinaryIntegrationTest {
         workspace.runBuckCommandWithEnvironmentAndContext(
             workspace.getPath(""),
             Optional.<NGContext>absent(),
-            Optional.<BuckEventListener>absent(),
             Optional.of(ImmutableMap.copyOf(env)),
             "run",
             ":bin-with-native-libs")

@@ -22,7 +22,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -130,7 +129,6 @@ public class CxxPreprocessAndCompileIntegrationTest {
         .runBuckCommandWithEnvironmentAndContext(
             tmp.getRootPath(),
             Optional.<NGContext>absent(),
-            Optional.<BuckEventListener>absent(),
             Optional.of(ImmutableMap.copyOf(envCopy)),
             "build",
             target.getFullyQualifiedName())

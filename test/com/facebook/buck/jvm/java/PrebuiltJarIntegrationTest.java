@@ -17,17 +17,14 @@
 package com.facebook.buck.jvm.java;
 
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.artifact_cache.CacheResultType;
-import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.BuildRuleEvent;
+import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -40,7 +37,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 
 public class PrebuiltJarIntegrationTest {
 
@@ -56,22 +52,23 @@ public class PrebuiltJarIntegrationTest {
         temp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:jar");
+    BuildTarget target = BuildTargetFactory.newInstance("//:jar");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
     result.assertSuccess();
 
-    BuildRuleEvent.Finished finished = getRuleFinished(result.getCapturedEvents());
-    assertEquals(CacheResultType.MISS, finished.getCacheResult().getType());
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally(target.getFullyQualifiedName());
 
     result = workspace.runBuckBuild("//:jar");
     result.assertSuccess();
-    finished = getRuleFinished(result.getCapturedEvents());
-    assertEquals(CacheResultType.LOCAL_KEY_UNCHANGED_HIT, finished.getCacheResult().getType());
+    buildLog = workspace.getBuildLog();
+    buildLog.assertTargetHadMatchingRuleKey(target.getFullyQualifiedName());
 
     // We expect the binary jar to have a different hash to the stub jar.
     Path binaryJar = workspace.getPath("junit.jar");
     HashCode originalHash = MorePaths.asByteSource(binaryJar).hash(Hashing.sha1());
     Path expectedOut =
-        BuildTargets.getGenPath(BuildTargetFactory.newInstance("//:jar"), "%s-abi.jar");
+        BuildTargets.getGenPath(target, "%s-abi.jar");
     Path abiJar = workspace.getPath(expectedOut.toString());
     HashCode abiHash = MorePaths.asByteSource(abiJar).hash(Hashing.sha1());
 
@@ -125,15 +122,4 @@ public class PrebuiltJarIntegrationTest {
     workspace.getBuildLog().assertTargetHadMatchingInputRuleKey("//:jar_from_gen");
   }
 
-  private BuildRuleEvent.Finished getRuleFinished(List<BuckEvent> capturedEvents) {
-    BuildRuleEvent.Finished finished = null;
-    for (BuckEvent capturedEvent : capturedEvents) {
-      if (!(capturedEvent instanceof BuildRuleEvent.Finished)) {
-        continue;
-      }
-      finished = (BuildRuleEvent.Finished) capturedEvent;
-    }
-    assertNotNull(finished);
-    return finished;
-  }
 }

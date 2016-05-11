@@ -19,28 +19,17 @@ package com.facebook.buck.testrunner;
 import static com.facebook.buck.testutil.OutputHelper.createBuckTestOutputLineRegex;
 import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import com.facebook.buck.event.BuckEvent;
-import com.facebook.buck.rules.IndividualTestEvent;
-import com.facebook.buck.test.TestCaseSummary;
-import com.facebook.buck.test.TestResultSummary;
-import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.collect.Maps;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 public class AssumptionViolationsTest {
 
@@ -122,63 +111,4 @@ public class AssumptionViolationsTest {
         "TESTS PASSED (with some assumption violations)"));
   }
 
-  @Test
-  public void shouldSkipIndividualTestsWithDistinctErrorMessages() throws IOException {
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "test", "--all", "--filter", "Test(A|B)Junit");
-    List<BuckEvent> capturedEvents = result.getCapturedEvents();
-
-    Map<String, String> output = Maps.newHashMap();
-    IndividualTestEvent.Finished resultsEvent = null;
-    for (BuckEvent event : capturedEvents) {
-      if (!(event instanceof IndividualTestEvent.Finished)) {
-        continue;
-      }
-      resultsEvent = (IndividualTestEvent.Finished) event;
-      for (TestCaseSummary testCaseSummary : resultsEvent.getResults().getTestCases()) {
-        for (TestResultSummary testResultSummary : testCaseSummary.getTestResults()) {
-          String id = String.format(
-              "%s#%s",
-              testResultSummary.getTestCaseName(),
-              testResultSummary.getTestName());
-          // null for success
-          // "A1:FAIL" for other types of result
-          String message = null;
-          if (testResultSummary.getType() != ResultType.SUCCESS) {
-            StringBuilder builder = new StringBuilder();
-            builder.append(testResultSummary.getMessage());
-            builder.append(':');
-            builder.append(testResultSummary.getType());
-            message = builder.toString();
-          }
-          output.put(id, message);
-        }
-      }
-    }
-    assertThat("There should have been a test-results event", resultsEvent, notNullValue());
-
-    assertThat("A1 should pass", output.get("com.example.AssumptionTestAJunit#test1"), nullValue());
-    assertThat("A2 should pass", output.get("com.example.AssumptionTestAJunit#test2"), nullValue());
-    assertThat("B3 should pass", output.get("com.example.AssumptionTestBJunit#test3"), nullValue());
-
-    assertThat(
-        "A3 should skip",
-        output.get("com.example.AssumptionTestAJunit#test3"),
-        equalTo("A3:ASSUMPTION_VIOLATION"));
-
-    assertThat(
-        "B1 should skip",
-        output.get("com.example.AssumptionTestBJunit#test1"),
-        equalTo("B1:ASSUMPTION_VIOLATION"));
-
-    assertThat(
-        "B2 should skip",
-        output.get("com.example.AssumptionTestBJunit#test2"),
-        equalTo("B2:ASSUMPTION_VIOLATION"));
-
-    assertThat(
-        "B4 should fail",
-        output.get("com.example.AssumptionTestBJunit#test4"),
-        equalTo("B4:FAILURE"));
-  }
 }

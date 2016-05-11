@@ -23,7 +23,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -157,7 +156,6 @@ public class ShBinaryRuleIntegrationTest {
         workspace.runBuckCommandWithEnvironmentAndContext(
             workspace.getDestPath(),
             Optional.<NGContext>absent(),
-            Optional.<BuckEventListener>absent(),
             Optional.of(ImmutableMap.copyOf(env)),
             "run",
             "//:pwd");

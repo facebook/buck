@@ -29,12 +29,10 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
-import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.TestCellBuilder;
-import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.DelegatingInputStream;
@@ -51,7 +49,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.eventbus.Subscribe;
 import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGContext;
 
@@ -290,20 +287,20 @@ public class DaemonIntegrationTest {
         ImmutableMap.copyOf(System.getenv()),
         inputStream,
         timeoutMillis)) {
-      BuckEventListener listener = new BuckEventListener() {
-        @Subscribe
-        @SuppressWarnings("unused")
-        public void onEvent(TestRunEvent.Started event) {
-          // When tests start running, make the heartbeat stream time out.
-          inputStream.setDelegate(TestContext.createHeartBeatStream(2 * timeoutMillis));
-        }
-
-        @Override
-        public void outputTrace(BuildId buildId) throws InterruptedException {
-          // do nothing
-        }
-      };
-      ProcessResult result = workspace.runBuckdCommand(context, listener, "test", "//:test");
+      ProcessResult result = workspace.runBuckdCommand(
+          context,
+          new CapturingPrintStream() {
+            @Override
+            public void println(String x) {
+              if (x.contains("TESTING //:test")) {
+                // When tests start running, make the heartbeat stream simulate a disconnection.
+                inputStream.setDelegate(TestContext.createDisconnectionStream(2 * timeoutMillis));
+              }
+              super.println(x);
+            }
+          },
+          "test",
+          "//:test");
       result.assertFailure();
       assertThat(result.getStderr(), containsString("InterruptedException"));
     }
@@ -365,20 +362,20 @@ public class DaemonIntegrationTest {
         ImmutableMap.copyOf(System.getenv()),
         inputStream,
         timeoutMillis)) {
-      BuckEventListener listener = new BuckEventListener() {
-        @Subscribe
-        @SuppressWarnings("unused")
-        public void onEvent(TestRunEvent.Started event) {
-          // When tests start running, make the heartbeat stream simulate a disconnection.
-          inputStream.setDelegate(TestContext.createDisconnectionStream(disconnectMillis));
-        }
-
-        @Override
-        public void outputTrace(BuildId buildId) throws InterruptedException {
-          // do nothing
-        }
-      };
-      ProcessResult result = workspace.runBuckdCommand(context, listener, "test", "//:test");
+      ProcessResult result = workspace.runBuckdCommand(
+          context,
+          new CapturingPrintStream() {
+            @Override
+            public void println(String x) {
+              if (x.contains("TESTING //:test")) {
+                // When tests start running, make the heartbeat stream simulate a disconnection.
+                inputStream.setDelegate(TestContext.createDisconnectionStream(disconnectMillis));
+              }
+              super.println(x);
+            }
+          },
+          "test",
+          "//:test");
       result.assertFailure();
       assertThat(result.getStderr(), containsString("InterruptedException"));
     }

@@ -153,7 +153,6 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
@@ -204,7 +203,6 @@ public final class Main {
   private final InputStream stdIn;
   private final PrintStream stdOut;
   private final PrintStream stdErr;
-  private final ImmutableList<BuckEventListener> externalEventsListeners;
 
   private final Architecture architecture;
 
@@ -525,23 +523,16 @@ public final class Main {
   }
 
   @VisibleForTesting
-  public Main(PrintStream stdOut, PrintStream stdErr, InputStream stdIn) {
-    this(stdOut, stdErr, stdIn, ImmutableList.<BuckEventListener>of());
-  }
-
-  @VisibleForTesting
   public Main(
       PrintStream stdOut,
       PrintStream stdErr,
-      InputStream stdIn,
-      List<BuckEventListener> externalEventsListeners) {
+      InputStream stdIn) {
     this.stdOut = stdOut;
     this.stdErr = stdErr;
     this.stdIn = stdIn;
     this.architecture = Architecture.detect();
     this.platform = Platform.detect();
     this.objectMapper = ObjectMappers.newDefaultInstance();
-    this.externalEventsListeners = ImmutableList.copyOf(externalEventsListeners);
   }
 
   private void flushEventListeners(
@@ -1430,8 +1421,6 @@ public final class Main {
     }
 
     eventListenersBuilder.add(new LoadBalancerEventsListener(counterRegistry));
-
-    eventListenersBuilder.addAll(externalEventsListeners);
 
     ImmutableList<BuckEventListener> eventListeners = eventListenersBuilder.build();
 

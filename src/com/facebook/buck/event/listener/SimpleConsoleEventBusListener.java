@@ -170,7 +170,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         event.getTargetNames(),
         TestResultFormatter.FormatMode.BEFORE_TEST_RUN);
     printLines(lines);
-
   }
 
   @Subscribe

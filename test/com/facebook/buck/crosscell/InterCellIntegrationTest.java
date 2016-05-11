@@ -27,7 +27,6 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
@@ -360,7 +359,6 @@ public class InterCellIntegrationTest {
     ProjectWorkspace.ProcessResult result = mainRepo.runBuckCommandWithEnvironmentAndContext(
         primary,
         Optional.<NGContext>absent(),
-        Optional.<BuckEventListener>absent(),
         Optional.<ImmutableMap<String, String>>absent(),
         "build",
         "//:bin");
