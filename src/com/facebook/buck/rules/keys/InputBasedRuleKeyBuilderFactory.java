@@ -21,7 +21,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -50,17 +49,14 @@ public class InputBasedRuleKeyBuilderFactory
   private final FileHashCache fileHashCache;
   private final SourcePathResolver pathResolver;
   private final InputHandling inputHandling;
-  private final RuleKeyBuilderFactory defaultRuleKeyBuilderFactory;
   private final LoadingCache<RuleKeyAppendable, Result> cache;
 
   protected InputBasedRuleKeyBuilderFactory(
       FileHashCache hashCache,
       SourcePathResolver pathResolver,
-      RuleKeyBuilderFactory defaultRuleKeyBuilderFactory,
       InputHandling inputHandling) {
     this.fileHashCache = hashCache;
     this.pathResolver = pathResolver;
-    this.defaultRuleKeyBuilderFactory = defaultRuleKeyBuilderFactory;
     this.inputHandling = inputHandling;
 
     // Build the cache around the sub-rule-keys and their dep lists.
@@ -78,9 +74,8 @@ public class InputBasedRuleKeyBuilderFactory
 
   public InputBasedRuleKeyBuilderFactory(
       FileHashCache hashCache,
-      SourcePathResolver pathResolver,
-      RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
-    this(hashCache, pathResolver, defaultRuleKeyBuilderFactory, InputHandling.HASH);
+      SourcePathResolver pathResolver) {
+    this(hashCache, pathResolver, InputHandling.HASH);
   }
 
   @Override
@@ -112,7 +107,7 @@ public class InputBasedRuleKeyBuilderFactory
     private final ImmutableList.Builder<Iterable<SourcePath>> inputs = ImmutableList.builder();
 
     private Builder() {
-      super(pathResolver, fileHashCache, defaultRuleKeyBuilderFactory);
+      super(pathResolver, fileHashCache);
     }
 
     @Override

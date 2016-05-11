@@ -21,6 +21,7 @@ import com.google.common.base.Supplier;
 
 public class UncachedRuleKeyBuilder extends RuleKeyBuilder {
 
+  private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
   private final Supplier<UncachedRuleKeyBuilder> subKeySupplier;
 
   public UncachedRuleKeyBuilder(
@@ -28,16 +29,18 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder {
       FileHashCache hashCache,
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
       RuleKeyLogger ruleKeyLogger) {
-    super(resolver, hashCache, ruleKeyBuilderFactory, ruleKeyLogger);
-    subKeySupplier = createSubKeySupplier(resolver, hashCache, ruleKeyBuilderFactory);
+    super(resolver, hashCache, ruleKeyLogger);
+    this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
+    this.subKeySupplier = createSubKeySupplier(resolver, hashCache, ruleKeyBuilderFactory);
   }
 
   public UncachedRuleKeyBuilder(
       SourcePathResolver resolver,
       FileHashCache hashCache,
       RuleKeyBuilderFactory ruleKeyBuilderFactory) {
-    super(resolver, hashCache, ruleKeyBuilderFactory);
-    subKeySupplier = createSubKeySupplier(resolver, hashCache, ruleKeyBuilderFactory);
+    super(resolver, hashCache);
+    this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
+    this.subKeySupplier = createSubKeySupplier(resolver, hashCache, ruleKeyBuilderFactory);
   }
 
   private static Supplier<UncachedRuleKeyBuilder> createSubKeySupplier(
@@ -53,6 +56,11 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder {
             ruleKeyBuilderFactory);
       }
     };
+  }
+
+  @Override
+  protected RuleKeyBuilder setBuildRule(BuildRule rule) {
+    return setSingleValue(ruleKeyBuilderFactory.build(rule));
   }
 
   @Override

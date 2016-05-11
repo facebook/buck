@@ -256,8 +256,7 @@ public class AndroidResourceTest {
         pathResolver.getRelativePath(dep.getPathToTextSymbolsFile()));
     RuleKey original = new InputBasedRuleKeyBuilderFactory(
         fileHashCache,
-        pathResolver,
-        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver))
+        pathResolver)
         .build(resource);
 
     fileHashCache.invalidateAll();
@@ -267,8 +266,7 @@ public class AndroidResourceTest {
         pathResolver.getRelativePath(dep.getPathToTextSymbolsFile()));
     RuleKey changed = new InputBasedRuleKeyBuilderFactory(
         fileHashCache,
-        pathResolver,
-        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver))
+        pathResolver)
         .build(resource);
 
     assertThat(original, Matchers.not(Matchers.equalTo(changed)));

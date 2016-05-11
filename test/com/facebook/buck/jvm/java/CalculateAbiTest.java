@@ -75,8 +75,7 @@ public class CalculateAbiTest {
     RuleKey initialInputKey =
         new InputBasedRuleKeyBuilderFactory(
             initialHashCache,
-            pathResolver,
-            initialRuleKeyBuilderFactory)
+            pathResolver)
             .build(calculateAbi);
 
     // Write something to the library source and geneated JAR, so they exist to generate rule keys.
@@ -97,8 +96,7 @@ public class CalculateAbiTest {
     RuleKey alteredInputKey =
         new InputBasedRuleKeyBuilderFactory(
             alteredHashCache,
-            pathResolver,
-            alteredRuleKeyBuilderFactory)
+            pathResolver)
             .build(calculateAbi);
 
     assertThat(initialKey, Matchers.not(Matchers.equalTo(alteredKey)));
@@ -139,8 +137,7 @@ public class CalculateAbiTest {
     RuleKey initialInputKey =
         new InputBasedRuleKeyBuilderFactory(
             initialHashCache,
-            pathResolver,
-            initialRuleKeyBuilderFactory)
+            pathResolver)
             .build(calculateAbi);
 
     // Write something to the library source and geneated JAR, so they exist to generate rule keys.
@@ -160,8 +157,7 @@ public class CalculateAbiTest {
     RuleKey alteredInputKey =
         new InputBasedRuleKeyBuilderFactory(
             alteredHashCache,
-            pathResolver,
-            alteredRuleKeyBuilderFactory)
+            pathResolver)
             .build(calculateAbi);
 
     assertThat(initialKey, Matchers.not(Matchers.equalTo(alteredKey)));

@@ -740,13 +740,10 @@ public class DefaultJavaLibraryTest {
             .addSrc(new BuildTargetSourcePath(genSrc.getBuildTarget()))
             .build(resolver, filesystem);
     DefaultFileHashCache originalHashCache = new DefaultFileHashCache(filesystem);
-    RuleKeyBuilderFactory originalRuleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(originalHashCache, pathResolver);
     InputBasedRuleKeyBuilderFactory factory =
         new InputBasedRuleKeyBuilderFactory(
             originalHashCache,
-            pathResolver,
-            originalRuleKeyBuilderFactory);
+            pathResolver);
     RuleKey originalRuleKey = factory.build(library);
 
     // Now change the genrule such that its rule key changes, but it's output stays the same (since
@@ -764,13 +761,10 @@ public class DefaultJavaLibraryTest {
             .addSrc(new BuildTargetSourcePath(genSrc.getBuildTarget()))
             .build(resolver, filesystem);
     DefaultFileHashCache unaffectedHashCache = new DefaultFileHashCache(filesystem);
-    RuleKeyBuilderFactory unaffectedRuleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(unaffectedHashCache, pathResolver);
     factory =
         new InputBasedRuleKeyBuilderFactory(
             unaffectedHashCache,
-            pathResolver,
-            unaffectedRuleKeyBuilderFactory);
+            pathResolver);
     RuleKey unaffectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
@@ -788,13 +782,10 @@ public class DefaultJavaLibraryTest {
             .addSrc(new BuildTargetSourcePath(genSrc.getBuildTarget()))
             .build(resolver, filesystem);
     DefaultFileHashCache affectedHashCache = new DefaultFileHashCache(filesystem);
-    RuleKeyBuilderFactory affectedRuleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(affectedHashCache, pathResolver);
     factory =
         new InputBasedRuleKeyBuilderFactory(
             affectedHashCache,
-            pathResolver,
-            affectedRuleKeyBuilderFactory);
+            pathResolver);
     RuleKey affectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
@@ -825,13 +816,10 @@ public class DefaultJavaLibraryTest {
             .addDep(dep.getBuildTarget())
             .build(resolver, filesystem);
     DefaultFileHashCache originalHashCache = new DefaultFileHashCache(filesystem);
-    RuleKeyBuilderFactory originalRuleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(originalHashCache, pathResolver);
     InputBasedRuleKeyBuilderFactory factory =
         new InputBasedRuleKeyBuilderFactory(
             originalHashCache,
-            pathResolver,
-            originalRuleKeyBuilderFactory);
+            pathResolver);
     RuleKey originalRuleKey = factory.build(library);
 
     // Now change the Java library dependency such that its rule key changes, and change its JAR
@@ -850,13 +838,10 @@ public class DefaultJavaLibraryTest {
             .addDep(dep.getBuildTarget())
             .build(resolver, filesystem);
     DefaultFileHashCache unaffectedHashCache = new DefaultFileHashCache(filesystem);
-    RuleKeyBuilderFactory unaffectedRuleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(unaffectedHashCache, pathResolver);
     factory =
         new InputBasedRuleKeyBuilderFactory(
             unaffectedHashCache,
-            pathResolver,
-            unaffectedRuleKeyBuilderFactory);
+            pathResolver);
     RuleKey unaffectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
@@ -878,13 +863,10 @@ public class DefaultJavaLibraryTest {
             .addDep(dep.getBuildTarget())
             .build(resolver, filesystem);
     DefaultFileHashCache affectedHashCache = new DefaultFileHashCache(filesystem);
-    RuleKeyBuilderFactory affectedRuleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(affectedHashCache, pathResolver);
     factory =
         new InputBasedRuleKeyBuilderFactory(
             affectedHashCache,
-            pathResolver,
-            affectedRuleKeyBuilderFactory);
+            pathResolver);
     RuleKey affectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
@@ -921,13 +903,10 @@ public class DefaultJavaLibraryTest {
             .addDep(dep.getBuildTarget())
             .build(resolver, filesystem);
     DefaultFileHashCache originalHashCache = new DefaultFileHashCache(filesystem);
-    RuleKeyBuilderFactory originalRuleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(originalHashCache, pathResolver);
     InputBasedRuleKeyBuilderFactory factory =
         new InputBasedRuleKeyBuilderFactory(
             originalHashCache,
-            pathResolver,
-            originalRuleKeyBuilderFactory);
+            pathResolver);
     RuleKey originalRuleKey = factory.build(library);
 
     // Now change the exported Java library dependency such that its rule key changes, and change
@@ -951,13 +930,10 @@ public class DefaultJavaLibraryTest {
             .addDep(dep.getBuildTarget())
             .build(resolver, filesystem);
     DefaultFileHashCache unaffectedHashCache = new DefaultFileHashCache(filesystem);
-    RuleKeyBuilderFactory unaffectedRuleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(unaffectedHashCache, pathResolver);
     factory =
         new InputBasedRuleKeyBuilderFactory(
             unaffectedHashCache,
-            pathResolver,
-            unaffectedRuleKeyBuilderFactory);
+            pathResolver);
     RuleKey unaffectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
@@ -983,13 +959,10 @@ public class DefaultJavaLibraryTest {
             .addDep(dep.getBuildTarget())
             .build(resolver, filesystem);
     DefaultFileHashCache affectedHashCache = new DefaultFileHashCache(filesystem);
-    RuleKeyBuilderFactory affectedRuleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(affectedHashCache, pathResolver);
     factory =
         new InputBasedRuleKeyBuilderFactory(
             affectedHashCache,
-            pathResolver,
-            affectedRuleKeyBuilderFactory);
+            pathResolver);
     RuleKey affectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
@@ -1030,13 +1003,10 @@ public class DefaultJavaLibraryTest {
             .addDep(dep1.getBuildTarget())
             .build(resolver, filesystem);
     DefaultFileHashCache originalHashCache = new DefaultFileHashCache(filesystem);
-    RuleKeyBuilderFactory originalRuleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(originalHashCache, pathResolver);
     InputBasedRuleKeyBuilderFactory factory =
         new InputBasedRuleKeyBuilderFactory(
             originalHashCache,
-            pathResolver,
-            originalRuleKeyBuilderFactory);
+            pathResolver);
     RuleKey originalRuleKey = factory.build(library);
 
     // Now change the exported Java library dependency such that its rule key changes, and change
@@ -1064,13 +1034,10 @@ public class DefaultJavaLibraryTest {
             .addDep(dep1.getBuildTarget())
             .build(resolver, filesystem);
     DefaultFileHashCache unaffectedHashCache = new DefaultFileHashCache(filesystem);
-    RuleKeyBuilderFactory unaffectedRuleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(unaffectedHashCache, pathResolver);
     factory =
         new InputBasedRuleKeyBuilderFactory(
             unaffectedHashCache,
-            pathResolver,
-            unaffectedRuleKeyBuilderFactory);
+            pathResolver);
     RuleKey unaffectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
@@ -1100,13 +1067,10 @@ public class DefaultJavaLibraryTest {
             .addDep(dep1.getBuildTarget())
             .build(resolver, filesystem);
     DefaultFileHashCache affectedHashCache = new DefaultFileHashCache(filesystem);
-    RuleKeyBuilderFactory affectedRuleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(affectedHashCache, pathResolver);
     factory =
         new InputBasedRuleKeyBuilderFactory(
             affectedHashCache,
-            pathResolver,
-            affectedRuleKeyBuilderFactory);
+            pathResolver);
     RuleKey affectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }

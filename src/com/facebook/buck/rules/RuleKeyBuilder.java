@@ -56,30 +56,25 @@ public abstract class RuleKeyBuilder {
   private final SourcePathResolver resolver;
   private final Hasher hasher;
   private final FileHashCache hashCache;
-  private final RuleKeyBuilderFactory defaultRuleKeyBuilderFactory;
   private final RuleKeyLogger ruleKeyLogger;
   private Stack<String> keyStack;
 
   public RuleKeyBuilder(
       SourcePathResolver resolver,
       FileHashCache hashCache,
-      RuleKeyBuilderFactory defaultRuleKeyBuilderFactory,
       RuleKeyLogger ruleKeyLogger) {
     this.resolver = resolver;
     this.hasher = new AppendingHasher(Hashing.sha1(), /* numHashers */ 2);
     this.hashCache = hashCache;
-    this.defaultRuleKeyBuilderFactory = defaultRuleKeyBuilderFactory;
     this.keyStack = new Stack<>();
     this.ruleKeyLogger = ruleKeyLogger;
   }
 
   public RuleKeyBuilder(
       SourcePathResolver resolver,
-      FileHashCache hashCache,
-      RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
+      FileHashCache hashCache) {
     this(resolver,
         hashCache,
-        defaultRuleKeyBuilderFactory,
         logger.isVerboseEnabled() ?
             new DefaultRuleKeyLogger() :
             new NullRuleKeyLogger());
@@ -148,9 +143,11 @@ public abstract class RuleKeyBuilder {
     return this;
   }
 
-  protected RuleKeyBuilder setBuildRule(BuildRule rule) {
-    return setSingleValue(defaultRuleKeyBuilderFactory.build(rule));
-  }
+  /**
+   * Implementations should ask their factories to compute the rule key for the {@link BuildRule}
+   * and call {@link #setSingleValue(Object)} on it.
+   */
+  protected abstract RuleKeyBuilder setBuildRule(BuildRule rule);
 
   /**
    * Implementations can override this to provide context-specific caching.

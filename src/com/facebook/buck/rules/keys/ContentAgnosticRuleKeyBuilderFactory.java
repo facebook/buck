@@ -93,7 +93,12 @@ public class ContentAgnosticRuleKeyBuilderFactory
   }
 
   private RuleKeyBuilder newBuilder() {
-    return new RuleKeyBuilder(pathResolver, fileHashCache, this) {
+    return new RuleKeyBuilder(pathResolver, fileHashCache) {
+      @Override
+      protected RuleKeyBuilder setBuildRule(BuildRule rule) {
+        return setSingleValue(ContentAgnosticRuleKeyBuilderFactory.this.build(rule));
+      }
+
       @Override
       public RuleKeyBuilder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
         RuleKey subKey = ruleKeyCache.getUnchecked(appendable);

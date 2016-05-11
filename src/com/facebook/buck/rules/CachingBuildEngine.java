@@ -1614,16 +1614,14 @@ public class CachingBuildEngine implements BuildEngine {
           defaultRuleKeyBuilderFactory,
           new InputBasedRuleKeyBuilderFactory(
               fileHashCache,
-              pathResolver,
-              defaultRuleKeyBuilderFactory),
+              pathResolver),
           new AbiRuleKeyBuilderFactory(
               fileHashCache,
               pathResolver,
               defaultRuleKeyBuilderFactory),
           new DefaultDependencyFileRuleKeyBuilderFactory(
               fileHashCache,
-              pathResolver,
-              defaultRuleKeyBuilderFactory));
+              pathResolver));
     }
 
     @VisibleForTesting

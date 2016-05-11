@@ -73,9 +73,6 @@ public class InputBasedRuleKeyBuilderFactoryTest {
 
     FakeFileHashCache hashCache = new FakeFileHashCache(
         ImmutableMap.of(filesystem.resolve(depOutput), HashCode.fromInt(0)));
-    DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
-        hashCache,
-        pathResolver);
 
     BuildRule rule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -86,11 +83,11 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             .build(resolver, filesystem);
 
     RuleKey inputKey1 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver, defaultRuleKeyBuilderFactory)
+        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver)
             .build(rule);
 
     RuleKey inputKey2 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver, defaultRuleKeyBuilderFactory)
+        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver)
             .build(rule);
 
     assertThat(
@@ -117,12 +114,9 @@ public class InputBasedRuleKeyBuilderFactoryTest {
         ImmutableMap.of(
             filesystem.resolve(output),
             HashCode.fromInt(0)));
-    DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory1 = new DefaultRuleKeyBuilderFactory(
-        hashCache,
-        pathResolver);
 
     RuleKey inputKey1 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver, defaultRuleKeyBuilderFactory1)
+        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver)
             .build(rule);
 
     // Now, build a rule key with a different hash for the output for the above rule.
@@ -130,12 +124,9 @@ public class InputBasedRuleKeyBuilderFactoryTest {
         ImmutableMap.of(
             filesystem.resolve(output),
             HashCode.fromInt(1)));
-    DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory2 = new DefaultRuleKeyBuilderFactory(
-        hashCache,
-        pathResolver);
 
     RuleKey inputKey2 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver, defaultRuleKeyBuilderFactory2)
+        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver)
             .build(rule);
 
     assertThat(
@@ -167,12 +158,9 @@ public class InputBasedRuleKeyBuilderFactoryTest {
         ImmutableMap.of(
             filesystem.resolve(Preconditions.checkNotNull(dep.getPathToOutput())),
             HashCode.fromInt(0)));
-    DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory1 = new DefaultRuleKeyBuilderFactory(
-        hashCache,
-        pathResolver);
 
     RuleKey inputKey1 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver, defaultRuleKeyBuilderFactory1)
+        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver)
             .build(rule);
 
     // Now, build a rule key with a different hash for the output for the above rule.
@@ -180,12 +168,9 @@ public class InputBasedRuleKeyBuilderFactoryTest {
         ImmutableMap.of(
             filesystem.resolve(Preconditions.checkNotNull(dep.getPathToOutput())),
             HashCode.fromInt(1)));
-    DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory2 = new DefaultRuleKeyBuilderFactory(
-        hashCache,
-        pathResolver);
 
     RuleKey inputKey2 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver, defaultRuleKeyBuilderFactory2)
+        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver)
             .build(rule);
 
     assertThat(
@@ -215,12 +200,9 @@ public class InputBasedRuleKeyBuilderFactoryTest {
         ImmutableMap.of(
             filesystem.resolve(output),
             HashCode.fromInt(0)));
-    DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory1 = new DefaultRuleKeyBuilderFactory(
-        hashCache,
-        pathResolver);
 
     RuleKey inputKey1 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver, defaultRuleKeyBuilderFactory1)
+        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver)
             .build(rule);
 
     // Now, build a rule key with a different hash for the output for the above rule.
@@ -228,12 +210,9 @@ public class InputBasedRuleKeyBuilderFactoryTest {
         ImmutableMap.of(
             filesystem.resolve(output),
             HashCode.fromInt(1)));
-    DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory2 = new DefaultRuleKeyBuilderFactory(
-        hashCache,
-        pathResolver);
 
     RuleKey inputKey2 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver, defaultRuleKeyBuilderFactory2)
+        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver)
             .build(rule);
 
     assertThat(
@@ -272,12 +251,9 @@ public class InputBasedRuleKeyBuilderFactoryTest {
         ImmutableMap.of(
             filesystem.resolve(Preconditions.checkNotNull(dep.getPathToOutput())),
             HashCode.fromInt(0)));
-    DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory1 = new DefaultRuleKeyBuilderFactory(
-        hashCache,
-        pathResolver);
 
     RuleKey inputKey1 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver, defaultRuleKeyBuilderFactory1)
+        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver)
             .build(rule);
 
     // Now, build a rule key with a different hash for the output for the above rule.
@@ -285,12 +261,9 @@ public class InputBasedRuleKeyBuilderFactoryTest {
         ImmutableMap.of(
             filesystem.resolve(Preconditions.checkNotNull(dep.getPathToOutput())),
             HashCode.fromInt(1)));
-    DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory2 = new DefaultRuleKeyBuilderFactory(
-        hashCache,
-        pathResolver);
 
     RuleKey inputKey2 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver, defaultRuleKeyBuilderFactory2)
+        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver)
             .build(rule);
 
     assertThat(

@@ -20,7 +20,6 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -46,9 +45,8 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
 
   public DefaultDependencyFileRuleKeyBuilderFactory(
       FileHashCache fileHashCache,
-      SourcePathResolver pathResolver,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory) {
-    super(fileHashCache, pathResolver, ruleKeyBuilderFactory, InputHandling.IGNORE);
+      SourcePathResolver pathResolver) {
+    super(fileHashCache, pathResolver, InputHandling.IGNORE);
     this.pathResolver = pathResolver;
   }
 

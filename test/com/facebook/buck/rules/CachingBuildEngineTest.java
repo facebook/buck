@@ -155,8 +155,7 @@ public class CachingBuildEngineTest {
   private static final DependencyFileRuleKeyBuilderFactory NOOP_DEP_FILE_RULE_KEY_FACTORY =
       new DefaultDependencyFileRuleKeyBuilderFactory(
           new NullFileHashCache(),
-          DEFAULT_SOURCE_PATH_RESOLVER,
-          NOOP_RULE_KEY_FACTORY);
+          DEFAULT_SOURCE_PATH_RESOLVER);
   private static final ObjectMapper MAPPER = ObjectMappers.newDefaultInstance();
 
   public abstract static class CommonFixture extends EasyMockSupport {
@@ -1501,8 +1500,7 @@ public class CachingBuildEngineTest {
     public void setUpDepFileFixture() {
       depFileFactory = new DefaultDependencyFileRuleKeyBuilderFactory(
           fileHashCache,
-          pathResolver,
-          ruleKeyBuilderFactory);
+          pathResolver);
     }
 
     @Test
@@ -1923,8 +1921,7 @@ public class CachingBuildEngineTest {
       DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
           new DefaultDependencyFileRuleKeyBuilderFactory(
               fileHashCache,
-              pathResolver,
-              NOOP_RULE_KEY_FACTORY);
+              pathResolver);
 
       // Use a genrule to produce the input file.
       final Genrule genrule =
@@ -2039,8 +2036,7 @@ public class CachingBuildEngineTest {
       DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
           new DefaultDependencyFileRuleKeyBuilderFactory(
               fileHashCache,
-              pathResolver,
-              NOOP_RULE_KEY_FACTORY);
+              pathResolver);
 
       // Use a genrule to produce the input file.
       final Genrule genrule =
@@ -2160,8 +2156,7 @@ public class CachingBuildEngineTest {
       DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
           new DefaultDependencyFileRuleKeyBuilderFactory(
               fileHashCache,
-              pathResolver,
-              NOOP_RULE_KEY_FACTORY);
+              pathResolver);
 
       // Use a genrule to produce the input file.
       final Genrule genrule =
@@ -2272,8 +2267,7 @@ public class CachingBuildEngineTest {
       DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
           new DefaultDependencyFileRuleKeyBuilderFactory(
               fileHashCache,
-              pathResolver,
-              NOOP_RULE_KEY_FACTORY);
+              pathResolver);
 
       // Prepare an input file that should appear in the dep file.
       final Genrule genrule =

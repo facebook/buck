@@ -58,10 +58,12 @@ public class DefaultRuleKeyBuilderFactory extends ReflectiveRuleKeyBuilderFactor
   }
 
   private RuleKeyBuilder newBuilder() {
-    return new RuleKeyBuilder(
-        pathResolver,
-        hashCache,
-        getDefaultRuleKeyBuilderFactory()) {
+    return new RuleKeyBuilder(pathResolver, hashCache) {
+      @Override
+      protected RuleKeyBuilder setBuildRule(BuildRule rule) {
+        return setSingleValue(getDefaultRuleKeyBuilderFactory().build(rule));
+      }
+
       @Override
       public RuleKeyBuilder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
         RuleKey subKey = ruleKeyCache.getUnchecked(appendable);
