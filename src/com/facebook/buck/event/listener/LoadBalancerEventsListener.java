@@ -62,7 +62,12 @@ public class LoadBalancerEventsListener implements BuckEventListener {
       ServerCounters counters = getServerCounters(perServerData.getServer());
       counters.getPingRequestCount().inc();
       if (perServerData.getException().isPresent()) {
-        counters.getPingRequestErrorCount().inc();
+        Exception exception = perServerData.getException().get();
+        if (exception instanceof SocketTimeoutException) {
+          counters.getPingRequestTimeoutCount().inc();
+        } else {
+          counters.getPingRequestErrorCount().inc();
+        }
       }
 
       if (perServerData.getPingRequestLatencyMillis().isPresent()) {
@@ -132,6 +137,7 @@ public class LoadBalancerEventsListener implements BuckEventListener {
     private final SamplingCounter pingRequestLatencyMillis;
     private final IntegerCounter pingRequestCount;
     private final IntegerCounter pingRequestErrorCount;
+    private final IntegerCounter pingRequestTimeoutCount;
 
     private final IntegerCounter serverNotHealthyCount;
     private final IntegerCounter isBestServerCount;
@@ -154,6 +160,10 @@ public class LoadBalancerEventsListener implements BuckEventListener {
       this.pingRequestErrorCount = registry.newIntegerCounter(
           PER_SERVER_CATEGORY,
           "ping_request_error_count",
+          getTagsForServer(server));
+      this.pingRequestTimeoutCount = registry.newIntegerCounter(
+          PER_SERVER_CATEGORY,
+          "ping_request_timeout_count",
           getTagsForServer(server));
       this.serverNotHealthyCount = registry.newIntegerCounter(
           PER_SERVER_CATEGORY,
@@ -200,6 +210,10 @@ public class LoadBalancerEventsListener implements BuckEventListener {
 
     public IntegerCounter getPingRequestErrorCount() {
       return pingRequestErrorCount;
+    }
+
+    public IntegerCounter getPingRequestTimeoutCount() {
+      return pingRequestTimeoutCount;
     }
 
     public IntegerCounter getServerNotHealthyCount() {
