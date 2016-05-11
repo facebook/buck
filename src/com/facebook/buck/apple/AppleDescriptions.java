@@ -22,7 +22,6 @@ import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.ProvidesStaticLibraryDeps;
@@ -45,7 +44,6 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
@@ -219,7 +217,7 @@ public class AppleDescriptions {
     output.srcs = arg.srcs;
     output.platformSrcs = arg.platformSrcs;
     output.headers = Optional.of(SourceList.ofNamedSources(headerMap));
-    output.platformHeaders = Optional.of(PatternMatchedCollection.<SourceList>of());
+    output.platformHeaders = arg.platformHeaders;
     output.prefixHeader = arg.prefixHeader;
     output.compilerFlags = arg.compilerFlags;
     output.platformCompilerFlags = arg.platformCompilerFlags;
@@ -235,7 +233,7 @@ public class AppleDescriptions {
     // This is intentionally an empty string; we put all prefixes into
     // the header map itself.
     output.headerNamespace = Optional.of("");
-    output.cxxRuntimeType = Optional.absent();
+    output.cxxRuntimeType = arg.cxxRuntimeType;
     output.tests = arg.tests;
   }
 
@@ -249,7 +247,7 @@ public class AppleDescriptions {
         output,
         arg,
         buildTarget);
-    output.linkStyle = Optional.absent();
+    output.linkStyle = arg.linkStyle;
   }
 
   public static void populateCxxLibraryDescriptionArg(
@@ -277,14 +275,13 @@ public class AppleDescriptions {
                 resolver.deprecatedPathFunction(),
                 headerPathPrefix,
                 arg)));
-    output.exportedPlatformHeaders = Optional.of(PatternMatchedCollection.<SourceList>of());
+    output.exportedPlatformHeaders = arg.exportedPlatformHeaders;
     output.exportedPlatformPreprocessorFlags = arg.exportedPlatformPreprocessorFlags;
-    output.exportedLangPreprocessorFlags = Optional.of(
-        ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
+    output.exportedLangPreprocessorFlags = arg.exportedLangPreprocessorFlags;
     output.exportedLinkerFlags = arg.exportedLinkerFlags;
     output.exportedPlatformLinkerFlags = arg.exportedPlatformLinkerFlags;
-    output.soname = Optional.absent();
-    output.forceStatic = Optional.of(false);
+    output.soname = arg.soname;
+    output.forceStatic = arg.forceStatic;
     output.linkWhole = arg.linkWhole;
     output.supportedPlatformsRegex = arg.supportedPlatformsRegex;
     output.canBeAsset = arg.canBeAsset;
