@@ -925,10 +925,12 @@ public final class Main {
                   executionEnvironment.getWifiSsid(),
                   httpWriteExecutorService));
 
-          ProgressEstimator progressEstimator = new ProgressEstimator(
-              filesystem.getRootPath(),
-              buildEventBus,
-              objectMapper);
+          ProgressEstimator progressEstimator =
+              new ProgressEstimator(
+                  filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
+                      .resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON),
+                  buildEventBus,
+                  objectMapper);
           consoleListener.setProgressEstimator(progressEstimator);
 
           BuildEnvironmentDescription buildEnvironmentDescription =

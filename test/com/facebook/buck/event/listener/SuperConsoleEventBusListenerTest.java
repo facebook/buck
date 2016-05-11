@@ -527,7 +527,7 @@ public class SuperConsoleEventBusListenerTest {
             logPath,
             timeZone);
     ProgressEstimator e = new ProgressEstimator(
-        getStorageForTest().getParent().getParent(),
+        getStorageForTest(),
         eventBus,
         ObjectMappers.newDefaultInstance());
     listener.setProgressEstimator(e);
@@ -704,7 +704,7 @@ public class SuperConsoleEventBusListenerTest {
             logPath,
             timeZone);
     ProgressEstimator e = new ProgressEstimator(
-        getStorageForTest().getParent().getParent(),
+        getStorageForTest(),
         eventBus,
         ObjectMappers.newDefaultInstance());
     listener.setProgressEstimator(e);
@@ -2174,7 +2174,7 @@ public class SuperConsoleEventBusListenerTest {
             logPath,
             timeZone);
     ProgressEstimator e = new ProgressEstimator(
-        getStorageForTest().getParent().getParent(),
+        getStorageForTest(),
         eventBus,
         ObjectMappers.newDefaultInstance());
     listener.setProgressEstimator(e);

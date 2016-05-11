@@ -19,7 +19,6 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.cli.ProgressEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.BuckConstant;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
@@ -38,7 +37,7 @@ import javax.annotation.Nullable;
 
 public class ProgressEstimator {
 
-  private final Path rootRepositoryPath;
+  private final Path storageFile;
 
   private static final Logger LOG = Logger.get(ProgressEstimator.class);
 
@@ -76,11 +75,11 @@ public class ProgressEstimator {
   private final AtomicDouble buildProgress = new AtomicDouble(-1.0);
 
   public ProgressEstimator(
-      Path rootRepositoryPath,
+      Path storageFile,
       BuckEventBus buckEventBus,
       ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
-    this.rootRepositoryPath = rootRepositoryPath;
+    this.storageFile = storageFile;
     this.command = null;
     this.buckEventBus = buckEventBus;
     this.expectationsStorage = null;
@@ -159,12 +158,6 @@ public class ProgressEstimator {
     }
   }
 
-  private Path getStorageFilePath() {
-    return rootRepositoryPath
-        .resolve(BuckConstant.getBuckOutputPath())
-        .resolve(PROGRESS_ESTIMATIONS_JSON);
-  }
-
   private void fillEstimationsForCommand(String aCommand) {
     preloadEstimationsFromStorageFile();
     Map<String, Number> commandEstimations = getEstimationsForCommand(aCommand);
@@ -185,12 +178,10 @@ public class ProgressEstimator {
   }
 
   private void preloadEstimationsFromStorageFile() {
-    Path fileWithExpectations = getStorageFilePath();
-
     Map<String, Map<String, Number>> map = null;
-    if (Files.exists(fileWithExpectations)) {
+    if (Files.exists(storageFile)) {
       try {
-        byte[] bytes = Files.readAllBytes(fileWithExpectations);
+        byte[] bytes = Files.readAllBytes(storageFile);
         map = objectMapper.readValue(
             bytes,
             new TypeReference<HashMap<String, Map<String, Number>>>(){});
@@ -244,17 +235,16 @@ public class ProgressEstimator {
     if (expectationsStorage == null) {
       return;
     }
-    Path storageFilePath = getStorageFilePath();
     try {
-      Files.createDirectories(storageFilePath.getParent());
+      Files.createDirectories(storageFile.getParent());
     } catch (IOException e) {
       LOG.warn("Unable to make path for storage %s: %s",
-          storageFilePath.toString(),
+          storageFile.toString(),
           e.getLocalizedMessage());
       return;
     }
     try {
-      objectMapper.writeValue(storageFilePath.toFile(), expectationsStorage);
+      objectMapper.writeValue(storageFile.toFile(), expectationsStorage);
     } catch (IOException e) {
       LOG.warn("Unable to save progress expectations: " + e.getLocalizedMessage());
     }
