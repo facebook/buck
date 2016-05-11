@@ -35,6 +35,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -218,9 +219,10 @@ public class CxxLibraryTest {
     NativeLinkableInput expectedSharedNativeLinkableInput =
         NativeLinkableInput.of(
             ImmutableList.<Arg>of(
-                new SourcePathArg(
-                    pathResolver,
-                    new BuildTargetSourcePath(staticPicLibraryTarget))),
+                FileListableLinkerInputArg.withSourcePathArg(
+                    new SourcePathArg(
+                        pathResolver,
+                        new BuildTargetSourcePath(staticPicLibraryTarget)))),
             ImmutableSet.<FrameworkPath>of(),
             ImmutableSet.<FrameworkPath>of());
     assertEquals(

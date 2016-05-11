@@ -104,6 +104,11 @@ public class GnuLinker implements Linker {
   }
 
   @Override
+  public Iterable<Arg> fileList(Path fileListPath) {
+    return ImmutableList.of();
+  }
+
+  @Override
   public String origin() {
     return "$ORIGIN";
   }

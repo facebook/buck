@@ -96,6 +96,8 @@ public class CxxLink
     Path scratchDir = BuildTargets.getScratchPath(getBuildTarget(), "%s-tmp");
     Path argFilePath = getProjectFilesystem().getRootPath().resolve(
         BuildTargets.getScratchPath(getBuildTarget(), "%s__argfile.txt"));
+    Path fileListPath = getProjectFilesystem().getRootPath().resolve(
+        BuildTargets.getScratchPath(getBuildTarget(), "%s__filelist.txt"));
 
     // Try to find all the cell roots used during the link.  This isn't technically correct since,
     // in theory not all inputs need to come from build rules, but it probably works in practice.
@@ -111,8 +113,10 @@ public class CxxLink
         new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),
         new CxxPrepareForLinkStep(
             argFilePath,
+            fileListPath,
+            linker.fileList(fileListPath),
             output,
-            Arg.stringify(args)),
+            args),
         new CxxLinkStep(
             getProjectFilesystem().getRootPath(),
             linker.getEnvironment(getResolver()),

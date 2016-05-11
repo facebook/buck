@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.json.JsonConcatenate;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -38,6 +38,7 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -692,7 +693,18 @@ public class CxxDescriptionEnhancer {
     }
 
     // Add object files into the args.
-    argsBuilder.addAll(SourcePathArg.from(sourcePathResolver, objects.values()));
+    ImmutableList<SourcePathArg> objectArgs =
+        FluentIterable
+            .from(SourcePathArg.from(sourcePathResolver, objects.values()))
+        .transform(new Function<Arg, SourcePathArg>() {
+          @Override
+          public SourcePathArg apply(Arg input) {
+            Preconditions.checkArgument(input instanceof SourcePathArg);
+            return (SourcePathArg) input;
+          }
+        })
+        .toList();
+    argsBuilder.addAll(FileListableLinkerInputArg.from(objectArgs));
 
     BuildTarget linkRuleTarget = createCxxLinkTarget(params.getBuildTarget());
 

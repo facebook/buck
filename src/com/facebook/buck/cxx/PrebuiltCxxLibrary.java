@@ -31,6 +31,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -326,7 +327,7 @@ public class PrebuiltCxxLibrary
           Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
           linkerArgsBuilder.addAll(linker.linkWhole(staticLibrary));
         } else {
-          linkerArgsBuilder.add(staticLibrary);
+          linkerArgsBuilder.add(FileListableLinkerInputArg.withSourcePathArg(staticLibrary));
         }
       }
     }
