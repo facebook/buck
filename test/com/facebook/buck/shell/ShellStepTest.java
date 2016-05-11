@@ -218,17 +218,6 @@ public class ShellStepTest {
   }
 
   @Test
-  public void testStdErrNotPrintedOnErrorIfSilentAndNotShouldPrintStdErr() throws Exception {
-    ShellStep command = createCommand(/*shouldPrintStdErr*/ false, /*shouldPrintStdOut*/ false);
-    ProcessExecutorParams params = createParams();
-    FakeProcess process = new FakeProcess(EXIT_FAILURE, OUTPUT_MSG, ERROR_MSG);
-    TestConsole console = new TestConsole(Verbosity.SILENT);
-    ExecutionContext context = createContext(ImmutableMap.of(params, process), console);
-    command.launchAndInteractWithProcess(context, params);
-    assertEquals("", console.getTextWrittenToStdErr());
-  }
-
-  @Test
   public void testStdErrPrintedOnErrorIfShouldPrintStdErrEvenIfSilent() throws Exception {
     ShellStep command = createCommand(/*shouldPrintStdErr*/ true, /*shouldPrintStdOut*/ false);
     ProcessExecutorParams params = createParams();

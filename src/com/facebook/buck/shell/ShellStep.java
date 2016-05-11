@@ -173,10 +173,12 @@ public abstract class ShellStep implements Step {
     stderr = result.getStderr();
 
     Verbosity verbosity = context.getVerbosity();
-    if (stdout.isPresent() && !stdout.get().isEmpty() && shouldPrintStdout(verbosity)) {
+    if (stdout.isPresent() && !stdout.get().isEmpty() &&
+        (result.getExitCode() != 0 || shouldPrintStdout(verbosity))) {
       context.postEvent(ConsoleEvent.info("%s", stdout.get()));
     }
-    if (stderr.isPresent() && !stderr.get().isEmpty() && shouldPrintStderr(verbosity)) {
+    if (stderr.isPresent() && !stderr.get().isEmpty() &&
+        (result.getExitCode() != 0 || shouldPrintStderr(verbosity))) {
       context.postEvent(ConsoleEvent.warning("%s", stderr.get()));
     }
 
@@ -190,9 +192,7 @@ public abstract class ShellStep implements Step {
       options.add(Option.PRINT_STD_OUT);
       options.add(Option.PRINT_STD_ERR);
     }
-    if (context.getVerbosity() == Verbosity.SILENT) {
-      options.add(Option.IS_SILENT);
-    }
+    options.add(Option.IS_SILENT);
   }
 
   public long getDuration() {
@@ -268,7 +268,7 @@ public abstract class ShellStep implements Step {
    *     error and only if verbosity is set to standard information.
    */
   protected boolean shouldPrintStdout(Verbosity verbosity) {
-    return false;
+    return verbosity.shouldPrintOutput();
   }
 
   /**
