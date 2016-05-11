@@ -533,7 +533,7 @@ public class AppleBinaryIntegrationTest {
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
     workspace.runBuckCommand("build",
         "--config",
-        "apple.default_debug_info_format=none",
+        "apple.default_debug_info_format_for_binaries=none",
         target.getFullyQualifiedName())
         .assertSuccess();
     BuildTarget appTarget = target.withFlavors(
@@ -592,7 +592,7 @@ public class AppleBinaryIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp#no-debug");
     workspace.runBuckCommand("build",
         "--config",
-        "apple.default_debug_info_format=dwarf_and_dsym",
+        "apple.default_debug_info_format_for_binaries=dwarf_and_dsym",
         target.getFullyQualifiedName())
         .assertSuccess();
     assertThat(
@@ -647,7 +647,7 @@ public class AppleBinaryIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp");
     workspace.runBuckCommand("build",
         "--config",
-        "apple.default_debug_info_format=dwarf_and_dsym",
+        "apple.default_debug_info_format_for_binaries=dwarf_and_dsym",
         target.getFullyQualifiedName())
         .assertSuccess();
     BuildTarget appTarget = target.withFlavors(
@@ -671,7 +671,7 @@ public class AppleBinaryIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp");
     workspace.runBuckCommand("build",
         "--config",
-        "apple.default_debug_info_format=none",
+        "apple.default_debug_info_format_for_binaries=none",
         target.getFullyQualifiedName())
         .assertSuccess();
     BuildTarget appTarget = target.withFlavors(AppleDebugFormat.NONE.getFlavor());

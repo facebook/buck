@@ -332,11 +332,25 @@ public class AppleConfig {
         .or(DEFAULT_TEST_LOG_LEVEL);
   }
 
-  public AppleDebugFormat getDefaultDebugInfoFormat() {
+  public AppleDebugFormat getDefaultDebugInfoFormatForBinaries() {
     return delegate.getEnum(
         "apple",
-        "default_debug_info_format",
+        "default_debug_info_format_for_binaries",
         AppleDebugFormat.class).or(AppleDebugFormat.DWARF_AND_DSYM);
+  }
+
+  public AppleDebugFormat getDefaultDebugInfoFormatForTests() {
+    return delegate.getEnum(
+        "apple",
+        "default_debug_info_format_for_tests",
+        AppleDebugFormat.class).or(AppleDebugFormat.DWARF);
+  }
+
+  public AppleDebugFormat getDefaultDebugInfoFormatForLibraries() {
+    return delegate.getEnum(
+        "apple",
+        "default_debug_info_format_for_libraries",
+        AppleDebugFormat.class).or(AppleDebugFormat.DWARF);
   }
 
   /**

@@ -329,13 +329,37 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'apple' /}
-  {param name: 'default_debug_info_format' /}
+  {param name: 'default_debug_info_format_for_binaries' /}
+  {param example_value: 'NONE' /}
+  {param description}
+    <code>default_debug_info_format_for_binaries</code> setting controls the default debug info format that
+    is used when building binary targets. If you don't specify it, <code>DWARF_AND_DSYM</code> value will be used.
+    You can disable debug data by specifying <code>NONE</code> value. You can produce unstripped binary by specifying
+    <code>DWARF</code> value.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'default_debug_info_format_for_libraries' /}
+  {param example_value: 'DWARF' /}
+  {param description}
+    <code>default_debug_info_format_for_libraries</code> setting controls the default debug info format that
+    is used when building dynamic library targets. If you don't specify it, <code>DWARF</code> value will be used.
+    You can disable debug data by specifying <code>NONE</code> value. You can produce dSYM file for the library by specifying
+    <code>DWARF_AND_DSYM</code> value.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'default_debug_info_format_for_tests' /}
   {param example_value: 'DWARF_AND_DSYM' /}
   {param description}
-    <code>default_debug_info_format</code> setting controls the default debug info format. If you
-    don't specify it, <code>DWARF_AND_DSYM</code> value will be used. You can disable debug
-    data by specifying <code>NONE</code> value. You can produce unstripped binary by specifying
-    <code>DWARF</code> value.
+    <code>default_debug_info_format_for_tests</code> setting controls the default debug info format that
+    is used when building test targets. If you don't specify it, <code>DWARF</code> value will be used.
+    You can disable debug data by specifying <code>NONE</code> value. You can produce dSYM file by specifying
+    <code>DWARF_AND_DSYM</code> value.
   {/param}
 {/call}
 

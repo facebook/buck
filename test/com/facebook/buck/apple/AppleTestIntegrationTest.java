@@ -103,7 +103,7 @@ public class AppleTestIntegrationTest {
         .withFlavors(
             ImmutableFlavor.of("iphonesimulator-x86_64"),
             ImmutableFlavor.of("apple-test-bundle"),
-            AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
+            AppleDebugFormat.DWARF.getFlavor(),
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path outputPath = projectRoot.resolve(
         BuildTargets.getGenPath(
@@ -136,7 +136,7 @@ public class AppleTestIntegrationTest {
         .withFlavors(
             ImmutableFlavor.of("iphonesimulator-x86_64"),
             ImmutableFlavor.of("apple-test-bundle"),
-            AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
+            AppleDebugFormat.DWARF.getFlavor(),
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path outputPath = projectRoot.resolve(
         BuildTargets.getGenPath(
@@ -164,7 +164,7 @@ public class AppleTestIntegrationTest {
         Paths.get("foo_output.expected"),
         BuildTargets.getGenPath(
             BuildTarget.builder(target)
-                .addFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor())
+                .addFlavors(AppleDebugFormat.DWARF.getFlavor())
                 .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
                 .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                 .build(),
@@ -187,7 +187,7 @@ public class AppleTestIntegrationTest {
         BuildTargets.getGenPath(
             BuildTarget.builder(target)
                 .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
-                .addFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor())
+                .addFlavors(AppleDebugFormat.DWARF.getFlavor())
                 .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                 .build(),
             "%s"));
@@ -208,7 +208,7 @@ public class AppleTestIntegrationTest {
         Paths.get("foo_output.expected"),
         BuildTargets.getGenPath(
             BuildTarget.builder(buildTarget)
-                .addFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor())
+                .addFlavors(AppleDebugFormat.DWARF.getFlavor())
                 .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
                 .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                 .build(),
@@ -218,7 +218,7 @@ public class AppleTestIntegrationTest {
     BuildTarget appleTestBundleFlavoredBuildTarget = buildTarget
         .withFlavors(
             ImmutableFlavor.of("apple-test-bundle"),
-            AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
+            AppleDebugFormat.DWARF.getFlavor(),
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path outputPath = projectRoot.resolve(
         BuildTargets.getGenPath(
@@ -270,7 +270,7 @@ public class AppleTestIntegrationTest {
         Paths.get("foo_output.expected"),
         BuildTargets.getGenPath(
             BuildTarget.builder(target)
-                .addFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor())
+                .addFlavors(AppleDebugFormat.DWARF.getFlavor())
                 .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
                 .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                 .build(),
@@ -365,9 +365,15 @@ public class AppleTestIntegrationTest {
         ".buckconfig.local");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "test",
-        "//:AppTest#dwarf-and-dsym",
+        "//:AppTest",
         "--config",
-        "cxx.cflags=-g");
+        "cxx.cflags=-g",
+        "--config",
+        "apple.default_debug_info_format_for_binaries=DWARF_AND_DSYM",
+        "--config",
+        "apple.default_debug_info_format_for_libraries=DWARF_AND_DSYM",
+        "--config",
+        "apple.default_debug_info_format_for_tests=DWARF_AND_DSYM");
     result.assertSuccess();
 
     assertThat(

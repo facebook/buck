@@ -484,7 +484,7 @@ public class AppleBundleIntegrationTest {
         Paths.get("DemoApp_output.expected"),
         BuildTargets.getGenPath(
             BuildTarget.builder(target)
-                .addFlavors(AppleDebugFormat.NONE.getFlavor())
+                .addFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor())
                 .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                 .build(),
             "%s"));
@@ -492,7 +492,7 @@ public class AppleBundleIntegrationTest {
     Path appPath = BuildTargets
         .getGenPath(
             BuildTarget.builder(target)
-                .addFlavors(AppleDebugFormat.NONE.getFlavor())
+                .addFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor())
                 .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                 .build(),
             "%s")

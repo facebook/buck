@@ -400,7 +400,7 @@ public class AppleLibraryIntegrationTest {
         BuildTargets
             .getGenPath(
                 BuildTarget.builder(target)
-                    .addFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor())
+                    .addFlavors(AppleDebugFormat.DWARF.getFlavor())
                     .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
                     .build(),
                 "%s")
@@ -443,7 +443,7 @@ public class AppleLibraryIntegrationTest {
         BuildTargets
             .getGenPath(
                 BuildTarget.builder(target)
-                    .addFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor())
+                    .addFlavors(AppleDebugFormat.DWARF.getFlavor())
                     .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
                     .build(),
                 "%s")
