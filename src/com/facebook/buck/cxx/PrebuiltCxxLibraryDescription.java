@@ -40,6 +40,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
@@ -521,6 +522,7 @@ public class PrebuiltCxxLibraryDescription implements
         },
         args.soname,
         args.linkWithoutSoname.or(false),
+        args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
         args.forceStatic.or(false),
         args.headerOnly.or(false),
         args.linkWhole.or(false),
@@ -617,6 +619,7 @@ public class PrebuiltCxxLibraryDescription implements
     public Optional<PatternMatchedCollection<ImmutableList<String>>> exportedPlatformLinkerFlags;
     public Optional<String> soname;
     public Optional<Boolean> linkWithoutSoname;
+    public Optional<ImmutableSortedSet<FrameworkPath>> frameworks;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
   }

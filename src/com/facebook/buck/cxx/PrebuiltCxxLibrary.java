@@ -65,6 +65,7 @@ public class PrebuiltCxxLibrary
   private final Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags;
   private final Optional<String> soname;
   private final boolean linkWithoutSoname;
+  private final ImmutableSet<FrameworkPath> frameworks;
   private final boolean forceStatic;
   private final boolean headerOnly;
   private final boolean linkWhole;
@@ -92,6 +93,7 @@ public class PrebuiltCxxLibrary
       Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags,
       Optional<String> soname,
       boolean linkWithoutSoname,
+      ImmutableSet<FrameworkPath> frameworks,
       boolean forceStatic,
       boolean headerOnly,
       boolean linkWhole,
@@ -110,6 +112,7 @@ public class PrebuiltCxxLibrary
     this.exportedLinkerFlags = exportedLinkerFlags;
     this.soname = soname;
     this.linkWithoutSoname = linkWithoutSoname;
+    this.frameworks = frameworks;
     this.forceStatic = forceStatic;
     this.headerOnly = headerOnly;
     this.linkWhole = linkWhole;
@@ -220,6 +223,7 @@ public class PrebuiltCxxLibrary
         }
         builder.putAllPreprocessorFlags(
             Preconditions.checkNotNull(exportedPreprocessorFlags.apply(cxxPlatform)));
+        builder.addAllFrameworks(frameworks);
         final Iterable<SourcePath> includePaths = Iterables.transform(
             includeDirs,
             new Function<String, SourcePath>() {
@@ -334,7 +338,7 @@ public class PrebuiltCxxLibrary
 
     return NativeLinkableInput.of(
         linkerArgs,
-        ImmutableSet.<FrameworkPath>of(),
+        Preconditions.checkNotNull(frameworks),
         ImmutableSet.<FrameworkPath>of());
   }
 
