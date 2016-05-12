@@ -35,6 +35,7 @@ public class CxxSourceTypesTest {
     assertTrue(CxxSourceTypes.isPreprocessableType(CxxSource.Type.CXX));
     assertTrue(CxxSourceTypes.isPreprocessableType(CxxSource.Type.OBJC));
     assertTrue(CxxSourceTypes.isPreprocessableType(CxxSource.Type.CUDA));
+    assertTrue(CxxSourceTypes.isPreprocessableType(CxxSource.Type.ASM_WITH_CPP));
   }
 
   @Test
@@ -44,6 +45,7 @@ public class CxxSourceTypesTest {
     assertFalse(CxxSourceTypes.isPreprocessableType(CxxSource.Type.CXX_CPP_OUTPUT));
     assertFalse(CxxSourceTypes.isPreprocessableType(CxxSource.Type.OBJC_CPP_OUTPUT));
     assertFalse(CxxSourceTypes.isPreprocessableType(CxxSource.Type.CUDA_CPP_OUTPUT));
+    assertFalse(CxxSourceTypes.isPreprocessableType(CxxSource.Type.ASM));
   }
 
   @Test
@@ -53,6 +55,7 @@ public class CxxSourceTypesTest {
     assertTrue(CxxSourceTypes.isCompilableType(CxxSource.Type.CXX_CPP_OUTPUT));
     assertTrue(CxxSourceTypes.isCompilableType(CxxSource.Type.OBJC_CPP_OUTPUT));
     assertTrue(CxxSourceTypes.isCompilableType(CxxSource.Type.CUDA_CPP_OUTPUT));
+    assertTrue(CxxSourceTypes.isCompilableType(CxxSource.Type.ASM));
   }
 
   @Test
@@ -62,6 +65,7 @@ public class CxxSourceTypesTest {
     assertFalse(CxxSourceTypes.isCompilableType(CxxSource.Type.CXX));
     assertFalse(CxxSourceTypes.isCompilableType(CxxSource.Type.OBJC));
     assertFalse(CxxSourceTypes.isCompilableType(CxxSource.Type.CUDA));
+    assertFalse(CxxSourceTypes.isCompilableType(CxxSource.Type.ASM_WITH_CPP));
   }
 
   @Test
@@ -85,6 +89,9 @@ public class CxxSourceTypesTest {
     assertThat(
         CxxSourceTypes.getPreprocessor(cxxPlatform, CxxSource.Type.CUDA),
         Matchers.is(cxxPlatform.getCudapp().get()));
+    assertThat(
+        CxxSourceTypes.getPreprocessor(cxxPlatform, CxxSource.Type.ASM_WITH_CPP),
+        Matchers.is(cxxPlatform.getAsmpp().get()));
   }
 
   @Test
@@ -108,6 +115,9 @@ public class CxxSourceTypesTest {
     assertThat(
         CxxSourceTypes.getCompiler(cxxPlatform, CxxSource.Type.CUDA_CPP_OUTPUT),
         Matchers.is(cxxPlatform.getCuda().get()));
+    assertThat(
+        CxxSourceTypes.getCompiler(cxxPlatform, CxxSource.Type.ASM),
+        Matchers.is(cxxPlatform.getAsm().get()));
   }
 
 }

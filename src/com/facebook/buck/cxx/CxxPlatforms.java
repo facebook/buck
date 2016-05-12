@@ -99,6 +99,8 @@ public class CxxPlatforms {
         .setCxxpp(config.getPreprocessorProvider(flavor, "cxxpp").or(cxxpp))
         .setCuda(config.getCompilerProvider(flavor, "cuda"))
         .setCudapp(config.getPreprocessorProvider(flavor, "cudapp"))
+        .setAsm(config.getCompilerProvider(flavor, "asm"))
+        .setAsmpp(config.getPreprocessorProvider(flavor, "asmpp"))
         .setLd(config.getLinkerProvider(flavor, "ld", ld.getType()).or(ld))
         .addAllLdflags(ldFlags)
         .setAr(getTool(flavor, "ar", config).transform(getArchiver(ar.getClass(), config)).or(ar))
@@ -143,6 +145,8 @@ public class CxxPlatforms {
         .setCxxpp(config.getPreprocessorProvider(flavor, "cxxpp").or(defaultPlatform.getCxxpp()))
         .setCuda(config.getCompilerProvider(flavor, "cuda").or(defaultPlatform.getCuda()))
         .setCudapp(config.getPreprocessorProvider(flavor, "cudapp").or(defaultPlatform.getCudapp()))
+        .setAsm(config.getCompilerProvider(flavor, "asm").or(defaultPlatform.getAsm()))
+        .setAsmpp(config.getPreprocessorProvider(flavor, "asmpp").or(defaultPlatform.getAsmpp()))
         .setLd(
             config.getLinkerProvider(flavor, "ld", defaultPlatform.getLd().getType())
                 .or(defaultPlatform.getLd()))
@@ -200,6 +204,8 @@ public class CxxPlatforms {
         .addAllCxxppflags(config.getFlags("cxxppflags").or(DEFAULT_CXXPPFLAGS))
         .addAllCudaflags(config.getFlags("cudaflags").or(ImmutableList.<String>of()))
         .addAllCudappflags(config.getFlags("cudappflags").or(ImmutableList.<String>of()))
+        .addAllAsmflags(config.getFlags("asmflags").or(ImmutableList.<String>of()))
+        .addAllAsmppflags(config.getFlags("asmppflags").or(ImmutableList.<String>of()))
         .addAllLdflags(config.getFlags("ldflags").or(DEFAULT_LDFLAGS))
         .addAllArflags(config.getFlags("arflags").or(DEFAULT_ARFLAGS))
         .addAllRanlibflags(config.getFlags("ranlibflags").or(DEFAULT_RANLIBFLAGS));
@@ -267,6 +273,12 @@ public class CxxPlatforms {
     }
     if (cxxPlatform.getCuda().isPresent()) {
       deps.addAll(cxxPlatform.getCuda().get().getParseTimeDeps());
+    }
+    if (cxxPlatform.getAsmpp().isPresent()) {
+      deps.addAll(cxxPlatform.getAsmpp().get().getParseTimeDeps());
+    }
+    if (cxxPlatform.getAsm().isPresent()) {
+      deps.addAll(cxxPlatform.getAsm().get().getParseTimeDeps());
     }
     deps.addAll(cxxPlatform.getLd().getParseTimeDeps());
     return deps.build();

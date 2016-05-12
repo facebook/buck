@@ -55,6 +55,11 @@ abstract class AbstractCxxSource {
     // Note, this is declared before ASSEMBLER so .s files are recognized as needing preprocessor.
     ASSEMBLER_WITH_CPP("assembler-with-cpp", "assembler", "s", "S"),
     ASSEMBLER("assembler", "assembler", "s"),
+
+    // Assembly files built with nasm/yasm.
+    ASM_WITH_CPP("asm-with-cpp", "asm", "asmpp"),
+    ASM("asm", "asm", "asm"),
+
     ;
 
     private final String language;

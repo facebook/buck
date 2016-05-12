@@ -62,6 +62,12 @@ interface AbstractCxxPlatform extends FlavorConvertible {
   Optional<CompilerProvider> getCuda();
   List<String> getCudaflags();
 
+  Optional<PreprocessorProvider> getAsmpp();
+  List<String> getAsmppflags();
+
+  Optional<CompilerProvider> getAsm();
+  List<String> getAsmflags();
+
   LinkerProvider getLd();
   List<String> getLdflags();
   Multimap<Linker.LinkableDepType, String> getRuntimeLdflags();

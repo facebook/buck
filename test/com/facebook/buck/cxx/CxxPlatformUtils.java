@@ -53,6 +53,8 @@ public class CxxPlatformUtils {
           .setCxxpp(DEFAULT_PREPROCESSOR_PROVIDER)
           .setCuda(DEFAULT_COMPILER_PROVIDER)
           .setCudapp(DEFAULT_PREPROCESSOR_PROVIDER)
+          .setAsm(DEFAULT_COMPILER_PROVIDER)
+          .setAsmpp(DEFAULT_PREPROCESSOR_PROVIDER)
           .setLd(
               new DefaultLinkerProvider(
                   LinkerProvider.Type.GNU,
