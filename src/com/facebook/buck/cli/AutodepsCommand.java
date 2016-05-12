@@ -30,9 +30,9 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -43,6 +43,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -116,7 +117,9 @@ public class AutodepsCommand extends AbstractCommand {
           params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
           params.getBuckConfig().getBuildArtifactCacheSizeLimit(),
           params.getObjectMapper(),
-          buildRuleResolver);
+          buildRuleResolver,
+          Preconditions.checkNotNull(
+              params.getExecutors().get(ExecutionContext.ExecutorPool.NETWORK)));
 
       // Create a BuildEngine because we store symbol information as build artifacts.
       BuckEventBus eventBus = params.getBuckEventBus();

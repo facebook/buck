@@ -124,6 +124,7 @@ import com.google.common.reflect.ClassPath;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ServiceManager;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGContext;
 import com.martiansoftware.nailgun.NGServer;
@@ -159,8 +160,10 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
@@ -190,6 +193,11 @@ public final class Main {
 
   private static final TimeSpan HANG_DETECTOR_TIMEOUT =
       new TimeSpan(5, TimeUnit.MINUTES);
+
+  /**
+   * Number of maximum threads for network operations.
+   */
+  private static final int MAX_NETWORK_THREADS = 20;
 
   /**
    * Path to a directory of static content that should be served by the {@link WebServer}.
@@ -878,10 +886,12 @@ public final class Main {
         // when connecting. For now, we'll use the default from the server environment.
         Locale locale = Locale.getDefault();
 
-        // create a cached thread pool for cpu intensive tasks
+        // Create a cached thread pool for cpu intensive tasks
         Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors = new HashMap<>();
         executors.put(ExecutionContext.ExecutorPool.CPU, listeningDecorator(
                 Executors.newCachedThreadPool()));
+        // Create a thread pool for network I/O tasks
+        executors.put(ExecutionContext.ExecutorPool.NETWORK, getNetworkExecutorService());
 
         // The order of resources in the try-with-resources block is important: the BuckEventBus
         // must be the last resource, so that it is closed first and can deliver its queued events
@@ -1179,6 +1189,18 @@ public final class Main {
     } else {
       return newDirectExecutorService();
     }
+  }
+
+  private static ListeningExecutorService getNetworkExecutorService() {
+    return listeningDecorator(new ThreadPoolExecutor(
+        /* corePoolSize */ MAX_NETWORK_THREADS,
+        /* maximumPoolSize */ MAX_NETWORK_THREADS,
+        /* keepAliveTime */ 15L, TimeUnit.SECONDS,
+        /* workQueue */ new LinkedBlockingQueue<Runnable>(MAX_NETWORK_THREADS),
+        /* threadFactory */ new ThreadFactoryBuilder()
+        .setNameFormat("Network I/O" + "-%d")
+        .build(),
+        /* handler */ new ThreadPoolExecutor.CallerRunsPolicy()));
   }
 
   @VisibleForTesting

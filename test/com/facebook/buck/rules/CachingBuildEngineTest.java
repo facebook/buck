@@ -101,6 +101,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.easymock.EasyMockSupport;
 import org.hamcrest.Matchers;
@@ -127,7 +128,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -249,7 +252,8 @@ public class CachingBuildEngineTest {
               256L,
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
-              resolver);
+              resolver,
+              createTestExecutorService());
 
       // Add a build step so we can verify that the steps are executed.
       buildSteps.add(
@@ -346,7 +350,8 @@ public class CachingBuildEngineTest {
               256L,
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
-              resolver);
+              resolver,
+              createTestExecutorService());
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
 
       BuildResult result = buildResult.get();
@@ -429,7 +434,8 @@ public class CachingBuildEngineTest {
               256L,
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
-              resolver);
+              resolver,
+              createTestExecutorService());
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
       buckEventBus.post(
           CommandEvent.finished(
@@ -512,7 +518,8 @@ public class CachingBuildEngineTest {
               256L,
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
-              resolver);
+              resolver,
+              createTestExecutorService());
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
       buckEventBus.post(
           CommandEvent.finished(
@@ -569,7 +576,8 @@ public class CachingBuildEngineTest {
               256L,
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
-              resolver);
+              resolver,
+              createTestExecutorService());
 
       // Run the build.
       replayAll();
@@ -647,7 +655,8 @@ public class CachingBuildEngineTest {
               256L,
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
-              resolver);
+              resolver,
+              createTestExecutorService());
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
@@ -757,7 +766,8 @@ public class CachingBuildEngineTest {
               256L,
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
-              resolver);
+              resolver,
+              createTestExecutorService());
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
@@ -854,7 +864,8 @@ public class CachingBuildEngineTest {
               256L,
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
-              resolver);
+              resolver,
+              createTestExecutorService());
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
@@ -896,7 +907,8 @@ public class CachingBuildEngineTest {
               256L,
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
-              resolver);
+              resolver,
+              createTestExecutorService());
 
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
       assertThat(result.getSuccess(), equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
@@ -932,7 +944,8 @@ public class CachingBuildEngineTest {
               256L,
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
-              resolver);
+              resolver,
+              createTestExecutorService());
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1009,7 +1022,8 @@ public class CachingBuildEngineTest {
               256L,
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
-              resolver);
+              resolver,
+              createTestExecutorService());
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1104,7 +1118,8 @@ public class CachingBuildEngineTest {
               256L,
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
-              resolver);
+              resolver,
+              createTestExecutorService());
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1163,7 +1178,8 @@ public class CachingBuildEngineTest {
               256L,
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
-              resolver);
+              resolver,
+              createTestExecutorService());
 
       assertThat(
           cachingBuildEngine.getNumRulesToBuild(ImmutableList.of(rule1)),
@@ -1195,7 +1211,8 @@ public class CachingBuildEngineTest {
               256L,
               Optional.of(2L),
               ObjectMappers.newDefaultInstance(),
-              resolver);
+              resolver,
+              createTestExecutorService());
 
       // Verify that after building successfully, nothing is cached.
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1228,7 +1245,8 @@ public class CachingBuildEngineTest {
               256L,
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
-              resolver);
+              resolver,
+              createTestExecutorService());
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
       assertEquals(
           BuildRuleSuccessType.BUILT_LOCALLY,
@@ -1251,7 +1269,8 @@ public class CachingBuildEngineTest {
               256L,
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
-              resolver);
+              resolver,
+              createTestExecutorService());
       result = cachingBuildEngine.build(buildContext, rule).get();
       assertEquals(
           BuildRuleSuccessType.FETCHED_FROM_CACHE,
@@ -3259,6 +3278,19 @@ public class CachingBuildEngineTest {
         .build();
 
     return new DefaultStepRunner(executionContext);
+  }
+
+  private static ListeningExecutorService createTestExecutorService() {
+    return listeningDecorator(new ThreadPoolExecutor(
+        /* corePoolSize */ CachingBuildEngine.MAX_TEST_NETWORK_THREADS,
+        /* maximumPoolSize */ CachingBuildEngine.MAX_TEST_NETWORK_THREADS,
+        /* keepAliveTime */ 15L, TimeUnit.SECONDS,
+        /* workQueue */ new LinkedBlockingQueue<Runnable>(
+            CachingBuildEngine.MAX_TEST_NETWORK_THREADS),
+        /* threadFactory */ new ThreadFactoryBuilder()
+        .setNameFormat("Network Test I/O" + "-%d")
+        .build(),
+        /* handler */ new ThreadPoolExecutor.CallerRunsPolicy()));
   }
 
   private static WeightedListeningExecutorService toWeighted(ListeningExecutorService service) {

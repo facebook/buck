@@ -39,6 +39,7 @@ import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.test.CoverageReportFormat;
@@ -489,7 +490,9 @@ public class TestCommand extends BuildCommand {
               params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
               params.getBuckConfig().getBuildArtifactCacheSizeLimit(),
               params.getObjectMapper(),
-              actionGraphAndResolver.getResolver());
+              actionGraphAndResolver.getResolver(),
+              Preconditions.checkNotNull(
+                  params.getExecutors().get(ExecutionContext.ExecutorPool.NETWORK)));
       try (Build build = createBuild(
           params.getBuckConfig(),
           actionGraphAndResolver.getActionGraph(),

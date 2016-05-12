@@ -33,6 +33,7 @@ import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.step.AdbOptions;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.util.DefaultPropertyFinder;
@@ -111,7 +112,9 @@ public class FetchCommand extends BuildCommand {
               params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
               params.getBuckConfig().getBuildArtifactCacheSizeLimit(),
               params.getObjectMapper(),
-              actionGraphAndResolver.getResolver()),
+              actionGraphAndResolver.getResolver(),
+              Preconditions.checkNotNull(
+                  params.getExecutors().get(ExecutionContext.ExecutorPool.NETWORK))),
           params.getArtifactCache(),
           params.getConsole(),
           params.getBuckEventBus(),
