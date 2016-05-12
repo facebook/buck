@@ -144,12 +144,17 @@ public class MissingSymbolsHandler {
       }
 
       @Subscribe
-      public void onBuildFinished(BuildEvent.Finished event) throws InterruptedException {
+      public void onBuildFinished(BuildEvent.Finished event) {
         // Shortcircuit if there aren't any failures.
         if (missingSymbolEvents.get(event.getBuildId()).isEmpty()) {
           return;
         }
-        missingSymbolsHandler.printNeededDependencies(missingSymbolEvents.get(event.getBuildId()));
+        try {
+          missingSymbolsHandler.printNeededDependencies(
+              missingSymbolEvents.get(event.getBuildId()));
+        } catch (InterruptedException e) {
+          LOG.error(e, "Missing symbols handler did not complete in time.");
+        }
         missingSymbolEvents.removeAll(event.getBuildId());
       }
     };
