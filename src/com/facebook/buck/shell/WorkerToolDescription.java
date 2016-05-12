@@ -78,9 +78,9 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
           args.exe.getFullyQualifiedName());
     }
 
-    String startupArgs;
+    String expandedStartupArgs;
     try {
-      startupArgs = MACRO_HANDLER.expand(
+      expandedStartupArgs = MACRO_HANDLER.expand(
           params.getBuildTarget(),
           params.getCellRoots(),
           resolver,
@@ -89,11 +89,18 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
       throw new HumanReadableException(e, "%s: %s", params.getBuildTarget(), e.getMessage());
     }
 
+    Iterable<BuildRule> rulesReferencedInStartupArgs = resolver.requireAllRules(
+        getTargetsFromStartupArgs(
+            params.getBuildTarget(),
+            params.getCellRoots(),
+            args.args));
+
     return new WorkerTool(
         params,
         new SourcePathResolver(resolver),
         (BinaryBuildRule) rule,
-        startupArgs);
+        rulesReferencedInStartupArgs,
+        expandedStartupArgs);
   }
 
   @Override
@@ -101,12 +108,22 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       WorkerToolDescription.Arg constructorArg) {
+    return getTargetsFromStartupArgs(
+        buildTarget,
+        cellRoots,
+        constructorArg.args);
+  }
+
+  private Iterable<BuildTarget> getTargetsFromStartupArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      Optional<String> startupArgs) {
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-    if (constructorArg.args.isPresent()) {
+    if (startupArgs.isPresent()) {
       try {
         targets.addAll(
             MACRO_HANDLER.extractParseTimeDeps(
-                buildTarget, cellRoots, constructorArg.args.get()));
+                buildTarget, cellRoots, startupArgs.get()));
       } catch (MacroException e) {
         throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
       }

@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -83,5 +84,38 @@ public class WorkerToolTest {
           e.getHumanReadableErrorMessage(),
           Matchers.containsString("needs to correspond to a binary rule"));
     }
+  }
+
+  @Test
+  public void testArgsWithLocationMacroAffectDependenciesAndExpands() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    BuildRule shBinaryRule = new ShBinaryBuilder(
+        BuildTargetFactory.newInstance("//:my_exe"))
+        .setMain(new FakeSourcePath("bin/exe"))
+        .build(resolver);
+
+    BuildRule exportFileRule =
+        ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:file"))
+            .setSrc(new FakeSourcePath("file.txt"))
+            .build(resolver);
+
+    WorkerToolBuilder workerToolBuilder = WorkerToolBuilder
+        .newWorkerToolBuilder(BuildTargetFactory.newInstance("//:worker_rule"))
+        .setExe(shBinaryRule.getBuildTarget())
+        .setArgs("--input $(location //:file)");
+    WorkerTool workerTool = (WorkerTool) workerToolBuilder.build(resolver);
+
+    assertThat(
+        workerToolBuilder.findImplicitDeps(),
+        Matchers.hasItem(exportFileRule.getBuildTarget()));
+    assertThat(workerTool.getDeps(), Matchers.hasItems(shBinaryRule, exportFileRule));
+    assertThat(workerTool.getRuntimeDeps(), Matchers.hasItems(shBinaryRule, exportFileRule));
+    assertThat(
+        workerTool.getArgs(), Matchers.containsString(
+            pathResolver.getAbsolutePath(
+                new BuildTargetSourcePath(exportFileRule.getBuildTarget())).toString()));
   }
 }

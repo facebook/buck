@@ -17,9 +17,11 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.WorkerTool;
+import com.google.common.collect.ImmutableList;
 
 public class WorkerMacroExpander extends ExecutableMacroExpander {
 
@@ -32,6 +34,17 @@ public class WorkerMacroExpander extends ExecutableMacroExpander {
               rule.getBuildTarget()));
     }
     return ((WorkerTool) rule).getBinaryBuildRule().getExecutableCommand();
+  }
+
+  @Override
+  protected ImmutableList<BuildRule> extractBuildTimeDeps(
+      BuildRuleResolver resolver,
+      BuildRule rule)
+      throws MacroException {
+    ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
+    deps.add(rule);
+    deps.addAll(getTool(rule).getDeps(new SourcePathResolver(resolver)));
+    return deps.build();
   }
 
   @Override

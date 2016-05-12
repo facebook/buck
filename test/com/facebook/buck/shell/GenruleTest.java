@@ -346,6 +346,31 @@ public class GenruleTest {
   }
 
   @Test
+  public void testGenruleWithWorkerMacroIncludesWorkerToolInDeps()
+      throws NoSuchBuildTargetException {
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+
+    BuildRule shBinaryRule = new ShBinaryBuilder(
+        BuildTargetFactory.newInstance("//:my_exe"))
+        .setMain(new FakeSourcePath("bin/exe"))
+        .build(ruleResolver);
+
+    BuildRule workerToolRule = WorkerToolBuilder
+        .newWorkerToolBuilder(BuildTargetFactory.newInstance("//:worker_rule"))
+        .setExe(shBinaryRule.getBuildTarget())
+        .build(ruleResolver);
+
+    BuildRule genrule = GenruleBuilder
+        .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule_with_worker"))
+        .setCmd("$(worker :worker_rule) abc")
+        .setOut("output.txt")
+        .build(ruleResolver);
+
+    assertThat(genrule.getDeps(), Matchers.hasItems(shBinaryRule, workerToolRule));
+  }
+
+  @Test
   public void testDepsEnvironmentVariableIsComplete() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
