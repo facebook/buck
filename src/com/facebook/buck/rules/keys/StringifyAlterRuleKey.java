@@ -19,7 +19,7 @@ package com.facebook.buck.rules.keys;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -77,9 +77,9 @@ class StringifyAlterRuleKey extends AbstractAlterRuleKey {
   }
 
   @Override
-  public void amendKey(RuleKeyBuilder builder, BuildRule rule) {
+  public void amendKey(RuleKeyObjectSink sink, BuildRule rule) {
     Object val = getValue(field, rule);
-    builder.setReflectively(
+    sink.setReflectively(
         field.getName(),
         val == null ? null : String.valueOf(val));
 

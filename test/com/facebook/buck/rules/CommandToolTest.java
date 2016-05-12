@@ -142,7 +142,7 @@ public class CommandToolTest {
     FileHashCache hashCache = FakeFileHashCache.createFromStrings(
         ImmutableMap.of(
             "input", Strings.repeat("a", 40)));
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(hashCache, pathResolver);
     RuleKey ruleKey = new UncachedRuleKeyBuilder(
         pathResolver,

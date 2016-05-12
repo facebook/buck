@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 
 import java.lang.reflect.Field;
 
@@ -27,7 +27,7 @@ class DefaultAlterRuleKey extends AbstractAlterRuleKey {
   }
 
   @Override
-  public void amendKey(RuleKeyBuilder builder, BuildRule rule) {
+  public void amendKey(RuleKeyObjectSink builder, BuildRule rule) {
     builder.setReflectively(field.getName(), getValue(field, rule));
   }
 }

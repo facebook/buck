@@ -21,17 +21,16 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -72,7 +71,7 @@ public class DummyRDotJavaTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(hashCache, pathResolver);
     BuildRule resourceRule1 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()

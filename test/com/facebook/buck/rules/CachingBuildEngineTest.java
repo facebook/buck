@@ -148,7 +148,7 @@ public class CachingBuildEngineTest {
   private static final SourcePathResolver DEFAULT_SOURCE_PATH_RESOLVER =
       new SourcePathResolver(
           new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-  private static final RuleKeyBuilderFactory NOOP_RULE_KEY_FACTORY =
+  private static final DefaultRuleKeyBuilderFactory NOOP_RULE_KEY_FACTORY =
       new DefaultRuleKeyBuilderFactory(
           new NullFileHashCache(),
           DEFAULT_SOURCE_PATH_RESOLVER);
@@ -168,7 +168,7 @@ public class CachingBuildEngineTest {
     protected ImmutableBuildContext buildContext;
     protected BuildRuleResolver resolver;
     protected SourcePathResolver pathResolver;
-    protected RuleKeyBuilderFactory ruleKeyBuilderFactory;
+    protected DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory;
 
     @Before
     public void setUp() {

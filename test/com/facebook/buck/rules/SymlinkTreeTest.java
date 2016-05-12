@@ -198,7 +198,7 @@ public class SymlinkTreeTest {
     ruleResolver.addToIndex(symlinkTreeBuildRule);
     SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
 
-    RuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
         FakeFileHashCache.createFromStrings(
             ImmutableMap.<String, String>of()),
         resolver);
@@ -226,7 +226,7 @@ public class SymlinkTreeTest {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
         ImmutableMap.<String, String>of());
-    RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
+    InputBasedRuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             hashCache,
             pathResolver);
@@ -284,7 +284,7 @@ public class SymlinkTreeTest {
     // target hashing to "aaaa".
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
         ImmutableMap.of("out", "aaaa"));
-    RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
+    InputBasedRuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             hashCache,
             pathResolver);

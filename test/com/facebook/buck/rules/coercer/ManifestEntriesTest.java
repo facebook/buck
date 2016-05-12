@@ -21,6 +21,7 @@ import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.google.common.base.Optional;
 
@@ -44,7 +45,10 @@ public class ManifestEntriesTest {
 
   @Test
   public void shouldUpdateRuleKey() throws Exception {
-    RuleKeyBuilder ruleKeyBuilder = createMock(RuleKeyBuilder.class);
+
+    @SuppressWarnings("unchecked")
+    RuleKeyBuilder<RuleKey> ruleKeyBuilder = createMock(RuleKeyBuilder.class);
+
     expect(ruleKeyBuilder.setReflectively("minSdkVersion", Optional.of(5)))
         .andReturn(ruleKeyBuilder);
     expect(ruleKeyBuilder.setReflectively("targetSdkVersion", Optional.of(7)))

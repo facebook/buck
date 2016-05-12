@@ -1600,9 +1600,9 @@ public class CachingBuildEngine implements BuildEngine {
 
   @VisibleForTesting
   static class RuleKeyFactories {
-    public final RuleKeyBuilderFactory defaultRuleKeyBuilderFactory;
-    public final RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory;
-    public final RuleKeyBuilderFactory abiRuleKeyBuilderFactory;
+    public final RuleKeyBuilderFactory<RuleKey> defaultRuleKeyBuilderFactory;
+    public final RuleKeyBuilderFactory<RuleKey> inputBasedRuleKeyBuilderFactory;
+    public final RuleKeyBuilderFactory<RuleKey> abiRuleKeyBuilderFactory;
     public final DependencyFileRuleKeyBuilderFactory depFileRuleKeyBuilderFactory;
 
     public static RuleKeyFactories build(
@@ -1629,9 +1629,9 @@ public class CachingBuildEngine implements BuildEngine {
 
     @VisibleForTesting
     RuleKeyFactories(
-        RuleKeyBuilderFactory defaultRuleKeyBuilderFactory,
-        RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory,
-        RuleKeyBuilderFactory abiRuleKeyBuilderFactory,
+        RuleKeyBuilderFactory<RuleKey> defaultRuleKeyBuilderFactory,
+        RuleKeyBuilderFactory<RuleKey> inputBasedRuleKeyBuilderFactory,
+        RuleKeyBuilderFactory<RuleKey> abiRuleKeyBuilderFactory,
         DependencyFileRuleKeyBuilderFactory depFileRuleKeyBuilderFactory) {
       this.defaultRuleKeyBuilderFactory = defaultRuleKeyBuilderFactory;
       this.inputBasedRuleKeyBuilderFactory = inputBasedRuleKeyBuilderFactory;

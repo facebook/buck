@@ -19,16 +19,15 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleScheduleInfo;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -149,7 +148,7 @@ public class CxxLinkTest {
     );
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.of(

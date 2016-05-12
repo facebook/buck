@@ -19,15 +19,15 @@ package com.facebook.buck.rules;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Supplier;
 
-public class UncachedRuleKeyBuilder extends RuleKeyBuilder {
+public class UncachedRuleKeyBuilder extends RuleKeyBuilder<RuleKey> {
 
-  private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
+  private final RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory;
   private final Supplier<UncachedRuleKeyBuilder> subKeySupplier;
 
   public UncachedRuleKeyBuilder(
       SourcePathResolver resolver,
       FileHashCache hashCache,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory,
+      RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory,
       RuleKeyLogger ruleKeyLogger) {
     super(resolver, hashCache, ruleKeyLogger);
     this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
@@ -37,7 +37,7 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder {
   public UncachedRuleKeyBuilder(
       SourcePathResolver resolver,
       FileHashCache hashCache,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+      RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
     super(resolver, hashCache);
     this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
     this.subKeySupplier = createSubKeySupplier(resolver, hashCache, ruleKeyBuilderFactory);
@@ -46,7 +46,7 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder {
   private static Supplier<UncachedRuleKeyBuilder> createSubKeySupplier(
       final SourcePathResolver resolver,
       final FileHashCache hashCache,
-      final RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+      final RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
     return new Supplier<UncachedRuleKeyBuilder>() {
       @Override
       public UncachedRuleKeyBuilder get() {
@@ -59,16 +59,23 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder {
   }
 
   @Override
-  protected RuleKeyBuilder setBuildRule(BuildRule rule) {
-    return setSingleValue(ruleKeyBuilderFactory.build(rule));
+  protected UncachedRuleKeyBuilder setBuildRule(BuildRule rule) {
+    setSingleValue(ruleKeyBuilderFactory.build(rule));
+    return this;
   }
 
   @Override
-  public RuleKeyBuilder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
-    RuleKeyBuilder subKeyBuilder = subKeySupplier.get();
+  public UncachedRuleKeyBuilder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
+    RuleKeyBuilder<RuleKey> subKeyBuilder = subKeySupplier.get();
     appendable.appendToRuleKey(subKeyBuilder);
     RuleKey subKey = subKeyBuilder.build();
-    return setAppendableRuleKey(key, subKey);
+    setAppendableRuleKey(key, subKey);
+    return this;
+  }
+
+  @Override
+  public RuleKey build() {
+    return buildRuleKey();
   }
 
 }

@@ -25,8 +25,8 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AccumulateClassNamesStep;
 import com.facebook.buck.jvm.java.Classpaths;
 import com.facebook.buck.jvm.java.HasClasspathEntries;
-import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -40,12 +40,12 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.InstallableApk;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.keys.AbiRule;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -611,7 +611,7 @@ public class AndroidBinary
   }
 
   @Override
-  public Sha1HashCode getAbiKeyForDeps(RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
+  public Sha1HashCode getAbiKeyForDeps(DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
     // For non-exopackages, there is no benefit to the ABI optimization, so we want to disable it.
     // Returning our RuleKey has this effect because we will never get an ABI match after a
     // RuleKey miss.

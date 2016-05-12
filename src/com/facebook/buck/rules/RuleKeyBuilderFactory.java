@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules;
 
-public interface RuleKeyBuilderFactory {
+public interface RuleKeyBuilderFactory<T> {
 
   /**
    * Creates a new {@link RuleKeyBuilder} for the given {@link BuildRule}. If you do not need to
@@ -25,7 +25,7 @@ public interface RuleKeyBuilderFactory {
    * @param buildRule The build rule to create the key for.
    * @return A builder that can used to build a rule key.
    */
-  RuleKeyBuilder newInstance(BuildRule buildRule);
+  RuleKeyBuilder<T> newInstance(BuildRule buildRule);
 
   /**
    * Creates a new {@link RuleKey} for the given {@link BuildRule}. If you need to add more
@@ -34,5 +34,5 @@ public interface RuleKeyBuilderFactory {
    * @param buildRule The build rule to create the key for.
    * @return A rule key.
    */
-  RuleKey build(BuildRule buildRule);
+  T build(BuildRule buildRule);
 }

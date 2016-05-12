@@ -32,7 +32,6 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
@@ -161,7 +160,7 @@ public class ExternallyBuiltApplePackageTest {
         newRuleKeyBuilderFactory().build(packageWithSdkVersion.apply("fake")));
   }
 
-  private RuleKeyBuilderFactory newRuleKeyBuilderFactory() {
+  private DefaultRuleKeyBuilderFactory newRuleKeyBuilderFactory() {
     return new DefaultRuleKeyBuilderFactory(
         new FakeFileHashCache(
             ImmutableMap.of(Paths.get(bundleLocation).toAbsolutePath(), HashCode.fromInt(5))),

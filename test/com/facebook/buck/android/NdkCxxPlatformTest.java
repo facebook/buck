@@ -18,9 +18,8 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cxx.CxxPlatformUtils;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
 import com.facebook.buck.cxx.CxxPreprocessMode;
 import com.facebook.buck.cxx.CxxSource;
@@ -35,10 +34,10 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -84,7 +83,7 @@ public class NdkCxxPlatformTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     String source = "source.cpp";
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
@@ -148,7 +147,7 @@ public class NdkCxxPlatformTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()

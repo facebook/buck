@@ -46,7 +46,7 @@ import java.util.Stack;
 
 import javax.annotation.Nullable;
 
-public abstract class RuleKeyBuilder implements RuleKeyObjectSink {
+public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
 
   @VisibleForTesting
   static final byte SEPARATOR = '\0';
@@ -80,7 +80,7 @@ public abstract class RuleKeyBuilder implements RuleKeyObjectSink {
             new NullRuleKeyLogger());
   }
 
-  private RuleKeyBuilder feed(byte[] bytes) {
+  private RuleKeyBuilder<T> feed(byte[] bytes) {
     while (!keyStack.isEmpty()) {
       String key = keyStack.pop();
       hasher.putBytes(key.getBytes(StandardCharsets.UTF_8));
@@ -92,7 +92,7 @@ public abstract class RuleKeyBuilder implements RuleKeyObjectSink {
     return this;
   }
 
-  protected RuleKeyBuilder setSourcePath(SourcePath sourcePath) {
+  protected RuleKeyBuilder<T> setSourcePath(SourcePath sourcePath) {
     if (sourcePath instanceof ArchiveMemberSourcePath) {
       ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) sourcePath;
       try {
@@ -130,7 +130,7 @@ public abstract class RuleKeyBuilder implements RuleKeyObjectSink {
     }
   }
 
-  protected RuleKeyBuilder setNonHashingSourcePath(SourcePath sourcePath) {
+  protected RuleKeyBuilder<T> setNonHashingSourcePath(SourcePath sourcePath) {
     String pathForKey;
     if (sourcePath instanceof ResourceSourcePath) {
       pathForKey = ((ResourceSourcePath) sourcePath).getResourceIdentifier();
@@ -147,14 +147,14 @@ public abstract class RuleKeyBuilder implements RuleKeyObjectSink {
    * Implementations should ask their factories to compute the rule key for the {@link BuildRule}
    * and call {@link #setSingleValue(Object)} on it.
    */
-  protected abstract RuleKeyBuilder setBuildRule(BuildRule rule);
+  protected abstract RuleKeyBuilder<T> setBuildRule(BuildRule rule);
 
-  protected RuleKeyBuilder setAppendableRuleKey(String key, RuleKey ruleKey) {
+  protected RuleKeyBuilder<T> setAppendableRuleKey(String key, RuleKey ruleKey) {
     return setReflectively(key + ".appendableSubKey", ruleKey);
   }
 
   @Override
-  public RuleKeyBuilder setReflectively(String key, @Nullable Object val) {
+  public RuleKeyBuilder<T> setReflectively(String key, @Nullable Object val) {
     if (val instanceof RuleKeyAppendable) {
       setAppendableRuleKey(key, (RuleKeyAppendable) val);
       if (!(val instanceof BuildRule)) {
@@ -237,7 +237,7 @@ public abstract class RuleKeyBuilder implements RuleKeyObjectSink {
   // file without changing the contents, we have a cache miss. We're going to assume that this
   // doesn't happen that often in practice.
   @Override
-  public RuleKeyBuilder setPath(Path absolutePath, Path ideallyRelative) throws IOException {
+  public RuleKeyBuilder<T> setPath(Path absolutePath, Path ideallyRelative) throws IOException {
     // TODO(shs96c): Enable this precondition once setPath(Path) has been removed.
     // Preconditions.checkState(absolutePath.isAbsolute());
     HashCode sha1 = hashCache.get(absolutePath);
@@ -261,7 +261,7 @@ public abstract class RuleKeyBuilder implements RuleKeyObjectSink {
     return this;
   }
 
-  public RuleKeyBuilder setArchiveMemberPath(
+  public RuleKeyBuilder<T> setArchiveMemberPath(
       ArchiveMemberPath absoluteArchiveMemberPath,
       ArchiveMemberPath relativeArchiveMemberPath) throws IOException {
     Preconditions.checkState(absoluteArchiveMemberPath.isAbsolute());
@@ -280,7 +280,7 @@ public abstract class RuleKeyBuilder implements RuleKeyObjectSink {
     return this;
   }
 
-  protected RuleKeyBuilder setSingleValue(@Nullable Object val) {
+  protected RuleKeyBuilder<T> setSingleValue(@Nullable Object val) {
 
     if (val == null) { // Null value first
       ruleKeyLogger.addNullValue();
@@ -372,10 +372,12 @@ public abstract class RuleKeyBuilder implements RuleKeyObjectSink {
     return this;
   }
 
-  public RuleKey build() {
+  protected RuleKey buildRuleKey() {
     RuleKey ruleKey = new RuleKey(hasher.hash());
     ruleKeyLogger.registerRuleKey(ruleKey);
     return ruleKey;
   }
+
+  public abstract T build();
 
 }

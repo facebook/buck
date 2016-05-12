@@ -29,12 +29,11 @@ import static org.junit.Assume.assumeTrue;
 
 import com.dd.plist.NSDictionary;
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cxx.CxxPlatformUtils;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
 import com.facebook.buck.cxx.CxxPreprocessMode;
@@ -52,10 +51,10 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -940,7 +939,7 @@ AppleSdkPaths appleSdkPaths =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     String source = "source.cpp";
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
@@ -1003,7 +1002,7 @@ AppleSdkPaths appleSdkPaths =
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()

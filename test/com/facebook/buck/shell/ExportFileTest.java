@@ -22,7 +22,6 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
@@ -34,13 +33,13 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
@@ -214,7 +213,8 @@ public class ExportFileTest {
     SourcePathResolver resolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
      );
-    RuleKeyBuilderFactory ruleKeyFactory = new DefaultRuleKeyBuilderFactory(hashCache, resolver);
+    DefaultRuleKeyBuilderFactory ruleKeyFactory =
+        new DefaultRuleKeyBuilderFactory(hashCache, resolver);
 
     filesystem.writeContentsToPath("I like cheese", temp);
 

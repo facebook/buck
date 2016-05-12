@@ -38,7 +38,7 @@ import javax.annotation.Nonnull;
  * and not the contents(hash) of the file.
  */
 public class ContentAgnosticRuleKeyBuilderFactory
-    extends ReflectiveRuleKeyBuilderFactory<RuleKeyBuilder> {
+    extends ReflectiveRuleKeyBuilderFactory<RuleKeyBuilder<RuleKey>, RuleKey> {
 
   private final FileHashCache fileHashCache;
   private final SourcePathResolver pathResolver;
@@ -52,7 +52,7 @@ public class ContentAgnosticRuleKeyBuilderFactory
         new CacheLoader<RuleKeyAppendable, RuleKey>() {
           @Override
           public RuleKey load(@Nonnull RuleKeyAppendable appendable) throws Exception {
-            RuleKeyBuilder subKeyBuilder = newBuilder();
+            RuleKeyBuilder<RuleKey> subKeyBuilder = newBuilder();
             appendable.appendToRuleKey(subKeyBuilder);
             return subKeyBuilder.build();
           }
@@ -92,24 +92,31 @@ public class ContentAgnosticRuleKeyBuilderFactory
     };
   }
 
-  private RuleKeyBuilder newBuilder() {
-    return new RuleKeyBuilder(pathResolver, fileHashCache) {
+  private RuleKeyBuilder<RuleKey> newBuilder() {
+    return new RuleKeyBuilder<RuleKey>(pathResolver, fileHashCache) {
       @Override
-      protected RuleKeyBuilder setBuildRule(BuildRule rule) {
+      protected RuleKeyBuilder<RuleKey> setBuildRule(BuildRule rule) {
         return setSingleValue(ContentAgnosticRuleKeyBuilderFactory.this.build(rule));
       }
 
       @Override
-      public RuleKeyBuilder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
+      public RuleKeyBuilder<RuleKey> setAppendableRuleKey(
+          String key,
+          RuleKeyAppendable appendable) {
         RuleKey subKey = ruleKeyCache.getUnchecked(appendable);
         return setAppendableRuleKey(key, subKey);
+      }
+
+      @Override
+      public RuleKey build() {
+        return buildRuleKey();
       }
 
     };
   }
 
   @Override
-  protected RuleKeyBuilder newBuilder(final BuildRule rule) {
+  protected RuleKeyBuilder<RuleKey> newBuilder(final BuildRule rule) {
     return newBuilder();
   }
 }

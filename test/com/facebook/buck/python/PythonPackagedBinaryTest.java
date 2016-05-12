@@ -19,17 +19,16 @@ package com.facebook.buck.python;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -62,7 +61,7 @@ public class PythonPackagedBinaryTest {
   public final TemporaryFolder tmpDir = new TemporaryFolder();
 
   private RuleKey getRuleKeyForModuleLayout(
-      RuleKeyBuilderFactory ruleKeyBuilderFactory,
+      DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory,
       SourcePathResolver resolver,
       String main, Path mainSrc,
       String mod1, Path src1,

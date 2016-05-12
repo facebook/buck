@@ -30,11 +30,11 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.AbiRule;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -172,7 +172,7 @@ public class DummyRDotJava extends AbstractBuildRule
   }
 
   @Override
-  public Sha1HashCode getAbiKeyForDeps(RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
+  public Sha1HashCode getAbiKeyForDeps(DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
     return HasAndroidResourceDeps.ABI_HASHER.apply(androidResourceDeps);
   }
 

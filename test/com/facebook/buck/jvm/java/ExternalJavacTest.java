@@ -112,7 +112,7 @@ public class ExternalJavacTest extends EasyMockSupport {
         fakeRuleKeyBuilderFactory)
         .setReflectively("javac", javac.toString())
         .build();
-    RuleKeyBuilder builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
+    RuleKeyBuilder<RuleKey> builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
     builder.setReflectively("key.appendableSubKey", javacKey);
     RuleKey expected = builder.build();
 
@@ -162,7 +162,7 @@ public class ExternalJavacTest extends EasyMockSupport {
         fakeRuleKeyBuilderFactory)
         .setReflectively("javac.version", javacVersion.toString())
         .build();
-    RuleKeyBuilder builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
+    RuleKeyBuilder<RuleKey> builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
     builder.setReflectively("key.appendableSubKey", javacKey);
     RuleKey expected = builder.build();
 

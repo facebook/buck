@@ -67,11 +67,15 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         outputSize);
   }
 
-  public static Suspended suspended(BuildRule rule, RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+  public static Suspended suspended(
+      BuildRule rule,
+      RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
     return new Suspended(rule, ruleKeyBuilderFactory);
   }
 
-  public static Resumed resumed(BuildRule rule, RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+  public static Resumed resumed(
+      BuildRule rule,
+      RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
     return new Resumed(rule, ruleKeyBuilderFactory);
   }
 
@@ -178,7 +182,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
 
     private final String ruleKey;
 
-    protected Suspended(BuildRule rule, RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+    protected Suspended(BuildRule rule, RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
       super(rule);
       this.ruleKey = ruleKeyBuilderFactory.newInstance(rule).build().toString();
     }
@@ -199,7 +203,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
 
     private final String ruleKey;
 
-    protected Resumed(BuildRule rule, RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+    protected Resumed(BuildRule rule, RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
       super(rule);
       this.ruleKey = ruleKeyBuilderFactory.newInstance(rule).build().toString();
     }
@@ -220,12 +224,12 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
 
     private final BuckEventBus eventBus;
     private final BuildRule rule;
-    private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
+    private final RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory;
 
     protected Scope(
         BuckEventBus eventBus,
         BuildRule rule,
-        RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+        RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
       this.eventBus = eventBus;
       this.rule = rule;
       this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
@@ -241,7 +245,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
   public static Scope startSuspendScope(
       BuckEventBus eventBus,
       BuildRule rule,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+      RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
     eventBus.post(BuildRuleEvent.started(rule));
     return new Scope(eventBus, rule, ruleKeyBuilderFactory);
   }
@@ -249,7 +253,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
   public static Scope resumeSuspendScope(
       BuckEventBus eventBus,
       BuildRule rule,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+      RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
     eventBus.post(BuildRuleEvent.resumed(rule, ruleKeyBuilderFactory));
     return new Scope(eventBus, rule, ruleKeyBuilderFactory);
   }

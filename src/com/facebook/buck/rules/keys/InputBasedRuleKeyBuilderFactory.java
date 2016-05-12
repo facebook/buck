@@ -44,7 +44,7 @@ import javax.annotation.Nullable;
  * @see SupportsInputBasedRuleKey
  */
 public class InputBasedRuleKeyBuilderFactory
-    extends ReflectiveRuleKeyBuilderFactory<InputBasedRuleKeyBuilderFactory.Builder> {
+    extends ReflectiveRuleKeyBuilderFactory<InputBasedRuleKeyBuilderFactory.Builder, RuleKey> {
 
   private final FileHashCache fileHashCache;
   private final SourcePathResolver pathResolver;
@@ -101,7 +101,7 @@ public class InputBasedRuleKeyBuilderFactory
     };
   }
 
-  public class Builder extends RuleKeyBuilder {
+  public class Builder extends RuleKeyBuilder<RuleKey> {
 
     private final ImmutableList.Builder<Iterable<BuildRule>> deps = ImmutableList.builder();
     private final ImmutableList.Builder<Iterable<SourcePath>> inputs = ImmutableList.builder();
@@ -111,7 +111,7 @@ public class InputBasedRuleKeyBuilderFactory
     }
 
     @Override
-    public RuleKeyBuilder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
+    public RuleKeyBuilder<RuleKey> setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
       Result result = cache.getUnchecked(appendable);
       deps.add(result.getDeps());
       inputs.add(result.getInputs());
@@ -119,7 +119,7 @@ public class InputBasedRuleKeyBuilderFactory
     }
 
     @Override
-    public RuleKeyBuilder setReflectively(String key, @Nullable Object val) {
+    public RuleKeyBuilder<RuleKey> setReflectively(String key, @Nullable Object val) {
       if (val instanceof ArchiveDependencySupplier) {
         return super.setReflectively(
             key,
@@ -133,7 +133,7 @@ public class InputBasedRuleKeyBuilderFactory
     // disk, and so we can always resolve the `Path` packaged in a `SourcePath`.  We hash this,
     // rather than the rule key from it's `BuildRule`.
     @Override
-    protected RuleKeyBuilder setSourcePath(SourcePath sourcePath) {
+    protected RuleKeyBuilder<RuleKey> setSourcePath(SourcePath sourcePath) {
       if (inputHandling == InputHandling.HASH) {
         deps.add(pathResolver.getRule(sourcePath).asSet());
 
@@ -159,7 +159,7 @@ public class InputBasedRuleKeyBuilderFactory
     // inputs.  If we see a `BuildRule` when generating the rule key, this is likely a break in
     // that contract, so check for that.
     @Override
-    protected RuleKeyBuilder setBuildRule(BuildRule rule) {
+    protected RuleKeyBuilder<RuleKey> setBuildRule(BuildRule rule) {
       throw new IllegalStateException(
           String.format(
               "Input-based rule key builders cannot process build rules. " +
@@ -174,9 +174,14 @@ public class InputBasedRuleKeyBuilderFactory
     // Build the rule key and the list of deps found from this builder.
     protected Result buildResult() {
       return new Result(
-          super.build(),
+          buildRuleKey(),
           Iterables.concat(deps.build()),
           Iterables.concat(inputs.build()));
+    }
+
+    @Override
+    public RuleKey build() {
+      return buildRuleKey();
     }
 
   }

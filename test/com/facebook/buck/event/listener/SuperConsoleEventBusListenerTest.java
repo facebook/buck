@@ -57,7 +57,6 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestRunEvent;
@@ -1897,7 +1896,7 @@ public class SuperConsoleEventBusListenerTest {
     String stepDescription = "working hard";
     UUID stepUuid = UUID.randomUUID();
 
-    RuleKeyBuilderFactory ruleKeyBuilderFactory = new FakeRuleKeyBuilderFactory(
+    FakeRuleKeyBuilderFactory ruleKeyBuilderFactory = new FakeRuleKeyBuilderFactory(
         ImmutableMap.of(
             fakeTarget, new RuleKey("aaaa")));
     SuperConsoleEventBusListener listener =

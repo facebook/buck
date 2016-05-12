@@ -20,14 +20,13 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeAbiRuleBuildRule;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -57,7 +56,7 @@ public class AbiRuleKeyBuilderFactoryTest {
 
     FakeFileHashCache hashCache = new FakeFileHashCache(
         ImmutableMap.of(depOutput, HashCode.fromInt(0)));
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(hashCache, pathResolver);
 
     BuildRule rule = new FakeAbiRuleBuildRule("//:rule", pathResolver, dep);
@@ -80,7 +79,7 @@ public class AbiRuleKeyBuilderFactoryTest {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeFileHashCache hashCache = new FakeFileHashCache(
         ImmutableMap.<Path, HashCode>of());
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(hashCache, pathResolver);
 
     FakeAbiRuleBuildRule rule = new FakeAbiRuleBuildRule("//:rule", pathResolver);

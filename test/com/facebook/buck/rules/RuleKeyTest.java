@@ -59,7 +59,7 @@ public class RuleKeyTest {
     SourcePathResolver resolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
      );
-    RuleKeyBuilder builder = createEmptyRuleKey(resolver);
+    RuleKeyBuilder<RuleKey> builder = createEmptyRuleKey(resolver);
 
     builder.setReflectively("path", Paths.get("some/path"));
   }
@@ -75,9 +75,9 @@ public class RuleKeyTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRuleResolver ruleResolver2 =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    RuleKeyBuilderFactory ruleKeyBuilderFactory1 =
+    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory1 =
         new DefaultRuleKeyBuilderFactory(hashCache, new SourcePathResolver(ruleResolver1));
-    RuleKeyBuilderFactory ruleKeyBuilderFactory2 =
+    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory2 =
         new DefaultRuleKeyBuilderFactory(hashCache, new SourcePathResolver(ruleResolver2));
 
     // Create a dependent build rule, //src/com/facebook/buck/cli:common.
@@ -706,12 +706,12 @@ public class RuleKeyTest {
       public NoopSetterRuleKeyBuilder(
           SourcePathResolver pathResolver,
           FileHashCache hashCache,
-          RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
+          RuleKeyBuilderFactory<RuleKey> defaultRuleKeyBuilderFactory) {
         super(pathResolver, hashCache, defaultRuleKeyBuilderFactory);
       }
 
       @Override
-      protected RuleKeyBuilder setSourcePath(SourcePath sourcePath) {
+      protected NoopSetterRuleKeyBuilder setSourcePath(SourcePath sourcePath) {
         return this;
       }
     }
@@ -720,7 +720,7 @@ public class RuleKeyTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
     FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.<Path, HashCode>of());
-    RuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+    RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
         hashCache,
         pathResolver);
 
@@ -741,7 +741,7 @@ public class RuleKeyTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
     FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.<Path, HashCode>of());
-    RuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
         hashCache,
         sourcePathResolver);
 
@@ -822,7 +822,7 @@ public class RuleKeyTest {
     }
   }
 
-  private RuleKeyBuilder createEmptyRuleKey(SourcePathResolver resolver) {
+  private RuleKeyBuilder<RuleKey> createEmptyRuleKey(SourcePathResolver resolver) {
     FileHashCache fileHashCache =
         new FileHashCache() {
           @Override

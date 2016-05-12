@@ -171,7 +171,7 @@ public class DefaultRuleKeyLoggerTest {
   private class Fixture {
     private SourcePathResolver pathResolver;
     private DefaultRuleKeyLogger logger;
-    private RuleKeyBuilderFactory ruleKeyBuilderFactory;
+    private RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory;
 
     public Fixture() {
       pathResolver = new SourcePathResolver(
@@ -213,7 +213,7 @@ public class DefaultRuleKeyLoggerTest {
       logger = new DefaultRuleKeyLogger();
       ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver) {
         @Override
-        protected RuleKeyBuilder newBuilder(BuildRule rule) {
+        protected RuleKeyBuilder<RuleKey> newBuilder(BuildRule rule) {
           return new UncachedRuleKeyBuilder(pathResolver, hashCache, this, logger);
         }
       };
@@ -227,7 +227,7 @@ public class DefaultRuleKeyLoggerTest {
       return logger;
     }
 
-    public RuleKeyBuilderFactory getRuleKeyBuilderFactory() {
+    public RuleKeyBuilderFactory<RuleKey> getRuleKeyBuilderFactory() {
       return ruleKeyBuilderFactory;
     }
   }

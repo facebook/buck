@@ -19,9 +19,6 @@ package com.facebook.buck.js;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -31,10 +28,13 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.keys.AbiRule;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.google.common.collect.ImmutableList;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 
@@ -165,7 +165,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
   }
 
   @Override
-  public Sha1HashCode getAbiKeyForDeps(RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
+  public Sha1HashCode getAbiKeyForDeps(DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
     return depsFinder.getInputsHash();
   }
 }

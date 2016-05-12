@@ -54,7 +54,6 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
@@ -1173,11 +1172,11 @@ public class DefaultJavaLibraryTest {
         "becgkaifhjd.txt", "bkhajdifcge.txt", "cabfghjekid.txt", "chkdbafijge.txt")) {
       fileHashes.put(filename, Hashing.sha1().hashString(filename, Charsets.UTF_8).toString());
     }
-    RuleKeyBuilderFactory ruleKeyBuilderFactory1 =
+    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory1 =
         new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(fileHashes.build()),
             pathResolver1);
-    RuleKeyBuilderFactory ruleKeyBuilderFactory2 =
+    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory2 =
         new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(fileHashes.build()),
             pathResolver2);

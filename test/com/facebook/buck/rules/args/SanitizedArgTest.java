@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -35,7 +36,7 @@ import org.junit.Test;
 
 public class SanitizedArgTest {
 
-  private RuleKeyBuilder createRuleKeyBuilder() {
+  private RuleKeyBuilder<RuleKey> createRuleKeyBuilder() {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     FileHashCache fileHashCache = new DefaultFileHashCache(projectFilesystem);
     SourcePathResolver resolver = new SourcePathResolver(
@@ -59,8 +60,8 @@ public class SanitizedArgTest {
   public void appendToRuleKey() {
     SanitizedArg arg1 = new SanitizedArg(Functions.constant("sanitized"), "unsanitized 1");
     SanitizedArg arg2 = new SanitizedArg(Functions.constant("sanitized"), "unsanitized 2");
-    RuleKeyBuilder builder1 = createRuleKeyBuilder();
-    RuleKeyBuilder builder2 = createRuleKeyBuilder();
+    RuleKeyBuilder<RuleKey> builder1 = createRuleKeyBuilder();
+    RuleKeyBuilder<RuleKey> builder2 = createRuleKeyBuilder();
     arg1.appendToRuleKey(builder1);
     arg2.appendToRuleKey(builder2);
     assertThat(

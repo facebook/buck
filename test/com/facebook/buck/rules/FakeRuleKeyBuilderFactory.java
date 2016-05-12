@@ -32,7 +32,7 @@ import java.io.IOException;
 import javax.annotation.Nullable;
 
 public class FakeRuleKeyBuilderFactory
-    implements RuleKeyBuilderFactory, DependencyFileRuleKeyBuilderFactory {
+    implements RuleKeyBuilderFactory<RuleKey>, DependencyFileRuleKeyBuilderFactory {
 
   private final ImmutableMap<BuildTarget, RuleKey> ruleKeys;
   private final FileHashCache fileHashCache;
@@ -49,14 +49,14 @@ public class FakeRuleKeyBuilderFactory
   }
 
   @Override
-  public RuleKeyBuilder newInstance(final BuildRule buildRule) {
+  public RuleKeyBuilder<RuleKey> newInstance(final BuildRule buildRule) {
     SourcePathResolver resolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
      );
     return new UncachedRuleKeyBuilder(resolver, fileHashCache, this) {
 
       @Override
-      public RuleKeyBuilder setReflectively(String key, @Nullable Object val) {
+      public RuleKeyBuilder<RuleKey> setReflectively(String key, @Nullable Object val) {
         return this;
       }
 

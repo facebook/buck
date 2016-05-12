@@ -37,7 +37,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
@@ -177,7 +176,7 @@ public class JavaLibrarySymbolsFinderTest {
 
     // Calculates the RuleKey for a JavaSymbolsRule with the specified JavaLibrarySymbolsFinder.
     final FileHashCache fileHashCache = new DefaultFileHashCache(projectFilesystem);
-    final RuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+    final DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
         fileHashCache,
         pathResolver);
     Function<JavaLibrarySymbolsFinder, RuleKey> createRuleKey =

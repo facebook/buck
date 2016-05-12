@@ -45,7 +45,6 @@ import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
@@ -753,7 +752,7 @@ public class TargetsCommand extends AbstractCommand {
     // RuleKeyBuilderFactory if we're showing the keys.
     Optional<ActionGraph> actionGraph = Optional.absent();
     Optional<BuildRuleResolver> buildRuleResolver = Optional.absent();
-    Optional<RuleKeyBuilderFactory> ruleKeyBuilderFactory = Optional.absent();
+    Optional<DefaultRuleKeyBuilderFactory> ruleKeyBuilderFactory = Optional.absent();
     if (isShowRuleKey() || isShowOutput()) {
       ActionGraphAndResolver result = Preconditions.checkNotNull(
           ActionGraphCache.getFreshActionGraph(
@@ -762,7 +761,7 @@ public class TargetsCommand extends AbstractCommand {
       actionGraph = Optional.of(result.getActionGraph());
       buildRuleResolver = Optional.of(result.getResolver());
       if (isShowRuleKey()) {
-        ruleKeyBuilderFactory = Optional.<RuleKeyBuilderFactory>of(
+        ruleKeyBuilderFactory = Optional.<DefaultRuleKeyBuilderFactory>of(
             new DefaultRuleKeyBuilderFactory(
                 params.getFileHashCache(),
                 new SourcePathResolver(result.getResolver())));

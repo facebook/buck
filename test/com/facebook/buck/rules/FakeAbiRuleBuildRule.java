@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.rules.keys.AbiRule;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.google.common.base.Strings;
 
 import javax.annotation.Nullable;
@@ -39,7 +40,7 @@ public class FakeAbiRuleBuildRule extends FakeBuildRule implements AbiRule {
   }
 
   @Override
-  public Sha1HashCode getAbiKeyForDeps(RuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
+  public Sha1HashCode getAbiKeyForDeps(DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
     if (abiKey == null) {
       String hashCode = String.valueOf(Math.abs(this.hashCode()));
       abiKey = Sha1HashCode.of(

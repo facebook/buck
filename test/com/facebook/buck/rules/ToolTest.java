@@ -39,7 +39,7 @@ public class ToolTest {
     SourcePathResolver pathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
@@ -92,7 +92,7 @@ public class ToolTest {
     SourcePathResolver pathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>of()),
@@ -136,7 +136,7 @@ public class ToolTest {
     SourcePathResolver pathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
@@ -159,8 +159,8 @@ public class ToolTest {
     assertEquals(tool1RuleKey, tool2RuleKey);
   }
 
-  private RuleKeyBuilder createRuleKeyBuilder(
-      RuleKeyBuilderFactory factory,
+  private RuleKeyBuilder<RuleKey> createRuleKeyBuilder(
+      DefaultRuleKeyBuilderFactory factory,
       SourcePathResolver resolver) {
     return factory.newInstance(new FakeBuildRule("//:test", resolver));
   }

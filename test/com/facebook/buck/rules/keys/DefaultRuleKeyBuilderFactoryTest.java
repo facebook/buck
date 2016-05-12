@@ -89,7 +89,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
 
     DefaultRuleKeyBuilderFactory factory =
         new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
-    RuleKeyBuilder builder = factory.newInstance(rule);
+    RuleKeyBuilder<RuleKey> builder = factory.newInstance(rule);
 
     builder.setReflectively("field", "cake-walk");
     RuleKey expected = builder.build();
@@ -121,7 +121,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
 
     DefaultRuleKeyBuilderFactory factory =
         new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
-    RuleKeyBuilder builder = factory.newInstance(rule);
+    RuleKeyBuilder<RuleKey> builder = factory.newInstance(rule);
 
     builder.setReflectively("field", "sausages");
     RuleKey expected = builder.build();
@@ -165,7 +165,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
             .setReflectively("cheese", "brie")
             .build();
 
-    RuleKeyBuilder builder = factory.newInstance(rule);
+    RuleKeyBuilder<RuleKey> builder = factory.newInstance(rule);
     builder.setReflectively("field.appendableSubKey", subKey);
     RuleKey expected = builder.build();
 
@@ -216,7 +216,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
             .setReflectively("cheese", "brie")
             .build();
 
-    RuleKeyBuilder builder = factory.newInstance(rule);
+    RuleKeyBuilder<RuleKey> builder = factory.newInstance(rule);
     builder.setReflectively("field.appendableSubKey", subKey);
     builder.setReflectively("field", factory.build(appendableRule));
     RuleKey expected = builder.build();
@@ -247,7 +247,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
 
     DefaultRuleKeyBuilderFactory factory =
         new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
-    RuleKeyBuilder builder = factory.newInstance(rule);
+    RuleKeyBuilder<RuleKey> builder = factory.newInstance(rule);
 
     builder.setReflectively("field", "cheddar");
     RuleKey expected = builder.build();
@@ -277,7 +277,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
 
     DefaultRuleKeyBuilderFactory factory =
         new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
-    RuleKeyBuilder builder = factory.newInstance(rule);
+    RuleKeyBuilder<RuleKey> builder = factory.newInstance(rule);
 
     builder.setReflectively("alpha", "stilton");
     builder.setReflectively("beta", 1);
@@ -313,7 +313,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
 
     DefaultRuleKeyBuilderFactory factory =
         new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
-    RuleKeyBuilder builder = factory.newInstance(rule);
+    RuleKeyBuilder<RuleKey> builder = factory.newInstance(rule);
 
     builder.setReflectively("exoticCheese", "bavarian smoked");
     builder.setReflectively("target", topLevelTarget.getFullyQualifiedName());
@@ -355,7 +355,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
 
     DefaultRuleKeyBuilderFactory factory =
         new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
-    RuleKeyBuilder builder = factory.newInstance(rule);
+    RuleKeyBuilder<RuleKey> builder = factory.newInstance(rule);
 
     builder.setReflectively("key", "child");
     builder.setReflectively("key", "parent");

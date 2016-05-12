@@ -112,7 +112,7 @@ public class PreprocessorFlagsTest {
           ));
       BuildRule fakeBuildRule = new FakeBuildRule(target, pathResolver);
 
-      RuleKeyBuilder builder;
+      RuleKeyBuilder<RuleKey> builder;
       builder = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver)
           .newInstance(fakeBuildRule);
       defaultFlags.appendToRuleKey(builder, CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
@@ -157,8 +157,8 @@ public class PreprocessorFlagsTest {
               .addRuleFlags("-I" + prefix + "/bar")
               .build();
 
-          RuleKeyBuilder builder = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver)
-              .newInstance(fakeBuildRule);
+          RuleKeyBuilder<RuleKey> builder =
+              new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(fakeBuildRule);
           PreprocessorFlags.builder().setOtherFlags(flags).build()
               .appendToRuleKey(builder, sanitizer);
           return builder.build();
