@@ -24,9 +24,12 @@ java_library(
   visibility = [ 'PUBLIC' ],
 )
 
-java_library(
+java_immutables_library(
   name = 'log',
   srcs = glob(['*.java'], excludes = LOGGER_FILES + APPENDABLE_LOG_RECORD_FILES),
+  immutable_types = [
+    'LogConfigSetup',
+  ],
   tests = [
     '//test/com/facebook/buck/log:log',
   ],

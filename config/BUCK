@@ -1,5 +1,6 @@
 export_file(
   name = 'logging.properties',
+  src = 'logging.properties.st',
   visibility = [
     'PUBLIC',
   ],

@@ -28,7 +28,7 @@
 # Enable the console logging handler and the file handler to
 # write rotating log files under buck-out/log/buck-*.log in the
 # project(s) being used.
-handlers=com.facebook.buck.cli.bootstrapper.ConsoleHandler,com.facebook.buck.cli.bootstrapper.BuckLogHandler
+handlers=com.facebook.buck.cli.bootstrapper.ConsoleHandler,java.util.logging.FileHandler
 
 # We handle console events via the event bus, so disable console logging by default.
 com.facebook.buck.log.ConsoleHandler.level=SEVERE
@@ -36,18 +36,21 @@ com.facebook.buck.log.ConsoleHandler.level=SEVERE
 # http client is way too chatty at FINER level.
 org.apache.http.level=SEVERE
 
+# Log to buck-out/log/buck-*log.
+java.util.logging.FileHandler.pattern=<default_file_pattern>
+
 # Write to disk all log messages not otherwise filtered by the top-level ".level"
 # property.
-com.facebook.buck.log.BuckLogHandler.level=ALL
+java.util.logging.FileHandler.level=ALL
 
 # Ignore the environment and always write UTF-8 to files.
-com.facebook.buck.log.BuckLogHandler.encoding=UTF-8
+java.util.logging.FileHandler.encoding=UTF-8
 
 # Replace the default fugly multiline log formatter with a custom one.
-com.facebook.buck.log.BuckLogHandler.formatter=com.facebook.buck.cli.bootstrapper.LogFormatter
+java.util.logging.FileHandler.formatter=com.facebook.buck.cli.bootstrapper.LogFormatter
 
 # Rotate up to this many log files, then start deleting the oldest one.
-com.facebook.buck.log.BuckLogHandler.count=25
+java.util.logging.FileHandler.count=<default_count>
 
 # TODO(t4624433): Temporarily disable logging for Guava's CombinedFuture
 # class until we can figure out what's going on.

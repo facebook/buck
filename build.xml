@@ -21,7 +21,7 @@
   <property name="buck.path_to_pex" value="${basedir}/src/com/facebook/buck/python/make_pex.py" />
   <property name="buck.path_to_python_test_main" value="${basedir}/src/com/facebook/buck/python/__test_main__.py" />
   <property name="buck.path_to_sh_binary_template" value="${basedir}/src/com/facebook/buck/shell/sh_binary_template" />
-  <property name="buck.logging_config_file" value="${basedir}/config/logging.properties" />
+  <property name="buck.logging_config_file" value="${basedir}/config/logging.properties.st" />
   <property name="buck.test_logging_config_file" value="${basedir}/config/logging.test.properties" />
   <property name="classes.dir" value="${build.dir}/classes" />
   <property name="testclasses.dir" value="${build.dir}/testclasses" />

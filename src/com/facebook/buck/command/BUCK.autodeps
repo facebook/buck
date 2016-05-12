@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY abe010467caae316e2f5c672e9d315cb4722db94 #@#
+#@# GENERATED FILE: DO NOT MODIFY bc91c596d56359311470bb60c325ff202a239808 #@#
 {
   "command" : {
     "deps" : [
+      "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:rules",

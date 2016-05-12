@@ -654,27 +654,14 @@ public final class Main {
       return 1;
     }
 
-    // Setup filesystem and buck config.
-    Path canonicalRootPath = projectRoot.toRealPath().normalize();
-    Config config = Configs.createDefaultConfig(canonicalRootPath, command.getConfigOverrides());
-    ProjectFilesystem filesystem = new ProjectFilesystem(canonicalRootPath, config);
-    BuckConfig buckConfig = new BuckConfig(
-        config,
-        filesystem,
-        architecture,
-        platform,
-        clientEnvironment);
-
     // Setup logging.
     if (setupLogging) {
 
       // Reset logging each time we run a command while daemonized.
       // This will cause us to write a new log per command.
-      if (context.isPresent()) {
-        LOG.debug("Rotating log.");
-        LogConfig.flushLogs();
-        LogConfig.setupLogging();
-      }
+      LOG.debug("Rotating log.");
+      LogConfig.flushLogs();
+      LogConfig.setupLogging(command.getLogConfig());
 
       if (LOG.isDebugEnabled()) {
         Long gitCommitTimestamp = Long.getLong("buck.git_commit_timestamp");
@@ -694,6 +681,17 @@ public final class Main {
         LOG.debug("System properties: %s", System.getProperties());
       }
     }
+
+    // Setup filesystem and buck config.
+    Path canonicalRootPath = projectRoot.toRealPath().normalize();
+    Config config = Configs.createDefaultConfig(canonicalRootPath, command.getConfigOverrides());
+    ProjectFilesystem filesystem = new ProjectFilesystem(canonicalRootPath, config);
+    BuckConfig buckConfig = new BuckConfig(
+        config,
+        filesystem,
+        architecture,
+        platform,
+        clientEnvironment);
 
     // Setup the console.
     Verbosity verbosity = VerbosityParser.parse(args);

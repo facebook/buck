@@ -16,11 +16,15 @@
 
 package com.facebook.buck.log;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.PathListing;
 import com.facebook.buck.util.BuckConstant;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
+
+import org.stringtemplate.v4.ST;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -44,7 +48,7 @@ import java.util.logging.Logger;
  * concatenated together and used as a single LogManager configuration,
  * with later entries overriding earlier ones.
  *
- * 1) $BUCK_DIRECTORY/config/logging.properties
+ * 1) $BUCK_DIRECTORY/config/logging.properties.st
  * 2) $PROJECT_ROOT/.bucklogging.properties
  * 3) $PROJECT_ROOT/.bucklogging.local.properties
  */
@@ -58,33 +62,41 @@ public class LogConfig {
    * Default constructor, called by LogManager.
    */
   public LogConfig() throws IOException {
-    setupLogging();
+    setupLogging(LogConfigSetup.builder()
+        .setLogFilePrefix("launch-")
+        .setCount(1)
+        .build());
   }
 
   /**
    * Creates the log output directory and concatenates logging.properties
    * files together to configure or re-configure LogManager.
    */
-  public static synchronized void setupLogging() throws IOException {
+  public static synchronized void setupLogging(LogConfigSetup logConfigSetup) throws IOException {
     // Bug JDK-6244047: The default FileHandler does not handle the directory not existing,
     // so we have to create it before any log statements actually run.
     Files.createDirectories(BuckConstant.getLogPath());
 
-    try {
-      deleteOldLogFiles();
-    } catch (IOException e) {
-      System.err.format(
-          "Error deleting old log files (ignored): %s\n",
-          e.getMessage());
+    if (logConfigSetup.getRotateLog()) {
+      try {
+        deleteOldLogFiles(logConfigSetup);
+      } catch (IOException e) {
+        System.err.format(
+            "Error deleting old log files (ignored): %s\n",
+            e.getMessage());
+      }
     }
 
     ImmutableList.Builder<InputStream> inputStreamsBuilder = ImmutableList.builder();
     if (!LogConfigPaths.MAIN_PATH.isPresent()) {
       System.err.format(
           "Error: Couldn't read system property %s (it should be set by buck_common or buck.cmd)\n",
-          LogConfigPaths.BUCK_CONFIG_FILE_PROPERTY);
+          LogConfigPaths.BUCK_CONFIG_STRING_TEMPLATE_FILE_PROPERTY);
     } else {
-      if (!addInputStreamForPath(LogConfigPaths.MAIN_PATH.get(), inputStreamsBuilder)) {
+      if (!addInputStreamForTemplate(
+          LogConfigPaths.MAIN_PATH.get(),
+          logConfigSetup,
+          inputStreamsBuilder)) {
         System.err.format(
             "Error: Couldn't open logging properties file %s\n",
             LogConfigPaths.MAIN_PATH.get());
@@ -117,6 +129,25 @@ public class LogConfig {
     }
   }
 
+  private static boolean addInputStreamForTemplate(
+      Path path,
+      LogConfigSetup logConfigSetup,
+      ImmutableList.Builder<InputStream> inputStreamsBuilder) throws IOException {
+    try {
+      String template = new String(Files.readAllBytes(path), Charsets.UTF_8);
+      ST st = new ST(template);
+      st.add("default_file_pattern",
+          MorePaths.pathWithUnixSeparators(logConfigSetup.getLogFilePath()).toString());
+      st.add("default_count", logConfigSetup.getCount());
+      String result = st.render();
+      inputStreamsBuilder.add(new ByteArrayInputStream(result.getBytes(Charsets.UTF_8)));
+      inputStreamsBuilder.add(new ByteArrayInputStream(NEWLINE));
+      return true;
+    } catch (FileNotFoundException e) {
+      return false;
+    }
+  }
+
   private static boolean addInputStreamForPath(
       Path path,
       ImmutableList.Builder<InputStream> inputStreamsBuilder) {
@@ -130,10 +161,10 @@ public class LogConfig {
     }
   }
 
-  private static void deleteOldLogFiles() throws IOException {
+  private static void deleteOldLogFiles(LogConfigSetup logConfigSetup) throws IOException {
     for (Path path : PathListing.listMatchingPathsWithFilters(
         BuckConstant.getLogPath(),
-             "buck-*.log*",
+             logConfigSetup.getLogFilePrefix() + "*.log*",
              PathListing.GET_PATH_MODIFIED_TIME,
              PathListing.FilterMode.EXCLUDE,
              Optional.<Integer>absent(),

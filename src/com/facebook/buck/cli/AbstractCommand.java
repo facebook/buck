@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
@@ -109,6 +110,11 @@ public abstract class AbstractCommand implements Command {
     }
 
     return builder.build();
+  }
+
+  @Override
+  public LogConfigSetup getLogConfig() {
+    return LogConfigSetup.DEFAULT_SETUP;
   }
 
   @Option(

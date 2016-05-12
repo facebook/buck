@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.rage.AbstractReport;
 import com.facebook.buck.rage.AutomatedReport;
 import com.facebook.buck.rage.DefectReporter;
@@ -95,5 +96,12 @@ public class RageCommand extends AbstractCommand {
   @Override
   public String getShortDescription() {
     return "create a defect report";
+  }
+
+  @Override
+  public LogConfigSetup getLogConfig() {
+    return LogConfigSetup.builder()
+        .setLogFilePrefix("rage-")
+        .build();
   }
 }

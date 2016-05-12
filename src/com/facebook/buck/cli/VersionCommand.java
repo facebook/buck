@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.config.RawConfig;
+import com.facebook.buck.log.LogConfigSetup;
 
 import java.io.IOException;
 
@@ -63,4 +64,8 @@ public class VersionCommand implements Command {
     return RawConfig.of();
   }
 
+  @Override
+  public LogConfigSetup getLogConfig() {
+    return LogConfigSetup.DEFAULT_SETUP;
+  }
 }

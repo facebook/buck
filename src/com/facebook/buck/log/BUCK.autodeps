@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 968a757dada1ec75f7cc78878b81b8bb16e0d1ae #@#
+#@# GENERATED FILE: DO NOT MODIFY 20132c27758a265901153a7acc59f0a95a35878e #@#
 {
   "log" : {
     "deps" : [
@@ -7,9 +7,12 @@
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/concurrent:concurrent",
-      "//third-party/java/jsr:jsr305"
+      "//third-party/java/immutables:processor",
+      "//third-party/java/jsr:jsr305",
+      "//third-party/java/stringtemplate:stringtemplate"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava"
     ]
   }

@@ -26,12 +26,12 @@ import java.nio.file.Paths;
  */
 public class LogConfigPaths {
   /**
-   * System property holding the path to the logging.properties file in the Buck repo.
+   * System property holding the path to the logging.properties.st file in the Buck repo.
    */
-  public static final String BUCK_CONFIG_FILE_PROPERTY = "buck.logging_config_file";
+  public static final String BUCK_CONFIG_STRING_TEMPLATE_FILE_PROPERTY = "buck.logging_config_file";
 
   /**
-   * If present, the path to the logging.properties file.
+   * If present, the path to the logging.properties.st file.
    */
   public static final Optional<Path> MAIN_PATH;
 
@@ -46,7 +46,7 @@ public class LogConfigPaths {
   public static final Path LOCAL_PATH = Paths.get(".bucklogging.local.properties");
 
   static {
-    String buckConfigFileProperty = System.getProperty(BUCK_CONFIG_FILE_PROPERTY);
+    String buckConfigFileProperty = System.getProperty(BUCK_CONFIG_STRING_TEMPLATE_FILE_PROPERTY);
     if (buckConfigFileProperty == null) {
       MAIN_PATH = Optional.absent();
     } else {

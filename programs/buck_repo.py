@@ -95,7 +95,7 @@ RESOURCES = {
     "dx": "third-party/java/dx/etc/dx",
     "jacoco_agent_jar": "third-party/java/jacoco/jacocoagent.jar",
     "libjcocoa.dylib": "third-party/java/ObjCBridge/libjcocoa.dylib",
-    "logging_config_file": "config/logging.properties",
+    "logging_config_file": "config/logging.properties.st",
     "native_exopackage_fake_path": "assets/android/native-exopackage-fakes.apk",
     "path_to_asm_jar": "third-party/java/asm/asm-debug-all-5.0.3.jar",
     "path_to_buck_py": "src/com/facebook/buck/parser/buck.py",
