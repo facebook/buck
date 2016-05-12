@@ -22,6 +22,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
@@ -77,6 +78,8 @@ import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 
 public class Build implements Closeable {
+
+  private static final Logger LOG = Logger.get(Build.class);
 
   private static final Predicate<BuildResult> RULES_FAILED_PREDICATE =
       new Predicate<BuildResult>() {
@@ -323,12 +326,15 @@ public class Build implements Closeable {
         }
       }
     } catch (IOException e) {
+      LOG.debug(e, "Got an exception during the build.");
       eventBus.post(ConsoleEvent.severe(getFailureMessage(e)));
       exitCode = 1;
     } catch (StepFailedException e) {
+      LOG.debug(e, "Got an exception during the build.");
       eventBus.post(ConsoleEvent.severe(getFailureMessage(e)));
       exitCode = e.getExitCode();
     } catch (ExecutionException e) {
+      LOG.debug(e, "Got an exception during the build.");
       // This is likely a checked exception that was caught while building a build rule.
       Throwable cause = e.getCause();
       if (cause instanceof HumanReadableException) {
