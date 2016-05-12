@@ -175,6 +175,6 @@ public class AndroidLibraryDescription
   public static class Arg extends JavaLibraryDescription.Arg {
     public Optional<SourcePath> manifest;
     public Optional<String> resourceUnionPackage;
-    public Optional<String> forceFinalResourceIds;
+    public Optional<Boolean> forceFinalResourceIds;
   }
 }
