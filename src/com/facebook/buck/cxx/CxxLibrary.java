@@ -31,7 +31,6 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Function;
@@ -221,13 +220,7 @@ public class CxxLibrary
           Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
           linkerArgsBuilder.addAll(linker.linkWhole(archive.toArg()));
         } else {
-          Arg libraryArg = archive.toArg();
-          if (libraryArg instanceof SourcePathArg) {
-            linkerArgsBuilder.add(
-                FileListableLinkerInputArg.withSourcePathArg((SourcePathArg) libraryArg));
-          } else {
-            linkerArgsBuilder.add(libraryArg);
-          }
+          linkerArgsBuilder.add(archive.toArg());
         }
       } else {
         BuildRule rule =

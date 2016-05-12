@@ -18,11 +18,8 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
@@ -40,107 +37,53 @@ import java.nio.file.Path;
 public class CxxPrepareForLinkStep implements Step {
 
   private final Path argFilePath;
-  private final Path fileListPath;
-  private final ImmutableList<Arg> linkerArgsToSupportFileList;
   private final Path output;
-  private final ImmutableList<Arg> args;
+  private final ImmutableList<String> args;
 
   private static final Logger LOG = Logger.get(CxxPrepareForLinkStep.class);
 
   public CxxPrepareForLinkStep(
       Path argFilePath,
-      Path fileListPath,
-      Iterable<Arg> linkerArgsToSupportFileList,
       Path output,
-      ImmutableList<Arg> args) {
+      ImmutableList<String> args) {
     this.argFilePath = argFilePath;
-    this.fileListPath = fileListPath;
-    this.linkerArgsToSupportFileList = ImmutableList.copyOf(linkerArgsToSupportFileList);
     this.output = output;
     this.args = args;
   }
 
-  private void prepareFileContents() throws IOException {
-    cleanupPreviousFiles();
-    createFileList();
+  private void prepareArgFileContents() throws IOException {
+    cleanupPreviousArgFile();
     createArgFile();
-  }
-
-  private void createFileList() throws IOException {
-    if (Files.notExists(fileListPath.getParent())) {
-      Files.createDirectories(fileListPath.getParent());
-    }
-    if (linkerArgsToSupportFileList.isEmpty()) {
-      LOG.verbose("linkerArgsToSupportFileList are empty, filelist feature is not supported");
-      return;
-    }
-    LOG.verbose("Creating filelist");
-    ImmutableList<String> contents = Arg.stringify(getFileListArgs());
-    storeContentsInFile(contents, fileListPath);
   }
 
   private void createArgFile() throws IOException {
     if (Files.notExists(argFilePath.getParent())) {
       Files.createDirectories(argFilePath.getParent());
     }
-    LOG.verbose("Creating argfile");
-    ImmutableList<String> argFileContents =
-        FluentIterable.from(getLinkerOptions())
-            .transform(Javac.ARGFILES_ESCAPER)
-            .toList();
-    storeContentsInFile(argFileContents, argFilePath);
-  }
-
-  private void storeContentsInFile(ImmutableList<String> contents, Path path) throws IOException {
-    try (PrintWriter pr = new PrintWriter(path.toString())) {
-      for (String option : contents) {
+    try (PrintWriter pr = new PrintWriter(argFilePath.toString())) {
+      LOG.verbose("Creating argfile");
+      ImmutableList<String> argFileContents = getLinkerOptions();
+      for (String option : FluentIterable.from(argFileContents).transform(Javac.ARGFILES_ESCAPER)) {
         pr.println(option);
       }
     }
   }
 
-  private void cleanupPreviousFiles() throws IOException {
+  private void cleanupPreviousArgFile() throws IOException {
     LOG.verbose("Cleaning up previous argfile at " + argFilePath.toString());
     Files.deleteIfExists(argFilePath);
-    LOG.verbose("Cleaning up previous filelist at " + fileListPath.toString());
-    Files.deleteIfExists(fileListPath);
-  }
-
-  private ImmutableList<Arg> getFileListArgs() {
-    if (linkerArgsToSupportFileList.isEmpty()) {
-      return ImmutableList.of();
-    }
-    return FluentIterable.from(args).filter(new Predicate<Arg>() {
-      @Override
-      public boolean apply(Arg input) {
-        return input instanceof FileListableLinkerInputArg;
-      }
-    }).toList();
-  }
-
-  private ImmutableList<Arg> getLinkerArgsWithoutFileListArgs() {
-    if (linkerArgsToSupportFileList.isEmpty()) {
-      return args;
-    }
-    return FluentIterable.from(args).filter(new Predicate<Arg>() {
-      @Override
-      public boolean apply(Arg input) {
-        return !(input instanceof FileListableLinkerInputArg);
-      }
-    }).toList();
   }
 
   private ImmutableList<String> getLinkerOptions() {
     return ImmutableList.<String>builder()
         .add("-o", output.toString())
-        .addAll(Arg.stringify(getLinkerArgsWithoutFileListArgs()))
-        .addAll(Arg.stringify(linkerArgsToSupportFileList))
+        .addAll(args)
         .build();
   }
 
   @Override
   public int execute(ExecutionContext context) throws IOException, InterruptedException {
-    prepareFileContents();
+    prepareArgFileContents();
     return 0;
   }
 

@@ -30,6 +30,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -38,7 +39,6 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -48,7 +48,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.FileListableLinkerInputArg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -768,8 +768,9 @@ public class CxxLibraryDescriptionTest {
             CxxLibraryBuilder.createDefaultPlatform(),
             Linker.LinkableDepType.STATIC_PIC);
     Arg firstArg = nativeLinkableInput.getArgs().get(0);
-    assertThat(firstArg, instanceOf(FileListableLinkerInputArg.class));
-    ImmutableCollection<BuildRule> deps = firstArg.getDeps(new SourcePathResolver(resolver));
+    assertThat(firstArg, instanceOf(SourcePathArg.class));
+    SourcePathArg sourcePathArg = (SourcePathArg) firstArg;
+    ImmutableCollection<BuildRule> deps = sourcePathArg.getDeps(new SourcePathResolver(resolver));
     assertThat(deps.size(), is(1));
     BuildRule buildRule = deps.asList().get(0);
     assertThat(
