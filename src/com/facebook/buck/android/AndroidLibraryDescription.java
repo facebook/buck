@@ -96,7 +96,7 @@ public class AndroidLibraryDescription
             Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps.get()))),
         javacOptions,
         DependencyMode.FIRST_ORDER,
-        /* forceFinalResourceIds */ false,
+        args.forceFinalResourceIds.or(false),
         args.resourceUnionPackage);
 
     boolean hasDummyRDotJavaFlavor =
@@ -175,5 +175,6 @@ public class AndroidLibraryDescription
   public static class Arg extends JavaLibraryDescription.Arg {
     public Optional<SourcePath> manifest;
     public Optional<String> resourceUnionPackage;
+    public Optional<String> forceFinalResourceIds;
   }
 }
