@@ -50,9 +50,12 @@ public class BuildTargets {
       ProjectFilesystem filesystem,
       BuildTarget target,
       String format) {
-    return filesystem.getBuckPaths().getScratchDir()
-        .resolve(target.getBasePath())
-        .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
+    return filesystem.getRootPath().getFileSystem().getPath(
+        String.format(
+            "%s/%s" + format,
+            filesystem.getBuckPaths().getScratchDir(),
+            target.getBasePathWithSlash(),
+            target.getShortNameAndFlavorPostfix()));
   }
 
   /**
@@ -70,9 +73,12 @@ public class BuildTargets {
       ProjectFilesystem filesystem,
       BuildTarget target,
       String format) {
-    return filesystem.getBuckPaths().getAnnotationDir()
-        .resolve(target.getBasePath())
-        .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
+    return filesystem.getRootPath().getFileSystem().getPath(
+        String.format(
+            "%s/%s" + format,
+            filesystem.getBuckPaths().getAnnotationDir(),
+            target.getBasePathWithSlash(),
+            target.getShortNameAndFlavorPostfix()));
   }
 
   /**
@@ -87,9 +93,12 @@ public class BuildTargets {
    * {@code target}.
    */
   public static Path getGenPath(ProjectFilesystem filesystem, BuildTarget target, String format) {
-    return filesystem.getBuckPaths().getGenDir()
-        .resolve(target.getBasePath())
-        .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
+    return filesystem.getRootPath().getFileSystem().getPath(
+        String.format(
+            "%s/%s" + format,
+            filesystem.getBuckPaths().getGenDir(),
+            target.getBasePathWithSlash(),
+            target.getShortNameAndFlavorPostfix()));
   }
 
   /**
