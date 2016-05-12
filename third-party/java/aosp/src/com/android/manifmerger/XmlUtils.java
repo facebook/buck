@@ -199,6 +199,32 @@ public class XmlUtils {
     }
 
     /**
+     * Extracts the origin {@link java.io.File} that {@link #parseDocument(java.io.File, com.android.manifmerger.IMergerLog)}
+     * added to the XML document or the string added by
+     *
+     * @param xmlNode Any node from a document returned by {@link #parseDocument(java.io.File, com.android.manifmerger.IMergerLog)}.
+     * @return The {@link java.io.File} object used to create the document or null.
+     */
+    @Nullable
+    static String extractXmlAbsoluteFilename(@Nullable Node xmlNode) {
+        if (xmlNode != null && xmlNode.getNodeType() != Node.DOCUMENT_NODE) {
+            xmlNode = xmlNode.getOwnerDocument();
+        }
+        if (xmlNode != null) {
+            Object data = xmlNode.getUserData(DATA_ORIGIN_FILE);
+            if (data instanceof File) {
+                return ((File) data).getAbsolutePath();
+            }
+            data = xmlNode.getUserData(DATA_FILE_NAME);
+            if (data instanceof String) {
+                return (String) data;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * This is a CRUDE INEXACT HACK to decorate the DOM with some kind of line number
      * information for elements. It's inexact because by the time we get the DOM we
      * already have lost all the information about whitespace between attributes.

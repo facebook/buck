@@ -1586,7 +1586,7 @@ public class ManifestMerger {
    * @return A new non-null {@link FileAndLine} combining the file name and line number.
    */
   private @NonNull FileAndLine xmlFileAndLine(@NonNull Node node) {
-    String name = XmlUtils.extractXmlFilename(node);
+    String name = XmlUtils.extractXmlAbsoluteFilename(node);
     int line = XmlUtils.extractLineNumber(node); // 0 in case of error or unknown
     return new FileAndLine(name, line);
   }
