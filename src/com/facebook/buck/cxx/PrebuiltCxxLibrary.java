@@ -66,6 +66,7 @@ public class PrebuiltCxxLibrary
   private final Optional<String> soname;
   private final boolean linkWithoutSoname;
   private final ImmutableSet<FrameworkPath> frameworks;
+  private final ImmutableSet<FrameworkPath> libraries;
   private final boolean forceStatic;
   private final boolean headerOnly;
   private final boolean linkWhole;
@@ -94,6 +95,7 @@ public class PrebuiltCxxLibrary
       Optional<String> soname,
       boolean linkWithoutSoname,
       ImmutableSet<FrameworkPath> frameworks,
+      ImmutableSet<FrameworkPath> libraries,
       boolean forceStatic,
       boolean headerOnly,
       boolean linkWhole,
@@ -113,6 +115,7 @@ public class PrebuiltCxxLibrary
     this.soname = soname;
     this.linkWithoutSoname = linkWithoutSoname;
     this.frameworks = frameworks;
+    this.libraries = libraries;
     this.forceStatic = forceStatic;
     this.headerOnly = headerOnly;
     this.linkWhole = linkWhole;
@@ -339,7 +342,7 @@ public class PrebuiltCxxLibrary
     return NativeLinkableInput.of(
         linkerArgs,
         Preconditions.checkNotNull(frameworks),
-        ImmutableSet.<FrameworkPath>of());
+        Preconditions.checkNotNull(libraries));
   }
 
   @Override

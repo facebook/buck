@@ -523,6 +523,7 @@ public class PrebuiltCxxLibraryDescription implements
         args.soname,
         args.linkWithoutSoname.or(false),
         args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
+        args.libraries.or(ImmutableSortedSet.<FrameworkPath>of()),
         args.forceStatic.or(false),
         args.headerOnly.or(false),
         args.linkWhole.or(false),
@@ -620,6 +621,7 @@ public class PrebuiltCxxLibraryDescription implements
     public Optional<String> soname;
     public Optional<Boolean> linkWithoutSoname;
     public Optional<ImmutableSortedSet<FrameworkPath>> frameworks;
+    public Optional<ImmutableSortedSet<FrameworkPath>> libraries;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
   }
