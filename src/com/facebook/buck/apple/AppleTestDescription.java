@@ -39,7 +39,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
@@ -49,7 +48,6 @@ import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -251,20 +249,7 @@ public class AppleTestDescription implements
           cxxPlatform.getFlavor().getName());
     }
 
-    AppleBundleResources resources = AppleResources.collectResourceDirsAndFiles(
-        targetGraph,
-        Preconditions.checkNotNull(targetGraph.get(params.getBuildTarget())));
-
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
-
-    Optional<AppleAssetCatalog> assetCatalog =
-        AppleDescriptions.createBuildRuleForTransitiveAssetCatalogDependencies(
-            targetGraph,
-            params,
-            sourcePathResolver,
-            appleCxxPlatform.getAppleSdk().getApplePlatform(),
-            appleCxxPlatform.getActool());
-
     String platformName = appleCxxPlatform.getAppleSdk().getApplePlatform().getName();
 
     BuildRule bundle = AppleDescriptions.createAppleBundle(
@@ -272,7 +257,6 @@ public class AppleTestDescription implements
         defaultCxxPlatform,
         appleCxxPlatformFlavorDomain,
         targetGraph,
-        // TODO(t11213927): modifying the deps here seems to be duplicated in createAppleBundle
         params.copyWithChanges(
             params.getBuildTarget().withAppendedFlavors(
                 BUNDLE_FLAVOR,
@@ -283,13 +267,7 @@ public class AppleTestDescription implements
             Suppliers.ofInstance(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .add(library)
-                    .addAll(assetCatalog.asSet())
                     .addAll(params.getDeclaredDeps().get())
-                    .addAll(
-                        BuildRules.toBuildRulesFor(
-                            params.getBuildTarget(),
-                            resolver,
-                            SourcePaths.filterBuildTargetSourcePaths(resources.getAll())))
                     .build()),
             params.getExtraDeps()),
         resolver,
