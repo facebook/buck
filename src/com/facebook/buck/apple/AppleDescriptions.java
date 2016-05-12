@@ -283,6 +283,7 @@ public class AppleDescriptions {
     output.exportedPlatformLinkerFlags = arg.exportedPlatformLinkerFlags;
     output.soname = arg.soname;
     output.forceStatic = arg.forceStatic;
+    output.preferredLinkage = arg.preferredLinkage;
     output.linkWhole = arg.linkWhole;
     output.supportedPlatformsRegex = arg.supportedPlatformsRegex;
     output.canBeAsset = arg.canBeAsset;

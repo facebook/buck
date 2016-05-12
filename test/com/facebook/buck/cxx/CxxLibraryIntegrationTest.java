@@ -26,6 +26,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.InferHelper;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -121,6 +122,28 @@ public class CxxLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "force_static_pic", tmp);
     workspace.setUp();
     workspace.runBuckBuild("//:foo#shared,default").assertSuccess();
+  }
+
+  @Test
+  public void preferredLinkageOverridesParentLinkStyle() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "preferred_linkage", tmp);
+    workspace.setUp();
+    BuckBuildLog buildLog;
+
+    workspace.runBuckBuild("//:foo-prefer-shared#default").assertSuccess();
+    buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:always_static#default,static-pic");
+    buildLog.assertTargetBuiltLocally("//:always_shared#default,shared");
+    buildLog.assertTargetBuiltLocally("//:agnostic#default,shared");
+    buildLog.assertTargetBuiltLocally("//:foo-prefer-shared#default");
+
+    workspace.runBuckBuild("//:foo-prefer-static#default").assertSuccess();
+    buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:always_static#default,static");
+    buildLog.assertTargetHadMatchingRuleKey("//:always_shared#default,shared");
+    buildLog.assertTargetBuiltLocally("//:agnostic#default,static");
+    buildLog.assertTargetBuiltLocally("//:foo-prefer-static#default");
   }
 
   @Test

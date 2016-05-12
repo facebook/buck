@@ -209,7 +209,21 @@ public class CxxLibrary
     linkerArgsBuilder.addAll(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform)));
 
     if (!headerOnly.apply(cxxPlatform)) {
-      if (type != Linker.LinkableDepType.SHARED || linkage == Linkage.STATIC) {
+      boolean isStatic;
+      switch (linkage) {
+        case STATIC:
+          isStatic = true;
+          break;
+        case SHARED:
+          isStatic = false;
+          break;
+        case ANY:
+          isStatic = type != Linker.LinkableDepType.SHARED;
+          break;
+        default:
+          throw new IllegalStateException("unhandled linkage type: " + linkage);
+      }
+      if (isStatic) {
         Archive archive =
             (Archive) requireBuildRule(
                 cxxPlatform.getFlavor(),

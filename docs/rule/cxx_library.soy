@@ -90,6 +90,8 @@ build of the library, while an Android APK will require a shared PIC-enabled bui
 
 {call cxx_common.force_static /}
 
+{call cxx_common.preferred_linkage /}
+
 {call cxx_common.exported_deps_arg /}
 
 {call buck.tests_arg /}
