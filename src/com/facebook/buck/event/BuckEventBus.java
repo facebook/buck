@@ -18,17 +18,22 @@ package com.facebook.buck.event;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -49,8 +54,8 @@ public class BuckEventBus implements Closeable {
   };
 
   private final Clock clock;
-  private final ExecutorService executorService;
-  private final EventBus eventBus;
+  private final boolean async;
+  private final ConcurrentLinkedDeque<Pair<ExecutorService, EventBus>> executorsAndBuses;
   private final Supplier<Long> threadIdSupplier;
   private final BuildId buildId;
   private final int shutdownTimeoutMillis;
@@ -62,28 +67,28 @@ public class BuckEventBus implements Closeable {
   @VisibleForTesting
   public BuckEventBus(
       Clock clock,
-      boolean async,
+      final boolean async,
       BuildId buildId,
       int shutdownTimeoutMillis) {
     this.clock = clock;
-    this.executorService = async ?
-        MostExecutors.newSingleThreadExecutor(
-            new CommandThreadFactory(BuckEventBus.class.getSimpleName())) :
-        MoreExecutors.newDirectExecutorService();
-    this.eventBus = new EventBus("buck-build-events");
+    this.async = async;
+    this.executorsAndBuses = new ConcurrentLinkedDeque<>();
     this.threadIdSupplier = DEFAULT_THREAD_ID_SUPPLIER;
     this.buildId = buildId;
     this.shutdownTimeoutMillis = shutdownTimeoutMillis;
   }
 
   private void dispatch(final BuckEvent event) {
-    executorService.submit(
-        new Runnable() {
-          @Override
-          public void run() {
-            eventBus.post(event);
+    for (final Pair<ExecutorService, EventBus> executorAndBus : executorsAndBuses) {
+      executorAndBus.getFirst().submit(
+          new Runnable() {
+            @Override
+            public void run() {
+              executorAndBus.getSecond().post(event);
+            }
           }
-        });
+      );
+    }
   }
 
   public void post(BuckEvent event) {
@@ -110,13 +115,22 @@ public class BuckEventBus implements Closeable {
   }
 
   public void register(Object object) {
+    EventBus eventBus = new EventBus("buck-build-events");
     eventBus.register(object);
+    executorsAndBuses.add(new Pair<ExecutorService, EventBus>(
+        async ?
+            MostExecutors.newSingleThreadExecutor(
+                new CommandThreadFactory(BuckEventBus.class.getSimpleName())) :
+            MoreExecutors.newDirectExecutorService(),
+        eventBus));
   }
 
   @VisibleForTesting
   public void postWithoutConfiguring(BuckEvent event) {
     Preconditions.checkState(event.isConfigured());
-    eventBus.post(event);
+    for (final Pair<ExecutorService, EventBus> executorAndBus : executorsAndBuses) {
+      executorAndBus.getSecond().post(event);
+    }
   }
 
   @VisibleForTesting
@@ -148,15 +162,30 @@ public class BuckEventBus implements Closeable {
    */
   @Override
   public void close() throws IOException {
-    executorService.shutdown();
     try {
-      if (!executorService.awaitTermination(shutdownTimeoutMillis, TimeUnit.MILLISECONDS)) {
-        LOG.warn(Joiner.on(System.lineSeparator()).join(
-          "The BuckEventBus failed to shut down within the standard timeout.",
-          "Your build might have succeeded, but some messages were probably lost.",
-          "Here's some debugging information:",
-          executorService.toString()));
-        executorService.shutdownNow();
+      ImmutableSet.Builder<ExecutorService> leftoverExecutorsBuilder = ImmutableSet.builder();
+      for (Pair<ExecutorService, EventBus> executorAndBus : executorsAndBuses) {
+        ExecutorService executorService = executorAndBus.getFirst();
+        executorService.shutdown();
+        if (!executorService.awaitTermination(shutdownTimeoutMillis, TimeUnit.MILLISECONDS)) {
+          leftoverExecutorsBuilder.add(executorService);
+        }
+      }
+      ImmutableSet<ExecutorService> leftoverExecutors = leftoverExecutorsBuilder.build();
+      if (!leftoverExecutors.isEmpty()) {
+        ImmutableSet<String> message = ImmutableSet.of(
+            "The BuckEventBus failed to shut down within the standard timeout.",
+            "Your build might have succeeded, but some messages were probably lost.",
+            "Here's some debugging information:");
+        LOG.warn(
+            Joiner.on(System.lineSeparator())
+                .join(
+                    Iterables.concat(
+                        message,
+                        Iterables.transform(leftoverExecutors, Functions.toStringFunction()))));
+        for (ExecutorService leftoverExecutor : leftoverExecutors) {
+          leftoverExecutor.shutdownNow();
+        }
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
