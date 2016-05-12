@@ -27,7 +27,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -162,8 +162,8 @@ public class GnuLinker implements Linker {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink
         .setReflectively("tool", tool)
         .setReflectively("type", getClass().getSimpleName());
   }

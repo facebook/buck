@@ -19,7 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
@@ -71,8 +71,8 @@ public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppen
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink
         .setReflectively("sdkVersion", packageConfigAndPlatformInfo.getSdkVersion())
         .setReflectively("buildVersion", packageConfigAndPlatformInfo.getPlatformBuildVersion());
   }

@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
@@ -119,13 +119,12 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    builder.setReflectively("preprocessor", preprocessor);
-    builder.setReflectively("includes", includes);
-    builder.setReflectively("frameworkPathSearchPathFunction", frameworkPathSearchPathFunction);
-    builder.setReflectively("headerVerification", headerVerification);
-    preprocessorFlags.appendToRuleKey(builder, sanitizer);
-    return builder;
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("preprocessor", preprocessor);
+    sink.setReflectively("includes", includes);
+    sink.setReflectively("frameworkPathSearchPathFunction", frameworkPathSearchPathFunction);
+    sink.setReflectively("headerVerification", headerVerification);
+    preprocessorFlags.appendToRuleKey(sink, sanitizer);
   }
 
   public HeaderPathNormalizer getHeaderPathNormalizer() {

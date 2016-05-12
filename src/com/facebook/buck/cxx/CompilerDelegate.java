@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
@@ -51,15 +51,14 @@ class CompilerDelegate implements RuleKeyAppendable {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    builder.setReflectively("compiler", compiler);
-    builder.setReflectively(
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("compiler", compiler);
+    sink.setReflectively(
         "platformCompilerFlags",
         sanitizer.sanitizeFlags(compilerFlags.getPlatformFlags()));
-    builder.setReflectively(
+    sink.setReflectively(
         "ruleCompilerFlags",
         sanitizer.sanitizeFlags(compilerFlags.getRuleFlags()));
-    return builder;
   }
 
   /**

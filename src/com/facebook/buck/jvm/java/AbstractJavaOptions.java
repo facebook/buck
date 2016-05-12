@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 
@@ -40,7 +40,7 @@ abstract class AbstractJavaOptions implements RuleKeyAppendable {
   protected abstract Optional<Path> getJavaPath();
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder.setReflectively("java", getJavaRuntimeLauncher());
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("java", getJavaRuntimeLauncher());
   }
 }

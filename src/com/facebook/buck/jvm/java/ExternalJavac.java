@@ -20,7 +20,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
@@ -148,13 +148,13 @@ public class ExternalJavac implements Javac {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
     if (DEFAULT_VERSION.equals(getVersion())) {
       // What we really want to do here is use a VersionedTool, however, this will suffice for now.
-      return builder.setReflectively("javac", pathToJavac.toString());
+      sink.setReflectively("javac", pathToJavac.toString());
+    } else {
+      sink.setReflectively("javac.version", getVersion().toString());
     }
-
-    return builder.setReflectively("javac.version", getVersion().toString());
   }
 
   public Path getPath() {

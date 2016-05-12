@@ -18,7 +18,7 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.Shell;
@@ -140,8 +140,8 @@ public class OCamlDebugLauncherStep implements Step {
     }
 
     @Override
-    public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-      return builder
+    public void appendToRuleKey(RuleKeyObjectSink sink) {
+      sink
           .setReflectively("ocamlDebug", ocamlDebug)
           .setReflectively("bytecodeOutput", bytecodeOutput.toString())
           .setReflectively("flags", bytecodeIncludeFlags);

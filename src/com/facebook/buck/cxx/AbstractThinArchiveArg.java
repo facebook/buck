@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
@@ -59,8 +59,8 @@ abstract class AbstractThinArchiveArg extends Arg {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink
         .setReflectively("archive", getPath())
         .setReflectively("inputs", getContents());
   }

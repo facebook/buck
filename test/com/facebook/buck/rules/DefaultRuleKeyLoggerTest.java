@@ -41,9 +41,8 @@ public class DefaultRuleKeyLoggerTest {
 
   private static class TestAppendable implements RuleKeyAppendable {
     @Override
-    public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-      builder.setReflectively("appendableKey", "appendableValue");
-      return builder;
+    public void appendToRuleKey(RuleKeyObjectSink sink) {
+      sink.setReflectively("appendableKey", "appendableValue");
     }
   }
 

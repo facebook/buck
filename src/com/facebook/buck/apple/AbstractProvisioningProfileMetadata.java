@@ -25,7 +25,7 @@ import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
@@ -177,7 +177,7 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder.setReflectively("provisioning-profile-uuid", getUUID());
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("provisioning-profile-uuid", getUUID());
   }
 }

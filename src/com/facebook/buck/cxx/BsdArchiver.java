@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.FileScrubber;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -155,8 +155,8 @@ public class BsdArchiver implements Archiver {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink
         .setReflectively("tool", tool)
         .setReflectively("type", getClass().getSimpleName());
   }

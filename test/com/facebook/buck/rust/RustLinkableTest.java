@@ -24,7 +24,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -110,8 +110,8 @@ public class RustLinkableTest {
             }
 
             @Override
-            public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-              return builder;
+            public void appendToRuleKey(RuleKeyObjectSink sink) {
+              // Do nothing.
             }
           });
     }

@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java.autodeps;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.collect.ImmutableList;
@@ -68,11 +68,10 @@ final class PrebuiltJarSymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
     if (binaryJar instanceof PathSourcePath) {
       PathSourcePath sourcePath = (PathSourcePath) binaryJar;
-      builder.setReflectively("binaryJar", sourcePath);
+      sink.setReflectively("binaryJar", sourcePath);
     }
-    return builder;
   }
 }

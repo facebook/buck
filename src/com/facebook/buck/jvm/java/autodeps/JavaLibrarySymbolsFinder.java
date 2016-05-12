@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java.autodeps;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -105,8 +105,8 @@ final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink
         .setReflectively("srcs", srcs)
         .setReflectively("recordRequires", shouldRecordRequiredSymbols);
   }

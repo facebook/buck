@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -78,13 +78,12 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    builder.setReflectively("type", getIncludeType());
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("type", getIncludeType());
     for (Path path : ImmutableSortedSet.copyOf(getNameToPathMap().keySet())) {
       SourcePath source = getNameToPathMap().get(path);
-      builder.setReflectively("include(" + path.toString() + ")", source);
+      sink.setReflectively("include(" + path.toString() + ")", source);
     }
-    return builder;
   }
 
   /**

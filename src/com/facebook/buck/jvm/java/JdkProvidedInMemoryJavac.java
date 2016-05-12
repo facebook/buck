@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
@@ -35,8 +35,8 @@ public class JdkProvidedInMemoryJavac extends Jsr199Javac {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder.setReflectively("javac", "jsr199")
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("javac", "jsr199")
         .setReflectively("javac.version", "in-memory");
   }
 

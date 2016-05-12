@@ -19,13 +19,13 @@ package com.facebook.buck.android;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 
 
 class BootClasspathAppender implements JavacOptionsAmender {
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder.setReflectively("bootclasspath", "android");
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("bootclasspath", "android");
   }
 
   @Override

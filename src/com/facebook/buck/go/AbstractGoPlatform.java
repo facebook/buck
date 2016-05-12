@@ -21,7 +21,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 
@@ -37,8 +37,8 @@ abstract class AbstractGoPlatform implements FlavorConvertible, RuleKeyAppendabl
   abstract Optional<CxxPlatform> getCxxPlatform();
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink
         .setReflectively("goos", getGoOs())
         .setReflectively("goarch", getGoArch());
   }

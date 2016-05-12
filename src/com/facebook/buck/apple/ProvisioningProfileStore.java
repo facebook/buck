@@ -20,7 +20,7 @@ import com.dd.plist.NSObject;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -164,8 +164,8 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
 
   // TODO(yiding): remove this once the precise provisioning profile can be determined.
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder.setReflectively("provisioning-profile-store", getProvisioningProfiles());
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("provisioning-profile-store", getProvisioningProfiles());
   }
 
   public static ProvisioningProfileStore fromSearchPath(final Path searchPath) {

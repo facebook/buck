@@ -83,8 +83,8 @@ public class VersionedTool implements Tool {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink
         .setReflectively("name", name)
         .setReflectively("version", version);
   }

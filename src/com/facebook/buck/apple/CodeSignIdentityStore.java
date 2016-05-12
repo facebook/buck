@@ -18,7 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
@@ -59,8 +59,8 @@ public class CodeSignIdentityStore implements RuleKeyAppendable {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder.setReflectively("CodeSignIdentityStore", getIdentities());
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("CodeSignIdentityStore", getIdentities());
   }
 
   /**

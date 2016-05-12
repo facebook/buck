@@ -18,15 +18,15 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 
 public interface JavacOptionsAmender extends RuleKeyAppendable {
   JavacOptions amend(JavacOptions original, BuildContext context);
 
   JavacOptionsAmender IDENTITY = new JavacOptionsAmender() {
     @Override
-    public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-      return builder;
+    public void appendToRuleKey(RuleKeyObjectSink sink) {
+      // Do nothing.
     }
 
     @Override

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -72,19 +72,18 @@ abstract class AbstractPreprocessorFlags {
   /**
    * Append to rule key the members which are not handled elsewhere.
    */
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder, DebugPathSanitizer sanitizer) {
-    builder.setReflectively("prefixHeader", getPrefixHeader());
-    builder.setReflectively("frameworkRoots", getFrameworkPaths());
+  public void appendToRuleKey(RuleKeyObjectSink sink, DebugPathSanitizer sanitizer) {
+    sink.setReflectively("prefixHeader", getPrefixHeader());
+    sink.setReflectively("frameworkRoots", getFrameworkPaths());
 
     // Sanitize any relevant paths in the flags we pass to the preprocessor, to prevent them
     // from contributing to the rule key.
-    builder.setReflectively(
+    sink.setReflectively(
         "platformPreprocessorFlags",
         sanitizer.sanitizeFlags(getOtherFlags().getPlatformFlags()));
-    builder.setReflectively(
+    sink.setReflectively(
         "rulePreprocessorFlags",
         sanitizer.sanitizeFlags(getOtherFlags().getRuleFlags()));
-    return builder;
   }
 
   public CxxToolFlags toToolFlags(

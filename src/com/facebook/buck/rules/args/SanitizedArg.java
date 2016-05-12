@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.args;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Function;
@@ -68,8 +68,8 @@ public class SanitizedArg extends Arg {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder.setReflectively("arg", sanitizer.apply(unsanitzed));
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("arg", sanitizer.apply(unsanitzed));
   }
 
   @Override

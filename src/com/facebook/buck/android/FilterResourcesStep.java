@@ -21,7 +21,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -412,8 +412,8 @@ public class FilterResourcesStep implements Step {
     }
 
     @Override
-    public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-      return builder.setReflectively("filter", getDescription());
+    public void appendToRuleKey(RuleKeyObjectSink sink) {
+      sink.setReflectively("filter", getDescription());
     }
 
     @VisibleForTesting

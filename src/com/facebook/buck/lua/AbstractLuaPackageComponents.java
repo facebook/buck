@@ -18,7 +18,7 @@ package com.facebook.buck.lua;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -54,10 +54,9 @@ abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    builder.setReflectively("modules", getModules());
-    builder.setReflectively("nativeLibraries", getNativeLibraries());
-    return builder;
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("modules", getModules());
+    sink.setReflectively("nativeLibraries", getNativeLibraries());
   }
 
   public ImmutableSortedSet<BuildRule> getDeps(SourcePathResolver resolver) {

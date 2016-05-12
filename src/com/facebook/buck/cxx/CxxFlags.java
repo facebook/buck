@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.google.common.base.Optional;
@@ -45,11 +45,11 @@ public class CxxFlags {
     return new RuleKeyAppendableFunction<String, String>() {
 
       @Override
-      public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+      public void appendToRuleKey(RuleKeyObjectSink sink) {
         SortedMap<String, String> sanitizedMap = Maps.transformValues(
             flagMacros,
             cxxPlatform.getDebugPathSanitizer().sanitize(Optional.<Path>absent()));
-        return builder.setReflectively("flagMacros", sanitizedMap);
+        sink.setReflectively("flagMacros", sanitizedMap);
       }
 
       @Override

@@ -18,7 +18,7 @@ package com.facebook.buck.d;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -43,8 +43,8 @@ abstract class AbstractDIncludes implements RuleKeyAppendable {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder.setReflectively("sources", getSources());
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("sources", getSources());
   }
 
 }

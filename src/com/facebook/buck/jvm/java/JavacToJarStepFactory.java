@@ -21,7 +21,7 @@ import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -167,9 +167,8 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    builder.setReflectively("javacOptions", javacOptions);
-    builder.setReflectively("amender", amender);
-    return builder;
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("javacOptions", javacOptions);
+    sink.setReflectively("amender", amender);
   }
 }

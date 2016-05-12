@@ -789,8 +789,8 @@ public class RuleKeyTest {
     }
 
     @Override
-    public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-      return builder
+    public void appendToRuleKey(RuleKeyObjectSink sink) {
+      sink
           .setReflectively("value", value)
           .setReflectively("foo", "foo")
           .setReflectively("bar", "bar");
@@ -816,8 +816,8 @@ public class RuleKeyTest {
     }
 
     @Override
-    public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-      return builder
+    public void appendToRuleKey(RuleKeyObjectSink sink) {
+      sink
           .setReflectively("foo", foo);
     }
   }

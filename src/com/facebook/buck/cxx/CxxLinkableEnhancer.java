@@ -23,7 +23,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
@@ -235,9 +235,9 @@ public class CxxLinkableEnhancer {
         new FrameworkPathArg(resolver, allLibraries) {
 
           @Override
-          public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-            return super.appendToRuleKey(builder)
-                .setReflectively("frameworkPathToSearchPath", frameworkPathToSearchPath);
+          public void appendToRuleKey(RuleKeyObjectSink sink) {
+            super.appendToRuleKey(sink);
+            sink.setReflectively("frameworkPathToSearchPath", frameworkPathToSearchPath);
           }
 
           @Override
@@ -285,9 +285,9 @@ public class CxxLinkableEnhancer {
     argsBuilder.add(
         new FrameworkPathArg(resolver, allFrameworks) {
           @Override
-          public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-            return super.appendToRuleKey(builder)
-                .setReflectively("frameworkPathToSearchPath", frameworkPathToSearchPath);
+          public void appendToRuleKey(RuleKeyObjectSink sink) {
+            super.appendToRuleKey(sink);
+            sink.setReflectively("frameworkPathToSearchPath", frameworkPathToSearchPath);
           }
 
           @Override

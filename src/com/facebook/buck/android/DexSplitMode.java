@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -206,19 +206,18 @@ class DexSplitMode implements RuleKeyAppendable {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    builder.setReflectively("dexStore", dexStore);
-    builder.setReflectively("dexSplitStrategy", dexSplitStrategy);
-    builder.setReflectively("isPrimaryDexScenarioOverflowAllowed",
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("dexStore", dexStore);
+    sink.setReflectively("dexSplitStrategy", dexSplitStrategy);
+    sink.setReflectively("isPrimaryDexScenarioOverflowAllowed",
         isPrimaryDexScenarioOverflowAllowed);
-    builder.setReflectively("linearAllocHardLimit", linearAllocHardLimit);
-    builder.setReflectively("primaryDexPatterns", primaryDexPatterns);
-    builder.setReflectively("primaryDexClassesFile", primaryDexClassesFile);
-    builder.setReflectively("primaryDexScenarioFile", primaryDexScenarioFile);
-    builder.setReflectively("secondaryDexHeadClassesFile", secondaryDexHeadClassesFile);
-    builder.setReflectively("secondaryDexTailClassesFile", secondaryDexTailClassesFile);
-    builder.setReflectively("shouldSplitDex", shouldSplitDex);
-    builder.setReflectively("useLinearAllocSplitDex", useLinearAllocSplitDex);
-    return builder;
+    sink.setReflectively("linearAllocHardLimit", linearAllocHardLimit);
+    sink.setReflectively("primaryDexPatterns", primaryDexPatterns);
+    sink.setReflectively("primaryDexClassesFile", primaryDexClassesFile);
+    sink.setReflectively("primaryDexScenarioFile", primaryDexScenarioFile);
+    sink.setReflectively("secondaryDexHeadClassesFile", secondaryDexHeadClassesFile);
+    sink.setReflectively("secondaryDexTailClassesFile", secondaryDexTailClassesFile);
+    sink.setReflectively("shouldSplitDex", shouldSplitDex);
+    sink.setReflectively("useLinearAllocSplitDex", useLinearAllocSplitDex);
   }
 }

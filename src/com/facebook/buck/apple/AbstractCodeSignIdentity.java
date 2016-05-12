@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -74,8 +74,8 @@ abstract class AbstractCodeSignIdentity implements RuleKeyAppendable {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder.setReflectively(
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively(
         "code-sign-identity",
         getFingerprint().transform(Functions.toStringFunction()));
   }

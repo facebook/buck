@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.util.Ansi;
@@ -135,8 +135,8 @@ public class InferBuckConfig implements RuleKeyAppendable {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink
         .setReflectively("infer-version", inferVersion.get())
         .setReflectively("clang-compiler", clangCompiler.get())
         .setReflectively("clang-plugin", clangPlugin.get());

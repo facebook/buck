@@ -21,7 +21,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
@@ -114,17 +114,15 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
     if (!isEmpty()) {
       // searchPathElements is not needed here since it comes from rules, which is appended below.
-      builder.setReflectively("owner", ownerTarget)
+      sink.setReflectively("owner", ownerTarget)
           .setReflectively("names", names)
           .setReflectively("parameters", parameters)
           .setReflectively("processOnly", processOnly)
           .setReflectively("inputs", inputs);
     }
-
-    return builder;
   }
 
   public boolean getProcessOnly() {

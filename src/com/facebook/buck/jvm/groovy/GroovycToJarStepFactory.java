@@ -24,7 +24,7 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
@@ -79,9 +79,9 @@ class GroovycToJarStepFactory extends BaseCompileToJarStepFactory {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    groovyc.appendToRuleKey(builder);
-    return builder
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    groovyc.appendToRuleKey(sink);
+    sink
         .setReflectively("extraArguments", extraArguments)
         .setReflectively("javacOptions", javacOptions);
   }

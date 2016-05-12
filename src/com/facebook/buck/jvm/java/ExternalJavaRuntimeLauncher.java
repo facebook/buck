@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 
 class ExternalJavaRuntimeLauncher implements JavaRuntimeLauncher {
 
@@ -32,7 +32,7 @@ class ExternalJavaRuntimeLauncher implements JavaRuntimeLauncher {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder.setReflectively("java", javaCommand);
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("java", javaCommand);
   }
 }

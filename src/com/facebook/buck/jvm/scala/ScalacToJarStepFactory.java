@@ -23,7 +23,7 @@ import com.facebook.buck.jvm.java.ClassUsageFileWriter;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
@@ -73,8 +73,8 @@ class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    scalac.appendToRuleKey(builder);
-    return builder.setReflectively("extraArguments", extraArguments);
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    scalac.appendToRuleKey(sink);
+    sink.setReflectively("extraArguments", extraArguments);
   }
 }

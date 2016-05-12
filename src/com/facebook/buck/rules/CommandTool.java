@@ -105,8 +105,8 @@ public class CommandTool implements Tool {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink
         .setReflectively("baseTool", baseTool)
         .setReflectively("args", args)
         .setReflectively("extraInputs", extraInputs);

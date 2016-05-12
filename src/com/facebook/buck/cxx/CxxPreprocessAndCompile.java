@@ -23,7 +23,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
@@ -171,14 +171,12 @@ public class CxxPreprocessAndCompile
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
     // If a sanitizer is being used for compilation, we need to record the working directory in
     // the rule key, as changing this changes the generated object file.
     if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO) {
-      builder.setReflectively("compilationDirectory", sanitizer.getCompilationDirectory());
+      sink.setReflectively("compilationDirectory", sanitizer.getCompilationDirectory());
     }
-
-    return builder;
   }
 
   private Path getDepFilePath() {

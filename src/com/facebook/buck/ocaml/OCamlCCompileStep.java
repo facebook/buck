@@ -18,7 +18,7 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -104,14 +104,13 @@ public class OCamlCCompileStep extends ShellStep {
     }
 
     @Override
-    public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-      builder.setReflectively("cCompiler", cCompiler);
-      builder.setReflectively("ocamlCompiler", ocamlCompiler);
-      builder.setReflectively("output", output.toString());
-      builder.setReflectively("input", input);
-      builder.setReflectively("flags", flags);
-      builder.setReflectively("includes", includes);
-      return builder;
+    public void appendToRuleKey(RuleKeyObjectSink sink) {
+      sink.setReflectively("cCompiler", cCompiler);
+      sink.setReflectively("ocamlCompiler", ocamlCompiler);
+      sink.setReflectively("output", output.toString());
+      sink.setReflectively("input", input);
+      sink.setReflectively("flags", flags);
+      sink.setReflectively("includes", includes);
     }
   }
 

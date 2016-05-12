@@ -78,8 +78,8 @@ public class SymlinkTree
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder.setReflectively("links", getLinksForRuleKey());
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("links", getLinksForRuleKey());
   }
 
   /**

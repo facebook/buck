@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
@@ -78,12 +78,11 @@ abstract class AbstractHeaderVerification implements RuleKeyAppendable {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    builder.setReflectively("mode", getMode());
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("mode", getMode());
     if (getMode() != Mode.IGNORE) {
-      builder.setReflectively("whitelist", getWhitelist());
+      sink.setReflectively("whitelist", getWhitelist());
     }
-    return builder;
   }
 
   public enum Mode {

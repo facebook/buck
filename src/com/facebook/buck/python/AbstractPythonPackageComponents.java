@@ -18,7 +18,7 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -67,7 +67,7 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
   public abstract Optional<Boolean> isZipSafe();
 
   @Override
-  public final RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+  public final void appendToRuleKey(RuleKeyObjectSink sink) {
     // Hash all the input components here so we can detect changes in both input file content
     // and module name mappings.
     // TODO(andrewjcg): Change the types of these fields from Map to SortedMap so that we don't
@@ -78,11 +78,9 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
         "resource", getResources(),
         "nativeLibraries", getNativeLibraries()).entrySet()) {
       for (Path name : ImmutableSortedSet.copyOf(part.getValue().keySet())) {
-        builder.setReflectively(part.getKey() + ":" + name, part.getValue().get(name));
+        sink.setReflectively(part.getKey() + ":" + name, part.getValue().get(name));
       }
     }
-
-    return builder;
   }
 
   public static PythonPackageComponents of() {

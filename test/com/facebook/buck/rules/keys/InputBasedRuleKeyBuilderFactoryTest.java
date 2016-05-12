@@ -32,7 +32,7 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -280,8 +280,8 @@ public class InputBasedRuleKeyBuilderFactoryTest {
     }
 
     @Override
-    public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-      return builder.setReflectively("input", input);
+    public void appendToRuleKey(RuleKeyObjectSink sink) {
+      sink.setReflectively("input", input);
     }
 
   }

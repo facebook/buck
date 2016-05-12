@@ -20,7 +20,7 @@ import static com.google.common.base.Optional.fromNullable;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
@@ -219,8 +219,8 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    builder.setReflectively("sourceLevel", getSourceLevel())
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("sourceLevel", getSourceLevel())
         .setReflectively("targetLevel", getTargetLevel())
         .setReflectively("extraArguments", Joiner.on(',').join(getExtraArguments()))
         .setReflectively("debug", isDebug())
@@ -229,8 +229,6 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
         .setReflectively("annotationProcessingParams", getAnnotationProcessingParams())
         .setReflectively("spoolMode", getSpoolMode())
         .setReflectively("trackClassUsage", trackClassUsage());
-
-    return builder;
   }
 
   public ImmutableSortedSet<SourcePath> getInputs(SourcePathResolver resolver) {

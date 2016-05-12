@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.UncachedRuleKeyBuilder;
@@ -202,8 +203,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
       }
 
       @Override
-      public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-        return builder.setReflectively("cheese", "brie");
+      public void appendToRuleKey(RuleKeyObjectSink sink) {
+        sink.setReflectively("cheese", "brie");
       }
 
     }
@@ -385,8 +386,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
 
   private static class Appender implements RuleKeyAppendable {
     @Override
-    public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-      return builder.setReflectively("cheese", "brie");
+    public void appendToRuleKey(RuleKeyObjectSink sink) {
+      sink.setReflectively("cheese", "brie");
     }
 
     @Override

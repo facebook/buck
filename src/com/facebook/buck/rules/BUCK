@@ -108,6 +108,7 @@ java_immutables_library(
     'RuleKeyBuilder.java',
     'RuleKeyBuilderFactory.java',
     'RuleKeyLogger.java',
+    'RuleKeyObjectSink.java',
     'SourcePath.java',
     'SourcePathResolver.java',
     'SourcePaths.java',

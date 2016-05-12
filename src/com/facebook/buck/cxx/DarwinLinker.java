@@ -21,7 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -146,8 +146,8 @@ public class DarwinLinker implements Linker, HasLinkerMap {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink
         .setReflectively("tool", tool)
         .setReflectively("type", getClass().getSimpleName());
   }
@@ -223,8 +223,8 @@ public class DarwinLinker implements Linker, HasLinkerMap {
     }
 
     @Override
-    public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-      return builder.setReflectively("symbolFiles", symbolFiles);
+    public void appendToRuleKey(RuleKeyObjectSink sink) {
+      sink.setReflectively("symbolFiles", symbolFiles);
     }
 
   }

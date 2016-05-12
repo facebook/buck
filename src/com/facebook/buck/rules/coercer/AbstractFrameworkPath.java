@@ -18,7 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
@@ -150,12 +150,11 @@ abstract class AbstractFrameworkPath implements
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    builder.setReflectively("sourcePath", getSourcePath());
-    builder.setReflectively(
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("sourcePath", getSourcePath());
+    sink.setReflectively(
         "sourceTree",
         getSourceTreePath().transform(Functions.toStringFunction()));
-    return builder;
   }
 
   public static FrameworkPath ofSourceTreePath(SourceTreePath sourceTreePath) {

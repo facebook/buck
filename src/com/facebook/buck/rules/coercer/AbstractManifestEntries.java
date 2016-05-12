@@ -16,7 +16,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Optional;
@@ -43,13 +43,13 @@ abstract class AbstractManifestEntries implements RuleKeyAppendable {
   protected abstract Optional<Boolean> getDebugMode();
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder
-            .setReflectively("minSdkVersion", getMinSdkVersion())
-            .setReflectively("targetSdkVersion", getTargetSdkVersion())
-            .setReflectively("versionCode", getVersionCode())
-            .setReflectively("versionName", getVersionName())
-            .setReflectively("debugMode", getDebugMode());
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink
+        .setReflectively("minSdkVersion", getMinSdkVersion())
+        .setReflectively("targetSdkVersion", getTargetSdkVersion())
+        .setReflectively("versionCode", getVersionCode())
+        .setReflectively("versionName", getVersionName())
+        .setReflectively("debugMode", getDebugMode());
   }
 
   /**

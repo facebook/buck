@@ -35,7 +35,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -117,8 +117,8 @@ public class CxxPreprocessAndCompileTest {
   RuleKeyAppendableFunction<FrameworkPath, Path> DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION =
       new RuleKeyAppendableFunction<FrameworkPath, Path>() {
         @Override
-        public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-          return builder;
+        public void appendToRuleKey(RuleKeyObjectSink sink) {
+          // Do nothing.
         }
 
         @Override

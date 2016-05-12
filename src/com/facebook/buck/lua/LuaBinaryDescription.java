@@ -52,7 +52,7 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
@@ -546,8 +546,8 @@ public class LuaBinaryDescription implements
       }
 
       @Override
-      public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-        return builder
+      public void appendToRuleKey(RuleKeyObjectSink sink) {
+        sink
             .setReflectively("starter", starter)
             .setReflectively("components", components);
       }

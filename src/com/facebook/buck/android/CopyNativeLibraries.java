@@ -27,7 +27,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -344,8 +344,8 @@ public class CopyNativeLibraries extends AbstractBuildRule {
     public abstract TargetCpuType getTargetCpuType();
 
     @Override
-    public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-      return builder
+    public void appendToRuleKey(RuleKeyObjectSink sink) {
+      sink
           .setReflectively("sourcePath", getSourcePath())
           .setReflectively("strippedObjectName", getStrippedObjectName())
           .setReflectively("targetCpuType", getTargetCpuType());

@@ -42,11 +42,11 @@ public class HashedFileTool implements Tool {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+  @SuppressWarnings("deprecation")
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
     try {
-      return builder.setPath(path.toAbsolutePath(), path);
+      sink.setPath(path.toAbsolutePath(), path);
     } catch (IOException e) {
-
       throw new RuntimeException(e);
     }
   }

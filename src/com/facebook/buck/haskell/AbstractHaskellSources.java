@@ -19,7 +19,7 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -66,8 +66,8 @@ abstract class AbstractHaskellSources implements RuleKeyAppendable {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder.setReflectively("modules", getModuleMap());
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("modules", getModuleMap());
   }
 
   public Iterable<BuildRule> getDeps(SourcePathResolver pathResolver) {

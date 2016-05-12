@@ -31,7 +31,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
@@ -107,12 +107,12 @@ public class JavaBinary extends AbstractBuildRule
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
     // Build a sorted set so that metaInfDirectory contents are listed in a canonical order.
     ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
     BuildRules.addInputsToSortedSet(metaInfDirectory, paths, directoryTraverser);
 
-    return builder.setReflectively(
+    sink.setReflectively(
         "metaInfDirectory",
         FluentIterable.from(paths.build())
             .transform(SourcePaths.toSourcePath(getProjectFilesystem())));

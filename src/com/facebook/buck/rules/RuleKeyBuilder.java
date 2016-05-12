@@ -46,7 +46,7 @@ import java.util.Stack;
 
 import javax.annotation.Nullable;
 
-public abstract class RuleKeyBuilder {
+public abstract class RuleKeyBuilder implements RuleKeyObjectSink {
 
   @VisibleForTesting
   static final byte SEPARATOR = '\0';
@@ -149,15 +149,11 @@ public abstract class RuleKeyBuilder {
    */
   protected abstract RuleKeyBuilder setBuildRule(BuildRule rule);
 
-  /**
-   * Implementations can override this to provide context-specific caching.
-   */
-  public abstract RuleKeyBuilder setAppendableRuleKey(String key, RuleKeyAppendable appendable);
-
   protected RuleKeyBuilder setAppendableRuleKey(String key, RuleKey ruleKey) {
     return setReflectively(key + ".appendableSubKey", ruleKey);
   }
 
+  @Override
   public RuleKeyBuilder setReflectively(String key, @Nullable Object val) {
     if (val instanceof RuleKeyAppendable) {
       setAppendableRuleKey(key, (RuleKeyAppendable) val);
@@ -240,6 +236,7 @@ public abstract class RuleKeyBuilder {
   // that's being used for compilation or some such). This does mean that if a user renames a
   // file without changing the contents, we have a cache miss. We're going to assume that this
   // doesn't happen that often in practice.
+  @Override
   public RuleKeyBuilder setPath(Path absolutePath, Path ideallyRelative) throws IOException {
     // TODO(shs96c): Enable this precondition once setPath(Path) has been removed.
     // Preconditions.checkState(absolutePath.isAbsolute());

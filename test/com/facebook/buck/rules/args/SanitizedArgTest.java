@@ -59,9 +59,13 @@ public class SanitizedArgTest {
   public void appendToRuleKey() {
     SanitizedArg arg1 = new SanitizedArg(Functions.constant("sanitized"), "unsanitized 1");
     SanitizedArg arg2 = new SanitizedArg(Functions.constant("sanitized"), "unsanitized 2");
+    RuleKeyBuilder builder1 = createRuleKeyBuilder();
+    RuleKeyBuilder builder2 = createRuleKeyBuilder();
+    arg1.appendToRuleKey(builder1);
+    arg2.appendToRuleKey(builder2);
     assertThat(
-        arg1.appendToRuleKey(createRuleKeyBuilder()).build(),
-        Matchers.equalTo(arg2.appendToRuleKey(createRuleKeyBuilder()).build()));
+        builder1.build(),
+        Matchers.equalTo(builder2.build()));
   }
 
 }

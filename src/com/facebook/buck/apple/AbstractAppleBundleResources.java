@@ -16,7 +16,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
@@ -65,8 +65,8 @@ abstract class AbstractAppleBundleResources implements RuleKeyAppendable {
   }
 
   @Override
-  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink
         .setReflectively("resourceDirs", getResourceDirs())
         .setReflectively("dirContainingResourceDirs", getDirsContainingResourceDirs())
         .setReflectively("resourceFiles", getResourceFiles())

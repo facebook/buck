@@ -32,7 +32,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CommandTool;
-import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
@@ -523,8 +523,8 @@ public class CxxDescriptionEnhancer {
           CxxFlags.getTranslateMacrosFn(cxxPlatform);
 
       @Override
-      public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-        return builder.setReflectively("translateMacrosFn", translateMacrosFn);
+      public void appendToRuleKey(RuleKeyObjectSink sink) {
+        sink.setReflectively("translateMacrosFn", translateMacrosFn);
       }
 
       @Override
