@@ -30,6 +30,8 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.ObjectMappers;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -199,12 +201,12 @@ public class AuditClasspathCommandTest {
       "{",
       "\"//:test-android-library\":",
       "[",
-      "\"%s\",",
-      "\"%s\"",
+      "%s,",
+      "%s",
       "],",
       "\"//:test-java-library\":",
       "[",
-      "\"%s\"",
+      "%s",
       "]",
       "}");
 
@@ -236,28 +238,29 @@ public class AuditClasspathCommandTest {
             javaTarget));
 
     Path root = javaTarget.getCellPath();
+    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
     String expected = String.format(EXPECTED_JSON,
-        root.resolve(
+        mapper.valueToTree(root.resolve(
             BuildTargets
                 .getGenPath(
                     params.getCell().getFilesystem(),
                     javaTarget,
                     "lib__%s__output")
-                .resolve(javaTarget.getShortName() + ".jar")),
-        root.resolve(
+                .resolve(javaTarget.getShortName() + ".jar"))),
+        mapper.valueToTree(root.resolve(
             BuildTargets
                 .getGenPath(
                     params.getCell().getFilesystem(),
                     androidTarget,
                     "lib__%s__output")
-                .resolve(androidTarget.getShortName() + ".jar")),
-        root.resolve(
+                .resolve(androidTarget.getShortName() + ".jar"))),
+        mapper.valueToTree(root.resolve(
             BuildTargets
                 .getGenPath(
                     params.getCell().getFilesystem(),
                     javaTarget,
                     "lib__%s__output")
-                .resolve(javaTarget.getShortName() + ".jar")));
+                .resolve(javaTarget.getShortName() + ".jar"))));
     assertEquals(expected, console.getTextWrittenToStdOut());
 
     assertEquals("", console.getTextWrittenToStdErr());

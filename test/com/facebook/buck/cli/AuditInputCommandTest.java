@@ -24,6 +24,7 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.httpserver.WebServer;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
@@ -90,16 +91,21 @@ public class AuditInputCommandTest {
 
   @Test
   public void testJsonClassPathOutput() throws IOException {
+    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
     final String expectedJson = Joiner.on("").join(
         "{",
         "\"//:test-android-library\":",
         "[",
-        "\"src/com/facebook/AndroidLibraryTwo.java\",",
-        "\"src/com/facebook/TestAndroidLibrary.java\"",
+        mapper.valueToTree(
+            MorePaths.pathWithPlatformSeparators("src/com/facebook/AndroidLibraryTwo.java")),
+        ",",
+        mapper.valueToTree(
+            MorePaths.pathWithPlatformSeparators("src/com/facebook/TestAndroidLibrary.java")),
         "],",
         "\"//:test-java-library\":",
         "[",
-        "\"src/com/facebook/TestJavaLibrary.java\"",
+        mapper.valueToTree(
+            MorePaths.pathWithPlatformSeparators("src/com/facebook/TestJavaLibrary.java")),
         "]",
         "}");
 
@@ -130,7 +136,7 @@ public class AuditInputCommandTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
       "Target //:test-java-library refers to non-existent input file: " +
-      "src/com/facebook/NonExistentFile.java");
+          MorePaths.pathWithPlatformSeparators("src/com/facebook/NonExistentFile.java"));
 
     BuildTarget rootTarget = BuildTargetFactory.newInstance("//:test-java-library");
     TargetNode<?> rootNode = JavaLibraryBuilder
@@ -145,6 +151,7 @@ public class AuditInputCommandTest {
 
   @Test
   public void testJsonContainsRulesWithNoFiles() throws IOException {
+    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
     final String expectedJson = Joiner.on("").join(
         "{",
         "\"//:test-exported-dep\":",
@@ -152,7 +159,9 @@ public class AuditInputCommandTest {
         "],",
         "\"//:test-java-library\":",
         "[",
-        "\"src/com/facebook/TestJavaLibrary.java\"",
+        mapper.valueToTree(
+            MorePaths.pathWithPlatformSeparators("src/com/facebook/TestJavaLibrary.java")
+        ),
         "]",
         "}");
 

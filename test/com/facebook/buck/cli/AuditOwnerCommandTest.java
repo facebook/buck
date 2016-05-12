@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.io.MorePaths.asPaths;
+import static com.facebook.buck.io.MorePaths.pathWithPlatformSeparators;
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
@@ -28,7 +30,6 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.httpserver.WebServer;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
@@ -54,6 +55,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -298,7 +300,7 @@ public class AuditOwnerCommandTest {
         "java/somefolder/badfolder/somefile.java",
         "java/somefolder/perfect.java",
         "com/test/subtest/random.java");
-    ImmutableSet<Path> inputPaths = MorePaths.asPaths(inputs);
+    ImmutableSet<Path> inputPaths = asPaths(inputs);
 
     BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
@@ -329,7 +331,7 @@ public class AuditOwnerCommandTest {
     ImmutableSet<String> inputs = ImmutableSet.of(
         "java/somefolder/badfolder/somefile.java",
         "java/somefolder/perfect.java");
-    ImmutableSet<Path> inputPaths = MorePaths.asPaths(inputs);
+    ImmutableSet<Path> inputPaths = asPaths(inputs);
 
     BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(
@@ -367,7 +369,7 @@ public class AuditOwnerCommandTest {
         "java/somefolder/badfolder/somefile.java",
         "java/somefolder/perfect.java",
         "com/test/subtest/random.java");
-    ImmutableSet<Path> inputPaths = MorePaths.asPaths(inputs);
+    ImmutableSet<Path> inputPaths = asPaths(inputs);
 
     BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(target, inputPaths);
@@ -405,7 +407,7 @@ public class AuditOwnerCommandTest {
         "java/somefolder/badfolder/somefile.java",
         "java/somefolder/perfect.java",
         "com/test/subtest/random.java");
-    ImmutableSortedSet<Path> inputPaths = MorePaths.asPaths(inputs);
+    ImmutableSortedSet<Path> inputPaths = asPaths(inputs);
 
     BuildTarget target = BuildTargetFactory.newInstance("//base/name:name");
     TargetNode<?> targetNode = createTargetNode(target, inputPaths);
@@ -419,11 +421,15 @@ public class AuditOwnerCommandTest {
         false);
     command.printOwnersOnlyJsonReport(params, report);
 
+    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
     String expectedJson = Joiner.on("").join(
       "{",
-      "\"com/test/subtest/random.java\":[\"//base/name:name\"],",
-      "\"java/somefolder/badfolder/somefile.java\":[\"//base/name:name\"],",
-      "\"java/somefolder/perfect.java\":[\"//base/name:name\"]",
+      mapper.valueToTree(pathWithPlatformSeparators("com/test/subtest/random.java")),
+      ":[\"//base/name:name\"],",
+        mapper.valueToTree(pathWithPlatformSeparators("java/somefolder/badfolder/somefile.java")),
+      ":[\"//base/name:name\"],",
+        mapper.valueToTree(pathWithPlatformSeparators("java/somefolder/perfect.java")),
+      ":[\"//base/name:name\"]",
       "}"
     );
 
@@ -449,7 +455,7 @@ public class AuditOwnerCommandTest {
         "java/somefolder/badfolder/somefile.java",
         "java/somefolder/perfect.java",
         "com/test/subtest/random.java");
-    ImmutableSortedSet<Path> inputPaths = MorePaths.asPaths(inputs);
+    ImmutableSortedSet<Path> inputPaths = asPaths(inputs);
 
     BuildTarget target1 = BuildTargetFactory.newInstance("//base/name1:name");
     BuildTarget target2 = BuildTargetFactory.newInstance("//base/name2:name");

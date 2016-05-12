@@ -25,11 +25,7 @@
 !com.facebook.buck.artifact_cache.ArtifactCacheBuckConfigTest#testServedCacheInheritsDirAndSizeFromDirCache
 !com.facebook.buck.artifact_cache.ArtifactCacheBuckConfigTest#testServedCacheMode
 !com.facebook.buck.autodeps.DepsForBuildFilesTest
-!com.facebook.buck.cli.AuditClasspathCommandTest#testJsonClassPathOutput
 !com.facebook.buck.cli.AuditInputCommandIntegrationTest
-!com.facebook.buck.cli.AuditInputCommandTest
-!com.facebook.buck.cli.AuditOwnerCommandIntegrationTest#testTwoFilesJSON
-!com.facebook.buck.cli.AuditOwnerCommandTest#verifyInputsWithOneOwnerAreCorrectlyReportedInJson
 !com.facebook.buck.cli.BuildCommandTest
 !com.facebook.buck.cli.BuildKeepGoingIntegrationTest
 !com.facebook.buck.cli.ExternalTestRunnerIntegrationTest

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -47,6 +48,8 @@ public class AuditOwnerCommandIntegrationTest {
 
   @Test
   public void testTwoFilesJSON() throws IOException {
+    String expectedJson = Platform.detect() == Platform.WINDOWS ?
+        "stdout-one-two-windows.json" : "stdout-one-two.json";
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "audit_owner", tmp);
     workspace.setUp();
@@ -58,6 +61,6 @@ public class AuditOwnerCommandIntegrationTest {
         "example/1.txt",
         "example/lib/2.txt");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-one-two.json"), result.getStdout());
+    assertEquals(workspace.getFileContents(expectedJson), result.getStdout());
   }
 }
