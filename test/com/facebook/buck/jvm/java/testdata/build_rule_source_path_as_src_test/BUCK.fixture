@@ -6,9 +6,9 @@ genrule(
   ],
   bash = ('TEXT=`cat resource.base.txt`;' +
     'sed \"s/REPLACEME/$TEXT/g\" LameGenfile.java > $OUT'),
-  cmd_exe = 'powershell.exe -Command "Get-Content LameGenfile.java | ' + 
-    '%{$_ -replace \'REPLACEME\', (Get-Content resource.base.txt)} | ' +
-    'Out-File -Encoding ASCII $env:OUT"',
+  cmd_exe = 'powershell.exe -Command ' +
+    'Out-File -Encoding ASCII $env:OUT -InputObject ' +
+    '((Get-Content LameGenfile.java)  -replace \'REPLACEME\', (Get-Content resource.base.txt))',
   out = 'LameGenfile.java',
 )
 

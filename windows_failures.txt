@@ -84,7 +84,6 @@
 !com.facebook.buck.io.WatchmanTest#successfulExecutionPopulatesAWatchmanInstance
 !com.facebook.buck.io.WatchmanTest#watchmanVersionTakingThirtySecondsReturnsEmpty
 !com.facebook.buck.io.WatchmanTest#watchmanWatchProjectTakingThirtySecondsReturnsEmpty
-!com.facebook.buck.jvm.java.BuildTargetSourcePathAsSrcIntegrationTest#testNewGenfileIsIncludedInJar
 !com.facebook.buck.jvm.java.CachedTestIntegrationTest#testPullingJarFromCacheDoesNotResultInReportingStaleTestResults
 !com.facebook.buck.jvm.java.CachedTestIntegrationTest#testRunningTestAfterBuildingWithCacheHitDoesNotReportStaleTests
 !com.facebook.buck.jvm.java.CachedTestRunReportingIntegrationTest#testCachedTestRun
