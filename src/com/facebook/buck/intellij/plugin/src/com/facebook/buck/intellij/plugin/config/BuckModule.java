@@ -18,6 +18,7 @@ package com.facebook.buck.intellij.plugin.config;
 
 import com.facebook.buck.intellij.plugin.debugger.AndroidDebugger;
 import com.facebook.buck.intellij.plugin.file.BuckFileType;
+import com.facebook.buck.intellij.plugin.autodeps.BuckAutoDepsContributor;
 import com.facebook.buck.intellij.plugin.ui.BuckEventsConsumer;
 import com.facebook.buck.intellij.plugin.ui.BuckToolWindowFactory;
 import com.facebook.buck.intellij.plugin.ui.BuckUIManager;
@@ -38,6 +39,8 @@ import com.intellij.openapi.fileTypes.FileTypeManager;
 import com.intellij.openapi.fileTypes.UnknownFileType;
 import com.intellij.openapi.fileTypes.impl.FileTypeManagerImpl;
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiDocumentManager;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -105,6 +108,8 @@ public final class BuckModule implements ProjectComponent {
 
     @Override
     public void projectOpened() {
+        PsiDocumentManager manager = PsiDocumentManager.getInstance(mProject);
+        manager.addListener(new BuckAutoDepsContributor(mProject));
         connect();
     }
 
