@@ -37,7 +37,6 @@ public class BuckCommand {
   // Internal commands
   public static final BuckCommand QUERY = new BuckCommand("query", "--json");
   public static final BuckCommand AUDIT_OWNER = new BuckCommand("audit", "owner", "--json");
-  public static final BuckCommand AUDIT_RULES = new BuckCommand("audit", "rules", "--json");
 
   /**
    * Command name passed to buck.
