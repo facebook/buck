@@ -157,13 +157,11 @@ public class AppleTestDescription implements
       params = params.withoutFlavor(debugFormat.getFlavor());
     }
 
-    String extension = args.extension.isLeft() ?
-        args.extension.getLeft().toFileExtension() :
-        args.extension.getRight();
-    if (!AppleBundleExtensions.VALID_XCTOOL_BUNDLE_EXTENSIONS.contains(extension)) {
+    if (!AppleBundleExtensions.VALID_XCTOOL_BUNDLE_EXTENSIONS
+        .contains(args.extension.toFileExtension())) {
       throw new HumanReadableException(
           "Invalid bundle extension for apple_test rule: %s (must be one of %s)",
-          extension,
+          args.extension,
           AppleBundleExtensions.VALID_XCTOOL_BUNDLE_EXTENSIONS);
     }
     boolean createBundle = Sets.intersection(
@@ -346,7 +344,7 @@ public class AppleTestDescription implements
         sourcePathResolver,
         bundle,
         testHostApp,
-        extension,
+        args.extension,
         args.contacts.get(),
         args.labels.get(),
         args.getRunTestSeparately(),
@@ -410,7 +408,7 @@ public class AppleTestDescription implements
     public Optional<BuildTarget> testHostApp;
 
     // Bundle related fields.
-    public Either<AppleBundleExtension, String> extension;
+    public AppleBundleExtension extension;
     public SourcePath infoPlist;
     public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
     public Optional<String> xcodeProductType;
@@ -420,7 +418,7 @@ public class AppleTestDescription implements
 
     @Override
     public Either<AppleBundleExtension, String> getExtension() {
-      return extension;
+      return Either.ofLeft(extension);
     }
 
     @Override

@@ -108,7 +108,7 @@ public class AppleTest
   private final Path testOutputPath;
   private final Path testLogsPath;
 
-  private final String testBundleExtension;
+  private final AppleBundleExtension testBundleExtension;
 
   private Optional<AppleTestXctoolStdoutReader> xctoolStdoutReader;
   private Optional<AppleTestXctestOutputReader> xctestOutputReader;
@@ -186,7 +186,7 @@ public class AppleTest
       SourcePathResolver resolver,
       BuildRule testBundle,
       Optional<AppleBundle> testHostApp,
-      String testBundleExtension,
+      AppleBundleExtension testBundleExtension,
       ImmutableSet<String> contacts,
       ImmutableSet<Label> labels,
       boolean runTestSeparately,
@@ -209,6 +209,10 @@ public class AppleTest
     this.labels = labels;
     this.runTestSeparately = runTestSeparately;
     this.testBundleExtension = testBundleExtension;
+    Preconditions.checkState(
+        AppleBundleExtensions.VALID_XCTOOL_BUNDLE_EXTENSIONS.contains(
+            testBundleExtension.toFileExtension()),
+        "Test bundle extension must be a valid test bundle extension");
     this.testOutputPath = getPathToTestOutputDirectory().resolve("test-output.json");
     this.testLogsPath = getPathToTestOutputDirectory().resolve("logs");
     this.xctoolStdoutReader = Optional.absent();
@@ -333,16 +337,7 @@ public class AppleTest
     } else {
       xctestOutputReader = Optional.of(new AppleTestXctestOutputReader(testReportingCallback));
 
-      Tool testRunningTool;
-      if (testBundleExtension.equals("xctest")) {
-        testRunningTool = xctest;
-      } else if (otest.isPresent()) {
-        testRunningTool = otest.get();
-      } else {
-        throw new HumanReadableException(
-            "Cannot run non-xctest bundle type %s (otest not present)",
-            testBundleExtension);
-      }
+      Tool testRunningTool = getTestRunningTool();
       HashMap<String, String> environment = new HashMap<>();
       environment.putAll(testRunningTool.getEnvironment(getResolver()));
       environment.putAll(options.getEnvironmentOverrides());
@@ -351,7 +346,7 @@ public class AppleTest
               getProjectFilesystem(),
               ImmutableMap.copyOf(environment),
               testRunningTool.getCommandPrefix(getResolver()),
-              (testBundleExtension.equals("xctest") ? "-XCTest" : "-SenTest"),
+              (testBundleExtension.equals(AppleBundleExtension.XCTEST) ? "-XCTest" : "-SenTest"),
               resolvedTestBundleDirectory,
               resolvedTestOutputPath,
               xctestOutputReader,
@@ -487,6 +482,24 @@ public class AppleTest
   @Override
   public Path getPathToOutput() {
     return testBundle.getPathToOutput();
+  }
+
+  private Tool getTestRunningTool() {
+    switch (testBundleExtension) {
+      case XCTEST:
+        return xctest;
+      case OCTEST:
+        if (otest.isPresent()) {
+          return otest.get();
+        } else {
+          throw new HumanReadableException(
+              "Cannot run non-xctest bundle type %s (otest not present)",
+              testBundleExtension);
+        }
+        //$CASES-OMITTED$
+      default:
+        throw new IllegalStateException("should not happen, checked during construction");
+    }
   }
 
 }

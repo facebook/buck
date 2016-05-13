@@ -1568,9 +1568,9 @@ public class ProjectGenerator {
         sourcePathResolver)
         .setTargetName(productName)
         .setProduct(
-            dylibProductTypeByBundleExtension(key.getExtension().getLeft()).get(),
+            dylibProductTypeByBundleExtension(key.getExtension()).get(),
             productName,
-            Paths.get(productName + "." + getExtensionString(key.getExtension())))
+            Paths.get(productName + "." + key.getExtension().toFileExtension()))
         .setSourcesWithFlags(
             ImmutableSet.of(
                 SourceWithFlags.of(
@@ -1619,7 +1619,7 @@ public class ProjectGenerator {
         overrideBuildSettingsBuilder.build(),
         ImmutableMap.of(
             PRODUCT_NAME, productName,
-            "WRAPPER_EXTENSION", getExtensionString(key.getExtension())),
+            "WRAPPER_EXTENSION", key.getExtension().toFileExtension()),
         ImmutableMap.of(
             "FRAMEWORK_SEARCH_PATHS",
             Joiner.on(' ').join(collectRecursiveFrameworkSearchPaths(tests)),
@@ -1640,7 +1640,7 @@ public class ProjectGenerator {
       int combinedTestIndex) {
     return Joiner.on("-").join(
         "_BuckCombinedTest",
-        getExtensionString(key.getExtension()),
+        key.getExtension().toFileExtension(),
         combinedTestIndex);
 
   }

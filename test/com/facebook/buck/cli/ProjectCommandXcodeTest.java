@@ -98,7 +98,7 @@ public class ProjectCommandXcodeTest {
     BuildTarget fooTestTarget = BuildTargetFactory.newInstance("//foo:lib-xctest");
     fooTestNode = AppleTestBuilder
         .createBuilder(fooTestTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setExtension(AppleBundleExtension.XCTEST)
         .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
@@ -128,14 +128,14 @@ public class ProjectCommandXcodeTest {
     bazTestNode = AppleTestBuilder
         .createBuilder(bazTestTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setExtension(AppleBundleExtension.XCTEST)
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 
     fooBinTestNode = AppleTestBuilder
         .createBuilder(fooBinTestTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(fooBinTarget)))
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setExtension(AppleBundleExtension.XCTEST)
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 
@@ -148,7 +148,7 @@ public class ProjectCommandXcodeTest {
     BuildTarget workspaceExtraTestTarget = BuildTargetFactory.newInstance("//foo:extra-xctest");
     workspaceExtraTestNode = AppleTestBuilder
         .createBuilder(workspaceExtraTestTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setExtension(AppleBundleExtension.XCTEST)
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 

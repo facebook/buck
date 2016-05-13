@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
@@ -49,7 +48,7 @@ public final class AppleTestBuilder
     return this;
   }
 
-  public AppleTestBuilder setExtension(Either<AppleBundleExtension, String> extension) {
+  public AppleTestBuilder setExtension(AppleBundleExtension extension) {
     arg.extension = extension;
     return this;
   }

@@ -43,16 +43,15 @@ import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeOutputStream;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -466,7 +465,7 @@ public class TargetsCommandTest {
     BuildTarget testTarget = BuildTargetFactory.newInstance("//foo:xctest");
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setExtension(AppleBundleExtension.XCTEST)
         .setSrcs(
             Optional.of(
                 ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo.m")))))
@@ -594,7 +593,7 @@ public class TargetsCommandTest {
 
     TargetNode<?> libraryTestNode1 = AppleTestBuilder
         .createBuilder(libraryTestTarget1)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setExtension(AppleBundleExtension.XCTEST)
         .setSrcs(
             Optional.of(
                 ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo1.m")))))
@@ -603,7 +602,7 @@ public class TargetsCommandTest {
 
     TargetNode<?> libraryTestNode2 = AppleTestBuilder
         .createBuilder(libraryTestTarget2)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setExtension(AppleBundleExtension.XCTEST)
         .setSrcs(
             Optional.of(
                 ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo2.m")))))
@@ -620,7 +619,7 @@ public class TargetsCommandTest {
 
     TargetNode<?> testLibraryTestNode = AppleTestBuilder
         .createBuilder(testLibraryTestTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setExtension(AppleBundleExtension.XCTEST)
         .setSrcs(
             Optional.of(
                 ImmutableSortedSet.of(
