@@ -183,9 +183,9 @@ public class SymlinkTreeTest {
     // Calculate their rule keys and verify they're different.
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
         ImmutableMap.<String, String>of());
-    RuleKey key1 = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
+    RuleKey key1 = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
         symlinkTreeBuildRule);
-    RuleKey key2 = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
+    RuleKey key2 = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
         modifiedSymlinkTreeBuildRule);
     assertNotEquals(key1, key2);
   }
@@ -199,6 +199,7 @@ public class SymlinkTreeTest {
     SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
 
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+        0,
         FakeFileHashCache.createFromStrings(
             ImmutableMap.<String, String>of()),
         resolver);
@@ -228,6 +229,7 @@ public class SymlinkTreeTest {
         ImmutableMap.<String, String>of());
     InputBasedRuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             hashCache,
             pathResolver);
 
@@ -286,6 +288,7 @@ public class SymlinkTreeTest {
         ImmutableMap.of("out", "aaaa"));
     InputBasedRuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             hashCache,
             pathResolver);
     RuleKey ruleKey1 =
@@ -297,6 +300,7 @@ public class SymlinkTreeTest {
         ImmutableMap.of("out", "bbbb"));
     inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             hashCache,
             pathResolver);
     RuleKey ruleKey2 =

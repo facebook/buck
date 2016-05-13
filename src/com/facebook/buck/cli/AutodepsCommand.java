@@ -119,7 +119,8 @@ public class AutodepsCommand extends AbstractCommand {
           params.getObjectMapper(),
           buildRuleResolver,
           Preconditions.checkNotNull(
-              params.getExecutors().get(ExecutionContext.ExecutorPool.NETWORK)));
+              params.getExecutors().get(ExecutionContext.ExecutorPool.NETWORK)),
+          params.getBuckConfig().getKeySeed());
 
       // Create a BuildEngine because we store symbol information as build artifacts.
       BuckEventBus eventBus = params.getBuckEventBus();

@@ -18,8 +18,8 @@ package com.facebook.buck.rules.args;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -45,7 +45,7 @@ public class SanitizedArgTest {
     return new UncachedRuleKeyBuilder(
         resolver,
         new DefaultFileHashCache(projectFilesystem),
-        new DefaultRuleKeyBuilderFactory(fileHashCache, resolver));
+        new DefaultRuleKeyBuilderFactory(0, fileHashCache, resolver));
   }
 
   @Test

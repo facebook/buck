@@ -89,6 +89,6 @@ public class ContentAgnosticRuleKeyBuilderFactoryTest {
             .setSrcs(ImmutableList.<SourcePath>of(new BuildTargetSourcePath(dep.getBuildTarget())))
             .build(resolver, fileSystem);
 
-    return new ContentAgnosticRuleKeyBuilderFactory(pathResolver).build(rule);
+    return new ContentAgnosticRuleKeyBuilderFactory(0, pathResolver).build(rule);
   }
 }

@@ -153,10 +153,12 @@ public class CachingBuildEngineTest {
           new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
   private static final DefaultRuleKeyBuilderFactory NOOP_RULE_KEY_FACTORY =
       new DefaultRuleKeyBuilderFactory(
+          0,
           new NullFileHashCache(),
           DEFAULT_SOURCE_PATH_RESOLVER);
   private static final DependencyFileRuleKeyBuilderFactory NOOP_DEP_FILE_RULE_KEY_FACTORY =
       new DefaultDependencyFileRuleKeyBuilderFactory(
+          0,
           new NullFileHashCache(),
           DEFAULT_SOURCE_PATH_RESOLVER);
   private static final ObjectMapper MAPPER = ObjectMappers.newDefaultInstance();
@@ -185,7 +187,7 @@ public class CachingBuildEngineTest {
       resolver =
           new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       pathResolver = new SourcePathResolver(resolver);
-      ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+      ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(0, fileHashCache, pathResolver);
     }
   }
 
@@ -253,7 +255,8 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService());
+              createTestExecutorService(),
+              0);
 
       // Add a build step so we can verify that the steps are executed.
       buildSteps.add(
@@ -351,7 +354,8 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService());
+              createTestExecutorService(),
+              0);
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
 
       BuildResult result = buildResult.get();
@@ -435,7 +439,8 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService());
+              createTestExecutorService(),
+              0);
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
       buckEventBus.post(
           CommandEvent.finished(
@@ -519,7 +524,8 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService());
+              createTestExecutorService(),
+              0);
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
       buckEventBus.post(
           CommandEvent.finished(
@@ -577,7 +583,8 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService());
+              createTestExecutorService(),
+              0);
 
       // Run the build.
       replayAll();
@@ -656,7 +663,8 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService());
+              createTestExecutorService(),
+              0);
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
@@ -767,7 +775,8 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService());
+              createTestExecutorService(),
+              0);
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
@@ -865,7 +874,8 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService());
+              createTestExecutorService(),
+              0);
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
@@ -908,7 +918,8 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService());
+              createTestExecutorService(),
+              0);
 
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
       assertThat(result.getSuccess(), equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
@@ -945,7 +956,8 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService());
+              createTestExecutorService(),
+              0);
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1023,7 +1035,8 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService());
+              createTestExecutorService(),
+              0);
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1119,7 +1132,8 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService());
+              createTestExecutorService(),
+              0);
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1179,7 +1193,8 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService());
+              createTestExecutorService(),
+              0);
 
       assertThat(
           cachingBuildEngine.getNumRulesToBuild(ImmutableList.of(rule1)),
@@ -1212,7 +1227,8 @@ public class CachingBuildEngineTest {
               Optional.of(2L),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService());
+              createTestExecutorService(),
+              0);
 
       // Verify that after building successfully, nothing is cached.
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1246,7 +1262,8 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService());
+              createTestExecutorService(),
+              0);
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
       assertEquals(
           BuildRuleSuccessType.BUILT_LOCALLY,
@@ -1270,7 +1287,8 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService());
+              createTestExecutorService(),
+              0);
       result = cachingBuildEngine.build(buildContext, rule).get();
       assertEquals(
           BuildRuleSuccessType.FETCHED_FROM_CACHE,
@@ -1518,6 +1536,7 @@ public class CachingBuildEngineTest {
     @Before
     public void setUpDepFileFixture() {
       depFileFactory = new DefaultDependencyFileRuleKeyBuilderFactory(
+          0,
           fileHashCache,
           pathResolver);
     }
@@ -1939,6 +1958,7 @@ public class CachingBuildEngineTest {
     public void manifestIsWrittenWhenBuiltLocally() throws Exception {
       DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
           new DefaultDependencyFileRuleKeyBuilderFactory(
+              0,
               fileHashCache,
               pathResolver);
 
@@ -2054,6 +2074,7 @@ public class CachingBuildEngineTest {
     public void manifestIsUpdatedWhenBuiltLocally() throws Exception {
       DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
           new DefaultDependencyFileRuleKeyBuilderFactory(
+              0,
               fileHashCache,
               pathResolver);
 
@@ -2174,6 +2195,7 @@ public class CachingBuildEngineTest {
     public void manifestIsTruncatedWhenGrowingPastSizeLimit() throws Exception {
       DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
           new DefaultDependencyFileRuleKeyBuilderFactory(
+              0,
               fileHashCache,
               pathResolver);
 
@@ -2285,6 +2307,7 @@ public class CachingBuildEngineTest {
     public void manifestBasedCacheHit() throws Exception {
       DefaultDependencyFileRuleKeyBuilderFactory depFilefactory =
           new DefaultDependencyFileRuleKeyBuilderFactory(
+              0,
               fileHashCache,
               pathResolver);
 
@@ -2410,6 +2433,7 @@ public class CachingBuildEngineTest {
                       ruleKeyBuilderFactory,
                       NOOP_RULE_KEY_FACTORY,
                       new AbiRuleKeyBuilderFactory(
+                          0,
                           fileHashCache,
                           pathResolver,
                           ruleKeyBuilderFactory),
@@ -2444,6 +2468,7 @@ public class CachingBuildEngineTest {
               .build();
       FakeAbiRuleBuildRule rule = new FakeAbiRuleBuildRule(params, pathResolver);
       final AbiRuleKeyBuilderFactory abiRuleKeyBuilderFactory = new AbiRuleKeyBuilderFactory(
+          0,
           fileHashCache,
           pathResolver,
           ruleKeyBuilderFactory);
@@ -2490,6 +2515,7 @@ public class CachingBuildEngineTest {
               .build();
       FakeAbiRuleBuildRule rule = new FakeAbiRuleBuildRule(params, pathResolver);
       final AbiRuleKeyBuilderFactory abiRuleKeyBuilderFactory = new AbiRuleKeyBuilderFactory(
+          0,
           fileHashCache,
           pathResolver,
           NOOP_RULE_KEY_FACTORY);

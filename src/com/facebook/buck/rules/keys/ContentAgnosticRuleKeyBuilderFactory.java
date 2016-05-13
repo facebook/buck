@@ -45,8 +45,9 @@ public class ContentAgnosticRuleKeyBuilderFactory
   private final LoadingCache<RuleKeyAppendable, RuleKey> ruleKeyCache;
 
   public ContentAgnosticRuleKeyBuilderFactory(
-      SourcePathResolver pathResolver
-  ) {
+      int seed,
+      SourcePathResolver pathResolver) {
+    super(seed);
     // Build the cache around the sub-rule-keys and their dep lists.
     ruleKeyCache = CacheBuilder.newBuilder().weakKeys().build(
         new CacheLoader<RuleKeyAppendable, RuleKey>() {

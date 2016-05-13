@@ -763,6 +763,7 @@ public class TargetsCommand extends AbstractCommand {
       if (isShowRuleKey()) {
         ruleKeyBuilderFactory = Optional.<DefaultRuleKeyBuilderFactory>of(
             new DefaultRuleKeyBuilderFactory(
+                params.getBuckConfig().getKeySeed(),
                 params.getFileHashCache(),
                 new SourcePathResolver(result.getResolver())));
       }

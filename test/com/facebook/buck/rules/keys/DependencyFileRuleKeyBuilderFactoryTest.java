@@ -80,6 +80,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
 
     RuleKey inputKey1 =
         new DefaultDependencyFileRuleKeyBuilderFactory(
+            0,
             hashCache,
             pathResolver)
             .build(
@@ -95,6 +96,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
 
     RuleKey inputKey2 =
         new DefaultDependencyFileRuleKeyBuilderFactory(
+            0,
             hashCache,
             pathResolver)
             .build(
@@ -129,6 +131,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
 
     RuleKey inputKey1 =
         new DefaultDependencyFileRuleKeyBuilderFactory(
+            0,
             hashCache,
             pathResolver)
             .build(
@@ -144,6 +147,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
 
     RuleKey inputKey2 =
         new DefaultDependencyFileRuleKeyBuilderFactory(
+            0,
             hashCache,
             pathResolver)
             .build(
@@ -186,6 +190,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
 
     RuleKey manifestKey1 =
         new DefaultDependencyFileRuleKeyBuilderFactory(
+            0,
             hashCache,
             pathResolver)
             .buildManifestKey(rule)
@@ -199,6 +204,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
 
     RuleKey manifestKey2 =
         new DefaultDependencyFileRuleKeyBuilderFactory(
+            0,
             hashCache,
             pathResolver)
             .buildManifestKey(rule)
@@ -230,6 +236,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
 
     RuleKey manifestKey1 =
         new DefaultDependencyFileRuleKeyBuilderFactory(
+            0,
             hashCache,
             pathResolver)
             .buildManifestKey(rule)
@@ -243,6 +250,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
 
     RuleKey manifestKey2 =
         new DefaultDependencyFileRuleKeyBuilderFactory(
+            0,
             hashCache,
             pathResolver)
             .buildManifestKey(rule)

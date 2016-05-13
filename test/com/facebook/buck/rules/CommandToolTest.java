@@ -143,7 +143,7 @@ public class CommandToolTest {
         ImmutableMap.of(
             "input", Strings.repeat("a", 40)));
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(hashCache, pathResolver);
+        new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver);
     RuleKey ruleKey = new UncachedRuleKeyBuilder(
         pathResolver,
         hashCache,
@@ -155,7 +155,7 @@ public class CommandToolTest {
         ImmutableMap.of(
             "input", Strings.repeat("b", 40)));
     ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(hashCache, pathResolver);
+        new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver);
     RuleKey changedRuleKey = new UncachedRuleKeyBuilder(
         pathResolver,
         hashCache,

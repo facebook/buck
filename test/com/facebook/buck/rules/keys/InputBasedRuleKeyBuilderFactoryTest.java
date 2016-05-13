@@ -83,11 +83,11 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             .build(resolver, filesystem);
 
     RuleKey inputKey1 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver)
+        new InputBasedRuleKeyBuilderFactory(0, hashCache, pathResolver)
             .build(rule);
 
     RuleKey inputKey2 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver)
+        new InputBasedRuleKeyBuilderFactory(0, hashCache, pathResolver)
             .build(rule);
 
     assertThat(
@@ -116,7 +116,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             HashCode.fromInt(0)));
 
     RuleKey inputKey1 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver)
+        new InputBasedRuleKeyBuilderFactory(0, hashCache, pathResolver)
             .build(rule);
 
     // Now, build a rule key with a different hash for the output for the above rule.
@@ -126,7 +126,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             HashCode.fromInt(1)));
 
     RuleKey inputKey2 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver)
+        new InputBasedRuleKeyBuilderFactory(0, hashCache, pathResolver)
             .build(rule);
 
     assertThat(
@@ -160,7 +160,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             HashCode.fromInt(0)));
 
     RuleKey inputKey1 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver)
+        new InputBasedRuleKeyBuilderFactory(0, hashCache, pathResolver)
             .build(rule);
 
     // Now, build a rule key with a different hash for the output for the above rule.
@@ -170,7 +170,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             HashCode.fromInt(1)));
 
     RuleKey inputKey2 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver)
+        new InputBasedRuleKeyBuilderFactory(0, hashCache, pathResolver)
             .build(rule);
 
     assertThat(
@@ -202,7 +202,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             HashCode.fromInt(0)));
 
     RuleKey inputKey1 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver)
+        new InputBasedRuleKeyBuilderFactory(0, hashCache, pathResolver)
             .build(rule);
 
     // Now, build a rule key with a different hash for the output for the above rule.
@@ -212,7 +212,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             HashCode.fromInt(1)));
 
     RuleKey inputKey2 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver)
+        new InputBasedRuleKeyBuilderFactory(0, hashCache, pathResolver)
             .build(rule);
 
     assertThat(
@@ -253,7 +253,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             HashCode.fromInt(0)));
 
     RuleKey inputKey1 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver)
+        new InputBasedRuleKeyBuilderFactory(0, hashCache, pathResolver)
             .build(rule);
 
     // Now, build a rule key with a different hash for the output for the above rule.
@@ -263,7 +263,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             HashCode.fromInt(1)));
 
     RuleKey inputKey2 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver)
+        new InputBasedRuleKeyBuilderFactory(0, hashCache, pathResolver)
             .build(rule);
 
     assertThat(

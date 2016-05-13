@@ -104,7 +104,7 @@ public class ExternalJavacTest extends EasyMockSupport {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//example:target").build();
     BuildRule buildRule = new NoopBuildRule(params, pathResolver);
     DefaultRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+        new DefaultRuleKeyBuilderFactory(0, fileHashCache, pathResolver);
 
     RuleKey javacKey = new UncachedRuleKeyBuilder(
         pathResolver,
@@ -154,7 +154,7 @@ public class ExternalJavacTest extends EasyMockSupport {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//example:target").build();
     BuildRule buildRule = new NoopBuildRule(params, pathResolver);
     DefaultRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+        new DefaultRuleKeyBuilderFactory(0, fileHashCache, pathResolver);
 
     RuleKey javacKey = new UncachedRuleKeyBuilder(
         pathResolver,

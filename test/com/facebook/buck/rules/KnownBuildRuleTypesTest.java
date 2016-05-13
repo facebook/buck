@@ -198,9 +198,9 @@ public class KnownBuildRuleTypesTest {
     Path javacPath = javac.toPath();
     FakeFileHashCache hashCache = new FakeFileHashCache(
         ImmutableMap.of(javacPath, MorePaths.asByteSource(javacPath).hash(Hashing.sha1())));
-    RuleKey configuredKey = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
+    RuleKey configuredKey = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
         configuredRule);
-    RuleKey libraryKey = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
+    RuleKey libraryKey = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
         libraryRule);
 
     assertNotEquals(libraryKey, configuredKey);

@@ -162,7 +162,8 @@ public class CachingBuildEngine implements BuildEngine {
       Optional<Long> artifactCacheSizeLimit,
       ObjectMapper objectMapper,
       final BuildRuleResolver resolver,
-      final ListeningExecutorService networkExecutor) {
+      final ListeningExecutorService networkExecutor,
+      final int keySeed) {
     this.ruleDeps = new RuleDepsCache(service);
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, service);
 
@@ -180,7 +181,7 @@ public class CachingBuildEngine implements BuildEngine {
         .build(new CacheLoader<ProjectFilesystem, RuleKeyFactories>() {
           @Override
           public RuleKeyFactories load(@Nonnull  ProjectFilesystem filesystem) throws Exception {
-            return RuleKeyFactories.build(fileHashCaches.get(filesystem), resolver);
+            return RuleKeyFactories.build(keySeed, fileHashCaches.get(filesystem), resolver);
           }
         });
     this.networkExecutor = networkExecutor;
@@ -1680,23 +1681,28 @@ public class CachingBuildEngine implements BuildEngine {
     public final DependencyFileRuleKeyBuilderFactory depFileRuleKeyBuilderFactory;
 
     public static RuleKeyFactories build(
+        int seed,
         FileHashCache fileHashCache,
         BuildRuleResolver ruleResolver) {
       SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
       DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+          seed,
           fileHashCache,
           pathResolver);
 
       return new RuleKeyFactories(
           defaultRuleKeyBuilderFactory,
           new InputBasedRuleKeyBuilderFactory(
+              seed,
               fileHashCache,
               pathResolver),
           new AbiRuleKeyBuilderFactory(
+              seed,
               fileHashCache,
               pathResolver,
               defaultRuleKeyBuilderFactory),
           new DefaultDependencyFileRuleKeyBuilderFactory(
+              seed,
               fileHashCache,
               pathResolver));
     }

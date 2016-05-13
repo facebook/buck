@@ -146,7 +146,7 @@ public class ShTestDescriptionTest {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(rule.getProjectFilesystem());
     DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+        new DefaultRuleKeyBuilderFactory(0, fileHashCache, pathResolver);
     return factory.build(rule);
   }
 

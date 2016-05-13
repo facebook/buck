@@ -87,7 +87,7 @@ public class ThriftCompilerTest {
 
     // Generate a rule key for the defaults.
 
-    RuleKey defaultRuleKey = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
+    RuleKey defaultRuleKey = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,
@@ -104,7 +104,7 @@ public class ThriftCompilerTest {
 
     // Verify that changing the compiler causes a rulekey change.
 
-    RuleKey compilerChange = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
+    RuleKey compilerChange = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,
@@ -122,7 +122,7 @@ public class ThriftCompilerTest {
 
     // Verify that changing the flags causes a rulekey change.
 
-    RuleKey flagsChange = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
+    RuleKey flagsChange = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,
@@ -140,7 +140,7 @@ public class ThriftCompilerTest {
 
     // Verify that changing the flags causes a rulekey change.
 
-    RuleKey outputDirChange = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
+    RuleKey outputDirChange = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,
@@ -158,7 +158,7 @@ public class ThriftCompilerTest {
 
     // Verify that changing the input causes a rulekey change.
 
-    RuleKey inputChange = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
+    RuleKey inputChange = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,
@@ -176,7 +176,7 @@ public class ThriftCompilerTest {
 
     // Verify that changing the input causes a rulekey change.
 
-    RuleKey languageChange = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
+    RuleKey languageChange = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,
@@ -194,7 +194,7 @@ public class ThriftCompilerTest {
 
     // Verify that changing the input causes a rulekey change.
 
-    RuleKey optionsChange = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
+    RuleKey optionsChange = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,
@@ -213,7 +213,7 @@ public class ThriftCompilerTest {
     // Verify that changing the includes does *not* cause a rulekey change, since we use a
     // different mechanism to track header changes.
 
-    RuleKey includeRootsChange = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
+    RuleKey includeRootsChange = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,
@@ -232,7 +232,7 @@ public class ThriftCompilerTest {
     // Verify that changing the header maps does *not* cause a rulekey change, since we use a
     // different mechanism to track header changes.
 
-    RuleKey headerMapKeyChange = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
+    RuleKey headerMapKeyChange = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,
@@ -250,7 +250,7 @@ public class ThriftCompilerTest {
 
     // Verify that changing the name of the include causes a rulekey change.
 
-    RuleKey includesKeyChange = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
+    RuleKey includesKeyChange = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,
@@ -270,7 +270,7 @@ public class ThriftCompilerTest {
 
     // Verify that changing the contents of an include causes a rulekey change.
 
-    RuleKey includesValueChange = new DefaultRuleKeyBuilderFactory(hashCache, resolver).build(
+    RuleKey includesValueChange = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
         new ThriftCompiler(
             params,
             resolver,

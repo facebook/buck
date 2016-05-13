@@ -124,25 +124,25 @@ public class PythonPackagedBinaryTest {
     // Calculate the rule keys for the various ways we can layout the source and modules
     // across different python libraries.
     RuleKey pair1 = getRuleKeyForModuleLayout(
-        new DefaultRuleKeyBuilderFactory(hashCache, resolver),
+        new DefaultRuleKeyBuilderFactory(0, hashCache, resolver),
         resolver,
         "main.py", mainRelative,
         "module/one.py", source1Relative,
         "module/two.py", source2Relative);
     RuleKey pair2 = getRuleKeyForModuleLayout(
-        new DefaultRuleKeyBuilderFactory(hashCache, resolver),
+        new DefaultRuleKeyBuilderFactory(0, hashCache, resolver),
         resolver,
         "main.py", mainRelative,
         "module/two.py", source2Relative,
         "module/one.py", source1Relative);
     RuleKey pair3 = getRuleKeyForModuleLayout(
-        new DefaultRuleKeyBuilderFactory(hashCache, resolver),
+        new DefaultRuleKeyBuilderFactory(0, hashCache, resolver),
         resolver,
         "main.py", mainRelative,
         "module/one.py", source2Relative,
         "module/two.py", source1Relative);
     RuleKey pair4 = getRuleKeyForModuleLayout(
-        new DefaultRuleKeyBuilderFactory(hashCache, resolver),
+        new DefaultRuleKeyBuilderFactory(0, hashCache, resolver),
         resolver,
         "main.py", mainRelative,
         "module/two.py", source1Relative,

@@ -162,6 +162,7 @@ public class ExternallyBuiltApplePackageTest {
 
   private DefaultRuleKeyBuilderFactory newRuleKeyBuilderFactory() {
     return new DefaultRuleKeyBuilderFactory(
+        0,
         new FakeFileHashCache(
             ImmutableMap.of(Paths.get(bundleLocation).toAbsolutePath(), HashCode.fromInt(5))),
         new SourcePathResolver(resolver));

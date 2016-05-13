@@ -114,7 +114,8 @@ public class FetchCommand extends BuildCommand {
               params.getObjectMapper(),
               actionGraphAndResolver.getResolver(),
               Preconditions.checkNotNull(
-                  params.getExecutors().get(ExecutionContext.ExecutorPool.NETWORK))),
+                  params.getExecutors().get(ExecutionContext.ExecutorPool.NETWORK)),
+              params.getBuckConfig().getKeySeed()),
           params.getArtifactCache(),
           params.getConsole(),
           params.getBuckEventBus(),

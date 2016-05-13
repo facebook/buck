@@ -94,7 +94,7 @@ public class TargetsCommandIntegrationTest {
         "--show-rulekey",
         "//:test");
     result.assertSuccess();
-    assertEquals("//:test 12c109cdbab186fbb8fdd785853d8bcb4538aed2\n", result.getStdout());
+    assertEquals("//:test 54bd34938b1827baea88dc5137c6385fdf280d60\n", result.getStdout());
   }
 
   @Test
@@ -128,7 +128,7 @@ public class TargetsCommandIntegrationTest {
         "//:test");
     result.assertSuccess();
     assertEquals(
-        "//:test 12c109cdbab186fbb8fdd785853d8bcb4538aed2 " +
+        "//:test 54bd34938b1827baea88dc5137c6385fdf280d60 " +
             MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output") +
             "\n",
         result.getStdout());
@@ -165,8 +165,8 @@ public class TargetsCommandIntegrationTest {
         "--show-rulekey");
     result.assertSuccess();
     assertEquals(
-        "//:another-test 9837c730735a095e73fde946172bca84a228cb6d\n" +
-            "//:test 12c109cdbab186fbb8fdd785853d8bcb4538aed2\n",
+        "//:another-test 163589ad581be53e82f0a18e68ac3ae9111f1307\n" +
+            "//:test 54bd34938b1827baea88dc5137c6385fdf280d60\n",
         result.getStdout());
   }
 

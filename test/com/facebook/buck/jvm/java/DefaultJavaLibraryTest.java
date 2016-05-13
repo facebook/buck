@@ -744,6 +744,7 @@ public class DefaultJavaLibraryTest {
     DefaultFileHashCache originalHashCache = new DefaultFileHashCache(filesystem);
     InputBasedRuleKeyBuilderFactory factory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             originalHashCache,
             pathResolver);
     RuleKey originalRuleKey = factory.build(library);
@@ -765,6 +766,7 @@ public class DefaultJavaLibraryTest {
     DefaultFileHashCache unaffectedHashCache = new DefaultFileHashCache(filesystem);
     factory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             unaffectedHashCache,
             pathResolver);
     RuleKey unaffectedRuleKey = factory.build(library);
@@ -786,6 +788,7 @@ public class DefaultJavaLibraryTest {
     DefaultFileHashCache affectedHashCache = new DefaultFileHashCache(filesystem);
     factory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             affectedHashCache,
             pathResolver);
     RuleKey affectedRuleKey = factory.build(library);
@@ -820,6 +823,7 @@ public class DefaultJavaLibraryTest {
     DefaultFileHashCache originalHashCache = new DefaultFileHashCache(filesystem);
     InputBasedRuleKeyBuilderFactory factory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             originalHashCache,
             pathResolver);
     RuleKey originalRuleKey = factory.build(library);
@@ -842,6 +846,7 @@ public class DefaultJavaLibraryTest {
     DefaultFileHashCache unaffectedHashCache = new DefaultFileHashCache(filesystem);
     factory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             unaffectedHashCache,
             pathResolver);
     RuleKey unaffectedRuleKey = factory.build(library);
@@ -867,6 +872,7 @@ public class DefaultJavaLibraryTest {
     DefaultFileHashCache affectedHashCache = new DefaultFileHashCache(filesystem);
     factory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             affectedHashCache,
             pathResolver);
     RuleKey affectedRuleKey = factory.build(library);
@@ -907,6 +913,7 @@ public class DefaultJavaLibraryTest {
     DefaultFileHashCache originalHashCache = new DefaultFileHashCache(filesystem);
     InputBasedRuleKeyBuilderFactory factory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             originalHashCache,
             pathResolver);
     RuleKey originalRuleKey = factory.build(library);
@@ -934,6 +941,7 @@ public class DefaultJavaLibraryTest {
     DefaultFileHashCache unaffectedHashCache = new DefaultFileHashCache(filesystem);
     factory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             unaffectedHashCache,
             pathResolver);
     RuleKey unaffectedRuleKey = factory.build(library);
@@ -963,6 +971,7 @@ public class DefaultJavaLibraryTest {
     DefaultFileHashCache affectedHashCache = new DefaultFileHashCache(filesystem);
     factory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             affectedHashCache,
             pathResolver);
     RuleKey affectedRuleKey = factory.build(library);
@@ -1007,6 +1016,7 @@ public class DefaultJavaLibraryTest {
     DefaultFileHashCache originalHashCache = new DefaultFileHashCache(filesystem);
     InputBasedRuleKeyBuilderFactory factory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             originalHashCache,
             pathResolver);
     RuleKey originalRuleKey = factory.build(library);
@@ -1038,6 +1048,7 @@ public class DefaultJavaLibraryTest {
     DefaultFileHashCache unaffectedHashCache = new DefaultFileHashCache(filesystem);
     factory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             unaffectedHashCache,
             pathResolver);
     RuleKey unaffectedRuleKey = factory.build(library);
@@ -1071,6 +1082,7 @@ public class DefaultJavaLibraryTest {
     DefaultFileHashCache affectedHashCache = new DefaultFileHashCache(filesystem);
     factory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             affectedHashCache,
             pathResolver);
     RuleKey affectedRuleKey = factory.build(library);
@@ -1174,10 +1186,12 @@ public class DefaultJavaLibraryTest {
     }
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory1 =
         new DefaultRuleKeyBuilderFactory(
+            0,
             FakeFileHashCache.createFromStrings(fileHashes.build()),
             pathResolver1);
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory2 =
         new DefaultRuleKeyBuilderFactory(
+            0,
             FakeFileHashCache.createFromStrings(fileHashes.build()),
             pathResolver2);
 

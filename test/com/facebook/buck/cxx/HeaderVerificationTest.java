@@ -44,7 +44,7 @@ public class HeaderVerificationTest {
                 new DefaultTargetNodeToBuildRuleTransformer()));
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(new FakeProjectFilesystem());
     DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(fileHashCache, resolver);
+        new DefaultRuleKeyBuilderFactory(0, fileHashCache, resolver);
     RuleKeyBuilder<RuleKey> builder = new UncachedRuleKeyBuilder(resolver, fileHashCache, factory);
     builder.setReflectively("headerVerification", headerVerification);
     return builder.build();

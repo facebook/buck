@@ -464,7 +464,8 @@ public class TestCommand extends BuildCommand {
               BuildIdSampler.apply(
                   params.getBuckConfig().getActionGraphCacheCheckSampleRate(),
                   params.getBuckEventBus().getBuildId()),
-              targetGraph));
+              targetGraph,
+              params.getBuckConfig().getKeySeed()));
       // Look up all of the test rules in the action graph.
       Iterable<TestRule> testRules = Iterables.filter(
           actionGraphAndResolver.getActionGraph().getNodes(),
@@ -492,7 +493,8 @@ public class TestCommand extends BuildCommand {
               params.getObjectMapper(),
               actionGraphAndResolver.getResolver(),
               Preconditions.checkNotNull(
-                  params.getExecutors().get(ExecutionContext.ExecutorPool.NETWORK)));
+                  params.getExecutors().get(ExecutionContext.ExecutorPool.NETWORK)),
+              params.getBuckConfig().getKeySeed());
       try (Build build = createBuild(
           params.getBuckConfig(),
           actionGraphAndResolver.getActionGraph(),

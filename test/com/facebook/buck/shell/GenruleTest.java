@@ -619,7 +619,7 @@ public class GenruleTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
+        new DefaultRuleKeyBuilderFactory(0, new NullFileHashCache(), pathResolver);
 
     // Get a rule key for two genrules using two different output names, but are otherwise the
     // same.
@@ -660,10 +660,12 @@ public class GenruleTest {
     BuildRule rule = ruleBuilder.build(resolver);
     DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
+            0,
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     InputBasedRuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.build(rule);
@@ -682,10 +684,12 @@ public class GenruleTest {
     rule = ruleBuilder.build(resolver);
     defaultRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
+            0,
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.build(rule);
@@ -705,6 +709,7 @@ public class GenruleTest {
     rule = ruleBuilder.build(resolver);
     inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);
@@ -731,10 +736,12 @@ public class GenruleTest {
     BuildRule rule = ruleBuilder.build(resolver);
     DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
+            0,
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     InputBasedRuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.build(rule);
@@ -757,10 +764,12 @@ public class GenruleTest {
     rule = ruleBuilder.build(resolver);
     defaultRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
+            0,
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.build(rule);
@@ -779,6 +788,7 @@ public class GenruleTest {
     rule = ruleBuilder.build(resolver);
     inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);
@@ -805,10 +815,12 @@ public class GenruleTest {
     BuildRule rule = ruleBuilder.build(resolver);
     DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
+            0,
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     InputBasedRuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.build(rule);
@@ -827,10 +839,12 @@ public class GenruleTest {
     rule = ruleBuilder.build(resolver);
     defaultRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
+            0,
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.build(rule);
@@ -849,6 +863,7 @@ public class GenruleTest {
     rule = ruleBuilder.build(resolver);
     inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);

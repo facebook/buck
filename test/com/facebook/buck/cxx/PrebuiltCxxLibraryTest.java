@@ -67,7 +67,7 @@ public class PrebuiltCxxLibraryTest {
 
     DefaultFileHashCache originalHashCache = new DefaultFileHashCache(filesystem);
     DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(originalHashCache, pathResolver);
+        new DefaultRuleKeyBuilderFactory(0, originalHashCache, pathResolver);
 
     RuleKey ruleKey = factory.build(lib);
     assertNotNull(ruleKey);

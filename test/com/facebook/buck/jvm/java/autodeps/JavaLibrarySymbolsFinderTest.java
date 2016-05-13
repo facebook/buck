@@ -177,6 +177,7 @@ public class JavaLibrarySymbolsFinderTest {
     // Calculates the RuleKey for a JavaSymbolsRule with the specified JavaLibrarySymbolsFinder.
     final FileHashCache fileHashCache = new DefaultFileHashCache(projectFilesystem);
     final DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+        0,
         fileHashCache,
         pathResolver);
     Function<JavaLibrarySymbolsFinder, RuleKey> createRuleKey =

@@ -941,6 +941,7 @@ AppleSdkPaths appleSdkPaths =
     String source = "source.cpp";
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
+            0,
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
                     .put("source.cpp", Strings.repeat("a", 40))
@@ -1004,6 +1005,7 @@ AppleSdkPaths appleSdkPaths =
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
+            0,
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
                     .put("input.o", Strings.repeat("a", 40))

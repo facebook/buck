@@ -69,11 +69,13 @@ public class CalculateAbiTest {
 
     DefaultFileHashCache initialHashCache = new DefaultFileHashCache(filesystem);
     DefaultRuleKeyBuilderFactory initialRuleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+        0,
         initialHashCache,
         pathResolver);
     RuleKey initialKey = initialRuleKeyBuilderFactory.build(calculateAbi);
     RuleKey initialInputKey =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             initialHashCache,
             pathResolver)
             .build(calculateAbi);
@@ -90,11 +92,13 @@ public class CalculateAbiTest {
 
     DefaultFileHashCache alteredHashCache = new DefaultFileHashCache(filesystem);
     DefaultRuleKeyBuilderFactory alteredRuleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+        0,
         alteredHashCache,
         pathResolver);
     RuleKey alteredKey = alteredRuleKeyBuilderFactory.build(calculateAbi);
     RuleKey alteredInputKey =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             alteredHashCache,
             pathResolver)
             .build(calculateAbi);
@@ -131,11 +135,13 @@ public class CalculateAbiTest {
 
     DefaultFileHashCache initialHashCache = new DefaultFileHashCache(filesystem);
     DefaultRuleKeyBuilderFactory initialRuleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+        0,
         initialHashCache,
         pathResolver);
     RuleKey initialKey = initialRuleKeyBuilderFactory.build(calculateAbi);
     RuleKey initialInputKey =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             initialHashCache,
             pathResolver)
             .build(calculateAbi);
@@ -151,11 +157,13 @@ public class CalculateAbiTest {
 
     DefaultFileHashCache alteredHashCache = new DefaultFileHashCache(filesystem);
     DefaultRuleKeyBuilderFactory alteredRuleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+        0,
         alteredHashCache,
         pathResolver);
     RuleKey alteredKey = alteredRuleKeyBuilderFactory.build(calculateAbi);
     RuleKey alteredInputKey =
         new InputBasedRuleKeyBuilderFactory(
+            0,
             alteredHashCache,
             pathResolver)
             .build(calculateAbi);

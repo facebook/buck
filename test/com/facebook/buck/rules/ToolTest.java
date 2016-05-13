@@ -41,6 +41,7 @@ public class ToolTest {
     );
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
+            0,
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
                     .put("path", Strings.repeat("a", 40))
@@ -94,6 +95,7 @@ public class ToolTest {
     );
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
+            0,
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>of()),
             pathResolver);
@@ -138,6 +140,7 @@ public class ToolTest {
     );
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
+            0,
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
                     // Note: the hashes of both files are the same

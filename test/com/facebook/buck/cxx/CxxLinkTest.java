@@ -85,7 +85,7 @@ public class CxxLinkTest {
 
     // Generate a rule key for the defaults.
 
-    RuleKey defaultRuleKey = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
+    RuleKey defaultRuleKey = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
         new CxxLink(
             params,
             pathResolver,
@@ -97,7 +97,7 @@ public class CxxLinkTest {
 
     // Verify that changing the archiver causes a rulekey change.
 
-    RuleKey linkerChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
+    RuleKey linkerChange = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
         new CxxLink(
             params,
             pathResolver,
@@ -110,7 +110,7 @@ public class CxxLinkTest {
 
     // Verify that changing the output path causes a rulekey change.
 
-    RuleKey outputChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
+    RuleKey outputChange = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
         new CxxLink(
             params,
             pathResolver,
@@ -123,7 +123,7 @@ public class CxxLinkTest {
 
     // Verify that changing the flags causes a rulekey change.
 
-    RuleKey flagsChange = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
+    RuleKey flagsChange = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
         new CxxLink(
             params,
             pathResolver,
@@ -150,6 +150,7 @@ public class CxxLinkTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
+            0,
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.of(
                     "ld", Strings.repeat("0", 40),

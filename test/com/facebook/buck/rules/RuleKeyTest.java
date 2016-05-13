@@ -36,6 +36,7 @@ import com.facebook.buck.testutil.packaged_resource.PackagedResourceTestUtil;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.NullFileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -76,9 +77,9 @@ public class RuleKeyTest {
     BuildRuleResolver ruleResolver2 =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory1 =
-        new DefaultRuleKeyBuilderFactory(hashCache, new SourcePathResolver(ruleResolver1));
+        new DefaultRuleKeyBuilderFactory(0, hashCache, new SourcePathResolver(ruleResolver1));
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory2 =
-        new DefaultRuleKeyBuilderFactory(hashCache, new SourcePathResolver(ruleResolver2));
+        new DefaultRuleKeyBuilderFactory(0, hashCache, new SourcePathResolver(ruleResolver2));
 
     // Create a dependent build rule, //src/com/facebook/buck/cli:common.
     JavaLibraryBuilder builder = JavaLibraryBuilder
@@ -240,6 +241,29 @@ public class RuleKeyTest {
         .build();
 
     assertEquals(manual, reflective);
+  }
+
+  @Test
+  public void differentSeedsMakeDifferentKeys() {
+    SourcePathResolver resolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
+
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//some:example");
+    BuildRule buildRule = new FakeBuildRule(buildTarget, resolver);
+
+    RuleKey empty1 = new DefaultRuleKeyBuilderFactory(0, new NullFileHashCache(), resolver)
+        .newInstance(buildRule)
+        .build();
+    RuleKey empty2 = new DefaultRuleKeyBuilderFactory(0, new NullFileHashCache(), resolver)
+        .newInstance(buildRule)
+        .build();
+    RuleKey empty3 = new DefaultRuleKeyBuilderFactory(1, new NullFileHashCache(), resolver)
+        .newInstance(buildRule)
+        .build();
+
+    assertThat(empty1, is(equalTo(empty2)));
+    assertThat(empty1, is(not(equalTo(empty3))));
   }
 
   @Test
@@ -654,8 +678,10 @@ public class RuleKeyTest {
         "foo",
         "xyzzy");
 
-    RuleKey ruleKey1 = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(buildRule1);
-    RuleKey ruleKey2 = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(buildRule2);
+    RuleKey ruleKey1 =
+        new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(buildRule1);
+    RuleKey ruleKey2 =
+        new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(buildRule2);
 
     assertNotEquals(ruleKey1, ruleKey2);
   }
@@ -691,9 +717,9 @@ public class RuleKeyTest {
         .build();
     BuildRule parentRule2 = new NoopBuildRule(parentParams2, pathResolver);
 
-    RuleKey ruleKey1 = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
+    RuleKey ruleKey1 = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
         parentRule1);
-    RuleKey ruleKey2 = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver).build(
+    RuleKey ruleKey2 = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
         parentRule2);
 
     assertNotEquals(ruleKey1, ruleKey2);
@@ -721,6 +747,7 @@ public class RuleKeyTest {
     );
     FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.<Path, HashCode>of());
     RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+        0,
         hashCache,
         pathResolver);
 
@@ -742,6 +769,7 @@ public class RuleKeyTest {
     );
     FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.<Path, HashCode>of());
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+        0,
         hashCache,
         sourcePathResolver);
 
@@ -859,6 +887,6 @@ public class RuleKeyTest {
         };
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//some:example");
     BuildRule buildRule = new FakeBuildRule(buildTarget, resolver);
-    return new DefaultRuleKeyBuilderFactory(fileHashCache, resolver).newInstance(buildRule);
+    return new DefaultRuleKeyBuilderFactory(0, fileHashCache, resolver).newInstance(buildRule);
   }
 }

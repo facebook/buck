@@ -88,6 +88,7 @@ public class DefaultRuleKeyLoggerTest {
     assertThat(
         fixture.getLogger().getCurrentLogElements(),
         Matchers.contains(
+            "number(0):", "key(buck.seed):",
             "string(\"//:foo\"):", "key(name):",
             "string(\"test_rule\"):", "key(buck.type):",
             "string(\"N/A\"):", "key(buckVersionUid):"));
@@ -112,6 +113,7 @@ public class DefaultRuleKeyLoggerTest {
     assertThat(
         fixture.getLogger().getCurrentLogElements(),
         Matchers.contains(
+            "number(0):", "key(buck.seed):",
             "string(\"//:foo\"):", "key(name):",
             "string(\"test_rule\"):", "key(buck.type):",
             "string(\"N/A\"):", "key(buckVersionUid):",
@@ -138,6 +140,7 @@ public class DefaultRuleKeyLoggerTest {
     assertThat(
         fixture.getLogger().getCurrentLogElements(),
         Matchers.contains(
+            "number(0):", "key(buck.seed):",
             "string(\"//:foo\"):", "key(name):",
             "string(\"test_rule\"):", "key(buck.type):",
             "string(\"N/A\"):", "key(buckVersionUid):",
@@ -161,6 +164,7 @@ public class DefaultRuleKeyLoggerTest {
     assertThat(
         fixture.getLogger().getCurrentLogElements(),
         Matchers.contains(
+            "number(0):", "key(buck.seed):",
             "string(\"//:foo\"):", "key(name):",
             "string(\"test_rule\"):", "key(buck.type):",
             "string(\"N/A\"):", "key(buckVersionUid):",
@@ -211,7 +215,7 @@ public class DefaultRuleKeyLoggerTest {
         }
       };
       logger = new DefaultRuleKeyLogger();
-      ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(hashCache, pathResolver) {
+      ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver) {
         @Override
         protected RuleKeyBuilder<RuleKey> newBuilder(BuildRule rule) {
           return new UncachedRuleKeyBuilder(pathResolver, hashCache, this, logger);

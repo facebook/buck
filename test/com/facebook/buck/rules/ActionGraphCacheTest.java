@@ -87,13 +87,15 @@ public class ActionGraphCacheTest {
   public void hitOnCache() throws InterruptedException {
     ActionGraphCache cache = new ActionGraphCache(MoreExecutors.newDirectExecutorService());
 
-    ActionGraphAndResolver resultRun1 = cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph);
+    ActionGraphAndResolver resultRun1 =
+        cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph, 0);
     // The 1st time you query the ActionGraph it's a cache miss.
     ImmutableList<Counter> counters = cache.getCounters();
     assertEquals(((IntegerCounter) counters.get(CACHE_HIT_COUNTER_INDEX)).get(), 0);
     assertEquals(((IntegerCounter) counters.get(CACHE_MISS_COUNTER_INDEX)).get(), 1);
 
-    ActionGraphAndResolver resultRun2 = cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph);
+    ActionGraphAndResolver resultRun2 =
+        cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph, 0);
     // The 2nd time it should be a cache hit and the ActionGraphs should be exactly the same.
     counters = cache.getCounters();
     assertEquals(((IntegerCounter) counters.get(CACHE_HIT_COUNTER_INDEX)).get(), 1);
@@ -114,7 +116,8 @@ public class ActionGraphCacheTest {
   public void missOnCache() {
     ActionGraphCache cache = new ActionGraphCache();
 
-    ActionGraphAndResolver resultRun1 = cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph);
+    ActionGraphAndResolver resultRun1 =
+        cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph, 0);
     // Each time you call it for a different TargetGraph so all calls should be misses.
     ImmutableList<Counter> counters = cache.getCounters();
     assertEquals(((IntegerCounter) counters.get(CACHE_HIT_COUNTER_INDEX)).get(), 0);
@@ -123,13 +126,15 @@ public class ActionGraphCacheTest {
     ActionGraphAndResolver resultRun2 = cache.getActionGraph(
         eventBus,
         CHECK_GRAPHS,
-        targetGraph.getSubgraph(ImmutableSet.of(nodeB)));
+        targetGraph.getSubgraph(ImmutableSet.of(nodeB)),
+        0);
 
     counters = cache.getCounters();
     assertEquals(((IntegerCounter) counters.get(CACHE_HIT_COUNTER_INDEX)).get(), 0);
     assertEquals(((IntegerCounter) counters.get(CACHE_MISS_COUNTER_INDEX)).get(), 2);
 
-    ActionGraphAndResolver resultRun3 = cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph);
+    ActionGraphAndResolver resultRun3 =
+        cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph, 0);
     counters = cache.getCounters();
     assertEquals(((IntegerCounter) counters.get(CACHE_HIT_COUNTER_INDEX)).get(), 0);
     assertEquals(((IntegerCounter) counters.get(CACHE_MISS_COUNTER_INDEX)).get(), 3);
@@ -181,31 +186,31 @@ public class ActionGraphCacheTest {
     Path file = tmpFilePath.newFile("foo.txt");
 
     // Fill the cache. An overflow event should invalidate the cache.
-    cache.getActionGraph(eventBus, NOT_CHECK_GRAPHS, targetGraph);
+    cache.getActionGraph(eventBus, NOT_CHECK_GRAPHS, targetGraph, 0);
     assertFalse(cache.isEmpty());
     cache.invalidateBasedOn(WatchEventsForTests.createOverflowEvent());
     assertTrue(cache.isEmpty());
 
     // Fill the cache. Add a file and ActionGraphCache should be invalidated.
-    cache.getActionGraph(eventBus, NOT_CHECK_GRAPHS, targetGraph);
+    cache.getActionGraph(eventBus, NOT_CHECK_GRAPHS, targetGraph, 0);
     assertFalse(cache.isEmpty());
     cache.invalidateBasedOn(
         WatchEventsForTests.createPathEvent(file, StandardWatchEventKinds.ENTRY_CREATE));
     assertTrue(cache.isEmpty());
 
     //Re-fill cache. Remove a file and ActionGraphCache should be invalidated.
-    cache.getActionGraph(eventBus, NOT_CHECK_GRAPHS, targetGraph);
+    cache.getActionGraph(eventBus, NOT_CHECK_GRAPHS, targetGraph, 0);
     assertFalse(cache.isEmpty());
     cache.invalidateBasedOn(
         WatchEventsForTests.createPathEvent(file, StandardWatchEventKinds.ENTRY_DELETE));
     assertTrue(cache.isEmpty());
 
     // Re-fill cache. Modify contents of a file, ActionGraphCache should NOT be invalidated.
-    cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph);
+    cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph, 0);
     assertFalse(cache.isEmpty());
     cache.invalidateBasedOn(
         WatchEventsForTests.createPathEvent(file, StandardWatchEventKinds.ENTRY_MODIFY));
-    cache.getActionGraph(eventBus, NOT_CHECK_GRAPHS, targetGraph);
+    cache.getActionGraph(eventBus, NOT_CHECK_GRAPHS, targetGraph, 0);
     assertFalse(cache.isEmpty());
 
     // We should have 4 cache misses and 1 hit from when you request the same graph after a file
@@ -229,7 +234,7 @@ public class ActionGraphCacheTest {
       BuildRuleResolver buildRuleResolver) {
     SourcePathResolver pathResolver = new SourcePathResolver(buildRuleResolver);
     ContentAgnosticRuleKeyBuilderFactory factory =
-        new ContentAgnosticRuleKeyBuilderFactory(pathResolver);
+        new ContentAgnosticRuleKeyBuilderFactory(0, pathResolver);
 
     HashMap<BuildRule, RuleKey> ruleKeysMap = new HashMap<>();
 

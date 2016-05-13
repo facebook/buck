@@ -45,7 +45,7 @@ public class CxxHeadersDirTest {
     );
     FileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+        new DefaultRuleKeyBuilderFactory(0, fileHashCache, pathResolver);
     UncachedRuleKeyBuilder builder =
         new UncachedRuleKeyBuilder(pathResolver, fileHashCache, factory);
     cxxHeaders.appendToRuleKey(builder);

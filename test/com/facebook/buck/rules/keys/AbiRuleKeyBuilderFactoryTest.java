@@ -57,15 +57,17 @@ public class AbiRuleKeyBuilderFactoryTest {
     FakeFileHashCache hashCache = new FakeFileHashCache(
         ImmutableMap.of(depOutput, HashCode.fromInt(0)));
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(hashCache, pathResolver);
+        new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver);
 
     BuildRule rule = new FakeAbiRuleBuildRule("//:rule", pathResolver, dep);
 
     RuleKey inputKey1 =
-        new AbiRuleKeyBuilderFactory(hashCache, pathResolver, ruleKeyBuilderFactory).build(rule);
+        new AbiRuleKeyBuilderFactory(0, hashCache, pathResolver, ruleKeyBuilderFactory)
+            .build(rule);
 
     RuleKey inputKey2 =
-        new AbiRuleKeyBuilderFactory(hashCache, pathResolver, ruleKeyBuilderFactory).build(rule);
+        new AbiRuleKeyBuilderFactory(0, hashCache, pathResolver, ruleKeyBuilderFactory)
+            .build(rule);
 
     assertThat(
         inputKey1,
@@ -80,17 +82,19 @@ public class AbiRuleKeyBuilderFactoryTest {
     FakeFileHashCache hashCache = new FakeFileHashCache(
         ImmutableMap.<Path, HashCode>of());
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(hashCache, pathResolver);
+        new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver);
 
     FakeAbiRuleBuildRule rule = new FakeAbiRuleBuildRule("//:rule", pathResolver);
 
     rule.setAbiKey(Sha1HashCode.of(Strings.repeat("a", 40)));
     RuleKey inputKey1 =
-        new AbiRuleKeyBuilderFactory(hashCache, pathResolver, ruleKeyBuilderFactory).build(rule);
+        new AbiRuleKeyBuilderFactory(0, hashCache, pathResolver, ruleKeyBuilderFactory)
+            .build(rule);
 
     rule.setAbiKey(Sha1HashCode.of(Strings.repeat("b", 40)));
     RuleKey inputKey2 =
-        new AbiRuleKeyBuilderFactory(hashCache, pathResolver, ruleKeyBuilderFactory).build(rule);
+        new AbiRuleKeyBuilderFactory(0, hashCache, pathResolver, ruleKeyBuilderFactory)
+            .build(rule);
 
     assertThat(
         inputKey1,

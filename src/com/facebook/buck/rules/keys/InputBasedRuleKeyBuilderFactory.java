@@ -52,9 +52,11 @@ public class InputBasedRuleKeyBuilderFactory
   private final LoadingCache<RuleKeyAppendable, Result> cache;
 
   protected InputBasedRuleKeyBuilderFactory(
+      int seed,
       FileHashCache hashCache,
       SourcePathResolver pathResolver,
       InputHandling inputHandling) {
+    super(seed);
     this.fileHashCache = hashCache;
     this.pathResolver = pathResolver;
     this.inputHandling = inputHandling;
@@ -73,9 +75,10 @@ public class InputBasedRuleKeyBuilderFactory
   }
 
   public InputBasedRuleKeyBuilderFactory(
+      int seed,
       FileHashCache hashCache,
       SourcePathResolver pathResolver) {
-    this(hashCache, pathResolver, InputHandling.HASH);
+    this(seed, hashCache, pathResolver, InputHandling.HASH);
   }
 
   @Override

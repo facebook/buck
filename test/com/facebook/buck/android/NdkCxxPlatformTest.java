@@ -85,6 +85,7 @@ public class NdkCxxPlatformTest {
     String source = "source.cpp";
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
+            0,
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
                     .put("source.cpp", Strings.repeat("a", 40))
@@ -149,6 +150,7 @@ public class NdkCxxPlatformTest {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
+            0,
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
                     .put("input.o", Strings.repeat("a", 40))

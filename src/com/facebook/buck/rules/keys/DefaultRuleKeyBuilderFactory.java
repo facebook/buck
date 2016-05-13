@@ -41,8 +41,12 @@ public class DefaultRuleKeyBuilderFactory
   private final FileHashCache hashCache;
   private final SourcePathResolver pathResolver;
 
-  public DefaultRuleKeyBuilderFactory(FileHashCache hashCache, SourcePathResolver pathResolver) {
-    ruleKeyCache = CacheBuilder.newBuilder().weakKeys().build(
+  public DefaultRuleKeyBuilderFactory(
+      int seed,
+      FileHashCache hashCache,
+      SourcePathResolver pathResolver) {
+    super(seed);
+    this.ruleKeyCache = CacheBuilder.newBuilder().weakKeys().build(
         new CacheLoader<RuleKeyAppendable, RuleKey>() {
           @Override
           public RuleKey load(@Nonnull RuleKeyAppendable appendable) throws Exception {

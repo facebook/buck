@@ -214,7 +214,7 @@ public class ExportFileTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
      );
     DefaultRuleKeyBuilderFactory ruleKeyFactory =
-        new DefaultRuleKeyBuilderFactory(hashCache, resolver);
+        new DefaultRuleKeyBuilderFactory(0, hashCache, resolver);
 
     filesystem.writeContentsToPath("I like cheese", temp);
 
@@ -240,7 +240,7 @@ public class ExportFileTest {
     resolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
-    ruleKeyFactory = new DefaultRuleKeyBuilderFactory(hashCache, resolver);
+    ruleKeyFactory = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver);
     RuleKey refreshed = ruleKeyFactory.build(rule);
 
     assertNotEquals(original, refreshed);

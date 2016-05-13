@@ -35,13 +35,15 @@ public abstract class ReflectiveRuleKeyBuilderFactory<T extends RuleKeyBuilder<U
 
   private static final Logger LOG = Logger.get(ReflectiveRuleKeyBuilderFactory.class);
 
+  private final int seed;
   private final LoadingCache<Class<? extends BuildRule>, ImmutableCollection<AlterRuleKey>>
       knownFields;
   private final LoadingCache<BuildRule, U> knownRules;
 
-  public ReflectiveRuleKeyBuilderFactory() {
-    knownFields = CacheBuilder.newBuilder().build(new ReflectiveAlterKeyLoader());
-    knownRules = CacheBuilder.newBuilder().weakKeys().build(
+  public ReflectiveRuleKeyBuilderFactory(int seed) {
+    this.seed = seed;
+    this.knownFields = CacheBuilder.newBuilder().build(new ReflectiveAlterKeyLoader());
+    this.knownRules = CacheBuilder.newBuilder().weakKeys().build(
         new CacheLoader<BuildRule, U>() {
           @Override
           public U load(BuildRule key) throws Exception {
@@ -58,6 +60,7 @@ public abstract class ReflectiveRuleKeyBuilderFactory<T extends RuleKeyBuilder<U
   @Override
   public T newInstance(BuildRule buildRule) {
     T builder = newBuilder(buildRule);
+    builder.setReflectively("buck.seed", seed);
     builder.setReflectively("name", buildRule.getBuildTarget().getFullyQualifiedName());
     // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
     builder.setReflectively("buck.type", buildRule.getType());

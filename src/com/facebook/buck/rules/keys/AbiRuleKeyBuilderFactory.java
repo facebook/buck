@@ -27,10 +27,11 @@ public class AbiRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactory {
   private final DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory;
 
   public AbiRuleKeyBuilderFactory(
+      int seed,
       FileHashCache hashCache,
       SourcePathResolver pathResolver,
       DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
-    super(hashCache, pathResolver);
+    super(seed, hashCache, pathResolver);
     this.defaultRuleKeyBuilderFactory = defaultRuleKeyBuilderFactory;
   }
 

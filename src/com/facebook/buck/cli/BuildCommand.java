@@ -405,7 +405,8 @@ public class BuildCommand extends AbstractCommand {
               BuildIdSampler.apply(
                   params.getBuckConfig().getActionGraphCacheCheckSampleRate(),
                   params.getBuckEventBus().getBuildId()),
-              result.getTargetGraph()));
+              result.getTargetGraph(),
+              params.getBuckConfig().getKeySeed()));
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
@@ -460,7 +461,8 @@ public class BuildCommand extends AbstractCommand {
             params.getObjectMapper(),
             actionGraphAndResolver.getResolver(),
             Preconditions.checkNotNull(
-                params.getExecutors().get(ExecutionContext.ExecutorPool.NETWORK))),
+                params.getExecutors().get(ExecutionContext.ExecutorPool.NETWORK)),
+            params.getBuckConfig().getKeySeed()),
         artifactCache,
         params.getConsole(),
         params.getBuckEventBus(),
