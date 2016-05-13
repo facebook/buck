@@ -92,6 +92,20 @@ public class PrebuiltJarIntegrationTest {
   }
 
   @Test
+  public void testPrebuiltJarGenruleDirectory() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "prebuilt",
+        temp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:jar_from_gen_dir").assertSuccess();
+    assertTrue(Files.exists(workspace.getPath("buck-out/gen/jar_from_gen_dir.jar")));
+    assertTrue(Files.isDirectory(workspace.getPath("buck-out/gen/jar_from_gen_dir.jar")));
+
+    workspace.runBuckCommand("run", "//:bin_from_gen_dir").assertSuccess();
+  }
+
+  @Test
   public void testPrebuiltJarRebuildsWhenItsInputsChange() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,

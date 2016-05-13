@@ -70,12 +70,14 @@ public abstract class ClasspathTraversal {
 
   private ClasspathTraverser createTraversalAdapter(Path path) {
     String extension = MorePaths.getFileExtension(path);
-    if (extension.equalsIgnoreCase("jar") || extension.equalsIgnoreCase("zip")) {
-      return new ZipFileTraversalAdapter(path);
-    } else if (Files.isDirectory(path)) {
+    if (Files.isDirectory(path)) {
       return new DirectoryTraversalAdapter(path);
     } else if (Files.isRegularFile(path)) {
-      return new FileTraversalAdapter(path);
+      if (extension.equalsIgnoreCase("jar") || extension.equalsIgnoreCase("zip")) {
+        return new ZipFileTraversalAdapter(path);
+      } else {
+        return new FileTraversalAdapter(path);
+      }
     } else {
       throw new IllegalArgumentException("Unsupported classpath traversal input: " + path);
     }
