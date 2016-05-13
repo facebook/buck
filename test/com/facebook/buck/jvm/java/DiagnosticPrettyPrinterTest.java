@@ -42,7 +42,7 @@ public class DiagnosticPrettyPrinterTest {
 
     // Paths should be absolute.
     assertEquals(
-        Paths.get("Example.java").toAbsolutePath() + ":-1: error: Something has gone wrong.\n",
+        Paths.get("Example.java").toUri().getPath() + ":-1: error: Something has gone wrong.\n",
         formatted);
   }
 

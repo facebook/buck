@@ -156,7 +156,7 @@ public class JvmLibraryArgInterpreterTest {
 
   @Test
   public void compilerArgWithPathReturnsExternalJavac() {
-    Path externalJavac = Paths.get("/foo/bar/javac.exe");
+    Path externalJavac = Paths.get("/foo/bar/javac.exe").toAbsolutePath();
     Either<BuiltInJavac, SourcePath> either =
         Either.ofRight((SourcePath) new FakeSourcePath(externalJavac.toString()));
 
@@ -172,7 +172,7 @@ public class JvmLibraryArgInterpreterTest {
 
   @Test
   public void compilerArgTakesPrecedenceOverJavacPathArg() {
-    Path externalJavac = Paths.get("/foo/bar/javac.exe");
+    Path externalJavac = Paths.get("/foo/bar/javac.exe").toAbsolutePath();
     SourcePath sourcePath = new FakeSourcePath(externalJavac.toString());
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
