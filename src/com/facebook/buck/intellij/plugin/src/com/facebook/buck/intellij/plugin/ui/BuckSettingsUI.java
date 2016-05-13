@@ -45,6 +45,7 @@ public class BuckSettingsUI extends JPanel {
   private TextFieldWithBrowseButton buckPathField;
   private JBTextField customizedInstallSettingField;
   private JCheckBox showDebug;
+  private JCheckBox enableAutoDeps;
   private JCheckBox runAfterInstall;
   private JCheckBox multiInstallMode;
   private JCheckBox uninstallBeforeInstall;
@@ -76,6 +77,7 @@ public class BuckSettingsUI extends JPanel {
     customizedInstallSettingField.setEnabled(false);
 
     showDebug = new JCheckBox("Show debug in tool window");
+    enableAutoDeps = new JCheckBox("Enable auto dependencies");
     runAfterInstall = new JCheckBox("Run after install (-r)");
     multiInstallMode = new JCheckBox("Multi-install mode (-x)");
     uninstallBeforeInstall = new JCheckBox("Uninstall before installing (-u)");
@@ -97,6 +99,9 @@ public class BuckSettingsUI extends JPanel {
     constraints.gridx = 0;
     constraints.gridy = 1;
     buckSettings.add(showDebug, constraints);
+    constraints.gridx = 0;
+    constraints.gridy = 2;
+    buckSettings.add(enableAutoDeps, constraints);
 
     JPanel installSettings = new JPanel(new BorderLayout());
     installSettings.setBorder(IdeBorderFactory.createTitledBorder("Buck Install Settings", true));
@@ -128,6 +133,7 @@ public class BuckSettingsUI extends JPanel {
         optionsProvider.getState().buckExecutable) ||
         optionsProvider.getState().runAfterInstall != runAfterInstall.isSelected() ||
         optionsProvider.getState().showDebug != showDebug.isSelected() ||
+        optionsProvider.getState().enableAutoDeps != enableAutoDeps.isSelected() ||
         optionsProvider.getState().multiInstallMode != multiInstallMode.isSelected() ||
         optionsProvider.getState().uninstallBeforeInstalling !=
             uninstallBeforeInstall.isSelected() ||
@@ -140,6 +146,7 @@ public class BuckSettingsUI extends JPanel {
   public void apply() {
     optionsProvider.getState().buckExecutable = buckPathField.getText();
     optionsProvider.getState().showDebug = showDebug.isSelected();
+    optionsProvider.getState().enableAutoDeps = enableAutoDeps.isSelected();
     optionsProvider.getState().runAfterInstall = runAfterInstall.isSelected();
     optionsProvider.getState().multiInstallMode = multiInstallMode.isSelected();
     optionsProvider.getState().uninstallBeforeInstalling = uninstallBeforeInstall.isSelected();
@@ -151,6 +158,7 @@ public class BuckSettingsUI extends JPanel {
   public void reset() {
     buckPathField.setText(optionsProvider.getState().buckExecutable);
     showDebug.setSelected(optionsProvider.getState().showDebug);
+    enableAutoDeps.setSelected(optionsProvider.getState().enableAutoDeps);
     runAfterInstall.setSelected(optionsProvider.getState().runAfterInstall);
     multiInstallMode.setSelected(optionsProvider.getState().multiInstallMode);
     uninstallBeforeInstall.setSelected(optionsProvider.getState().uninstallBeforeInstalling);

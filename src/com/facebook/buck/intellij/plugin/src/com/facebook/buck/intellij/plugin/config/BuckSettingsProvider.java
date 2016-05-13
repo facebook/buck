@@ -116,6 +116,12 @@ public class BuckSettingsProvider implements PersistentStateComponent<BuckSettin
     public boolean showDebug = false;
 
     /**
+     * Enable the buck auto deps for the plugin.
+     *
+     */
+    public boolean enableAutoDeps = false;
+
+    /**
      * "-r" parameter for "buck install"
      */
     public Boolean runAfterInstall = true;

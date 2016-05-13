@@ -17,7 +17,9 @@
 package com.facebook.buck.intellij.plugin.autodeps;
 
 import com.facebook.buck.intellij.plugin.actions.BuckAuditOwner;
+import com.facebook.buck.intellij.plugin.config.BuckSettingsProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.common.util.concurrent.FutureCallback;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
@@ -57,17 +59,19 @@ public class BuckAutoDepsContributor implements PsiDocumentManager.Listener {
         importClassLine.length() - 1);
   }
 
-  public VirtualFile getVirtualFileFromImportLine(String importClassLine) {
+  public Optional<VirtualFile> getVirtualFileFromImportLine(String importClassLine) {
     GlobalSearchScope scope = GlobalSearchScope.allScope(mProject);
 
     PsiClass psiClass = JavaPsiFacade.getInstance(mProject).
         findClass(getImportedClassFromImportLine(importClassLine), scope);
-    return psiClass.getContainingFile().getVirtualFile();
+
+    return psiClass == null ?
+        Optional.<VirtualFile>absent() :
+        Optional.fromNullable(psiClass.getContainingFile().getVirtualFile());
   }
 
   @Override
-  public void documentCreated(
-      @NotNull final Document document, final PsiFile psiFile) {
+  public void documentCreated(@NotNull final Document document, final PsiFile psiFile) {
     document.addDocumentListener(
         new DocumentListener() {
           @Override
@@ -76,11 +80,13 @@ public class BuckAutoDepsContributor implements PsiDocumentManager.Listener {
 
           @Override
           public void documentChanged(DocumentEvent documentEvent) {
-            String newLine = documentEvent.getNewFragment().toString();
-            if (importPattern.matcher(newLine).matches()) {
-              addDependency(
-                  getVirtualFileFromImportLine(newLine),
-                  FileDocumentManager.getInstance().getFile(document));
+            if (BuckSettingsProvider.getInstance().getState().enableAutoDeps) {
+              String newLine = documentEvent.getNewFragment().toString();
+              if (importPattern.matcher(newLine).matches()) {
+                addDependency(
+                    getVirtualFileFromImportLine(newLine),
+                    Optional.fromNullable(FileDocumentManager.getInstance().getFile(document)));
+              }
             }
           }
         });
@@ -93,16 +99,18 @@ public class BuckAutoDepsContributor implements PsiDocumentManager.Listener {
   }
 
   public void addDependency(
-      final VirtualFile importClass,
-      final VirtualFile currentClass) {
+      final Optional<VirtualFile> importClass,
+      final Optional<VirtualFile> currentClass) {
+    if (!importClass.isPresent() || !currentClass.isPresent()) {
+      return;
+    }
     BuckAuditOwner.execute(
         mProject,
         new FutureCallback<String>() {
           @Override
-
           public void onSuccess(@Nullable String buckTargetResult) {
             try {
-              String currentClassPath = currentClass.getPath();
+              String currentClassPath = currentClass.get().getPath();
               Map<String, List<String>> pathAndTargetData =
                   mObjectMapper.readValue(buckTargetResult, Map.class);
               String importTargetName = "";
@@ -130,15 +138,16 @@ public class BuckAutoDepsContributor implements PsiDocumentManager.Listener {
                   importTargetName,
                   currentTargetName
               );
-
             } catch (IOException e) {
               LOG.error(e.toString());
             }
           }
+
           @Override
-          public void onFailure(Throwable throwable) {}
+          public void onFailure(Throwable throwable) {
+          }
         },
-        importClass.getPath(),
-        currentClass.getPath());
+        importClass.get().getPath(),
+        currentClass.get().getPath());
   }
 }
