@@ -21,10 +21,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ObjectMappers;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 
@@ -41,7 +44,10 @@ import java.nio.file.Path;
  */
 public class BuildKeepGoingIntegrationTest {
 
-  private static final String GENRULE_OUTPUT = "buck-out/gen/rule_with_output/rule_with_output.txt";
+  private static final String GENRULE_OUTPUT =
+      "buck-out/gen/rule_with_output/rule_with_output.txt";
+  private static final String GENRULE_OUTPUT_PATH =
+      MorePaths.pathWithPlatformSeparators("buck-out/gen/rule_with_output/rule_with_output.txt");
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
@@ -55,7 +61,7 @@ public class BuildKeepGoingIntegrationTest {
 
     ProcessResult result = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport =
-        "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT + "\n" +
+        "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT_PATH + "\n" +
         "OK   //:rule_without_output BUILT_LOCALLY\n";
     assertThat(result.getStderr(), containsString(expectedReport));
   }
@@ -71,7 +77,7 @@ public class BuildKeepGoingIntegrationTest {
         "//:failing_rule")
         .assertFailure();
     String expectedReport =
-        "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT + "\n" +
+        "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT_PATH + "\n" +
         "FAIL //:failing_rule\n";
     assertThat(result.getStderr(), containsString(expectedReport));
     Path outputFile = workspace.getPath(GENRULE_OUTPUT);
@@ -86,13 +92,13 @@ public class BuildKeepGoingIntegrationTest {
 
     ProcessResult result1 = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport1 =
-        "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT + "\n" +
+        "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT_PATH + "\n" +
         "OK   //:rule_without_output BUILT_LOCALLY\n";
     assertThat(result1.getStderr(), containsString(expectedReport1));
 
     ProcessResult result2 = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport2 =
-        "OK   //:rule_with_output MATCHING_RULE_KEY " + GENRULE_OUTPUT + "\n" +
+        "OK   //:rule_with_output MATCHING_RULE_KEY " + GENRULE_OUTPUT_PATH + "\n" +
         "OK   //:rule_without_output MATCHING_RULE_KEY\n";
     assertThat(result2.getStderr(), containsString(expectedReport2));
 
@@ -100,7 +106,7 @@ public class BuildKeepGoingIntegrationTest {
 
     ProcessResult result3 = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport3 =
-        "OK   //:rule_with_output FETCHED_FROM_CACHE " + GENRULE_OUTPUT + "\n" +
+        "OK   //:rule_with_output FETCHED_FROM_CACHE " + GENRULE_OUTPUT_PATH + "\n" +
         "OK   //:rule_without_output BUILT_LOCALLY\n";
     assertThat(result3.getStderr(), containsString(expectedReport3));
   }
@@ -121,14 +127,15 @@ public class BuildKeepGoingIntegrationTest {
 
     assertTrue(buildReport.exists());
     String buildReportContents = com.google.common.io.Files.toString(buildReport, Charsets.UTF_8);
-    String expectedReport = Joiner.on('\n').join(
+    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
+    String expectedReport = Joiner.on(System.lineSeparator()).join(
         "{",
         "  \"success\" : false,",
         "  \"results\" : {",
         "    \"//:rule_with_output\" : {",
         "      \"success\" : true,",
         "      \"type\" : \"BUILT_LOCALLY\",",
-        "      \"output\" : \"" + GENRULE_OUTPUT + "\"",
+        "      \"output\" : " + mapper.valueToTree(GENRULE_OUTPUT_PATH),
         "    },",
         "    \"//:failing_rule\" : {",
         "      \"success\" : false",

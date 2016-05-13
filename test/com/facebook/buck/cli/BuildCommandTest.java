@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.command.BuildExecutionResult;
 import com.facebook.buck.command.BuildReport;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
@@ -35,7 +36,9 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Verbosity;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -103,7 +106,9 @@ public class BuildCommandTest {
   public void testGenerateBuildReportForConsole() {
     String expectedReport =
         "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule1 " +
-            "BUILT_LOCALLY buck-out/gen/fake/rule1.txt\n" +
+            "BUILT_LOCALLY " +
+            MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt") +
+            "\n" +
         "\u001B[1m\u001B[41m\u001B[37mFAIL\u001B[0m //fake:rule2\n" +
         "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule3 FETCHED_FROM_CACHE\n" +
         "\u001B[1m\u001B[41m\u001B[37mFAIL\u001B[0m //fake:rule4\n";
@@ -119,7 +124,8 @@ public class BuildCommandTest {
   @Test
   public void testGenerateVerboseBuildReportForConsole() {
     String expectedReport =
-        "OK   //fake:rule1 BUILT_LOCALLY buck-out/gen/fake/rule1.txt\n" +
+        "OK   //fake:rule1 BUILT_LOCALLY " +
+        MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt") + "\n" +
         "FAIL //fake:rule2\n" +
         "OK   //fake:rule3 FETCHED_FROM_CACHE\n" +
         "FAIL //fake:rule4\n\n" +
@@ -132,14 +138,18 @@ public class BuildCommandTest {
 
   @Test
   public void testGenerateJsonBuildReport() throws IOException {
-    String expectedReport = Joiner.on('\n').join(
+    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
+    String rule1TxtPath = mapper.valueToTree(
+        MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt")
+    ).toString();
+    String expectedReport = Joiner.on(System.lineSeparator()).join(
         "{",
         "  \"success\" : false,",
         "  \"results\" : {",
         "    \"//fake:rule1\" : {",
         "      \"success\" : true,",
         "      \"type\" : \"BUILT_LOCALLY\",",
-        "      \"output\" : \"buck-out/gen/fake/rule1.txt\"",
+        "      \"output\" : " + rule1TxtPath,
         "    },",
         "    \"//fake:rule2\" : {",
         "      \"success\" : false",

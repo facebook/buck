@@ -25,9 +25,6 @@
 !com.facebook.buck.artifact_cache.ArtifactCacheBuckConfigTest#testServedCacheInheritsDirAndSizeFromDirCache
 !com.facebook.buck.artifact_cache.ArtifactCacheBuckConfigTest#testServedCacheMode
 !com.facebook.buck.autodeps.DepsForBuildFilesTest
-!com.facebook.buck.cli.AuditInputCommandIntegrationTest
-!com.facebook.buck.cli.BuildCommandTest
-!com.facebook.buck.cli.BuildKeepGoingIntegrationTest
 !com.facebook.buck.cli.ExternalTestRunnerIntegrationTest
 !com.facebook.buck.cli.PublishCommandIntegrationTest#testBasicCase
 !com.facebook.buck.cli.PublishCommandIntegrationTest#testDependenciesTriggerPomGeneration

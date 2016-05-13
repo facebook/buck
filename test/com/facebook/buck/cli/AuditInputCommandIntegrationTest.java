@@ -22,6 +22,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -29,6 +30,11 @@ import org.junit.Test;
 import java.io.IOException;
 
 public class AuditInputCommandIntegrationTest {
+
+  private String expectedStdout =
+      Platform.detect() == Platform.WINDOWS ? "stdout-windows" : "stdout";
+  private String expectedStdoutJson =
+      Platform.detect() == Platform.WINDOWS ? "stdout-windows.json" : "stdout.json";
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
@@ -42,7 +48,7 @@ public class AuditInputCommandIntegrationTest {
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("audit", "input", "//example:foo");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout"), result.getStdout());
+    assertEquals(workspace.getFileContents(expectedStdout), result.getStdout());
   }
 
   @Test
@@ -54,7 +60,7 @@ public class AuditInputCommandIntegrationTest {
     // Print all of the inputs to the rule in JSON format.
     ProcessResult result = workspace.runBuckCommand("audit", "input", "//example:foo", "--json");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout.json"), result.getStdout());
+    assertEquals(workspace.getFileContents(expectedStdoutJson), result.getStdout());
   }
 
   @Test
@@ -66,6 +72,6 @@ public class AuditInputCommandIntegrationTest {
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("audit", "input", "//example:foo.plist");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout"), result.getStdout());
+    assertEquals(workspace.getFileContents(expectedStdout), result.getStdout());
   }
 }

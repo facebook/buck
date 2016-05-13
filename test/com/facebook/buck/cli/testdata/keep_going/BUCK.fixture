@@ -2,6 +2,7 @@ genrule(
   name = 'rule_with_output',
   out = 'rule_with_output.txt',
   bash = 'touch $OUT',
+  cmd_exe = 'echo tmp >> %OUT%',
   srcs = [
     ':common_dependency',
   ],
@@ -19,6 +20,7 @@ genrule(
   name = 'failing_rule',
   out = 'failing_rule.txt',
   bash = 'touch $OUT && exit 2',
+  cmd_exe = 'echo tmp >> %OUT% && exit /B 2',
   srcs = [
     ':common_dependency',
   ],
@@ -29,5 +31,5 @@ genrule(
   srcs = ['main.py'],
   out = 'common_dependency.txt',
   bash = 'cp $SRCS $OUT',
+  cmd_exe = 'copy %SRCS% %OUT%'
 )
-
