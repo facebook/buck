@@ -446,13 +446,13 @@ public class CachingBuildEngineTest {
       buckEventBus.post(
           CommandEvent.finished(
               CommandEvent.started("build", ImmutableList.<String>of(), false), 0));
-      verifyAll();
 
+      BuildResult result = buildResult.get();
+      verifyAll();
       assertTrue(
           "We expect build() to be synchronous in this case, " +
               "so the future should already be resolved.",
           MoreFutures.isSuccess(buildResult));
-      BuildResult result = buildResult.get();
       assertEquals(BuildRuleSuccessType.FETCHED_FROM_CACHE, result.getSuccess());
       assertTrue(
           ((BuildableAbstractCachingBuildRule) buildRule).isInitializedFromDisk());
@@ -532,9 +532,9 @@ public class CachingBuildEngineTest {
       buckEventBus.post(
           CommandEvent.finished(
               CommandEvent.started("build", ImmutableList.<String>of(), false), 0));
-      verifyAll();
 
       BuildResult result = buildResult.get();
+      verifyAll();
       assertEquals(BuildRuleSuccessType.FETCHED_FROM_CACHE, result.getSuccess());
       assertTrue(
           ((BuildableAbstractCachingBuildRule) buildRule).isInitializedFromDisk());

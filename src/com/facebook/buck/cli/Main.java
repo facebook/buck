@@ -197,7 +197,7 @@ public final class Main {
   /**
    * Number of maximum threads for network operations.
    */
-  private static final int MAX_NETWORK_THREADS = 20;
+  private static final int MAX_NETWORK_THREADS = 23;
 
   /**
    * Path to a directory of static content that should be served by the {@link WebServer}.
@@ -1192,15 +1192,18 @@ public final class Main {
   }
 
   private static ListeningExecutorService getNetworkExecutorService() {
-    return listeningDecorator(new ThreadPoolExecutor(
+    ThreadPoolExecutor networkExecutor = new ThreadPoolExecutor(
         /* corePoolSize */ MAX_NETWORK_THREADS,
         /* maximumPoolSize */ MAX_NETWORK_THREADS,
-        /* keepAliveTime */ 15L, TimeUnit.SECONDS,
+        /* keepAliveTime */ 500L, TimeUnit.MILLISECONDS,
         /* workQueue */ new LinkedBlockingQueue<Runnable>(MAX_NETWORK_THREADS),
         /* threadFactory */ new ThreadFactoryBuilder()
         .setNameFormat("Network I/O" + "-%d")
         .build(),
-        /* handler */ new ThreadPoolExecutor.CallerRunsPolicy()));
+        /* handler */ new ThreadPoolExecutor.CallerRunsPolicy());
+    networkExecutor.allowCoreThreadTimeOut(true);
+
+    return listeningDecorator(networkExecutor);
   }
 
   @VisibleForTesting
