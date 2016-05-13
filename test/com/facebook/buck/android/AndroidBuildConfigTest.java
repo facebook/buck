@@ -102,7 +102,7 @@ public class AndroidBuildConfigTest {
     ExecutionContext context = TestExecutionContext
         .newBuilder()
         .build();
-    int exitCode = step.execute(context);
+    int exitCode = step.execute(context).getExitCode();
     assertEquals(0, exitCode);
     assertEquals(
         BuildConfigFields.fromFields(ImmutableList.of(

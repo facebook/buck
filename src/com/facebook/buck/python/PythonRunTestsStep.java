@@ -19,6 +19,7 @@ package com.facebook.buck.python;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.test.selectors.TestDescription;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.HumanReadableException;
@@ -80,16 +81,19 @@ public class PythonRunTestsStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws IOException, InterruptedException {
-    int exitCode = doExecute(context);
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
+    StepExecutionResult result = doExecute(context);
     if (timedOut) {
       throw new HumanReadableException(
-          "Following test case timed out: " + testName + ", with exitCode: " + exitCode);
+          "Following test case timed out: " + testName + ", with exitCode: " +
+          result.getExitCode());
     }
-    return exitCode;
+    return result;
   }
 
-  private int doExecute(ExecutionContext context) throws IOException, InterruptedException {
+  private StepExecutionResult doExecute(ExecutionContext context)
+      throws IOException, InterruptedException {
     if (testSelectorList.isEmpty()) {
       return getShellStepWithArgs("-o", resultsOutputPath.toString()).execute(context);
     }
@@ -111,9 +115,9 @@ public class PythonRunTestsStep implements Step {
         Optional.of(timeoutHandler));
 
     if (timedOut) {
-      return 1;
+      return StepExecutionResult.ERROR;
     } else if (result.getExitCode() != 0) {
-      return result.getExitCode();
+      return StepExecutionResult.of(result.getExitCode());
     }
 
     Preconditions.checkState(result.getStdout().isPresent());

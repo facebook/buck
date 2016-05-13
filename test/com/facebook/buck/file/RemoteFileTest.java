@@ -144,7 +144,7 @@ public class RemoteFileTest {
         new FakeBuildableContext());
     ExecutionContext context = TestExecutionContext.newInstance();
     for (Step buildStep : buildSteps) {
-      int result = buildStep.execute(context);
+      int result = buildStep.execute(context).getExitCode();
       if (result != 0) {
         break;
       }

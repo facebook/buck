@@ -39,6 +39,7 @@ import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -666,7 +667,7 @@ public class JavaTest
         .add(
             new AbstractExecutionStep("write classpath file") {
               @Override
-              public int execute(ExecutionContext context) throws IOException {
+              public StepExecutionResult execute(ExecutionContext context) throws IOException {
                 ImmutableSet<Path> classpathEntries = ImmutableSet.<Path>builder()
                     .addAll(getTransitiveClasspathEntries().values())
                     .addAll(additionalClasspathEntries)
@@ -675,7 +676,7 @@ public class JavaTest
                 getProjectFilesystem().writeLinesToPath(
                     Iterables.transform(classpathEntries, Functions.toStringFunction()),
                     getClassPathFile());
-                return 0;
+                return StepExecutionResult.SUCCESS;
               }
             })
         .build();

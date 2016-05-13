@@ -108,7 +108,7 @@ public class CxxCompileStepIntegrationTest {
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     TestConsole console = (TestConsole) executionContext.getConsole();
-    int exitCode = step.execute(executionContext);
+    int exitCode = step.execute(executionContext).getExitCode();
     if (failure.isPresent()) {
       assertNotEquals("compile step succeeded", 0, exitCode);
       assertThat(

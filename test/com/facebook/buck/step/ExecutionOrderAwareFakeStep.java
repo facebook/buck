@@ -47,7 +47,7 @@ public class ExecutionOrderAwareFakeStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) {
     Preconditions.checkState(!executionBeginOrder.isPresent());
     Preconditions.checkState(!executionEndOrder.isPresent());
     executionBeginOrder = Optional.of(atomicExecutionOrder.getAndIncrement());
@@ -59,7 +59,7 @@ public class ExecutionOrderAwareFakeStep implements Step {
 
     executionEndOrder = Optional.of(atomicExecutionOrder.getAndIncrement());
 
-    return exitCode;
+    return StepExecutionResult.of(exitCode);
   }
 
   @Override

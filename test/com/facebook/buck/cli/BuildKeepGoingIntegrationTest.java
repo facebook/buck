@@ -142,7 +142,8 @@ public class BuildKeepGoingIntegrationTest {
         "    }",
         "  },",
         "  \"failures\" : {",
-        "    \"//:failing_rule\" : \"//:failing_rule failed with exit code 2:\\ngenrule\"",
+        "    \"//:failing_rule\" : \"//:failing_rule failed with exit code 2:\\ngenrule" +
+            "\\nstderr: \"",
         "  }",
         "}");
     assertEquals(expectedReport, buildReportContents);

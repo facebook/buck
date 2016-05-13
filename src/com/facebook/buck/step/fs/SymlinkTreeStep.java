@@ -19,6 +19,7 @@ package com.facebook.buck.step.fs;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
@@ -48,7 +49,7 @@ public class SymlinkTreeStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) {
     for (ImmutableMap.Entry<Path, Path> ent : links.entrySet()) {
       Path target = filesystem.resolve(ent.getValue());
       Path link = filesystem.resolve(root.resolve(ent.getKey()));
@@ -59,10 +60,10 @@ public class SymlinkTreeStep implements Step {
         String msg = String.format("failed creating linking \"%s\" -> \"%s\"", link, target);
         context.logError(e, msg);
         e.printStackTrace(context.getStdErr());
-        return 1;
+        return StepExecutionResult.ERROR;
       }
     }
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

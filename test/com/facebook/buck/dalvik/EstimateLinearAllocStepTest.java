@@ -71,7 +71,7 @@ public class EstimateLinearAllocStepTest {
         filesystem,
         pathToJarOrClassesDirectory,
         linearAllocEstimator);
-    int exitCode = step.execute(context);
+    int exitCode = step.execute(context).getExitCode();
     assertEquals(0, exitCode);
     assertEquals(Integer.valueOf(425), step.get());
   }

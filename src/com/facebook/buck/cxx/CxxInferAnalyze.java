@@ -29,6 +29,7 @@ import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymCopyStep;
 import com.google.common.base.Function;
@@ -138,7 +139,7 @@ public class CxxInferAnalyze extends AbstractBuildRule {
         .add(
             new AbstractExecutionStep("write_specs_path_list") {
               @Override
-              public int execute(ExecutionContext context) throws IOException {
+              public StepExecutionResult execute(ExecutionContext context) throws IOException {
                 try {
                   ImmutableList<String> specsDirsWithAbsolutePath =
                       FluentIterable.from(getSpecsOfAllDeps()).transform(
@@ -152,9 +153,9 @@ public class CxxInferAnalyze extends AbstractBuildRule {
                   getProjectFilesystem().writeLinesToPath(specsDirsWithAbsolutePath, specsPathList);
                 } catch (IOException e) {
                   context.logError(e, "Error while writing specs path list file for the analyzer");
-                  return 1;
+                  return StepExecutionResult.ERROR;
                 }
-                return 0;
+                return StepExecutionResult.SUCCESS;
               }
             })
         .add(

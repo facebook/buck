@@ -26,6 +26,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.XmlDomParser;
 import com.google.common.annotations.VisibleForTesting;
@@ -159,7 +160,7 @@ public class MiniAapt implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
 
     try {
@@ -167,7 +168,7 @@ public class MiniAapt implements Step {
       processXmlFilesForIds(filesystem, references);
     } catch (IOException | XPathExpressionException | ResourceParseException e) {
       context.logError(e, "Error parsing resources to generate resource IDs for %s.", resDirectory);
-      return 1;
+      return StepExecutionResult.ERROR;
     }
 
     try {
@@ -177,11 +178,11 @@ public class MiniAapt implements Step {
             "The following resources were not found when processing %s: \n%s\n",
             resDirectory,
             Joiner.on('\n').join(missing)));
-        return 1;
+        return StepExecutionResult.ERROR;
       }
     } catch (IOException e) {
       context.logError(e, "Error verifying resources for %s.", resDirectory);
-      return 1;
+      return StepExecutionResult.ERROR;
     }
 
     if (resourceUnion) {
@@ -189,7 +190,7 @@ public class MiniAapt implements Step {
         resourceUnion();
       } catch (IOException e) {
         context.logError(e, "Error performing resource union for %s.", resDirectory);
-        return 1;
+        return StepExecutionResult.ERROR;
       }
     }
 
@@ -202,10 +203,10 @@ public class MiniAapt implements Step {
       }
     } catch (IOException e) {
       context.logError(e, "Error writing file: %s", pathToTextSymbolsFile);
-      return 1;
+      return StepExecutionResult.ERROR;
     }
 
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   /**

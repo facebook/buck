@@ -70,7 +70,7 @@ public class ZipScrubberStepIntegrationTest {
     ZipScrubberStep step = new ZipScrubberStep(
         new ProjectFilesystem(tmp.getRootPath()),
         Paths.get("output.zip"));
-    assertEquals(0, step.execute(executionContext));
+    assertEquals(0, step.execute(executionContext).getExitCode());
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));

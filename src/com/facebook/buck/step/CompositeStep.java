@@ -37,14 +37,15 @@ public class CompositeStep implements Step, Iterable<Step> {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     for (Step step : steps) {
-      int exitCode = step.execute(context);
-      if (exitCode != 0) {
-        return exitCode;
+      StepExecutionResult executionResult = step.execute(context);
+      if (!executionResult.isSuccess()) {
+        return executionResult;
       }
     }
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

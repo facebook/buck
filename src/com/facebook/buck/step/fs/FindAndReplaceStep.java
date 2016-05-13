@@ -19,6 +19,7 @@ package com.facebook.buck.step.fs;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Function;
 
 import java.io.BufferedReader;
@@ -47,7 +48,7 @@ public class FindAndReplaceStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     try (BufferedReader reader = new BufferedReader(
              new InputStreamReader(filesystem.newFileInputStream(input)));
          BufferedWriter writer = new BufferedWriter(
@@ -60,9 +61,9 @@ public class FindAndReplaceStep implements Step {
       }
     } catch (IOException e) {
       context.logError(e, "error replacing %s -> %s", input, output);
-      return 1;
+      return StepExecutionResult.ERROR;
     }
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

@@ -21,6 +21,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -85,7 +86,7 @@ public class WriteFileStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) {
     try (InputStream sourceStream = source.openStream()) {
       filesystem.copyToPath(
           sourceStream,
@@ -95,11 +96,11 @@ public class WriteFileStep implements Step {
         Path resolvedPath = filesystem.resolve(outputPath);
         MoreFiles.makeExecutable(resolvedPath);
       }
-      return 0;
+      return StepExecutionResult.SUCCESS;
     } catch (IOException e) {
       LOG.error(e, "Couldn't copy bytes to %s", outputPath);
       e.printStackTrace(context.getStdErr());
-      return 1;
+      return StepExecutionResult.ERROR;
     }
   }
 

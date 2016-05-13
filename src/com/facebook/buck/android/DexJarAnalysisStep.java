@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -42,7 +43,7 @@ class DexJarAnalysisStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
 
     try (ZipFile zf = new ZipFile(filesystem.resolve(dexPath).toFile())) {
       ZipEntry classesDexEntry = zf.getEntry("classes.dex");
@@ -62,10 +63,10 @@ class DexJarAnalysisStep implements Step {
               uncompressedSize),
           dexMetaPath);
 
-      return 0;
+      return StepExecutionResult.SUCCESS;
     } catch (IOException e) {
       context.logError(e, "There was an error in smart dexing step.");
-      return 1;
+      return StepExecutionResult.ERROR;
     }
   }
 

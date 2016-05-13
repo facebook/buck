@@ -19,6 +19,7 @@ package com.facebook.buck.json;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
@@ -51,7 +52,8 @@ public class JsonConcatenateStep implements Step {
   }
 
   @Override
-  public int execute(final ExecutionContext context) throws IOException, InterruptedException {
+  public StepExecutionResult execute(final ExecutionContext context)
+      throws IOException, InterruptedException {
     ImmutableSortedSet<Path> filesToConcatenate =
         FluentIterable.from(this.inputs)
             .transform(
@@ -70,7 +72,7 @@ public class JsonConcatenateStep implements Step {
         destination,
         filesystem)
         .concatenate();
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

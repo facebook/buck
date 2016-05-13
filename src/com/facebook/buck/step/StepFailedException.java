@@ -38,8 +38,9 @@ public class StepFailedException extends Exception {
 
   static StepFailedException createForFailingStepWithExitCode(Step step,
       ExecutionContext context,
-      int exitCode,
+      StepExecutionResult executionResult,
       Optional<BuildTarget> buildTarget) {
+    int exitCode = executionResult.getExitCode();
     String nameOrDescription = context.getVerbosity().shouldPrintCommand()
         ? step.getDescription(context)
         : step.getShortName();
@@ -53,6 +54,10 @@ public class StepFailedException extends Exception {
       message = String.format("Failed with exit code %d:\n%s",
           exitCode,
           nameOrDescription);
+    }
+    Optional<String> stderr = executionResult.getStderr();
+    if (stderr.isPresent()) {
+      message += "\nstderr: " + stderr.get();
     }
     return new StepFailedException(message, step, exitCode);
   }

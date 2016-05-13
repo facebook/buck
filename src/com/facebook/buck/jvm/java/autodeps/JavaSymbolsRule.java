@@ -33,6 +33,7 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -105,7 +106,7 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
     Step mkdirStep = new MkdirStep(getProjectFilesystem(), getPathToOutput().getParent());
     Step extractSymbolsStep = new AbstractExecutionStep("java-symbols") {
       @Override
-      public int execute(ExecutionContext context) throws IOException {
+      public StepExecutionResult execute(ExecutionContext context) throws IOException {
         Symbols symbols = symbolsFinder.extractSymbols();
 
         Symbols symbolsToSerialize;
@@ -122,7 +123,7 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
           context.getObjectMapper().writeValue(output, symbolsToSerialize);
         }
 
-        return 0;
+        return StepExecutionResult.SUCCESS;
       }
     };
 

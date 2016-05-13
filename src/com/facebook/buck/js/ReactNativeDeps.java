@@ -34,6 +34,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -111,7 +112,7 @@ public class ReactNativeDeps extends AbstractBuildRule
 
     steps.add(new AbstractExecutionStep("hash_js_inputs") {
       @Override
-      public int execute(ExecutionContext context) throws IOException {
+      public StepExecutionResult execute(ExecutionContext context) throws IOException {
         ImmutableList<Path> paths;
         try {
           paths = FluentIterable.from(getProjectFilesystem().readLines(output))
@@ -120,7 +121,7 @@ public class ReactNativeDeps extends AbstractBuildRule
               .toSortedList(Ordering.natural());
         } catch (IOException e) {
           context.logError(e, "Error reading output of the 'react-native-deps' step.");
-          return 1;
+          return StepExecutionResult.ERROR;
         }
 
         FluentIterable<SourcePath> unlistedSrcs =
@@ -133,7 +134,7 @@ public class ReactNativeDeps extends AbstractBuildRule
                   "included in 'srcs':\n%s",
               entryPath,
               Joiner.on('\n').join(unlistedSrcs));
-          return 1;
+          return StepExecutionResult.ERROR;
         }
 
         Hasher hasher = Hashing.sha1().newHasher();
@@ -142,14 +143,14 @@ public class ReactNativeDeps extends AbstractBuildRule
             hasher.putUnencodedChars(getProjectFilesystem().computeSha1(path));
           } catch (IOException e) {
             context.logError(e, "Error hashing input file: %s", path);
-            return 1;
+            return StepExecutionResult.ERROR;
           }
         }
 
         String inputsHash = hasher.hash().toString();
         buildableContext.addMetadata(METADATA_KEY_FOR_INPUTS_HASH, inputsHash);
         getProjectFilesystem().writeContentsToPath(inputsHash, inputsHashFile);
-        return 0;
+        return StepExecutionResult.SUCCESS;
       }
     });
 

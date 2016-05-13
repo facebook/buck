@@ -21,6 +21,7 @@ import static com.facebook.buck.jvm.java.JacocoConstants.JACOCO_EXEC_COVERAGE_FI
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -74,12 +75,12 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     try (OutputStream propertyFileStream = new FileOutputStream(propertyFile.toFile())){
       saveParametersToPropertyStream(filesystem, propertyFileStream);
     } catch (IOException e) {
       context.logError(e, "Cannot write coverage report generator params to file.");
-      return 1;
+      return StepExecutionResult.ERROR;
     }
 
     return super.execute(context);

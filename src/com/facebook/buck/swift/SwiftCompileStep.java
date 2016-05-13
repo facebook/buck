@@ -19,6 +19,7 @@ package com.facebook.buck.swift;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.SimpleProcessListener;
@@ -66,7 +67,7 @@ public class SwiftCompileStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     ListeningProcessExecutor executor = new ListeningProcessExecutor();
     ProcessExecutorParams params = makeProcessExecutorParams();
     SimpleProcessListener listener = new SimpleProcessListener();
@@ -79,10 +80,10 @@ public class SwiftCompileStep implements Step {
       if (result != 0) {
         LOG.error("Error running %s: %s", getDescription(context), listener.getStderr());
       }
-      return result;
+      return StepExecutionResult.of(result);
     } catch (IOException e) {
       LOG.error(e, "Could not execute command %s", compilerCommand);
-      return 1;
+      return StepExecutionResult.ERROR;
     }
   }
 

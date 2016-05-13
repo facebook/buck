@@ -20,6 +20,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.CommandSplitter;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Functions;
@@ -124,11 +125,12 @@ public class ArchiveStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     ImmutableList<String> allInputs = getAllInputs();
     if (allInputs.isEmpty()) {
       filesystem.writeContentsToPath("!<arch>\n", output);
-      return 0;
+      return StepExecutionResult.SUCCESS;
     } else {
       ImmutableList<String> archiveCommandPrefix =
           ImmutableList.<String>builder()
@@ -140,10 +142,10 @@ public class ArchiveStep implements Step {
       for (ImmutableList<String> command : commandSplitter.getCommandsForArguments(allInputs)) {
         int exitCode = runArchiver(context, command);
         if (exitCode != 0) {
-          return exitCode;
+          return StepExecutionResult.of(exitCode);
         }
       }
-      return 0;
+      return StepExecutionResult.SUCCESS;
     }
   }
 

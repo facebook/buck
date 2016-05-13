@@ -53,7 +53,7 @@ public class RmStepTest {
         file,
         /* shouldForceDeletion */ false,
         /* shouldRecurse */ false);
-    assertEquals(0, step.execute(context));
+    assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file));
   }
@@ -67,7 +67,7 @@ public class RmStepTest {
         file,
         /* shouldForceDeletion */ true,
         /* shouldRecurse */ false);
-    assertEquals(0, step.execute(context));
+    assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file));
   }
@@ -81,7 +81,7 @@ public class RmStepTest {
         dir,
         /* shouldForceDeletion */ false,
         /* shouldRecurse */ true);
-    assertEquals(0, step.execute(context));
+    assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(dir));
   }
@@ -95,7 +95,7 @@ public class RmStepTest {
         dir,
         /* shouldForceDeletion */ true,
         /* shouldRecurse */ true);
-    assertEquals(0, step.execute(context));
+    assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(dir));
   }
@@ -109,7 +109,7 @@ public class RmStepTest {
         file,
         /* shouldForceDeletion */ false,
         /* shouldRecurse */ true);
-    assertEquals(0, step.execute(context));
+    assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file));
   }
@@ -123,7 +123,7 @@ public class RmStepTest {
         file,
         /* shouldForceDeletion */ true,
         /* shouldRecurse */ true);
-    assertEquals(0, step.execute(context));
+    assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file));
   }
@@ -137,7 +137,7 @@ public class RmStepTest {
         dir,
         /* shouldForceDeletion */ false,
         /* shouldRecurse */ false);
-    assertEquals(1, step.execute(context));
+    assertEquals(1, step.execute(context).getExitCode());
   }
 
   @Test
@@ -149,7 +149,7 @@ public class RmStepTest {
         dir,
         /* shouldForceDeletion */ true,
         /* shouldRecurse */ false);
-    assertEquals(1, step.execute(context));
+    assertEquals(1, step.execute(context).getExitCode());
   }
 
   @Test
@@ -161,7 +161,7 @@ public class RmStepTest {
         file,
         /* shouldForceDeletion */ false,
         /* shouldRecurse */ false);
-    assertEquals(1, step.execute(context));
+    assertEquals(1, step.execute(context).getExitCode());
   }
 
   @Test
@@ -173,7 +173,7 @@ public class RmStepTest {
         file,
         /* shouldForceDeletion */ true,
         /* shouldRecurse */ false);
-    assertEquals(0, step.execute(context));
+    assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file));
   }
@@ -187,7 +187,7 @@ public class RmStepTest {
         file,
         /* shouldForceDeletion */ false,
         /* shouldRecurse */ true);
-    assertEquals(1, step.execute(context));
+    assertEquals(1, step.execute(context).getExitCode());
   }
 
   @Test
@@ -199,7 +199,7 @@ public class RmStepTest {
         file,
         /* shouldForceDeletion */ true,
         /* shouldRecurse */ true);
-    assertEquals(0, step.execute(context));
+    assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file));
   }

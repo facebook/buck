@@ -22,6 +22,7 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.util.MoreMaps;
@@ -171,7 +172,7 @@ public class SymlinkTree
   protected Step getVerifiyStep() {
     return new AbstractExecutionStep("verify_symlink_tree") {
         @Override
-        public int execute(ExecutionContext context) throws IOException {
+        public StepExecutionResult execute(ExecutionContext context) throws IOException {
           for (ImmutableMap.Entry<Path, SourcePath> entry : getLinks().entrySet()) {
             for (Path pathPart : entry.getKey()) {
               if (pathPart.toString().equals("..")) {
@@ -182,11 +183,11 @@ public class SymlinkTree
                             "Path '%s' should not contain '%s'.",
                             entry.getKey(),
                             pathPart)));
-                return 1;
+                return StepExecutionResult.ERROR;
               }
             }
           }
-          return 0;
+          return StepExecutionResult.SUCCESS;
         }
       };
   }

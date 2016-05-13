@@ -82,7 +82,7 @@ public class ZipStepTest {
         false,
         ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
-    assertEquals(0, step.execute(TestExecutionContext.newInstance()));
+    assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     try (Zip zip = new Zip(out, false)) {
       assertEquals(ImmutableSet.of("file1.txt", "file2.txt", "file3.txt"), zip.getFileNames());
@@ -107,7 +107,7 @@ public class ZipStepTest {
         false,
         ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
-    assertEquals(0, step.execute(TestExecutionContext.newInstance()));
+    assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     try (Zip zip = new Zip(out, false)) {
       assertEquals(ImmutableSet.of("file2.txt"), zip.getFileNames());
@@ -131,7 +131,7 @@ public class ZipStepTest {
         false,
         ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
-    assertEquals(0, step.execute(TestExecutionContext.newInstance()));
+    assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     // Make sure we have the right attributes.
     try (ZipFile zip = new ZipFile(out.toFile())) {
@@ -165,7 +165,7 @@ public class ZipStepTest {
         false,
         ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
-    assertEquals(0, step.execute(TestExecutionContext.newInstance()));
+    assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     // Make sure we have the right attributes.
     try (ZipFile zip = new ZipFile(out.toFile())) {
@@ -198,7 +198,7 @@ public class ZipStepTest {
         false,
         ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
-    assertEquals(1, step.execute(TestExecutionContext.newInstance()));
+    assertEquals(1, step.execute(TestExecutionContext.newInstance()).getExitCode());
   }
 
   @Test
@@ -217,7 +217,7 @@ public class ZipStepTest {
         true,
         ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
-    assertEquals(0, step.execute(TestExecutionContext.newInstance()));
+    assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     try (Zip zip = new Zip(out, false)) {
       assertEquals(ImmutableSet.of("file1.txt"), zip.getFileNames());
@@ -240,7 +240,7 @@ public class ZipStepTest {
         true,
         ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
-    assertEquals(0, step.execute(TestExecutionContext.newInstance()));
+    assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     try (Zip zip = new Zip(out, false)) {
       assertEquals(ImmutableSet.of("", "foo/", "bar/"), zip.getDirNames());
@@ -279,7 +279,7 @@ public class ZipStepTest {
         false,
         ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
-    assertEquals(0, step.execute(TestExecutionContext.newInstance()));
+    assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     // Use apache's common-compress to parse the zip file, since it reads the central
     // directory and will verify it's valid.
@@ -310,7 +310,7 @@ public class ZipStepTest {
         false,
         ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
-    assertEquals(0, step.execute(TestExecutionContext.newInstance()));
+    assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     assertTrue(Files.exists(outputZip));
@@ -347,7 +347,7 @@ public class ZipStepTest {
         false,
         ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
-    assertEquals(0, step.execute(TestExecutionContext.newInstance()));
+    assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     Path destination = tmp.newFolder("output");
     Unzip.extractZipFile(outputZip, destination, Unzip.ExistingFileMode.OVERWRITE);
@@ -373,7 +373,7 @@ public class ZipStepTest {
             false,
             ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
             zipdir);
-    assertEquals(0, step.execute(context));
+    assertEquals(0, step.execute(context).getExitCode());
     ImmutableList<String> entries1 = getEntries(filesystem, output);
 
     // Run the zip step on a filesystem with a different ordering.
@@ -390,7 +390,7 @@ public class ZipStepTest {
             false,
             ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
             zipdir);
-    assertEquals(0, step.execute(context));
+    assertEquals(0, step.execute(context).getExitCode());
     ImmutableList<String> entries2 = getEntries(filesystem, output);
 
     assertEquals(entries1, entries2);

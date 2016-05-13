@@ -107,7 +107,7 @@ public class SymlinkFileStepTest {
         /* source */ Paths.get("dummy"),
         /* target */ Paths.get("my_symlink"),
         /* useAbsolutePaths*/ true);
-    int exitCode = symlinkStep.execute(executionContext);
+    int exitCode = symlinkStep.execute(executionContext).getExitCode();
     assertEquals(0, exitCode);
     assertTrue(java.nio.file.Files.isSymbolicLink(symlink));
     assertTrue(symlink.toFile().exists());

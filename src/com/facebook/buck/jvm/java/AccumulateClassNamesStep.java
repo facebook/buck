@@ -24,6 +24,7 @@ import com.facebook.buck.jvm.java.classes.FileLike;
 import com.facebook.buck.jvm.java.classes.FileLikes;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -78,7 +79,7 @@ public class AccumulateClassNamesStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) {
     ImmutableSortedMap<String, HashCode> classNames;
     if (pathToJarOrClassesDirectory.isPresent()) {
       Optional<ImmutableSortedMap<String, HashCode>> classNamesOptional = calculateClassHashes(
@@ -88,7 +89,7 @@ public class AccumulateClassNamesStep implements Step {
       if (classNamesOptional.isPresent()) {
         classNames = classNamesOptional.get();
       } else {
-        return 1;
+        return StepExecutionResult.ERROR;
       }
     } else {
       classNames = ImmutableSortedMap.of();
@@ -109,10 +110,10 @@ public class AccumulateClassNamesStep implements Step {
       context.getBuckEventBus().post(ThrowableConsoleEvent.create(e,
           "There was an error writing the list of .class files to %s.",
           whereClassNamesShouldBeWritten));
-      return 1;
+      return StepExecutionResult.ERROR;
     }
 
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

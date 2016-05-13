@@ -20,6 +20,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Joiner;
 
 import java.io.IOException;
@@ -81,7 +82,7 @@ public class SymlinkFileStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) {
     Path existingFilePath = getExistingFilePath();
     Path desiredLinkPath = getDesiredLinkPath();
     try {
@@ -89,10 +90,10 @@ public class SymlinkFileStep implements Step {
           desiredLinkPath,
           existingFilePath,
           /* force */ true);
-      return 0;
+      return StepExecutionResult.SUCCESS;
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
-      return 1;
+      return StepExecutionResult.ERROR;
     }
   }
 }

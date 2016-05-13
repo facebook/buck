@@ -68,7 +68,7 @@ public class GenerateManifestStepTest {
         skeletonPath,
         libraryManifestFiles.build(),
         manifestPath);
-    int result = manifestCommand.execute(context);
+    int result = manifestCommand.execute(context).getExitCode();
 
     assertEquals(0, result);
 

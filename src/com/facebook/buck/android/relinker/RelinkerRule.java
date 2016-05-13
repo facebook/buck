@@ -38,6 +38,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Charsets;
 import com.google.common.base.Predicate;
@@ -176,7 +177,8 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
         new MkdirStep(getProjectFilesystem(), getScratchDirPath()),
         new AbstractExecutionStep("xdso-dce relinker") {
           @Override
-          public int execute(ExecutionContext context) throws IOException, InterruptedException {
+          public StepExecutionResult execute(ExecutionContext context)
+              throws IOException, InterruptedException {
             ImmutableSet<String> symbolsNeeded = readSymbolsNeeded();
             if (!isRelinkable) {
               getProjectFilesystem().copyFile(getBaseLibPath(), getLibFilePath());
@@ -184,15 +186,16 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
             } else {
               writeVersionScript(symbolsNeeded);
               for (Step s : relinkerSteps.build()) {
-                if (s.execute(context) != 0) {
-                  return 1;
+                StepExecutionResult executionResult = s.execute(context);
+                if (!executionResult.isSuccess()) {
+                  return StepExecutionResult.ERROR;
                 }
               }
             }
             writeSymbols(
                 getSymbolsNeededOutPath(),
                 Sets.union(symbolsNeeded, getSymbols(getLibFilePath()).undefined));
-            return 0;
+            return StepExecutionResult.SUCCESS;
           }
         });
   }

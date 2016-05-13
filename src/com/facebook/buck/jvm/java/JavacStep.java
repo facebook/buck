@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
@@ -131,8 +132,9 @@ public class JavacStep implements Step {
   }
 
   @Override
-  public final int execute(ExecutionContext context) throws IOException, InterruptedException {
-    return tryBuildWithFirstOrderDeps(context, filesystem);
+  public final StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
+    return StepExecutionResult.of(tryBuildWithFirstOrderDeps(context, filesystem));
   }
 
   private int tryBuildWithFirstOrderDeps(ExecutionContext context, ProjectFilesystem filesystem)

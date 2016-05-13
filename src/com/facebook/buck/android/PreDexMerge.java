@@ -33,6 +33,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Function;
@@ -236,7 +237,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
 
     steps.add(new AbstractExecutionStep("write_metadata_txt") {
       @Override
-      public int execute(ExecutionContext executionContext) {
+      public StepExecutionResult execute(ExecutionContext executionContext) {
         Map<Path, DexWithClasses> metadataTxtEntries = sortResult.metadataTxtDexEntries;
         List<String> lines = Lists.newArrayListWithCapacity(metadataTxtEntries.size());
         if (dexSplitMode.getDexStore() == DexStore.RAW) {
@@ -255,9 +256,9 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
           getProjectFilesystem().writeLinesToPath(lines, paths.metadataFile);
         } catch (IOException e) {
           executionContext.logError(e, "Failed when writing metadata.txt multi-dex.");
-          return 1;
+          return StepExecutionResult.ERROR;
         }
-        return 0;
+        return StepExecutionResult.SUCCESS;
       }
     });
   }

@@ -20,6 +20,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -64,7 +65,7 @@ public class WorkerShellStep implements Step {
   }
 
   @Override
-  public int execute(final ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(final ExecutionContext context) throws InterruptedException {
     try {
       // Use the process's startup command as the key.
       String key = Joiner.on(' ').join(getCommand(context.getPlatform()));
@@ -80,7 +81,7 @@ public class WorkerShellStep implements Step {
           verbosity.shouldPrintStandardInformation()) {
         context.postEvent(ConsoleEvent.warning("%s", result.getStderr().get()));
       }
-      return result.getExitCode();
+      return StepExecutionResult.of(result.getExitCode());
     } catch (IOException e) {
       throw new HumanReadableException(e, "Error communicating with external process.");
     }

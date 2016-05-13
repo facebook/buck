@@ -325,7 +325,8 @@ public class SymlinkTreeTest {
                 new PathSourcePath(
                     projectFilesystem,
                     MorePaths.relativize(tmpDir.getRoot().toPath(), tmpDir.newFile().toPath()))));
-    int exitCode = symlinkTree.getVerifiyStep().execute(TestExecutionContext.newInstance());
+    int exitCode = symlinkTree.getVerifiyStep().execute(TestExecutionContext.newInstance())
+                   .getExitCode();
     assertThat(exitCode, Matchers.not(Matchers.equalTo(0)));
   }
 

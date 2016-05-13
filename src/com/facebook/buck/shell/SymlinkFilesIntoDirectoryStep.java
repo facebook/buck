@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
@@ -56,7 +57,7 @@ public class SymlinkFilesIntoDirectoryStep extends AbstractExecutionStep {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) {
     // Note that because these paths are resolved to absolute paths, the symlinks will be absolute
     // paths, as well.
     Path outDir = filesystem.resolve(this.outDir);
@@ -70,10 +71,10 @@ public class SymlinkFilesIntoDirectoryStep extends AbstractExecutionStep {
         filesystem.createSymLink(link, target, false);
       } catch (IOException e) {
         context.logError(e, "Failed to create symlink from %s to %s.", link, target);
-        return 1;
+        return StepExecutionResult.ERROR;
       }
     }
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
 }

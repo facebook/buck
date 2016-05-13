@@ -21,6 +21,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.XmlDomParser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -140,7 +141,7 @@ public class CompileStringsStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) {
     try {
       buildResourceNameToIdMap(
           filesystem,
@@ -150,7 +151,7 @@ public class CompileStringsStep implements Step {
           arrayResourceNameToIdMap);
     } catch (IOException e) {
       context.logError(e, "Failure parsing R.txt file.");
-      return 1;
+      return StepExecutionResult.ERROR;
     }
 
     ImmutableMultimap<String, Path> filesByLocale = groupFilesByLocale(stringFiles);
@@ -160,7 +161,7 @@ public class CompileStringsStep implements Step {
         resourcesByLocale.put(locale, compileStringFiles(filesystem, filesByLocale.get(locale)));
       } catch (IOException | SAXException e) {
         context.logError(e, "Error parsing string file for locale: %s", locale);
-        return 1;
+        return StepExecutionResult.ERROR;
       }
     }
 
@@ -190,11 +191,11 @@ public class CompileStringsStep implements Step {
             pathBuilder.apply(locale));
       } catch (IOException e) {
         context.logError(e, "Error creating binary file for locale: %s", locale);
-        return 1;
+        return StepExecutionResult.ERROR;
       }
     }
 
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   /**

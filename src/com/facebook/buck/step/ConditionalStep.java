@@ -32,11 +32,12 @@ public class ConditionalStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     if (shouldRunStep.get()) {
       return step.execute(context);
     } else {
-      return 0;
+      return StepExecutionResult.SUCCESS;
     }
   }
 

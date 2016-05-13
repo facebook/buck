@@ -21,6 +21,7 @@ import com.facebook.buck.io.TeeInputStream;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -112,7 +113,7 @@ class XctestRunTestsStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder()
         .addAllCommand(getCommand())
         .setDirectory(filesystem.getRootPath().toAbsolutePath().toFile())
@@ -161,12 +162,12 @@ class XctestRunTestsStep implements Step {
                 exitCode));
       }
 
-      return exitCode;
+      return StepExecutionResult.of(exitCode);
     } catch (IOException e) {
       LOG.error(e, "Exception while running %s", params.getCommand());
       MoreThrowables.propagateIfInterrupt(e);
       context.getConsole().printBuildFailureWithStacktrace(e);
-      return 1;
+      return StepExecutionResult.ERROR;
     }
   }
 

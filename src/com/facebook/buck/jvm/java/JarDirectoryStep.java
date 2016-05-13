@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -135,9 +136,9 @@ public class JarDirectoryStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) {
     try {
-      return JarDirectoryStepHelper.createJarFile(
+      return StepExecutionResult.of(JarDirectoryStepHelper.createJarFile(
           filesystem,
           pathToOutputFile,
           entriesToJar,
@@ -145,10 +146,10 @@ public class JarDirectoryStep implements Step {
           Optional.fromNullable(manifestFile),
           mergeManifests,
           blacklist,
-          context);
+          context));
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
-      return 1;
+      return StepExecutionResult.ERROR;
     }
   }
 }

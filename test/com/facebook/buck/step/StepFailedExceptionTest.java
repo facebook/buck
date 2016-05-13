@@ -57,10 +57,11 @@ public class StepFailedExceptionTest {
   @Test
   public void testCreateForFailingStepForExitCodeWithBuildTarget() {
     final int exitCode = 17;
+    final StepExecutionResult executionResult = StepExecutionResult.of(exitCode);
     Step step = new FakeStep("cp", "cp foo bar", exitCode);
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     StepFailedException exception = StepFailedException.createForFailingStepWithExitCode(
-        step, verboseContext, exitCode, Optional.of(buildTarget));
+        step, verboseContext, executionResult, Optional.of(buildTarget));
 
     assertEquals(step, exception.getStep());
     assertEquals(exitCode, exception.getExitCode());
@@ -70,9 +71,10 @@ public class StepFailedExceptionTest {
   @Test
   public void testCreateForFailingStepForExitCodeWithoutBuildTarget() {
     final int exitCode = 17;
+    final StepExecutionResult executionResult = StepExecutionResult.of(exitCode);
     Step step = new FakeStep("cp", "cp foo bar", exitCode);
     StepFailedException exception = StepFailedException.createForFailingStepWithExitCode(
-        step, verboseContext, exitCode, Optional.<BuildTarget>absent());
+        step, verboseContext, executionResult, Optional.<BuildTarget>absent());
 
     assertEquals(step, exception.getStep());
     assertEquals(exitCode, exception.getExitCode());
@@ -82,10 +84,11 @@ public class StepFailedExceptionTest {
   @Test
   public void testCreateForFailingStepWithSilentConsole() {
     final int exitCode = 17;
+    final StepExecutionResult executionResult = StepExecutionResult.of(exitCode);
     Step step = new FakeStep("cp", "cp foo bar", exitCode);
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     StepFailedException exception = StepFailedException.createForFailingStepWithExitCode(
-        step, silentContext, exitCode, Optional.of(buildTarget));
+        step, silentContext, executionResult, Optional.of(buildTarget));
 
     assertEquals(step, exception.getStep());
     assertEquals("//foo:bar failed with exit code 17:\ncp", exception.getMessage());

@@ -20,6 +20,7 @@ import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.SimpleProcessListener;
@@ -78,7 +79,7 @@ class SwiftStdlibStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     ListeningProcessExecutor executor = new ListeningProcessExecutor();
     ProcessExecutorParams params = makeProcessExecutorParams();
     SimpleProcessListener listener = new SimpleProcessListener();
@@ -90,16 +91,16 @@ class SwiftStdlibStep implements Step {
       int result = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
       if (result != 0) {
         LOG.error("Error running %s: %s", getDescription(context), listener.getStderr());
-        return result;
+        return StepExecutionResult.of(result);
       }
     } catch (IOException e) {
       LOG.error(e, "Could not execute command %s", command);
-      return 1;
+      return StepExecutionResult.ERROR;
     }
 
     // Copy from temp to destinationDirectory if we wrote files.
     if (Files.notExists(temp)) {
-      return 0;
+      return StepExecutionResult.SUCCESS;
     }
     try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(temp)) {
       if (dirStream.iterator().hasNext()) {
@@ -108,9 +109,9 @@ class SwiftStdlibStep implements Step {
       }
     } catch (IOException e) {
       LOG.error(e, "Could not copy to %s", destinationDirectory);
-      return 1;
+      return StepExecutionResult.ERROR;
     }
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

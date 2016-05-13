@@ -31,6 +31,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.collect.FluentIterable;
@@ -163,7 +164,7 @@ public class ResourcesFilter extends AbstractBuildRule
 
     steps.add(new AbstractExecutionStep("record_build_output") {
       @Override
-      public int execute(ExecutionContext context) {
+      public StepExecutionResult execute(ExecutionContext context) {
         buildableContext.addMetadata(
             RES_DIRECTORIES_KEY,
             FluentIterable.from(filteredResDirectories)
@@ -174,7 +175,7 @@ public class ResourcesFilter extends AbstractBuildRule
             FluentIterable.from(stringFilesBuilder.build())
                 .transform(Functions.toStringFunction())
                 .toList());
-        return 0;
+        return StepExecutionResult.SUCCESS;
       }
     });
 

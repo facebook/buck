@@ -58,19 +58,19 @@ public final class DefaultStepRunner implements StepRunner {
     StepEvent.Started started = StepEvent.started(stepShortName, stepDescription, stepUuid);
     context.getBuckEventBus().logDebugAndPost(
         LOG, started);
-    int exitCode = 1;
+    StepExecutionResult executionResult = StepExecutionResult.ERROR;
     try {
-      exitCode = step.execute(context);
+      executionResult = step.execute(context);
     } catch (IOException | RuntimeException e) {
       throw StepFailedException.createForFailingStepWithException(step, e, buildTarget);
     } finally {
       context.getBuckEventBus().logDebugAndPost(
-          LOG, StepEvent.finished(started, exitCode));
+          LOG, StepEvent.finished(started, executionResult.getExitCode()));
     }
-    if (exitCode != 0) {
+    if (!executionResult.isSuccess()) {
       throw StepFailedException.createForFailingStepWithExitCode(step,
           context,
-          exitCode,
+          executionResult,
           buildTarget);
     }
   }

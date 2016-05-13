@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.collect.ImmutableMap;
 
 import com.dd.plist.BinaryPropertyListWriter;
@@ -70,7 +71,7 @@ class PlistProcessStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     try (InputStream stream = filesystem.newFileInputStream(input);
          BufferedInputStream bufferedStream = new BufferedInputStream(stream)) {
       NSObject infoPlist;
@@ -107,10 +108,10 @@ class PlistProcessStep implements Step {
       }
     } catch (IOException e) {
       context.logError(e, "error parsing plist %s", input);
-      return 1;
+      return StepExecutionResult.ERROR;
     }
 
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

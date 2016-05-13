@@ -21,6 +21,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
@@ -56,7 +57,7 @@ public class HeaderMapStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     LOG.debug("Writing header map with %d entries to %s", entries.size(), output);
     HeaderMap.Builder builder = HeaderMap.builder();
     for (Map.Entry<Path, Path> entry : entries.entrySet()) {
@@ -64,7 +65,7 @@ public class HeaderMapStep implements Step {
     }
     HeaderMap headerMap = builder.build();
     filesystem.writeBytesToPath(headerMap.getBytes(), output);
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

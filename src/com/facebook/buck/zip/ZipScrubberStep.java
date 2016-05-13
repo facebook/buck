@@ -19,6 +19,7 @@ package com.facebook.buck.zip;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -56,7 +57,7 @@ public class ZipScrubberStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     Path zipPath = filesystem.resolve(zip);
     try (FileChannel channel =
              FileChannel.open(zipPath, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
@@ -107,9 +108,9 @@ public class ZipScrubberStep implements Step {
 
     } catch (IOException e) {
       context.logError(e, "Error scrubbing non-deterministic metadata from %s", zipPath);
-      return 1;
+      return StepExecutionResult.ERROR;
     }
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
 }

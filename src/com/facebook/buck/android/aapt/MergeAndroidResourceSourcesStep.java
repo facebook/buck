@@ -28,6 +28,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -55,7 +56,8 @@ public class MergeAndroidResourceSourcesStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     ResourceMerger merger = new ResourceMerger();
     try {
       for (Path resPath : resPaths) {
@@ -75,9 +77,9 @@ public class MergeAndroidResourceSourcesStep implements Step {
       merger.mergeData(writer, /* cleanUp */ false);
     } catch (MergingException e) {
       LOG.error(e, "Failed merging resources.");
-      return 1;
+      return StepExecutionResult.ERROR;
     }
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -145,7 +146,7 @@ public class XzStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) {
     try (
         InputStream in = filesystem.newFileInputStream(sourceFile);
         OutputStream out = filesystem.newFileOutputStream(destinationFile);
@@ -158,9 +159,9 @@ public class XzStep implements Step {
       }
     } catch (IOException e) {
       LOG.error(e);
-      return 1;
+      return StepExecutionResult.ERROR;
     }
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   public Path getDestinationFile() {

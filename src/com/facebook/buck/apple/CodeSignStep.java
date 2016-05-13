@@ -20,6 +20,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
@@ -58,7 +59,7 @@ class CodeSignStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     ProcessExecutorParams.Builder paramsBuilder = ProcessExecutorParams.builder();
     if (codesignAllocatePath.isPresent()) {
       ImmutableList<String> commandPrefix = codesignAllocatePath.get().getCommandPrefix(resolver);
@@ -89,13 +90,13 @@ class CodeSignStep implements Step {
               /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
     } catch (InterruptedException | IOException e) {
       context.logError(e, "Could not execute codesign.");
-      return 1;
+      return StepExecutionResult.ERROR;
     }
 
     if (result.getExitCode() != 0) {
-      return 1;
+      return StepExecutionResult.ERROR;
     }
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

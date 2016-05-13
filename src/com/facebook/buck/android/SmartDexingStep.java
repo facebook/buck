@@ -23,6 +23,7 @@ import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.RmStep;
@@ -167,7 +168,7 @@ public class SmartDexingStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     try {
       Multimap<Path, Path> outputToInputs = outputToInputsSupplier.get();
       runDxCommands(context, outputToInputs);
@@ -220,10 +221,10 @@ public class SmartDexingStep implements Step {
       }
     } catch (StepFailedException | IOException e) {
       context.logError(e, "There was an error in smart dexing step.");
-      return 1;
+      return StepExecutionResult.ERROR;
     }
 
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   private void runDxCommands(ExecutionContext context, Multimap<Path, Path> outputToInputs)

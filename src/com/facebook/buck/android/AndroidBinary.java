@@ -51,6 +51,7 @@ import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -455,7 +456,7 @@ public class AndroidBinary
             // Step that populates a list of libraries and writes a metadata.txt to decompress.
             new AbstractExecutionStep("write_metadata_for_asset_libraries") {
               @Override
-              public int execute(ExecutionContext context) {
+              public StepExecutionResult execute(ExecutionContext context) {
                 ProjectFilesystem filesystem = getProjectFilesystem();
                 try {
                   // Walk file tree to find libraries
@@ -491,9 +492,9 @@ public class AndroidBinary
                   }
                 } catch (IOException e) {
                   context.logError(e, "Writing metadata for asset libraries failed.");
-                  return 1;
+                  return StepExecutionResult.ERROR;
                 }
-                return 0;
+                return StepExecutionResult.SUCCESS;
               }
             });
       }
@@ -502,7 +503,7 @@ public class AndroidBinary
         steps.add(
             new AbstractExecutionStep("rename_asset_libraries_as_temp_files") {
               @Override
-              public int execute(ExecutionContext context) {
+              public StepExecutionResult execute(ExecutionContext context) {
                 try {
                   ProjectFilesystem filesystem = getProjectFilesystem();
                   for (Path libPath : inputAssetLibrariesBuilder.build()) {
@@ -510,10 +511,10 @@ public class AndroidBinary
                     filesystem.move(libPath, tempPath);
                     outputAssetLibrariesBuilder.add(tempPath);
                   }
-                  return 0;
+                  return StepExecutionResult.SUCCESS;
                 } catch (IOException e) {
                   context.logError(e, "Renaming asset libraries failed");
-                  return 1;
+                  return StepExecutionResult.ERROR;
                 }
               }
             }
@@ -757,7 +758,7 @@ public class AndroidBinary
     steps.add(
         new AbstractExecutionStep("collect_all_class_names") {
           @Override
-          public int execute(ExecutionContext context) {
+          public StepExecutionResult execute(ExecutionContext context) {
             for (Path path : classPathEntriesToDex) {
               Optional<ImmutableSortedMap<String, HashCode>> hashes =
                   AccumulateClassNamesStep.calculateClassHashes(
@@ -765,11 +766,11 @@ public class AndroidBinary
                       getProjectFilesystem(),
                       path);
               if (!hashes.isPresent()) {
-                return 1;
+                return StepExecutionResult.ERROR;
               }
               builder.putAll(hashes.get());
             }
-            return 0;
+            return StepExecutionResult.SUCCESS;
           }
         });
 

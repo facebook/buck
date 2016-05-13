@@ -36,6 +36,7 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.ObjectMappers;
@@ -152,7 +153,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
     String stepName = hasClassesToDx ? "record_dx_success" : "record_empty_dx";
     AbstractExecutionStep recordArtifactAndMetadataStep = new AbstractExecutionStep(stepName) {
       @Override
-      public int execute(ExecutionContext context) throws IOException {
+      public StepExecutionResult execute(ExecutionContext context) throws IOException {
         if (hasClassesToDx) {
           buildableContext.recordArtifact(getPathToDex());
         }
@@ -166,7 +167,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
             context.getObjectMapper().writeValueAsString(
                 Maps.transformValues(classNamesToHashes, Functions.toStringFunction())));
 
-        return 0;
+        return StepExecutionResult.SUCCESS;
       }
     };
     steps.add(recordArtifactAndMetadataStep);

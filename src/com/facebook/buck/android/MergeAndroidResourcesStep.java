@@ -24,6 +24,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -134,13 +135,13 @@ public class MergeAndroidResourcesStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) {
     try {
       doExecute();
-      return 0;
+      return StepExecutionResult.SUCCESS;
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
-      return 1;
+      return StepExecutionResult.ERROR;
     }
   }
 

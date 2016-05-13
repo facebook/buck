@@ -23,6 +23,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
@@ -90,7 +91,7 @@ class ProvisioningProfileCopyStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
 
     final String bundleID;
     try {
@@ -152,7 +153,7 @@ class ProvisioningProfileCopyStep implements Step {
           CopySourceMode.FILE);
     } catch (IOException e) {
       context.logError(e, "Failed when trying to copy: %s", getDescription(context));
-      return 1;
+      return StepExecutionResult.ERROR;
     }
 
     // Merge tne entitlements with the profile, and write out.

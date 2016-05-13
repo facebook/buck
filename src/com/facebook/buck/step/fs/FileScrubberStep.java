@@ -20,6 +20,7 @@ import com.facebook.buck.io.FileScrubber;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
@@ -50,7 +51,7 @@ public class FileScrubberStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     Path filePath = filesystem.resolve(input);
     try {
       for (FileScrubber scrubber : scrubbers) {
@@ -60,9 +61,9 @@ public class FileScrubberStep implements Step {
       }
     } catch (IOException | FileScrubber.ScrubException e) {
       context.logError(e, "Error scrubbing non-deterministic metadata from %s", filePath);
-      return 1;
+      return StepExecutionResult.ERROR;
     }
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

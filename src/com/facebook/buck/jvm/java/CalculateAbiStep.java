@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -47,7 +48,7 @@ public class CalculateAbiStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) {
     String fileSha1;
     try {
       Path out = getPathToHash(context, buildableContext);
@@ -55,13 +56,13 @@ public class CalculateAbiStep implements Step {
       fileSha1 = filesystem.computeSha1(out);
     } catch (IOException e) {
       context.logError(e, "Failed to calculate ABI for %s.", binaryJar);
-      return 1;
+      return StepExecutionResult.ERROR;
     }
 
     Sha1HashCode abiKey = Sha1HashCode.of(fileSha1);
     buildableContext.addMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, abiKey.getHash());
 
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   private Path getPathToHash(

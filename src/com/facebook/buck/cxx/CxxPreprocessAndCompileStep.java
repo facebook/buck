@@ -21,6 +21,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.LineProcessorRunnable;
@@ -436,7 +437,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     try {
       LOG.debug("%s %s -> %s", operation.toString().toLowerCase(), input, output);
 
@@ -472,7 +473,7 @@ public class CxxPreprocessAndCompileStep implements Step {
               filesystem.getRootPath().toAbsolutePath());
         } catch (IOException e) {
           context.logError(e, "error updating compilation directory");
-          return 1;
+          return StepExecutionResult.ERROR;
         }
       }
 
@@ -480,12 +481,12 @@ public class CxxPreprocessAndCompileStep implements Step {
         LOG.warn("error %d %s %s", exitCode, operation.toString().toLowerCase(), input);
       }
 
-      return exitCode;
+      return StepExecutionResult.of(exitCode);
 
     } catch (Exception e) {
       MoreThrowables.propagateIfInterrupt(e);
       context.logError(e, "Build error caused by exception");
-      return 1;
+      return StepExecutionResult.ERROR;
     }
   }
 

@@ -30,6 +30,7 @@ import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -199,7 +200,8 @@ public class CxxInferCapture
     }
 
     @Override
-    public int execute(ExecutionContext context) throws IOException, InterruptedException {
+    public StepExecutionResult execute(ExecutionContext context)
+        throws IOException, InterruptedException {
       Depfiles.parseAndWriteBuckCompatibleDepfile(
           context,
           getProjectFilesystem(),
@@ -209,7 +211,7 @@ public class CxxInferCapture
           destDepfile,
           getResolver().deprecatedGetPath(input),
           output);
-      return 0;
+      return StepExecutionResult.SUCCESS;
     }
 
     @Override

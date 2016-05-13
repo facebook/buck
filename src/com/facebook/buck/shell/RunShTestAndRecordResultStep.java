@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.HumanReadableException;
@@ -72,7 +73,7 @@ public class RunShTestAndRecordResultStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     TestResultSummary summary;
     if (context.getPlatform() == Platform.WINDOWS) {
       // Ignore sh_test on Windows.
@@ -118,13 +119,14 @@ public class RunShTestAndRecordResultStep implements Step {
         }
 
         @Override
-        public int execute(ExecutionContext context) throws InterruptedException {
-          int exitCode = super.execute(context);
+        public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+          StepExecutionResult executionResult = super.execute(context);
           if (timedOut) {
             throw new HumanReadableException(
-                "Timed out running test: " + testCaseName + ", with exitCode: " + exitCode);
+                "Timed out running test: " + testCaseName + ", with exitCode: " +
+                executionResult.getExitCode());
           }
-          return exitCode;
+          return executionResult;
         }
 
         @Override
@@ -151,10 +153,10 @@ public class RunShTestAndRecordResultStep implements Step {
           return false;
         }
       };
-      int exitCode = test.execute(context);
+      StepExecutionResult executionResult = test.execute(context);
 
       // Write test result.
-      boolean isSuccess = exitCode == 0;
+      boolean isSuccess = executionResult.isSuccess();
       summary = new TestResultSummary(
           getShortName(),
           "sh_test",
@@ -175,7 +177,7 @@ public class RunShTestAndRecordResultStep implements Step {
 
     // Even though the test may have failed, this command executed successfully, so its exit code
     // should be zero.
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
 }

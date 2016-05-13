@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -150,13 +151,13 @@ public class CopyStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) {
     try {
       filesystem.copy(source, destination, copySourceMode);
-      return 0;
+      return StepExecutionResult.SUCCESS;
     } catch (IOException e) {
       context.logError(e, "Failed when trying to copy: %s", getDescription(context));
-      return 1;
+      return StepExecutionResult.ERROR;
     }
   }
 }

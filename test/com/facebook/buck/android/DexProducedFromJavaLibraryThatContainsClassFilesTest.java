@@ -152,7 +152,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     ((EstimateLinearAllocStep) steps.get(2)).setLinearAllocEstimateForTesting(250);
     Step recordArtifactAndMetadataStep = steps.get(5);
-    int exitCode = recordArtifactAndMetadataStep.execute(executionContext);
+    int exitCode = recordArtifactAndMetadataStep.execute(executionContext).getExitCode();
     assertEquals(0, exitCode);
     assertEquals("The generated .dex.jar file should be in the set of recorded artifacts.",
         ImmutableSet.of(BuildTargets.getGenPath(filesystem, buildTarget, "%s.dex.jar")),
@@ -225,7 +225,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     Step recordArtifactAndMetadataStep = steps.get(2);
     assertThat(recordArtifactAndMetadataStep.getShortName(), startsWith("record_"));
-    int exitCode = recordArtifactAndMetadataStep.execute(executionContext);
+    int exitCode = recordArtifactAndMetadataStep.execute(executionContext).getExitCode();
     assertEquals(0, exitCode);
 
     verifyAll();

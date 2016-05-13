@@ -26,6 +26,7 @@ import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
@@ -224,16 +225,16 @@ public class PreDexedFilesSorter {
     // Write out the .class file.
     steps.add(new AbstractExecutionStep("write_canary_class") {
       @Override
-      public int execute(ExecutionContext context) {
+      public StepExecutionResult execute(ExecutionContext context) {
         Path classFile = scratchDirectoryForCanaryClass.resolve(relativePathToClassFile);
         try (InputStream inputStream = fileLike.getInput()) {
           filesystem.createParentDirs(classFile);
           filesystem.copyToPath(inputStream, classFile);
         } catch (IOException e) {
           context.logError(e,  "Error writing canary class file: %s.",  classFile.toString());
-          return 1;
+          return StepExecutionResult.ERROR;
         }
-        return 0;
+        return StepExecutionResult.SUCCESS;
       }
     });
 

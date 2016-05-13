@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -72,7 +73,7 @@ public class ConcatStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) {
     ImmutableList<Path> list = inputs.get();
     try (
         OutputStream out = filesystem.newFileOutputStream(output);
@@ -83,9 +84,9 @@ public class ConcatStep implements Step {
       out.flush();
     } catch (IOException e) {
       context.logError(e, "There was an error in concat step");
-      return 1;
+      return StepExecutionResult.ERROR;
     }
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

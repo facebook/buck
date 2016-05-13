@@ -20,6 +20,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
@@ -49,13 +50,14 @@ class RegisterDebugSymbolsStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     ImmutableList<String> lldbCommandPrefix = lldb.getCommandPrefix(resolver);
     ProcessExecutorParams params = ProcessExecutorParams
         .builder()
         .addCommand(lldbCommandPrefix.toArray(new String[lldbCommandPrefix.size()]))
         .build();
-    return context.getProcessExecutor().launchAndExecute(
+    return StepExecutionResult.of(context.getProcessExecutor().launchAndExecute(
         params,
         ImmutableSet.<ProcessExecutor.Option>of(),
         Optional.of(
@@ -63,7 +65,7 @@ class RegisterDebugSymbolsStep implements Step {
                 binaryBuildRule.getPathToOutput(),
                 location)),
         Optional.<Long>absent(),
-        Optional.<Function<Process, Void>>absent()).getExitCode();
+        Optional.<Function<Process, Void>>absent()).getExitCode());
   }
 
   @Override

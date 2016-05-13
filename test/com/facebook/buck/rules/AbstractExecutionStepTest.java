@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.TestExecutionContext;
 
 import org.junit.Test;
@@ -35,8 +36,8 @@ public class AbstractExecutionStepTest {
     String description = "How I describe myself.";
     Step step = new AbstractExecutionStep(description) {
       @Override
-      public int execute(ExecutionContext context) {
-        return 0;
+      public StepExecutionResult execute(ExecutionContext context) {
+        return StepExecutionResult.SUCCESS;
       }
     };
     ExecutionContext context = TestExecutionContext.newInstance();

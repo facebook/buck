@@ -30,6 +30,7 @@ import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -230,16 +231,16 @@ public class AndroidBuildConfig extends AbstractBuildRule {
     }
 
     @Override
-    public int execute(ExecutionContext context) {
+    public StepExecutionResult execute(ExecutionContext context) {
       List<String> lines;
       try {
         lines = filesystem.readLines(valuesFile);
       } catch (IOException e) {
         context.logError(e, "Error reading %s.", valuesFile);
-        return 1;
+        return StepExecutionResult.ERROR;
       }
       values = BuildConfigFields.fromFieldDeclarations(lines);
-      return 0;
+      return StepExecutionResult.SUCCESS;
     }
 
     @Override

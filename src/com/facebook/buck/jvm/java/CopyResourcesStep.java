@@ -27,6 +27,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -62,14 +63,15 @@ public class CopyResourcesStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     for (Step step : buildSteps()) {
-      int result = step.execute(context);
-      if (result != 0) {
+      StepExecutionResult result = step.execute(context);
+      if (!result.isSuccess()) {
         return result;
       }
     }
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @VisibleForTesting

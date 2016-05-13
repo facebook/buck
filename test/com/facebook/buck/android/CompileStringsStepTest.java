@@ -428,7 +428,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
             return destinationDir.resolve(input + PackageStringAssets.STRING_ASSET_FILE_EXTENSION);
           }
         });
-    assertEquals(0, step.execute(context));
+    assertEquals(0, step.execute(context).getExitCode());
     Map<String, byte[]> fileContentsMap = fileSystem.getFileContents();
     assertEquals("Incorrect number of string files written.", 4, fileContentsMap.size());
     for (Map.Entry<String, byte[]> entry : fileContentsMap.entrySet()) {

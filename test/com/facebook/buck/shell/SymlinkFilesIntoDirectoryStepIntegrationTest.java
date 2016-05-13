@@ -63,7 +63,7 @@ public class SymlinkFilesIntoDirectoryStepIntegrationTest {
         tmp.getRoot().toPath(),
         ImmutableSet.of(Paths.get("a.txt"), Paths.get("foo/b.txt"), Paths.get("foo/bar/c.txt")),
         outputFolder.toPath());
-    int exitCode = symlinkStep.execute(executionContext);
+    int exitCode = symlinkStep.execute(executionContext).getExitCode();
     assertEquals(0, exitCode);
 
     // The remainder of the checks assert that we've created symlinks, which we may not have done

@@ -33,6 +33,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -187,7 +188,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
     steps.add(
         new AbstractExecutionStep("hash_native_libs") {
           @Override
-          public int execute(ExecutionContext context) {
+          public StepExecutionResult execute(ExecutionContext context) {
             ProjectFilesystem filesystem = getProjectFilesystem();
             ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
             try {
@@ -199,9 +200,9 @@ public class CopyNativeLibraries extends AbstractBuildRule {
               filesystem.writeLinesToPath(metadataLines.build(), pathToMetadataTxt);
             } catch (IOException e) {
               context.logError(e, "There was an error hashing native libraries.");
-              return 1;
+              return StepExecutionResult.ERROR;
             }
-            return 0;
+            return StepExecutionResult.SUCCESS;
           }
         });
 
@@ -249,17 +250,18 @@ public class CopyNativeLibraries extends AbstractBuildRule {
         steps.add(
             new Step() {
               @Override
-              public int execute(ExecutionContext context) {
+              public StepExecutionResult execute(ExecutionContext context) {
                 // TODO(shs96c): Using a projectfilesystem here is almost definitely wrong.
                 // This is because each library may come from different build rules, which may be in
                 // different cells --- this check works by coincidence.
                 if (!filesystem.exists(libSourceDir)) {
-                  return 0;
+                  return StepExecutionResult.SUCCESS;
                 }
-                if (mkDirStep.execute(context) == 0 && copyStep.execute(context) == 0) {
-                  return 0;
+                if (mkDirStep.execute(context).isSuccess() &&
+                    copyStep.execute(context).isSuccess()) {
+                  return StepExecutionResult.SUCCESS;
                 }
-                return 1;
+                return StepExecutionResult.ERROR;
               }
 
               @Override
@@ -285,7 +287,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
     steps.add(
         new AbstractExecutionStep("rename_native_executables") {
           @Override
-          public int execute(ExecutionContext context) {
+          public StepExecutionResult execute(ExecutionContext context) {
             final ImmutableSet.Builder<Path> executablesBuilder = ImmutableSet.builder();
             try {
               filesystem.walkRelativeFileTree(destinationDir, new SimpleFileVisitor<Path>() {
@@ -306,9 +308,9 @@ public class CopyNativeLibraries extends AbstractBuildRule {
               }
             } catch (IOException e) {
               context.logError(e, "Renaming native executables failed.");
-              return 1;
+              return StepExecutionResult.ERROR;
             }
-            return 0;
+            return StepExecutionResult.SUCCESS;
           }
         });
   }

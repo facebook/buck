@@ -21,6 +21,7 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Objects;
 import com.google.common.base.Supplier;
@@ -56,7 +57,7 @@ public class GenerateBuildConfigStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) {
     String java = BuildConfigs.generateBuildConfigDotJava(
         source,
         javaPackage,
@@ -66,10 +67,10 @@ public class GenerateBuildConfigStep implements Step {
       filesystem.writeContentsToPath(java, outBuildConfigPath);
     } catch (IOException e) {
       context.logError(e, "Error writing BuildConfig.java: %s", outBuildConfigPath);
-      return 1;
+      return StepExecutionResult.ERROR;
     }
 
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

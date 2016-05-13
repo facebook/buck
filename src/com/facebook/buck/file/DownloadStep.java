@@ -21,6 +21,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
@@ -54,14 +55,14 @@ public class DownloadStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     BuckEventBus eventBus = context.getBuckEventBus();
     try {
       Path resolved = filesystem.resolve(output);
       boolean success = downloader.fetch(eventBus, url, resolved);
 
       if (!success) {
-        return reportFailedDownload(eventBus);
+        return StepExecutionResult.of(reportFailedDownload(eventBus));
       }
 
       HashCode readHash = Files.asByteSource(resolved.toFile()).hash(Hashing.sha1());
@@ -72,16 +73,16 @@ public class DownloadStep implements Step {
                 url,
                 sha1,
                 readHash));
-        return -1;
+        return StepExecutionResult.of(-1);
       }
     } catch (IOException e) {
-      return reportFailedDownload(eventBus);
+      return StepExecutionResult.of(reportFailedDownload(eventBus));
     } catch (HumanReadableException e) {
       eventBus.post(ConsoleEvent.severe(e.getHumanReadableErrorMessage(), e));
-      return -1;
+      return StepExecutionResult.of(-1);
     }
 
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   private int reportFailedDownload(BuckEventBus eventBus) {

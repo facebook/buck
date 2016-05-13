@@ -28,6 +28,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Joiner;
@@ -76,7 +77,8 @@ class GroovycStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     ProcessBuilder processBuilder = new ProcessBuilder(createCommand());
 
     Map<String, String> env = processBuilder.environment();
@@ -94,7 +96,7 @@ class GroovycStep implements Step {
       e.printStackTrace(context.getStdErr());
     }
 
-    return exitCode;
+    return StepExecutionResult.of(exitCode);
   }
 
   @Override

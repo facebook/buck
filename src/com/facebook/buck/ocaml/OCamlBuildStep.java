@@ -23,6 +23,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -90,18 +91,18 @@ public class OCamlBuildStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context)
+  public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
     if (hasGeneratedSources) {
-      int genExitCode = generateSources(context, filesystem.getRootPath());
-      if (genExitCode != 0) {
-        return genExitCode;
+      StepExecutionResult genExecutionResult = generateSources(context, filesystem.getRootPath());
+      if (!genExecutionResult.isSuccess()) {
+        return genExecutionResult;
       }
     }
 
-    int depToolExitCode = depToolStep.execute(context);
-    if (depToolExitCode != 0) {
-      return depToolExitCode;
+    StepExecutionResult depToolExecutionResult = depToolStep.execute(context);
+    if (!depToolExecutionResult.isSuccess()) {
+      return depToolExecutionResult;
     }
 
     // OCaml requires module A to be present in command line to ocamlopt or ocamlc before
@@ -115,46 +116,50 @@ public class OCamlBuildStep implements Step {
     ImmutableList.Builder<Path> nativeLinkerInputs = ImmutableList.builder();
 
     if (!bytecodeOnly) {
-      int mlCompileNativeExitCode = executeMLNativeCompilation(
+      StepExecutionResult mlCompileNativeExecutionResult = executeMLNativeCompilation(
           context,
           filesystem.getRootPath(),
           sortedInput,
           nativeLinkerInputs);
-      if (mlCompileNativeExitCode != 0) {
-        return mlCompileNativeExitCode;
+      if (!mlCompileNativeExecutionResult.isSuccess()) {
+        return mlCompileNativeExecutionResult;
       }
     }
 
     ImmutableList.Builder<Path> bytecodeLinkerInputs = ImmutableList.builder();
-    int mlCompileBytecodeExitCode = executeMLBytecodeCompilation(
+    StepExecutionResult mlCompileBytecodeExecutionResult = executeMLBytecodeCompilation(
         context,
         filesystem.getRootPath(),
         sortedInput,
         bytecodeLinkerInputs);
-    if (mlCompileBytecodeExitCode != 0) {
-      return mlCompileBytecodeExitCode;
+    if (!mlCompileBytecodeExecutionResult.isSuccess()) {
+      return mlCompileBytecodeExecutionResult;
     }
 
     ImmutableList.Builder<Path> cLinkerInputs = ImmutableList.builder();
-    int cCompileExitCode = executeCCompilation(context, cLinkerInputs);
-    if (cCompileExitCode != 0) {
-      return cCompileExitCode;
+    StepExecutionResult cCompileExecutionResult = executeCCompilation(context, cLinkerInputs);
+    if (!cCompileExecutionResult.isSuccess()) {
+      return cCompileExecutionResult;
     }
 
     ImmutableList<Path> cObjects = cLinkerInputs.build();
 
     if (!bytecodeOnly) {
       nativeLinkerInputs.addAll(cObjects);
-      int nativeLinkExitCode = executeNativeLinking(context, nativeLinkerInputs.build());
-      if (nativeLinkExitCode != 0) {
-        return nativeLinkExitCode;
+      StepExecutionResult nativeLinkExecutionResult = executeNativeLinking(
+          context,
+          nativeLinkerInputs.build());
+      if (!nativeLinkExecutionResult.isSuccess()) {
+        return nativeLinkExecutionResult;
       }
     }
 
     bytecodeLinkerInputs.addAll(cObjects);
-    int bytecodeLinkExitCode =  executeBytecodeLinking(context, bytecodeLinkerInputs.build());
-    if (bytecodeLinkExitCode != 0) {
-      return bytecodeLinkExitCode;
+    StepExecutionResult bytecodeLinkExecutionResult = executeBytecodeLinking(
+        context,
+        bytecodeLinkerInputs.build());
+    if (!bytecodeLinkExecutionResult.isSuccess()) {
+      return bytecodeLinkExecutionResult;
     }
 
     if (!ocamlContext.isLibrary()) {
@@ -170,11 +175,11 @@ public class OCamlBuildStep implements Step {
       );
       return debugLauncher.execute(context);
     } else {
-      return 0;
+      return StepExecutionResult.SUCCESS;
     }
   }
 
-  private int executeCCompilation(
+  private StepExecutionResult executeCCompilation(
       ExecutionContext context,
       ImmutableList.Builder<Path> linkerInputs) throws IOException, InterruptedException {
 
@@ -198,15 +203,15 @@ public class OCamlBuildStep implements Step {
               cSrc,
               cCompileFlags.build(),
               cxxPreprocessorInput.getIncludes()));
-      int compileExitCode = compileStep.execute(context);
-      if (compileExitCode != 0) {
-        return compileExitCode;
+      StepExecutionResult compileExecutionResult = compileStep.execute(context);
+      if (!compileExecutionResult.isSuccess()) {
+        return compileExecutionResult;
       }
     }
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
-  private int executeNativeLinking(
+  private StepExecutionResult executeNativeLinking(
       ExecutionContext context,
       ImmutableList<Path> linkerInputs) throws IOException, InterruptedException {
 
@@ -229,7 +234,7 @@ public class OCamlBuildStep implements Step {
     return linkStep.execute(context);
   }
 
-  private int executeBytecodeLinking(
+  private StepExecutionResult executeBytecodeLinking(
       ExecutionContext context,
       ImmutableList<Path> linkerInputs) throws IOException, InterruptedException {
 
@@ -264,7 +269,7 @@ public class OCamlBuildStep implements Step {
     return flagBuilder.build();
   }
 
-  private int executeMLNativeCompilation(
+  private StepExecutionResult executeMLNativeCompilation(
       ExecutionContext context,
       Path workingDirectory,
       ImmutableList<Path> sortedInput,
@@ -273,9 +278,9 @@ public class OCamlBuildStep implements Step {
     MakeCleanDirectoryStep mkDir = new MakeCleanDirectoryStep(
         filesystem,
         ocamlContext.getCompileNativeOutputDir());
-    int mkDirExitCode = mkDir.execute(context);
-    if (mkDirExitCode != 0) {
-      return mkDirExitCode;
+    StepExecutionResult mkDirExecutionResult = mkDir.execute(context);
+    if (!mkDirExecutionResult.isSuccess()) {
+      return mkDirExecutionResult;
     }
     for (Path inputOutput : sortedInput) {
       String inputFileName = inputOutput.getFileName().toString();
@@ -300,15 +305,15 @@ public class OCamlBuildStep implements Step {
               outputPath,
               inputOutput,
               compileFlags));
-      int compileExitCode = compileStep.execute(context);
-      if (compileExitCode != 0) {
-        return compileExitCode;
+      StepExecutionResult compileExecutionResult = compileStep.execute(context);
+      if (!compileExecutionResult.isSuccess()) {
+        return compileExecutionResult;
       }
     }
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
-  private int executeMLBytecodeCompilation(
+  private StepExecutionResult executeMLBytecodeCompilation(
       ExecutionContext context,
       Path workingDirectory,
       ImmutableList<Path> sortedInput,
@@ -317,9 +322,9 @@ public class OCamlBuildStep implements Step {
     MakeCleanDirectoryStep mkDir = new MakeCleanDirectoryStep(
         filesystem,
         ocamlContext.getCompileBytecodeOutputDir());
-    int mkDirExitCode = mkDir.execute(context);
-    if (mkDirExitCode != 0) {
-      return mkDirExitCode;
+    StepExecutionResult mkDirExecutionResult = mkDir.execute(context);
+    if (!mkDirExecutionResult.isSuccess()) {
+      return mkDirExecutionResult;
     }
     for (Path inputOutput : sortedInput) {
       String inputFileName = inputOutput.getFileName().toString();
@@ -344,22 +349,22 @@ public class OCamlBuildStep implements Step {
               outputPath,
               inputOutput,
               compileFlags));
-      int compileExitCode = compileBytecodeStep.execute(context);
-      if (compileExitCode != 0) {
-        return compileExitCode;
+      StepExecutionResult compileExecutionResult = compileBytecodeStep.execute(context);
+      if (!compileExecutionResult.isSuccess()) {
+        return compileExecutionResult;
       }
     }
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
-  private int generateSources(ExecutionContext context, Path workingDirectory)
+  private StepExecutionResult generateSources(ExecutionContext context, Path workingDirectory)
       throws IOException, InterruptedException {
     MakeCleanDirectoryStep mkDir = new MakeCleanDirectoryStep(
         filesystem,
         ocamlContext.getGeneratedSourceDir());
-    int mkDirExitCode = mkDir.execute(context);
-    if (mkDirExitCode != 0) {
-      return mkDirExitCode;
+    StepExecutionResult mkDirExecutionResult = mkDir.execute(context);
+    if (!mkDirExecutionResult.isSuccess()) {
+      return mkDirExecutionResult;
     }
     for (SourcePath yaccSource : ocamlContext.getYaccInput()) {
       SourcePath output = ocamlContext.getYaccOutput(ImmutableSet.of(yaccSource)).get(0);
@@ -370,9 +375,9 @@ public class OCamlBuildStep implements Step {
             ocamlContext.getYaccCompiler().get(),
             resolver.getAbsolutePath(output),
             resolver.getAbsolutePath(yaccSource)));
-      int yaccExitCode = yaccStep.execute(context);
-      if (yaccExitCode != 0) {
-        return yaccExitCode;
+      StepExecutionResult yaccExecutionResult = yaccStep.execute(context);
+      if (!yaccExecutionResult.isSuccess()) {
+        return yaccExecutionResult;
       }
     }
     for (SourcePath lexSource : ocamlContext.getLexInput()) {
@@ -384,12 +389,12 @@ public class OCamlBuildStep implements Step {
             ocamlContext.getLexCompiler().get(),
             resolver.getAbsolutePath(output),
             resolver.getAbsolutePath(lexSource)));
-      int lexExitCode = lexStep.execute(context);
-      if (lexExitCode != 0) {
-        return lexExitCode;
+      StepExecutionResult lexExecutionResult = lexStep.execute(context);
+      if (!lexExecutionResult.isSuccess()) {
+        return lexExecutionResult;
       }
     }
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   private ImmutableList<Path> sortDependency(String depOutput) {

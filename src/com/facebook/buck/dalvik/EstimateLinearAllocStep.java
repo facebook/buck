@@ -23,6 +23,7 @@ import com.facebook.buck.jvm.java.classes.FileLike;
 import com.facebook.buck.jvm.java.classes.FileLikes;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -79,7 +80,7 @@ public class EstimateLinearAllocStep implements Step, Supplier<Integer> {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) {
     Path path = filesystem.resolve(pathToJarOrClassesDirectory);
     ClasspathTraversal traversal = new ClasspathTraversal(Collections.singleton(path), filesystem) {
 
@@ -106,11 +107,11 @@ public class EstimateLinearAllocStep implements Step, Supplier<Integer> {
       new DefaultClasspathTraverser().traverse(traversal);
     } catch (IOException e) {
       context.logError(e, "Error accumulating class names for %s.", pathToJarOrClassesDirectory);
-      return 1;
+      return StepExecutionResult.ERROR;
     }
 
     this.linearAllocEstimate = (Integer) traversal.getResult();
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

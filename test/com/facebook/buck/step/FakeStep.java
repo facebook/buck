@@ -28,8 +28,8 @@ public class FakeStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
-    return exitCode;
+  public StepExecutionResult execute(ExecutionContext context) {
+    return StepExecutionResult.of(exitCode);
   }
 
   @Override

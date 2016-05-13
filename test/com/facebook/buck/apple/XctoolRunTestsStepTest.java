@@ -99,7 +99,7 @@ public class XctoolRunTestsStepTest {
         .setEnvironment(ImmutableMap.<String, String>of())
         .build();
     assertThat(
-        step.execute(executionContext),
+        step.execute(executionContext).getExitCode(),
         equalTo(0));
   }
 
@@ -149,7 +149,7 @@ public class XctoolRunTestsStepTest {
         .setConsole(testConsole)
         .build();
     assertThat(
-        step.execute(executionContext),
+        step.execute(executionContext).getExitCode(),
         equalTo(42));
     assertThat(
         testConsole.getTextWrittenToStdErr(),
@@ -205,7 +205,7 @@ public class XctoolRunTestsStepTest {
         .setEnvironment(ImmutableMap.<String, String>of())
         .build();
     assertThat(
-        step.execute(executionContext),
+        step.execute(executionContext).getExitCode(),
         equalTo(0));
   }
 
@@ -261,7 +261,7 @@ public class XctoolRunTestsStepTest {
         .setEnvironment(ImmutableMap.<String, String>of())
         .build();
     assertThat(
-        step.execute(executionContext),
+        step.execute(executionContext).getExitCode(),
         equalTo(0));
   }
 
@@ -312,7 +312,7 @@ public class XctoolRunTestsStepTest {
         .setEnvironment(ImmutableMap.<String, String>of())
         .build();
     assertThat(
-        step.execute(executionContext),
+        step.execute(executionContext).getExitCode(),
         equalTo(0));
   }
 
@@ -361,7 +361,7 @@ public class XctoolRunTestsStepTest {
         .setEnvironment(ImmutableMap.<String, String>of())
         .build();
     assertThat(
-        step.execute(executionContext),
+        step.execute(executionContext).getExitCode(),
         not(equalTo(0)));
   }
 
@@ -450,7 +450,7 @@ public class XctoolRunTestsStepTest {
           .setEnvironment(ImmutableMap.<String, String>of())
           .build();
       assertThat(
-          step.execute(executionContext),
+          step.execute(executionContext).getExitCode(),
           equalTo(0));
     }
   }
@@ -509,7 +509,7 @@ public class XctoolRunTestsStepTest {
         .setConsole(testConsole)
         .build();
     assertThat(
-        step.execute(executionContext),
+        step.execute(executionContext).getExitCode(),
         equalTo(42));
     assertThat(
         testConsole.getTextWrittenToStdErr(),
@@ -576,7 +576,7 @@ public class XctoolRunTestsStepTest {
           .setEnvironment(ImmutableMap.<String, String>of())
           .build();
       assertThat(
-          step.execute(executionContext),
+          step.execute(executionContext).getExitCode(),
           equalTo(0));
     }
   }
@@ -631,7 +631,7 @@ public class XctoolRunTestsStepTest {
         .setEnvironment(ImmutableMap.<String, String>of())
         .build();
     assertThat(
-        step.execute(executionContext),
+        step.execute(executionContext).getExitCode(),
         equalTo(0));
   }
 }

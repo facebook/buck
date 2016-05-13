@@ -65,7 +65,7 @@ public class GetStringsFilesStepTest {
         ImmutableList.of(Paths.get("test3"), Paths.get("test"), Paths.get("test2")),
         stringFilesBuilder);
 
-    assertEquals(0, step.execute(context));
+    assertEquals(0, step.execute(context).getExitCode());
 
     ImmutableList<Path> expectedStringFiles = ImmutableList.of(
         Paths.get("test3/res/values/strings.xml"),

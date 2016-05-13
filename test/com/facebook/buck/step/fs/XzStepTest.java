@@ -67,7 +67,7 @@ public class XzStepTest {
 
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    assertEquals(0, step.execute(context));
+    assertEquals(0, step.execute(context).getExitCode());
 
     ByteSource original = PathByteSource.asByteSource(sourceFile);
     ByteSource decompressed = new ByteSource() {

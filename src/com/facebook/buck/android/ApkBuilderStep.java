@@ -24,6 +24,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.KeystoreProperties;
 import com.google.common.base.Joiner;
@@ -115,7 +116,7 @@ public class ApkBuilderStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     PrintStream output = null;
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
       output = context.getStdOut();
@@ -160,13 +161,13 @@ public class ApkBuilderStep implements Step {
             UnrecoverableKeyException e) {
       context.logError(e, "Error when creating APK at: %s.", pathToOutputApkFile);
       Throwables.propagateIfInstanceOf(e, IOException.class);
-      return 1;
+      return StepExecutionResult.ERROR;
     } catch (DuplicateFileException e) {
       throw new HumanReadableException(
           String.format("Found duplicate file for APK: %1$s\nOrigin 1: %2$s\nOrigin 2: %3$s",
               e.getArchivePath(), e.getFile1(), e.getFile2()));
     }
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   private PrivateKeyAndCertificate createKeystoreProperties()

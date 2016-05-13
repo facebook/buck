@@ -51,9 +51,9 @@ public class ConditionalStepTest extends EasyMockSupport {
     final AtomicInteger numCalls = new AtomicInteger(0);
     Step stepToRunWhenSupplierIsTrue = new AbstractExecutionStep("inc") {
       @Override
-      public int execute(ExecutionContext context) {
+      public StepExecutionResult execute(ExecutionContext context) {
         numCalls.incrementAndGet();
-        return 37;
+        return StepExecutionResult.of(37);
       }
     };
 
@@ -61,7 +61,7 @@ public class ConditionalStepTest extends EasyMockSupport {
     ConditionalStep conditionalStep = new ConditionalStep(conditional, stepToRunWhenSupplierIsTrue);
     condition.set(TriState.TRUE);
     ExecutionContext context = TestExecutionContext.newInstance();
-    int exitCode = conditionalStep.execute(context);
+    int exitCode = conditionalStep.execute(context).getExitCode();
     assertEquals("stepToRunWhenSupplierIsTrue should have been run once.", 1, numCalls.get());
     assertEquals("The exit code of stepToRunWhenSupplierIsTrue should be passed through.",
         37,
@@ -92,7 +92,7 @@ public class ConditionalStepTest extends EasyMockSupport {
     final AtomicInteger numCalls = new AtomicInteger(0);
     Step stepToRunWhenSupplierIsTrue = new AbstractExecutionStep("inc") {
       @Override
-      public int execute(ExecutionContext context) {
+      public StepExecutionResult execute(ExecutionContext context) {
         numCalls.incrementAndGet();
         throw new IllegalStateException("This step should not be executed.");
       }
@@ -102,7 +102,7 @@ public class ConditionalStepTest extends EasyMockSupport {
     ConditionalStep conditionalStep = new ConditionalStep(conditional, stepToRunWhenSupplierIsTrue);
     condition.set(TriState.FALSE);
     ExecutionContext context = TestExecutionContext.newInstance();
-    int exitCode = conditionalStep.execute(context);
+    int exitCode = conditionalStep.execute(context).getExitCode();
     assertEquals("stepToRunWhenSupplierIsTrue should not have been run.", 0, numCalls.get());
     assertEquals("The exit code should be zero when the conditional is false.", 0, exitCode);
     assertEquals("inc", conditionalStep.getShortName());

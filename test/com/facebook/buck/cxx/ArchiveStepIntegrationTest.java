@@ -90,9 +90,9 @@ public class ArchiveStepIntegrationTest {
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     TestConsole console = (TestConsole) executionContext.getConsole();
-    int exitCode = archiveStep.execute(executionContext);
+    int exitCode = archiveStep.execute(executionContext).getExitCode();
     assertEquals("archive step failed: " + console.getTextWrittenToStdErr(), 0, exitCode);
-    exitCode = fileScrubberStep.execute(executionContext);
+    exitCode = fileScrubberStep.execute(executionContext).getExitCode();
     assertEquals("archive scrub step failed: " + console.getTextWrittenToStdErr(), 0, exitCode);
 
     // Now read the archive entries and verify that the timestamp, UID, and GID fields are
@@ -133,7 +133,7 @@ public class ArchiveStepIntegrationTest {
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     TestConsole console = (TestConsole) executionContext.getConsole();
-    int exitCode = archiveStep.execute(executionContext);
+    int exitCode = archiveStep.execute(executionContext).getExitCode();
     assertEquals("archive step failed: " + console.getTextWrittenToStdErr(), 0, exitCode);
 
     // Now read the archive entries and verify that the timestamp, UID, and GID fields are
@@ -176,7 +176,7 @@ public class ArchiveStepIntegrationTest {
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     TestConsole console = (TestConsole) executionContext.getConsole();
-    int exitCode = archiveStep.execute(executionContext);
+    int exitCode = archiveStep.execute(executionContext).getExitCode();
     assertEquals("archive step failed: " + console.getTextWrittenToStdErr(), 0, exitCode);
 
     // Now read the archive entries and verify that the timestamp, UID, and GID fields are
@@ -225,7 +225,7 @@ public class ArchiveStepIntegrationTest {
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     TestConsole console = (TestConsole) executionContext.getConsole();
-    int exitCode = archiveStep.execute(executionContext);
+    int exitCode = archiveStep.execute(executionContext).getExitCode();
     assertEquals("archive step failed: " + console.getTextWrittenToStdErr(), 0, exitCode);
 
     // Verify that the thin header is present.

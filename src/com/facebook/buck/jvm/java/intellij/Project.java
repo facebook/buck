@@ -1102,7 +1102,7 @@ public class Project {
         .setConsole(childConsole)
         .setExecutors(executionContext.getExecutors())
         .build()) {
-      exitCode = command.execute(childContext);
+      exitCode = command.execute(childContext).getExitCode();
     }
     return new ExitCodeAndOutput(exitCode, command.getStdout(), command.getStderr());
   }

@@ -20,6 +20,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -54,7 +55,7 @@ public class GetStringsFilesStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) {
     try {
       Predicate<Path> filter = new Predicate<Path>() {
         @Override
@@ -67,10 +68,10 @@ public class GetStringsFilesStep implements Step {
       for (Path resDir : resDirs) {
         stringFilesBuilder.addAll(filesystem.getFilesUnderPath(resDir, filter));
       }
-      return 0;
+      return StepExecutionResult.SUCCESS;
     } catch (Exception e) {
       context.logError(e, "There was an error getting the list of string files.");
-      return 1;
+      return StepExecutionResult.ERROR;
     }
   }
 

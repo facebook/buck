@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Joiner;
@@ -97,7 +98,8 @@ public class JavacDirectToJarStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
 
     CustomZipOutputStream jarOutputStream = null;
 
@@ -109,9 +111,9 @@ public class JavacDirectToJarStep implements Step {
 
       JavacStep javacStep = createJavacStep(jarOutputStream);
 
-      int javacStepResult = javacStep.execute(context);
+      StepExecutionResult javacStepResult = javacStep.execute(context);
 
-      if (javacStepResult != 0) {
+      if (!javacStepResult.isSuccess()) {
         return javacStepResult;
       }
 
@@ -119,7 +121,7 @@ public class JavacDirectToJarStep implements Step {
       // added into the jarOutputStream. However, in this step they are already directly placed in
       // jarOutputStream by the compiler. entriesToJar is still needed though because it may contain
       // other resources that need to be copied into the jar.
-      return JarDirectoryStepHelper.createJarFile(
+      return StepExecutionResult.of(JarDirectoryStepHelper.createJarFile(
           filesystem,
           outputJar,
           jarOutputStream,
@@ -131,7 +133,7 @@ public class JavacDirectToJarStep implements Step {
           manifestFile,
           /* mergeManifests */ true,
           ImmutableSet.<Pattern>of(),
-          context);
+          context));
 
     } finally {
       if (jarOutputStream != null) {

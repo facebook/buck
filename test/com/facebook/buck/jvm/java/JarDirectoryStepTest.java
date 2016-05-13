@@ -79,7 +79,7 @@ public class JarDirectoryStepTest {
         /* manifest file */ null);
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    int returnCode = step.execute(context);
+    int returnCode = step.execute(context).getExitCode();
 
     assertEquals(0, returnCode);
 
@@ -141,7 +141,7 @@ public class JarDirectoryStepTest {
         .setConsole(console)
         .build();
 
-    int returnCode = step.execute(context);
+    int returnCode = step.execute(context).getExitCode();
 
     assertEquals(1, returnCode);
     assertEquals(
@@ -169,7 +169,7 @@ public class JarDirectoryStepTest {
 
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    int returnCode = step.execute(context);
+    int returnCode = step.execute(context).getExitCode();
 
     assertEquals(0, returnCode);
 
@@ -216,7 +216,7 @@ public class JarDirectoryStepTest {
         /* merge manifest */ true,
         /* blacklist */ ImmutableSet.<String>of());
     ExecutionContext context = TestExecutionContext.newInstance();
-    assertEquals(0, step.execute(context));
+    assertEquals(0, step.execute(context).getExitCode());
 
     try (Zip zip = new Zip(output, false)) {
       byte[] rawManifest = zip.readFully("META-INF/MANIFEST.MF");
@@ -243,7 +243,7 @@ public class JarDirectoryStepTest {
         /* manifest file */ null);
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    int returnCode = step.execute(context);
+    int returnCode = step.execute(context).getExitCode();
 
     assertEquals(0, returnCode);
 
@@ -303,7 +303,7 @@ public class JarDirectoryStepTest {
 
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    int returnCode = step.execute(context);
+    int returnCode = step.execute(context).getExitCode();
 
     assertEquals(0, returnCode);
 
@@ -332,7 +332,7 @@ public class JarDirectoryStepTest {
             /* main class */ null,
             /* manifest file */ null);
     ExecutionContext context = TestExecutionContext.newInstance();
-    int returnCode = step.execute(context);
+    int returnCode = step.execute(context).getExitCode();
     assertEquals(0, returnCode);
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.

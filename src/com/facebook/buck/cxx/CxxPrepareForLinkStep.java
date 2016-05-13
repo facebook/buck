@@ -20,6 +20,7 @@ import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
@@ -82,9 +83,10 @@ public class CxxPrepareForLinkStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     prepareArgFileContents();
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

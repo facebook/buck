@@ -23,6 +23,7 @@ import com.facebook.buck.jvm.java.classes.FileLike;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -71,7 +72,7 @@ public class HashInputJarsToDexStep extends AbstractExecutionStep
   }
 
   @Override
-  public int execute(final ExecutionContext context) {
+  public StepExecutionResult execute(final ExecutionContext context) {
     ImmutableList.Builder<Path> allInputs = ImmutableList.builder();
     allInputs.addAll(primaryInputsToDex.get());
     if (secondaryOutputToInputs.isPresent()) {
@@ -98,11 +99,11 @@ public class HashInputJarsToDexStep extends AbstractExecutionStep
         dexInputsToHashes.put(path, Sha1HashCode.fromHashCode(hasher.hash()));
       } catch (IOException e) {
         context.logError(e, "Error hashing smart dex input: %s", path);
-        return 1;
+        return StepExecutionResult.ERROR;
       }
     }
     stepFinished = true;
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

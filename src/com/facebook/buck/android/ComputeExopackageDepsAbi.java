@@ -33,6 +33,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -100,7 +101,7 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
     return ImmutableList.<Step>of(
         new AbstractExecutionStep("compute_android_binary_deps_abi") {
           @Override
-          public int execute(ExecutionContext context) {
+          public StepExecutionResult execute(ExecutionContext context) {
             try {
 
               // For exopackages, the only significant thing android_binary does is apkbuilder,
@@ -209,10 +210,10 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
               String abiHash = hasher.hash().toString();
               LOG.verbose("ABI hash = %s", abiHash);
               buildableContext.addMetadata(METADATA_KEY, abiHash);
-              return 0;
+              return StepExecutionResult.SUCCESS;
             } catch (IOException e) {
               context.logError(e, "Error computing ABI hash.");
-              return 1;
+              return StepExecutionResult.ERROR;
             }
           }
         });

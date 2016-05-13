@@ -24,6 +24,7 @@ import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -84,7 +85,7 @@ public class IntraDexReorderStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     try {
       DefaultStepRunner stepRunner = new DefaultStepRunner(context);
       List<Step> dxSteps = generateReorderCommands();
@@ -93,9 +94,9 @@ public class IntraDexReorderStep implements Step {
       }
     } catch (StepFailedException | IOException | InterruptedException e) {
       context.logError(e, "There was an error in intra dex reorder step.");
-      return 1;
+      return StepExecutionResult.ERROR;
     }
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   private ImmutableList<Step> generateReorderCommands()

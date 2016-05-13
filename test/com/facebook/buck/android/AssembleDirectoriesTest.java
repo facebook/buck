@@ -87,7 +87,7 @@ public class AssembleDirectoriesTest {
         FakeBuildContext.NOOP_CONTEXT,
         new FakeBuildableContext());
     for (Step step : steps) {
-      assertEquals(0, step.execute(context));
+      assertEquals(0, step.execute(context).getExitCode());
     }
     Path outputFile = filesystem.resolve(assembleDirectories.getPathToOutput());
     try (DirectoryStream<Path> dir = Files.newDirectoryStream(outputFile)) {

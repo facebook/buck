@@ -25,6 +25,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -92,11 +93,11 @@ public class ZipStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) {
     if (filesystem.exists(pathToZipFile)) {
       context.postEvent(
           ConsoleEvent.severe("Attempting to overwrite an existing zip: %s", pathToZipFile));
-      return 1;
+      return StepExecutionResult.ERROR;
     }
 
     // Since filesystem traversals can be non-deterministic, sort the entries we find into
@@ -191,10 +192,10 @@ public class ZipStep implements Step {
 
     } catch (IOException e) {
       context.logError(e, "Error creating zip file %s", pathToZipFile);
-      return 1;
+      return StepExecutionResult.ERROR;
     }
 
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

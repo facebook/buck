@@ -19,6 +19,7 @@ package com.facebook.buck.d;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
@@ -58,7 +59,7 @@ public class DTestStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     // Build the process, redirecting output to the provided output file.  In general,
     // it's undesirable that both stdout and stderr are being redirected to the same
     // input stream.  However, due to the nature of OS pipe buffering, we can't really
@@ -77,7 +78,7 @@ public class DTestStep implements Step {
       process = BgProcessKiller.startProcess(builder);
     } catch (IOException e) {
       context.logError(e, "Error starting command %s", command);
-      return 1;
+      return StepExecutionResult.ERROR;
     }
 
     // Run the test process, saving the exit code.
@@ -104,10 +105,10 @@ public class DTestStep implements Step {
       stream.write((Integer.toString(result.getExitCode())).getBytes());
     } catch (IOException e) {
       context.logError(e, "Error saving exit code to %s", exitCode);
-      return 1;
+      return StepExecutionResult.ERROR;
     }
 
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

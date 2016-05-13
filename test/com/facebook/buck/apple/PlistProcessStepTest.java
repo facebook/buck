@@ -59,7 +59,7 @@ public class PlistProcessStepTest {
     ExecutionContext executionContext = TestExecutionContext
         .newBuilder()
         .build();
-    int errorCode = plistProcessStep.execute(executionContext);
+    int errorCode = plistProcessStep.execute(executionContext).getExitCode();
     assertThat(errorCode, equalTo(1));
   }
 
@@ -84,7 +84,7 @@ public class PlistProcessStepTest {
         INPUT_PATH);
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
-    int errorCode = plistProcessStep.execute(executionContext);
+    int errorCode = plistProcessStep.execute(executionContext).getExitCode();
     assertThat(errorCode, equalTo(0));
 
     dict.put("Key1", "OverrideValue");
@@ -114,7 +114,7 @@ public class PlistProcessStepTest {
         INPUT_PATH);
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
-    int errorCode = plistProcessStep.execute(executionContext);
+    int errorCode = plistProcessStep.execute(executionContext).getExitCode();
     assertThat(errorCode, equalTo(0));
 
     assertThat(
@@ -143,7 +143,7 @@ public class PlistProcessStepTest {
         INPUT_PATH);
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
-    int errorCode = plistProcessStep.execute(executionContext);
+    int errorCode = plistProcessStep.execute(executionContext).getExitCode();
     assertThat(errorCode, equalTo(0));
 
     assertThat(

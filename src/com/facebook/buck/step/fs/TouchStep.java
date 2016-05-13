@@ -19,6 +19,7 @@ package com.facebook.buck.step.fs;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -42,9 +43,10 @@ public class TouchStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     filesystem.touch(fileToTouch);
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

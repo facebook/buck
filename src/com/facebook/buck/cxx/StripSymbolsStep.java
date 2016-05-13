@@ -21,6 +21,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
@@ -47,7 +48,8 @@ public class StripSymbolsStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     return (new DefaultShellStep(
         projectFilesystem.getRootPath(),
         ImmutableList.<String>builder()

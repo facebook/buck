@@ -19,6 +19,7 @@ package com.facebook.buck.zip;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
@@ -88,7 +89,7 @@ public class RepackZipEntriesStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) {
     Path inputFile = filesystem.getPathForRelativePath(inputPath);
     Path outputFile = filesystem.getPathForRelativePath(outputPath);
     try (
@@ -121,10 +122,10 @@ public class RepackZipEntriesStep implements Step {
         out.closeEntry();
       }
 
-      return 0;
+      return StepExecutionResult.SUCCESS;
     } catch (IOException e) {
       context.logError(e, "Unable to repack zip");
-      return 1;
+      return StepExecutionResult.ERROR;
     }
   }
 

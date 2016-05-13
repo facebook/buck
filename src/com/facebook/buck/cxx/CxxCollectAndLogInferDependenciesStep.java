@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -117,7 +118,8 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     ImmutableList<String> output;
     if (analysisRule.isPresent()) {
       output = processAnalysisRule(analysisRule.get());
@@ -127,7 +129,7 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
       throw new IllegalStateException("Expected non-empty analysis or capture rules in input");
     }
     projectFilesystem.writeLinesToPath(output, outputFile);
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

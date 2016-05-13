@@ -19,6 +19,7 @@ package com.facebook.buck.step.fs;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -55,13 +56,14 @@ public class StringTemplateStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     String template;
     try {
       template = new String(Files.readAllBytes(templatePath), Charsets.UTF_8);
     } catch (IOException e) {
       context.logError(e, "Could not read sh_binary template file");
-      return 1;
+      return StepExecutionResult.ERROR;
     }
 
     ST st = new ST(template);

@@ -23,6 +23,7 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
@@ -168,19 +169,19 @@ public final class ProGuardObfuscateStep extends ShellStep {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
-    int exitCode = super.execute(context);
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+    StepExecutionResult executionResult = super.execute(context);
 
     // proguard has a peculiar behaviour when multiple -injars/outjars pairs are specified in which
     // any -injars that would have been fully stripped away will not produce their matching -outjars
     // as requested (so the file won't exist).  Our build steps are not sophisticated enough to
     // account for this and remove those entries from the classes to dex so we hack things here to
     // ensure that the files exist but are empty.
-    if (exitCode == 0) {
-      exitCode = ensureAllOutputsExist(context);
+    if (executionResult.isSuccess()) {
+      return StepExecutionResult.of(ensureAllOutputsExist(context));
     }
 
-    return exitCode;
+    return executionResult;
   }
 
   private int ensureAllOutputsExist(ExecutionContext context) {
@@ -281,7 +282,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     }
 
     @Override
-    public int execute(ExecutionContext context) {
+    public StepExecutionResult execute(ExecutionContext context) {
       String proGuardArguments = Joiner.on('\n')
           .join(getParameters(context, filesystem.getRootPath()));
       try {
@@ -292,10 +293,10 @@ public final class ProGuardObfuscateStep extends ShellStep {
         context.logError(e,
             "Error writing ProGuard arguments to file: %s.",
             pathToProGuardCommandLineArgsFile);
-        return 1;
+        return StepExecutionResult.ERROR;
       }
 
-      return 0;
+      return StepExecutionResult.SUCCESS;
     }
 
     /** @return the list of arguments to pass to ProGuard. */

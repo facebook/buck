@@ -213,7 +213,7 @@ public class WorkerShellStepTest {
         .setBuckEventBus(eventBus)
         .build();
 
-    int exitCode = step.execute(context);
+    int exitCode = step.execute(context).getExitCode();
     assertThat(exitCode, Matchers.equalTo(0));
 
     // assert that the job's stdout and stderr were written to the console

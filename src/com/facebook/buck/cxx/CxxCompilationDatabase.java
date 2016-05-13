@@ -34,6 +34,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -156,9 +157,9 @@ public class CxxCompilationDatabase extends AbstractBuildRule
     }
 
     @Override
-    public int execute(ExecutionContext context) {
+    public StepExecutionResult execute(ExecutionContext context) {
       Iterable<CxxCompilationDatabaseEntry> entries = createEntries();
-      return writeOutput(entries, context);
+      return StepExecutionResult.of(writeOutput(entries, context));
     }
 
     @VisibleForTesting

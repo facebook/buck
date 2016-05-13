@@ -25,6 +25,7 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.FilteredDirectoryCopier;
@@ -133,8 +134,9 @@ public class FilterResourcesStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws IOException, InterruptedException {
-      return doExecute(context);
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
+    return StepExecutionResult.of(doExecute(context));
   }
 
   private int doExecute(ExecutionContext context) throws IOException, InterruptedException {
@@ -361,7 +363,7 @@ public class FilterResourcesStep implements Step {
           Escaper.escapeAsBashString(source),
           Escaper.escapeAsBashString(destination));
 
-      if (0 != convertStep.execute(context)) {
+      if (!convertStep.execute(context).isSuccess()) {
         throw new HumanReadableException("Cannot scale " + source + " to " + destination);
       }
     }

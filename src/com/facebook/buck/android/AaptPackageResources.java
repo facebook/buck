@@ -42,6 +42,7 @@ import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -278,11 +279,11 @@ public class AaptPackageResources extends AbstractBuildRule
         steps.add(
             new AbstractExecutionStep("record_build_output") {
               @Override
-              public int execute(ExecutionContext context) {
+              public StepExecutionResult execute(ExecutionContext context) {
                 buildableContext.addMetadata(
                     R_DOT_JAVA_LINEAR_ALLOC_SIZE,
                     estimateLinearAllocStep.get().toString());
-                return 0;
+                return StepExecutionResult.SUCCESS;
               }
             });
       }

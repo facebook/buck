@@ -25,6 +25,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -179,7 +180,7 @@ public class SplitZipStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) {
     try {
       Set<Path> inputJarPaths = FluentIterable.from(inputPathsToSplit)
           .transform(filesystem.getAbsolutifier())
@@ -226,10 +227,10 @@ public class SplitZipStep implements Step {
         writeMetaList(secondaryMetaInfoWriter, outputFiles, dexSplitMode.getDexStore());
       }
 
-      return 0;
+      return StepExecutionResult.SUCCESS;
     } catch (IOException e) {
       context.logError(e, "There was an error running SplitZipStep.");
-      return 1;
+      return StepExecutionResult.ERROR;
     }
   }
 

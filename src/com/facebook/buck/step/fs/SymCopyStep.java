@@ -19,6 +19,7 @@ package com.facebook.buck.step.fs;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -66,7 +67,8 @@ public class SymCopyStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     for (Path source : roots) {
       Preconditions.checkArgument(
           !source.isAbsolute() && filesystem.exists(source));
@@ -74,7 +76,7 @@ public class SymCopyStep implements Step {
           source,
           new SymCopyFileVisitor(source, dest));
     }
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

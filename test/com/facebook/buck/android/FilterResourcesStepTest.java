@@ -110,7 +110,7 @@ public class FilterResourcesStepTest {
     }
 
     // Execute command.
-    assertThat(command.execute(TestExecutionContext.newInstance()), Matchers.is(0));
+    assertThat(command.execute(TestExecutionContext.newInstance()).getExitCode(), Matchers.is(0));
   }
 
   @Test

@@ -24,6 +24,7 @@ import com.android.manifmerger.MergerLog;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
@@ -59,7 +60,7 @@ public class GenerateManifestStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) {
 
     if (skeletonManifestPath.getNameCount() == 0) {
       throw new HumanReadableException("Skeleton manifest filepath is missing");
@@ -74,7 +75,7 @@ public class GenerateManifestStep implements Step {
       Files.createParentDirs(outManifestPath.toFile());
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
-      return 1;
+      return StepExecutionResult.ERROR;
     }
 
     List<File> libraryManifestFiles = Lists.newArrayList();
@@ -117,7 +118,7 @@ public class GenerateManifestStep implements Step {
       }
     }
 
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override

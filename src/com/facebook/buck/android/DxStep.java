@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -171,9 +172,9 @@ public class DxStep extends ShellStep {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     if (options.contains(Option.RUN_IN_PROCESS)) {
-      return executeInProcess(context);
+      return StepExecutionResult.of(executeInProcess(context));
     } else {
       return super.execute(context);
     }

@@ -133,7 +133,7 @@ public class MergeAndroidResourcesStepTest {
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
-    assertEquals(0, mergeStep.execute(executionContext));
+    assertEquals(0, mergeStep.execute(executionContext).getExitCode());
 
     // Verify that the correct Java code is generated.
     assertThat(
@@ -193,7 +193,7 @@ public class MergeAndroidResourcesStepTest {
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
-    assertEquals(0, mergeStep.execute(executionContext));
+    assertEquals(0, mergeStep.execute(executionContext).getExitCode());
 
     // Verify that the correct Java code is generated.
     assertEquals(
@@ -268,7 +268,7 @@ public class MergeAndroidResourcesStepTest {
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
-    assertEquals(0, mergeStep.execute(executionContext));
+    assertEquals(0, mergeStep.execute(executionContext).getExitCode());
 
     // Verify that the correct Java code is generated.
     assertEquals(
@@ -340,7 +340,7 @@ public class MergeAndroidResourcesStepTest {
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
-    assertEquals(0, mergeStep.execute(executionContext));
+    assertEquals(0, mergeStep.execute(executionContext).getExitCode());
 
     String res1java = filesystem.readFileIfItExists(Paths.get("output/res1/R.java")).get();
     String res2java = filesystem.readFileIfItExists(Paths.get("output/res2/R.java")).get();

@@ -24,6 +24,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.Shell;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeExecutableStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.MoreIterables;
@@ -57,7 +58,8 @@ public class OCamlDebugLauncherStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException, IOException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws InterruptedException, IOException {
     String debugCmdStr = getDebugCmd();
     String debugLauncherScript = getDebugLauncherScript(debugCmdStr);
 
@@ -66,9 +68,9 @@ public class OCamlDebugLauncherStep implements Step {
         debugLauncherScript,
         args.getOutput(),
         /* executable */ false);
-    int writeExitCode = writeFile.execute(context);
-    if (writeExitCode != 0) {
-      return writeExitCode;
+    StepExecutionResult writeExecutionResult = writeFile.execute(context);
+    if (!writeExecutionResult.isSuccess()) {
+      return writeExecutionResult;
     }
 
     Step chmod = new MakeExecutableStep(filesystem, args.getOutput());

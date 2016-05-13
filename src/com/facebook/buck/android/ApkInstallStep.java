@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 
 import com.android.ddmlib.IDevice;
 
@@ -32,16 +33,16 @@ public class ApkInstallStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     AdbHelper adbHelper = AdbHelper.get(context, true);
     if (adbHelper.getDevices(true).isEmpty()) {
-      return 0;
+      return StepExecutionResult.SUCCESS;
     }
 
     if (!adbHelper.installApk(installableApk, false, true)) {
-      return 1;
+      return StepExecutionResult.ERROR;
     }
-    return 0;
+    return StepExecutionResult.SUCCESS;
   }
 
   @Override
