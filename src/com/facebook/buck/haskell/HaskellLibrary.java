@@ -85,12 +85,12 @@ public class HaskellLibrary extends NoopBuildRule implements HaskellCompileDep, 
     throw new AssertionError();
   }
 
-  private HaskellLibraryDescription.Type getInterfaceType(CxxSourceRuleFactory.PicType picType) {
+  private HaskellLibraryDescription.Type getPackageType(CxxSourceRuleFactory.PicType picType) {
     switch (picType) {
       case PIC:
-        return HaskellLibraryDescription.Type.INTERFACES_DYNAMIC;
+        return HaskellLibraryDescription.Type.PACKAGE_DYNAMIC;
       case PDC:
-        return HaskellLibraryDescription.Type.INTERFACES;
+        return HaskellLibraryDescription.Type.PACKAGE;
     }
     throw new AssertionError();
   }
@@ -133,13 +133,13 @@ public class HaskellLibrary extends NoopBuildRule implements HaskellCompileDep, 
   }
 
   @VisibleForTesting
-  protected HaskellCompileRule requireCompileRule(
+  protected HaskellPackageRule requirePackageRule(
       CxxPlatform cxxPlatform,
       CxxSourceRuleFactory.PicType picType)
       throws NoSuchBuildTargetException {
-    return (HaskellCompileRule) requireBuildRule(
+    return (HaskellPackageRule) requireBuildRule(
         cxxPlatform.getFlavor(),
-        getInterfaceType(picType).getFlavor());
+        getPackageType(picType).getFlavor());
   }
 
   @Override
@@ -147,10 +147,10 @@ public class HaskellLibrary extends NoopBuildRule implements HaskellCompileDep, 
       CxxPlatform cxxPlatform,
       CxxSourceRuleFactory.PicType picType)
       throws NoSuchBuildTargetException {
-    HaskellCompileRule rule = requireCompileRule(cxxPlatform, picType);
-    return HaskellCompileInput.of(
-        ImmutableList.<String>of(),
-        ImmutableList.<SourcePath>of(new BuildTargetSourcePath(rule.getBuildTarget())));
+    HaskellPackageRule rule = requirePackageRule(cxxPlatform, picType);
+    return HaskellCompileInput.builder()
+        .addPackages(rule.getPackage())
+        .build();
   }
 
 }

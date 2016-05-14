@@ -50,6 +50,12 @@ abstract class AbstractFakeHaskellConfig implements HaskellConfig {
 
   @Override
   @Value.Default
+  public ToolProvider getPackager() {
+    return new ConstantToolProvider(new CommandTool.Builder().build());
+  }
+
+  @Override
+  @Value.Default
   public boolean shouldCacheLinks() {
     return true;
   }

@@ -42,6 +42,11 @@ public interface HaskellConfig {
   ImmutableList<String> getLinkerFlags();
 
   /**
+   * @return the {@link ToolProvider} for the haskell packager.
+   */
+  ToolProvider getPackager();
+
+  /**
    * @return whether to cache haskell link rules.
    */
   boolean shouldCacheLinks();

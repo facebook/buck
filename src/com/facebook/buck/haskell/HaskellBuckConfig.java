@@ -103,6 +103,28 @@ public class HaskellBuckConfig implements HaskellConfig {
     return getFlags("linker_flags").or(ImmutableList.<String>of());
   }
 
+  @VisibleForTesting
+  protected Optional<Path> getSystemPackager() {
+    return finder.getOptionalExecutable(Paths.get("ghc-pkg"), delegate.getEnvironment());
+  }
+
+  @Override
+  public ToolProvider getPackager() {
+    Optional<ToolProvider> configuredPackager = delegate.getToolProvider(SECTION, "packager");
+    if (configuredPackager.isPresent()) {
+      return configuredPackager.get();
+    }
+
+    Optional<Path> systemPackager = getSystemPackager();
+    if (systemPackager.isPresent()) {
+      return new ConstantToolProvider(new HashedFileTool(systemPackager.get()));
+    }
+
+    throw new HumanReadableException(
+        "No Haskell packager found in .buckconfig (%s.compiler) or on system",
+        SECTION);
+  }
+
   @Override
   public boolean shouldCacheLinks() {
     return delegate.getBooleanValue(SECTION, "cache_links", true);

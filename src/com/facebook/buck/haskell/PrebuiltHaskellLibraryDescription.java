@@ -68,11 +68,13 @@ public class PrebuiltHaskellLibraryDescription
       public HaskellCompileInput getCompileInput(
           CxxPlatform cxxPlatform,
           CxxSourceRuleFactory.PicType picType) throws NoSuchBuildTargetException {
-        return HaskellCompileInput.of(
-            args.exportedCompilerFlags.or(ImmutableList.<String>of()),
-            picType == CxxSourceRuleFactory.PicType.PDC ?
-                args.staticInterfaces.asSet() :
-                args.sharedInterfaces.asSet());
+        return HaskellCompileInput.builder()
+            .addAllFlags(args.exportedCompilerFlags.or(ImmutableList.<String>of()))
+            .addAllIncludes(
+                picType == CxxSourceRuleFactory.PicType.PDC ?
+                    args.staticInterfaces.asSet() :
+                    args.sharedInterfaces.asSet())
+            .build();
       }
 
       @Override

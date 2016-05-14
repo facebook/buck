@@ -16,6 +16,7 @@
 
 package com.facebook.buck.haskell;
 
+import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.cxx.Linker;
@@ -56,6 +57,10 @@ public class HaskellLibraryIntegrationTest {
   @Parameterized.Parameter(value = 0)
   public Linker.LinkableDepType linkStyle;
 
+  private String getLinkFlavor() {
+    return linkStyle.toString().toLowerCase().replace('_', '-');
+  }
+
   @Before
   public void setUp() throws IOException {
 
@@ -72,19 +77,26 @@ public class HaskellLibraryIntegrationTest {
 
   @Test
   public void simple() throws IOException {
-    workspace.runBuckBuild("//:foo#default," + linkStyle.toString().toLowerCase()).assertSuccess();
+    workspace.runBuckBuild("//:foo#default," + getLinkFlavor()).assertSuccess();
   }
 
   @Test
   public void dependency() throws IOException {
-    workspace.runBuckBuild("//:dependent#default," + linkStyle.toString().toLowerCase())
+    workspace.runBuckBuild("//:dependent#default," + getLinkFlavor())
         .assertSuccess();
   }
 
   @Test
   public void foreign() throws IOException {
-    workspace.runBuckBuild("//:foreign#default," + linkStyle.toString().toLowerCase())
-        .assertSuccess();
+    workspace.runBuckBuild("//:foreign#default," + getLinkFlavor()).assertSuccess();
+  }
+
+  @Test
+  public void firstOrderDeps() throws IOException {
+    workspace.runBuckBuild("//:first_order_a_pass#default," + getLinkFlavor()).assertSuccess();
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckBuild("//:first_order_a_fail#default," + getLinkFlavor()).assertFailure();
+    assertThat(result.getStderr(), Matchers.containsString("It is a member of the hidden package"));
   }
 
 }

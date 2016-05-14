@@ -173,6 +173,7 @@ public class HaskellBinaryDescription implements
                     CxxSourceRuleFactory.PicType.PDC :
                     CxxSourceRuleFactory.PicType.PIC,
                 args.main,
+                Optional.<HaskellPackageInfo>absent(),
                 args.compilerFlags.or(ImmutableList.<String>of()),
                 HaskellSources.from(
                     params.getBuildTarget(),

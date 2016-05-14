@@ -17,7 +17,7 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 
 import org.immutables.value.Value;
@@ -27,7 +27,7 @@ import org.immutables.value.Value;
  * rules) export this object to their dependent's compilations.
  */
 @Value.Immutable
-@BuckStyleTuple
+@BuckStyleImmutable
 interface AbstractHaskellCompileInput {
 
   /**
@@ -39,5 +39,10 @@ interface AbstractHaskellCompileInput {
    * @return any haskell includes used by the top-level compile job.
    */
   ImmutableList<SourcePath> getIncludes();
+
+  /**
+   * @return any haskell packages used by the top-level compile job.
+   */
+  ImmutableList<HaskellPackage> getPackages();
 
 }

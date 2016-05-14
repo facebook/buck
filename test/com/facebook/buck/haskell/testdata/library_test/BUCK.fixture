@@ -38,3 +38,41 @@ cxx_library(
     'foreign.c',
   ],
 )
+
+haskell_library(
+  name = 'first_order_a_fail',
+  srcs = [
+    'FirstOrderA.hs',
+  ],
+  deps = [
+    ':first_order_b',
+  ],
+)
+
+haskell_library(
+  name = 'first_order_a_pass',
+  srcs = [
+    'FirstOrderA.hs',
+  ],
+  deps = [
+    ':first_order_b',
+    ':first_order_c',
+  ],
+)
+
+haskell_library(
+  name = 'first_order_b',
+  srcs = [
+    'FirstOrderB.hs',
+  ],
+  deps = [
+    ':first_order_c',
+  ],
+)
+
+haskell_library(
+  name = 'first_order_c',
+  srcs = [
+    'FirstOrderC.hs',
+  ],
+)

@@ -37,6 +37,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -46,9 +47,11 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
+import java.io.File;
 import java.util.Map;
 
 public class HaskellLibraryDescription implements
@@ -83,6 +86,18 @@ public class HaskellLibraryDescription implements
     return new Arg();
   }
 
+  /**
+   * @return the package identifier to use for the library with the given target.
+   */
+  private HaskellPackageInfo getPackageInfo(BuildTarget target) {
+    String name =
+        String.format("%s-%s", target.getBaseName(), target.getShortName());
+    name = name.replace(File.separatorChar, '-');
+    name = name.replace('_', '-');
+    name = name.replaceFirst("^-*", "");
+    return HaskellPackageInfo.of(name, "1.0.0", name);
+  }
+
   private HaskellCompileRule requireCompileRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -99,29 +114,13 @@ public class HaskellLibraryDescription implements
         haskellConfig,
         picType,
         Optional.<String>absent(),
+        Optional.of(getPackageInfo(params.getBuildTarget())),
         args.compilerFlags.or(ImmutableList.<String>of()),
         HaskellSources.from(
             params.getBuildTarget(),
             pathResolver,
             "srcs",
             args.srcs.or(SourceList.EMPTY)));
-  }
-
-  private HaskellCompileRule createInterfaces(
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
-      CxxPlatform cxxPlatform,
-      Arg args,
-      CxxSourceRuleFactory.PicType picType)
-      throws NoSuchBuildTargetException {
-    return requireCompileRule(
-        params,
-        resolver,
-        pathResolver,
-        cxxPlatform,
-        args,
-        picType);
   }
 
   private Archive createStaticLibrary(
@@ -147,6 +146,43 @@ public class HaskellLibraryDescription implements
             cxxPlatform.getFlavor(),
             picType),
         compileRule.getObjects());
+  }
+
+  private HaskellPackageRule createPackage(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
+      Arg args,
+      CxxSourceRuleFactory.PicType picType)
+      throws NoSuchBuildTargetException {
+
+    ImmutableSortedMap.Builder<String, HaskellPackage> depPackagesBuilder =
+        ImmutableSortedMap.naturalOrder();
+    for (BuildRule rule : params.getDeps()) {
+      if (rule instanceof HaskellCompileDep) {
+        ImmutableList<HaskellPackage> packages =
+            ((HaskellCompileDep) rule).getCompileInput(cxxPlatform, picType).getPackages();
+        for (HaskellPackage pkg : packages) {
+          depPackagesBuilder.put(pkg.getInfo().getIdentifier(), pkg);
+        }
+      }
+    }
+    ImmutableSortedMap<String, HaskellPackage> depPackages = depPackagesBuilder.build();
+
+    HaskellCompileRule compileRule =
+        requireCompileRule(params, resolver, pathResolver, cxxPlatform, args, picType);
+
+    return HaskellPackageRule.from(
+        params.getBuildTarget(),
+        params,
+        pathResolver,
+        haskellConfig.getPackager().resolve(resolver),
+        getPackageInfo(params.getBuildTarget()),
+        depPackages,
+        compileRule.getModules(),
+        ImmutableSortedSet.<SourcePath>of(),
+        ImmutableSortedSet.of(compileRule.getInterfaces()));
   }
 
   private HaskellLinkRule createSharedLibrary(
@@ -198,15 +234,15 @@ public class HaskellLibraryDescription implements
       Preconditions.checkState(cxxPlatform.isPresent());
 
       switch (type.get().getValue()) {
-        case INTERFACES:
-        case INTERFACES_DYNAMIC:
-          return createInterfaces(
+        case PACKAGE:
+        case PACKAGE_DYNAMIC:
+          return createPackage(
               params,
               resolver,
               pathResolver,
               cxxPlatform.get(),
               args,
-              type.get().getValue() == Type.INTERFACES_DYNAMIC ?
+              type.get().getValue() == Type.PACKAGE_DYNAMIC ?
                   CxxSourceRuleFactory.PicType.PIC :
                   CxxSourceRuleFactory.PicType.PDC);
         case SHARED:
@@ -264,11 +300,13 @@ public class HaskellLibraryDescription implements
 
   protected enum Type implements FlavorConvertible {
 
-    INTERFACES(ImmutableFlavor.of("interfaces")),
-    INTERFACES_DYNAMIC(ImmutableFlavor.of("interfaces-dynamic")),
+    PACKAGE(ImmutableFlavor.of("package")),
+    PACKAGE_DYNAMIC(ImmutableFlavor.of("package-dynamic")),
+
     SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR),
     STATIC_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR),
     STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR),
+
     ;
 
     private final Flavor flavor;

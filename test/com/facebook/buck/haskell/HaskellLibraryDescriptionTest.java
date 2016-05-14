@@ -44,10 +44,15 @@ public class HaskellLibraryDescriptionTest {
             TargetGraphFactory.newInstance(builder.build()),
             new DefaultTargetNodeToBuildRuleTransformer());
     HaskellLibrary library = (HaskellLibrary) builder.build(resolver);
-    HaskellCompileRule rule =
-        library.requireCompileRule(
+    library.getCompileInput(
+        CxxPlatformUtils.DEFAULT_PLATFORM,
+        CxxSourceRuleFactory.PicType.PDC);
+    BuildTarget compileTarget =
+        HaskellDescriptionUtils.getCompileBuildTarget(
+            target,
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxSourceRuleFactory.PicType.PIC);
+            CxxSourceRuleFactory.PicType.PDC);
+    HaskellCompileRule rule = resolver.getRuleWithType(compileTarget, HaskellCompileRule.class);
     assertThat(rule.getFlags(), Matchers.hasItem(flag));
   }
 
