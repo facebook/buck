@@ -208,7 +208,7 @@ public class HaskellCompileRule extends AbstractBuildRule {
             return ImmutableList.<String>builder()
                 .addAll(compiler.getCommandPrefix(getResolver()))
                 .addAll(flags)
-                .add("-c")
+                .add("-no-link")
                 .addAll(
                     picType == CxxSourceRuleFactory.PicType.PIC ?
                         ImmutableList.of("-dynamic", "-fPIC", "-hisuf", "dyn_hi") :

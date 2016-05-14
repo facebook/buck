@@ -99,4 +99,16 @@ public class HaskellLibraryIntegrationTest {
     assertThat(result.getStderr(), Matchers.containsString("It is a member of the hidden package"));
   }
 
+  @Test
+  public void order() throws IOException {
+    workspace.writeContentsToPath("module OrderA where\nimport OrderB\n", "OrderA.hs");
+    workspace.runBuckBuild("//:order#default," + getLinkFlavor())
+        .assertSuccess();
+    workspace.runBuckCommand("clean");
+    workspace.writeContentsToPath("module OrderA where\n", "OrderA.hs");
+    workspace.writeContentsToPath("module OrderB where\nimport OrderA\n", "OrderB.hs");
+    workspace.runBuckBuild("//:order#default," + getLinkFlavor())
+        .assertSuccess();
+  }
+
 }

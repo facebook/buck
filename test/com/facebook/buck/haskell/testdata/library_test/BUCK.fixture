@@ -76,3 +76,11 @@ haskell_library(
     'FirstOrderC.hs',
   ],
 )
+
+haskell_library(
+  name = 'order',
+  srcs = [
+    'OrderA.hs',
+    'OrderB.hs',
+  ],
+)
