@@ -92,15 +92,24 @@ public class HaskellCompileRule extends AbstractBuildRule {
         .resolve("interfaces");
   }
 
+  /**
+   * @return the path where the compiler places generated FFI stub files.
+   */
+  private Path getStubDir() {
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s").resolve("stubs");
+  }
+
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(getObjectDir());
     buildableContext.recordArtifact(getInterfaceDir());
+    buildableContext.recordArtifact(getStubDir());
     return ImmutableList.of(
         new MakeCleanDirectoryStep(getProjectFilesystem(), getObjectDir()),
         new MakeCleanDirectoryStep(getProjectFilesystem(), getInterfaceDir()),
+        new MakeCleanDirectoryStep(getProjectFilesystem(), getStubDir()),
         new ShellStep(getProjectFilesystem().getRootPath()) {
 
           @Override
@@ -127,6 +136,7 @@ public class HaskellCompileRule extends AbstractBuildRule {
                         main.asSet()))
                 .add("-odir", getProjectFilesystem().resolve(getObjectDir()).toString())
                 .add("-hidir", getProjectFilesystem().resolve(getInterfaceDir()).toString())
+                .add("-stubdir", getProjectFilesystem().resolve(getStubDir()).toString())
                 .add("-i" + Joiner.on(':').join(
                     FluentIterable.from(includes)
                         .transform(getResolver().getAbsolutePathFunction())
