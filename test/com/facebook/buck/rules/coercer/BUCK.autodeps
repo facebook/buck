@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 7174bdf022061e1da751e239743278a18cf3fade #@#
+#@# GENERATED FILE: DO NOT MODIFY fc4e326428d41a98a78baac67bf282c16a2e957e #@#
 {
   "coercer" : {
     "deps" : [
@@ -7,6 +7,7 @@
       "//src/com/facebook/buck/python:support",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:interfaces",
+      "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/rules/coercer:types",
       "//src/com/facebook/buck/util:exceptions",

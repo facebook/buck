@@ -24,6 +24,7 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -109,6 +110,25 @@ public class LuaBuckConfig implements LuaConfig {
   @Override
   public Optional<BuildTarget> getNativeStarterLibrary() {
     return delegate.getBuildTarget(SECTION, "native_starter_library");
+  }
+
+  @Override
+  public PackageStyle getPackageStyle() {
+    return delegate.getEnum(SECTION, "package_style", PackageStyle.class).or(PackageStyle.INPLACE);
+  }
+
+  @Override
+  public ToolProvider getPackager() {
+    Optional<ToolProvider> packager = delegate.getToolProvider(SECTION, "packager");
+    if (!packager.isPresent()) {
+      throw new HumanReadableException("no packager set in '%s.packager'", SECTION);
+    }
+    return packager.get();
+  }
+
+  @Override
+  public boolean shouldCacheBinaries() {
+    return delegate.getBooleanValue(SECTION, "cache_binaries", true);
   }
 
 }

@@ -111,10 +111,12 @@ static int run_starter(
 
   std::string str;
   str += "arg = " + repr(argv) + ';';
-  str += "package.path = " + repr(join(modules_dir, "?.lua") + ';' +
-    join(join(modules_dir, "?"), "init.lua")) + ';';
-  str += "package.cpath = " +
-    repr(join(modules_dir, std::string("?.") + extension_suffix)) + ';';
+  if (modules_dir != NULL) {
+    str += "package.path = " + repr(join(modules_dir, "?.lua") + ';' +
+      join(join(modules_dir, "?"), "init.lua")) + ';';
+    str += "package.cpath = " +
+      repr(join(modules_dir, std::string("?.") + extension_suffix)) + ';';
+  }
   str += "require " + repr(main_module) + ';';
 
   int rc = luaL_dostring(L, str.c_str());
@@ -131,12 +133,14 @@ static int run_starter(
 
 int main(int argc, const char ** argv) {
   const char *main_module = <MAIN_MODULE>;
-  std::string mods_dir = join(dirname(realpath(argv[0])), <MODULES_DIR>);
+  const char *modules_dir = <MODULES_DIR>;
   const char *extension_suffix = <EXT_SUFFIX>;
   return run_starter(
     argc,
     argv,
     main_module,
-    mods_dir.c_str(),
+    modules_dir != NULL ?
+      join(dirname(realpath(argv[0])), modules_dir).c_str() :
+      NULL,
     extension_suffix);
 }

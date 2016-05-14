@@ -41,6 +41,10 @@ end
 -- Use the realpath of the script, to support running behind symlinks.
 local dirpath = dirname(realpath(arg[0]))
 
-package.path = join(join(dirpath, <MODULES_DIR>), "?.lua");
-package.cpath = join(join(dirpath, <MODULES_DIR>), "?." .. <EXT_SUFFIX>);
+local modules_dir = <MODULES_DIR>
+if modules_dir ~= nil then
+  package.path = join(join(dirpath, modules_dir), "?.lua");
+  package.cpath = join(join(dirpath, modules_dir), "?." .. <EXT_SUFFIX>);
+end
+
 require <MAIN_MODULE>

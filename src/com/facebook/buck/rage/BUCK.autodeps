@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 22a1afa3256e6bdf0c3fc5275874255b3bd2ef5c #@#
+#@# GENERATED FILE: DO NOT MODIFY ec158973696b26ba2cea5cd1be5df2d508b4a1a0 #@#
 {
   "config" : {
     "deps" : [
@@ -24,7 +24,6 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/rage:config",
-      "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/environment:environment",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",

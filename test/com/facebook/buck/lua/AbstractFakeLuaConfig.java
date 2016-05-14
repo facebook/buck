@@ -21,7 +21,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 
@@ -63,6 +65,24 @@ abstract class AbstractFakeLuaConfig implements LuaConfig {
   @Value.Default
   public String getExtension() {
     return ".lex";
+  }
+
+  @Override
+  @Value.Default
+  public PackageStyle getPackageStyle() {
+    return PackageStyle.INPLACE;
+  }
+
+  @Override
+  @Value.Default
+  public ToolProvider getPackager() {
+    return new ConstantToolProvider(new CommandTool.Builder().addArg("packager").build());
+  }
+
+  @Override
+  @Value.Default
+  public boolean shouldCacheBinaries() {
+    return true;
   }
 
 }

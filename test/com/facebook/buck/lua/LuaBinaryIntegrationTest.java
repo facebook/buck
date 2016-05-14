@@ -40,13 +40,17 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BgProcessKiller;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -223,6 +227,23 @@ public class LuaBinaryIntegrationTest {
         result.getStdout() + result.getStderr(),
         result.getStdout().trim(),
         Matchers.equalTo("hello world"));
+  }
+
+  @Test
+  public void packagedFormat() throws Exception {
+    Path output =
+        workspace.buildAndReturnOutput(
+            "-c", "lua.package_style=standalone",
+            "-c", "lua.packager=//:packager",
+            "//:simple");
+    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
+    ImmutableMap<String, ImmutableMap<String, String>> components =
+        mapper.readValue(
+            output.toFile(),
+            new TypeReference<ImmutableMap<String, ImmutableMap<String, String>>>() {});
+    assertThat(
+        components.get("modules").keySet(),
+        Matchers.equalTo(ImmutableSet.of("simple.lua")));
   }
 
   private LuaBuckConfig getLuaBuckConfig() throws IOException {

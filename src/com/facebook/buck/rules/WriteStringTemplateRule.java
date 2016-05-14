@@ -16,11 +16,16 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.step.AbstractExecutionStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.StringTemplateStep;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -28,6 +33,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.stringtemplate.v4.ST;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -42,16 +48,21 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
   @AddToRuleKey
   private final ImmutableMap<String, String> values;
 
+  @AddToRuleKey
+  private final boolean executable;
+
   public WriteStringTemplateRule(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       Path output,
       SourcePath template,
-      ImmutableMap<String, String> values) {
+      ImmutableMap<String, String> values,
+      boolean executable) {
     super(buildRuleParams, resolver);
     this.output = output;
     this.template = template;
     this.values = values;
+    this.executable = executable;
   }
 
   @Override
@@ -59,8 +70,9 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
       BuildContext context,
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
-    return ImmutableList.of(
-        new MkdirStep(getProjectFilesystem(), output.getParent()),
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    steps.add(new MkdirStep(getProjectFilesystem(), output.getParent()));
+    steps.add(
         new StringTemplateStep(
             getResolver().getAbsolutePath(template),
             getProjectFilesystem(),
@@ -74,6 +86,17 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
                 return st;
               }
             }));
+    if (executable) {
+      steps.add(
+          new AbstractExecutionStep("chmod +x") {
+            @Override
+            public StepExecutionResult execute(ExecutionContext context) throws IOException {
+              MoreFiles.makeExecutable(getProjectFilesystem().resolve(output));
+              return StepExecutionResult.of(0, Optional.<String>absent());
+            }
+          });
+    }
+    return steps.build();
   }
 
   @Override
@@ -87,7 +110,8 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
       BuildTarget target,
       Path output,
       SourcePath template,
-      ImmutableMap<String, String> values) {
+      ImmutableMap<String, String> values,
+      boolean executable) {
     return new WriteStringTemplateRule(
         baseParams.copyWithChanges(
             target,
@@ -97,7 +121,8 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
         pathResolver,
         output,
         template,
-        values);
+        values,
+        executable);
   }
 
 }

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 38ec2e20f2a2cb533556ee37ab1347e4eae6e373 #@#
+#@# GENERATED FILE: DO NOT MODIFY 6f973665685786af42dba1c15913ff69f67f7e95 #@#
 {
   "lua" : {
     "deps" : [
@@ -12,6 +12,7 @@
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/cxx:testutil",
@@ -22,6 +23,8 @@
       "//test/com/facebook/buck/testutil/integration:integration",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/jackson:jackson-core",
+      "//third-party/java/jackson:jackson-databind",
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]

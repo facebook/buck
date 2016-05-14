@@ -55,3 +55,18 @@ cxx_library(
     'dep.c',
   ],
 )
+
+python_binary(
+  name = 'packager',
+  main_module = 'packager',
+  deps = [
+    ':lib-packager',
+  ],
+)
+
+python_library(
+  name = 'lib-packager',
+  srcs = [
+    'packager.py',
+  ],
+)
