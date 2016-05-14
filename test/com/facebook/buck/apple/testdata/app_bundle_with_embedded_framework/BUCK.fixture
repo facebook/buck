@@ -1,0 +1,25 @@
+apple_library(
+  name = 'TestLib',
+  srcs = ['empty.c'],
+)
+
+# Framework flavor doesn't work as expected, create a separate bundle instead.
+apple_bundle(
+  name = 'TestFramework',
+  info_plist = 'Dummy-Info.plist',
+  binary = ':TestLib#shared',
+  extension = 'framework',
+)
+
+apple_binary(
+  name = 'DemoAppBinary',
+  srcs = ['main.c'],
+)
+
+apple_bundle(
+  name = 'DemoApp',
+  info_plist = 'Dummy-Info.plist',
+  extension = 'app',
+  binary = ':DemoAppBinary',
+  deps = [':TestFramework'],
+)

@@ -713,16 +713,16 @@ public class AppleDescriptions {
     for (BuildRule rule : deps) {
       if (rule instanceof BuildRuleWithAppleBundle) {
         AppleBundle appleBundle = ((BuildRuleWithAppleBundle) rule).getAppleBundle();
+        Path outputPath = Preconditions.checkNotNull(
+            appleBundle.getPathToOutput(),
+            "Path cannot be null for AppleBundle [%s].",
+            appleBundle);
+        SourcePath sourcePath = new BuildTargetSourcePath(
+            appleBundle.getBuildTarget(),
+            outputPath);
+
         if (AppleBundleExtension.APPEX.toFileExtension().equals(appleBundle.getExtension()) ||
             AppleBundleExtension.APP.toFileExtension().equals(appleBundle.getExtension())) {
-          Path outputPath = Preconditions.checkNotNull(
-              appleBundle.getPathToOutput(),
-              "Path cannot be null for AppleBundle [%s].",
-              appleBundle);
-          SourcePath sourcePath = new BuildTargetSourcePath(
-              appleBundle.getBuildTarget(),
-              outputPath);
-
           Path destinationPath;
 
           String platformName = appleBundle.getPlatformName();
@@ -738,6 +738,11 @@ public class AppleDescriptions {
           }
 
           extensionBundlePaths.put(sourcePath, destinationPath.toString());
+        } else if (
+            AppleBundleExtension.FRAMEWORK.toFileExtension().equals(appleBundle.getExtension())) {
+          extensionBundlePaths.put(
+              sourcePath,
+              destinations.getFrameworksPath().toString());
         }
       }
     }

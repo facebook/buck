@@ -74,7 +74,7 @@ abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
           .setMetadataPath(IOS_CONTENTS_PATH)
           .setResourcesPath(IOS_CONTENTS_PATH)
           .setExecutablesPath(IOS_CONTENTS_PATH)
-          .setFrameworksPath(IOS_CONTENTS_PATH)
+          .setFrameworksPath(IOS_CONTENTS_PATH.resolve("Frameworks"))
           .setPlugInsPath(IOS_CONTENTS_PATH.resolve("PlugIns"))
           .setWatchAppPath(IOS_CONTENTS_PATH.resolve("Watch"))
           .build();
