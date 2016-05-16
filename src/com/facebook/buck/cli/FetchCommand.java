@@ -153,7 +153,7 @@ public class FetchCommand extends BuildCommand {
         Optional.<String>absent(),
         new DefaultPropertyFinder(params.getCell().getFilesystem(), params.getEnvironment()));
 
-    Optional<Path> sdkDir = resolver.findAndroidSdkDirSafe();
+    Optional<Path> sdkDir = resolver.getSdkOrAbsent();
 
     Downloader downloader = StackedDownloader.createFromConfig(params.getBuckConfig(), sdkDir);
     Description<?> description = new RemoteFileDescription(downloader);

@@ -165,11 +165,11 @@ public class AndroidPlatformTarget {
   }
 
   public Optional<Path> getNdkDirectory() {
-    return androidDirectoryResolver.findAndroidNdkDir();
+    return androidDirectoryResolver.getNdkOrAbsent();
   }
 
   public Optional<Path> getSdkDirectory() {
-    return androidDirectoryResolver.findAndroidSdkDirSafe();
+    return androidDirectoryResolver.getSdkOrAbsent();
   }
 
   /**
@@ -226,7 +226,7 @@ public class AndroidPlatformTarget {
       String platformDirectoryPath,
       Set<Path> additionalJarPaths,
       Optional<Path> aaptOverride) {
-    Path androidSdkDir = androidDirectoryResolver.findAndroidSdkDir();
+    Path androidSdkDir = androidDirectoryResolver.getSdkOrThrow();
     if (!androidSdkDir.isAbsolute()) {
       throw new HumanReadableException(
           "Path to Android SDK must be absolute but was: %s.",
@@ -260,7 +260,7 @@ public class AndroidPlatformTarget {
 
     // This is the directory under the Android SDK directory that contains the dx script, jack,
     // jill, and binaries.
-    Path buildToolsDir = androidDirectoryResolver.findAndroidBuildToolsDir();
+    Path buildToolsDir = androidDirectoryResolver.getBuildToolsOrThrow();
 
     // This is the directory under the Android SDK directory that contains the aapt, aidl, and
     // zipalign binaries. Before Android SDK Build-tools 23.0.0_rc1, this was the same as
@@ -317,7 +317,7 @@ public class AndroidPlatformTarget {
         final String apiLevel,
         Optional<Path> aaptOverride) {
       // TODO(natthu): Use Paths instead of Strings everywhere in this file.
-      Path androidSdkDir = androidDirectoryResolver.findAndroidSdkDir();
+      Path androidSdkDir = androidDirectoryResolver.getSdkOrThrow();
       File addonsParentDir = androidSdkDir.resolve("add-ons").toFile();
       String apiDirPrefix = "addon-google_apis-google-" + apiLevel;
       final Pattern apiDirPattern = Pattern.compile(apiDirPrefix + API_DIR_SUFFIX);

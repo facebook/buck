@@ -315,7 +315,7 @@ public class AndroidBinaryIntegrationTest {
             workspace.asCell().getFilesystem(),
             ImmutableMap.copyOf(System.getenv())));
 
-    Optional<Path> ndkPath = androidResolver.findAndroidNdkDir();
+    Optional<Path> ndkPath = androidResolver.getNdkOrAbsent();
     assertTrue(ndkPath.isPresent());
 
     ImmutableCollection<NdkCxxPlatform> platforms = NdkCxxPlatforms.getPlatforms(

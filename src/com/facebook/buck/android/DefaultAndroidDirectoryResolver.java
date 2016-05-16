@@ -99,13 +99,13 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   }
 
   @Override
-  public Optional<Path> findAndroidSdkDirSafe() {
+  public Optional<Path> getSdkOrAbsent() {
     return sdkSupplier.get();
   }
 
   @Override
-  public Path findAndroidSdkDir() {
-    Optional<Path> androidSdkDir = findAndroidSdkDirSafe();
+  public Path getSdkOrThrow() {
+    Optional<Path> androidSdkDir = getSdkOrAbsent();
     Preconditions.checkState(androidSdkDir.isPresent(),
         "Android SDK could not be found.  Set the environment variable ANDROID_SDK to point to " +
             "your Android SDK.");
@@ -113,18 +113,18 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   }
 
   @Override
-  public Path findAndroidBuildToolsDir() {
+  public Path getBuildToolsOrThrow() {
     return buildToolsSupplier.get();
   }
 
   @Override
-  public Optional<Path> findAndroidNdkDir() {
+  public Optional<Path> getNdkOrAbsent() {
     return ndkSupplier.get();
   }
 
   @Override
   public Optional<String> getNdkVersion() {
-    Optional<Path> ndkPath = findAndroidNdkDir();
+    Optional<Path> ndkPath = getNdkOrAbsent();
     if (!ndkPath.isPresent()) {
       return Optional.absent();
     }
@@ -186,7 +186,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   }
 
   private Path getBuildToolsPathFromSdkDir() {
-    final Path androidSdkDir = findAndroidSdkDir();
+    final Path androidSdkDir = getSdkOrThrow();
     final Path buildToolsDir = androidSdkDir.resolve("build-tools");
 
     if (buildToolsDir.toFile().isDirectory()) {
@@ -349,7 +349,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
             "details about the setting.  To install the correct version of the tools, run " +
             "`%s update sdk --force --no-ui --all --filter build-tools-%s`",
         targetBuildToolsVersion.get(),
-        Escaper.escapeAsShellString(findAndroidSdkDir().resolve("tools/android").toString()),
+        Escaper.escapeAsShellString(getSdkOrThrow().resolve("tools/android").toString()),
         targetBuildToolsVersion.get());
   }
 
@@ -378,7 +378,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
         Objects.equals(targetBuildToolsVersion, that.targetBuildToolsVersion) &&
         Objects.equals(targetNdkVersion, that.targetNdkVersion) &&
         Objects.equals(propertyFinder, that.propertyFinder) &&
-        Objects.equals(findAndroidNdkDir(), that.findAndroidNdkDir());
+        Objects.equals(getNdkOrAbsent(), that.getNdkOrAbsent());
   }
 
   @Override
@@ -391,7 +391,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
         targetBuildToolsVersion,
         targetNdkVersion,
         propertyFinder,
-        findAndroidNdkDir());
+        getNdkOrAbsent());
   }
 
   @Override

@@ -47,24 +47,24 @@ public class FakeAndroidDirectoryResolver implements AndroidDirectoryResolver {
   }
 
   @Override
-  public Optional<Path> findAndroidSdkDirSafe() {
+  public Optional<Path> getSdkOrAbsent() {
     return androidSdkDir;
   }
 
   @Override
-  public Path findAndroidSdkDir() {
+  public Path getSdkOrThrow() {
     Preconditions.checkState(androidSdkDir.isPresent());
     return androidSdkDir.get();
   }
 
   @Override
-  public Path findAndroidBuildToolsDir() {
+  public Path getBuildToolsOrThrow() {
     Preconditions.checkState(androidBuildToolsDir.isPresent());
     return androidBuildToolsDir.get();
   }
 
   @Override
-  public Optional<Path> findAndroidNdkDir() {
+  public Optional<Path> getNdkOrAbsent() {
     return androidNdkDir;
   }
 

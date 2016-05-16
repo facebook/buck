@@ -72,7 +72,7 @@ public class NdkLibraryTest {
         .build();
     ndkBuildCommand = new ExecutableFinder().getOptionalExecutable(
         Paths.get("ndk-build"),
-        resolver.findAndroidNdkDir().get()).get().toAbsolutePath().toString();
+        resolver.getNdkOrAbsent().get()).get().toAbsolutePath().toString();
   }
 
   @Test

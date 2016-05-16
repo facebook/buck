@@ -29,11 +29,11 @@ public class AssumeAndroidPlatform {
   private AssumeAndroidPlatform() {}
 
   public static void assumeNdkIsAvailable() {
-    assumeNotNull(getAndroidDirectoryResolver().findAndroidNdkDir().orNull());
+    assumeNotNull(getAndroidDirectoryResolver().getNdkOrAbsent().orNull());
   }
 
   public static void assumeSdkIsAvailable() {
-    assumeNotNull(getAndroidDirectoryResolver().findAndroidSdkDirSafe().orNull());
+    assumeNotNull(getAndroidDirectoryResolver().getSdkOrAbsent().orNull());
   }
 
   private static AndroidDirectoryResolver getAndroidDirectoryResolver() {

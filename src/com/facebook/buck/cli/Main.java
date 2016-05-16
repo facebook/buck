@@ -1233,7 +1233,7 @@ public final class Main {
           throw exception;
         }
 
-        Optional<Path> androidSdkDirOption = androidDirectoryResolver.findAndroidSdkDirSafe();
+        Optional<Path> androidSdkDirOption = androidDirectoryResolver.getSdkOrAbsent();
         if (!androidSdkDirOption.isPresent()) {
           exception = new NoAndroidSdkException();
           throw exception;

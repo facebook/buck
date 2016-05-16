@@ -332,7 +332,7 @@ public class KnownBuildRuleTypes {
         FlavorDomain.from("Apple C++ Platform", appleCxxPlatforms);
 
     // Setup the NDK C/C++ platforms.
-    Optional<Path> ndkRoot = androidDirectoryResolver.findAndroidNdkDir();
+    Optional<Path> ndkRoot = androidDirectoryResolver.getNdkOrAbsent();
     ImmutableMap.Builder<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> ndkCxxPlatformsBuilder =
         ImmutableMap.builder();
     if (ndkRoot.isPresent()) {
@@ -452,7 +452,7 @@ public class KnownBuildRuleTypes {
     if (downloadConfig.isDownloadAtRuntimeOk()) {
       downloader = StackedDownloader.createFromConfig(
           config,
-          androidDirectoryResolver.findAndroidSdkDirSafe());
+          androidDirectoryResolver.getSdkOrAbsent());
     } else {
       // Or just set one that blows up
       downloader = new ExplodingDownloader();

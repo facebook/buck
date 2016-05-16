@@ -64,7 +64,7 @@ public class DefaultAndroidDirectoryResolverTest {
             Optional.<String>absent(),
             propertyFinder);
 
-    assertEquals(Optional.<Path>absent(), androidDirectoryResolver.findAndroidNdkDir());
+    assertEquals(Optional.<Path>absent(), androidDirectoryResolver.getNdkOrAbsent());
   }
 
   @Test
@@ -84,7 +84,7 @@ public class DefaultAndroidDirectoryResolverTest {
             propertyFinder);
 
     assertEquals(Optional.of(ndkDir),
-        androidDirectoryResolver.findAndroidNdkDir());
+        androidDirectoryResolver.getNdkOrAbsent());
   }
 
   @Test
@@ -106,7 +106,7 @@ public class DefaultAndroidDirectoryResolverTest {
         propertyFinder);
 
     assertEquals(Optional.of(ndkDir),
-        androidDirectoryResolver.findAndroidNdkDir());
+        androidDirectoryResolver.getNdkOrAbsent());
   }
 
   @Test
@@ -129,7 +129,7 @@ public class DefaultAndroidDirectoryResolverTest {
 
     assertEquals(
         Optional.of(ndkDir),
-        androidDirectoryResolver.findAndroidNdkDir());
+        androidDirectoryResolver.getNdkOrAbsent());
   }
 
   @Test
@@ -150,7 +150,7 @@ public class DefaultAndroidDirectoryResolverTest {
         propertyFinder);
 
     assertEquals(Optional.of(ndkDir),
-        androidDirectoryResolver.findAndroidNdkDir());
+        androidDirectoryResolver.getNdkOrAbsent());
   }
 
   @Test
@@ -169,7 +169,7 @@ public class DefaultAndroidDirectoryResolverTest {
             propertyFinder);
 
     assertEquals(Optional.of(ndkDir),
-        androidDirectoryResolver.findAndroidNdkDir());
+        androidDirectoryResolver.getNdkOrAbsent());
   }
 
   @Test
@@ -191,7 +191,7 @@ public class DefaultAndroidDirectoryResolverTest {
             propertyFinder);
 
     assertEquals(Optional.of(ndkDir),
-        androidDirectoryResolver.findAndroidNdkDir());
+        androidDirectoryResolver.getNdkOrAbsent());
   }
 
   @Test
@@ -212,7 +212,7 @@ public class DefaultAndroidDirectoryResolverTest {
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("Failed to read NDK version from " + ndkDir.toAbsolutePath());
-    androidDirectoryResolver.findAndroidNdkDir();
+    androidDirectoryResolver.getNdkOrAbsent();
   }
 
   @Test
@@ -234,7 +234,7 @@ public class DefaultAndroidDirectoryResolverTest {
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("Supported NDK version is r9e but Buck is configured to use " +
             "r9q with ndk.dir or ANDROID_NDK");
-    androidDirectoryResolver.findAndroidNdkDir();
+    androidDirectoryResolver.getNdkOrAbsent();
     }
 
   @Test
@@ -258,7 +258,7 @@ public class DefaultAndroidDirectoryResolverTest {
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("Couldn't find a valid NDK under " +
             tmpDir.getRoot().toAbsolutePath());
-    androidDirectoryResolver.findAndroidNdkDir();
+    androidDirectoryResolver.getNdkOrAbsent();
   }
 
   @Test
@@ -283,7 +283,7 @@ public class DefaultAndroidDirectoryResolverTest {
             propertyFinder);
 
     assertEquals(Optional.of(releaseDir),
-        androidDirectoryResolver.findAndroidNdkDir());
+        androidDirectoryResolver.getNdkOrAbsent());
 
     releaseDir = createTmpNdkVersions(
         NDK_POST_R11_VERSION_FILENAME,
@@ -299,7 +299,7 @@ public class DefaultAndroidDirectoryResolverTest {
             propertyFinder);
 
     assertEquals(Optional.of(releaseDir),
-        androidDirectoryResolver.findAndroidNdkDir());
+        androidDirectoryResolver.getNdkOrAbsent());
   }
 
   @Test
@@ -352,7 +352,7 @@ public class DefaultAndroidDirectoryResolverTest {
             propertyFinder);
 
     assertEquals(Optional.of(expectedPath),
-        androidDirectoryResolver.findAndroidNdkDir());
+        androidDirectoryResolver.getNdkOrAbsent());
   }
 
   @Test
@@ -377,7 +377,7 @@ public class DefaultAndroidDirectoryResolverTest {
             propertyFinder);
 
     assertEquals(Optional.of(expectedPath),
-        androidDirectoryResolver.findAndroidNdkDir());
+        androidDirectoryResolver.getNdkOrAbsent());
   }
 
   @Test(expected = HumanReadableException.class)
@@ -396,7 +396,7 @@ public class DefaultAndroidDirectoryResolverTest {
             Optional.of(""),
             propertyFinder);
 
-    androidDirectoryResolver.findAndroidNdkDir();
+    androidDirectoryResolver.getNdkOrAbsent();
   }
 
   @Test(expected = HumanReadableException.class)
@@ -415,7 +415,7 @@ public class DefaultAndroidDirectoryResolverTest {
             Optional.of("r9e"),
             propertyFinder);
 
-    androidDirectoryResolver.findAndroidNdkDir();
+    androidDirectoryResolver.getNdkOrAbsent();
   }
 
   @Test
@@ -433,7 +433,7 @@ public class DefaultAndroidDirectoryResolverTest {
             /* targetNdkVersion */ Optional.<String>absent(),
             propertyFinder);
     assertThat(
-        androidDirectoryResolver.findAndroidBuildToolsDir().getFileName().toString(),
+        androidDirectoryResolver.getBuildToolsOrThrow().getFileName().toString(),
         Matchers.equalTo("platform-tools"));
   }
 
@@ -452,7 +452,7 @@ public class DefaultAndroidDirectoryResolverTest {
             /* targetNdkVersion */ Optional.<String>absent(),
             propertyFinder);
     assertThat(
-        androidDirectoryResolver.findAndroidBuildToolsDir().getFileName().toString(),
+        androidDirectoryResolver.getBuildToolsOrThrow().getFileName().toString(),
         Matchers.equalTo("android-4.2.2"));
   }
 
@@ -471,7 +471,7 @@ public class DefaultAndroidDirectoryResolverTest {
             /* targetNdkVersion */ Optional.<String>absent(),
             propertyFinder);
     assertThat(
-        androidDirectoryResolver.findAndroidBuildToolsDir().getFileName().toString(),
+        androidDirectoryResolver.getBuildToolsOrThrow().getFileName().toString(),
         Matchers.equalTo("build-tools-17.2.2"));
   }
 
@@ -492,7 +492,7 @@ public class DefaultAndroidDirectoryResolverTest {
 
     expectedException.expect(HumanReadableException.class);
       expectedException.expectMessage("foobar-17.2.2");
-    androidDirectoryResolver.findAndroidBuildToolsDir();
+    androidDirectoryResolver.getBuildToolsOrThrow();
 
   }
 
@@ -513,7 +513,7 @@ public class DefaultAndroidDirectoryResolverTest {
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(sdkDir.resolve("build-tools") + " was empty");
-    androidDirectoryResolver.findAndroidBuildToolsDir();
+    androidDirectoryResolver.getBuildToolsOrThrow();
   }
 
   @Test
@@ -533,7 +533,7 @@ public class DefaultAndroidDirectoryResolverTest {
             /* targetNdkVersion */ Optional.<String>absent(),
             propertyFinder);
     assertThat(
-        androidDirectoryResolver.findAndroidBuildToolsDir().getFileName().toString(),
+        androidDirectoryResolver.getBuildToolsOrThrow().getFileName().toString(),
         Matchers.equalTo("23.0.0_rc1"));
   }
 
@@ -555,7 +555,7 @@ public class DefaultAndroidDirectoryResolverTest {
             /* targetNdkVersion */ Optional.<String>absent(),
             propertyFinder);
     assertThat(
-        androidDirectoryResolver.findAndroidBuildToolsDir().getFileName().toString(),
+        androidDirectoryResolver.getBuildToolsOrThrow().getFileName().toString(),
         Matchers.equalTo("23.0.0_rc1"));
   }
 
@@ -582,7 +582,7 @@ public class DefaultAndroidDirectoryResolverTest {
             /* targetNdkVersion */ Optional.<String>absent(),
             propertyFinder);
     assertThat(
-        androidDirectoryResolver.findAndroidBuildToolsDir().getFileName().toString(),
+        androidDirectoryResolver.getBuildToolsOrThrow().getFileName().toString(),
         Matchers.equalTo("17.0.0"));
   }
 
@@ -606,7 +606,7 @@ public class DefaultAndroidDirectoryResolverTest {
             /* targetNdkVersion */ Optional.<String>absent(),
             propertyFinder);
     assertThat(
-        androidDirectoryResolver.findAndroidBuildToolsDir().getFileName().toString(),
+        androidDirectoryResolver.getBuildToolsOrThrow().getFileName().toString(),
         Matchers.equalTo("17.0.0"));
   }
 
@@ -630,7 +630,7 @@ public class DefaultAndroidDirectoryResolverTest {
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("2.0.0");
-    androidDirectoryResolver.findAndroidBuildToolsDir();
+    androidDirectoryResolver.getBuildToolsOrThrow();
   }
 
   private Path[] createTmpNdkVersions(String filename, String... directoryNamesAndVersionStrings)
