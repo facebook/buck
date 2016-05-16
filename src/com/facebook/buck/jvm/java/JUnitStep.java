@@ -116,6 +116,7 @@ public class JUnitStep extends ShellStep {
             try {
               switch(platform) {
                 case LINUX:
+                case FREEBSD:
                 case MACOS: {
                   Field field = process.getClass().getDeclaredField("pid");
                   field.setAccessible(true);
