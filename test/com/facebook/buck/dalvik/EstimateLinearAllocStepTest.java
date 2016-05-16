@@ -16,6 +16,7 @@
 
 package com.facebook.buck.dalvik;
 
+import static com.facebook.buck.io.MorePaths.pathWithPlatformSeparators;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.dalvik.EstimateLinearAllocStep.LinearAllocEstimator;
@@ -43,9 +44,9 @@ public class EstimateLinearAllocStepTest {
 
   private LinearAllocEstimator linearAllocEstimator = new FakeLinearAllocEstimator(
       ImmutableMap.<String, Integer>builder()
-      .put("com/example/Foo.class", 100)
-      .put("com/example/Bar.class", 250)
-      .put("com/example/subpackage/Baz.class", 75)
+      .put(pathWithPlatformSeparators("com/example/Foo.class"), 100)
+      .put(pathWithPlatformSeparators("com/example/Bar.class"), 250)
+      .put(pathWithPlatformSeparators("com/example/subpackage/Baz.class"), 75)
       .build());
 
   @Test
@@ -58,10 +59,10 @@ public class EstimateLinearAllocStepTest {
     tmp.newFolder("dir", "com", "example");
     tmp.newFolder("dir", "com", "example", "subpackage");
 
-    tmp.newFile("dir/com/example/Foo.class");
-    tmp.newFile("dir/com/example/Bar.class");
-    tmp.newFile("dir/com/example/not_a_class.png");
-    tmp.newFile("dir/com/example/subpackage/Baz.class");
+    tmp.newFile(pathWithPlatformSeparators("dir/com/example/Foo.class"));
+    tmp.newFile(pathWithPlatformSeparators("dir/com/example/Bar.class"));
+    tmp.newFile(pathWithPlatformSeparators("dir/com/example/not_a_class.png"));
+    tmp.newFile(pathWithPlatformSeparators("dir/com/example/subpackage/Baz.class"));
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
     ExecutionContext context = TestExecutionContext.newInstance();

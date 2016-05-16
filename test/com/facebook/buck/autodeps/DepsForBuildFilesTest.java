@@ -19,6 +19,7 @@ package com.facebook.buck.autodeps;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.autodeps.DepsForBuildFiles.DependencyType;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.google.common.collect.ImmutableList;
@@ -26,7 +27,6 @@ import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,9 +70,11 @@ public class DepsForBuildFilesTest {
 
     Map<BuildTarget, List<BuildTarget>> observed = new HashMap<>();
     for (DepsForBuildFiles.BuildFileWithDeps buildFileWithDeps : depsForBuildFiles) {
-      Path directory = buildFileWithDeps.getBasePath();
+      String dirUnixPath =
+          MorePaths.pathWithUnixSeparators(buildFileWithDeps.getBasePath().toString());
       for (DepsForBuildFiles.DepsForRule depsForRule : buildFileWithDeps) {
-        String fullyQualifiedName = String.format("//%s:%s", directory, depsForRule.getShortName());
+        String fullyQualifiedName =
+            String.format("//%s:%s", dirUnixPath, depsForRule.getShortName());
         BuildTarget buildTarget = BuildTargetFactory.newInstance(fullyQualifiedName);
 
         List<BuildTarget> deps = ImmutableList.copyOf(depsForRule.depsForDependencyType(

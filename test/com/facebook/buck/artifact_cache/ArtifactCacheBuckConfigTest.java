@@ -22,6 +22,7 @@ import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
@@ -32,14 +33,19 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class ArtifactCacheBuckConfigTest {
+
+  @Rule
+  public TemporaryPaths tmpDir = new TemporaryPaths();
 
   @Test
   public void testWifiBlacklist() throws IOException {
@@ -200,23 +206,24 @@ public class ArtifactCacheBuckConfigTest {
 
   @Test
   public void testServedCacheInheritsDirAndSizeFromDirCache() throws IOException {
+    Path cacheDir = tmpDir.getRoot();
     ArtifactCacheBuckConfig config = createFromText(
         "[cache]",
         "serve_local_cache = true",
-        "dir = /cache_dir");
+        "dir = " + cacheDir);
     assertThat(
         config.getServedLocalCache(),
         Matchers.equalTo(Optional.of(
                 DirCacheEntry.builder()
                     .setMaxSizeBytes(Optional.<Long>absent())
-                    .setCacheDir(Paths.get("/cache_dir"))
+                    .setCacheDir(cacheDir)
                     .setCacheReadMode(ArtifactCacheBuckConfig.CacheReadMode.readonly)
                     .build())));
 
     config = createFromText(
         "[cache]",
         "serve_local_cache = true",
-        "dir = /cache_dir",
+        "dir = " + cacheDir,
         "dir_mode = readwrite",
         "dir_max_size = 42b");
     assertThat(
@@ -224,24 +231,25 @@ public class ArtifactCacheBuckConfigTest {
         Matchers.equalTo(Optional.of(
                 DirCacheEntry.builder()
                     .setMaxSizeBytes(Optional.of(42L))
-                    .setCacheDir(Paths.get("/cache_dir"))
+                    .setCacheDir(cacheDir)
                     .setCacheReadMode(ArtifactCacheBuckConfig.CacheReadMode.readonly)
                     .build())));
   }
 
   @Test
   public void testServedCacheMode() throws IOException {
+    Path cacheDir = tmpDir.getRoot();
     ArtifactCacheBuckConfig config = createFromText(
         "[cache]",
         "serve_local_cache = true",
-        "dir = /cache_dir",
+        "dir = " + cacheDir,
         "served_local_cache_mode = readwrite");
     assertThat(
         config.getServedLocalCache(),
         Matchers.equalTo(Optional.of(
                 DirCacheEntry.builder()
                     .setMaxSizeBytes(Optional.<Long>absent())
-                    .setCacheDir(Paths.get("/cache_dir"))
+                    .setCacheDir(cacheDir)
                     .setCacheReadMode(ArtifactCacheBuckConfig.CacheReadMode.readwrite)
                     .build())));
   }
