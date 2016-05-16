@@ -64,10 +64,10 @@ public class ProjectWorkspaceTest {
     workspace.copyRecursively(sourceDir, Paths.get("destdir"));
 
     assertEquals(
-        "Hello world\n",
+        "Hello world" + System.lineSeparator(),
         workspace.getFileContents("destdir/subdir/test.file"));
     assertEquals(
-        "Goodbye world\n",
+        "Goodbye world" + System.lineSeparator(),
         workspace.getFileContents("destdir/subdir/test.file2"));
   }
 }

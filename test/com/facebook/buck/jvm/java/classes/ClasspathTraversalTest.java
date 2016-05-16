@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.classes;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -95,8 +96,8 @@ public class ClasspathTraversalTest {
     Files.write("bar.txt", new File(yesADir, "bar.txt"), Charsets.UTF_8);
     File aSubDir = new File(yesADir, "fizzbuzz");
     assertTrue("Failed to create dir: " + aSubDir, aSubDir.mkdir());
-    Files.write("fizzbuzz/whatever.txt", new File(aSubDir, "whatever.txt"),
-        Charsets.UTF_8);
+    Files.write(MorePaths.pathWithPlatformSeparators("fizzbuzz/whatever.txt"),
+        new File(aSubDir, "whatever.txt"), Charsets.UTF_8);
     verifyFileLike(4, notADirectory, yesADir);
   }
 

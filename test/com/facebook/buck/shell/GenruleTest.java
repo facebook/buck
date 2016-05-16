@@ -119,7 +119,8 @@ public class GenruleTest {
             "//src/com/facebook/katana:katana_manifest");
     BuildRule genrule = GenruleBuilder
         .newGenruleBuilder(buildTarget)
-        .setCmd("python convert_to_katana.py AndroidManifest.xml > $OUT")
+        .setBash("python convert_to_katana.py AndroidManifest.xml > $OUT")
+        .setCmdExe("python convert_to_katana.py AndroidManifest.xml > %OUT%")
         .setOut("AndroidManifest.xml")
         .setSrcs(
             ImmutableList.<SourcePath>of(
@@ -232,13 +233,22 @@ public class GenruleTest {
                 .toString())
         .build(),
         genruleCommand.getEnvironmentVariables(executionContext));
-    assertEquals(
-        ImmutableList.of(
-            "/bin/bash",
-            "-e",
-            "-c",
-            "python convert_to_katana.py AndroidManifest.xml > $OUT"),
-        genruleCommand.getShellCommand(executionContext));
+    if (Platform.detect() == Platform.WINDOWS) {
+      assertEquals(
+          ImmutableList.of(
+              "cmd.exe",
+              "/c",
+              "python convert_to_katana.py AndroidManifest.xml > %OUT%"),
+          genruleCommand.getShellCommand(executionContext));
+    } else {
+      assertEquals(
+          ImmutableList.of(
+              "/bin/bash",
+              "-e",
+              "-c",
+              "python convert_to_katana.py AndroidManifest.xml > $OUT"),
+          genruleCommand.getShellCommand(executionContext));
+    }
   }
 
   private GenruleBuilder createGenruleBuilderThatUsesWorkerMacro(

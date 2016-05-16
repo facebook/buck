@@ -19,7 +19,7 @@ package com.facebook.buck.testrunner;
 import static com.facebook.buck.testutil.OutputHelper.createBuckTestOutputLineRegex;
 import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -64,7 +64,7 @@ public class ClassStatementsTest {
     int actualRuntime = Integer.parseInt(matcher.group(1));
     assertThat("Reasonable runtime was guessed",
         actualRuntime,
-        greaterThan(BEFORE_CLASS_EXPECTED_RUNTIME));
+        greaterThanOrEqualTo(BEFORE_CLASS_EXPECTED_RUNTIME));
   }
 
 }

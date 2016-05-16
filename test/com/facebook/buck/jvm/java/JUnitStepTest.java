@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.runner.FileClassPathRunner;
 import com.facebook.buck.model.BuildId;
@@ -105,7 +106,8 @@ public class JUnitStepTest {
             vmArg2,
             "-verbose",
             "-classpath",
-            "@/opt/src/buck/foo" + File.pathSeparator + "build/classes/junit",
+            "@/opt/src/buck/foo" + File.pathSeparator +
+                MorePaths.pathWithPlatformSeparators("build/classes/junit"),
             FileClassPathRunner.class.getName(),
             "com.facebook.buck.testrunner.JUnitMain",
             "--output",
@@ -181,7 +183,8 @@ public class JUnitStepTest {
             vmArg2,
             "-verbose",
             "-classpath",
-            "@/opt/src/buck/foo" + File.pathSeparator + "build/classes/junit",
+            "@/opt/src/buck/foo" + File.pathSeparator +
+                MorePaths.pathWithPlatformSeparators("build/classes/junit"),
             FileClassPathRunner.class.getName(),
             "com.facebook.buck.testrunner.JUnitMain",
             "--output",
