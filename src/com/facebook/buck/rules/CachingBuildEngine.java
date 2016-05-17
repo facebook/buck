@@ -387,7 +387,8 @@ public class CachingBuildEngine implements BuildEngine {
                           markRuleAsUsed(rule, context.getEventBus()),
                           Functions.constant(input));
                     }
-                  });
+                  },
+                  service);
 
           // 4. Return to the current rule and check caches to see if we can avoid building locally.
           AsyncFunction<List<BuildResult>, Optional<BuildResult>> checkCachesCallback =
@@ -563,7 +564,8 @@ public class CachingBuildEngine implements BuildEngine {
           ListenableFuture<Optional<BuildResult>> checkCachesResult =
               Futures.transformAsync(
                   getDepResults,
-                  ruleAsyncFunction(rule, context, checkCachesCallback));
+                  ruleAsyncFunction(rule, context, checkCachesCallback),
+                  service);
 
           // 5. Build the current rule locally, if we have to.
           AsyncFunction<Optional<BuildResult>, BuildResult> buildLocallyCallback =
@@ -602,9 +604,10 @@ public class CachingBuildEngine implements BuildEngine {
                       DEFAULT_BUILD_WEIGHT * ruleScheduleInfo.getJobsMultiplier());
                 }
               };
-          return Futures.transformAsync(checkCachesResult, buildLocallyCallback);
+          return Futures.transformAsync(checkCachesResult, buildLocallyCallback, service);
         }
-      });
+      },
+      service);
     }
   }
 
@@ -811,7 +814,8 @@ public class CachingBuildEngine implements BuildEngine {
             return Futures.immediateFuture(input);
           }
         };
-    buildResult = Futures.transformAsync(buildResult, ruleAsyncFunction(rule, context, callback));
+    buildResult =
+        Futures.transformAsync(buildResult, ruleAsyncFunction(rule, context, callback), service);
 
     // Handle either build success or failure.
     final SettableFuture<BuildResult> result = SettableFuture.create();
@@ -1076,7 +1080,8 @@ public class CachingBuildEngine implements BuildEngine {
             }
             return Futures.allAsList(results);
           }
-        });
+        },
+        service);
   }
 
   @Override
@@ -1113,7 +1118,8 @@ public class CachingBuildEngine implements BuildEngine {
                   }
                   return Futures.allAsList(depKeys);
                 }
-              });
+              },
+              service);
 
       final RuleKeyFactories keyFactories =
           ruleKeyFactories.getUnchecked(rule.getProjectFilesystem());
@@ -1162,7 +1168,8 @@ public class CachingBuildEngine implements BuildEngine {
                 Futures.allAsList(asyncCallbacks),
                 Functions.constant(result));
           }
-        });
+        },
+        service);
   }
 
   private ListenableFuture<CacheResult>
@@ -1210,8 +1217,8 @@ public class CachingBuildEngine implements BuildEngine {
                     filesystem,
                     cacheResult);
               }
-            }
-        );
+            },
+            networkExecutor);
 
     return unzipResult;
   }
