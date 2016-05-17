@@ -680,6 +680,7 @@ public class CxxDescriptionEnhancer {
                   params,
                   sourcePathResolver,
                   cxxPlatform,
+                  params.getDeps(),
                   Predicates.instanceOf(NativeLinkable.class)));
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
@@ -1111,7 +1112,9 @@ public class CxxDescriptionEnhancer {
       BuildRuleParams params,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
-      Predicate<Object> traverse) throws NoSuchBuildTargetException {
+      Iterable<? extends BuildRule> deps,
+      Predicate<Object> traverse)
+      throws NoSuchBuildTargetException {
 
     BuildTarget symlinkTreeTarget =
         createSharedLibrarySymlinkTreeTarget(
@@ -1126,7 +1129,7 @@ public class CxxDescriptionEnhancer {
     ImmutableSortedMap<String, SourcePath> libraries =
         NativeLinkables.getTransitiveSharedLibraries(
             cxxPlatform,
-            params.getDeps(),
+            deps,
             traverse);
 
     ImmutableMap.Builder<Path, SourcePath> links = ImmutableMap.builder();

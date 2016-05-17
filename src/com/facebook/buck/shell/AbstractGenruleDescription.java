@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasTests;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -62,7 +63,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
           .put("maven_coords", new MavenCoordinatesMacroExpander())
           .build());
 
-  protected abstract <A extends T> BuildRule createBuildRule(
+  protected <A extends T> BuildRule createBuildRule(
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       A args,
@@ -70,18 +71,41 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       Optional<com.facebook.buck.rules.args.Arg> cmd,
       Optional<com.facebook.buck.rules.args.Arg> bash,
       Optional<com.facebook.buck.rules.args.Arg> cmdExe,
-      String out);
+      String out) {
+    return new Genrule(
+        params,
+        new SourcePathResolver(resolver),
+        srcs,
+        cmd,
+        bash,
+        cmdExe,
+        out,
+        args.tests.get());
+  }
+
+  protected MacroHandler getMacroHandlerForParseTimeDeps() {
+    return MACRO_HANDLER;
+  }
+
+  @SuppressWarnings("unused")
+  protected <A extends AbstractGenruleDescription.Arg> MacroHandler getMacroHandler(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    return MACRO_HANDLER;
+  }
 
   @Override
   public <A extends T> BuildRule createBuildRule(
       final TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
-      final A args) {
+      final A args)
+      throws NoSuchBuildTargetException {
     final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     Function<String, com.facebook.buck.rules.args.Arg> macroArgFunction =
         MacroArg.toMacroArgFunction(
-            MACRO_HANDLER,
+            getMacroHandler(params, resolver, args),
             params.getBuildTarget(),
             params.getCellRoots(),
             resolver);
@@ -138,7 +162,8 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       String paramValue,
       ImmutableSet.Builder<BuildTarget> targets) {
     try {
-      targets.addAll(MACRO_HANDLER.extractParseTimeDeps(target, cellNames, paramValue));
+      targets.addAll(
+          getMacroHandlerForParseTimeDeps().extractParseTimeDeps(target, cellNames, paramValue));
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }

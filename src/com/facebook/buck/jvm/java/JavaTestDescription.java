@@ -265,6 +265,7 @@ public class JavaTestDescription implements
           buildRuleParams,
           pathResolver,
           cxxPlatform,
+          buildRuleParams.getDeps(),
           Predicates.or(
               Predicates.instanceOf(NativeLinkable.class),
               Predicates.instanceOf(JavaLibrary.class)));

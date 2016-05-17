@@ -137,6 +137,7 @@ public class HaskellBinaryDescription implements
                   params,
                   pathResolver,
                   cxxPlatform,
+                  params.getDeps(),
                   Predicates.instanceOf(NativeLinkable.class)));
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.

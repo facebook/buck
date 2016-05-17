@@ -66,7 +66,7 @@ public class StringExpander implements MacroExpander {
       BuildRuleResolver resolver,
       String input)
       throws MacroException {
-    return new Object();
+    return toReturn;
   }
 
 }
