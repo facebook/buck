@@ -17,13 +17,13 @@
 package com.facebook.buck.rules.args;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.MacroMatchResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.macros.MacroException;
+import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.macros.MacroHandler;
-import com.facebook.buck.rules.macros.MacroMatchResult;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.shell.WorkerTool;
 import com.google.common.collect.ImmutableList;

@@ -18,17 +18,24 @@ package com.facebook.buck.config;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
+import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 
 public class ConfigTest {
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void shouldGetBooleanValues() throws IOException {
@@ -195,4 +202,73 @@ public class ConfigTest {
         ".buckconfig: foo:bar: Input ends inside hexadecimal sequence: \\u002",
         msg);
   }
+
+  @Test
+  public void configReference() {
+    Config config =
+        new Config(
+            RawConfig.builder()
+                .put("section", "field1", "hello $(config section.field2) world")
+                .put("section", "field2", "goodbye")
+                .build());
+    assertThat(
+        config.get("section", "field1"),
+        Matchers.equalTo(Optional.of("hello goodbye world")));
+  }
+
+  @Test
+  public void configReferenceAtStart() {
+    Config config =
+        new Config(
+            RawConfig.builder()
+                .put("section", "field1", "$(config section.field2) world")
+                .put("section", "field2", "goodbye")
+                .build());
+    assertThat(
+        config.get("section", "field1"),
+        Matchers.equalTo(Optional.of("goodbye world")));
+  }
+
+  @Test
+  public void escapedReference() {
+    Config config =
+        new Config(
+            RawConfig.builder()
+                .put("section", "field1", "hello \\$(config section.field2) world")
+                .put("section", "field2", "goodbye")
+                .build());
+    assertThat(
+        config.get("section", "field1"),
+        Matchers.equalTo(Optional.of("hello $(config section.field2) world")));
+  }
+
+  @Test
+  public void recursiveConfigReference() {
+    Config config =
+        new Config(
+            RawConfig.builder()
+                .put("section", "field1", "hello $(config section.field2) world")
+                .put("section", "field2", "hello $(config section.field3) world")
+                .put("section", "field3", "goodbye")
+                .build());
+    assertThat(
+        config.get("section", "field1"),
+        Matchers.equalTo(Optional.of("hello hello goodbye world world")));
+  }
+
+  @Test
+  public void cyclicalConfigReference() {
+    Config config =
+        new Config(
+            RawConfig.builder()
+                .put("section", "field1", "$(config section.field2)")
+                .put("section", "field2", "$(config section.field3)")
+                .put("section", "field3", "$(config section.field1)")
+                .build());
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(
+        "section.field1 -> section.field2 -> section.field3 -> section.field1");
+    config.get("section", "field1");
+  }
+
 }

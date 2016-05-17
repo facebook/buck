@@ -1,10 +1,11 @@
-#@# GENERATED FILE: DO NOT MODIFY fc042695911d8ac4648928c86f4cb86a48246947 #@#
+#@# GENERATED FILE: DO NOT MODIFY e9b6fc47d29860ee35aa0e04dcbe55e1bc6fefa9 #@#
 {
   "rules" : {
     "deps" : [
       "//src/com/facebook/buck/android:exceptions",
       "//src/com/facebook/buck/android:utils",
       "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/model:macros",
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:escaper",
@@ -52,6 +53,7 @@
   "worker" : {
     "deps" : [
       "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/model:macros",
       "//src/com/facebook/buck/shell:worker_process",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",

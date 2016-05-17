@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 0f549a0e2b4e18d807d750f4872f09a3d2354f7f #@#
+#@# GENERATED FILE: DO NOT MODIFY b205af936ea5709c7863f39a807de24381edf0a7 #@#
 {
   "build_id" : {
     "deps" : [ ],
@@ -6,6 +6,15 @@
       "//third-party/java/jackson:jackson-annotations",
       "//third-party/java/jackson:jackson-core",
       "//third-party/java/jackson:jackson-databind"
+    ]
+  },
+  "macros" : {
+    "deps" : [
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//third-party/java/guava:guava"
     ]
   },
   "model" : {

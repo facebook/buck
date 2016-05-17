@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY e1fc380aadc01717ec1ef7b94d12ced84c82ecfd #@#
+#@# GENERATED FILE: DO NOT MODIFY 831b6031eb276bb154f298d94f029f1d8644ecec #@#
 {
   "args" : {
     "deps" : [
@@ -8,6 +8,7 @@
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/model:macros",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:interfaces",

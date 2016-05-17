@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 72ecb8fc7fac7f826bf35a2d3725e4bbfba64cee #@#
+#@# GENERATED FILE: DO NOT MODIFY 2221c6d9856548548713d86f66c3dfaff4e082b6 #@#
 {
   "config" : {
     "deps" : [
@@ -8,6 +8,7 @@
       "//third-party/java/ini4j:ini4j"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/model:macros",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava"
     ]

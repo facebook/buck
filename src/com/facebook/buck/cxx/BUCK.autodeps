@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY a69e781cff76a100eb6b5930ab9e8cabb216d58f #@#
+#@# GENERATED FILE: DO NOT MODIFY dbc88f6060f1a52a53cce3f9063da85364ef5438 #@#
 {
   "framework_path_arg" : {
     "deps" : [ ],
@@ -56,6 +56,7 @@
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/model:macros",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",

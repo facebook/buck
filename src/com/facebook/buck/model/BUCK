@@ -1,5 +1,4 @@
 BUILD_ID_SRCS = [ 'BuildId.java' ]
-
 java_library(
   name = 'build_id',
   srcs = BUILD_ID_SRCS,
@@ -7,9 +6,25 @@ java_library(
   visibility = ['PUBLIC'],
 )
 
+MACRO_SRCS = [
+  'AbstractMacroMatchResult.java',
+  'MacroFinder.java',
+  'MacroReplacer.java',
+  'MacroException.java',
+]
+java_immutables_library(
+  name = 'macros',
+  immutable_types = [
+    'MacroMatchResult',
+  ],
+  srcs = MACRO_SRCS,
+  autodeps = True,
+  visibility = ['PUBLIC'],
+)
+
 java_immutables_library(
   name = 'model',
-  srcs = glob(['*.java'], excludes = BUILD_ID_SRCS),
+  srcs = glob(['*.java'], excludes = BUILD_ID_SRCS + MACRO_SRCS),
   immutable_types = [
     'BuildTarget',
     'UnflavoredBuildTarget',

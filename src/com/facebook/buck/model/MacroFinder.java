@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.macros;
+package com.facebook.buck.model;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;

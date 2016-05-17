@@ -14,11 +14,16 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.macros;
+package com.facebook.buck.model;
 
-/**
- * Interface to define replacement behavior for @{link MacroFinder}.
- */
-public interface MacroReplacer {
-  String replace(String input) throws MacroException;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import org.immutables.value.Value;
+
+@Value.Immutable
+@BuckStyleImmutable
+interface AbstractMacroMatchResult {
+  String getMacroType();
+  String getMacroInput();
+  int getStartIndex();
+  int getEndIndex();
 }

@@ -116,7 +116,7 @@ public class ApplePackageDescriptionTest {
       new AppleConfig(FakeBuckConfig.builder()
           .setSections(
               "[apple]",
-              "macosx_package_command = " + command,
+              "macosx_package_command = " + command.replace("$", "\\$"),
               "macosx_package_extension = api"
           )
           .build()),

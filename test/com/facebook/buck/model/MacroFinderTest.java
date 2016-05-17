@@ -14,10 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.macros;
+package com.facebook.buck.model;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.rules.macros.FunctionMacroReplacer;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;

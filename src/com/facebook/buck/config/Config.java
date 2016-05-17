@@ -16,13 +16,18 @@
 
 package com.facebook.buck.config;
 
+import com.facebook.buck.model.MacroException;
+import com.facebook.buck.model.MacroFinder;
+import com.facebook.buck.model.MacroReplacer;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -32,8 +37,10 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Stack;
 import java.util.regex.Pattern;
 
 /**
@@ -41,6 +48,8 @@ import java.util.regex.Pattern;
  * override values defined by the previous ones.
  */
 public class Config {
+
+  private static final MacroFinder MACRO_FINDER = new MacroFinder();
 
   private final RawConfig rawConfig;
 
@@ -63,12 +72,72 @@ public class Config {
     this.rawConfig = rawConfig;
   }
 
-  public ImmutableMap<String, ImmutableMap<String, String>> getSectionToEntries() {
-    return this.rawConfig.getValues();
+  /**
+   * @return the input after recursively expanding any config references.
+   */
+  private String expand(String input, final Stack<String> expandStack) {
+    MacroReplacer macroReplacer =
+        new MacroReplacer() {
+          @Override
+          public String replace(String input) throws MacroException {
+            List<String> parts = Splitter.on('.').limit(2).splitToList(input);
+            if (parts.size() != 2) {
+              throw new HumanReadableException(
+                  "references must have the form `<section>.<field>`, but was '%s'",
+                  input);
+            }
+            return get(parts.get(0), parts.get(1), expandStack).or("");
+          }
+        };
+    try {
+      return MACRO_FINDER.replace(ImmutableMap.of("config", macroReplacer), input);
+    } catch (MacroException e) {
+      throw new HumanReadableException(e, e.getMessage());
+    }
+  }
+
+  private Optional<String> get(String section, String field, Stack<String> expandStack) {
+
+    // Check if we're caught in a config-reference cyclical dependency and error out if so.
+    String expandStackKey = String.format("%s.%s", section, field);
+    if (expandStack.search(expandStackKey) != -1) {
+      throw new HumanReadableException(
+          "cyclical dependency in config references: %s",
+          Joiner.on(" -> ").join(FluentIterable.from(expandStack).append(expandStackKey)));
+    }
+
+    Optional<String> val = rawConfig.getValue(section, field);
+    if (!val.isPresent()) {
+      return Optional.absent();
+    }
+
+    // Add the current section/field pair to the stack before expansion so we can provide a useful
+    // error message for dependency cycles.
+    expandStack.push(expandStackKey);
+    String expanded = expand(val.get(), expandStack);
+    expandStack.pop();
+
+    return Optional.of(expanded);
+  }
+
+  public Optional<String> get(String section, String field) {
+    return get(section, field, new Stack<String>());
   }
 
   public ImmutableMap<String, String> get(String sectionName) {
-    return this.rawConfig.getSection(sectionName);
+    ImmutableMap.Builder<String, String> expanded = ImmutableMap.builder();
+    for (Map.Entry<String, String> ent : this.rawConfig.getSection(sectionName).entrySet()) {
+      expanded.put(ent.getKey(), get(sectionName, ent.getKey()).get());
+    }
+    return expanded.build();
+  }
+
+  public ImmutableMap<String, ImmutableMap<String, String>> getSectionToEntries() {
+    ImmutableMap.Builder<String, ImmutableMap<String, String>> expanded = ImmutableMap.builder();
+    for (String section : this.rawConfig.getValues().keySet()) {
+      expanded.put(section, get(section));
+    }
+    return expanded.build();
   }
 
   /**
@@ -100,9 +169,10 @@ public class Config {
     // Default split character for lists is comma.
     return getOptionalListWithoutComments(sectionName, propertyName, ',');
   }
+
   public Optional<ImmutableList<String>> getOptionalListWithoutComments(
       String sectionName, String propertyName, char splitChar) {
-    Optional<String> rawValue = getRawValue(sectionName, propertyName);
+    Optional<String> rawValue = get(sectionName, propertyName);
     if (!rawValue.isPresent()) {
       return Optional.absent();
     }
@@ -121,7 +191,7 @@ public class Config {
   }
 
   public Optional<String> getValue(String sectionName, String propertyName) {
-    Optional<String> rawValue = getRawValue(sectionName, propertyName);
+    Optional<String> rawValue = get(sectionName, propertyName);
     if (rawValue.isPresent()) {
       String value = rawValue.get();
       if (value.isEmpty()) {
@@ -310,7 +380,7 @@ public class Config {
       Optional<Character> splitChar,
       String section,
       String field) {
-    ImmutableList.Builder<String> listBuilder = ImmutableList.<String>builder();
+    ImmutableList.Builder<String> listBuilder = ImmutableList.builder();
     StringBuilder stringBuilder = new StringBuilder();
     boolean inQuotes = false;
     int quoteIndex = 0;
@@ -398,15 +468,6 @@ public class Config {
   }
 
   /**
-   * @return the value at sectionName, propertyName, without any decoding,
-   *   or absent() if the key is not present.
-   */
-  private Optional<String> getRawValue(String sectionName, String propertyName) {
-    ImmutableMap<String, String> properties = get(sectionName);
-    return Optional.fromNullable(properties.get(propertyName));
-  }
-
-  /**
    * Decodes hexadecimal digits from a string.
    * @param string the string to decode the digits from
    * @param begin position to start decoding from
@@ -456,4 +517,5 @@ public class Config {
     }
     return result;
   }
+
 }

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.model.MacroException;
+import com.facebook.buck.model.MacroReplacer;
 import com.google.common.base.Function;
 
 /**

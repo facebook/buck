@@ -1,9 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY 974496ab314b4a71206646dfaad4a9bddc921508 #@#
+#@# GENERATED FILE: DO NOT MODIFY 6ad24735f1e6ca30574880cc0c52e6662d814323 #@#
 {
   "macros" : {
     "deps" : [
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/java:support",
+      "//src/com/facebook/buck/model:macros",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",

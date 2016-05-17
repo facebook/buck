@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2014-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,16 +14,17 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.macros;
+package com.facebook.buck.model;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+@SuppressWarnings("serial")
+public class MacroException extends Exception {
 
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractMacroMatchResult {
-  String getMacroType();
-  String getMacroInput();
-  int getStartIndex();
-  int getEndIndex();
+  public MacroException(String message) {
+    super(message);
+  }
+
+  public MacroException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
 }
