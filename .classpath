@@ -3,8 +3,6 @@
 	<classpathentry excluding="**/BUCK|**/BUCK.autodeps|com/facebook/buck/android/support/|com/facebook/buck/cli/quickstart/**|com/facebook/buck/event/listener/noos/|com/facebook/buck/intellij/" kind="src" path="src"/>
 	<classpathentry excluding="**/BUCK" kind="src" path="third-party/java/aosp/src"/>
 	<classpathentry kind="src" path="src-gen"/>
-	<classpathentry kind="src" path="build/immutables-tests"/>
-	<classpathentry kind="src" path="build/immutables"/>
 	<classpathentry excluding="**/BUCK|**/testdata/**|com/facebook/buck/event/listener/noos/" kind="src" path="test"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="third-party/java/android/common-24.2.3.jar"/>
@@ -27,14 +25,6 @@
 	<classpathentry kind="lib" path="third-party/java/dd-plist/dd-plist.jar" sourcepath="third-party/java/dd-plist/dd-plist-sources.jar"/>
 	<classpathentry kind="lib" path="third-party/java/ddmlib/ddmlib-22.5.3.jar"/>
 	<classpathentry kind="lib" path="third-party/java/easymock/easymock-3.3.1.jar"/>
-	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.core.contenttype_3.4.200.v20140207-1251.jar"/>
-	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.core.jobs_3.6.1.v20141014-1248.jar"/>
-	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.core.resources_3.9.1.v20140825-1431.jar"/>
-	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.core.runtime_3.10.0.v20140318-2214.jar"/>
-	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.equinox.common_3.6.200.v20130402-1505.jar"/>
-	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.equinox.preferences_3.5.200.v20140224-1527.jar"/>
-	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.jdt.core_3.10.2.v20150120-1634.jar"/>
-	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.osgi_3.10.2.v20150203-1939.jar"/>
 	<classpathentry kind="lib" path="third-party/java/gson/gson-2.2.4.jar" sourcepath="third-party/java/gson/gson-2.2.4-sources.jar"/>
 	<classpathentry kind="lib" path="third-party/java/guava/guava-19.0.jar" sourcepath="third-party/java/guava/guava-19.0-sources.jar"/>
 	<classpathentry kind="lib" path="third-party/java/guice/guice-3.0.jar"/>
@@ -82,5 +72,18 @@
 	<classpathentry kind="lib" path="third-party/java/plexus/plexus-utils-3.0.20.jar"/>
 	<classpathentry kind="lib" path="third-party/java/jimfs/jimfs-1.0.jar"/>
 	<classpathentry kind="lib" path="third-party/java/thrift/libthrift-0.9.3.jar"/>
+	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.core.contenttype_3.5.100.v20160418-1621.jar"/>
+	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.core.jobs_3.8.0.v20160319-0610.jar"/>
+	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.core.resources_3.11.0.v20160422-0304.jar"/>
+	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.core.runtime_3.12.0.v20160427-1901.jar"/>
+	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.equinox.common_3.8.0.v20160422-1942.jar"/>
+	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.equinox.preferences_3.6.0.v20160120-1756.jar"/>
+	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.jdt.core_3.12.0.v20160426-1326.jar"/>
+	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.osgi_3.11.0.v20160427-2120.jar"/>
+	<classpathentry kind="src" path=".apt_generated">
+		<attributes>
+			<attribute name="optional" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
