@@ -1,9 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY 024bafb847df42782b85383b9a5f3ba51c676401 #@#
+#@# GENERATED FILE: DO NOT MODIFY 8e7cbe48dcf73f2d9e17dbe62950a8f130637d37 #@#
 {
   "autodeps" : {
     "deps" : [
       "//src/com/facebook/buck/autodeps:autodeps",
       "//src/com/facebook/buck/autodeps:model",
+      "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/util:object_mapper",
       "//test/com/facebook/buck/model:testutil",

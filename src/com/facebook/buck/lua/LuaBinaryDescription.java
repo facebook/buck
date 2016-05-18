@@ -32,6 +32,7 @@ import com.facebook.buck.cxx.Linkers;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.NativeLinkables;
+import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -51,7 +52,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -63,8 +63,8 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.PackagedResource;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
@@ -77,7 +77,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.io.Resources;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -90,8 +92,9 @@ public class LuaBinaryDescription implements
 
   private static final BuildRuleType TYPE = BuildRuleType.of("lua_binary");
 
-  private static final String STARTER = "starter.lua.in";
-  private static final String NATIVE_STARTER_CXX_SOURCE = "native-starter.cpp.in";
+  private static final String STARTER = "com/facebook/buck/lua/starter.lua.in";
+  private static final String NATIVE_STARTER_CXX_SOURCE =
+      "com/facebook/buck/lua/native-starter.cpp.in";
 
   private final LuaConfig luaConfig;
   private final CxxBuckConfig cxxBuckConfig;
@@ -126,6 +129,14 @@ public class LuaBinaryDescription implements
         "%s" + luaConfig.getExtension());
   }
 
+  private String getNativeStarterCxxSourceTemplate() {
+    try {
+      return Resources.toString(Resources.getResource(NATIVE_STARTER_CXX_SOURCE), Charsets.UTF_8);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   private CxxSource getNativeStarterCxxSource(
       BuildRuleParams baseParams,
       BuildRuleResolver ruleResolver,
@@ -133,6 +144,25 @@ public class LuaBinaryDescription implements
       final CxxPlatform cxxPlatform,
       final String mainModule,
       final Optional<Path> relativeModulesDir) {
+
+    BuildTarget templateTarget =
+        BuildTarget.builder(baseParams.getBuildTarget())
+            .addFlavors(ImmutableFlavor.of("native-starter-cxx-source-template"))
+            .build();
+    ruleResolver.addToIndex(
+        new WriteFile(
+            baseParams.copyWithChanges(
+                templateTarget,
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            pathResolver,
+            getNativeStarterCxxSourceTemplate(),
+            BuildTargets.getGenPath(
+                baseParams.getProjectFilesystem(),
+                templateTarget,
+                "%s/native-starter.cpp.in"),
+            /* executable */ false));
+
     BuildTarget target =
         BuildTarget.builder(baseParams.getBuildTarget())
             .addFlavors(ImmutableFlavor.of("native-starter-cxx-source"))
@@ -145,13 +175,7 @@ public class LuaBinaryDescription implements
             pathResolver,
             target,
             output,
-            new PathSourcePath(
-                baseParams.getProjectFilesystem(),
-                LuaBinaryDescription.class + "/" + NATIVE_STARTER_CXX_SOURCE,
-                new PackagedResource(
-                    baseParams.getProjectFilesystem(),
-                    LuaBinaryDescription.class,
-                    NATIVE_STARTER_CXX_SOURCE)),
+            new BuildTargetSourcePath(templateTarget),
             ImmutableMap.of(
                 "MAIN_MODULE",
                 Escaper.escapeAsPythonString(mainModule),
@@ -162,6 +186,7 @@ public class LuaBinaryDescription implements
                 "EXT_SUFFIX",
                 Escaper.escapeAsPythonString(cxxPlatform.getSharedLibraryExtension())),
             /* executable */ false));
+
     return CxxSource.of(
         CxxSource.Type.CXX,
         new BuildTargetSourcePath(target),
@@ -284,6 +309,14 @@ public class LuaBinaryDescription implements
     return new BuildTargetSourcePath(target);
   }
 
+  private String getPureStarterTemplate() {
+    try {
+      return Resources.toString(Resources.getResource(STARTER), Charsets.UTF_8);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   private SourcePath getPureStarter(
       BuildRuleParams baseParams,
       BuildRuleResolver ruleResolver,
@@ -292,6 +325,25 @@ public class LuaBinaryDescription implements
       Path output,
       final String mainModule,
       final Optional<Path> relativeModulesDir) {
+
+    BuildTarget templateTarget =
+        BuildTarget.builder(baseParams.getBuildTarget())
+            .addFlavors(ImmutableFlavor.of("starter-template"))
+            .build();
+    ruleResolver.addToIndex(
+        new WriteFile(
+            baseParams.copyWithChanges(
+                templateTarget,
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            pathResolver,
+            getPureStarterTemplate(),
+            BuildTargets.getGenPath(
+                baseParams.getProjectFilesystem(),
+                templateTarget,
+                "%s/starter.lua.in"),
+            /* executable */ false));
+
     BuildTarget target =
         BuildTarget.builder(baseParams.getBuildTarget())
             .addFlavors(ImmutableFlavor.of("pure-starter"))
@@ -303,13 +355,7 @@ public class LuaBinaryDescription implements
             pathResolver,
             target,
             output,
-            new PathSourcePath(
-                baseParams.getProjectFilesystem(),
-                LuaBinaryDescription.class + "/" + STARTER,
-                new PackagedResource(
-                    baseParams.getProjectFilesystem(),
-                    LuaBinaryDescription.class,
-                    STARTER)),
+            new BuildTargetSourcePath(templateTarget),
             ImmutableMap.of(
                 "SHEBANG",
                 lua.getCommandPrefix(pathResolver).get(0),
@@ -322,6 +368,7 @@ public class LuaBinaryDescription implements
                 "EXT_SUFFIX",
                 Escaper.escapeAsPythonString(cxxPlatform.getSharedLibraryExtension())),
             /* executable */ true));
+
     return new BuildTargetSourcePath(target);
   }
 

@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY c33feaabe5531061f662d47e5d75b77ebf6cdee3 #@#
+#@# GENERATED FILE: DO NOT MODIFY fd5f25f913ccdd1fa5b52f0a0dba603408f185ef #@#
 {
   "lua" : {
     "deps" : [
+      "//src/com/facebook/buck/file:rules",
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/rules/args:args",
@@ -9,7 +10,6 @@
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:util",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
