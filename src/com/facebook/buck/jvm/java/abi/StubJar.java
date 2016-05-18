@@ -21,6 +21,7 @@ import static org.objectweb.asm.ClassReader.SKIP_DEBUG;
 import static org.objectweb.asm.ClassReader.SKIP_FRAMES;
 
 import com.facebook.buck.io.HashingDeterministicJarWriter;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSource;
@@ -66,7 +67,7 @@ public class StubJar {
 
     @Override
     public void visit(Path relativizedPath, InputStream stream) throws IOException {
-      String fileName = relativizedPath.toString();
+      String fileName = MorePaths.pathWithUnixSeparators(relativizedPath);
       if (!fileName.endsWith(".class")) {
         return;
       }

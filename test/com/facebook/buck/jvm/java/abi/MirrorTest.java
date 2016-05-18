@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.base.Joiner;
@@ -863,7 +864,8 @@ public class MirrorTest {
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
           if (file.getFileName().toString().endsWith(".class")) {
-            ZipEntry entry = new ZipEntry(outputDir.toPath().relativize(file).toString());
+            ZipEntry entry =
+                new ZipEntry(MorePaths.pathWithUnixSeparators(outputDir.toPath().relativize(file)));
             os.putNextEntry(entry);
             ByteStreams.copy(Files.newInputStream(file), os);
             os.closeEntry();
