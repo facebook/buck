@@ -20,14 +20,17 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.rage.AbstractReport;
 import com.facebook.buck.rage.AutomatedReport;
-import com.facebook.buck.rage.DefectReporter;
+import com.facebook.buck.rage.DefaultDefectReporter;
+import com.facebook.buck.rage.DefaultExtraInfoCollector;
 import com.facebook.buck.rage.DefectSubmitResult;
+import com.facebook.buck.rage.ExtraInfoCollector;
 import com.facebook.buck.rage.InteractiveReport;
 import com.facebook.buck.rage.RageBuckConfig;
 import com.facebook.buck.rage.RageConfig;
 import com.facebook.buck.rage.VcsInfoCollector;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.versioncontrol.DefaultVersionControlCmdLineInterfaceFactory;
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlCmdLineInterfaceFactory;
@@ -52,6 +55,7 @@ public class RageCommand extends AbstractCommand {
     BuckConfig buckConfig = params.getBuckConfig();
     RageConfig rageConfig = RageBuckConfig.create(buckConfig);
     DirtyPrintStreamDecorator stdOut = params.getConsole().getStdOut();
+    ProcessExecutor processExecutor = new ProcessExecutor(params.getConsole());
 
     VersionControlCmdLineInterfaceFactory vcsFactory =
         new DefaultVersionControlCmdLineInterfaceFactory(
@@ -60,24 +64,30 @@ public class RageCommand extends AbstractCommand {
             new VersionControlBuckConfig(buckConfig),
             buckConfig.getEnvironment());
 
-    AbstractReport report;
     Optional<VcsInfoCollector> vcsInfoCollector =
         VcsInfoCollector.create(vcsFactory.createCmdLineInterface());
+
+    ExtraInfoCollector extraInfoCollector =
+        new DefaultExtraInfoCollector(rageConfig, filesystem, processExecutor);
+
+    AbstractReport report;
     if (params.getConsole().getAnsi().isAnsiTerminal() && !nonInteractive) {
       report = new InteractiveReport(
-          new DefectReporter(filesystem, params.getObjectMapper(), rageConfig),
+          new DefaultDefectReporter(filesystem, params.getObjectMapper(), rageConfig),
           filesystem,
           stdOut,
           params.getStdIn(),
           params.getBuildEnvironmentDescription(),
-          vcsInfoCollector);
+          vcsInfoCollector,
+          extraInfoCollector);
     } else {
       report = new AutomatedReport(
-          new DefectReporter(filesystem, params.getObjectMapper(), rageConfig),
+          new DefaultDefectReporter(filesystem, params.getObjectMapper(), rageConfig),
           filesystem,
           stdOut,
           params.getBuildEnvironmentDescription(),
-          gatherVcsInfo ? vcsInfoCollector : Optional.<VcsInfoCollector>absent());
+          gatherVcsInfo ? vcsInfoCollector : Optional.<VcsInfoCollector>absent(),
+          extraInfoCollector);
     }
     DefectSubmitResult defectSubmitResult = report.collectAndSubmitResult();
 

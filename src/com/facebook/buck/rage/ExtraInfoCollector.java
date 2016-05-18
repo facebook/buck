@@ -16,8 +16,6 @@
 
 package com.facebook.buck.rage;
 
-import com.facebook.buck.model.BuildId;
-import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -28,27 +26,27 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 /**
- * Interface around the 'backend' of submitting a defect report.
+ * Responsible for getting extra information to the report by running a user-specified command.
  */
-public interface DefectReporter {
-  DefectSubmitResult submitReport(DefectReport defectReport) throws IOException;
+public interface ExtraInfoCollector {
+
+  Optional<ExtraInfoResult> run()
+      throws IOException, InterruptedException, ExtraInfoExecutionException;
 
   @Value.Immutable
   @BuckStyleImmutable
-  interface AbstractDefectSubmitResult {
-    String getReportSubmitLocation();
-    Optional<Path> getReportLocalLocation();
-    Optional<String> getReportSubmitMessage();
+  interface AbstractExtraInfoResult {
+    String getOutput();
+    ImmutableSet<Path> getExtraFiles();
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractDefectReport {
-    Optional<UserReport> getUserReport();
-    ImmutableSet<BuildId> getHighlightedBuildIds();
-    ImmutableSet<Path> getIncludedPaths();
-    BuildEnvironmentDescription getBuildEnvironmentDescription();
-    Optional<SourceControlInfo> getSourceControlInfo();
-    Optional<String> getExtraInfo();
+  class ExtraInfoExecutionException extends Exception {
+    public ExtraInfoExecutionException(String message) {
+      super(message);
+    }
+
+    public ExtraInfoExecutionException(String message, Throwable cause) {
+      super(message, cause);
+    }
   }
 }

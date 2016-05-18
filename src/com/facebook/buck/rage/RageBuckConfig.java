@@ -22,6 +22,7 @@ public class RageBuckConfig {
 
   private static final String SECTION_NAME = "rage";
   private static final String REPORT_UPLOAD_URL_FIELD = "report_upload_url";
+  private static final String EXTRA_INFO_COMMAND_FIELD = "extra_info_command";
 
   private RageBuckConfig() {
   }
@@ -29,6 +30,8 @@ public class RageBuckConfig {
   public static RageConfig create(BuckConfig buckConfig) {
     return RageConfig.builder()
         .setReportUploadUri(buckConfig.getUrl(SECTION_NAME, REPORT_UPLOAD_URL_FIELD))
+        .setExtraInfoCommand(
+            buckConfig.getListWithoutComments(SECTION_NAME, EXTRA_INFO_COMMAND_FIELD))
         .build();
   }
 }

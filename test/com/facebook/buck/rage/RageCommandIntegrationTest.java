@@ -20,17 +20,24 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.TestBuildEnvironmentDescription;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 
 import org.eclipse.jetty.server.Request;
@@ -56,6 +63,14 @@ public class RageCommandIntegrationTest {
 
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
+
+  private static final ExtraInfoCollector EMPTY_EXTRA_INFO_HELPER = new ExtraInfoCollector() {
+    @Override
+    public Optional<ExtraInfoResult> run()
+        throws IOException, InterruptedException, ExtraInfoExecutionException {
+      return Optional.absent();
+    }
+  };
 
   @Test
   public void testRageNonInteractiveReport() throws Exception {
@@ -102,7 +117,7 @@ public class RageCommandIntegrationTest {
           .build();
       ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
       ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-      DefectReporter reporter = new DefectReporter(
+      DefectReporter reporter = new DefaultDefectReporter(
           filesystem,
           objectMapper,
           config);
@@ -111,7 +126,8 @@ public class RageCommandIntegrationTest {
           filesystem,
           new CapturingPrintStream(),
           TestBuildEnvironmentDescription.INSTANCE,
-          VcsInfoCollector.create(new NoOpCmdLineInterface()));
+          VcsInfoCollector.create(new NoOpCmdLineInterface()),
+          EMPTY_EXTRA_INFO_HELPER);
       DefectSubmitResult defectSubmitResult = automatedReport.collectAndSubmitResult();
 
       assertThat(
@@ -136,6 +152,34 @@ public class RageCommandIntegrationTest {
   }
 
   @Test
+  public void testExtraInfo() throws Exception {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "interactive_report", temporaryFolder);
+    workspace.setUp();
+
+    RageConfig config = RageConfig.builder()
+        .setExtraInfoCommand(ImmutableList.of("python", "extra.py"))
+        .build();
+    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
+    Console console = new TestConsole();
+    CapturingDefectReporter defectReporter = new CapturingDefectReporter();
+    AutomatedReport automatedReport = new AutomatedReport(
+        defectReporter,
+        filesystem,
+        new CapturingPrintStream(),
+        TestBuildEnvironmentDescription.INSTANCE,
+        VcsInfoCollector.create(new NoOpCmdLineInterface()),
+        new DefaultExtraInfoCollector(config, filesystem, new ProcessExecutor(console)));
+    automatedReport.collectAndSubmitResult();
+    DefectReport defectReport = defectReporter.getDefectReport();
+    assertThat(defectReport.getExtraInfo(), Matchers.equalTo(Optional.of("Extra\n")));
+    assertThat(
+        FluentIterable.from(defectReport.getIncludedPaths())
+            .transform(Functions.toStringFunction()),
+        Matchers.hasItem(Matchers.endsWith("extra.txt")));
+  }
+
+  @Test
   public void testUploadFailure() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "interactive_report", temporaryFolder);
@@ -155,13 +199,12 @@ public class RageCommandIntegrationTest {
           });
       httpd.start();
 
-
       RageConfig config = RageConfig.builder()
           .setReportUploadUri(httpd.getUri("/rage"))
           .build();
       ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
       ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-      DefectReporter reporter = new DefectReporter(
+      DefectReporter reporter = new DefaultDefectReporter(
           filesystem,
           objectMapper,
           config);
@@ -170,10 +213,27 @@ public class RageCommandIntegrationTest {
           filesystem,
           new CapturingPrintStream(),
           TestBuildEnvironmentDescription.INSTANCE,
-          VcsInfoCollector.create(new NoOpCmdLineInterface()));
+          VcsInfoCollector.create(new NoOpCmdLineInterface()),
+          EMPTY_EXTRA_INFO_HELPER);
 
       expectedException.expect(HumanReadableException.class);
       automatedReport.collectAndSubmitResult();
+    }
+  }
+
+  private static class CapturingDefectReporter implements DefectReporter {
+    private DefectReport defectReport = null;
+
+    public DefectReport getDefectReport() {
+      return Preconditions.checkNotNull(defectReport);
+    }
+
+    @Override
+    public DefectSubmitResult submitReport(DefectReport defectReport) throws IOException {
+      this.defectReport = defectReport;
+      return DefectSubmitResult.builder()
+          .setReportSubmitLocation("")
+          .build();
     }
   }
 }

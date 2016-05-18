@@ -35,17 +35,20 @@ import java.nio.file.Path;
  */
 public abstract class AbstractReport {
 
-  protected final DefectReporter defectReporter;
-  protected final BuildEnvironmentDescription buildEnvironmentDescription;
-  protected final PrintStream output;
+  private final DefectReporter defectReporter;
+  private final BuildEnvironmentDescription buildEnvironmentDescription;
+  private final PrintStream output;
+  private final ExtraInfoCollector extraInfoCollector;
 
   public AbstractReport(
       DefectReporter defectReporter,
       BuildEnvironmentDescription buildEnvironmentDescription,
-      PrintStream output) {
+      PrintStream output,
+      ExtraInfoCollector extraInfoCollector) {
     this.defectReporter = defectReporter;
     this.buildEnvironmentDescription = buildEnvironmentDescription;
     this.output = output;
+    this.extraInfoCollector = extraInfoCollector;
   }
 
   protected abstract ImmutableSet<BuildLogEntry> promptForBuildSelection() throws IOException;
@@ -57,13 +60,37 @@ public abstract class AbstractReport {
       throws IOException, InterruptedException {
 
     Optional<UserReport> userReport = getUserReport();
-    ImmutableSet<BuildLogEntry> hightlghtedBuilds = promptForBuildSelection();
+    ImmutableSet<BuildLogEntry> highlightedBuilds = promptForBuildSelection();
     Optional<SourceControlInfo> sourceControlInfo = getSourceControlInfo();
+
+    ImmutableSet<Path> extraInfoPaths = ImmutableSet.of();
+    Optional<String> extraInfo = Optional.absent();
+    try {
+      Optional<ExtraInfoResult> extraInfoResultOptional = extraInfoCollector.run();
+      if (extraInfoResultOptional.isPresent()) {
+        extraInfoPaths = extraInfoResultOptional.get().getExtraFiles();
+        extraInfo = Optional.of(extraInfoResultOptional.get().getOutput());
+      }
+    } catch (DefaultExtraInfoCollector.ExtraInfoExecutionException e) {
+      output.printf("There was a problem gathering additional information: %s. " +
+          "The results will not be attached to the report.", e.getMessage());
+    }
+
+    ImmutableSet<Path> includedPaths = FluentIterable.from(highlightedBuilds)
+        .transform(
+            new Function<BuildLogEntry, Path>() {
+              @Override
+              public Path apply(BuildLogEntry input) {
+                return input.getRelativePath();
+              }
+            })
+        .append(extraInfoPaths)
+        .toSet();
 
     DefectReport defectReport = DefectReport.builder()
         .setUserReport(userReport)
         .setHighlightedBuildIds(
-            FluentIterable.from(hightlghtedBuilds)
+            FluentIterable.from(highlightedBuilds)
                 .transformAndConcat(
                     new Function<BuildLogEntry, Iterable<BuildId>>() {
                       @Override
@@ -73,16 +100,8 @@ public abstract class AbstractReport {
                     }))
         .setBuildEnvironmentDescription(buildEnvironmentDescription)
         .setSourceControlInfo(sourceControlInfo)
-        .setIncludedPaths(
-            FluentIterable.from(hightlghtedBuilds)
-                .transform(
-                    new Function<BuildLogEntry, Path>() {
-                      @Override
-                      public Path apply(BuildLogEntry input) {
-                        return input.getRelativePath();
-                      }
-                    })
-                .toSet())
+        .setIncludedPaths(includedPaths)
+        .setExtraInfo(extraInfo)
         .build();
 
     output.println("Writing report, please wait..");

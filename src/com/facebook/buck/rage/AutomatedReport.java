@@ -32,16 +32,19 @@ import java.io.PrintStream;
 public class AutomatedReport extends AbstractReport {
   private final BuildLogHelper buildLogHelper;
   private final Optional<VcsInfoCollector> vcsInfoCollector;
+  private final PrintStream output;
 
   public AutomatedReport(
       DefectReporter defectReporter,
       ProjectFilesystem filesystem,
       PrintStream output,
       BuildEnvironmentDescription buildEnvironmentDescription,
-      Optional<VcsInfoCollector> vcsInfoCollector) {
-    super(defectReporter, buildEnvironmentDescription, output);
+      Optional<VcsInfoCollector> vcsInfoCollector,
+      ExtraInfoCollector extraInfoCollector) {
+    super(defectReporter, buildEnvironmentDescription, output, extraInfoCollector);
     this.vcsInfoCollector = vcsInfoCollector;
     this.buildLogHelper = new BuildLogHelper(filesystem);
+    this.output = output;
   }
 
   @Override

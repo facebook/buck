@@ -41,6 +41,7 @@ public class InteractiveReport extends AbstractReport {
   private final BuildLogHelper buildLogHelper;
   private final Optional<VcsInfoCollector> vcsInfoCollector;
   private final UserInput input;
+  private final PrintStream output;
 
   public InteractiveReport(
       DefectReporter defectReporter,
@@ -48,13 +49,16 @@ public class InteractiveReport extends AbstractReport {
       PrintStream output,
       InputStream stdin,
       BuildEnvironmentDescription buildEnvironmentDescription,
-      Optional<VcsInfoCollector> vcsInfoCollector) {
+      Optional<VcsInfoCollector> vcsInfoCollector,
+      ExtraInfoCollector extraInfoCollector) {
     super(
         defectReporter,
         buildEnvironmentDescription,
-        output);
+        output,
+        extraInfoCollector);
     this.buildLogHelper = new BuildLogHelper(filesystem);
     this.vcsInfoCollector = vcsInfoCollector;
+    this.output = output;
     this.input = new UserInput(output, new BufferedReader(new InputStreamReader(stdin)));
   }
 

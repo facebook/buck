@@ -18,6 +18,7 @@ package com.facebook.buck.rage;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 import org.immutables.value.Value;
 
@@ -27,4 +28,5 @@ import java.net.URI;
 @BuckStyleImmutable
 interface AbstractRageConfig {
   Optional<URI> getReportUploadUri();
+  ImmutableList<String> getExtraInfoCommand();
 }
