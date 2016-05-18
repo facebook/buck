@@ -57,8 +57,7 @@ public class IjDependencyListBuilder {
    */
   public enum Type {
     MODULE("module"),
-    LIBRARY("library"),
-    SOURCE_FOLDER("sourceFolder");
+    LIBRARY("library");
 
     private final String value;
     Type(String value) {
@@ -109,17 +108,9 @@ public class IjDependencyListBuilder {
       }
     }
 
-    public boolean getSourceFolder() {
-      if (getType().equals(Type.SOURCE_FOLDER)) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-
     @Value.Check
     protected void dataOnlyAbsentForSourceFolder() {
-      Preconditions.checkArgument(getData().isPresent() || getType().equals(Type.SOURCE_FOLDER));
+      Preconditions.checkArgument(getData().isPresent());
     }
 
     @Override
@@ -154,12 +145,6 @@ public class IjDependencyListBuilder {
 
   public IjDependencyListBuilder() {
     builder = ImmutableSortedSet.naturalOrder();
-
-    builder.add(
-        DependencyEntry.builder()
-            .setType(Type.SOURCE_FOLDER)
-            .setSortOrder(SortOrder.SOURCE_FOLDER)
-            .build());
   }
 
   public void addModule(String name, Scope scope, boolean exported) {

@@ -65,7 +65,6 @@ public class IjProjectDataPreparerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testWriteModule() throws Exception {
     TargetNode<?> guavaTargetNode = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third_party/guava:guava"))
@@ -106,9 +105,6 @@ public class IjProjectDataPreparerTest {
                                 .setExported(false)
                                 .build()
                         )))
-            ),
-            allOf(
-                hasProperty("type", equalTo(IjDependencyListBuilder.Type.SOURCE_FOLDER))
             )
         ));
   }
@@ -200,9 +196,6 @@ public class IjProjectDataPreparerTest {
                         )))
             ),
             allOf(
-                hasProperty("type", equalTo(IjDependencyListBuilder.Type.SOURCE_FOLDER))
-            ),
-            allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.LIBRARY)),
                 hasProperty("data", equalTo(Optional.of(
                             DependencyEntryData.builder()
@@ -234,9 +227,6 @@ public class IjProjectDataPreparerTest {
                                 .setScope(IjDependencyListBuilder.Scope.TEST)
                                 .build()
                         )))
-            ),
-            allOf(
-                hasProperty("type", equalTo(IjDependencyListBuilder.Type.SOURCE_FOLDER))
             )
         ));
   }

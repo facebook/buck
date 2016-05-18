@@ -27,6 +27,7 @@
   </component>
 %endif%
   <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
     <content url="%contentRoot.url%">
 %contentRoot.folders:{folder |
       <%folder.type% url="%folder.url%" %\\%
@@ -48,6 +49,10 @@
         %if(generatedFolder.isAndroidResources)% type="java-resource" %endif%/>
     </content>
 }%
+    <orderEntry type="inheritedJdk" />
+%if(hasSourceFolders)%
+    <orderEntry type="sourceFolder" forTests="false" />
+%endif%
 %dependencies:{dep |
   %if(dep.module)%
     <orderEntry type="%dep.type%" module-name="%dep.module.name%" scope="%dep.module.scope%" %\\%
@@ -55,10 +60,7 @@
   %elseif(dep.library)%
     <orderEntry type="%dep.type%" name="%dep.library.name%" scope="%dep.library.scope%" %\\%
       level="project" %if(dep.library.exported)% exported="" %endif% />
-  %elseif(dep.sourceFolder)%
-    <orderEntry type="%dep.type%" forTests="false" />
   %endif%
 }%
-    <orderEntry type="inheritedJdk" />
   </component>
 </module>
