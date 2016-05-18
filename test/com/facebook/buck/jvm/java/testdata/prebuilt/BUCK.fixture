@@ -6,7 +6,8 @@ prebuilt_jar(
 genrule(
   name = 'genjar',
   out = 'junit2.jar',
-  cmd = 'cp junit.jar $OUT',
+  bash = 'cp junit.jar $OUT',
+  cmd_exe = 'copy junit.jar %OUT%',
   srcs = [
     'junit.jar',
   ],

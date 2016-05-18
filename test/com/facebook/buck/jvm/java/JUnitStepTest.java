@@ -106,7 +106,7 @@ public class JUnitStepTest {
             vmArg2,
             "-verbose",
             "-classpath",
-            "@/opt/src/buck/foo" + File.pathSeparator +
+            "@" + classpathFile + File.pathSeparator +
                 MorePaths.pathWithPlatformSeparators("build/classes/junit"),
             FileClassPathRunner.class.getName(),
             "com.facebook.buck.testrunner.JUnitMain",
@@ -174,7 +174,7 @@ public class JUnitStepTest {
     MoreAsserts.assertListEquals(
         ImmutableList.of(
             "/foo/bar/custom/java",
-            "-Djava.io.tmpdir=/opt/src/buck/" + directoryForTemp,
+            "-Djava.io.tmpdir=" + filesystem.resolve(directoryForTemp),
             "-Dbuck.testrunner_classes=" + testRunnerClasspath,
             buildIdArg,
             modulePathArg,
@@ -183,7 +183,7 @@ public class JUnitStepTest {
             vmArg2,
             "-verbose",
             "-classpath",
-            "@/opt/src/buck/foo" + File.pathSeparator +
+            "@" + classpathFile + File.pathSeparator +
                 MorePaths.pathWithPlatformSeparators("build/classes/junit"),
             FileClassPathRunner.class.getName(),
             "com.facebook.buck.testrunner.JUnitMain",

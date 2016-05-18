@@ -94,11 +94,11 @@ public class ClasspathMacroExpanderTest {
         rule,
         ruleResolver,
         String.format(
-            "%s/%s:%s/%s",
+            "%s" + File.separator + "%s" + File.pathSeparatorChar + "%s" + File.separator + "%s",
             ROOT,
             dep.getPathToOutput(),
             ROOT,
-            rule.getPathToOutput()).replace(':', File.pathSeparatorChar));
+            rule.getPathToOutput()));
   }
 
   @Test(expected = MacroException.class)

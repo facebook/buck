@@ -96,9 +96,10 @@ public class ExportFileTest {
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
-            "mkdir -p /opt/src/buck/buck-out/gen",
-            "rm -r -f /opt/src/buck/buck-out/gen/example.html",
-            "cp " + projectFilesystem.resolve("example.html") + " buck-out/gen/example.html"),
+            "mkdir -p " + projectFilesystem.resolve("buck-out/gen"),
+            "rm -r -f " + projectFilesystem.resolve("buck-out/gen/example.html"),
+            "cp " + projectFilesystem.resolve("example.html") + " " +
+                Paths.get("buck-out/gen/example.html")),
         steps,
         TestExecutionContext.newInstance());
     assertEquals(
@@ -119,9 +120,10 @@ public class ExportFileTest {
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
-            "mkdir -p /opt/src/buck/buck-out/gen",
-            "rm -r -f /opt/src/buck/buck-out/gen/fish",
-            "cp " + projectFilesystem.resolve("example.html") + " buck-out/gen/fish"),
+            "mkdir -p " + projectFilesystem.resolve("buck-out/gen"),
+            "rm -r -f " + projectFilesystem.resolve("buck-out/gen/fish"),
+            "cp " + projectFilesystem.resolve("example.html") + " " +
+                Paths.get("buck-out/gen/fish")),
         steps,
         TestExecutionContext.newInstance());
     assertEquals(
@@ -143,9 +145,10 @@ public class ExportFileTest {
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
-            "mkdir -p /opt/src/buck/buck-out/gen",
-            "rm -r -f /opt/src/buck/buck-out/gen/fish",
-            "cp " + projectFilesystem.resolve("chips") + " buck-out/gen/fish"),
+            "mkdir -p " + projectFilesystem.resolve("buck-out/gen"),
+            "rm -r -f " + projectFilesystem.resolve("buck-out/gen/fish"),
+            "cp " + projectFilesystem.resolve("chips") + " " +
+                Paths.get("buck-out/gen/fish")),
         steps,
         TestExecutionContext.newInstance());
     assertEquals(

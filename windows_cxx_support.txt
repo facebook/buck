@@ -1,3 +1,4 @@
+!com.facebook.buck.crosscell.InterCellIntegrationTest#circularCellReferencesAreAllowed
 !com.facebook.buck.cxx.CxxSourceRuleFactoryTest
 !com.facebook.buck.cxx.CxxSourceRuleFactoryTest.*
 !com.facebook.buck.cxx.PrecompiledHeaderFeatureTest

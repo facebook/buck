@@ -22,6 +22,7 @@ import static org.junit.Assert.assertSame;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -72,10 +73,12 @@ public class CxxTestStepTest {
 
   @Test
   public void success() throws IOException, InterruptedException {
+    ImmutableList<String> trueCmd = Platform.detect() == Platform.WINDOWS ?
+        ImmutableList.of("cmd", "/C", "(exit 0)") : ImmutableList.of("true");
     CxxTestStep step =
         new CxxTestStep(
             filesystem,
-            ImmutableList.of("true"),
+            trueCmd,
             ImmutableMap.<String, String>of(),
             exitCode,
             output,
@@ -87,10 +90,12 @@ public class CxxTestStepTest {
 
   @Test
   public void failure() throws IOException, InterruptedException {
+    ImmutableList<String> falseCmd = Platform.detect() == Platform.WINDOWS ?
+        ImmutableList.of("cmd", "/C", "(exit 1)") : ImmutableList.of("false");
     CxxTestStep step =
         new CxxTestStep(
             filesystem,
-            ImmutableList.of("false"),
+            falseCmd,
             ImmutableMap.<String, String>of(),
             exitCode,
             output,
@@ -103,10 +108,13 @@ public class CxxTestStepTest {
   @Test
   public void output() throws IOException, InterruptedException {
     String stdout = "hello world";
+    ImmutableList<String> echoCmd = Platform.detect() == Platform.WINDOWS ?
+        ImmutableList.of("powershell", "-Command", "echo", "'" + stdout + "'") :
+        ImmutableList.of("echo", stdout);
     CxxTestStep step =
         new CxxTestStep(
             filesystem,
-            ImmutableList.of("echo", stdout),
+            echoCmd,
             ImmutableMap.<String, String>of(),
             exitCode,
             output,
@@ -118,10 +126,12 @@ public class CxxTestStepTest {
 
   @Test
   public void timeout() throws IOException, InterruptedException {
+    ImmutableList<String> sleepCmd = Platform.detect() == Platform.WINDOWS ?
+        ImmutableList.of("powershell", "-Command", "sleep 10") : ImmutableList.of("sleep", "10");
     CxxTestStep step =
         new CxxTestStep(
             filesystem,
-            ImmutableList.of("sleep", "10"),
+            sleepCmd,
             ImmutableMap.<String, String>of(),
             exitCode,
             output,

@@ -150,7 +150,11 @@ public final class Escaper {
    * @return possibly quoted string
    */
   public static String escapeAsBashString(String str) {
-    return escape(Quoter.SINGLE, BASH_SPECIAL_CHARS, str);
+    if (Platform.detect() == Platform.WINDOWS) {
+      return CREATE_PROCESS_ESCAPER.apply(str);
+    } else {
+      return escape(Quoter.SINGLE, BASH_SPECIAL_CHARS, str);
+    }
   }
 
   public static String escapeAsBashString(Path path) {

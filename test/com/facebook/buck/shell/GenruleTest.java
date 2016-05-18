@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -170,8 +171,9 @@ public class GenruleTest {
             "rm",
             "-r",
             "-f",
-            "/opt/src/buck/" + filesystem.getBuckPaths().getGenDir() +
-            "/src/com/facebook/katana/katana_manifest/AndroidManifest.xml"),
+
+            filesystem.resolve(filesystem.getBuckPaths().getGenDir() +
+            "/src/com/facebook/katana/katana_manifest/AndroidManifest.xml").toString()),
         rmCommand.getShellCommand());
 
     Step secondStep = steps.get(1);
@@ -397,19 +399,22 @@ public class GenruleTest {
         .newGenruleBuilder(
             BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:baz"))
         .setBash("cat $DEPS > $OUT")
+        .setCmdExe("echo %DEPS% > %OUT%")
         .setOut("deps.txt")
         .setSrcs(
             ImmutableList.<SourcePath>of(new BuildTargetSourcePath(dep.getBuildTarget())))
         .build(resolver, filesystem);
 
     AbstractGenruleStep genruleStep = ((Genrule) genrule).createGenruleStep();
-    ExecutionContext context = newEmptyExecutionContext(Platform.LINUX);
+    Platform platform = Platform.detect() == Platform.WINDOWS ?
+        Platform.WINDOWS : Platform.LINUX;
+    ExecutionContext context = newEmptyExecutionContext(platform);
     ImmutableMap<String, String> environmentVariables =
         genruleStep.getEnvironmentVariables(context);
     assertEquals(
         "Make sure that the use of $DEPS pulls in $GEN_DIR, as well.",
         ImmutableMap.of(
-            "DEPS", "$GEN_DIR/foo/bar.jar",
+            "DEPS", MorePaths.pathWithPlatformSeparators("$GEN_DIR/foo/bar.jar"),
             "GEN_DIR", filesystem.resolve("buck-out/gen").toString(),
             "OUT", filesystem.resolve("buck-out/gen/foo/baz/deps.txt").toString()),
         environmentVariables);

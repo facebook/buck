@@ -259,7 +259,7 @@ public class Genrule extends AbstractBuildRule
             output.subpath(
                 getProjectFilesystem().getBuckPaths().getGenDir().getNameCount(),
                 output.getNameCount());
-        appendTo.add("$GEN_DIR/" + relativePath);
+        appendTo.add("$GEN_DIR" + relativePath.getFileSystem().getSeparator() + relativePath);
       } else {
         appendTo.add(getProjectFilesystem().resolve(output).toString());
       }

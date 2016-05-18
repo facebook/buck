@@ -126,7 +126,7 @@ public class GenruleIntegrationTest {
     assertThat(Files.isDirectory(workspace.resolve("buck-out/gen/mkdir/directory")), equalTo(true));
     assertThat(
         workspace.getFileContents("buck-out/gen/mkdir/directory/file"),
-        equalTo("something\n"));
+        equalTo("something" + System.lineSeparator()));
 
     workspace.runBuckCommand("clean").assertSuccess();
 
@@ -138,7 +138,7 @@ public class GenruleIntegrationTest {
     assertThat(Files.isDirectory(workspace.resolve("buck-out/gen/mkdir/directory")), equalTo(true));
     assertThat(
         workspace.getFileContents("buck-out/gen/mkdir/directory/file"),
-        equalTo("something\n"));
+        equalTo("something" + System.lineSeparator()));
   }
 
   @Test

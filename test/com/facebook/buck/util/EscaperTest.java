@@ -37,6 +37,7 @@ public class EscaperTest {
 
   @Test
   public void testEscapeAsBashString() {
+    assumeThat(File.separatorChar, equalTo('/'));
     assertEquals("a", Escaper.escapeAsBashString("a"));
     assertEquals("'a b'", Escaper.escapeAsBashString("a b"));
     assertEquals("'a'\\''b'", Escaper.escapeAsBashString("a'b"));

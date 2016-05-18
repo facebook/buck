@@ -1,5 +1,6 @@
 genrule(
   name = 'ignored',
   out = 'ignored',
-  cmd = 'touch $OUT',
+  bash = 'touch $OUT',
+  cmd_exe = 'echo "" > %OUT%',
 )

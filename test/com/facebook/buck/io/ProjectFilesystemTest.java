@@ -654,8 +654,8 @@ public class ProjectFilesystemTest {
     });
 
     ImmutableSet<String> found = allPaths.build();
-    assertTrue(found.contains("foo/bar/cake.txt"));
-    assertFalse(found.contains("foo/bar/cake.txt.orig"));
+    assertTrue(found.contains(Paths.get("foo/bar/cake.txt").toString()));
+    assertFalse(found.contains(Paths.get("foo/bar/cake.txt.orig").toString()));
   }
 
   @Test

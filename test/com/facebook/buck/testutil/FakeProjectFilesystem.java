@@ -20,6 +20,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.FakeClock;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -206,7 +207,12 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   public static ProjectFilesystem createJavaOnlyFilesystem(String rootPath) {
-    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    boolean isWindows = Platform.detect() == Platform.WINDOWS;
+
+    Configuration configuration = isWindows ? Configuration.windows() : Configuration.unix();
+    rootPath = isWindows ? "C:" + rootPath : rootPath;
+
+    FileSystem vfs = Jimfs.newFileSystem(configuration);
 
     Path root = vfs.getPath(rootPath);
     try {

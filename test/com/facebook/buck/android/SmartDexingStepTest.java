@@ -31,6 +31,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.base.Suppliers;
@@ -119,12 +120,18 @@ public class SmartDexingStepTest extends EasyMockSupport {
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
         ImmutableList.of(
-            "(cd /opt/src/buck && " +
-            Paths.get("/usr/bin/dx") + " " + xmx +
-                "--dex --output /opt/src/buck/classes.dex.tmp.jar " +
-                "/opt/src/buck/foo.dex.jar /opt/src/buck/bar.dex.jar)",
+            Joiner.on(" ").join(
+                "(cd",
+                filesystem.getRootPath(),
+                "&&",
+                Paths.get("/usr/bin/dx"),
+                xmx + "--dex --output",
+                filesystem.resolve("classes.dex.tmp.jar"),
+                filesystem.resolve("foo.dex.jar"),
+                filesystem.resolve("bar.dex.jar") + ")"
+            ),
             "repack classes.dex.tmp.jar in classes.dex.jar",
-            "rm -f /opt/src/buck/classes.dex.tmp.jar",
+            "rm -f " + filesystem.resolve("classes.dex.tmp.jar"),
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
             "xz -z -4 --check=crc32 classes.dex.jar"),
         steps,
@@ -155,14 +162,18 @@ public class SmartDexingStepTest extends EasyMockSupport {
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
         ImmutableList.of(
-            "(cd /opt/src/buck && " +
-            "/usr/bin/dx " + xmx +
-                "--dex --output " +
-                "/opt/src/buck/classes.dex.tmp.jar " +
-                "/opt/src/buck/foo.dex.jar " +
-                "/opt/src/buck/bar.dex.jar)",
+            Joiner.on(" ").join(
+                "(cd",
+                filesystem.getRootPath(),
+                "&&",
+                Paths.get("/usr/bin/dx"),
+                xmx + "--dex --output",
+                filesystem.resolve("classes.dex.tmp.jar"),
+                filesystem.resolve("foo.dex.jar"),
+                filesystem.resolve("bar.dex.jar") + ")"
+            ),
             "repack classes.dex.tmp.jar in classes.dex.jar",
-            "rm -f /opt/src/buck/classes.dex.tmp.jar",
+            "rm -f " + filesystem.resolve("classes.dex.tmp.jar"),
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
             "xz -z -9 --check=crc32 classes.dex.jar"),
         steps,
@@ -188,10 +199,16 @@ public class SmartDexingStepTest extends EasyMockSupport {
 
     String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
     assertEquals(
-        "(cd /opt/src/buck && " +
-        Paths.get("/usr/bin/dx") + " " + xmx +
-            "--dex --output /opt/src/buck/classes.dex " +
-            "/opt/src/buck/foo.dex.jar /opt/src/buck/bar.dex.jar)",
+        Joiner.on(" ").join(
+            "(cd",
+            filesystem.getRootPath(),
+            "&&",
+            Paths.get("/usr/bin/dx"),
+            xmx + "--dex --output",
+            filesystem.resolve("classes.dex"),
+            filesystem.resolve("foo.dex.jar"),
+            filesystem.resolve("bar.dex.jar") + ")"
+        ),
         dxStep.getDescription(createMockedExecutionContext()));
     verifyAll();
   }
@@ -213,10 +230,18 @@ public class SmartDexingStepTest extends EasyMockSupport {
 
     String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
     assertEquals(
-        "(cd /opt/src/buck && " +
-        Paths.get("/usr/bin/dx") + " " + xmx + "--dex --output /opt/src/buck/classes.dex.jar " +
-        "/opt/src/buck/foo.dex.jar /opt/src/buck/bar.dex.jar) && " +
-        "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
+        Joiner.on(" ").join(
+            "(cd",
+            filesystem.getRootPath(),
+            "&&",
+            Paths.get("/usr/bin/dx"),
+            xmx + "--dex --output",
+            filesystem.resolve("classes.dex.jar"),
+            filesystem.resolve("foo.dex.jar"),
+            filesystem.resolve("bar.dex.jar") + ")",
+            "&&",
+            "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta"
+        ),
         dxStep.getDescription(createMockedExecutionContext()));
     verifyAll();
   }

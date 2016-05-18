@@ -69,7 +69,7 @@ public class MorePathsTest {
       ".buckd",
       "foo/bar",
       root.getAbsolutePath() + "/buck-cache",
-      "/root/not/in/test"));
+      Paths.get("/root/not/in/test").toAbsolutePath().toString()));
 
     assertEquals(
         "Set should have been filtered down to paths contained under root.",
@@ -119,7 +119,7 @@ public class MorePathsTest {
         pathToDesiredLinkUnderProjectRoot,
         pathToExistingFileUnderProjectRoot,
         projectFilesystem);
-    assertEquals("../../biz.txt", relativePath.toString());
+    assertEquals(Paths.get("../../biz.txt").toString(), relativePath.toString());
 
     Path absolutePathToDesiredLinkUnderProjectRoot = projectFilesystem.resolve(
         pathToDesiredLinkUnderProjectRoot);
@@ -148,7 +148,7 @@ public class MorePathsTest {
         pathToDesiredLinkUnderProjectRoot,
         pathToExistingFileUnderProjectRoot,
         projectFilesystem);
-    assertEquals("../../foo/bar/baz/biz.txt", relativePath.toString());
+    assertEquals(Paths.get("../../foo/bar/baz/biz.txt").toString(), relativePath.toString());
 
     Path absolutePathToDesiredLinkUnderProjectRoot = projectFilesystem.resolve(
         pathToDesiredLinkUnderProjectRoot);

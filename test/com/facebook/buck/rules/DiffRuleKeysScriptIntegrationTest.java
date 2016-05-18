@@ -24,6 +24,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 
@@ -177,8 +178,9 @@ public class DiffRuleKeysScriptIntegrationTest {
 
   private ProcessExecutor.Result runRuleKeyDiffer(
       ProjectWorkspace workspace) throws IOException, InterruptedException {
+    String cmd = Platform.detect() == Platform.WINDOWS ? "python" : "python2.7";
     ProcessExecutor.Result result = workspace.runCommand(
-        "python2.7",
+        cmd,
         Paths.get("scripts", "diff_rulekeys.py").toString(),
         tmp.getRootPath().resolve("buck-0.log").toString(),
         tmp.getRootPath().resolve("buck-1.log").toString(),

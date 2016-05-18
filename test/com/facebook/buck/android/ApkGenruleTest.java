@@ -21,7 +21,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -158,10 +157,9 @@ public class ApkGenruleTest {
 
     // Verify all of the observers of the Genrule.
     String expectedApkOutput =
-        MorePathsForTests.rootRelativePath(
-            "/opt/src/buck/" +
-                projectFilesystem.getBuckPaths().getGenDir().toString() +
-            "/src/com/facebook/sign_fb4a/sign_fb4a.apk").toString();
+        projectFilesystem.resolve(
+            projectFilesystem.getBuckPaths().getGenDir().toString() +
+             "/src/com/facebook/sign_fb4a/sign_fb4a.apk").toString();
     assertEquals(expectedApkOutput,
         apkGenrule.getAbsoluteOutputFilePath());
     assertEquals(
@@ -202,7 +200,7 @@ public class ApkGenruleTest {
             "rm",
             "-r",
             "-f",
-            "/opt/src/buck/" + apkGenrule.getPathToOutput()),
+            expectedApkOutput),
         rmCommand.getShellCommand());
 
     Step secondStep = steps.get(1);
@@ -254,8 +252,8 @@ public class ApkGenruleTest {
         executionContext);
     assertEquals(new ImmutableMap.Builder<String, String>()
         .put(
-            "APK", "/opt/src/buck/" +
-            BuildTargets.getGenPath(projectFilesystem, apkTarget, "%s.apk").toString())
+            "APK", projectFilesystem.resolve(
+                BuildTargets.getGenPath(projectFilesystem, apkTarget, "%s.apk")).toString())
         .put("OUT", expectedApkOutput).build(),
         environmentVariables);
     assertEquals(

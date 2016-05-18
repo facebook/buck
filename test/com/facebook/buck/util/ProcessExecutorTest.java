@@ -40,13 +40,17 @@ public class ProcessExecutorTest {
     Console console = new Console(
         Verbosity.ALL, stdOut, stdErr, ansi);
     ProcessExecutor executor = new ProcessExecutor(console);
-    ProcessExecutor.Result result = executor.execute(Runtime.getRuntime().exec("echo Hello"));
+    String cmd = Platform.detect() == Platform.WINDOWS ?
+        "cmd /C echo Hello" : "echo Hello";
+    ProcessExecutor.Result result = executor.execute(Runtime.getRuntime().exec(cmd));
     assertEquals(ansi.asHighlightedFailureText("Hello\n"), result.getStdout().get());
     assertEquals("", result.getStderr().get());
   }
 
   @Test
   public void testExpectStdout() throws IOException, InterruptedException {
+    String cmd = Platform.detect() == Platform.WINDOWS ?
+        "cmd /C echo Hello" : "echo Hello";
     CapturingPrintStream stdOut = new CapturingPrintStream();
     CapturingPrintStream stdErr = new CapturingPrintStream();
     Ansi ansi = Ansi.forceTty();
@@ -54,7 +58,7 @@ public class ProcessExecutorTest {
         Verbosity.ALL, stdOut, stdErr, ansi);
     ProcessExecutor executor = new ProcessExecutor(console);
     ProcessExecutor.Result result = executor.execute(
-        Runtime.getRuntime().exec("echo Hello"),
+        Runtime.getRuntime().exec(cmd),
         EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
         /* stdin */ Optional.<String>absent(),
         /* timeOutMs */ Optional.<Long>absent(),
@@ -65,6 +69,8 @@ public class ProcessExecutorTest {
 
   @Test
   public void testProcessFailureDoesNotWriteEmptyString() throws IOException, InterruptedException {
+    String cmd = Platform.detect() == Platform.WINDOWS ?
+        "cmd /C (exit 1)" : "false";
     DirtyPrintStreamDecorator stdOut =
         new DirtyPrintStreamDecorator(new CapturingPrintStream());
     DirtyPrintStreamDecorator stdErr =
@@ -73,7 +79,7 @@ public class ProcessExecutorTest {
     Console console = new Console(
         Verbosity.ALL, stdOut, stdErr, ansi);
     ProcessExecutor executor = new ProcessExecutor(console);
-    executor.execute(Runtime.getRuntime().exec("false"));
+    executor.execute(Runtime.getRuntime().exec(cmd));
     assertFalse(stdOut.isDirty());
     assertFalse(stdErr.isDirty());
   }

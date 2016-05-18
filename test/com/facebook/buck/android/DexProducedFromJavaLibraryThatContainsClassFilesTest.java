@@ -74,7 +74,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
   @Test
   public void testGetBuildStepsWhenThereAreClassesToDex() throws IOException, InterruptedException {
-    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem("/home/user");
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     SourcePathResolver pathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())

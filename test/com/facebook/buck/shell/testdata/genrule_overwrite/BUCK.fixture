@@ -2,6 +2,7 @@ genrule(
   name = 'genrule-one',
   out = 'output.txt',
   bash = 'echo "one" > $OUT',
+  cmd_exe = 'powershell -Command Out-File -FilePath $env:OUT -Encoding ascii -InputObject "one"',
   srcs = [
     'input-file.txt',
   ],
@@ -11,6 +12,7 @@ genrule(
   name = 'genrule-two',
   out = 'output.txt',
   bash = 'echo "two" > $OUT',
+  cmd_exe = 'powershell -Command Out-File -FilePath $env:OUT -Encoding ascii -InputObject "two"',
   srcs = [
     'input-file.txt',
   ],
