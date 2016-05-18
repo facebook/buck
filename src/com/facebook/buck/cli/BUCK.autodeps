@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY d182e1fea0e6724736aedbeb3673647e51c70777 #@#
+#@# GENERATED FILE: DO NOT MODIFY 89d01acb1cdba6824084203012b7f5f8b313f764 #@#
 {
   "cli" : {
     "deps" : [
+      "//src-gen:thrift",
       "//src/com/facebook/buck/android:exceptions",
       "//src/com/facebook/buck/android:helpers",
       "//src/com/facebook/buck/apple:platform",
@@ -42,7 +43,6 @@
       "//src/com/facebook/buck/rules/coercer:types",
       "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/simulate:simulate",
-      "//src/com/facebook/buck/slb:slb",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/test:config",
       "//src/com/facebook/buck/test:report-format",
@@ -58,7 +58,8 @@
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
       "//third-party/java/immutables:processor",
       "//third-party/java/jackson:jackson-core",
-      "//third-party/java/jna:jna"
+      "//third-party/java/jna:jna",
+      "//third-party/java/thrift:libthrift"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/android:rules",

@@ -47,6 +47,22 @@ struct BuildJob {
   3: optional BuildStatus status = BuildStatus.UNKNOWN;
 }
 
+# Thrift doesn't universally guarantee map ordering. Using list of tuples.
+struct OrderedStringMapEntry {
+  1: string key;
+  2: string value;
+}
+
+struct BuildJobStateBuckConfig {
+  1: optional map<string, string> userEnvironment;
+  2: optional map<string, list<OrderedStringMapEntry>> rawBuckConfig;
+  3: optional string architecture;
+  4: optional string platform;
+}
+
+struct BuildJobState {
+  1: optional BuildJobStateBuckConfig buckConfig;
+}
 
 ##############################################################################
 ## Request/Response structs

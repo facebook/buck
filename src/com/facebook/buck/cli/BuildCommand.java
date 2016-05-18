@@ -23,8 +23,11 @@ import com.facebook.buck.command.Build;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistributedBuild;
+import com.facebook.buck.distributed.DistributedBuildState;
+import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -41,7 +44,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
-import com.facebook.buck.slb.NoHealthyServersException;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDevice;
@@ -67,11 +69,19 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
+import org.apache.thrift.TException;
+import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.protocol.TTupleProtocol;
+import org.apache.thrift.transport.TIOStreamTransport;
+import org.apache.thrift.transport.TTransport;
+import org.apache.thrift.transport.TZlibTransport;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -88,6 +98,7 @@ public class BuildCommand extends AbstractCommand {
   private static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
   private static final String SHOW_OUTPUT_LONG_ARG = "--show-output";
   private static final String DISTRIBUTED_LONG_ARG = "--distributed";
+  private static final String DISTRIBUTED_STATE_DUMP_LONG_ARG = "--distributed-state-dump";
 
   @Option(
       name = KEEP_GOING_LONG_ARG,
@@ -148,6 +159,13 @@ public class BuildCommand extends AbstractCommand {
       usage = "Whether to run in distributed build mode. (experimental)",
       hidden = true)
   private boolean useDistributedBuild = false;
+
+  @Nullable
+  @Option(
+      name = DISTRIBUTED_STATE_DUMP_LONG_ARG,
+      usage = "Dump/load distributed build state to/from a file. (experimental).",
+      hidden = true)
+  private String distributedBuildStateFile = null;
 
   @Argument
   private List<String> arguments = Lists.newArrayList();
@@ -316,29 +334,62 @@ public class BuildCommand extends AbstractCommand {
       params.getBuckEventBus().post(started);
     }
 
-    // Parse the build files to create a ActionGraph.
-    ActionGraphAndResolver actionGraphAndResolver =
-        createActionGraphAndResolver(params, executorService);
-    if (actionGraphAndResolver == null) {
-      return 1;
-    }
-
     int exitCode;
     if (useDistributedBuild) {
       exitCode = executeDistributedBuild(params);
     } else {
+      // Parse the build files to create a ActionGraph.
+      ActionGraphAndResolver actionGraphAndResolver =
+          createActionGraphAndResolver(params, executorService);
+      if (actionGraphAndResolver == null) {
+        return 1;
+      }
       exitCode = executeLocalBuild(params, actionGraphAndResolver, executorService);
+      if (exitCode == 0 && showOutput) {
+        showOutputs(params, actionGraphAndResolver);
+      }
     }
     params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
-
-    if (exitCode == 0 && showOutput) {
-      showOutputs(params, actionGraphAndResolver);
-    }
 
     return exitCode;
   }
 
-  private int executeDistributedBuild(CommandRunnerParams params) throws NoHealthyServersException {
+  private int executeDistributedBuild(CommandRunnerParams params) throws IOException {
+    ProjectFilesystem filesystem = params.getCell().getFilesystem();
+
+    if (distributedBuildStateFile != null) {
+      Path stateDumpPath = Paths.get(distributedBuildStateFile);
+      TTransport transport;
+      boolean loading = Files.exists(stateDumpPath);
+      if (loading) {
+        transport = new TIOStreamTransport(filesystem.newFileInputStream(stateDumpPath));
+      } else {
+        transport = new TIOStreamTransport(filesystem.newFileOutputStream(stateDumpPath));
+      }
+      transport = new TZlibTransport(transport);
+      TProtocol protocol = new TTupleProtocol(transport);
+
+      try {
+        if (loading) {
+          DistributedBuildState state = DistributedBuildState.load(protocol);
+          BuckConfig buckConfig = state.createBuckConfig(filesystem);
+          params.getBuckEventBus().post(
+              ConsoleEvent.info(
+                  "Done loading state. Aliases: %s",
+                  buckConfig.getAliases()));
+        } else {
+          BuckConfig buckConfig = params.getBuckConfig();
+          BuildJobState jobState = DistributedBuildState.dump(buckConfig);
+          jobState.write(protocol);
+          transport.flush();
+        }
+      } catch (TException e) {
+        throw new RuntimeException(e);
+      } finally {
+        transport.close();
+      }
+    }
+
     // TODO(ruibm): Add here distributed build magic.
     DistributedBuild build = new DistributedBuild(
         new DistBuildService(new DistBuildConfig(params.getBuckConfig()), params.getBuckEventBus())

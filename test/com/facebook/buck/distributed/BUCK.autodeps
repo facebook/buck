@@ -1,0 +1,19 @@
+#@# GENERATED FILE: DO NOT MODIFY 8918ce23a31b3f392989b6c9612a815fe0665570 #@#
+{
+  "distributed" : {
+    "deps" : [
+      "//src-gen:thrift",
+      "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/config:config",
+      "//src/com/facebook/buck/distributed:distributed",
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/util/environment:platform",
+      "//test/com/facebook/buck/config:testutil",
+      "//test/com/facebook/buck/testutil:testutil",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}
