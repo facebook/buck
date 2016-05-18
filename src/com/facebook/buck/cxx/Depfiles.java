@@ -27,6 +27,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -202,9 +203,23 @@ public class Depfiles {
              PerfEventId.of("depfile-parse"),
              params)) {
       ImmutableList<String> prereqs = Depfiles.parseDepfile(reader).getPrereqs();
-      // Skip the first prereq, as it's the input source file.
-      Preconditions.checkState(inputPath.toString().equals(prereqs.get(0)));
-      ImmutableList<String> headers = prereqs.subList(1, prereqs.size());
+
+      // Additional files passed in via command-line flags (e.g. `-fsanitize-blacklist=<file>`)
+      // appear first in the dep file, followed by the input source file.  So, just skip over
+      // everything until just after the input source which should position us at the headers.
+      //
+      // TODO(#11303454): This means we're not including the content of these special files into the
+      // rule key.  The correct way to handle this is likely to support macros in preprocessor/
+      // compiler flags at which point we can use the entries for these files in the depfile to
+      // verify that the user properly references these files via the macros.
+      int inputIndex = prereqs.indexOf(inputPath.toString());
+      Preconditions.checkState(
+          inputIndex != -1,
+          "Could not find input source (%s) in dep file prereqs (%s)",
+          inputPath,
+          prereqs);
+      Iterable<String> headers = Iterables.skip(prereqs, inputIndex + 1);
+
       for (String rawHeader : headers) {
         Path header = Paths.get(rawHeader).normalize();
         Optional<Path> absolutePath =
