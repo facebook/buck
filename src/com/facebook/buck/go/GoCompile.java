@@ -100,6 +100,9 @@ public class GoCompile extends AbstractBuildRule {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
+
+    buildableContext.recordArtifact(output);
+
     ImmutableList.Builder<Path> compileSrcListBuilder = ImmutableList.builder();
     ImmutableList.Builder<Path> headerSrcListBuilder = ImmutableList.builder();
     ImmutableList.Builder<Path> asmSrcListBuilder = ImmutableList.builder();
