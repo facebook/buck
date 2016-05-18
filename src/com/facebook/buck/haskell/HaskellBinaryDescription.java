@@ -178,7 +178,9 @@ public class HaskellBinaryDescription implements
                 args.compilerFlags.or(ImmutableList.<String>of()),
                 HaskellSources.from(
                     params.getBuildTarget(),
+                    resolver,
                     pathResolver,
+                    cxxPlatform,
                     "srcs",
                     args.srcs.or(SourceList.EMPTY))));
     linkArgsBuilder.addAll(SourcePathArg.from(pathResolver, compileRule.getObjects()));

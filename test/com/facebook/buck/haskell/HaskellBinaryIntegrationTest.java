@@ -103,4 +103,15 @@ public class HaskellBinaryIntegrationTest {
     assertThat(result.getStdout(), Matchers.equalTo("hello world"));
   }
 
+  @Test
+  public void cxxGenrule() throws IOException {
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "run",
+            "-c", "cxx.cppflags=-some-flag",
+            "//:gen_main#default," + getLinkFlavor());
+    result.assertSuccess();
+    assertThat(result.getStdout().trim(), Matchers.equalTo("-some-flag"));
+  }
+
 }

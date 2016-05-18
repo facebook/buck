@@ -41,3 +41,16 @@ cxx_library(
     'foreign.c',
   ],
 )
+
+haskell_binary(
+  name = 'gen_main',
+  srcs = [
+    ':gen',
+  ],
+)
+
+cxx_genrule(
+  name = 'gen',
+  out = 'Main.hs',
+  cmd = 'echo \'module Main where\nmain = putStrLn "$(cppflags)"\' > $OUT',
+)
