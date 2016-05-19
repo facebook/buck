@@ -106,6 +106,78 @@ public class CxxDescriptionEnhancerTest {
   }
 
   @Test
+  public void libraryTestIncludesPublicHeadersOfDependenciesOfLibraryUnderTest() throws Exception {
+    SourcePathResolver pathResolver = new SourcePathResolver(
+            new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
+
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
+    BuildTarget otherlibTarget = BuildTargetFactory.newInstance("//:otherlib");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
+
+    BuildRuleParams otherlibParams = new FakeBuildRuleParamsBuilder(otherlibTarget).build();
+    FakeCxxLibrary otherlibRule = new FakeCxxLibrary(
+            otherlibParams,
+            pathResolver,
+            BuildTargetFactory.newInstance("//:otherheader"),
+            BuildTargetFactory.newInstance("//:othersymlink"),
+            BuildTargetFactory.newInstance("//:otherprivateheader"),
+            BuildTargetFactory.newInstance("//:otherprivatesymlink"),
+            new FakeBuildRule("//:archive", pathResolver),
+            new FakeBuildRule("//:shared", pathResolver),
+            Paths.get("output/path/lib.so"),
+            "lib.so",
+            // This library has no tests.
+            ImmutableSortedSet.<BuildTarget>of()
+    );
+
+    BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget)
+            .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(otherlibRule)).build();
+    FakeCxxLibrary libRule = new FakeCxxLibrary(
+            libParams,
+            pathResolver,
+            BuildTargetFactory.newInstance("//:header"),
+            BuildTargetFactory.newInstance("//:symlink"),
+            BuildTargetFactory.newInstance("//:privateheader"),
+            BuildTargetFactory.newInstance("//:privatesymlink"),
+            new FakeBuildRule("//:archive", pathResolver),
+            new FakeBuildRule("//:shared", pathResolver),
+            Paths.get("output/path/lib.so"),
+            "lib.so",
+            // Ensure the test is listed as a dep of the lib.
+            ImmutableSortedSet.of(testTarget)
+    );
+
+    BuildRuleParams testParams = new FakeBuildRuleParamsBuilder(testTarget)
+            .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(libRule))
+            .build();
+
+    ImmutableList<CxxPreprocessorInput> combinedInput =
+            CxxDescriptionEnhancer.collectCxxPreprocessorInput(
+                    testParams,
+                    CxxPlatformUtils.DEFAULT_PLATFORM,
+                    ImmutableMultimap.<CxxSource.Type, String>of(),
+                    ImmutableList.<HeaderSymlinkTree>of(),
+                    ImmutableSet.<FrameworkPath>of(),
+                    CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+                            CxxPlatformUtils.DEFAULT_PLATFORM,
+                            FluentIterable.from(testParams.getDeps())
+                                    .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
+
+    Set<SourcePath> roots = new HashSet<>();
+    for (CxxHeaders headers : CxxPreprocessorInput.concat(combinedInput).getIncludes()) {
+      roots.add(headers.getRoot());
+    }
+    assertThat(
+            "Test of library should include public dependency headers",
+            roots,
+            allOf(
+                    hasItem(new BuildTargetSourcePath(BuildTargetFactory.newInstance("//:othersymlink"))),
+                    not(hasItem(
+                            new BuildTargetSourcePath(BuildTargetFactory.newInstance("//:otherprivatesymlink"))))));
+  }
+
+  @Test
   public void nonTestLibraryDepDoesNotIncludePrivateHeadersOfLibrary() throws Exception {
     SourcePathResolver pathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
