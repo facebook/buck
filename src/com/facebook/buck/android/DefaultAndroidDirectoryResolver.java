@@ -33,24 +33,30 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.StringTokenizer;
 
 /**
  * Utility class used for resolving the location of Android specific directories.
  */
 public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver {
   // Pre r11 NDKs store the version at RELEASE.txt.
-  // Post r11 NDKs store the version at source.properties.
   @VisibleForTesting
   static final String NDK_PRE_R11_VERSION_FILENAME = "RELEASE.TXT";
+  // Post r11 NDKs store the version at source.properties.
   @VisibleForTesting
   static final String NDK_POST_R11_VERSION_FILENAME = "source.properties";
+
+  @VisibleForTesting
+  static final String SDK_NOT_FOUND_MESSAGE = "Android SDK could not be found. Make sure to set " +
+      "one of these environment variables: ANDROID_SDK, ANDROID_HOME";
+
+  @VisibleForTesting
+  static final String NDK_NOT_FOUND_MESSAGE = "Android NDK could not be found. Make sure to set " +
+      "one of these  environment variables: ANDROID_NDK_REPOSITORY, ANDROID_NDK or NDK_HOME]";
 
   public static final ImmutableSet<String> BUILD_TOOL_PREFIXES =
       ImmutableSet.of("android-", "build-tools-");
@@ -60,9 +66,9 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   private final Optional<String> targetNdkVersion;
   private final PropertyFinder propertyFinder;
 
-  private final Supplier<Optional<Path>> sdkSupplier;
-  private final Supplier<Path> buildToolsSupplier;
-  private final Supplier<Optional<Path>> ndkSupplier;
+  private final Supplier<Optional<Path>> sdk;
+  private final Supplier<Path> buildTools;
+  private final Supplier<Optional<Path>> ndk;
 
   public DefaultAndroidDirectoryResolver(
       ProjectFilesystem projectFilesystem,
@@ -74,52 +80,50 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
     this.targetNdkVersion = targetNdkVersion;
     this.propertyFinder = propertyFinder;
 
-    this.sdkSupplier =
+    this.sdk =
         Suppliers.memoize(new Supplier<Optional<Path>>() {
           @Override
           public Optional<Path> get() {
-            return getSdkPathFromSdkDir();
+            return findSdk();
           }
         });
 
-    this.buildToolsSupplier =
+    this.buildTools =
         Suppliers.memoize(new Supplier<Path>() {
           @Override
           public Path get() {
-            return getBuildToolsPathFromSdkDir();
+            return findBuildTools();
           }
         });
-    this.ndkSupplier =
+    this.ndk =
         Suppliers.memoize(new Supplier<Optional<Path>>() {
           @Override
           public Optional<Path> get() {
-            return getNdkPathFromNdkRepository().or(getNdkPathFromNdkDir());
+            return findNdk();
           }
         });
-  }
-
-  @Override
-  public Optional<Path> getSdkOrAbsent() {
-    return sdkSupplier.get();
   }
 
   @Override
   public Path getSdkOrThrow() {
     Optional<Path> androidSdkDir = getSdkOrAbsent();
-    Preconditions.checkState(androidSdkDir.isPresent(),
-        "Android SDK could not be found.  Set the environment variable ANDROID_SDK to point to " +
-            "your Android SDK.");
+    Preconditions.checkState(androidSdkDir.isPresent(), SDK_NOT_FOUND_MESSAGE);
     return androidSdkDir.get();
   }
 
   @Override
   public Path getBuildToolsOrThrow() {
-    return buildToolsSupplier.get();
+    return buildTools.get();
+  }
+
+  @Override
+  public Optional<Path> getSdkOrAbsent() {
+    return sdk.get();
   }
 
   @Override
   public Optional<Path> getNdkOrAbsent() {
-    return ndkSupplier.get();
+    return ndk.get();
   }
 
   @Override
@@ -128,64 +132,54 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
     if (!ndkPath.isPresent()) {
       return Optional.absent();
     }
-    return findNdkVersionFromPath(ndkPath.get());
+    return findNdkVersion(ndkPath.get());
   }
 
   /**
    * The method returns the NDK version of a path.
-   * @param ndkPath Path to the folder that contains the NDK.
+   * @param ndkDirectory Path to the folder that contains the NDK.
    * @return A string containing the NDK version or absent.
    */
-  private Optional<String> findNdkVersionFromPath(Path ndkPath) {
-    Path releaseVersion = ndkPath.resolve(NDK_POST_R11_VERSION_FILENAME);
+  private Optional<String> findNdkVersion(Path ndkDirectory) {
+    Path newNdkPath = ndkDirectory.resolve(NDK_POST_R11_VERSION_FILENAME);
+    Path oldNdkPath = ndkDirectory.resolve(NDK_PRE_R11_VERSION_FILENAME);
+    boolean newNdkPathFound = Files.exists(newNdkPath);
+    boolean oldNdkPathFound = Files.exists(oldNdkPath);
 
-    if (Files.exists(releaseVersion)) {
-      try (InputStream inputFile = new FileInputStream(releaseVersion.toFile())) {
-        Properties sourceProperties = new Properties();
-        sourceProperties.load(inputFile);
-        return Optional.of(sourceProperties.getProperty("Pkg.Revision"));
+    if (newNdkPathFound && oldNdkPathFound) {
+      throw new HumanReadableException("Android NDK directory " + ndkDirectory + " can not " +
+          "contain both properties files. Remove source.properties or RELEASE.TXT.");
+    } else if (newNdkPathFound) {
+      Properties sourceProperties = new Properties();
+      try (FileInputStream fileStream = new FileInputStream(newNdkPath.toFile())) {
+        sourceProperties.load(fileStream);
+        return Optional.fromNullable(sourceProperties.getProperty("Pkg.Revision"));
       } catch (IOException e) {
-        throw new HumanReadableException(
-            e,
-            "Failed to read the Android NDK version from: %s", releaseVersion);
+        throw new HumanReadableException("Failed to read NDK version from " + newNdkPath + ".");
       }
+    } else if (oldNdkPathFound) {
+      Optional<String> propertiesContents = projectFilesystem.readFirstLineFromFile(oldNdkPath);
+      return Optional.of(propertiesContents.get().split("\\s+")[0]);
     } else {
-      releaseVersion = ndkPath.resolve(NDK_PRE_R11_VERSION_FILENAME);
-      Optional<String> contents = projectFilesystem.readFirstLineFromFile(releaseVersion);
-      if (contents.isPresent()) {
-        StringTokenizer stringTokenizer = new StringTokenizer(contents.get());
-        if (stringTokenizer.hasMoreTokens()) {
-          return Optional.of(stringTokenizer.nextToken());
-        }
-      }
+      throw new HumanReadableException(ndkDirectory + " does not contain a valid properties file " +
+          "for Android NDK.");
     }
-    return Optional.absent();
   }
 
-  private Optional<Path> getSdkPathFromSdkDir() {
-    Optional<Path> androidSdkDir =
-        propertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
-            "sdk.dir",
-            "ANDROID_SDK",
-            "ANDROID_HOME");
-    if (androidSdkDir.isPresent()) {
-      Preconditions.checkArgument(androidSdkDir.get().toFile().isDirectory(),
-          "The location of your Android SDK %s must be a directory",
-          androidSdkDir.get());
+  private Optional<Path> findSdk() {
+    Optional<Path> sdkPath = propertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
+          "sdk.dir",
+          "ANDROID_SDK",
+          "ANDROID_HOME");
+
+    if (sdkPath.isPresent() && !sdkPath.get().toFile().isDirectory()) {
+        throw new HumanReadableException("Android SDK path (" + sdkPath.get() + ") " +
+            "is not a directory.");
     }
-    return androidSdkDir;
+    return sdkPath;
   }
 
-  private static String stripBuildToolsPrefix(String name) {
-    for (String prefix: BUILD_TOOL_PREFIXES) {
-      if (name.startsWith(prefix)) {
-        return name.substring(prefix.length());
-      }
-    }
-    return name;
-  }
-
-  private Path getBuildToolsPathFromSdkDir() {
+  private Path findBuildTools() {
     final Path androidSdkDir = getSdkOrThrow();
     final Path buildToolsDir = androidSdkDir.resolve("build-tools");
 
@@ -258,88 +252,88 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
     return androidSdkDir.resolve("platform-tools");
   }
 
-  private Optional<Path> getNdkPathFromNdkDir() {
-    Optional<Path> path = propertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
+  private Optional<Path> findNdk() {
+    Optional<Path> repository = propertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
+        "ndk.repository",
+        "ANDROID_NDK_REPOSITORY");
+    if (repository.isPresent()){
+      return findNdkFromRepository(repository.get());
+    }
+    Optional<Path> directory = propertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
         "ndk.dir",
         "ANDROID_NDK",
         "NDK_HOME");
-
-    if (path.isPresent()) {
-      Path ndkPath = path.get();
-      Optional<String> ndkVersionOptional = findNdkVersionFromPath(ndkPath);
-      if (!ndkVersionOptional.isPresent()) {
-        throw new HumanReadableException(
-            "Failed to read NDK version from %s", ndkPath);
-      } else {
-        String ndkVersion = ndkVersionOptional.get();
-        if (targetNdkVersion.isPresent() &&
-            !isEquivalentToExpected(targetNdkVersion.get(), ndkVersion)) {
-          throw new HumanReadableException(
-              "Supported NDK version is %s but Buck is configured to use %s with " +
-                  "ndk.dir or ANDROID_NDK",
-              targetNdkVersion.get(),
-              ndkVersion);
-        }
-      }
+    if (directory.isPresent()) {
+      return findNdkFromDirectory(directory.get());
     }
-    return path;
+
+    return Optional.absent();
   }
 
-  private Optional<Path> getNdkPathFromNdkRepository() {
-    Optional<Path> repositoryPathOptional =
-        propertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
-            "ndk.repository",
-            "ANDROID_NDK_REPOSITORY");
-
-    Optional<Path> path = Optional.absent();
-
-    if (repositoryPathOptional.isPresent()) {
-      Path repositoryPath = repositoryPathOptional.get();
-
-      ImmutableSortedSet<Path> repositoryPathContents;
-      try (DirectoryStream<Path> stream = Files.newDirectoryStream(repositoryPath)) {
-        repositoryPathContents = ImmutableSortedSet.copyOf(stream);
-      } catch (IOException e) {
-        throw new HumanReadableException(
-            e,
-            "Failed to read the Android NDK repository directory: %s",
-            repositoryPath);
+  private Optional<Path> findNdkFromDirectory(Path directory) {
+    Optional<String> version = findNdkVersion(directory);
+    if (version.isPresent()) {
+      if (targetNdkVersion.isPresent() && !versionsMatch(targetNdkVersion.get(), version.get())) {
+        throw new HumanReadableException("Buck is configured to use Android NDK version " +
+            targetNdkVersion.get() + " at ndk.dir or ANDROID_NDK or NDK_HOME. The found version " +
+            "is " + version.get() + " located at " + directory);
       }
+    } else {
+      throw new HumanReadableException("Failed to read NDK version from " + directory + ".");
+    }
+    return Optional.of(directory);
+  }
 
+  private Optional<Path> findNdkFromRepository(Path repository) {
+    ImmutableSortedSet<Path> repositoryContents = ImmutableSortedSet.of();
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(repository)) {
+      repositoryContents = ImmutableSortedSet.copyOf(stream);
+    } catch (IOException e) {
+      throw new HumanReadableException("Unable to read contents of Android ndk.repository or " +
+          "ANDROID_NDK_REPOSITORY at " + repository);
+    }
+
+    Optional<Path> ndkPath = Optional.absent();
+    if (!repositoryContents.isEmpty()) {
       Optional<String> newestVersion = Optional.absent();
       VersionStringComparator versionComparator = new VersionStringComparator();
-      for (Path potentialNdkPath : repositoryPathContents) {
+      for (Path potentialNdkPath : repositoryContents) {
         if (potentialNdkPath.toFile().isDirectory()) {
-          Optional<String> ndkVersion = findNdkVersionFromPath(potentialNdkPath);
-          // For each directory found, first check to see if it is in fact something we
-          // believe to be a NDK directory.  If it is, check to see if we have a
-          // target version and if this NDK directory matches it.  If not, choose the
-          // newest version.
-          //
-          // It is possible to collapse this all into one if statement, but it is
-          // significantly harder to grok.
+          Optional<String> ndkVersion = findNdkVersion(potentialNdkPath);
           if (ndkVersion.isPresent()) {
             if (targetNdkVersion.isPresent()) {
-              if (isEquivalentToExpected(targetNdkVersion.get(), ndkVersion.get())) {
+              if (versionsMatch(targetNdkVersion.get(), ndkVersion.get())) {
                 return Optional.of(potentialNdkPath);
               }
             } else {
               if (!newestVersion.isPresent() || versionComparator.compare(
                   ndkVersion.get(),
                   newestVersion.get()) > 0) {
-                path = Optional.of(potentialNdkPath);
+                ndkPath = Optional.of(potentialNdkPath);
                 newestVersion = Optional.of(ndkVersion.get());
               }
             }
           }
         }
       }
-      if (!path.isPresent()) {
-        throw new HumanReadableException(
-            "Couldn't find a valid NDK under %s", repositoryPath);
+    }
+    if (!ndkPath.isPresent()) {
+      throw new HumanReadableException("Couldn't find a valid NDK under %s", repository);
+    } else if (targetNdkVersion.isPresent()) {
+      throw new HumanReadableException("Buck is configured to use Android NDK version " +
+          targetNdkVersion.get() + " at ANDROID_NDK_REPOSITORY or ndk.repository but the " +
+          "repository does not contain that version.");
+    }
+    return ndkPath;
+  }
+
+  private static String stripBuildToolsPrefix(String name) {
+    for (String prefix: BUILD_TOOL_PREFIXES) {
+      if (name.startsWith(prefix)) {
+        return name.substring(prefix.length());
       }
     }
-    return path;
+    return name;
   }
 
   private HumanReadableException unableToFindTargetBuildTools() {
@@ -353,7 +347,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
         targetBuildToolsVersion.get());
   }
 
-  private boolean isEquivalentToExpected(String expected, String candidate) {
+  private boolean versionsMatch(String expected, String candidate) {
     if (Strings.isNullOrEmpty(expected) || Strings.isNullOrEmpty(candidate)) {
       return false;
     }
@@ -385,13 +379,15 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   public String toString() {
     return String.format(
         "%s projectFilesystem=%s, targetBuildToolsVersion=%s, targetNdkVersion=%s, " +
-            "propertyFinder=%s, findAndroidNdkDir()=%s",
+            "propertyFinder=%s, AndroidSdkDir=%s, AndroidBuildToolsDir=%s, AndroidNdkDir=%s",
         super.toString(),
         projectFilesystem,
         targetBuildToolsVersion,
         targetNdkVersion,
         propertyFinder,
-        getNdkOrAbsent());
+        (sdk.get().isPresent()) ? (sdk.get().get()) : "SDK not available",
+        (sdk.get().isPresent()) ? (buildTools.get()) : "Build tools not available",
+        (ndk.get().isPresent()) ? (ndk.get()) : "NDK not available");
   }
 
   @Override
