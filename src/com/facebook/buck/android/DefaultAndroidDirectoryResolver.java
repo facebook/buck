@@ -23,8 +23,6 @@ import com.facebook.buck.util.VersionStringComparator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -71,9 +69,10 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
 
   private Optional<String> sdkErrorMessage;
   private Optional<String> buildToolsErrorMessage;
+  private Optional<String> ndkErrorMessage;
   private final Optional<Path> sdk;
   private final Optional<Path> buildTools;
-  private final Supplier<Optional<Path>> ndk;
+  private final Optional<Path> ndk;
 
   public DefaultAndroidDirectoryResolver(
       ProjectFilesystem projectFilesystem,
@@ -87,20 +86,15 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
 
     this.sdkErrorMessage = Optional.absent();
     this.buildToolsErrorMessage = Optional.absent();
+    this.ndkErrorMessage = Optional.absent();
     this.sdk = findSdk();
     this.buildTools = findBuildTools();
-    this.ndk =
-        Suppliers.memoize(new Supplier<Optional<Path>>() {
-          @Override
-          public Optional<Path> get() {
-            return findNdk();
-          }
-        });
+    this.ndk = findNdk();
   }
 
   @Override
   public Path getSdkOrThrow() {
-    if (!sdk.isPresent()) {
+    if (!sdk.isPresent() && sdkErrorMessage.isPresent()) {
       throw new HumanReadableException(sdkErrorMessage.get());
     }
     return sdk.get();
@@ -108,10 +102,18 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
 
   @Override
   public Path getBuildToolsOrThrow() {
-    if (!buildTools.isPresent()) {
+    if (!buildTools.isPresent() && buildToolsErrorMessage.isPresent()) {
       throw new HumanReadableException(buildToolsErrorMessage.get());
     }
     return buildTools.get();
+  }
+
+  @Override
+  public Path getNdkOrThrow() {
+    if (!ndk.isPresent() && ndkErrorMessage.isPresent()) {
+      throw new HumanReadableException(ndkErrorMessage.get());
+    }
+    return ndk.get();
   }
 
   @Override
@@ -121,7 +123,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
 
   @Override
   public Optional<Path> getNdkOrAbsent() {
-    return ndk.get();
+    return ndk;
   }
 
   @Override
@@ -131,37 +133,6 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
       return Optional.absent();
     }
     return findNdkVersion(ndkPath.get());
-  }
-
-  /**
-   * The method returns the NDK version of a path.
-   * @param ndkDirectory Path to the folder that contains the NDK.
-   * @return A string containing the NDK version or absent.
-   */
-  private Optional<String> findNdkVersion(Path ndkDirectory) {
-    Path newNdkPath = ndkDirectory.resolve(NDK_POST_R11_VERSION_FILENAME);
-    Path oldNdkPath = ndkDirectory.resolve(NDK_PRE_R11_VERSION_FILENAME);
-    boolean newNdkPathFound = Files.exists(newNdkPath);
-    boolean oldNdkPathFound = Files.exists(oldNdkPath);
-
-    if (newNdkPathFound && oldNdkPathFound) {
-      throw new HumanReadableException("Android NDK directory " + ndkDirectory + " can not " +
-          "contain both properties files. Remove source.properties or RELEASE.TXT.");
-    } else if (newNdkPathFound) {
-      Properties sourceProperties = new Properties();
-      try (FileInputStream fileStream = new FileInputStream(newNdkPath.toFile())) {
-        sourceProperties.load(fileStream);
-        return Optional.fromNullable(sourceProperties.getProperty("Pkg.Revision"));
-      } catch (IOException e) {
-        throw new HumanReadableException("Failed to read NDK version from " + newNdkPath + ".");
-      }
-    } else if (oldNdkPathFound) {
-      Optional<String> propertiesContents = projectFilesystem.readFirstLineFromFile(oldNdkPath);
-      return Optional.of(propertiesContents.get().split("\\s+")[0]);
-    } else {
-      throw new HumanReadableException(ndkDirectory + " does not contain a valid properties file " +
-          "for Android NDK.");
-    }
   }
 
   private Optional<Path> findSdk() {
@@ -268,33 +239,51 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   }
 
   private Optional<Path> findNdk() {
-    Optional<Path> repository = propertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
-        "ndk.repository",
-        "ANDROID_NDK_REPOSITORY");
-    if (repository.isPresent()){
+    Optional<Path> repository = Optional.absent();
+    try {
+      repository = propertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
+          "ndk.repository",
+          "ANDROID_NDK_REPOSITORY");
+    } catch (RuntimeException e) {
+      ndkErrorMessage = Optional.of(e.getMessage());
+    }
+    if (repository.isPresent()) {
       return findNdkFromRepository(repository.get());
     }
-    Optional<Path> directory = propertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
-        "ndk.dir",
-        "ANDROID_NDK",
-        "NDK_HOME");
+
+    Optional<Path> directory = Optional.absent();
+    try {
+      directory = propertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
+          "ndk.dir",
+          "ANDROID_NDK",
+          "NDK_HOME");
+    } catch (RuntimeException e) {
+      ndkErrorMessage = Optional.of(e.getMessage());
+    }
     if (directory.isPresent()) {
       return findNdkFromDirectory(directory.get());
     }
 
+    if (!ndkErrorMessage.isPresent()) {
+      ndkErrorMessage = Optional.of(NDK_NOT_FOUND_MESSAGE);
+    }
     return Optional.absent();
   }
 
   private Optional<Path> findNdkFromDirectory(Path directory) {
     Optional<String> version = findNdkVersion(directory);
-    if (version.isPresent()) {
+    if (!version.isPresent() && ndkErrorMessage.isPresent()) {
+      return Optional.absent();
+    } else if (version.isPresent()) {
       if (targetNdkVersion.isPresent() && !versionsMatch(targetNdkVersion.get(), version.get())) {
-        throw new HumanReadableException("Buck is configured to use Android NDK version " +
+        ndkErrorMessage = Optional.of("Buck is configured to use Android NDK version " +
             targetNdkVersion.get() + " at ndk.dir or ANDROID_NDK or NDK_HOME. The found version " +
             "is " + version.get() + " located at " + directory);
+        return Optional.absent();
       }
     } else {
-      throw new HumanReadableException("Failed to read NDK version from " + directory + ".");
+      ndkErrorMessage = Optional.of("Failed to read NDK version from " + directory + ".");
+      return Optional.absent();
     }
     return Optional.of(directory);
   }
@@ -304,8 +293,9 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(repository)) {
       repositoryContents = ImmutableSortedSet.copyOf(stream);
     } catch (IOException e) {
-      throw new HumanReadableException("Unable to read contents of Android ndk.repository or " +
+      ndkErrorMessage = Optional.of("Unable to read contents of Android ndk.repository or " +
           "ANDROID_NDK_REPOSITORY at " + repository);
+      return Optional.absent();
     }
 
     Optional<Path> ndkPath = Optional.absent();
@@ -333,13 +323,49 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
       }
     }
     if (!ndkPath.isPresent()) {
-      throw new HumanReadableException("Couldn't find a valid NDK under %s", repository);
+      ndkErrorMessage = Optional.of("Couldn't find a valid NDK under " + repository);
+      return Optional.absent();
     } else if (targetNdkVersion.isPresent()) {
-      throw new HumanReadableException("Buck is configured to use Android NDK version " +
+      ndkErrorMessage = Optional.of("Buck is configured to use Android NDK version " +
           targetNdkVersion.get() + " at ANDROID_NDK_REPOSITORY or ndk.repository but the " +
           "repository does not contain that version.");
+      return Optional.absent();
     }
     return ndkPath;
+  }
+
+  /**
+   * The method returns the NDK version of a path.
+   * @param ndkDirectory Path to the folder that contains the NDK.
+   * @return A string containing the NDK version or absent.
+   */
+  private Optional<String> findNdkVersion(Path ndkDirectory) {
+    Path newNdkPath = ndkDirectory.resolve(NDK_POST_R11_VERSION_FILENAME);
+    Path oldNdkPath = ndkDirectory.resolve(NDK_PRE_R11_VERSION_FILENAME);
+    boolean newNdkPathFound = Files.exists(newNdkPath);
+    boolean oldNdkPathFound = Files.exists(oldNdkPath);
+
+    if (newNdkPathFound && oldNdkPathFound) {
+      ndkErrorMessage = Optional.of("Android NDK directory " + ndkDirectory + " can not " +
+          "contain both properties files. Remove source.properties or RELEASE.TXT.");
+      return Optional.absent();
+    } else if (newNdkPathFound) {
+      Properties sourceProperties = new Properties();
+      try (FileInputStream fileStream = new FileInputStream(newNdkPath.toFile())) {
+        sourceProperties.load(fileStream);
+        return Optional.fromNullable(sourceProperties.getProperty("Pkg.Revision"));
+      } catch (IOException e) {
+        ndkErrorMessage = Optional.of("Failed to read NDK version from " + newNdkPath + ".");
+        return Optional.absent();
+      }
+    } else if (oldNdkPathFound) {
+      Optional<String> propertiesContents = projectFilesystem.readFirstLineFromFile(oldNdkPath);
+      return Optional.of(propertiesContents.get().split("\\s+")[0]);
+    } else {
+      ndkErrorMessage = Optional.of(ndkDirectory + " does not contain a valid properties file " +
+          "for Android NDK.");
+      return Optional.absent();
+    }
   }
 
   private static String stripBuildToolsPrefix(String name) {
@@ -361,11 +387,9 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   }
 
   private boolean versionsMatch(String expected, String candidate) {
-    if (Strings.isNullOrEmpty(expected) || Strings.isNullOrEmpty(candidate)) {
-      return false;
-    }
-
-    return candidate.startsWith(expected);
+    return !(Strings.isNullOrEmpty(expected) ||
+        Strings.isNullOrEmpty(candidate)) &&
+        candidate.startsWith(expected);
   }
 
   @Override
@@ -400,7 +424,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
         propertyFinder,
         (sdk.isPresent()) ? (sdk.get()) : "SDK not available",
         (sdk.isPresent()) ? (buildTools.get()) : "Build tools not available",
-        (ndk.get().isPresent()) ? (ndk.get()) : "NDK not available");
+        (ndk.isPresent()) ? (ndk.get()) : "NDK not available");
   }
 
   @Override

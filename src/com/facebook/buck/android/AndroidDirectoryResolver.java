@@ -36,6 +36,11 @@ public interface AndroidDirectoryResolver {
   Path getSdkOrThrow();
 
   /**
+   * @return {@code Path} pointing to Android NDK or throws an exception why NDK was not found.
+   */
+  Path getNdkOrThrow();
+
+  /**
    * @return {@code Path} pointing to Android SDK build tools or throws an exception why the build
    * tools were not found.
    */
