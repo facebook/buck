@@ -39,11 +39,15 @@ public class EnvironmentFilter {
       "CMD_DURATION",      // Added to environment by 'fish' shell.
       "com.apple.java.jvmTask", // Added to environment by Apple JVM.
       "COMP_WORDBREAKS",  // Set by the programmable completion part of bash.
+      "HISTSIZE",       // Bash history configuration.
+      "HISTCONTROL",      // Bash history configuration.
       "ITERM_SESSION_ID", // Added by iTerm on OS X.
       "ITERM_PROFILE",    // Added by iTerm on OS X.
       "JAVA_ARCH",        // More OS X cruft.
       "KRB5CCNAME",       // Kerberos authentication adds this.
       "KRB5RCACHETYPE",   // More Kerberos cruft.
+      "LOG_SESSION_ID",   // Session ID for certain environments.
+      "LS_COLORS",      // Colour configuration for ls
       "MallocNanoZone",   // Added to environment by Xcode
       "OLDPWD",           // Previous working directory; set by bash's cd builtin.
       "PROMPT_COMMAND",   // Prompt control variable, just in case someone exports it.
@@ -52,6 +56,7 @@ public class EnvironmentFilter {
       "PS3",              // Same.
       "PS4",              // Same.
       "PWD",              // Current working directory; set by bash.
+      "SECURITYSESSIONID",   // Session ID for certain environments.
       "SHLVL",            // Shell nestedness level; set by bash.
       "SSH_AGENT_PID",    // SSH session management variable.
       "SSH_AUTH_SOCK",    // Same.
@@ -64,6 +69,7 @@ public class EnvironmentFilter {
       "TERM_PROGRAM_VERSION", // Added to environment by OS X.
       "TMUX",             // tmux session management variable.
       "TMUX_PANE",        // Current tmux pane.
+      "XDG_SESSION_ID",   // Session ID for certain environments.
       "XPC_FLAGS",        // More OS X cruft.
       "XPC_SERVICE_NAME"  // Same.
   );
