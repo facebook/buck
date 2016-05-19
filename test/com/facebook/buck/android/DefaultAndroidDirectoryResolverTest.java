@@ -444,6 +444,8 @@ public class DefaultAndroidDirectoryResolverTest {
   public void buildToolsEmptyDirectoryThrows() throws IOException {
     Path sdkDir = tmpDir.newFolder("sdk");
     sdkDir.resolve("build-tools").toFile().mkdir();
+    sdkDir.resolve("tools").toFile().mkdir();
+    Path toolsDir = sdkDir.resolve("tools").toAbsolutePath();
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
@@ -455,7 +457,9 @@ public class DefaultAndroidDirectoryResolverTest {
                 Optional.<Path>absent()));
 
     expectedException.expect(HumanReadableException.class);
-    expectedException.expectMessage(sdkDir.resolve("build-tools") + " was empty");
+    expectedException.expectMessage("null was empty, but should have contained a subdirectory " +
+        "with build tools. Install them using the Android SDK Manager (" + toolsDir +
+        File.separator + "android).");
     androidDirectoryResolver.getBuildToolsOrThrow();
   }
 

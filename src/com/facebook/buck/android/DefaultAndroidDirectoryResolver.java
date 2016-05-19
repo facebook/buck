@@ -54,6 +54,10 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
       "one of these environment variables: ANDROID_SDK, ANDROID_HOME";
 
   @VisibleForTesting
+  static final String TOOLS_NEED_SDK_MESSAGE = "Android SDK Build tools require Android SDK. " +
+      "Make sure one of these environment variables was set: ANDROID_SDK, ANDROID_HOME";
+
+  @VisibleForTesting
   static final String NDK_NOT_FOUND_MESSAGE = "Android NDK could not be found. Make sure to set " +
       "one of these  environment variables: ANDROID_NDK_REPOSITORY, ANDROID_NDK or NDK_HOME]";
 
@@ -66,8 +70,9 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   private final PropertyFinder propertyFinder;
 
   private Optional<String> sdkErrorMessage;
+  private Optional<String> buildToolsErrorMessage;
   private final Optional<Path> sdk;
-  private final Supplier<Path> buildTools;
+  private final Optional<Path> buildTools;
   private final Supplier<Optional<Path>> ndk;
 
   public DefaultAndroidDirectoryResolver(
@@ -81,14 +86,9 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
     this.propertyFinder = propertyFinder;
 
     this.sdkErrorMessage = Optional.absent();
+    this.buildToolsErrorMessage = Optional.absent();
     this.sdk = findSdk();
-    this.buildTools =
-        Suppliers.memoize(new Supplier<Path>() {
-          @Override
-          public Path get() {
-            return findBuildTools();
-          }
-        });
+    this.buildTools = findBuildTools();
     this.ndk =
         Suppliers.memoize(new Supplier<Optional<Path>>() {
           @Override
@@ -108,6 +108,9 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
 
   @Override
   public Path getBuildToolsOrThrow() {
+    if (!buildTools.isPresent()) {
+      throw new HumanReadableException(buildToolsErrorMessage.get());
+    }
     return buildTools.get();
   }
 
@@ -181,46 +184,56 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
     return sdkPath;
   }
 
-  private Path findBuildTools() {
-    final Path androidSdkDir = getSdkOrThrow();
-    final Path buildToolsDir = androidSdkDir.resolve("build-tools");
+  private Optional<Path> findBuildTools() {
+    if (!sdk.isPresent()) {
+      buildToolsErrorMessage = Optional.of(TOOLS_NEED_SDK_MESSAGE);
+      return Optional.absent();
+    }
+    final Path sdkDir = sdk.get();
+    final Path toolsDir = sdkDir.resolve("build-tools");
 
-    if (buildToolsDir.toFile().isDirectory()) {
+    if (toolsDir.toFile().isDirectory()) {
       // In older versions of the ADT that have been upgraded via the SDK manager, the build-tools
       // directory appears to contain subfolders of the form "17.0.0". However, newer versions of
       // the ADT that are downloaded directly from http://developer.android.com/ appear to have
       // subfolders of the form android-4.2.2. There also appear to be cases where subfolders
       // are named build-tools-18.0.0. We need to support all of these scenarios.
-
-      File[] directories = buildToolsDir.toFile().listFiles(new FileFilter() {
-        @Override
-        public boolean accept(File pathname) {
-          if (!pathname.isDirectory()) {
-            return false;
+      File[] directories;
+      try {
+        directories = toolsDir.toFile().listFiles(new FileFilter() {
+          @Override
+          public boolean accept(File pathname) {
+            if (!pathname.isDirectory()) {
+              return false;
+            }
+            String version = stripBuildToolsPrefix(pathname.getName());
+            if (!VersionStringComparator.isValidVersionString(version)) {
+              throw new HumanReadableException(
+                  "%s in %s is not a valid build tools directory.%n" +
+                      "Build tools directories should be follow the naming scheme: " +
+                      "android-<VERSION>, build-tools-<VERSION>, or <VERSION>. Please remove " +
+                      "directory %s.",
+                  pathname.getName(),
+                  buildTools,
+                  pathname.getName());
+            }
+            if (targetBuildToolsVersion.isPresent()) {
+              return targetBuildToolsVersion.get().equals(pathname.getName());
+            }
+            return true;
           }
-          String version = stripBuildToolsPrefix(pathname.getName());
-          if (!VersionStringComparator.isValidVersionString(version)) {
-            throw new HumanReadableException(
-                "%s in %s is not a valid build tools directory.%n" +
-                    "Build tools directories should be follow the naming scheme: " +
-                    "android-<VERSION>, build-tools-<VERSION>, or <VERSION>. Please remove " +
-                    "directory %s.",
-                pathname.getName(),
-                buildToolsDir,
-                pathname.getName());
-          }
-          if (targetBuildToolsVersion.isPresent()) {
-            return targetBuildToolsVersion.get().equals(pathname.getName());
-          }
-          return true;
-        }
-      });
+        });
+      } catch (HumanReadableException e) {
+        buildToolsErrorMessage = Optional.of(e.getHumanReadableErrorMessage());
+        return Optional.absent();
+      }
 
       if (targetBuildToolsVersion.isPresent()) {
         if (directories.length == 0) {
-          throw unableToFindTargetBuildTools();
+          buildToolsErrorMessage = unableToFindTargetBuildTools();
+          return Optional.absent();
         } else {
-          return directories[0].toPath();
+          return Optional.of(directories[0].toPath());
         }
       }
 
@@ -237,21 +250,21 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
         }
       }
       if (newestBuildDir == null) {
-        throw new HumanReadableException(
-                "%s was empty, but should have contained a subdirectory with build tools.%n" +
-                    "Install them using the Android SDK Manager (%s).",
-            buildToolsDir,
-            buildToolsDir.getParent().resolve("tools").resolve("android"));
+        buildToolsErrorMessage = Optional.of(buildTools + " was empty, but should have " +
+            "contained a subdirectory with build tools. Install them using the Android " +
+            "SDK Manager (" + toolsDir.getParent().resolve("tools").resolve("android") + ").");
+        return Optional.absent();
       }
-      return newestBuildDir.toPath();
+      return Optional.of(newestBuildDir.toPath());
     }
     if (targetBuildToolsVersion.isPresent()) {
       // We were looking for a specific version, but we aren't going to find it at this point since
       // nothing under platform-tools was versioned.
-      throw unableToFindTargetBuildTools();
+      buildToolsErrorMessage = unableToFindTargetBuildTools();
+      return Optional.absent();
     }
     // Build tools used to exist inside of platform-tools, so fallback to that.
-    return androidSdkDir.resolve("platform-tools");
+    return Optional.of(sdkDir.resolve("platform-tools"));
   }
 
   private Optional<Path> findNdk() {
@@ -338,15 +351,13 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
     return name;
   }
 
-  private HumanReadableException unableToFindTargetBuildTools() {
-    throw new HumanReadableException(
-        "Unable to find build-tools version %s, which is specified by your config.  Please see " +
-            "https://buckbuild.com/concept/buckconfig.html#android.build_tools_version for more " +
-            "details about the setting.  To install the correct version of the tools, run " +
-            "`%s update sdk --force --no-ui --all --filter build-tools-%s`",
-        targetBuildToolsVersion.get(),
-        Escaper.escapeAsShellString(getSdkOrThrow().resolve("tools/android").toString()),
-        targetBuildToolsVersion.get());
+  private Optional<String> unableToFindTargetBuildTools() {
+    return Optional.of("Unable to find build-tools version " + targetBuildToolsVersion.get() +
+        ", which is specified by your config.  Please see " +
+        "https://buckbuild.com/concept/buckconfig.html#android.build_tools_version for more " +
+        "details about the setting.  To install the correct version of the tools, run `" +
+        Escaper.escapeAsShellString(sdk.get().resolve("tools/android").toString()) + " update " +
+        "sdk --force --no-ui --all --filter build-tools-" + targetBuildToolsVersion.get() + "`");
   }
 
   private boolean versionsMatch(String expected, String candidate) {
