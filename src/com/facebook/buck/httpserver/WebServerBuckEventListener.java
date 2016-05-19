@@ -27,7 +27,6 @@ import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.TestRunEvent;
-import com.facebook.buck.step.StepEvent;
 import com.google.common.eventbus.Subscribe;
 
 
@@ -63,16 +62,6 @@ public class WebServerBuckEventListener implements BuckEventListener {
 
   @Subscribe
   public void buildFinished(BuildEvent.Finished finished) {
-    streamingWebSocketServlet.tellClients(finished);
-  }
-
-  @Subscribe
-  public void stepStarted(StepEvent.Started started) {
-    streamingWebSocketServlet.tellClients(started);
-  }
-
-  @Subscribe
-  public void stepFinished(StepEvent.Finished finished) {
     streamingWebSocketServlet.tellClients(finished);
   }
 

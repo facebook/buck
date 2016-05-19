@@ -29,7 +29,6 @@ import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.TestRunEvent;
-import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestContext;
@@ -86,15 +85,6 @@ public class WebServerBuckEventListenerTest {
     webServerBuckEventListener.parseFinished((ParseEvent.Finished) anyObject());
     EasyMock.expectLastCall().times(1);
 
-    //Step started
-    // this project has only 1 step
-    webServerBuckEventListener.stepStarted(anyObject(StepEvent.Started.class));
-    EasyMock.expectLastCall().times(1);
-
-    //Step finished
-    webServerBuckEventListener.stepFinished((StepEvent.Finished) anyObject());
-    EasyMock.expectLastCall().times(1);
-
     //Output trace
     webServerBuckEventListener.outputTrace(anyObject(BuildId.class));
     EasyMock.expectLastCall().times(1);
@@ -145,15 +135,6 @@ public class WebServerBuckEventListenerTest {
 
     //Parse finished
     webServerBuckEventListener.parseFinished(anyObject(ParseEvent.Finished.class));
-    EasyMock.expectLastCall().times(1);
-
-    //Step started
-    //This target has only 1 step
-    webServerBuckEventListener.stepStarted(anyObject(StepEvent.Started.class));
-    EasyMock.expectLastCall().times(1);
-
-    //Step finished
-    webServerBuckEventListener.stepFinished(anyObject(StepEvent.Finished.class));
     EasyMock.expectLastCall().times(1);
 
     //Individual test started
@@ -224,15 +205,6 @@ public class WebServerBuckEventListenerTest {
 
     //Parse finished
     webServerBuckEventListener.parseFinished(anyObject(ParseEvent.Finished.class));
-    EasyMock.expectLastCall().times(1);
-
-    //Step started
-    //This target has only 1 step
-    webServerBuckEventListener.stepStarted(anyObject(StepEvent.Started.class));
-    EasyMock.expectLastCall().times(1);
-
-    //Step finished
-    webServerBuckEventListener.stepFinished(anyObject(StepEvent.Finished.class));
     EasyMock.expectLastCall().times(1);
 
     //Compiler error
