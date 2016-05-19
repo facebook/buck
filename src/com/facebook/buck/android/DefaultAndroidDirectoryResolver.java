@@ -144,13 +144,14 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
           "ANDROID_HOME");
     } catch (RuntimeException e) {
       sdkErrorMessage = Optional.of(e.getMessage());
-      return sdkPath;
+      return Optional.absent();
     }
 
     if (!sdkPath.isPresent()) {
       sdkErrorMessage = Optional.of(SDK_NOT_FOUND_MESSAGE);
-    } else if (!sdkPath.isPresent() && !sdkPath.get().toFile().isDirectory()) {
+    } else if (sdkPath.isPresent() && !sdkPath.get().toFile().isDirectory()) {
       sdkErrorMessage = Optional.of("Android SDK path [" + sdkPath.get() + "] is not a directory.");
+      return Optional.absent();
     }
     return sdkPath;
   }
