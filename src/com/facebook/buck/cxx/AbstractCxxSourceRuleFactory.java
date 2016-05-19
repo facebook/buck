@@ -136,7 +136,7 @@ abstract class AbstractCxxSourceRuleFactory {
                 }
               });
 
-  private final LoadingCache<PreprocessAndCompilePreprocessorDelegateKey, PreprocessorDelegate>
+  private final LoadingCache<PreprocessorDelegateCacheKey, PreprocessorDelegateCacheValue>
       preprocessorDelegates = CacheBuilder.newBuilder()
       .build(new PreprocessorDelegateCacheLoader());
 
@@ -203,8 +203,8 @@ abstract class AbstractCxxSourceRuleFactory {
     Preconditions.checkArgument(CxxSourceTypes.isPreprocessableType(source.getType()));
 
     BuildTarget target = createPreprocessBuildTarget(name, source.getType());
-    PreprocessorDelegate preprocessorDelegate = preprocessorDelegates.getUnchecked(
-        PreprocessAndCompilePreprocessorDelegateKey.of(source.getType(), source.getFlags()));
+    PreprocessorDelegateCacheValue preprocessorDelegateValue = preprocessorDelegates.getUnchecked(
+        PreprocessorDelegateCacheKey.of(source.getType(), source.getFlags()));
     Compiler compiler =
         CxxSourceTypes.getCompiler(
             getCxxPlatform(),
@@ -219,7 +219,7 @@ abstract class AbstractCxxSourceRuleFactory {
                 Suppliers.ofInstance(
                   new DepsBuilder()
                       .addPreprocessDeps()
-                      .add(preprocessorDelegate.getPreprocessor())
+                      .add(preprocessorDelegateValue.getPreprocessorDelegate().getPreprocessor())
                       // We shouldn't really need to depend on the compiler for preprocess-only
                       // rules, but the `CxxPreprocessAndCompile` class adds the entire
                       // `CompilerDelegate` to the rule key, which means the input-based rule key
@@ -229,7 +229,7 @@ abstract class AbstractCxxSourceRuleFactory {
                       .build()),
                 Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
             getPathResolver(),
-            preprocessorDelegate,
+            preprocessorDelegateValue.getPreprocessorDelegate(),
             new CompilerDelegate(
                 getPathResolver(),
                 getCxxPlatform().getDebugPathSanitizer(),
@@ -457,15 +457,15 @@ abstract class AbstractCxxSourceRuleFactory {
 
     LOG.verbose("Creating preprocessed InferCapture build rule %s for %s", target, source);
 
-    PreprocessorDelegate preprocessorDelegate = preprocessorDelegates.getUnchecked(
-        PreprocessAndCompilePreprocessorDelegateKey.of(source.getType(), source.getFlags()));
+    PreprocessorDelegateCacheValue preprocessorDelegateValue = preprocessorDelegates.getUnchecked(
+        PreprocessorDelegateCacheKey.of(source.getType(), source.getFlags()));
     CxxInferCapture result = new CxxInferCapture(
         getParams().copyWithChanges(
             target,
             Suppliers.ofInstance(
                 new DepsBuilder()
                     .addPreprocessDeps()
-                    .add(preprocessorDelegate.getPreprocessor())
+                    .add(preprocessorDelegateValue.getPreprocessorDelegate().getPreprocessor())
                     .add(source)
                     .build()),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
@@ -477,7 +477,7 @@ abstract class AbstractCxxSourceRuleFactory {
         source.getPath(),
         source.getType(),
         getCompileOutputPath(target, name),
-        preprocessorDelegate,
+        preprocessorDelegateValue.getPreprocessorDelegate(),
         inferConfig,
         getCxxPlatform().getDebugPathSanitizer());
     getResolver().addToIndex(result);
@@ -505,8 +505,9 @@ abstract class AbstractCxxSourceRuleFactory {
 
     LOG.verbose("Creating preprocess and compile %s for %s", target, source);
 
-    PreprocessorDelegate preprocessorDelegate = preprocessorDelegates.getUnchecked(
-        PreprocessAndCompilePreprocessorDelegateKey.of(source.getType(), source.getFlags()));
+    PreprocessorDelegateCacheValue preprocessorDelegateValue = preprocessorDelegates.getUnchecked(
+        PreprocessorDelegateCacheKey.of(source.getType(), source.getFlags()));
+    PreprocessorDelegate preprocessorDelegate = preprocessorDelegateValue.getPreprocessorDelegate();
     DepsBuilder depsBuilder = new DepsBuilder()
         .addPreprocessDeps()
         .add(preprocessorDelegate.getPreprocessor())
@@ -515,7 +516,7 @@ abstract class AbstractCxxSourceRuleFactory {
     Optional<PrecompiledHeaderReference> precompiledHeaderReference = Optional.absent();
     if (shouldUsePrecompiledHeaders(preprocessorDelegate, strategy)) {
       CxxPrecompiledHeader precompiledHeader =
-          requirePrecompiledHeaderBuildRule(preprocessorDelegate, source);
+          requirePrecompiledHeaderBuildRule(preprocessorDelegateValue, source);
       depsBuilder.add(precompiledHeader);
       precompiledHeaderReference =
           Optional.of(PrecompiledHeaderReference.from(precompiledHeader));
@@ -566,7 +567,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
   @VisibleForTesting
   CxxPrecompiledHeader requirePrecompiledHeaderBuildRule(
-      PreprocessorDelegate preprocessorDelegate,
+      PreprocessorDelegateCacheValue preprocessorDelegateCacheValue,
       CxxSource source) {
     CxxToolFlags compilerFlags = computeCompilerFlags(source.getType(), source.getFlags());
     // Clang will only use precompiled headers generated with the same flags and language settings.
@@ -576,7 +577,7 @@ abstract class AbstractCxxSourceRuleFactory {
         "%s%s-%s",
         PCH_FLAVOR_PREFIX,
         source.getType().getLanguage(),
-        preprocessorDelegate.hashCommand(compilerFlags));
+        preprocessorDelegateCacheValue.getCommandHash(compilerFlags));
     BuildTarget target = BuildTarget
         .builder(getParams().getBuildTarget())
         .addFlavors(getCxxPlatform().getFlavor())
@@ -588,6 +589,8 @@ abstract class AbstractCxxSourceRuleFactory {
       return existingRule.get();
     }
     Path output = BuildTargets.getGenPath(getParams().getProjectFilesystem(), target, "%s.gch");
+    PreprocessorDelegate preprocessorDelegate =
+        preprocessorDelegateCacheValue.getPreprocessorDelegate();
     SourcePath path = Preconditions.checkNotNull(preprocessorDelegate.getPrefixHeader().get());
     CxxPrecompiledHeader rule = new CxxPrecompiledHeader(
         getParams().copyWithChanges(
@@ -609,7 +612,6 @@ abstract class AbstractCxxSourceRuleFactory {
     getResolver().addToIndex(rule);
     return rule;
   }
-
 
   public ImmutableSet<CxxInferCapture> requireInferCaptureBuildRules(
       ImmutableMap<String, CxxSource> sources,
@@ -763,18 +765,42 @@ abstract class AbstractCxxSourceRuleFactory {
 
   @Value.Immutable
   @BuckStyleTuple
-  interface AbstractPreprocessAndCompilePreprocessorDelegateKey {
+  interface AbstractPreprocessorDelegateCacheKey {
     CxxSource.Type getSourceType();
     ImmutableList<String> getSourceFlags();
   }
 
+  static class PreprocessorDelegateCacheValue {
+    private final PreprocessorDelegate preprocessorDelegate;
+    private final LoadingCache<CxxToolFlags, String> commandHashCache;
+
+    PreprocessorDelegateCacheValue(PreprocessorDelegate preprocessorDelegate) {
+      this.preprocessorDelegate = preprocessorDelegate;
+      this.commandHashCache = CacheBuilder.newBuilder()
+          .build(new CacheLoader<CxxToolFlags, String>() {
+            @Override
+            public String load(CxxToolFlags key) {
+              return PreprocessorDelegateCacheValue.this.preprocessorDelegate.hashCommand(key);
+            }
+          });
+    }
+
+    PreprocessorDelegate getPreprocessorDelegate() {
+      return preprocessorDelegate;
+    }
+
+    String getCommandHash(CxxToolFlags flags) {
+      return this.commandHashCache.getUnchecked(flags);
+    }
+  }
+
   private class PreprocessorDelegateCacheLoader
-      extends CacheLoader<PreprocessAndCompilePreprocessorDelegateKey, PreprocessorDelegate> {
+      extends CacheLoader<PreprocessorDelegateCacheKey, PreprocessorDelegateCacheValue> {
 
     @Override
-    public PreprocessorDelegate load(@Nonnull PreprocessAndCompilePreprocessorDelegateKey key)
+    public PreprocessorDelegateCacheValue load(@Nonnull PreprocessorDelegateCacheKey key)
         throws Exception {
-      return new PreprocessorDelegate(
+      PreprocessorDelegate delegate = new PreprocessorDelegate(
           getPathResolver(),
           getCxxPlatform().getDebugPathSanitizer(),
           getCxxBuckConfig().getHeaderVerification(),
@@ -789,6 +815,7 @@ abstract class AbstractCxxSourceRuleFactory {
               getSystemIncludeRoots()),
           CxxDescriptionEnhancer.frameworkPathToSearchPath(getCxxPlatform(), getPathResolver()),
           getIncludes());
+      return new PreprocessorDelegateCacheValue(delegate);
     }
 
   }
