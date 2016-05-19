@@ -15,10 +15,8 @@
  */
 package com.facebook.buck.android;
 
-import
-    static com.facebook.buck.android.DefaultAndroidDirectoryResolver.NDK_POST_R11_VERSION_FILENAME;
-import
-    static com.facebook.buck.android.DefaultAndroidDirectoryResolver.NDK_PRE_R11_VERSION_FILENAME;
+import static com.facebook.buck.android.DefaultAndroidDirectoryResolver.NDK_POST_R11_VERSION_FILENAME;
+import static com.facebook.buck.android.DefaultAndroidDirectoryResolver.NDK_PRE_R11_VERSION_FILENAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
@@ -52,17 +50,12 @@ public class DefaultAndroidDirectoryResolverTest {
 
   @Test
   public void testFindAndroidNdkDirEmpty() {
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "ndk.dir", Optional.<Path>absent(),
-            "ndk.repository", Optional.<Path>absent()));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.<String>absent(),
-            propertyFinder);
+            createEmptyPropertiesFinder());
 
     assertEquals(Optional.<Path>absent(), androidDirectoryResolver.getNdkOrAbsent());
   }
@@ -70,21 +63,17 @@ public class DefaultAndroidDirectoryResolverTest {
   @Test
   public void testFindAndroidNdkDirWithOldFormat() throws IOException {
     Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9d (64-bit)")[0];
-
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "ndk.dir", Optional.of(ndkDir),
-            "ndk.repository", Optional.<Path>absent()));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.of("r9d"),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.<Path>absent(),
+                Optional.of(ndkDir),
+                Optional.<Path>absent()));
 
-    assertEquals(Optional.of(ndkDir),
-        androidDirectoryResolver.getNdkOrAbsent());
+    assertEquals(Optional.of(ndkDir), androidDirectoryResolver.getNdkOrAbsent());
   }
 
   @Test
@@ -93,20 +82,16 @@ public class DefaultAndroidDirectoryResolverTest {
         NDK_POST_R11_VERSION_FILENAME,
         "ndk-dir",
         "Pkg.Desc = Android NDK\nPkg.Revision = 11.2.2725575")[0];
-
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "ndk.dir", Optional.of(ndkDir),
-            "ndk.repository", Optional.<Path>absent()));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver = new DefaultAndroidDirectoryResolver(
         new ProjectFilesystem(tmpDir.getRoot()),
         Optional.<String>absent(),
         Optional.of("11.2"),
-        propertyFinder);
+        createPropertiesFinder(
+            Optional.<Path>absent(),
+            Optional.of(ndkDir),
+            Optional.<Path>absent()));
 
-    assertEquals(Optional.of(ndkDir),
-        androidDirectoryResolver.getNdkOrAbsent());
+    assertEquals(Optional.of(ndkDir), androidDirectoryResolver.getNdkOrAbsent());
   }
 
   @Test
@@ -114,22 +99,17 @@ public class DefaultAndroidDirectoryResolverTest {
     Path ndkDir = createTmpNdkVersions(
         NDK_PRE_R11_VERSION_FILENAME,
         "ndk-dir-r9d", "r9d-rc2 (64-bit)")[0];
-
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "ndk.dir", Optional.of(ndkDir),
-            "ndk.repository", Optional.<Path>absent()));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.of("r9d"),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.<Path>absent(),
+                Optional.of(ndkDir),
+                Optional.<Path>absent()));
 
-    assertEquals(
-        Optional.of(ndkDir),
-        androidDirectoryResolver.getNdkOrAbsent());
+    assertEquals(Optional.of(ndkDir), androidDirectoryResolver.getNdkOrAbsent());
   }
 
   @Test
@@ -137,39 +117,32 @@ public class DefaultAndroidDirectoryResolverTest {
     Path ndkDir = createTmpNdkVersions(
         NDK_POST_R11_VERSION_FILENAME,
         "ndk-dir-r11b", "Pkg.Revision = 11.1.32")[0];
-
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "ndk.dir", Optional.of(ndkDir),
-            "ndk.repository", Optional.<Path>absent()));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver = new DefaultAndroidDirectoryResolver(
         new ProjectFilesystem(tmpDir.getRoot()),
         Optional.<String>absent(),
         Optional.of("11.1"),
-        propertyFinder);
+        createPropertiesFinder(
+            Optional.<Path>absent(),
+            Optional.of(ndkDir),
+            Optional.<Path>absent()));
 
-    assertEquals(Optional.of(ndkDir),
-        androidDirectoryResolver.getNdkOrAbsent());
+    assertEquals(Optional.of(ndkDir), androidDirectoryResolver.getNdkOrAbsent());
   }
 
   @Test
   public void testFindAndroidNdkDirAbsentWithOldFormat() throws IOException {
     Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9e")[0];
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "ndk.dir", Optional.of(ndkDir),
-            "ndk.repository", Optional.<Path>absent()));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.<String>absent(),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.<Path>absent(),
+                Optional.of(ndkDir),
+                Optional.<Path>absent()));
 
-    assertEquals(Optional.of(ndkDir),
-        androidDirectoryResolver.getNdkOrAbsent());
+    assertEquals(Optional.of(ndkDir), androidDirectoryResolver.getNdkOrAbsent());
   }
 
   @Test
@@ -178,37 +151,31 @@ public class DefaultAndroidDirectoryResolverTest {
         NDK_POST_R11_VERSION_FILENAME,
         "ndk-dir",
         "Pkg.Desc = Android NDK\nPkg.Revision = 11.2.2725575")[0];
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "ndk.dir", Optional.of(ndkDir),
-            "ndk.repository", Optional.<Path>absent()));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.<String>absent(),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.<Path>absent(),
+                Optional.of(ndkDir),
+                Optional.<Path>absent()));
 
-    assertEquals(Optional.of(ndkDir),
-        androidDirectoryResolver.getNdkOrAbsent());
+    assertEquals(Optional.of(ndkDir), androidDirectoryResolver.getNdkOrAbsent());
   }
 
   @Test
   public void testFindAndroidNdkDirThrowOnFailedRead() throws IOException {
     Path ndkDir = tmpDir.newFolder("ndk-dir");
-
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "ndk.dir", Optional.of(ndkDir),
-            "ndk.repository", Optional.<Path>absent()));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.<String>absent(),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.<Path>absent(),
+                Optional.of(ndkDir),
+                Optional.<Path>absent()));
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(ndkDir.toAbsolutePath() + " does not contain a valid " +
@@ -219,18 +186,15 @@ public class DefaultAndroidDirectoryResolverTest {
   @Test
   public void testFindAndroidNdkDirThrowOnUnsupportedVersion() throws IOException {
     Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9q")[0];
-
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "ndk.dir", Optional.of(ndkDir),
-            "ndk.repository", Optional.<Path>absent()));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.of("r9e"),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.<Path>absent(),
+                Optional.of(ndkDir),
+                Optional.<Path>absent()));
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("Buck is configured to use Android NDK version r9e at " +
@@ -243,18 +207,15 @@ public class DefaultAndroidDirectoryResolverTest {
     Path ndkDir = tmpDir.newFolder("ndk-dir-r9a");
     tmpDir.newFolder("ndk-dir-r9b");
     createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir-r9c", "r9c");
-
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "ndk.dir", Optional.<Path>absent(),
-            "ndk.repository", Optional.of(tmpDir.getRoot())));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.of("r9e"),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.<Path>absent(),
+                Optional.<Path>absent(),
+                Optional.of(tmpDir.getRoot())));
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(ndkDir + " does not contain a valid properties file for " +
@@ -270,34 +231,32 @@ public class DefaultAndroidDirectoryResolverTest {
         "ndk-dir-r9b", "r9b (64-bit)",
         "ndk-dir-r9c", "r9c (64-bit)"
     )[2];
-
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "ndk.dir", Optional.<Path>absent(),
-            "ndk.repository", Optional.of(tmpDir.getRoot())));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.<String>absent(),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.<Path>absent(),
+                Optional.<Path>absent(),
+                Optional.of(tmpDir.getRoot())));
 
-    assertEquals(Optional.of(releaseDir),
-        androidDirectoryResolver.getNdkOrAbsent());
+    assertEquals(Optional.of(releaseDir), androidDirectoryResolver.getNdkOrAbsent());
 
     releaseDir = createTmpNdkVersions(
         NDK_POST_R11_VERSION_FILENAME,
         "ndk-dir-r11c", "Pkg.Revision = 11.2.2725575",
         "ndk-dir-r11b", "Pkg.Revision = 11.1.32"
     )[0];
-
     androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.<String>absent(),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.<Path>absent(),
+                Optional.<Path>absent(),
+                Optional.of(tmpDir.getRoot())));
 
     assertEquals(Optional.of(releaseDir),
         androidDirectoryResolver.getNdkOrAbsent());
@@ -309,24 +268,24 @@ public class DefaultAndroidDirectoryResolverTest {
         "ndk-dir-r9a", "r9a",
         "ndk-dir-r9b", "r9b"
     );
-
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "ndk.dir", Optional.<Path>absent(),
-            "ndk.repository", Optional.of(tmpDir.getRoot())));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver1 =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.of("r9a"),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.<Path>absent(),
+                Optional.<Path>absent(),
+                Optional.of(tmpDir.getRoot())));
     DefaultAndroidDirectoryResolver androidDirectoryResolver2 =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.of("r9b"),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.<Path>absent(),
+                Optional.<Path>absent(),
+                Optional.of(tmpDir.getRoot())));
 
     assertNotEquals(androidDirectoryResolver1, androidDirectoryResolver2);
   }
@@ -339,18 +298,15 @@ public class DefaultAndroidDirectoryResolverTest {
         "ndk-dir-r9b", "r9b",
         "ndk-dir-r9c", "r9c"
     )[1];
-
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "ndk.dir", Optional.<Path>absent(),
-            "ndk.repository", Optional.of(tmpDir.getRoot())));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.of("r9b"),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.<Path>absent(),
+                Optional.<Path>absent(),
+                Optional.of(tmpDir.getRoot())));
 
     assertEquals(Optional.of(expectedPath),
         androidDirectoryResolver.getNdkOrAbsent());
@@ -364,18 +320,15 @@ public class DefaultAndroidDirectoryResolverTest {
         "ndk-dir-r9b", "r9b-rc3 (64-bit)",
         "ndk-dir-r9c", "r9c"
     )[1];
-
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "ndk.dir", Optional.<Path>absent(),
-            "ndk.repository", Optional.of(tmpDir.getRoot())));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.of("r9b"),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.<Path>absent(),
+                Optional.<Path>absent(),
+                Optional.of(tmpDir.getRoot())));
 
     assertEquals(Optional.of(expectedPath),
         androidDirectoryResolver.getNdkOrAbsent());
@@ -384,18 +337,15 @@ public class DefaultAndroidDirectoryResolverTest {
   @Test(expected = HumanReadableException.class)
     public void testFindAndroidNdkDirScanTakesVersionEmptyRequested() throws IOException {
     createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir-r9a", "r9a-rc2");
-
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "ndk.dir", Optional.<Path>absent(),
-            "ndk.repository", Optional.of(tmpDir.getRoot())));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.of(""),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.<Path>absent(),
+                Optional.<Path>absent(),
+                Optional.of(tmpDir.getRoot())));
 
     androidDirectoryResolver.getNdkOrAbsent();
   }
@@ -403,18 +353,15 @@ public class DefaultAndroidDirectoryResolverTest {
   @Test(expected = HumanReadableException.class)
   public void testFindAndroidNdkDirScanTakesVersionEmptyFound() throws IOException {
     createTmpNdkVersions("ndk-dir-r9a", "");
-
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "ndk.dir", Optional.<Path>absent(),
-            "ndk.repository", Optional.of(tmpDir.getRoot())));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.of("r9e"),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.<Path>absent(),
+                Optional.<Path>absent(),
+                Optional.of(tmpDir.getRoot())));
 
     androidDirectoryResolver.getNdkOrAbsent();
   }
@@ -423,16 +370,15 @@ public class DefaultAndroidDirectoryResolverTest {
   public void buildToolsFallsBacktoPlatformTools() throws IOException {
     Path sdkDir = tmpDir.newFolder("sdk");
     createBuildToolsVersions(sdkDir, "platform-tools");
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "sdk.dir", Optional.of(sdkDir)));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             /* targetBuildToolsVersion */ Optional.<String>absent(),
             /* targetNdkVersion */ Optional.<String>absent(),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.of(sdkDir),
+                Optional.<Path>absent(),
+                Optional.<Path>absent()));
     assertThat(
         androidDirectoryResolver.getBuildToolsOrThrow().getFileName().toString(),
         Matchers.equalTo("platform-tools"));
@@ -442,16 +388,15 @@ public class DefaultAndroidDirectoryResolverTest {
   public void buildToolsAPIVersionFound() throws IOException {
     Path sdkDir = tmpDir.newFolder("sdk");
     createBuildToolsVersions(sdkDir, "build-tools/android-4.2.2");
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "sdk.dir", Optional.of(sdkDir)));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             /* targetBuildToolsVersion */ Optional.<String>absent(),
             /* targetNdkVersion */ Optional.<String>absent(),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.of(sdkDir),
+                Optional.<Path>absent(),
+                Optional.<Path>absent()));
     assertThat(
         androidDirectoryResolver.getBuildToolsOrThrow().getFileName().toString(),
         Matchers.equalTo("android-4.2.2"));
@@ -461,16 +406,15 @@ public class DefaultAndroidDirectoryResolverTest {
   public void buildToolsWithBuildToolsPrefix() throws IOException {
     Path sdkDir = tmpDir.newFolder("sdk");
     createBuildToolsVersions(sdkDir, "build-tools/build-tools-17.2.2");
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "sdk.dir", Optional.of(sdkDir)));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             /* targetBuildToolsVersion */ Optional.<String>absent(),
             /* targetNdkVersion */ Optional.<String>absent(),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.of(sdkDir),
+                Optional.<Path>absent(),
+                Optional.<Path>absent()));
     assertThat(
         androidDirectoryResolver.getBuildToolsOrThrow().getFileName().toString(),
         Matchers.equalTo("build-tools-17.2.2"));
@@ -480,16 +424,15 @@ public class DefaultAndroidDirectoryResolverTest {
   public void buildToolsInvalidPrefixThrows() throws IOException {
     Path sdkDir = tmpDir.newFolder("sdk");
     createBuildToolsVersions(sdkDir, "build-tools/foobar-17.2.2");
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "sdk.dir", Optional.of(sdkDir)));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             /* targetBuildToolsVersion */ Optional.<String>absent(),
             /* targetNdkVersion */ Optional.<String>absent(),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.of(sdkDir),
+                Optional.<Path>absent(),
+                Optional.<Path>absent()));
 
     expectedException.expect(HumanReadableException.class);
       expectedException.expectMessage("foobar-17.2.2");
@@ -501,16 +444,15 @@ public class DefaultAndroidDirectoryResolverTest {
   public void buildToolsEmptyDirectoryThrows() throws IOException {
     Path sdkDir = tmpDir.newFolder("sdk");
     sdkDir.resolve("build-tools").toFile().mkdir();
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "sdk.dir", Optional.of(sdkDir)));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             /* targetBuildToolsVersion */ Optional.<String>absent(),
             /* targetNdkVersion */ Optional.<String>absent(),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.of(sdkDir),
+                Optional.<Path>absent(),
+                Optional.<Path>absent()));
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(sdkDir.resolve("build-tools") + " was empty");
@@ -523,16 +465,15 @@ public class DefaultAndroidDirectoryResolverTest {
     createBuildToolsVersions(
         sdkDir,
         "build-tools/23.0.0_rc1");
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "sdk.dir", Optional.of(sdkDir)));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             /* targetBuildToolsVersion */ Optional.<String>absent(),
             /* targetNdkVersion */ Optional.<String>absent(),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.of(sdkDir),
+                Optional.<Path>absent(),
+                Optional.<Path>absent()));
     assertThat(
         androidDirectoryResolver.getBuildToolsOrThrow().getFileName().toString(),
         Matchers.equalTo("23.0.0_rc1"));
@@ -545,16 +486,15 @@ public class DefaultAndroidDirectoryResolverTest {
         sdkDir,
         "build-tools/22.0.0",
         "build-tools/23.0.0_rc1");
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "sdk.dir", Optional.of(sdkDir)));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             /* targetBuildToolsVersion */ Optional.<String>absent(),
             /* targetNdkVersion */ Optional.<String>absent(),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.of(sdkDir),
+                Optional.<Path>absent(),
+                Optional.<Path>absent()));
     assertThat(
         androidDirectoryResolver.getBuildToolsOrThrow().getFileName().toString(),
         Matchers.equalTo("23.0.0_rc1"));
@@ -571,17 +511,15 @@ public class DefaultAndroidDirectoryResolverTest {
         "build-tools/build-tools-15.0.0",
         "build-tools/17.0.0",
         "build-tools/16.0.0");
-
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "sdk.dir", Optional.of(sdkDir)));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             /* targetBuildToolsVersion */ Optional.<String>absent(),
             /* targetNdkVersion */ Optional.<String>absent(),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.of(sdkDir),
+                Optional.<Path>absent(),
+                Optional.<Path>absent()));
     assertThat(
         androidDirectoryResolver.getBuildToolsOrThrow().getFileName().toString(),
         Matchers.equalTo("17.0.0"));
@@ -595,17 +533,15 @@ public class DefaultAndroidDirectoryResolverTest {
         "build-tools/16.0.0",
         "build-tools/17.0.0",
         "build-tools/18.0.0");
-
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "sdk.dir", Optional.of(sdkDir)));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             /* targetBuildToolsVersion */ Optional.of("17.0.0"),
             /* targetNdkVersion */ Optional.<String>absent(),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.of(sdkDir),
+                Optional.<Path>absent(),
+                Optional.<Path>absent()));
     assertThat(
         androidDirectoryResolver.getBuildToolsOrThrow().getFileName().toString(),
         Matchers.equalTo("17.0.0"));
@@ -617,21 +553,34 @@ public class DefaultAndroidDirectoryResolverTest {
     createBuildToolsVersions(
         sdkDir,
         "build-tools/18.0.0");
-
-    PropertyFinder propertyFinder = new FakePropertyFinder(
-        ImmutableMap.of(
-            "sdk.dir", Optional.of(sdkDir)));
-
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             /* targetBuildToolsVersion */ Optional.of("2.0.0"),
             /* targetNdkVersion */ Optional.<String>absent(),
-            propertyFinder);
+            createPropertiesFinder(
+                Optional.of(sdkDir),
+                Optional.<Path>absent(),
+                Optional.<Path>absent()));
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("2.0.0");
     androidDirectoryResolver.getBuildToolsOrThrow();
+  }
+
+  private PropertyFinder createEmptyPropertiesFinder() {
+    return createPropertiesFinder(
+        Optional.<Path>absent(),
+        Optional.<Path>absent(),
+        Optional.<Path>absent());
+  }
+
+  private PropertyFinder createPropertiesFinder(
+      Optional<Path> sdk,
+      Optional<Path> ndk,
+      Optional<Path> ndkRepository) {
+    return new FakePropertyFinder(
+        ImmutableMap.of("sdk.dir", sdk, "ndk.dir", ndk, "ndk.repository", ndkRepository));
   }
 
   private Path[] createTmpNdkVersions(String filename, String... directoryNamesAndVersionStrings)

@@ -16,24 +16,23 @@
 
 package com.facebook.buck.android;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
-
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 
 public class BadAndroidConfigIntegrationTest {
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   private ProjectWorkspace workspace;
 
@@ -52,10 +51,10 @@ public class BadAndroidConfigIntegrationTest {
     workspace.setUp();
     workspace.runBuckBuild("//:hello_java").assertSuccess();
 
-    ProcessResult resultForFailure = workspace.runBuckBuild("//:hello_android").assertFailure();
-    assertThat(resultForFailure.getStderr(),
-        containsString(String.format(
-            "Properties file local.properties contains invalid path [%s] for key sdk.dir.",
-            Paths.get("/this/is/a/non/existent/directory"))));
+    expectedException.expect(NoAndroidSdkException.class);
+    expectedException.expectMessage("Must define a local.properties file with a property " +
+        "named 'sdk.dir' that points to the absolute path of your Android SDK directory, " +
+        "or set ANDROID_HOME or ANDROID_SDK.");
+    workspace.runBuckBuild("//:hello_android").assertFailure();
   }
 }

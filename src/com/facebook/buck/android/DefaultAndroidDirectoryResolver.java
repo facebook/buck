@@ -22,7 +22,6 @@ import com.facebook.buck.util.PropertyFinder;
 import com.facebook.buck.util.VersionStringComparator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -66,7 +65,8 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   private final Optional<String> targetNdkVersion;
   private final PropertyFinder propertyFinder;
 
-  private final Supplier<Optional<Path>> sdk;
+  private Optional<String> sdkErrorMessage;
+  private final Optional<Path> sdk;
   private final Supplier<Path> buildTools;
   private final Supplier<Optional<Path>> ndk;
 
@@ -80,14 +80,8 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
     this.targetNdkVersion = targetNdkVersion;
     this.propertyFinder = propertyFinder;
 
-    this.sdk =
-        Suppliers.memoize(new Supplier<Optional<Path>>() {
-          @Override
-          public Optional<Path> get() {
-            return findSdk();
-          }
-        });
-
+    this.sdkErrorMessage = Optional.absent();
+    this.sdk = findSdk();
     this.buildTools =
         Suppliers.memoize(new Supplier<Path>() {
           @Override
@@ -106,9 +100,10 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
 
   @Override
   public Path getSdkOrThrow() {
-    Optional<Path> androidSdkDir = getSdkOrAbsent();
-    Preconditions.checkState(androidSdkDir.isPresent(), SDK_NOT_FOUND_MESSAGE);
-    return androidSdkDir.get();
+    if (!sdk.isPresent()) {
+      throw new HumanReadableException(sdkErrorMessage.get());
+    }
+    return sdk.get();
   }
 
   @Override
@@ -118,7 +113,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
 
   @Override
   public Optional<Path> getSdkOrAbsent() {
-    return sdk.get();
+    return sdk;
   }
 
   @Override
@@ -167,14 +162,21 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   }
 
   private Optional<Path> findSdk() {
-    Optional<Path> sdkPath = propertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
+    Optional<Path> sdkPath = Optional.absent();
+    try {
+      sdkPath = propertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
           "sdk.dir",
           "ANDROID_SDK",
           "ANDROID_HOME");
+    } catch (RuntimeException e) {
+      sdkErrorMessage = Optional.of(e.getMessage());
+      return sdkPath;
+    }
 
-    if (sdkPath.isPresent() && !sdkPath.get().toFile().isDirectory()) {
-        throw new HumanReadableException("Android SDK path (" + sdkPath.get() + ") " +
-            "is not a directory.");
+    if (!sdkPath.isPresent()) {
+      sdkErrorMessage = Optional.of(SDK_NOT_FOUND_MESSAGE);
+    } else if (!sdkPath.isPresent() && !sdkPath.get().toFile().isDirectory()) {
+      sdkErrorMessage = Optional.of("Android SDK path [" + sdkPath.get() + "] is not a directory.");
     }
     return sdkPath;
   }
@@ -385,8 +387,8 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
         targetBuildToolsVersion,
         targetNdkVersion,
         propertyFinder,
-        (sdk.get().isPresent()) ? (sdk.get().get()) : "SDK not available",
-        (sdk.get().isPresent()) ? (buildTools.get()) : "Build tools not available",
+        (sdk.isPresent()) ? (sdk.get()) : "SDK not available",
+        (sdk.isPresent()) ? (buildTools.get()) : "Build tools not available",
         (ndk.get().isPresent()) ? (ndk.get()) : "NDK not available");
   }
 
