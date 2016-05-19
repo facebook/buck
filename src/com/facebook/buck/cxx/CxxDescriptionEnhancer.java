@@ -383,6 +383,12 @@ public class CxxDescriptionEnhancer {
               testable.getCxxPreprocessorInput(
                   cxxPlatform,
                   HeaderVisibility.PRIVATE));
+
+          // Add any dependent headers
+          cxxPreprocessorInputFromTestedRulesBuilder.addAll(
+              CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+                  cxxPlatform,
+                  ImmutableList.of(rule)));
         }
       }
     }
