@@ -66,6 +66,8 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.SimplePerfEvent;
+import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.halide.HalideCompile;
 import com.facebook.buck.halide.HalideLibraryDescription;
@@ -146,7 +148,9 @@ import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -958,20 +962,35 @@ public class ProjectGenerator {
 
   private ImmutableSet<TargetNode<?>> getTransitiveFrameworkNodes(
       TargetNode<? extends HasAppleBundleFields> targetNode) {
-    return FluentIterable
-        .from(targetGraph.getSubgraph(ImmutableSet.of(targetNode)).getNodes())
-        .filter(new Predicate<TargetNode<?>>() {
-          @Override
-          public boolean apply(TargetNode<?> input) {
-            Optional<TargetNode<AppleBundleDescription.Arg>> appleBundleNode =
-                input.castArg(AppleBundleDescription.Arg.class);
-            if (!appleBundleNode.isPresent()) {
-              return false;
-            }
-            return isFrameworkBundle(appleBundleNode.get().getConstructorArg());
+    GraphTraversable<TargetNode<?>> graphTraversable = new GraphTraversable<TargetNode<?>>() {
+      @Override
+      public Iterator<TargetNode<?>> findChildren(TargetNode<?> node) {
+        if (node.getType() != AppleResourceDescription.TYPE) {
+          return targetGraph.getAll(node.getDeps()).iterator();
+        } else {
+          return Collections.emptyIterator();
+        }
+      }
+    };
+
+    final ImmutableSet.Builder<TargetNode<?>> filteredRules = ImmutableSet.builder();
+    AcyclicDepthFirstPostOrderTraversal<TargetNode<?>> traversal =
+        new AcyclicDepthFirstPostOrderTraversal<>(graphTraversable);
+    try {
+      for (TargetNode<?> node : traversal.traverse(ImmutableList.of(targetNode))) {
+        if (node != targetNode) {
+          Optional<TargetNode<AppleBundleDescription.Arg>> appleBundleNode =
+              node.castArg(AppleBundleDescription.Arg.class);
+          if (appleBundleNode.isPresent() &&
+              isFrameworkBundle(appleBundleNode.get().getConstructorArg())) {
+            filteredRules.add(node);
           }
-        })
-        .toSet();
+        }
+      }
+    } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
+      throw new RuntimeException(e);
+    }
+    return filteredRules.build();
   }
 
   /**

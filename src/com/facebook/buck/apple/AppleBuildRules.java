@@ -62,7 +62,7 @@ public final class AppleBuildRules {
       ImmutableSet.<Class<? extends BuildRule>>of(AppleTest.class);
 
   private static final ImmutableSet<BuildRuleType> RECURSIVE_DEPENDENCIES_STOP_AT_TYPES =
-      ImmutableSet.of(AppleBundleDescription.TYPE);
+      ImmutableSet.of(AppleBundleDescription.TYPE, AppleResourceDescription.TYPE);
 
   private static final ImmutableSet<AppleBundleExtension> XCODE_TARGET_TEST_BUNDLE_EXTENSIONS =
       ImmutableSet.of(AppleBundleExtension.OCTEST, AppleBundleExtension.XCTEST);
