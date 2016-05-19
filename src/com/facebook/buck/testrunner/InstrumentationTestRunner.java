@@ -21,6 +21,8 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 public class InstrumentationTestRunner {
   private static final long ADB_CONNECT_TIMEOUT_MS = 5000;
@@ -32,6 +34,7 @@ public class InstrumentationTestRunner {
   private final String testRunner;
   private final File outputDirectory;
   private final boolean attemptUninstall;
+  private final Map<String, String> extraInstrumentationArguments;
   @Nullable private final String instrumentationApkPath;
   @Nullable private final String apkUnderTestPath;
 
@@ -43,7 +46,8 @@ public class InstrumentationTestRunner {
       File outputDirectory,
       String instrumentationApkPath,
       String apkUnderTestPath,
-      boolean attemptUninstall) {
+      boolean attemptUninstall,
+      Map<String, String> extraInstrumentationArguments) {
     this.adbExecutablePath = adbExecutablePath;
     this.deviceSerial = deviceSerial;
     this.packageName = packageName;
@@ -52,6 +56,7 @@ public class InstrumentationTestRunner {
     this.instrumentationApkPath = instrumentationApkPath;
     this.apkUnderTestPath = apkUnderTestPath;
     this.attemptUninstall = attemptUninstall;
+    this.extraInstrumentationArguments = extraInstrumentationArguments;
   }
 
   public static InstrumentationTestRunner fromArgs(String... args) throws Throwable {
@@ -62,6 +67,7 @@ public class InstrumentationTestRunner {
     String testRunner = null;
     String instrumentationApkPath = null;
     boolean attemptUninstall = false;
+    Map<String, String> extraInstrumentationArguments = new HashMap<String, String>();
 
     for (int i = 0; i < args.length; i++) {
       switch (args[i]) {
@@ -89,6 +95,15 @@ public class InstrumentationTestRunner {
           break;
         case "--attempt-uninstall":
           attemptUninstall = true;
+          break;
+        case "--extra-instrumentation-argument":
+          String rawArg = args[++i];
+          String[] extraArguments = rawArg.split("=", 2);
+          if (extraArguments.length != 2) {
+            System.err.printf("Not a valid extra arguments argument: %s\n", rawArg);
+            System.exit(1);
+          }
+          extraInstrumentationArguments.put(extraArguments[0], extraArguments[1]);
           break;
       }
     }
@@ -127,7 +142,8 @@ public class InstrumentationTestRunner {
         outputDirectory,
         instrumentationApkPath,
         apkUnderTestPath,
-        attemptUninstall);
+        attemptUninstall,
+        extraInstrumentationArguments);
   }
 
   public void run() throws Throwable {
@@ -151,6 +167,9 @@ public class InstrumentationTestRunner {
           this.testRunner,
           getDevice(deviceSerial)
       );
+      for (Map.Entry<String, String> entry : this.extraInstrumentationArguments.entrySet()) {
+        runner.addInstrumentationArg(entry.getKey(), entry.getValue());
+      }
       BuckXmlTestRunListener listener = new BuckXmlTestRunListener();
       listener.setReportDir(this.outputDirectory);
       runner.run(listener);
