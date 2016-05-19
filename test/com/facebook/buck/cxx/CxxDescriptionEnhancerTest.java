@@ -23,25 +23,27 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -103,6 +105,87 @@ public class CxxDescriptionEnhancerTest {
         Matchers.<SourcePath>hasItems(
             new BuildTargetSourcePath(BuildTargetFactory.newInstance("//:symlink")),
             new BuildTargetSourcePath(BuildTargetFactory.newInstance("//:privatesymlink"))));
+  }
+
+  @Test
+  public void libraryTestIncludesPublicHeadersOfDependenciesOfLibraryUnderTest() throws Exception {
+    SourcePathResolver pathResolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
+
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
+    BuildTarget otherlibTarget = BuildTargetFactory.newInstance("//:otherlib");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
+
+    BuildRuleParams otherlibParams = new FakeBuildRuleParamsBuilder(otherlibTarget).build();
+    FakeCxxLibrary otherlibRule = new FakeCxxLibrary(
+        otherlibParams,
+        pathResolver,
+        BuildTargetFactory.newInstance("//:otherheader"),
+        BuildTargetFactory.newInstance("//:othersymlink"),
+        BuildTargetFactory.newInstance("//:otherprivateheader"),
+        BuildTargetFactory.newInstance("//:otherprivatesymlink"),
+        new FakeBuildRule("//:archive", pathResolver),
+        new FakeBuildRule("//:shared", pathResolver),
+        Paths.get("output/path/lib.so"),
+        "lib.so",
+        // This library has no tests.
+        ImmutableSortedSet.<BuildTarget>of()
+    );
+
+    BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget)
+        .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(otherlibRule)).build();
+    FakeCxxLibrary libRule = new FakeCxxLibrary(
+        libParams,
+        pathResolver,
+        BuildTargetFactory.newInstance("//:header"),
+        BuildTargetFactory.newInstance("//:symlink"),
+        BuildTargetFactory.newInstance("//:privateheader"),
+        BuildTargetFactory.newInstance("//:privatesymlink"),
+        new FakeBuildRule("//:archive", pathResolver),
+        new FakeBuildRule("//:shared", pathResolver),
+        Paths.get("output/path/lib.so"),
+        "lib.so",
+        // Ensure the test is listed as a dep of the lib.
+        ImmutableSortedSet.of(testTarget)
+    );
+
+    BuildRuleParams testParams = new FakeBuildRuleParamsBuilder(testTarget)
+        .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(libRule))
+        .build();
+
+    ImmutableList<CxxPreprocessorInput> combinedInput =
+        CxxDescriptionEnhancer.collectCxxPreprocessorInput(
+            testParams,
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            ImmutableMultimap.<CxxSource.Type, String>of(),
+            ImmutableList.<HeaderSymlinkTree>of(),
+            ImmutableSet.<FrameworkPath>of(),
+            CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                FluentIterable.from(testParams.getDeps())
+                    .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
+
+    Set<SourcePath> roots = new HashSet<>();
+    for (CxxHeaders headers : CxxPreprocessorInput.concat(combinedInput).getIncludes()) {
+      roots.add(headers.getRoot());
+    }
+    assertThat(
+        "Test of library should include public dependency headers",
+        Iterables.transform(
+            CxxPreprocessorInput.concat(combinedInput).getIncludes(),
+            new Function<CxxHeaders, SourcePath>() {
+              @Override
+              public SourcePath apply(CxxHeaders input) {
+                return input.getRoot();
+              }
+            }),
+        allOf(
+            hasItem(new BuildTargetSourcePath(BuildTargetFactory.newInstance("//:othersymlink"))),
+            not(
+                hasItem(
+                    new BuildTargetSourcePath(
+                        BuildTargetFactory.newInstance("//:otherprivatesymlink"))))));
   }
 
   @Test
