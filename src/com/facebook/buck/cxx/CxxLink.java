@@ -43,12 +43,19 @@ import java.nio.file.Path;
 
 public class CxxLink
     extends AbstractBuildRule
-    implements SupportsInputBasedRuleKey, ProvidesStaticLibraryDeps, OverrideScheduleRule {
+    implements SupportsInputBasedRuleKey, ProvidesLinkedBinaryDeps, OverrideScheduleRule {
 
   private static final Predicate<BuildRule> ARCHIVE_RULES_PREDICATE = new Predicate<BuildRule>() {
     @Override
     public boolean apply(BuildRule input) {
       return input instanceof Archive;
+    }
+  };
+
+  private static final Predicate<BuildRule> COMPILE_RULES_PREDICATE = new Predicate<BuildRule>() {
+    @Override
+    public boolean apply(BuildRule input) {
+      return input instanceof CxxPreprocessAndCompile;
     }
   };
 
@@ -129,6 +136,11 @@ public class CxxLink
   @Override
   public ImmutableSet<BuildRule> getStaticLibraryDeps() {
     return FluentIterable.from(getDeps()).filter(ARCHIVE_RULES_PREDICATE).toSet();
+  }
+
+  @Override
+  public ImmutableSet<BuildRule> getCompileDeps() {
+    return FluentIterable.from(getDeps()).filter(COMPILE_RULES_PREDICATE).toSet();
   }
 
   @Override

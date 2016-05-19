@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.ProvidesStaticLibraryDeps;
+import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -39,7 +39,7 @@ import java.util.SortedSet;
 /**
  * Puts together multiple thin library/binaries into a multi-arch file.
  */
-public class MultiarchFile extends AbstractBuildRule implements ProvidesStaticLibraryDeps {
+public class MultiarchFile extends AbstractBuildRule implements ProvidesLinkedBinaryDeps {
 
   @AddToRuleKey
   private final Tool lipo;
@@ -91,8 +91,19 @@ public class MultiarchFile extends AbstractBuildRule implements ProvidesStaticLi
   public ImmutableSet<BuildRule> getStaticLibraryDeps() {
     ImmutableSet.Builder<BuildRule> builder = ImmutableSet.builder();
     for (BuildRule dep : getDeps()) {
-      if (dep instanceof ProvidesStaticLibraryDeps) {
-        builder.addAll(((ProvidesStaticLibraryDeps) dep).getStaticLibraryDeps());
+      if (dep instanceof ProvidesLinkedBinaryDeps) {
+        builder.addAll(((ProvidesLinkedBinaryDeps) dep).getStaticLibraryDeps());
+      }
+    }
+    return builder.build();
+  }
+
+  @Override
+  public ImmutableSet<BuildRule> getCompileDeps() {
+    ImmutableSet.Builder<BuildRule> builder = ImmutableSet.builder();
+    for (BuildRule dep : getDeps()) {
+      if (dep instanceof ProvidesLinkedBinaryDeps) {
+        builder.addAll(((ProvidesLinkedBinaryDeps) dep).getCompileDeps());
       }
     }
     return builder.build();

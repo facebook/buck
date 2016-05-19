@@ -24,7 +24,7 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.HeaderVisibility;
-import com.facebook.buck.cxx.ProvidesStaticLibraryDeps;
+import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -350,7 +350,7 @@ public class AppleDescriptions {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       BuildRule strippedBinaryRule,
-      ProvidesStaticLibraryDeps unstrippedBinaryRule,
+      ProvidesLinkedBinaryDeps unstrippedBinaryRule,
       AppleDebugFormat debugFormat,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform,
@@ -389,7 +389,7 @@ public class AppleDescriptions {
       AppleDebugFormat debugFormat,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      ProvidesStaticLibraryDeps unstrippedBinaryRule,
+      ProvidesLinkedBinaryDeps unstrippedBinaryRule,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
@@ -419,7 +419,7 @@ public class AppleDescriptions {
   static AppleDsym createAppleDsym(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      ProvidesStaticLibraryDeps unstrippedBinaryBuildRule,
+      ProvidesLinkedBinaryDeps unstrippedBinaryBuildRule,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
@@ -436,6 +436,7 @@ public class AppleDescriptions {
             Suppliers.ofInstance(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .add(unstrippedBinaryBuildRule)
+                    .addAll(unstrippedBinaryBuildRule.getCompileDeps())
                     .addAll(unstrippedBinaryBuildRule.getStaticLibraryDeps())
                     .build()),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
@@ -541,7 +542,7 @@ public class AppleDescriptions {
 
     BuildRule targetDebuggableBinaryRule;
     Optional<AppleDsym> appleDsym;
-    if (unstrippedBinaryRule instanceof ProvidesStaticLibraryDeps) {
+    if (unstrippedBinaryRule instanceof ProvidesLinkedBinaryDeps) {
       BuildTarget binaryBuildTarget = getBinaryFromBuildRuleWithBinary(flavoredBinaryRule)
           .getBuildTarget()
           .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
@@ -550,7 +551,7 @@ public class AppleDescriptions {
           binaryParams,
           resolver,
           getBinaryFromBuildRuleWithBinary(flavoredBinaryRule),
-          (ProvidesStaticLibraryDeps) unstrippedBinaryRule,
+          (ProvidesLinkedBinaryDeps) unstrippedBinaryRule,
           debugFormat,
           cxxPlatformFlavorDomain,
           defaultCxxPlatform,
@@ -559,7 +560,7 @@ public class AppleDescriptions {
           debugFormat,
           binaryParams,
           resolver,
-          (ProvidesStaticLibraryDeps) unstrippedBinaryRule,
+          (ProvidesLinkedBinaryDeps) unstrippedBinaryRule,
           cxxPlatformFlavorDomain,
           defaultCxxPlatform,
           appleCxxPlatforms);

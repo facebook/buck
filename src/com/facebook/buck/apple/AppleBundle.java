@@ -25,6 +25,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.NativeTestable;
+import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -39,6 +40,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -66,6 +68,8 @@ import com.google.common.util.concurrent.Futures;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -75,7 +79,7 @@ import java.util.Set;
  */
 public class AppleBundle
     extends AbstractBuildRule
-    implements NativeTestable, BuildRuleWithAppleBundle, BuildRuleWithBinary {
+    implements NativeTestable, BuildRuleWithAppleBundle, BuildRuleWithBinary, HasRuntimeDeps {
 
   private static final Logger LOG = Logger.get(AppleBundle.class);
   private static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
@@ -814,5 +818,21 @@ public class AppleBundle
   @Override
   public BuildRule getBinaryBuildRule() {
     return binary.get();
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    if (binary.get() instanceof ProvidesLinkedBinaryDeps) {
+      List<BuildRule> linkDeps = new ArrayList<>();
+      linkDeps.addAll(((ProvidesLinkedBinaryDeps) binary.get()).getCompileDeps());
+      linkDeps.addAll(((ProvidesLinkedBinaryDeps) binary.get()).getStaticLibraryDeps());
+      if (linkDeps.size() > 0) {
+        return ImmutableSortedSet.<BuildRule>naturalOrder()
+            .add(binary.get())
+            .addAll(linkDeps)
+            .build();
+      }
+    }
+    return ImmutableSortedSet.of();
   }
 }

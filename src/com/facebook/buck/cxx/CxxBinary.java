@@ -42,7 +42,7 @@ import javax.annotation.Nullable;
 
 public class CxxBinary
     extends AbstractBuildRule
-    implements BinaryBuildRule, NativeTestable, HasRuntimeDeps, ProvidesStaticLibraryDeps {
+    implements BinaryBuildRule, NativeTestable, HasRuntimeDeps, ProvidesLinkedBinaryDeps {
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
@@ -126,8 +126,17 @@ public class CxxBinary
 
   @Override
   public ImmutableSet<BuildRule> getStaticLibraryDeps() {
-    if (linkRule instanceof ProvidesStaticLibraryDeps) {
-      return ((ProvidesStaticLibraryDeps) linkRule).getStaticLibraryDeps();
+    if (linkRule instanceof ProvidesLinkedBinaryDeps) {
+      return ((ProvidesLinkedBinaryDeps) linkRule).getStaticLibraryDeps();
+    } else {
+      return ImmutableSet.of();
+    }
+  }
+
+  @Override
+  public ImmutableSet<BuildRule> getCompileDeps() {
+    if (linkRule instanceof ProvidesLinkedBinaryDeps) {
+      return ((ProvidesLinkedBinaryDeps) linkRule).getCompileDeps();
     } else {
       return ImmutableSet.of();
     }

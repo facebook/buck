@@ -31,6 +31,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -588,6 +589,168 @@ public class AppleBinaryIntegrationTest {
     String stdout = hasSymbol.getStdout().or("");
     assertThat(stdout, containsString("t -[AppDelegate window]"));
     assertThat(stdout, containsString("U _UIApplicationMain"));
+  }
+
+  @Test
+  public void testBuildingWithDwarfProducesAllCompileRulesOnDisk() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_application_bundle_dwarf_and_dsym", tmp);
+    workspace.setUp();
+    workspace.enableDirCache();
+
+    Flavor platformFlavor = ImmutableFlavor.of("iphonesimulator-x86_64");
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp")
+        .withAppendedFlavors(AppleDebugFormat.DWARF.getFlavor());
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:DemoAppBinary")
+        .withAppendedFlavors(platformFlavor, AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    BuildTarget appTarget = target.withFlavors(
+        AppleDebugFormat.DWARF.getFlavor(),
+        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
+
+    Path binaryOutput = workspace.getPath(
+        BuildTargets.getGenPath(filesystem, appTarget, "%s")
+            .resolve(target.getShortName() + ".app")
+            .resolve(target.getShortName()));
+
+    Path delegateFileOutput = workspace.getPath(
+        BuildTargets
+            .getGenPath(
+                filesystem,
+                binaryTarget.withFlavors(
+                    platformFlavor,
+                    ImmutableFlavor.of("compile-" + sanitize("AppDelegate.m.o")),
+                    AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                "%s")
+            .resolve("AppDelegate.m.o"));
+
+    Path mainFileOutput = workspace.getPath(
+        BuildTargets
+            .getGenPath(
+                filesystem,
+                binaryTarget.withFlavors(
+                    platformFlavor,
+                    ImmutableFlavor.of("compile-" + sanitize("main.m.o")),
+                    AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                "%s")
+            .resolve("main.m.o"));
+
+    assertThat(Files.exists(binaryOutput), Matchers.equalTo(true));
+    assertThat(Files.exists(delegateFileOutput), Matchers.equalTo(true));
+    assertThat(Files.exists(mainFileOutput), Matchers.equalTo(true));
+  }
+
+  @Test
+  public void testBuildingWithNoDebugDoesNotProduceAllCompileRulesOnDisk() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_application_bundle_dwarf_and_dsym", tmp);
+    workspace.setUp();
+    workspace.enableDirCache();
+
+    Flavor platformFlavor = ImmutableFlavor.of("iphonesimulator-x86_64");
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp")
+        .withAppendedFlavors(AppleDebugFormat.NONE.getFlavor());
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:DemoAppBinary")
+        .withAppendedFlavors(platformFlavor, AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    BuildTarget appTarget = target.withFlavors(
+        AppleDebugFormat.NONE.getFlavor(),
+        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
+
+    Path binaryOutput = workspace.getPath(
+        BuildTargets.getGenPath(filesystem, appTarget, "%s")
+            .resolve(target.getShortName() + ".app")
+            .resolve(target.getShortName()));
+
+    Path delegateFileOutput = workspace.getPath(
+        BuildTargets
+            .getGenPath(
+                filesystem,
+                binaryTarget.withFlavors(
+                    platformFlavor,
+                    ImmutableFlavor.of("compile-" + sanitize("AppDelegate.m.o")),
+                    AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                "%s")
+            .resolve("AppDelegate.m.o"));
+
+    Path mainFileOutput = workspace.getPath(
+        BuildTargets
+            .getGenPath(
+                filesystem,
+                binaryTarget.withFlavors(
+                    platformFlavor,
+                    ImmutableFlavor.of("compile-" + sanitize("main.m.o")),
+                    AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                "%s")
+            .resolve("main.m.o"));
+
+    assertThat(Files.exists(binaryOutput), Matchers.equalTo(true));
+    assertThat(Files.exists(delegateFileOutput), Matchers.equalTo(false));
+    assertThat(Files.exists(mainFileOutput), Matchers.equalTo(false));
+  }
+
+  @Test
+  public void testBuildingWithDwarfAndDsymDoesNotProduceAllCompileRulesOnDisk() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_application_bundle_dwarf_and_dsym", tmp);
+    workspace.setUp();
+    workspace.enableDirCache();
+
+    Flavor platformFlavor = ImmutableFlavor.of("iphonesimulator-x86_64");
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp")
+        .withAppendedFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor());
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:DemoAppBinary")
+        .withAppendedFlavors(platformFlavor, AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    BuildTarget appTarget = target.withFlavors(
+        AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
+        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
+
+    Path binaryOutput = workspace.getPath(
+        BuildTargets.getGenPath(filesystem, appTarget, "%s")
+            .resolve(target.getShortName() + ".app")
+            .resolve(target.getShortName()));
+
+    Path delegateFileOutput = workspace.getPath(
+        BuildTargets
+            .getGenPath(
+                filesystem,
+                binaryTarget.withFlavors(
+                    platformFlavor,
+                    ImmutableFlavor.of("compile-" + sanitize("AppDelegate.m.o")),
+                    AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                "%s")
+            .resolve("AppDelegate.m.o"));
+
+    Path mainFileOutput = workspace.getPath(
+        BuildTargets
+            .getGenPath(
+                filesystem,
+                binaryTarget.withFlavors(
+                    platformFlavor,
+                    ImmutableFlavor.of("compile-" + sanitize("main.m.o")),
+                    AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                "%s")
+            .resolve("main.m.o"));
+
+    assertThat(Files.exists(binaryOutput), Matchers.equalTo(true));
+    assertThat(Files.exists(delegateFileOutput), Matchers.equalTo(false));
+    assertThat(Files.exists(mainFileOutput), Matchers.equalTo(false));
   }
 
   @Test

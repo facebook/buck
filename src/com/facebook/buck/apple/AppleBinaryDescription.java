@@ -20,7 +20,7 @@ import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
-import com.facebook.buck.cxx.ProvidesStaticLibraryDeps;
+import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.BuildTarget;
@@ -189,7 +189,7 @@ public class AppleBinaryDescription implements
           resolver,
           args,
           unstrippedBinaryBuildTarget,
-          (ProvidesStaticLibraryDeps) unstrippedBinaryRule);
+          (ProvidesLinkedBinaryDeps) unstrippedBinaryRule);
     } else {
       return unstrippedBinaryRule;
     }
@@ -201,7 +201,7 @@ public class AppleBinaryDescription implements
       BuildRuleResolver resolver,
       A args,
       BuildTarget unstrippedBinaryBuildTarget,
-      ProvidesStaticLibraryDeps unstrippedBinaryRule) throws NoSuchBuildTargetException {
+      ProvidesLinkedBinaryDeps unstrippedBinaryRule) throws NoSuchBuildTargetException {
     BuildTarget strippedBinaryBuildTarget = unstrippedBinaryBuildTarget
         .withAppendedFlavors(
             CxxStrip.RULE_FLAVOR,

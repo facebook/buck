@@ -16,7 +16,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.BuildRuleWithBinary;
-import com.facebook.buck.cxx.ProvidesStaticLibraryDeps;
+import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -86,7 +86,7 @@ public class AppleDebuggableBinary
    * Indicates whether its possible to wrap given _binary_ rule.
    */
   public static boolean canWrapBinaryBuildRule(BuildRule binaryBuildRule) {
-    return binaryBuildRule instanceof ProvidesStaticLibraryDeps;
+    return binaryBuildRule instanceof ProvidesLinkedBinaryDeps;
   }
 
   public static boolean isBuildRuleDebuggable(BuildRule buildRule) {
@@ -96,7 +96,7 @@ public class AppleDebuggableBinary
     }
 
     // fat/thin binaries and dynamic libraries may have dSYMs
-    if (buildRule instanceof ProvidesStaticLibraryDeps ||
+    if (buildRule instanceof ProvidesLinkedBinaryDeps ||
         buildRule instanceof AppleDebuggableBinary) {
       return true;
     }
@@ -113,7 +113,7 @@ public class AppleDebuggableBinary
   public static ImmutableSortedSet<BuildRule> getRequiredRuntimeDeps(
       AppleDebugFormat debugFormat,
       BuildRule strippedBinaryRule,
-      ProvidesStaticLibraryDeps unstrippedBinaryRule,
+      ProvidesLinkedBinaryDeps unstrippedBinaryRule,
       Optional<AppleDsym> appleDsym) {
     if (debugFormat == AppleDebugFormat.NONE) {
       return ImmutableSortedSet.of(strippedBinaryRule);
@@ -121,6 +121,7 @@ public class AppleDebuggableBinary
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.<BuildRule>naturalOrder();
     if (debugFormat == AppleDebugFormat.DWARF) {
       builder.add(unstrippedBinaryRule);
+      builder.addAll(unstrippedBinaryRule.getCompileDeps());
       builder.addAll(unstrippedBinaryRule.getStaticLibraryDeps());
     } else if (debugFormat == AppleDebugFormat.DWARF_AND_DSYM) {
       Preconditions.checkArgument(

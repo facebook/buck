@@ -22,7 +22,7 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.ProvidesStaticLibraryDeps;
+import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
@@ -267,7 +267,7 @@ public class AppleLibraryDescription implements
         CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle),
         resolver,
         strippedBinaryRule,
-        (ProvidesStaticLibraryDeps) unstrippedBinaryRule,
+        (ProvidesLinkedBinaryDeps) unstrippedBinaryRule,
         AppleDebugFormat.FLAVOR_DOMAIN.getValue(params.getBuildTarget()).or(defaultDebugFormat),
         delegate.getCxxPlatforms(),
         delegate.getDefaultCxxPlatform(),
