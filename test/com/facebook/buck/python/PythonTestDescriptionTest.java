@@ -23,6 +23,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
@@ -232,7 +233,9 @@ public class PythonTestDescriptionTest {
         new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .build(resolver);
     BuildRule pythonLibrary =
-        new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+        new PythonLibraryBuilder(
+                BuildTargetFactory.newInstance("//:lib"),
+                new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()))
             .setDeps(ImmutableSortedSet.of(cxxBinary.getBuildTarget()))
             .build(resolver);
     PythonTest pythonTest =

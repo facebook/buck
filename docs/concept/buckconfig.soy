@@ -2069,6 +2069,15 @@ your <code>.buckjavaargs</code> file</a>:
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'python' /}
+  {param name: 'base_module_strip' /}
+  {param example_value: '1' /}
+  {param description}
+    If specified this value will be applied to the `base_module_strip` for all Python targets.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'rust' /}
   {param description}

@@ -100,6 +100,7 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtensionBuilder builder = new CxxPythonExtensionBuilder(
         target,
         FlavorDomain.of("Python Platform", PY2, PY3),
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()),
         new CxxBuckConfig(FakeBuckConfig.builder().build()),
         CxxTestBuilder.createDefaultPlatforms());
 
@@ -133,6 +134,7 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtensionBuilder baseModuleBuilder = new CxxPythonExtensionBuilder(
         target2,
         FlavorDomain.of("Python Platform", PY2, PY3),
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()),
         new CxxBuckConfig(FakeBuckConfig.builder().build()),
         CxxTestBuilder.createDefaultPlatforms())
         .setBaseModule(name);
@@ -181,6 +183,7 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtensionBuilder builder = new CxxPythonExtensionBuilder(
         target,
         FlavorDomain.of("Python Platform", PY2, PY3),
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()),
         new CxxBuckConfig(FakeBuckConfig.builder().build()),
         CxxTestBuilder.createDefaultPlatforms())
         .setDeps(ImmutableSortedSet.of(cxxLibraryTarget));
@@ -239,6 +242,7 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtensionBuilder builder = new CxxPythonExtensionBuilder(
         target,
         FlavorDomain.of("Python Platform", PY2, PY3),
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()),
         new CxxBuckConfig(FakeBuckConfig.builder().build()),
         CxxTestBuilder.createDefaultPlatforms());
 
@@ -298,6 +302,7 @@ public class CxxPythonExtensionDescriptionTest {
         (CxxPythonExtensionDescription) new CxxPythonExtensionBuilder(
             target,
             FlavorDomain.of("Python Platform", PY2, PY3),
+            new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             CxxTestBuilder.createDefaultPlatforms())
             .build()
@@ -326,6 +331,7 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtensionBuilder builder = new CxxPythonExtensionBuilder(
         target,
         FlavorDomain.of("Python Platform", PY2, PY3),
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()),
         new CxxBuckConfig(FakeBuckConfig.builder().build()),
         CxxTestBuilder.createDefaultPlatforms());
 
@@ -373,6 +379,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:rule"),
             FlavorDomain.of("Python Platform", PY2, PY3),
+            new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             CxxTestBuilder.createDefaultPlatforms());
     CxxPythonExtension rule =
@@ -397,6 +404,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:rule"),
             FlavorDomain.of("Python Platform", PY2, PY3),
+            new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             CxxTestBuilder.createDefaultPlatforms());
     CxxPythonExtension rule =
@@ -424,6 +432,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:rule"),
             FlavorDomain.of("Python Platform", PY2, PY3),
+            new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             CxxTestBuilder.createDefaultPlatforms());
     builder.setLinkerFlags(ImmutableList.of("--flag"));
@@ -458,6 +467,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:rule"),
             FlavorDomain.of("Python Platform", PY2, PY3),
+            new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             CxxTestBuilder.createDefaultPlatforms());
     CxxPythonExtension rule =
@@ -499,6 +509,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:rule"),
             pythonPlatforms,
+            new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             CxxTestBuilder.createDefaultPlatforms())
         .setPlatformDeps(
@@ -565,6 +576,7 @@ public class CxxPythonExtensionDescriptionTest {
         (CxxPythonExtension) new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:ext"),
             FlavorDomain.of("Python Platform", PY2, PY3),
+            new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             CxxTestBuilder.createDefaultPlatforms())
             .setDeps(ImmutableSortedSet.of(cxxBinary.getBuildTarget()))

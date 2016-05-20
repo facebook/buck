@@ -266,7 +266,12 @@ public class PythonBinaryDescription implements
           "%s: must set exactly one of `main_module` and `main`",
           params.getBuildTarget());
     }
-    Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
+    Path baseModule = PythonUtil.getBasePath(
+        params.getBuildTarget(),
+        args.baseModule,
+        args.baseModuleStrip.isPresent()
+            ? args.baseModuleStrip
+            : pythonBuckConfig.getBaseModuleStrip());
 
     String mainModule;
     ImmutableMap.Builder<Path, SourcePath> modules = ImmutableMap.builder();
@@ -361,6 +366,7 @@ public class PythonBinaryDescription implements
     public Optional<String> mainModule;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<String> baseModule;
+    public Optional<Integer> baseModuleStrip;
     public Optional<Boolean> zipSafe;
     public Optional<ImmutableList<String>> buildArgs;
     public Optional<String> platform;

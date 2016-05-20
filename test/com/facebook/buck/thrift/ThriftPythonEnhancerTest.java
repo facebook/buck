@@ -20,17 +20,19 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.PythonLibrary;
 import com.facebook.buck.python.PythonTestUtils;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -54,17 +56,23 @@ public class ThriftPythonEnhancerTest {
   private static final BuildTarget TARGET = BuildTargetFactory.newInstance("//:test#python");
   private static final BuckConfig BUCK_CONFIG = FakeBuckConfig.builder().build();
   private static final ThriftBuckConfig THRIFT_BUCK_CONFIG = new ThriftBuckConfig(BUCK_CONFIG);
+  private static final PythonBuckConfig PYTHON_BUCK_CONFIG = new PythonBuckConfig(
+          BUCK_CONFIG,
+          new ExecutableFinder());
   private static final ThriftPythonEnhancer ENHANCER =
       new ThriftPythonEnhancer(
           THRIFT_BUCK_CONFIG,
+          PYTHON_BUCK_CONFIG,
           ThriftPythonEnhancer.Type.NORMAL);
   private static final ThriftPythonEnhancer TWISTED_ENHANCER =
       new ThriftPythonEnhancer(
           THRIFT_BUCK_CONFIG,
+          PYTHON_BUCK_CONFIG,
           ThriftPythonEnhancer.Type.TWISTED);
   private static final ThriftPythonEnhancer ASYNCIO_ENHANCER =
       new ThriftPythonEnhancer(
           THRIFT_BUCK_CONFIG,
+          PYTHON_BUCK_CONFIG,
           ThriftPythonEnhancer.Type.ASYNCIO);
 
   private static FakeBuildRule createFakeBuildRule(
@@ -194,17 +202,21 @@ public class ThriftPythonEnhancerTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
         ImmutableMap.of("thrift", strConfig.build())).build();
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig, new ExecutableFinder());
     ThriftPythonEnhancer enhancer =
         new ThriftPythonEnhancer(
             thriftBuckConfig,
+            pythonBuckConfig,
             ThriftPythonEnhancer.Type.NORMAL);
     ThriftPythonEnhancer twistedEnhancer =
         new ThriftPythonEnhancer(
             thriftBuckConfig,
+            pythonBuckConfig,
             ThriftPythonEnhancer.Type.TWISTED);
     ThriftPythonEnhancer asyncioEnhancer =
         new ThriftPythonEnhancer(
             thriftBuckConfig,
+            pythonBuckConfig,
             ThriftPythonEnhancer.Type.ASYNCIO);
 
     // With no options we just need to find the python thrift library.

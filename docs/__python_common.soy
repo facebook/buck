@@ -65,6 +65,21 @@
 {/template}
 
 /***/
+{template .base_module_strip_arg}
+{call buck.arg}
+  {param name: 'base_module_strip' /}
+  {param default : 'None' /}
+  {param desc}
+  An integer consisting of the number of path elements to strip from the beginning of the
+  `base_module`.  Often times you want to store your source under a directory named `src` or
+  something similar, but you want the Python namespace to be `import my.module` and not `import
+  src.my.module`.  Setting this to `1` would achieve this.  You can also set this globally in a
+  `python` section of `.buckconfig`.
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .platform_arg}
 {call buck.arg}
   {param name : 'platform' /}

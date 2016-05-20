@@ -18,15 +18,18 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.python.PythonLibraryBuilder;
+import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -57,7 +60,9 @@ public class MavenUberJarTest {
     BuildTarget javaTarget = BuildTargetFactory.newInstance("//:java");
 
     BuildRule pythonLibrary = PythonLibraryBuilder
-        .createBuilder(pythonTarget)
+        .createBuilder(
+                pythonTarget,
+                new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()))
         .build(ruleResolver);
 
     JavaLibraryBuilder javaLibraryBuilder = JavaLibraryBuilder

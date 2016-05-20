@@ -248,6 +248,10 @@ public class PythonBuckConfig {
     return delegate.getValue(SECTION, "pex_extension").or(".pex");
   }
 
+  public Optional<Integer> getBaseModuleStrip() {
+      return delegate.getInteger(SECTION, "base_module_strip");
+  }
+
   private static PythonVersion getPythonVersion(ProcessExecutor processExecutor, Path pythonPath)
       throws InterruptedException {
     try {

@@ -88,14 +88,17 @@ public class CxxPythonExtensionDescription implements
   public static final BuildRuleType TYPE = BuildRuleType.of("cxx_python_extension");
 
   private final FlavorDomain<PythonPlatform> pythonPlatforms;
+  private final PythonBuckConfig pythonBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public CxxPythonExtensionDescription(
       FlavorDomain<PythonPlatform> pythonPlatforms,
+      PythonBuckConfig pythonBuckConfig,
       CxxBuckConfig cxxBuckConfig,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.pythonPlatforms = pythonPlatforms;
+    this.pythonBuckConfig = pythonBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatforms = cxxPlatforms;
   }
@@ -326,7 +329,12 @@ public class CxxPythonExtensionDescription implements
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     final SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
-    Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
+    Path baseModule = PythonUtil.getBasePath(
+        params.getBuildTarget(),
+        args.baseModule,
+        args.baseModuleStrip.isPresent()
+            ? args.baseModuleStrip
+            : pythonBuckConfig.getBaseModuleStrip());
     final Path module = baseModule.resolve(getExtensionName(params.getBuildTarget()));
     return new CxxPythonExtension(params, pathResolver) {
 
@@ -442,6 +450,7 @@ public class CxxPythonExtensionDescription implements
   public static class Arg extends CxxConstructorArg {
     public Optional<PatternMatchedCollection<ImmutableSortedSet<BuildTarget>>> platformDeps;
     public Optional<String> baseModule;
+    public Optional<Integer> baseModuleStrip;
   }
 
 }
