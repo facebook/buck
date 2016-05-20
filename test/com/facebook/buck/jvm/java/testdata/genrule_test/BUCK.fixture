@@ -3,7 +3,8 @@ genrule(
   srcs = [
     'resource.base.txt'
   ],
-  cmd = 'eval cat $SRCS > $OUT',
+  bash = 'eval cat $SRCS > $OUT',
+  cmd_exe = 'powershell.exe -Command Out-File -Encoding ASCII $env:OUT -InputObject (Get-Content $env:SRCS)',
   out = 'resource.txt',
 )
 
