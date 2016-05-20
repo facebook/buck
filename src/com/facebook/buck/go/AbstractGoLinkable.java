@@ -16,9 +16,11 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
 
@@ -29,5 +31,6 @@ import java.nio.file.Path;
 abstract class AbstractGoLinkable {
 
   abstract ImmutableMap<Path, SourcePath> getGoLinkInput();
+  abstract ImmutableSet<BuildTarget> getExportedDeps();
 
 }

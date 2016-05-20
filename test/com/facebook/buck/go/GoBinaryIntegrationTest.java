@@ -148,4 +148,13 @@ public class GoBinaryIntegrationTest {
 
     workspace.runBuckCommand("run", "//:illegal_dep").assertFailure();
   }
+
+  @Test
+  public void exportedDeps() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "exported_deps", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:a").assertSuccess();
+  }
+
 }

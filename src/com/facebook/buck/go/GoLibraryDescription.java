@@ -84,15 +84,18 @@ public class GoLibraryDescription implements
 
     if (metadataClass.isAssignableFrom(GoLinkable.class)) {
       Preconditions.checkState(platform.isPresent());
-
       SourcePath output = new BuildTargetSourcePath(
           resolver.requireRule(buildTarget).getBuildTarget());
-      return Optional.of(metadataClass.cast(GoLinkable.builder()
-          .setGoLinkInput(ImmutableMap.of(
-              args.packageName.transform(MorePaths.TO_PATH)
-                  .or(goBuckConfig.getDefaultPackageName(buildTarget)),
-              output))
-          .build()));
+      return Optional.of(
+          metadataClass.cast(
+              GoLinkable.builder()
+                  .setGoLinkInput(
+                      ImmutableMap.of(
+                          args.packageName.transform(MorePaths.TO_PATH)
+                              .or(goBuckConfig.getDefaultPackageName(buildTarget)),
+                          output))
+                  .setExportedDeps(args.exportedDeps.or(ImmutableSortedSet.<BuildTarget>of()))
+                  .build()));
     } else if (buildTarget.getFlavors().contains(GoDescriptors.TRANSITIVE_LINKABLES_FLAVOR)) {
       Preconditions.checkState(platform.isPresent());
 
@@ -139,6 +142,7 @@ public class GoLibraryDescription implements
     public Optional<List<String>> assemblerFlags;
     public Optional<String> packageName;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
 
     @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
 

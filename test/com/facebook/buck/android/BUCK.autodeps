@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 6d46c3a150c3d4c643cac82ada1e337e61030f0e #@#
+#@# GENERATED FILE: DO NOT MODIFY abfe4e43263c848b75af772be206f2502d861b7b #@#
 {
   "aar-integration" : {
     "deps" : [
@@ -59,6 +59,7 @@
   },
   "integration" : {
     "deps" : [
+      "//src/com/facebook/buck/android:exceptions",
       "//src/com/facebook/buck/android:rules",
       "//src/com/facebook/buck/android:steps",
       "//src/com/facebook/buck/android:utils",

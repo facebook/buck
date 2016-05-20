@@ -1,0 +1,4 @@
+package b
+
+func b() {
+}
