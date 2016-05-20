@@ -74,16 +74,16 @@ public class FakeRuleKeyBuilderFactory
   }
 
   @Override
-  public Pair<RuleKey, ImmutableSet<SourcePath>> build(
+  public Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> build(
       BuildRule rule,
       Optional<ImmutableSet<SourcePath>> possibleDepFileSourcePaths,
       ImmutableList<DependencyFileEntry> inputs) throws IOException {
-    return new Pair<>(build(rule), ImmutableSet.<SourcePath>of());
+    return Optional.of(new Pair<>(build(rule), ImmutableSet.<SourcePath>of()));
   }
 
   @Override
-  public Pair<RuleKey, ImmutableSet<SourcePath>> buildManifestKey(BuildRule rule) {
-    return new Pair<>(build(rule), ImmutableSet.<SourcePath>of());
+  public Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> buildManifestKey(BuildRule rule) {
+    return Optional.of(new Pair<>(build(rule), ImmutableSet.<SourcePath>of()));
   }
 
 }

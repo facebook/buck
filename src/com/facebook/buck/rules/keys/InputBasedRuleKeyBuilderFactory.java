@@ -24,6 +24,7 @@ import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -44,7 +45,9 @@ import javax.annotation.Nullable;
  * @see SupportsInputBasedRuleKey
  */
 public class InputBasedRuleKeyBuilderFactory
-    extends ReflectiveRuleKeyBuilderFactory<InputBasedRuleKeyBuilderFactory.Builder, RuleKey> {
+    extends ReflectiveRuleKeyBuilderFactory<
+        InputBasedRuleKeyBuilderFactory.Builder,
+        Optional<RuleKey>> {
 
   private final FileHashCache fileHashCache;
   private final SourcePathResolver pathResolver;
@@ -88,7 +91,7 @@ public class InputBasedRuleKeyBuilderFactory
       // Construct the rule key, verifying that all the deps we saw when constructing it
       // are explicit dependencies of the rule.
       @Override
-      public RuleKey build() {
+      public Optional<RuleKey> build() {
         Result result = buildResult();
         for (BuildRule usedDep : result.getDeps()) {
           Preconditions.checkState(
@@ -98,13 +101,13 @@ public class InputBasedRuleKeyBuilderFactory
               usedDep.getBuildTarget(),
               rule.getDeps());
         }
-        return result.getRuleKey();
+        return Optional.of(result.getRuleKey());
       }
 
     };
   }
 
-  public class Builder extends RuleKeyBuilder<RuleKey> {
+  public class Builder extends RuleKeyBuilder<Optional<RuleKey>> {
 
     private final ImmutableList.Builder<Iterable<BuildRule>> deps = ImmutableList.builder();
     private final ImmutableList.Builder<Iterable<SourcePath>> inputs = ImmutableList.builder();
@@ -114,29 +117,32 @@ public class InputBasedRuleKeyBuilderFactory
     }
 
     @Override
-    public RuleKeyBuilder<RuleKey> setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
+    public Builder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
       Result result = cache.getUnchecked(appendable);
       deps.add(result.getDeps());
       inputs.add(result.getInputs());
-      return setAppendableRuleKey(key, result.getRuleKey());
+      setAppendableRuleKey(key, result.getRuleKey());
+      return this;
     }
 
     @Override
-    public RuleKeyBuilder<RuleKey> setReflectively(String key, @Nullable Object val) {
+    public Builder setReflectively(String key, @Nullable Object val) {
       if (val instanceof ArchiveDependencySupplier) {
-        return super.setReflectively(
+        super.setReflectively(
             key,
             ((ArchiveDependencySupplier) val).getArchiveMembers(pathResolver));
+      } else {
+        super.setReflectively(key, val);
       }
 
-      return super.setReflectively(key, val);
+      return this;
     }
 
     // Input-based rule keys are evaluated after all dependencies for a rule are available on
     // disk, and so we can always resolve the `Path` packaged in a `SourcePath`.  We hash this,
     // rather than the rule key from it's `BuildRule`.
     @Override
-    protected RuleKeyBuilder<RuleKey> setSourcePath(SourcePath sourcePath) {
+    protected Builder setSourcePath(SourcePath sourcePath) {
       if (inputHandling == InputHandling.HASH) {
         deps.add(pathResolver.getRule(sourcePath).asSet());
 
@@ -162,7 +168,7 @@ public class InputBasedRuleKeyBuilderFactory
     // inputs.  If we see a `BuildRule` when generating the rule key, this is likely a break in
     // that contract, so check for that.
     @Override
-    protected RuleKeyBuilder<RuleKey> setBuildRule(BuildRule rule) {
+    protected Builder setBuildRule(BuildRule rule) {
       throw new IllegalStateException(
           String.format(
               "Input-based rule key builders cannot process build rules. " +
@@ -183,8 +189,8 @@ public class InputBasedRuleKeyBuilderFactory
     }
 
     @Override
-    public RuleKey build() {
-      return buildRuleKey();
+    public Optional<RuleKey> build() {
+      return Optional.of(buildRuleKey());
     }
 
   }
