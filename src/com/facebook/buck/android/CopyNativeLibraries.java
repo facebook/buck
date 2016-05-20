@@ -332,6 +332,8 @@ public class CopyNativeLibraries extends AbstractBuildRule {
         return Optional.of(SdkConstants.ABI_ARMEABI);
       case ARMV7:
         return Optional.of(SdkConstants.ABI_ARMEABI_V7A);
+      case ARM64:
+        return Optional.of(SdkConstants.ABI_ARM64_V8A);
       case X86:
         return Optional.of(SdkConstants.ABI_INTEL_ATOM);
       case X86_64:
