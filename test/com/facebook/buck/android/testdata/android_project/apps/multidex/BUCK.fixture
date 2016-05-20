@@ -109,8 +109,8 @@ android_binary(
   keystore = '//keystores:debug',
   use_split_dex = True,
   reorder_classes_intra_dex = True,
-  dex_reorder_tool_file = "//externa_files:fake_reorder_tool.sh",
-  dex_reorder_data_dump_file = "//externa_files:fake_data_file",
+  dex_reorder_tool_file = "//external_files:fake_reorder_tool.sh",
+  dex_reorder_data_dump_file = "//external_files:fake_data_file",
   exopackage_modes = [
     'native_library',
     'secondary_dex',
