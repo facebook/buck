@@ -51,6 +51,19 @@ public interface Linker extends Tool {
   Iterable<String> soname(String soname);
 
   /**
+   * Specifies that the linker should link the files listed in file.
+   * This is an alternative to listing the files on the command line.
+   * The file names are listed one per line separated only by newlines.
+   * Spaces and tabs are assumed to be part of the file name.
+   *
+   * @param fileListPath the path to file which contains contents for file list to link
+   *
+   * @return the platform-specific way to support the feature.
+   * Empty list if feature is not supported.
+   */
+  Iterable<Arg> fileList(Path fileListPath);
+
+  /**
    * @return the placeholder used by the dynamic loader for the directory containing the top-level
    *     executable.
    */

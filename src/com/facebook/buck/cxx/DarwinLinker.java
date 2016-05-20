@@ -106,6 +106,15 @@ public class DarwinLinker implements Linker, HasLinkerMap {
   }
 
   @Override
+  public Iterable<Arg> fileList(Path fileListPath) {
+    return ImmutableList.<Arg>of(
+        new StringArg("-Xlinker"),
+        new StringArg("-filelist"),
+        new StringArg("-Xlinker"),
+        new StringArg(fileListPath.toString()));
+  }
+
+  @Override
   public String origin() {
     return "@executable_path";
   }

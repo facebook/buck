@@ -48,7 +48,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -768,9 +768,8 @@ public class CxxLibraryDescriptionTest {
             CxxLibraryBuilder.createDefaultPlatform(),
             Linker.LinkableDepType.STATIC_PIC);
     Arg firstArg = nativeLinkableInput.getArgs().get(0);
-    assertThat(firstArg, instanceOf(SourcePathArg.class));
-    SourcePathArg sourcePathArg = (SourcePathArg) firstArg;
-    ImmutableCollection<BuildRule> deps = sourcePathArg.getDeps(new SourcePathResolver(resolver));
+    assertThat(firstArg, instanceOf(FileListableLinkerInputArg.class));
+    ImmutableCollection<BuildRule> deps = firstArg.getDeps(new SourcePathResolver(resolver));
     assertThat(deps.size(), is(1));
     BuildRule buildRule = deps.asList().get(0);
     assertThat(
