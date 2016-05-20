@@ -135,6 +135,65 @@ public class DefaultAndroidDirectoryResolverTest {
   }
 
   @Test
+  public void throwAtGetNdkDirectoryIsEmpty() throws IOException {
+    Path ndkDir = tmpDir.newFolder("ndk-dir");
+    DefaultAndroidDirectoryResolver resolver = createResolver(
+        Optional.<String>absent(),
+        Optional.<Path>absent(),
+        Optional.of(ndkDir),
+        Optional.<Path>absent());
+
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(ndkDir.toAbsolutePath() + " does not contain a valid " +
+        "properties file for Android NDK.");
+    resolver.getNdkOrThrow();
+  }
+
+  @Test
+  public void throwAtGetNdkIsUnsupportedVersion() throws IOException {
+    Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9q")[0];
+    DefaultAndroidDirectoryResolver resolver = createResolver(
+        Optional.of("r9e"),
+        Optional.<Path>absent(),
+        Optional.of(ndkDir),
+        Optional.<Path>absent());
+
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage("Buck is configured to use Android NDK version r9e at " +
+        "ndk.dir or ANDROID_NDK or NDK_HOME. The found version is r9q located at " + ndkDir);
+    resolver.getNdkOrThrow();
+  }
+
+  @Test
+  public void throwAtGetNdkTargetVersionIsEmpty() throws IOException {
+    createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir-r9a", "r9a-rc2");
+    DefaultAndroidDirectoryResolver resolver = createResolver(
+        Optional.of(""),
+        Optional.<Path>absent(),
+        Optional.<Path>absent(),
+        Optional.of(tmpDir.getRoot()));
+
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage("Couldn't find a valid NDK under " + tmpDir.getRoot());
+    resolver.getNdkOrThrow();
+  }
+
+  @Test
+  public void throwAtGetNdkVersionFileIsEmpty() throws IOException {
+    createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir-r9a", "");
+    DefaultAndroidDirectoryResolver resolver = createResolver(
+        Optional.of(""),
+        Optional.<Path>absent(),
+        Optional.of(tmpDir.getRoot()),
+        Optional.<Path>absent());
+
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(tmpDir.getRoot() + " does not contain a valid properties " +
+        "file for Android NDK.");
+    resolver.getNdkOrThrow();
+  }
+
+  @Test
   public void getNdkSpecificVersion() throws IOException {
     Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9d (64-bit)")[0];
     DefaultAndroidDirectoryResolver resolver = createResolver(
@@ -228,22 +287,52 @@ public class DefaultAndroidDirectoryResolverTest {
   }
 
   @Test
-  public void testFindAndroidNdkDirThrowOnFailedRead() throws IOException {
-    Path ndkDir = tmpDir.newFolder("ndk-dir");
-    DefaultAndroidDirectoryResolver androidDirectoryResolver =
-        new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
-            Optional.<String>absent(),
-            Optional.<String>absent(),
-            createPropertiesFinder(
-                Optional.<Path>absent(),
-                Optional.of(ndkDir),
-                Optional.<Path>absent()));
+  public void scanNdkSpecificVersion() throws IOException {
+    Path expectedPath = createTmpNdkVersions(
+        NDK_PRE_R11_VERSION_FILENAME,
+        "ndk-dir-r9a", "r9a",
+        "ndk-dir-r9b", "r9b",
+        "ndk-dir-r9c", "r9c"
+    )[1];
+    DefaultAndroidDirectoryResolver resolver = createResolver(
+        Optional.of("r9b"),
+        Optional.<Path>absent(),
+        Optional.<Path>absent(),
+        Optional.of(tmpDir.getRoot()));
 
-    expectedException.expect(HumanReadableException.class);
-    expectedException.expectMessage(ndkDir.toAbsolutePath() + " does not contain a valid " +
-        "properties file for Android NDK.");
-    androidDirectoryResolver.getNdkOrThrow();
+    assertEquals(expectedPath, resolver.getNdkOrThrow());
+  }
+
+  @Test
+  public void scanNdkInexactMatchVersion() throws IOException {
+    Path expectedPath = createTmpNdkVersions(
+        NDK_POST_R11_VERSION_FILENAME,
+        "ndk-dir-r11", "Pkg.Desc = Android NDK\nPkg.Revision = 11.2",
+        "ndk-dir-r12", "Pkg.Desc = Android NDK\nPkg.Revision = 12.4",
+        "ndk-dir-r13", "Pkg.Desc = Android NDK\nPkg.Revision = 13.2")[2];
+    DefaultAndroidDirectoryResolver resolver = createResolver(
+        Optional.of("13"),
+        Optional.<Path>absent(),
+        Optional.<Path>absent(),
+        Optional.of(tmpDir.getRoot()));
+
+    assertEquals(expectedPath, resolver.getNdkOrThrow());
+  }
+
+  @Test
+  public void scanNdkNewestVersion() throws IOException {
+    Path expectedPath = createTmpNdkVersions(
+        NDK_POST_R11_VERSION_FILENAME,
+        "ndk-dir-r11", "Pkg.Desc = Android NDK\nPkg.Revision = 11.2",
+        "ndk-dir-r12", "Pkg.Desc = Android NDK\nPkg.Revision = 12.4",
+        "ndk-dir-r13", "Pkg.Desc = Android NDK\nPkg.Revision = 13.2")[2];
+    DefaultAndroidDirectoryResolver resolver = createResolver(
+        Optional.<String>absent(),
+        Optional.<Path>absent(),
+        Optional.<Path>absent(),
+        Optional.of(tmpDir.getRoot()));
+
+    assertEquals(expectedPath, resolver.getNdkOrThrow());
   }
 
   @Test
@@ -264,65 +353,6 @@ public class DefaultAndroidDirectoryResolverTest {
         "ndk.dir or ANDROID_NDK or NDK_HOME. The found version is r9q located at " + ndkDir);
     androidDirectoryResolver.getNdkOrThrow();
     }
-
-  @Test
-  public void testFindAndroidNdkDirScanThrowsOnFail() throws IOException {
-    tmpDir.newFolder("ndk-dir-r9a");
-    tmpDir.newFolder("ndk-dir-r9b");
-    createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir-r9c", "r9c");
-    DefaultAndroidDirectoryResolver androidDirectoryResolver =
-        new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
-            Optional.<String>absent(),
-            Optional.of("r9e"),
-            createPropertiesFinder(
-                Optional.<Path>absent(),
-                Optional.<Path>absent(),
-                Optional.of(tmpDir.getRoot())));
-
-    expectedException.expect(HumanReadableException.class);
-    expectedException.expectMessage("Couldn't find a valid NDK under " + tmpDir.getRoot());
-    androidDirectoryResolver.getNdkOrThrow();
-  }
-
-  @Test
-  public void testFindAndroidNdkDirScanTakesNewest() throws IOException {
-    Path releaseDir = createTmpNdkVersions(
-        NDK_PRE_R11_VERSION_FILENAME,
-        "ndk-dir-r9a", "r9a",
-        "ndk-dir-r9b", "r9b (64-bit)",
-        "ndk-dir-r9c", "r9c (64-bit)"
-    )[2];
-    DefaultAndroidDirectoryResolver androidDirectoryResolver =
-        new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
-            Optional.<String>absent(),
-            Optional.<String>absent(),
-            createPropertiesFinder(
-                Optional.<Path>absent(),
-                Optional.<Path>absent(),
-                Optional.of(tmpDir.getRoot())));
-
-    assertEquals(Optional.of(releaseDir), androidDirectoryResolver.getNdkOrAbsent());
-
-    releaseDir = createTmpNdkVersions(
-        NDK_POST_R11_VERSION_FILENAME,
-        "ndk-dir-r11c", "Pkg.Revision = 11.2.2725575",
-        "ndk-dir-r11b", "Pkg.Revision = 11.1.32"
-    )[0];
-    androidDirectoryResolver =
-        new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
-            Optional.<String>absent(),
-            Optional.<String>absent(),
-            createPropertiesFinder(
-                Optional.<Path>absent(),
-                Optional.<Path>absent(),
-                Optional.of(tmpDir.getRoot())));
-
-    assertEquals(Optional.of(releaseDir),
-        androidDirectoryResolver.getNdkOrAbsent());
-  }
 
   @Test
   public void notEqualWhenNdkIsDifferent() throws IOException {
@@ -353,75 +383,13 @@ public class DefaultAndroidDirectoryResolverTest {
   }
 
   @Test
-  public void testFindAndroidNdkDirScanTakesVersion() throws IOException {
-    Path expectedPath = createTmpNdkVersions(
-        NDK_PRE_R11_VERSION_FILENAME,
-        "ndk-dir-r9a", "r9a",
-        "ndk-dir-r9b", "r9b",
-        "ndk-dir-r9c", "r9c"
-    )[1];
-    DefaultAndroidDirectoryResolver androidDirectoryResolver =
-        new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
-            Optional.<String>absent(),
-            Optional.of("r9b"),
-            createPropertiesFinder(
-                Optional.<Path>absent(),
-                Optional.<Path>absent(),
-                Optional.of(tmpDir.getRoot())));
-
-    assertEquals(Optional.of(expectedPath),
-        androidDirectoryResolver.getNdkOrAbsent());
-  }
-
-  @Test
-  public void testFindAndroidNdkDirScanTakesVersionInexactMatch() throws IOException {
-    Path expectedPath = createTmpNdkVersions(
-        NDK_PRE_R11_VERSION_FILENAME,
-        "ndk-dir-r9a", "r9a-rc2",
-        "ndk-dir-r9b", "r9b-rc3 (64-bit)",
-        "ndk-dir-r9c", "r9c"
-    )[1];
-    DefaultAndroidDirectoryResolver androidDirectoryResolver =
-        new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
-            Optional.<String>absent(),
-            Optional.of("r9b"),
-            createPropertiesFinder(
-                Optional.<Path>absent(),
-                Optional.<Path>absent(),
-                Optional.of(tmpDir.getRoot())));
-
-    assertEquals(Optional.of(expectedPath),
-        androidDirectoryResolver.getNdkOrAbsent());
-  }
-
-  @Test
-    public void testFindAndroidNdkDirScanTakesVersionEmptyRequested() throws IOException {
+  public void testFindAndroidNdkDirScanTakesVersionEmptyRequested() throws IOException {
     createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir-r9a", "r9a-rc2");
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.of(""),
-            createPropertiesFinder(
-                Optional.<Path>absent(),
-                Optional.<Path>absent(),
-                Optional.of(tmpDir.getRoot())));
-
-    expectedException.expect(HumanReadableException.class);
-    expectedException.expectMessage("Couldn't find a valid NDK under " + tmpDir.getRoot());
-    androidDirectoryResolver.getNdkOrThrow();
-  }
-
-  @Test
-  public void testFindAndroidNdkDirScanTakesVersionEmptyFound() throws IOException {
-    createTmpNdkVersions("ndk-dir-r9a", "");
-    DefaultAndroidDirectoryResolver androidDirectoryResolver =
-        new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
-            Optional.<String>absent(),
-            Optional.of("r9e"),
             createPropertiesFinder(
                 Optional.<Path>absent(),
                 Optional.<Path>absent(),
