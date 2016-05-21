@@ -32,6 +32,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
+import com.facebook.buck.step.fs.TouchStep;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -141,19 +142,23 @@ public class GoCompile extends AbstractBuildRule {
 
     boolean allowExternalReferences = !asmSrcs.isEmpty();
 
-    steps.add(new GoCompileStep(
-        getProjectFilesystem().getRootPath(),
-        compiler.getEnvironment(getResolver()),
-        compiler.getCommandPrefix(getResolver()),
-        compilerFlags,
-        packageName,
-        compileSrcs,
-        importPathMap,
-        ImmutableList.of(symlinkTree.getRoot()),
-        asmHeaderPath,
-        allowExternalReferences,
-        platform,
-        output));
+    if (compileSrcs.isEmpty()) {
+      steps.add(new TouchStep(getProjectFilesystem(), output));
+    } else {
+      steps.add(new GoCompileStep(
+          getProjectFilesystem().getRootPath(),
+          compiler.getEnvironment(getResolver()),
+          compiler.getCommandPrefix(getResolver()),
+          compilerFlags,
+          packageName,
+          compileSrcs,
+          importPathMap,
+          ImmutableList.of(symlinkTree.getRoot()),
+          asmHeaderPath,
+          allowExternalReferences,
+          platform,
+          output));
+    }
 
     if (!asmSrcs.isEmpty()) {
       Path asmIncludeDir = BuildTargets.getScratchPath(

@@ -49,7 +49,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
@@ -109,7 +108,9 @@ abstract class GoDescriptors {
       ImmutableSet<SourcePath> srcs,
       List<String> compilerFlags,
       List<String> assemblerFlags,
-      GoPlatform platform) throws NoSuchBuildTargetException {
+      GoPlatform platform,
+      Iterable<BuildTarget> deps)
+      throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     Preconditions.checkState(
@@ -119,9 +120,7 @@ abstract class GoDescriptors {
         params.getBuildTarget(),
         resolver,
         platform,
-        FluentIterable.from(params.getDeps())
-            .transform(HasBuildTarget.TO_TARGET)
-            .toSortedSet(Ordering.natural()));
+        deps);
 
     BuildTarget target = createSymlinkTreeTarget(params.getBuildTarget());
     SymlinkTree symlinkTree = makeSymlinkTree(
@@ -206,7 +205,9 @@ abstract class GoDescriptors {
         srcs,
         compilerFlags,
         assemblerFlags,
-        platform);
+        platform,
+        FluentIterable.from(params.getDeclaredDeps().get())
+            .transform(HasBuildTarget.TO_TARGET));
     resolver.addToIndex(library);
 
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -341,7 +342,7 @@ abstract class GoDescriptors {
       final BuildTarget sourceTarget,
       final BuildRuleResolver resolver,
       final GoPlatform platform,
-      ImmutableSet<BuildTarget> targets)
+      Iterable<BuildTarget> targets)
       throws NoSuchBuildTargetException {
     final ImmutableSet.Builder<GoLinkable> linkables = ImmutableSet.builder();
     new AbstractBreadthFirstThrowingTraversal<BuildTarget, NoSuchBuildTargetException>(targets) {

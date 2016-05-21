@@ -1,4 +1,4 @@
 package b
 
-func b() {
+func B() {
 }

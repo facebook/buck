@@ -20,6 +20,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
@@ -42,6 +43,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -295,7 +297,9 @@ public class GoTestDescription implements
               return ImmutableSortedSet.<BuildRule>naturalOrder()
                   .addAll(originalParams.getExtraDeps().get())
                   // Make sure to include dynamically generated sources as deps.
-                  .addAll(sourcePathResolver.filterBuildRuleInputs(libraryArg.srcs))
+                  .addAll(
+                      sourcePathResolver.filterBuildRuleInputs(
+                          libraryArg.srcs.or(ImmutableSortedSet.<SourcePath>of())))
                   .build();
             }
           });
@@ -306,7 +310,7 @@ public class GoTestDescription implements
           goBuckConfig,
           packageName,
           ImmutableSet.<SourcePath>builder()
-              .addAll(libraryArg.srcs)
+              .addAll(libraryArg.srcs.or(ImmutableSortedSet.<SourcePath>of()))
               .addAll(args.srcs)
               .build(),
           ImmutableList.<String>builder()
@@ -317,7 +321,9 @@ public class GoTestDescription implements
               .addAll(libraryArg.assemblerFlags.get())
               .addAll(args.assemblerFlags.get())
               .build(),
-          platform);
+          platform,
+          FluentIterable.from(params.getDeclaredDeps().get())
+              .transform(HasBuildTarget.TO_TARGET));
     } else {
       testLibrary = GoDescriptors.createGoCompileRule(
           params,
@@ -327,7 +333,9 @@ public class GoTestDescription implements
           args.srcs,
           args.compilerFlags.get(),
           args.assemblerFlags.get(),
-          platform);
+          platform,
+          FluentIterable.from(params.getDeclaredDeps().get())
+              .transform(HasBuildTarget.TO_TARGET));
     }
 
     return testLibrary;

@@ -4,6 +4,6 @@ import "a"
 import "b"
 
 func main() {
-  a.a()
-  b.b()
+  a.A()
+  b.B()
 }

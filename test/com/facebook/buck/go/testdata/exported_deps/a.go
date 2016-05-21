@@ -2,6 +2,6 @@ package a
 
 import "b"
 
-func a() {
-  b.b()
+func A() {
+  b.B()
 }
