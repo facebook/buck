@@ -49,6 +49,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -346,6 +347,7 @@ public class OCamlIntegrationTest {
   }
 
   @Test
+  @Ignore("Redesign test so it does not depend on compiler/platform-specific binary artifacts.")
   public void testPrebuiltLibraryMac() throws IOException {
     if (Platform.detect() == Platform.MACOS) {
       ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
