@@ -59,7 +59,7 @@ public class ErrorExtractorTest {
             "        .build().missing();\n" +
             "                ^\n" +
             "  symbol:   method missing()\n" +
-            "  location: class com.squareup.okhttp.Request\n";
+            "  location: class okhttp3.Request\n";
 
         ErrorExtractor errorExtractor = new ErrorExtractor(str);
         ImmutableList<CompilerErrorItem> errors = errorExtractor.getErrors();

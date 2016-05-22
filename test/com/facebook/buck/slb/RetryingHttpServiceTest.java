@@ -17,7 +17,7 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.squareup.okhttp.Request;
+import okhttp3.Request;
 
 import org.easymock.EasyMock;
 import org.junit.Assert;

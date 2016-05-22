@@ -16,7 +16,7 @@
 
 package com.facebook.buck.slb;
 
-import com.squareup.okhttp.Response;
+import okhttp3.Response;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,12 +46,7 @@ public class LoadBalancedHttpResponse extends OkHttpResponseWrapper {
 
   @Override
   public InputStream getBody() throws IOException {
-    try {
-      return new LoadBalancedInputStream(getResponse().body().byteStream());
-    } catch (IOException e) {
-      reportConnectionResultIfFirst(false);
-      throw e;
-    }
+    return new LoadBalancedInputStream(getResponse().body().byteStream());
   }
 
   @Override

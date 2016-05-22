@@ -22,9 +22,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,10 +59,11 @@ public class ClientSideSlb implements HttpLoadBalancer {
         config.getLatencyCheckTimeRangeMillis(),
         config.getMaxAcceptableLatencyMillis(),
         config.getEventBus());
-    this.pingClient = config.getPingHttpClient();
-    this.pingClient.setConnectTimeout(config.getConnectionTimeoutMillis(), TimeUnit.MILLISECONDS);
-    this.pingClient.setReadTimeout(config.getConnectionTimeoutMillis(), TimeUnit.MILLISECONDS);
-    this.pingClient.setWriteTimeout(config.getConnectionTimeoutMillis(), TimeUnit.MILLISECONDS);
+    OkHttpClient.Builder pingClientBuilder = config.getPingHttpClient().newBuilder();
+    pingClientBuilder.connectTimeout(config.getConnectionTimeoutMillis(), TimeUnit.MILLISECONDS);
+    pingClientBuilder.readTimeout(config.getConnectionTimeoutMillis(), TimeUnit.MILLISECONDS);
+    pingClientBuilder.writeTimeout(config.getConnectionTimeoutMillis(), TimeUnit.MILLISECONDS);
+    this.pingClient = pingClientBuilder.build();
 
     this.schedulerService = config.getSchedulerService();
     backgroundHealthChecker = this.schedulerService.scheduleWithFixedDelay(

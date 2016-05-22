@@ -1,6 +1,6 @@
 prebuilt_jar(
   name = 'okhttp',
-  binary_jar = 'okhttp-2.7.4.jar',
+  binary_jar = 'okhttp-3.2.0.jar',
   javadoc_url = 'http://square.github.io/okhttp/javadoc',
   deps = [
     '//third-party/java/okio:okio',
