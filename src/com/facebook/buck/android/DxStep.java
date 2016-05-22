@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -29,8 +30,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -195,13 +198,19 @@ public class DxStep extends ShellStep {
     Preconditions.checkState(argv.get(1).equals("--dex"));
     ImmutableList<String> args = argv.subList(2, argv.size());
 
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    PrintStream stderrStream = new PrintStream(stderr);
     try {
       com.android.dx.command.dexer.Main dexer = new com.android.dx.command.dexer.Main();
       int returncode = dexer.run(
           args.toArray(new String[args.size()]),
           context.getStdOut(),
-          context.getStdErr()
+          stderrStream
       );
+      String stdErrOutput = stderr.toString();
+      if (!stdErrOutput.isEmpty()) {
+        context.postEvent(ConsoleEvent.warning("%s", stdErrOutput));
+      }
       if (returncode == 0) {
         resourcesReferencedInCode = dexer.getReferencedResourceNames();
       }
