@@ -155,7 +155,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     // Verify static native linkable input.
     NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
-        ImmutableList.<Arg>of(
+        ImmutableList.of(
             FileListableLinkerInputArg.withSourcePathArg(
                 new SourcePathArg(
                     pathResolver,
@@ -664,18 +664,9 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) new PrebuiltCxxLibraryBuilder(TARGET)
             .setForceStatic(true)
             .build(resolver, filesystem);
-    NativeLinkableInput nativeLinkableInput =
-        prebuiltCxxLibrary.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            Linker.LinkableDepType.STATIC);
     assertThat(
-        Arg.stringify(nativeLinkableInput.getArgs()).get(0),
-        Matchers.endsWith(".a"));
-    assertThat(
-        prebuiltCxxLibrary.getSharedLibraries(
-            CxxPlatformUtils.DEFAULT_PLATFORM)
-            .entrySet(),
-        Matchers.empty());
+        prebuiltCxxLibrary.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.equalTo(NativeLinkable.Linkage.STATIC));
   }
 
   @Test

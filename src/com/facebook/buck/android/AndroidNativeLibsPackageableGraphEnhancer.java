@@ -91,13 +91,16 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     boolean hasNativeLibs = false;
 
     for (NativeLinkable nativeLinkable : linkables) {
-      ImmutableMap<String, SourcePath> solibs = nativeLinkable.getSharedLibraries(
-          platform.getCxxPlatform());
-      for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
-        builder.put(
-            new Pair<>(targetCpuType, entry.getKey()),
-            entry.getValue());
-        hasNativeLibs = true;
+      if (nativeLinkable.getPreferredLinkage(platform.getCxxPlatform()) !=
+          NativeLinkable.Linkage.STATIC) {
+        ImmutableMap<String, SourcePath> solibs = nativeLinkable.getSharedLibraries(
+            platform.getCxxPlatform());
+        for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
+          builder.put(
+              new Pair<>(targetCpuType, entry.getKey()),
+              entry.getValue());
+          hasNativeLibs = true;
+        }
       }
     }
     return hasNativeLibs;

@@ -304,9 +304,6 @@ public class CxxLibrary
     if (headerOnly.apply(cxxPlatform)) {
       return ImmutableMap.of();
     }
-    if (linkage == Linkage.STATIC) {
-      return ImmutableMap.of();
-    }
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableMap.of();
     }

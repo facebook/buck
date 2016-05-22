@@ -18,9 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
@@ -31,11 +29,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -49,7 +45,6 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -164,75 +159,6 @@ public class CxxLibraryTest {
     // Verify that the implemented BuildRule methods are effectively unused.
     assertEquals(ImmutableList.<Step>of(), cxxLibrary.getBuildSteps(null, null));
     assertNull(cxxLibrary.getPathToOutput());
-  }
-
-  @Test
-  public void staticLinkage() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    CxxPlatform cxxPlatform =
-        DefaultCxxPlatforms.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
-
-    BuildTarget staticPicLibraryTarget =
-        params.getBuildTarget().withAppendedFlavors(
-            cxxPlatform.getFlavor(),
-            CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
-    ruleResolver.addToIndex(
-        Archive.from(
-            staticPicLibraryTarget,
-            new FakeBuildRuleParamsBuilder(staticPicLibraryTarget).build(),
-            pathResolver,
-            cxxPlatform.getAr(),
-            cxxPlatform.getRanlib(),
-            Archive.Contents.NORMAL,
-            BuildTargets.getGenPath(
-                params.getProjectFilesystem(),
-                staticPicLibraryTarget,
-                "%s/libfoo.a"),
-            ImmutableList.<SourcePath>of()));
-
-    // Construct a CxxLibrary object to test.
-    CxxLibrary cxxLibrary = new CxxLibrary(
-        params,
-        ruleResolver,
-        pathResolver,
-        params.getDeclaredDeps().get(),
-        /* hasExportedHeaders */ Predicates.<CxxPlatform>alwaysTrue(),
-        /* headerOnly */ Predicates.<CxxPlatform>alwaysFalse(),
-        Functions.constant(ImmutableMultimap.<CxxSource.Type, String>of()),
-        /* exportedLinkerFlags */ Functions.<Iterable<Arg>>constant(ImmutableList.<Arg>of()),
-        /* linkTargetInput */ Functions.constant(NativeLinkableInput.of()),
-        /* supportedPlatformsRegex */ Optional.<Pattern>absent(),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of(),
-        NativeLinkable.Linkage.STATIC,
-        /* linkWhole */ false,
-        Optional.<String>absent(),
-        ImmutableSortedSet.<BuildTarget>of(),
-        /* isAsset */ false);
-
-    assertThat(
-        cxxLibrary.getSharedLibraries(cxxPlatform).entrySet(),
-        Matchers.empty());
-
-    // Verify that
-    NativeLinkableInput expectedSharedNativeLinkableInput =
-        NativeLinkableInput.of(
-            ImmutableList.<Arg>of(
-                FileListableLinkerInputArg.withSourcePathArg(
-                    new SourcePathArg(
-                        pathResolver,
-                        new BuildTargetSourcePath(staticPicLibraryTarget)))),
-            ImmutableSet.<FrameworkPath>of(),
-            ImmutableSet.<FrameworkPath>of());
-    assertEquals(
-        expectedSharedNativeLinkableInput,
-        cxxLibrary.getNativeLinkableInput(
-            cxxPlatform,
-            Linker.LinkableDepType.SHARED));
   }
 
   @Test

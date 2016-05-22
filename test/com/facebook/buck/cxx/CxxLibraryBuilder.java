@@ -85,6 +85,16 @@ public class CxxLibraryBuilder extends
     return this;
   }
 
+  public CxxLibraryBuilder setForceStatic(boolean forceStatic) {
+    arg.forceStatic = Optional.of(forceStatic);
+    return this;
+  }
+
+  public CxxLibraryBuilder setPreferredLinkage(NativeLinkable.Linkage linkage) {
+    arg.preferredLinkage = Optional.of(linkage);
+    return this;
+  }
+
   public CxxLibraryBuilder setTests(ImmutableSortedSet<BuildTarget> tests) {
     arg.tests = Optional.of(tests);
     return this;

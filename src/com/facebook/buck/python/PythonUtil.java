@@ -49,6 +49,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
@@ -255,15 +256,14 @@ public class PythonUtil {
             params.getBuildTarget());
       }
     } else {
-      Map<BuildTarget, NativeLinkable> allNativeRoots = new LinkedHashMap<>();
-      allNativeRoots.putAll(nativeLinkableRoots);
 
       // For regular linking, add all extensions via the package components interface.
+      Map<BuildTarget, NativeLinkable> extensionNativeDeps = new LinkedHashMap<>();
       for (Map.Entry<BuildTarget, CxxPythonExtension> entry : extensions.entrySet()) {
         allComponents.addComponent(
             entry.getValue().getPythonPackageComponents(pythonPlatform, cxxPlatform),
             entry.getKey());
-        allNativeRoots.putAll(
+        extensionNativeDeps.putAll(
             Maps.uniqueIndex(
                 entry.getValue().getNativeLinkTarget(pythonPlatform)
                     .getSharedNativeLinkTargetDeps(cxxPlatform),
@@ -272,10 +272,13 @@ public class PythonUtil {
 
       // Add all the native libraries.
       ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
-          NativeLinkables.getTransitiveNativeLinkables(cxxPlatform, allNativeRoots.values());
+          NativeLinkables.getTransitiveNativeLinkables(
+              cxxPlatform,
+              Iterables.concat(nativeLinkableRoots.values(), extensionNativeDeps.values()));
       for (NativeLinkable nativeLinkable : nativeLinkables.values()) {
         NativeLinkable.Linkage linkage = nativeLinkable.getPreferredLinkage(cxxPlatform);
-        if (linkage != NativeLinkable.Linkage.STATIC) {
+        if (nativeLinkableRoots.containsKey(nativeLinkable.getBuildTarget()) ||
+            linkage != NativeLinkable.Linkage.STATIC) {
           ImmutableMap<String, SourcePath> libs = nativeLinkable.getSharedLibraries(cxxPlatform);
           for (Map.Entry<String, SourcePath> ent : libs.entrySet()) {
             allComponents.addNativeLibraries(

@@ -1320,4 +1320,20 @@ public class CxxLibraryDescriptionTest {
     assertThat(lib.getContents(), Matchers.equalTo(Archive.Contents.THIN));
   }
 
+  @Test
+  public void forceStatic() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    CxxLibraryBuilder cxxLibraryBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setPreferredLinkage(NativeLinkable.Linkage.STATIC);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(cxxLibraryBuilder.build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
+    CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(resolver, filesystem);
+    assertThat(
+        rule.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.equalTo(NativeLinkable.Linkage.STATIC));
+  }
+
 }

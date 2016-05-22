@@ -389,7 +389,7 @@ public class PrebuiltCxxLibrary
       throws NoSuchBuildTargetException {
     String resolvedSoname = getSoname(cxxPlatform);
     ImmutableMap.Builder<String, SourcePath> solibs = ImmutableMap.builder();
-    if (!headerOnly && !provided && getPreferredLinkage(cxxPlatform) != Linkage.STATIC) {
+    if (!headerOnly && !provided) {
       SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);
       solibs.put(resolvedSoname, sharedLibrary);
     }
