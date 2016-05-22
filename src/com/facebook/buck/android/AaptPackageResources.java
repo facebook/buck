@@ -46,6 +46,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Ordering;
 
@@ -131,14 +132,27 @@ public class AaptPackageResources extends AbstractBuildRule
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    // Symlink the manifest to a path named AndroidManifest.xml. Do this before running any other
-    // commands to ensure that it is available at the desired path.
+    // Copy manifest to a path named AndroidManifest.xml after replacing the manifest placeholders
+    // if needed. Do this before running any other commands to ensure that it is available at the
+    // desired path.
     steps.add(
-        new MkdirStep(getProjectFilesystem(), getAndroidManifestXml().getParent()),
-        CopyStep.forFile(
-            getProjectFilesystem(),
-            getResolver().getAbsolutePath(manifest),
-            getAndroidManifestXml()));
+        new MkdirStep(getProjectFilesystem(), getAndroidManifestXml().getParent()));
+
+    Optional<ImmutableMap<String, String>> placeholders = manifestEntries.getPlaceholders();
+    if (placeholders.isPresent() && !placeholders.get().isEmpty()) {
+      steps.add(
+          new ReplaceManifestPlaceholdersStep(
+              getProjectFilesystem(),
+              getResolver().getAbsolutePath(manifest),
+              getAndroidManifestXml(),
+              placeholders.get()));
+    } else {
+      steps.add(
+          CopyStep.forFile(
+              getProjectFilesystem(),
+              getResolver().getAbsolutePath(manifest),
+              getAndroidManifestXml()));
+    }
 
     steps.add(new MkdirStep(getProjectFilesystem(), getResourceApkPath().getParent()));
 

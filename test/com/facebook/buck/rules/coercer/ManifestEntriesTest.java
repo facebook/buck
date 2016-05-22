@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
@@ -40,6 +41,8 @@ public class ManifestEntriesTest {
     assertTrue(ManifestEntries.builder().setVersionCode(1).build().hasAny());
     assertTrue(ManifestEntries.builder().setVersionName("").build().hasAny());
     assertTrue(ManifestEntries.builder().setDebugMode(false).build().hasAny());
+    assertTrue(ManifestEntries.builder().setPlaceholders(
+        ImmutableMap.of("key1", "val1")).build().hasAny());
   }
 
 
@@ -58,6 +61,8 @@ public class ManifestEntriesTest {
     expect(ruleKeyBuilder.setReflectively("versionName", Optional.of("thirteen")))
         .andReturn(ruleKeyBuilder);
     expect(ruleKeyBuilder.setReflectively("debugMode", Optional.absent()))
+        .andReturn(ruleKeyBuilder);
+    expect(ruleKeyBuilder.setReflectively("placeholders", Optional.absent()))
         .andReturn(ruleKeyBuilder);
 
     replay(ruleKeyBuilder);

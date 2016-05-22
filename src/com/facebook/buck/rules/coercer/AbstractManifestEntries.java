@@ -20,6 +20,7 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
 
@@ -41,6 +42,8 @@ abstract class AbstractManifestEntries implements RuleKeyAppendable {
   protected abstract Optional<String> getVersionName();
   @Value.Parameter
   protected abstract Optional<Boolean> getDebugMode();
+  @Value.Parameter
+  protected abstract Optional<ImmutableMap<String, String>> getPlaceholders();
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
@@ -49,7 +52,8 @@ abstract class AbstractManifestEntries implements RuleKeyAppendable {
         .setReflectively("targetSdkVersion", getTargetSdkVersion())
         .setReflectively("versionCode", getVersionCode())
         .setReflectively("versionName", getVersionName())
-        .setReflectively("debugMode", getDebugMode());
+        .setReflectively("debugMode", getDebugMode())
+        .setReflectively("placeholders", getPlaceholders());
   }
 
   /**
@@ -60,7 +64,8 @@ abstract class AbstractManifestEntries implements RuleKeyAppendable {
         getTargetSdkVersion().isPresent() ||
         getVersionName().isPresent() ||
         getVersionCode().isPresent() ||
-        getDebugMode().isPresent();
+        getDebugMode().isPresent() ||
+        getPlaceholders().isPresent();
   }
 
   /**
