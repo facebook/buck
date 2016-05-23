@@ -590,7 +590,7 @@ public class BuckConfig {
     if (sampleRate.isPresent()) {
       return SampleRate.of(sampleRate.get());
     }
-    return SampleRate.of(0.50f);
+    return SampleRate.of(0.25f);
   }
 
   public Optional<ImmutableSet<PatternAndMessage>> getUnexpectedFlavorsMessages() {
