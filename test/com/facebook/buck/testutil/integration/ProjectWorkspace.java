@@ -53,6 +53,7 @@ import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -61,8 +62,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.martiansoftware.nailgun.NGContext;
-
-import org.junit.rules.TemporaryFolder;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
@@ -134,27 +133,34 @@ public class ProjectWorkspace {
   private final Path templatePath;
   private final Path destPath;
 
-  /**
-   * @param templateDir The directory that contains the template version of the project.
-   * @param targetFolder The directory where the clone of the template directory should be
-   *     written. By requiring a {@link TemporaryFolder} rather than a {@link File}, we can ensure
-   *     that JUnit will clean up the test correctly.
-   */
-  public ProjectWorkspace(Path templateDir, Path targetFolder) {
-    Preconditions.checkNotNull(templateDir);
-    Preconditions.checkNotNull(targetFolder);
+  @VisibleForTesting
+  ProjectWorkspace(Path templateDir, Path targetFolder) {
     this.templatePath = templateDir;
     this.destPath = targetFolder;
   }
 
-  public ProjectWorkspace(File templateDir, TemporaryPaths temporaryFolder) {
-    this(templateDir.toPath(), temporaryFolder.getRoot());
+  /**
+   * Creates a new workspace by copying the contents of existingWorkspace to targetFolder when
+   * {@link #setUp()} is invoked. In general, prefer
+   * {@link TestDataHelper#createProjectWorkspaceForScenario(Object, String, TemporaryRoot)} to this
+   * method.
+   * <p>
+   * A valid reason to use this API is for performance reasons. Specifically, it may be expensive to
+   * put a workspace into a particular state. If you have various scenarios that you want to test
+   * based on that state, then it makes sense to create the initial state once in
+   * {@code @BeforeClass} and then use this method to create a new workspace for the scenario you
+   * are about to test in {@code @Before}.
+   *
+   * @param existingWorkspace The directory that contains the template version of the project.
+   * @param targetFolder The directory where the clone of the template directory should be
+   *     written. By requiring a {@link TemporaryRoot} rather than a {@link File}, we can ensure
+   *     that JUnit will clean up the test correctly.
+   */
+  public static ProjectWorkspace cloneExistingWorkspaceIntoNewFolder(
+      ProjectWorkspace existingWorkspace,
+      TemporaryRoot targetFolder) {
+    return new ProjectWorkspace(existingWorkspace.getDestPath(), targetFolder.getRootPath());
   }
-
-  public ProjectWorkspace(Path templateDir, TemporaryPaths temporaryFolder) {
-    this(templateDir, temporaryFolder.getRoot());
-  }
-
 
   /**
    * This will copy the template directory, renaming files named {@code foo.fixture} to {@code foo}

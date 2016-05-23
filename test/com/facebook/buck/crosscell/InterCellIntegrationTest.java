@@ -43,6 +43,7 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.integration.TemporaryRoot;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
@@ -176,11 +177,8 @@ public class InterCellIntegrationTest {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     ProjectWorkspace primary = createWorkspace("inter-cell/multi-cell/primary");
-    primary.setUp();
     ProjectWorkspace secondary = createWorkspace("inter-cell/multi-cell/secondary");
-    secondary.setUp();
     ProjectWorkspace ternary = createWorkspace("inter-cell/multi-cell/ternary");
-    ternary.setUp();
     registerCell(secondary, "ternary", ternary);
     registerCell(primary, "secondary", secondary);
 
@@ -372,10 +370,7 @@ public class InterCellIntegrationTest {
       String secondaryPath) throws IOException {
 
     ProjectWorkspace primary = createWorkspace(primaryPath);
-    primary.setUp();
-
     ProjectWorkspace secondary = createWorkspace(secondaryPath);
-    secondary.setUp();
 
     registerCell(primary, "secondary", secondary);
 
@@ -383,10 +378,19 @@ public class InterCellIntegrationTest {
   }
 
   private ProjectWorkspace createWorkspace(String scenarioName) throws IOException {
-    Path templateDir = TestDataHelper.getTestDataScenario(this, scenarioName);
-    return new ProjectWorkspace(
-        templateDir,
-        tmp.newFolder());
+    final Path tmpSubfolder = tmp.newFolder();
+    TemporaryRoot temporaryRoot = new TemporaryRoot() {
+      @Override
+      public Path getRootPath() {
+        return tmpSubfolder;
+      }
+    };
+    ProjectWorkspace projectWorkspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        scenarioName,
+        temporaryRoot);
+    projectWorkspace.setUp();
+    return projectWorkspace;
   }
 
   private void registerCell(

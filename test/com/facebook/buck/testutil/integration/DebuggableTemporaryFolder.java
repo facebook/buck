@@ -36,7 +36,7 @@ import java.nio.file.Path;
  * public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder().doNotDeleteOnExit();
  * </pre>
  */
-public class DebuggableTemporaryFolder extends TemporaryFolder {
+public class DebuggableTemporaryFolder extends TemporaryFolder implements TemporaryRoot {
 
   private String name;
   private boolean doNotDeleteOnExit;
@@ -75,6 +75,7 @@ public class DebuggableTemporaryFolder extends TemporaryFolder {
     }
   }
 
+  @Override
   public Path getRootPath() {
     return getRoot().toPath();
   }

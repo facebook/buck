@@ -55,6 +55,8 @@ public class AndroidExopackageBinaryIntegrationTest {
   public static TemporaryPaths projectFolderWithPrebuiltTargets =
       new TemporaryPaths();
 
+  private static ProjectWorkspace workspaceWithPrebuiltTargets;
+
   @Rule
   public TemporaryPaths tmpFolder = new TemporaryPaths();
 
@@ -66,17 +68,17 @@ public class AndroidExopackageBinaryIntegrationTest {
   public static void setUpOnce() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+    workspaceWithPrebuiltTargets = TestDataHelper.createProjectWorkspaceForScenario(
         new AndroidBinaryIntegrationTest(),
         "android_project",
         projectFolderWithPrebuiltTargets);
-    workspace.setUp();
+    workspaceWithPrebuiltTargets.setUp();
 
     Properties properties = System.getProperties();
     properties.setProperty("buck.native_exopackage_fake_path",
         Paths.get("assets/android/native-exopackage-fakes.apk").toAbsolutePath().toString());
 
-    workspace.runBuckBuild(
+    workspaceWithPrebuiltTargets.runBuckBuild(
         DEX_EXOPACKAGE_TARGET,
         NATIVE_EXOPACKAGE_TARGET,
         DEX_AND_NATIVE_EXOPACKAGE_TARGET)
@@ -85,7 +87,9 @@ public class AndroidExopackageBinaryIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    workspace = new ProjectWorkspace(projectFolderWithPrebuiltTargets.getRoot(), tmpFolder);
+    workspace = ProjectWorkspace.cloneExistingWorkspaceIntoNewFolder(
+        workspaceWithPrebuiltTargets,
+        tmpFolder);
     workspace.setUp();
     filesystem = new ProjectFilesystem(workspace.getDestPath());
   }

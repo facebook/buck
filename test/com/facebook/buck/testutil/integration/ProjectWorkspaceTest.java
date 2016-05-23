@@ -14,12 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.testutil;
+package com.facebook.buck.testutil.integration;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
@@ -43,7 +41,7 @@ public class ProjectWorkspaceTest {
     File testFile = new File(templateDir, "test.file");
     Files.write("hello world".getBytes(), testFile);
 
-    ProjectWorkspace workspace = new ProjectWorkspace(templateDir, tmpFolder);
+    ProjectWorkspace workspace = new ProjectWorkspace(templateDir.toPath(), tmpFolder.getRoot());
     workspace.writeContentsToPath("bye world", "test.file");
 
     assertEquals("bye world", workspace.getFileContents("test.file"));
@@ -60,7 +58,7 @@ public class ProjectWorkspaceTest {
     Path testFile2 = testSubdir.resolve("test.file2");
     java.nio.file.Files.write(testFile2, ImmutableList.of("Goodbye world"), Charsets.UTF_8);
 
-    ProjectWorkspace workspace = new ProjectWorkspace(templateDir, tmpFolder);
+    ProjectWorkspace workspace = new ProjectWorkspace(templateDir, tmpFolder.getRoot());
     workspace.copyRecursively(sourceDir, Paths.get("destdir"));
 
     assertEquals(

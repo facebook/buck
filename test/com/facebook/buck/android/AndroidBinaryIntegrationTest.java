@@ -73,6 +73,8 @@ public class AndroidBinaryIntegrationTest {
   @ClassRule
   public static TemporaryPaths projectFolderWithPrebuiltTargets = new TemporaryPaths();
 
+  private static ProjectWorkspace workspaceWithPrebuiltTargets;
+
   @Rule
   public TemporaryPaths tmpFolder = new TemporaryPaths();
 
@@ -87,18 +89,19 @@ public class AndroidBinaryIntegrationTest {
   public static void setUpOnce() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+    workspaceWithPrebuiltTargets = TestDataHelper.createProjectWorkspaceForScenario(
         new AndroidBinaryIntegrationTest(),
         "android_project",
         projectFolderWithPrebuiltTargets);
-    workspace.setUp();
-    workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
+    workspaceWithPrebuiltTargets.setUp();
+    workspaceWithPrebuiltTargets.runBuckBuild(SIMPLE_TARGET).assertSuccess();
   }
 
   @Before
   public void setUp() throws IOException {
-    workspace = new ProjectWorkspace(
-        projectFolderWithPrebuiltTargets.getRoot(), tmpFolder.getRoot());
+    workspace = ProjectWorkspace.cloneExistingWorkspaceIntoNewFolder(
+        workspaceWithPrebuiltTargets,
+        tmpFolder);
     workspace.setUp();
     filesystem = new ProjectFilesystem(workspace.getDestPath());
   }
