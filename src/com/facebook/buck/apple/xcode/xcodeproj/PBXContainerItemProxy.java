@@ -76,9 +76,8 @@ public class PBXContainerItemProxy extends PBXContainerItem {
     super.serializeInto(s);
 
     Preconditions.checkNotNull(containerPortal.getGlobalID());
-    Preconditions.checkNotNull(target.getGlobalID());
     s.addField("containerPortal", containerPortal.getGlobalID());
-    s.addField("remoteGlobalIDString", target.getGlobalID());
+    s.addField("remoteGlobalIDString", target);
     s.addField("remoteInfo", target.getName());
     s.addField("proxyType", proxyType.getIntValue());
   }

@@ -1202,6 +1202,18 @@ public class ProjectGenerator {
       mutator.setPostBuildRunScriptPhasesFromTargetNodes(postScriptPhases.build());
     }
 
+    if (bundleLoaderNode.isPresent()) {
+      // Add the bundle loader as a target dependency of the target
+      TargetNode<AppleBundleDescription.Arg> bundleLoader = bundleLoaderNode.get();
+      Optional<PBXTarget> bundleTarget = targetNodeToProjectTarget.getUnchecked(bundleLoader);
+      if (bundleTarget.isPresent()) {
+        LOG.debug("Adding target dependency %s to target %s",
+            getProductNameForBuildTarget(bundleLoader.getBuildTarget()),
+            buildTargetName);
+        mutator.setTargetDependenciesFromTargets(ImmutableList.of(bundleTarget.get()), project);
+      }
+    }
+
     NewNativeTargetProjectMutator.Result targetBuilderResult;
     try {
       targetBuilderResult = mutator.buildTargetAndAddToProject(project);
