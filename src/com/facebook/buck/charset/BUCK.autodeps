@@ -1,0 +1,9 @@
+#@# GENERATED FILE: DO NOT MODIFY 9f41a6a1f0fbfef7dc770cb233221e85c89b07b2 #@#
+{
+  "charset" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//third-party/java/jsr:jsr305"
+    ]
+  }
+}

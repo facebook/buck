@@ -1,0 +1,12 @@
+#@# GENERATED FILE: DO NOT MODIFY 5b2c3deefcb3cc330809547d3ca3343f8d64ef37 #@#
+{
+  "charset" : {
+    "deps" : [
+      "//src/com/facebook/buck/charset:charset",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}
