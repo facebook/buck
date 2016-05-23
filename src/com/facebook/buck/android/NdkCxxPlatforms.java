@@ -141,7 +141,7 @@ public class NdkCxxPlatforms {
               platform,
               ndkRoot,
               NdkCxxPlatformTargetConfiguration.builder()
-                  .setToolchain(Toolchain.ARM_LINUX_ADNROIDEABI)
+                  .setToolchain(Toolchain.ARM_LINUX_ANDROIDEABI)
                   .setTargetArch(TargetArch.ARM)
                   .setTargetArchAbi(TargetArchAbi.ARMEABI)
                   .setTargetAppPlatform(androidPlatform)
@@ -197,7 +197,7 @@ public class NdkCxxPlatforms {
               platform,
               ndkRoot,
               NdkCxxPlatformTargetConfiguration.builder()
-                  .setToolchain(Toolchain.ARM_LINUX_ADNROIDEABI)
+                  .setToolchain(Toolchain.ARM_LINUX_ANDROIDEABI)
                   .setTargetArch(TargetArch.ARM)
                   .setTargetArchAbi(TargetArchAbi.ARMEABI_V7A)
                   .setTargetAppPlatform(androidPlatform)
@@ -973,7 +973,7 @@ public class NdkCxxPlatforms {
 
     X86("x86"),
     X86_64("x86_64"),
-    ARM_LINUX_ADNROIDEABI("arm-linux-androideabi"),
+    ARM_LINUX_ANDROIDEABI("arm-linux-androideabi"),
     ;
 
     private final String value;
