@@ -72,7 +72,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -88,6 +88,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.concurrent.Executors;
 
 public class TargetsCommandTest {
@@ -100,15 +101,15 @@ public class TargetsCommandTest {
   private ProjectFilesystem filesystem;
   private ListeningExecutorService executor;
 
-  private SortedMap<String, TargetNode<?>> buildTargetNodes(
+  private Iterable<TargetNode<?>> buildTargetNodes(
       ProjectFilesystem filesystem,
       String buildTarget) {
-    SortedMap<String, TargetNode<?>> buildRules = Maps.newTreeMap();
+    SortedSet<TargetNode<?>> buildRules = Sets.newTreeSet();
     BuildTarget target = BuildTargetFactory.newInstance(filesystem, buildTarget);
     TargetNode<?> node = JavaLibraryBuilder
         .createBuilder(target)
         .build();
-    buildRules.put(buildTarget, node);
+    buildRules.add(node);
     return buildRules;
   }
 
@@ -157,7 +158,7 @@ public class TargetsCommandTest {
   public void testJsonOutputForBuildTarget()
       throws IOException, BuildFileParseException, InterruptedException {
     // run `buck targets` on the build file and parse the observed JSON.
-    SortedMap<String, TargetNode<?>> nodes = buildTargetNodes(filesystem, "//:test-library");
+    Iterable<TargetNode<?>> nodes = buildTargetNodes(filesystem, "//:test-library");
 
     targetsCommand.printJsonForTargets(
         params,
@@ -215,7 +216,7 @@ public class TargetsCommandTest {
   public void testJsonOutputForMissingBuildTarget()
       throws BuildFileParseException, IOException, InterruptedException {
     // nonexistent target should not exist.
-    SortedMap<String, TargetNode<?>> buildRules = buildTargetNodes(filesystem, "//:nonexistent");
+    Iterable<TargetNode<?>> buildRules = buildTargetNodes(filesystem, "//:nonexistent");
     targetsCommand.printJsonForTargets(
         params,
         executor,

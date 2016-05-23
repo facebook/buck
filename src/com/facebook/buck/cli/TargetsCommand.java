@@ -274,12 +274,11 @@ public class TargetsCommand extends AbstractCommand {
       return 1;
     }
 
-    ImmutableMap<BuildTarget, ShowOptions> showRulesResult =
-        ImmutableMap.of();
-
     if (isShowOutput() || isShowRuleKey() || isShowTargetHash()) {
+      ImmutableMap<BuildTarget, ShowOptions> showRulesResult;
+      TargetGraphAndBuildTargets targetGraphAndBuildTargetsForShowRules;
       try {
-        TargetGraphAndBuildTargets targetGraphAndBuildTargetsForShowRules =
+        targetGraphAndBuildTargetsForShowRules =
             buildTargetGraphAndTargetsForShowRules(params, executor, buildRuleTypes);
         showRulesResult = computeShowRules(
             params,
@@ -296,10 +295,15 @@ public class TargetsCommand extends AbstractCommand {
         return 1;
       }
 
-      if (!getPrintJson()) {
+      if (getPrintJson()) {
+        Iterable<TargetNode<?>> matchingNodes =
+            targetGraphAndBuildTargetsForShowRules.getTargetGraph().getAll(
+                targetGraphAndBuildTargetsForShowRules.getBuildTargets());
+        return tryPrintJsonForTargets(params, executor, matchingNodes, showRulesResult);
+      } else {
         printShowRules(showRulesResult, params);
-        return 0;
       }
+      return 0;
     }
 
     // Parse the entire action graph, or (if targets are specified),
@@ -321,7 +325,23 @@ public class TargetsCommand extends AbstractCommand {
         graphAndTargets.get(),
         buildRuleTypes);
 
-    return printResults(params, executor, matchingNodes, showRulesResult);
+    return printResults(params, executor, matchingNodes);
+  }
+
+  private int tryPrintJsonForTargets(
+      CommandRunnerParams params,
+      ListeningExecutorService executor,
+      Iterable<TargetNode<?>> targetNodes,
+      ImmutableMap<BuildTarget, ShowOptions> showRulesResult)
+      throws IOException, InterruptedException {
+    try {
+      printJsonForTargets(params, executor, targetNodes, showRulesResult);
+      return 0;
+    } catch (BuildFileParseException e) {
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      return 1;
+    }
   }
 
   private TargetGraphAndBuildTargets buildTargetGraphAndTargetsForShowRules(
@@ -376,17 +396,14 @@ public class TargetsCommand extends AbstractCommand {
   private int printResults(
       CommandRunnerParams params,
       ListeningExecutorService executor,
-      SortedMap<String, TargetNode<?>> matchingNodes,
-      ImmutableMap<BuildTarget, ShowOptions> showRulesResult)
+      SortedMap<String, TargetNode<?>> matchingNodes)
       throws IOException, InterruptedException {
     if (getPrintJson()) {
-      try {
-        printJsonForTargets(params, executor, matchingNodes, showRulesResult);
-      } catch (BuildFileParseException e) {
-        params.getBuckEventBus().post(ConsoleEvent.severe(
-                MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-        return 1;
-      }
+      return tryPrintJsonForTargets(
+          params,
+          executor,
+          matchingNodes.values(),
+          ImmutableMap.<BuildTarget, ShowOptions>of());
     } else if (isPrint0()) {
       printNullDelimitedTargets(matchingNodes.keySet(), params.getConsole().getStdOut());
     } else {
@@ -650,18 +667,17 @@ public class TargetsCommand extends AbstractCommand {
   void printJsonForTargets(
       CommandRunnerParams params,
       ListeningExecutorService executor,
-      SortedMap<String, TargetNode<?>> buildIndex,
+      Iterable<TargetNode<?>> targetNodes,
       ImmutableMap<BuildTarget, ShowOptions> showRulesResult)
       throws BuildFileParseException, IOException, InterruptedException {
     // Print the JSON representation of the build node for the specified target(s).
     params.getConsole().getStdOut().println("[");
 
     ObjectMapper mapper = params.getObjectMapper();
-    Iterator<Entry<String, TargetNode<?>>> mapIterator = buildIndex.entrySet().iterator();
+    Iterator<TargetNode<?>> targetNodeIterator = targetNodes.iterator();
 
-    while (mapIterator.hasNext()) {
-      Entry<String, TargetNode<?>> current = mapIterator.next();
-      TargetNode<?> targetNode = current.getValue();
+    while (targetNodeIterator.hasNext()) {
+      TargetNode<?> targetNode = targetNodeIterator.next();
       SortedMap<String, Object> sortedTargetRule;
       sortedTargetRule = params.getParser().getRawTargetNode(
           params.getBuckEventBus(),
@@ -700,7 +716,7 @@ public class TargetsCommand extends AbstractCommand {
         throw new RuntimeException(e);
       }
       String output = stringWriter.getBuffer().toString();
-      if (mapIterator.hasNext()) {
+      if (targetNodeIterator.hasNext()) {
         output += ",";
       }
       params.getConsole().getStdOut().println(output);

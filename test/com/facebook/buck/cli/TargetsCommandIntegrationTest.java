@@ -603,4 +603,31 @@ public class TargetsCommandIntegrationTest {
             "//workspace:workspace"),
         ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(result.getStdout())));
   }
+
+  @Test
+  public void testShowAllTargetsWithJson() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "output_path", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "targets", "--json", "--show-output");
+    result.assertSuccess();
+    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
+
+    // Parse the observed JSON.
+    JsonNode observed = objectMapper.readTree(
+        objectMapper.getFactory().createParser(result.getStdout())
+    );
+
+    String expectedJson = workspace.getFileContents("output_path_json_all.js");
+    JsonNode expected = objectMapper.readTree(
+        objectMapper.getFactory().createParser(normalizeNewlines(expectedJson))
+    );
+
+    assertEquals(
+        "Output from targets command should match expected JSON.",
+        observed,
+        expected);
+  }
 }
