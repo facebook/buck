@@ -27,7 +27,6 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.LinkerProvider;
 import com.facebook.buck.cxx.PosixNmSymbolNameTool;
 import com.facebook.buck.cxx.PreprocessorProvider;
-import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Flavor;
@@ -35,10 +34,9 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -47,11 +45,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
@@ -478,20 +472,14 @@ public class NdkCxxPlatforms {
         .build();
   }
 
-  // Read the NDK version from the "RELEASE.TXT" at the NDK root.
+  /**
+   * It returns the version of the Android NDK located at the {@code ndkRoot} or throws the
+   * exception.
+   * @param ndkRoot the path where Android NDK is located.
+   * @return the version of the Android NDK located in {@code ndkRoot}.
+   */
   private static String readVersion(ProjectFilesystem ndkRoot) {
-    try (InputStream input = ndkRoot.newFileInputStream(Paths.get("RELEASE.TXT"));
-         BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charsets.UTF_8))) {
-      // TODO(#8085133): Added to work around an issue where the linux release of r10e is mislabeled
-      // as r10e-rc4.  Remove this once there is a fixed release.
-      return reader.readLine().trim().replace("r10e-rc4", "r10e");
-    } catch (IOException e) {
-      throw new HumanReadableException(
-          e,
-          "could not extract version from NDK repository at %s: %s",
-          ndkRoot,
-          e.getMessage());
-    }
+    return DefaultAndroidDirectoryResolver.findNdkVersionFromDirectory(ndkRoot.getRootPath()).get();
   }
 
   /**

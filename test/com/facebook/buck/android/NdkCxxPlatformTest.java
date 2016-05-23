@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
+import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
@@ -206,13 +207,13 @@ public class NdkCxxPlatformTest {
 
       // Iterate building up rule keys for combinations of different platforms and NDK root
       // directories.
-      for (String dir : ImmutableList.of("something", "something else")) {
+      for (String dir : ImmutableList.of("android-ndk-r9c", "android-ndk-r10b")) {
         for (Platform platform :
             ImmutableList.of(Platform.LINUX, Platform.MACOS, Platform.WINDOWS)) {
           tmp.create();
           Path root = tmp.newFolder(dir).toPath();
           FakeProjectFilesystem filesystem = new FakeProjectFilesystem(root.toFile());
-          filesystem.writeContentsToPath("something", Paths.get("RELEASE.TXT"));
+          MoreFiles.writeLinesToFile(ImmutableList.of("r9c"), root.resolve("RELEASE.TXT"));
           ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> platforms =
               NdkCxxPlatforms.getPlatforms(
                   filesystem,

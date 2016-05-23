@@ -21,11 +21,13 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PropertyFinder;
 import com.facebook.buck.util.VersionStringComparator;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
@@ -340,31 +342,40 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
    * @param ndkDirectory Path to the folder that contains the NDK.
    * @return A string containing the NDK version or absent.
    */
-  private Optional<String> findNdkVersion(Path ndkDirectory) {
-    Path newNdkPath = ndkDirectory.resolve(NDK_POST_R11_VERSION_FILENAME);
-    Path oldNdkPath = ndkDirectory.resolve(NDK_PRE_R11_VERSION_FILENAME);
-    boolean newNdkPathFound = Files.exists(newNdkPath);
-    boolean oldNdkPathFound = Files.exists(oldNdkPath);
+  public static Optional<String> findNdkVersionFromDirectory(Path ndkDirectory) {
+    Path newNdk = ndkDirectory.resolve(NDK_POST_R11_VERSION_FILENAME);
+    Path oldNdk = ndkDirectory.resolve(NDK_PRE_R11_VERSION_FILENAME);
+    boolean newNdkPathFound = Files.exists(newNdk);
+    boolean oldNdkPathFound = Files.exists(oldNdk);
 
     if (newNdkPathFound && oldNdkPathFound) {
-      ndkErrorMessage = Optional.of("Android NDK directory " + ndkDirectory + " can not " +
+      throw new HumanReadableException("Android NDK directory " + ndkDirectory + " can not " +
           "contain both properties files. Remove source.properties or RELEASE.TXT.");
-      return Optional.absent();
     } else if (newNdkPathFound) {
       Properties sourceProperties = new Properties();
-      try (FileInputStream fileStream = new FileInputStream(newNdkPath.toFile())) {
+      try (FileInputStream fileStream = new FileInputStream(newNdk.toFile())) {
         sourceProperties.load(fileStream);
         return Optional.fromNullable(sourceProperties.getProperty("Pkg.Revision"));
       } catch (IOException e) {
-        ndkErrorMessage = Optional.of("Failed to read NDK version from " + newNdkPath + ".");
-        return Optional.absent();
+        throw new HumanReadableException("Failed to read NDK version from " + newNdk + ".");
       }
     } else if (oldNdkPathFound) {
-      Optional<String> propertiesContents = projectFilesystem.readFirstLineFromFile(oldNdkPath);
-      return Optional.of(propertiesContents.get().split("\\s+")[0]);
+      try (BufferedReader reader = Files.newBufferedReader(oldNdk, Charsets.UTF_8)) {
+        return Optional.fromNullable(reader.readLine().split("\\s+")[0]);
+      } catch (IOException e) {
+        throw new HumanReadableException("Failed to read NDK version from " + oldNdk + ".");
+      }
     } else {
-      ndkErrorMessage = Optional.of(ndkDirectory + " does not contain a valid properties file " +
-          "for Android NDK.");
+      throw new HumanReadableException(ndkDirectory + " does not contain a valid properties " +
+          "file for Android NDK.");
+    }
+  }
+
+  public Optional<String> findNdkVersion(Path ndkDirectory) {
+    try {
+      return findNdkVersionFromDirectory(ndkDirectory);
+    } catch (HumanReadableException e) {
+      ndkErrorMessage = Optional.of(e.getHumanReadableErrorMessage());
       return Optional.absent();
     }
   }
