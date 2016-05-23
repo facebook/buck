@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
-  <version>2.4</version>
+  <version>2.5</version>
   <category>Build</category>
 
   <description><![CDATA[
@@ -21,6 +21,14 @@
   <change-notes><![CDATA[
 
   <ul>
+      <li>
+        <b>2.5</b>
+          Updated buck icons.
+          Made all existing paths in a Buck file clickable.
+          Improved grammar.
+          Show popup on how to enable the toolbar.
+          Disable choose target if indexing not over.
+      </li>
       <li>
         <b>2.4</b>
           Added the plugin to the toolbar.
@@ -132,26 +140,26 @@
       <action class="com.facebook.buck.intellij.plugin.actions.ChooseTargetAction" id="buck.ChooseTarget">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift J"/>
       </action>
+      <action class="com.facebook.buck.intellij.plugin.actions.BuckBuildAction" id="buck.Build">
+        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift S"/>
+      </action>
+      <action class="com.facebook.buck.intellij.plugin.actions.BuckTestAction" id="buck.Test">
+        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift Y"/>
+      </action>
       <action class="com.facebook.buck.intellij.plugin.actions.BuckInstallAction" id="buck.Install">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift X"/>
       </action>
       <action class="com.facebook.buck.intellij.plugin.actions.BuckInstallDebugAction" id="buck.InstallDebug">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift D"/>
       </action>
-      <action class="com.facebook.buck.intellij.plugin.actions.BuckBuildAction" id="buck.Build">
-        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift S"/>
-      </action>
-      <action class="com.facebook.buck.intellij.plugin.actions.BuckTestAction" id="buck.Test">
-          <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift Y"/>
-      </action>
-      <action class="com.facebook.buck.intellij.plugin.actions.BuckProjectGenerationAction" id="buck.ProjectGeneration">
-        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift B"/>
+      <action class="com.facebook.buck.intellij.plugin.actions.BuckUninstallAction" id="buck.Uninstall">
+        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift M"/>
       </action>
       <action class="com.facebook.buck.intellij.plugin.actions.BuckKillAction" id="buck.Kill">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift L"/>
       </action>
-      <action class="com.facebook.buck.intellij.plugin.actions.BuckUninstallAction" id="buck.Uninstall">
-        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift M"/>
+      <action class="com.facebook.buck.intellij.plugin.actions.BuckProjectGenerationAction" id="buck.ProjectGeneration">
+        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift B"/>
       </action>
       <add-to-group anchor="last" group-id="MainToolBar"/>
     </group>

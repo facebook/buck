@@ -22,12 +22,13 @@ import com.facebook.buck.intellij.plugin.build.BuckCommand;
 import com.facebook.buck.intellij.plugin.config.BuckModule;
 import com.facebook.buck.intellij.plugin.config.BuckSettingsProvider;
 import com.facebook.buck.intellij.plugin.ui.BuckEventsConsumer;
-import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.Icon;
+
+import icons.BuckIcons;
 
 /**
  * Run buck install command.
@@ -36,7 +37,7 @@ public class BuckInstallAction extends BuckBaseAction {
 
   public static final String ACTION_TITLE = "Run buck install";
   public static final String ACTION_DESCRIPTION = "Run buck install command";
-  public static final Icon ICON = AllIcons.Actions.Execute;
+  public static final Icon ICON = BuckIcons.ACTION_INSTALL;
 
   public BuckInstallAction() {
     this(ACTION_TITLE, ACTION_DESCRIPTION, ICON);

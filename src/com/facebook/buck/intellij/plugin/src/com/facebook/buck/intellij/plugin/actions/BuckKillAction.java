@@ -20,9 +20,10 @@ import com.facebook.buck.intellij.plugin.build.BuckBuildManager;
 import com.facebook.buck.intellij.plugin.build.BuckCommand;
 import com.facebook.buck.intellij.plugin.build.BuckKillCommandHandler;
 import com.facebook.buck.intellij.plugin.config.BuckModule;
-import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
+
+import icons.BuckIcons;
 
 /**
  * Run buck kill command.
@@ -34,7 +35,7 @@ public class BuckKillAction extends BuckBaseAction {
   public static final String ACTION_DESCRIPTION = "Run buck kill command";
 
   public BuckKillAction() {
-    super(ACTION_TITLE, ACTION_DESCRIPTION, AllIcons.Actions.Suspend);
+    super(ACTION_TITLE, ACTION_DESCRIPTION, BuckIcons.ACTION_KILL);
   }
 
   @Override

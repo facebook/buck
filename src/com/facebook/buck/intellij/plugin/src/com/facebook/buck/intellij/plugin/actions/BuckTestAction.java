@@ -21,8 +21,9 @@ import com.facebook.buck.intellij.plugin.build.BuckBuildManager;
 import com.facebook.buck.intellij.plugin.build.BuckCommand;
 import com.facebook.buck.intellij.plugin.config.BuckModule;
 import com.facebook.buck.intellij.plugin.ui.BuckEventsConsumer;
-import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+
+import icons.BuckIcons;
 
 /**
  * Run buck test command.
@@ -33,7 +34,7 @@ public class BuckTestAction extends BuckBaseAction {
   public static final String ACTION_DESCRIPTION = "Run buck test command";
 
   public BuckTestAction() {
-    super(ACTION_TITLE, ACTION_DESCRIPTION, AllIcons.Modules.TestRoot);
+    super(ACTION_TITLE, ACTION_DESCRIPTION, BuckIcons.ACTION_TEST);
   }
 
   @Override

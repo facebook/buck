@@ -16,15 +16,16 @@
 
 package com.facebook.buck.intellij.plugin.actions;
 
-import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 
 import javax.swing.Icon;
 
+import icons.BuckIcons;
+
 public class BuckInstallDebugAction extends BuckInstallAction{
   public static final String ACTION_TITLE = "Run buck install and debug";
   public static final String ACTION_DESCRIPTION = "Run buck install command and debug";
-  public static final Icon ICON = AllIcons.Actions.StartDebugger;
+  public static final Icon ICON = BuckIcons.ACTION_DEBUG;
 
   private static boolean mDebug;
 

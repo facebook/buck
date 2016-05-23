@@ -20,7 +20,6 @@ import com.facebook.buck.intellij.plugin.actions.choosetargets.ChooseTargetItem;
 import com.facebook.buck.intellij.plugin.actions.choosetargets.ChooseTargetModel;
 import com.facebook.buck.intellij.plugin.config.BuckSettingsProvider;
 import com.facebook.buck.intellij.plugin.ui.BuckToolWindowFactory;
-import com.intellij.icons.AllIcons;
 import com.intellij.ide.actions.GotoActionBase;
 import com.intellij.ide.util.gotoByName.ChooseByNamePopup;
 import com.intellij.ide.util.gotoByName.DefaultChooseByNameItemProvider;
@@ -36,6 +35,8 @@ import com.sun.glass.events.KeyEvent;
 import javax.swing.KeyStroke;
 import java.awt.event.KeyAdapter;
 
+import icons.BuckIcons;
+
 /**
  * Pop up a GUI for choose buck targets (alias).
  */
@@ -48,7 +49,7 @@ public class ChooseTargetAction extends GotoActionBase implements DumbAware {
     Presentation presentation = this.getTemplatePresentation();
     presentation.setText(ACTION_TITLE);
     presentation.setDescription(ACTION_DESCRIPTION);
-    presentation.setIcon(AllIcons.Actions.Preview);
+    presentation.setIcon(BuckIcons.ACTION_FIND);
   }
 
   @Override
