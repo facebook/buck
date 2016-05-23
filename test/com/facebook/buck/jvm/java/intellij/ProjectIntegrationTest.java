@@ -51,7 +51,11 @@ public class ProjectIntegrationTest {
         this, "project1", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand("project", "-v", "5");
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--deprecated-ij-generation",
+        "-v",
+        "5");
     result.assertSuccess("buck project should exit cleanly");
 
     workspace.verify();
@@ -88,7 +92,11 @@ public class ProjectIntegrationTest {
         this, "project_with_genrule_as_a_src", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand("project", "-v", "5");
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--deprecated-ij-generation",
+        "-v",
+        "5");
     result.assertSuccess("buck project should exit cleanly");
 
     workspace.verify();
@@ -104,7 +112,9 @@ public class ProjectIntegrationTest {
     long lastModified = 0; // We're gonna party like it's 1970!
     assertTrue((new File(temporaryFolder.getRoot(), "root.iml")).setLastModified(lastModified));
 
-    ProcessResult result = workspace.runBuckCommand("project");
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--deprecated-ij-generation");
     result.assertSuccess("buck project should exit cleanly");
 
     assertEquals(
@@ -119,7 +129,12 @@ public class ProjectIntegrationTest {
         this, "project1", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand("project", "--dry-run", "-v", "5");
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--deprecated-ij-generation",
+        "--dry-run",
+        "-v",
+        "5");
     result.assertSuccess("buck project should exit cleanly");
 
     ImmutableSortedSet<String> expectedResult = ImmutableSortedSet.of(
@@ -153,7 +168,9 @@ public class ProjectIntegrationTest {
         this, "project2", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand("project");
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--deprecated-ij-generation");
     result.assertSuccess("buck project should exit cleanly");
 
     workspace.verify();
@@ -172,6 +189,7 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
+        "--deprecated-ij-generation",
         "--without-tests",
         "//modules/dep1:dep1",
         "//:root",
@@ -212,6 +230,7 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
+        "--deprecated-ij-generation",
         "--dry-run",
         "--without-tests",
         "//modules/dep1:dep1",
@@ -248,7 +267,12 @@ public class ProjectIntegrationTest {
         this, "project_slice_with_project_in_different_buck_file", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand("project", "//:root", "-v", "5");
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--deprecated-ij-generation",
+        "//:root",
+        "-v",
+        "5");
     result.assertSuccess("buck project should exit cleanly");
 
     workspace.verify();
@@ -288,6 +312,7 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
+        "--deprecated-ij-generation",
         "//modules/dep1:dep1",
         "-v", "5");
     result.assertSuccess("buck project should exit cleanly");
@@ -326,6 +351,7 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
+        "--deprecated-ij-generation",
         "--dry-run",
         "--without-tests",
         "//modules/dep1:dep1",
@@ -361,6 +387,7 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
+        "--deprecated-ij-generation",
         "//modules/dep1:dep1",
         "-v", "5");
     result.assertSuccess("buck project should exit cleanly");
@@ -401,6 +428,7 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
+        "--deprecated-ij-generation",
         "//modules/dep1:dep1",
         "-v", "5");
     result.assertSuccess("buck project should exit cleanly");
@@ -445,7 +473,9 @@ public class ProjectIntegrationTest {
         this, "buck_project_multiple_libraries_in_one_build_file", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand("project");
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--deprecated-ij-generation");
     result.assertSuccess("buck project should exit cleanly");
 
     workspace.verify();
@@ -461,6 +491,7 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
+        "--deprecated-ij-generation",
         "//modules/dep1:");
     result.assertSuccess();
   }
@@ -475,6 +506,7 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
+        "--deprecated-ij-generation",
         "//modules/dep1:nonexistent-target");
     result.assertFailure("No rule found when resolving target " +
         "//modules/dep1:nonexistent-target in build file //modules/dep1/BUCK");
@@ -490,6 +522,7 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
+        "--deprecated-ij-generation",
         "//nonexistent/path:target");
     result.assertFailure("No build file at nonexistent/path/BUCK " +
         "when resolving target //nonexistent/path:target.");
@@ -505,6 +538,7 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
+        "--deprecated-ij-generation",
         "app");
     result.assertSuccess();
 
@@ -521,6 +555,7 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
+        "--deprecated-ij-generation",
         "--disable-r-java-idea-generator",
         "app");
     result.assertSuccess();
@@ -534,7 +569,11 @@ public class ProjectIntegrationTest {
         this, "project_with_android_binary", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand("project", "-v", "5");
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--deprecated-ij-generation",
+        "-v",
+        "5");
     result.assertSuccess("buck project should exit cleanly");
 
     workspace.verify();
@@ -565,6 +604,7 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
+        "--deprecated-ij-generation",
         "-v", "5",
         "//apps/sample:app");
     result.assertSuccess("buck project should exit cleanly");
@@ -598,6 +638,7 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
+        "--deprecated-ij-generation",
         "--disable-r-java-idea-generator",
         "-v", "5");
     result.assertSuccess("buck project should exit cleanly");
@@ -631,6 +672,7 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
+        "--deprecated-ij-generation",
         "--disable-r-java-idea-generator",
         "//apps/sample:app",
         "-v", "5");
@@ -666,6 +708,7 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
+        "--deprecated-ij-generation",
         "app");
     result.assertSuccess();
 
@@ -673,21 +716,22 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void testExperimentalBuckProject() throws IOException {
+  public void testVersion2BuckProject() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "experimental_project1", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand("project", "--experimental-ij-generation");
+    ProcessResult result = workspace.runBuckCommand(
+        "project");
     result.assertSuccess("buck project should exit cleanly");
 
     workspace.verify();
   }
 
   @Test
-  public void testExperimentalBuckProjectSlice() throws IOException {
+  public void testVersion2BuckProjectSlice() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -696,7 +740,6 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
-        "--experimental-ij-generation",
         "--without-tests",
         "modules/dep1:dep1");
     result.assertSuccess("buck project should exit cleanly");
@@ -705,7 +748,7 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void testExperimentalBuckProjectSourceMerging() throws IOException {
+  public void testVersion2BuckProjectSourceMerging() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -714,7 +757,6 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
-        "--experimental-ij-generation",
         "//java/code/modules/tip");
     result.assertSuccess("buck project should exit cleanly");
 

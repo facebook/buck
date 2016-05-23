@@ -76,7 +76,11 @@ public class NumThreadsIntegrationTest {
         this, "num_threads", tmp);
     workspace.setUp();
 
-    ProcessResult buildResult1 = workspace.runBuckCommand("project", "--verbose", "10");
+    ProcessResult buildResult1 = workspace.runBuckCommand(
+        "project",
+        "--deprecated-ij-generation",
+        "--verbose",
+        "10");
     assertThat("Number of threads to use should be read from .buckconfig.",
         buildResult1.getStderr(),
         containsString("Creating a build with 7 threads.\n"));
@@ -87,7 +91,11 @@ public class NumThreadsIntegrationTest {
         "  ide = intellij");
     Files.write(workspace.getPath(".buckconfig"), newBuckProject.getBytes(UTF_8));
     int numThreads = Runtime.getRuntime().availableProcessors();
-    ProcessResult buildResult2 = workspace.runBuckCommand("project", "--verbose", "10");
+    ProcessResult buildResult2 = workspace.runBuckCommand(
+        "project",
+        "--deprecated-ij-generation",
+        "--verbose",
+        "10");
     assertThat(
         "Once num_threads is removed from .buckconfig, the number of threads should be " +
         "equal to the number of processors.",

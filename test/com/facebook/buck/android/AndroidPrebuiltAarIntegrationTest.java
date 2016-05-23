@@ -70,7 +70,7 @@ public class AndroidPrebuiltAarIntegrationTest {
 
   @Test
   public void testProjectAndroidPrebuiltAar() throws IOException {
-    workspace.runBuckCommand("project", "//:app").assertSuccess();
+    workspace.runBuckCommand("project", "--deprecated-ij-generation", "//:app").assertSuccess();
   }
 
   @Test
