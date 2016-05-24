@@ -3,6 +3,7 @@ standard_java_library(
     'FatArch',
     'FatHeader',
     'MachoHeader',
+    'LoadCommand',
   ],
   tests = [
     '//test/com/facebook/buck/macho:macho',
