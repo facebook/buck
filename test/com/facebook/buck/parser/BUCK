@@ -25,18 +25,15 @@ java_test(
 
 java_test(
   name = 'benchmark_correctness',
-  autodeps = True,
+  deps = [
+    ':benchmarks',
+  ],
 )
 
 java_library(
   name = 'benchmarks',
   srcs = glob(['*Benchmark.java']),
   autodeps = True,
-  deps = [
-    # This has to be added as an explicit dependency because the rule points to a prebuilt_jar()
-    # whose binary_jar is a generated file, so its contents cannot be read by `buck autodeps`.
-    '//third-party/java/caliper:caliper',
-  ],
   visibility = [
     '//test/com/facebook/buck/benchmarks/...',
   ],
