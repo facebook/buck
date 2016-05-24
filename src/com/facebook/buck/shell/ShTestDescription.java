@@ -124,7 +124,8 @@ public class ShTestDescription implements
             .transform(SourcePaths.toSourcePath(params.getProjectFilesystem()))
             .toSortedSet(Ordering.natural()),
         args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
-        args.labels.get());
+        args.labels.get(),
+        args.contacts.or(ImmutableSet.<String>of()));
   }
 
   @Override
@@ -153,6 +154,7 @@ public class ShTestDescription implements
   public static class Arg extends AbstractDescriptionArg {
     public SourcePath test;
     public Optional<ImmutableList<String>> args;
+    public Optional<ImmutableSet<String>> contacts;
     public Optional<ImmutableSortedSet<Label>> labels;
     public Optional<Long> testRuleTimeoutMs;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;

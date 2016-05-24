@@ -73,7 +73,8 @@ public class ShTestTest extends EasyMockSupport {
         /* env */ ImmutableMap.<String, Arg>of(),
         /* resources */ ImmutableSortedSet.<SourcePath>of(),
         Optional.<Long>absent(),
-        /* labels */ ImmutableSet.<Label>of());
+        /* labels */ ImmutableSet.<Label>of(),
+        /* contacts */ ImmutableSet.<String>of());
     filesystem.touch(shTest.getPathToTestOutputResult());
 
     assertTrue(
@@ -106,7 +107,8 @@ public class ShTestTest extends EasyMockSupport {
         /* env */ ImmutableMap.<String, Arg>of(),
         /* resources */ ImmutableSortedSet.<SourcePath>of(),
         Optional.<Long>absent(),
-        /* labels */ ImmutableSet.<Label>of());
+        /* labels */ ImmutableSet.<Label>of(),
+        /* contacts */ ImmutableSet.<String>of());
 
     assertThat(
         shTest.getRuntimeDeps(),

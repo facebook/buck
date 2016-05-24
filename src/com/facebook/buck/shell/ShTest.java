@@ -69,6 +69,7 @@ public class ShTest
   @SuppressWarnings("PMD.UnusedPrivateField")
   private final ImmutableSortedSet<SourcePath> resources;
   private final Optional<Long> testRuleTimeoutMs;
+  private final ImmutableSet<String> contacts;
   private final ImmutableSet<Label> labels;
 
   protected ShTest(
@@ -79,7 +80,8 @@ public class ShTest
       ImmutableMap<String, Arg> env,
       ImmutableSortedSet<SourcePath> resources,
       Optional<Long> testRuleTimeoutMs,
-      Set<Label> labels) {
+      Set<Label> labels,
+      ImmutableSet<String> contacts) {
     super(params, resolver);
     this.test = test;
     this.args = args;
@@ -87,6 +89,7 @@ public class ShTest
     this.resources = resources;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.labels = ImmutableSet.copyOf(labels);
+    this.contacts = contacts;
   }
 
   @Override
@@ -96,7 +99,7 @@ public class ShTest
 
   @Override
   public ImmutableSet<String> getContacts() {
-    return ImmutableSet.of();
+    return contacts;
   }
 
   @Override
@@ -156,7 +159,6 @@ public class ShTest
       final ExecutionContext context,
       boolean isUsingTestSelectors,
       boolean isDryRun) {
-    final ImmutableSet<String> contacts = getContacts();
 
     if (isDryRun) {
       // Again, shortcut to returning no results, because sh-tests have no concept of a dry-run.
