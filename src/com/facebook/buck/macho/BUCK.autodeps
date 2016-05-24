@@ -1,0 +1,12 @@
+#@# GENERATED FILE: DO NOT MODIFY 158bced83031fd3299fb84bcb0633142d134b2bb #@#
+{
+  "macho" : {
+    "deps" : [
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//third-party/java/guava:guava"
+    ]
+  }
+}

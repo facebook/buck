@@ -1,0 +1,24 @@
+#@# GENERATED FILE: DO NOT MODIFY af4c06e5b974dec9472f65bed3cd4f8e801db5c6 #@#
+{
+  "macho" : {
+    "deps" : [
+      "//src/com/facebook/buck/macho:macho",
+      "//test/com/facebook/buck/macho:testutil",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:hamcrest-junit",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  },
+  "testutil" : {
+    "deps" : [
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/macho:macho"
+    ]
+  }
+}

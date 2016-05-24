@@ -1,0 +1,10 @@
+standard_java_library(
+  immutable_types = [
+    'FatArch',
+    'FatHeader',
+    'MachoHeader',
+  ],
+  tests = [
+    '//test/com/facebook/buck/macho:macho',
+  ],
+)
