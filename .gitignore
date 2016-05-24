@@ -17,6 +17,7 @@ src/com/facebook/buck/intellij/plugin/third-party/*.iml
 /local.properties
 /.buckconfig.local
 /.buckd
+.buckversion
 .fakebuckversion
 
 # Compiled Python
