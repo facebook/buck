@@ -2,8 +2,9 @@ standard_java_library(
   immutable_types = [
     'FatArch',
     'FatHeader',
-    'MachoHeader',
     'LoadCommand',
+    'MachoHeader',
+    'Nlist',
   ],
   tests = [
     '//test/com/facebook/buck/macho:macho',
