@@ -38,6 +38,7 @@ public class OCamlLinkStep extends ShellStep {
   public final ImmutableList<String> cxxCompiler;
   public final ImmutableList<String> ocamlCompilerCommandPrefix;
   public final ImmutableList<String> flags;
+  public final Optional<String> stdlib;
   public final Path output;
   public final ImmutableList<Arg> depInput;
   public final ImmutableList<Arg> cDepInput;
@@ -53,6 +54,7 @@ public class OCamlLinkStep extends ShellStep {
       ImmutableList<String> cxxCompiler,
       ImmutableList<String> ocamlCompilerCommandPrefix,
       ImmutableList<String> flags,
+      Optional<String> stdlib,
       Path output,
       ImmutableList<Arg> depInput,
       ImmutableList<Arg> cDepInput,
@@ -64,6 +66,7 @@ public class OCamlLinkStep extends ShellStep {
     this.ocamlCompilerCommandPrefix = ocamlCompilerCommandPrefix;
     this.cxxCompiler = cxxCompiler;
     this.flags = flags;
+    this.stdlib = stdlib;
     this.output = output;
     this.depInput = depInput;
     this.cDepInput = cDepInput;
@@ -94,9 +97,15 @@ public class OCamlLinkStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    return ImmutableList.<String>builder()
+    ImmutableList.Builder<String> cmd = ImmutableList.<String>builder()
         .addAll(ocamlCompilerCommandPrefix)
-        .addAll(OCamlCompilables.DEFAULT_OCAML_FLAGS)
+        .addAll(OCamlCompilables.DEFAULT_OCAML_FLAGS);
+
+    if (stdlib.isPresent()) {
+        cmd.add("-nostdlib", OCamlCompilables.OCAML_INCLUDE_FLAG, stdlib.get());
+    }
+
+    return cmd
         .add("-cc", cxxCompiler.get(0))
         .addAll(
             MoreIterables.zipAndConcat(

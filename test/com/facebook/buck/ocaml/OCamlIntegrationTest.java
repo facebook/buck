@@ -36,6 +36,7 @@ import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.CxxSourceRuleFactoryHelper;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -43,6 +44,7 @@ import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
@@ -54,6 +56,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class OCamlIntegrationTest {
 
@@ -509,6 +513,60 @@ public class OCamlIntegrationTest {
 
     workspace.resetBuildLogFile();
     workspace.replaceFileContents(".buckconfig", "warnings_flags=+a", "");
+    workspace.runBuckCommand("build", target.toString()).assertSuccess();
+    buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally(target.toString());
+    buildLog.assertTargetBuiltLocally(binary.toString());
+  }
+
+  @Test
+  public void testConfigInteropIncludes() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "config_interop_includes",
+        tmp);
+    workspace.setUp();
+
+    Path ocamlc = new ExecutableFinder(Platform.detect()).getExecutable(
+        Paths.get("ocamlc"),
+        ImmutableMap.copyOf(System.getenv()));
+
+    ProcessExecutor.Result result = workspace.runCommand(ocamlc.toString(), "-where");
+    assertEquals(0, result.getExitCode());
+    String stdlibPath = result.getStdout().get();
+
+    BuildTarget target = BuildTargetFactory.newInstance(workspace.getDestPath(),
+        "//:test");
+    BuildTarget binary = createOCamlLinkTarget(target);
+
+    ImmutableSet<BuildTarget> targets = ImmutableSet.of(target, binary);
+
+    // Points somewhere with no stdlib in it, so fails to find Pervasives
+    workspace.runBuckCommand("build", target.toString()).assertFailure();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    assertTrue(buildLog.getAllTargets().containsAll(targets));
+    buildLog.assertTargetCanceled(target.toString());
+    buildLog.assertTargetCanceled(binary.toString());
+
+    workspace.resetBuildLogFile();
+
+    // Point to the real stdlib (from `ocamlc -where`)
+    workspace.replaceFileContents(
+        ".buckconfig",
+        "interop.includes=lib",
+        "interop.includes=" + stdlibPath);
+    workspace.runBuckCommand("build", target.toString()).assertSuccess();
+    buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally(target.toString());
+    buildLog.assertTargetBuiltLocally(binary.toString());
+
+    workspace.resetBuildLogFile();
+
+    // Remove the config, should default to a valid place
+    workspace.replaceFileContents(
+        ".buckconfig",
+        "interop.includes=" + stdlibPath,
+        "");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally(target.toString());

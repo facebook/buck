@@ -27,6 +27,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -46,6 +47,8 @@ public class OCamlLink extends AbstractBuildRule {
   private final Tool ocamlCompiler;
   @AddToRuleKey
   private final ImmutableList<String> flags;
+  @AddToRuleKey
+  private final Optional<String> stdlib;
   @AddToRuleKey(stringify = true)
   private final Path outputRelativePath;
   @AddToRuleKey
@@ -65,6 +68,7 @@ public class OCamlLink extends AbstractBuildRule {
       ImmutableList<String> cxxCompiler,
       Tool ocamlCompiler,
       ImmutableList<String> flags,
+      Optional<String> stdlib,
       Path outputRelativePath,
       ImmutableList<Arg> depInput,
       ImmutableList<Arg> cDepInput,
@@ -77,6 +81,7 @@ public class OCamlLink extends AbstractBuildRule {
     this.cxxCompiler = cxxCompiler;
     this.ocamlCompiler = ocamlCompiler;
     this.flags = flags;
+    this.stdlib = stdlib;
     this.outputRelativePath = outputRelativePath;
     this.depInput = depInput;
     this.cDepInput = cDepInput;
@@ -100,6 +105,7 @@ public class OCamlLink extends AbstractBuildRule {
             cxxCompiler,
             ocamlCompiler.getCommandPrefix(getResolver()),
             flags,
+            stdlib,
             getProjectFilesystem().resolve(outputRelativePath),
             depInput,
             cDepInput,
