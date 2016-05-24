@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY ff9ab4bda9e03045be03ab264944801001c7bb5d #@#
+#@# GENERATED FILE: DO NOT MODIFY aa0b85786518d5f12320abe643707da64ec22227 #@#
 {
   "keys" : {
     "deps" : [
@@ -6,12 +6,12 @@
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/hashing:hashing",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:Sha1HashCode",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rule_key",
-      "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
       "//third-party/java/jackson:jackson-databind",

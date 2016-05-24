@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 1fbd28eedeb8c73368e61c8ecb4dad1aa44aaaf2 #@#
+#@# GENERATED FILE: DO NOT MODIFY 6ff37a8905526010e4c7ed9e7a421fba8aa2c891 #@#
 {
   "Sha1HashCode" : {
     "deps" : [ ],
@@ -45,6 +45,7 @@
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/graph:graph",
+      "//src/com/facebook/buck/hashing:hashing",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/core:packagefinder",
       "//src/com/facebook/buck/model:build_id",
