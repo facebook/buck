@@ -234,7 +234,9 @@ public class TargetNodeVisibilityTest {
     Description<FakeDescription.FakeArg> description = new FakeDescription();
     FakeDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
     BuildRuleFactoryParams params =
-        NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(buildTarget);
+        NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
+            buildTarget,
+            new FakeProjectFilesystem());
     return new TargetNode<>(
         Hashing.sha1().hashString(params.target.getFullyQualifiedName(), UTF_8),
         description,

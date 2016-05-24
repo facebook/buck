@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -34,17 +35,32 @@ import java.nio.file.Path;
 
 public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescription.Arg> {
 
-  protected JavaLibraryBuilder(BuildTarget target, HashCode hashCode) {
-    super(new JavaLibraryDescription(DEFAULT_JAVAC_OPTIONS), target, hashCode);
+  private final ProjectFilesystem projectFilesystem;
+
+  protected JavaLibraryBuilder(
+      BuildTarget target,
+      ProjectFilesystem projectFilesystem,
+      HashCode hashCode) {
+    super(
+        new JavaLibraryDescription(DEFAULT_JAVAC_OPTIONS),
+        target,
+        projectFilesystem,
+        hashCode);
+    this.projectFilesystem = projectFilesystem;
   }
 
   public static JavaLibraryBuilder createBuilder(BuildTarget target) {
-    return new JavaLibraryBuilder(target, null);
+    return new JavaLibraryBuilder(target, new FakeProjectFilesystem(), null);
   }
 
+  public static JavaLibraryBuilder createBuilder(
+      BuildTarget target,
+      ProjectFilesystem projectFilesystem) {
+    return new JavaLibraryBuilder(target, projectFilesystem, null);
+  }
 
   public static JavaLibraryBuilder createBuilder(BuildTarget target, HashCode hashCode) {
-    return new JavaLibraryBuilder(target, hashCode);
+    return new JavaLibraryBuilder(target, new FakeProjectFilesystem(), hashCode);
   }
 
   public JavaLibraryBuilder addDep(BuildTarget rule) {
@@ -83,7 +99,7 @@ public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescripti
   }
 
   public JavaLibraryBuilder addSrc(Path path) {
-    return addSrc(new PathSourcePath(new FakeProjectFilesystem(), path));
+    return addSrc(new PathSourcePath(projectFilesystem, path));
   }
 
   public JavaLibraryBuilder addSrcTarget(BuildTarget target) {

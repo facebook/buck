@@ -238,7 +238,8 @@ public class JvmLibraryArgInterpreterTest {
   private void populateWithDefaultValues(Object arg) {
     BuildRuleFactoryParams factoryParams =
         NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
-            BuildTargetFactory.newInstance("//example:target"));
+            BuildTargetFactory.newInstance("//example:target"),
+            new FakeProjectFilesystem());
 
     try {
       new ConstructorArgMarshaller(

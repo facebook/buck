@@ -54,16 +54,25 @@ public abstract class AbstractNodeBuilder<A> {
   protected AbstractNodeBuilder(
       Description<A> description,
       BuildTarget target) {
-    this(description, target, null);
+    this(description, target, new FakeProjectFilesystem(), null);
   }
 
   protected AbstractNodeBuilder(
       Description<A> description,
       BuildTarget target,
+      ProjectFilesystem projectFilesystem) {
+    this(description, target, projectFilesystem, null);
+  }
+
+  protected AbstractNodeBuilder(
+      Description<A> description,
+      BuildTarget target,
+      ProjectFilesystem projectFilesystem,
       HashCode hashCode) {
     this.description = description;
     this.factoryParams = NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
-        target);
+        target,
+        projectFilesystem);
     this.target = target;
     this.rawHashCode = hashCode;
 
@@ -185,7 +194,7 @@ public abstract class AbstractNodeBuilder<A> {
       new ConstructorArgMarshaller(
           new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance())).populateDefaults(
           cellRoots,
-          new FakeProjectFilesystem(),
+          factoryParams.getProjectFilesystem(),
           factoryParams,
           arg);
     } catch (ConstructorArgMarshalException error) {

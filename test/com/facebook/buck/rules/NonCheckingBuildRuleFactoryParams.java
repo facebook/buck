@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.InMemoryBuildFileTree;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -29,9 +29,11 @@ public final class NonCheckingBuildRuleFactoryParams {
 
   private NonCheckingBuildRuleFactoryParams() {}
 
-  public static BuildRuleFactoryParams createNonCheckingBuildRuleFactoryParams(BuildTarget target) {
+  public static BuildRuleFactoryParams createNonCheckingBuildRuleFactoryParams(
+      BuildTarget target,
+      ProjectFilesystem projectFilesystem) {
     return new BuildRuleFactoryParams(
-        new FakeProjectFilesystem(),
+        projectFilesystem,
         target,
         new InMemoryBuildFileTree(ImmutableList.<BuildTarget>of()),
         /* enforceBuckPackageBoundary */ false);

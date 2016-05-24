@@ -112,7 +112,8 @@ public class AuditOwnerCommandTest {
     arg.inputs = inputs;
     BuildRuleFactoryParams params =
         NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
-            buildTarget);
+            buildTarget,
+            new FakeProjectFilesystem());
     try {
       return new TargetNode<>(
           Hashing.sha1().hashString(params.target.getFullyQualifiedName(), UTF_8),

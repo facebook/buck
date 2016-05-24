@@ -170,7 +170,9 @@ public class TargetNodeTest {
       ImmutableMap<String, Object> rawNode)
       throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
     BuildRuleFactoryParams buildRuleFactoryParams =
-        NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(buildTarget);
+        NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
+            buildTarget,
+            new FakeProjectFilesystem());
 
     Description<Arg> description = new TestDescription();
 
