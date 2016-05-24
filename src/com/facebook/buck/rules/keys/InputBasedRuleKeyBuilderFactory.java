@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
@@ -23,7 +24,6 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
@@ -49,18 +49,18 @@ public class InputBasedRuleKeyBuilderFactory
         InputBasedRuleKeyBuilderFactory.Builder,
         Optional<RuleKey>> {
 
-  private final FileHashCache fileHashCache;
+  private final FileHashLoader fileHashLoader;
   private final SourcePathResolver pathResolver;
   private final InputHandling inputHandling;
   private final LoadingCache<RuleKeyAppendable, Result> cache;
 
   protected InputBasedRuleKeyBuilderFactory(
       int seed,
-      FileHashCache hashCache,
+      FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
       InputHandling inputHandling) {
     super(seed);
-    this.fileHashCache = hashCache;
+    this.fileHashLoader = hashLoader;
     this.pathResolver = pathResolver;
     this.inputHandling = inputHandling;
 
@@ -79,9 +79,9 @@ public class InputBasedRuleKeyBuilderFactory
 
   public InputBasedRuleKeyBuilderFactory(
       int seed,
-      FileHashCache hashCache,
+      FileHashLoader hashLoader,
       SourcePathResolver pathResolver) {
-    this(seed, hashCache, pathResolver, InputHandling.HASH);
+    this(seed, hashLoader, pathResolver, InputHandling.HASH);
   }
 
   @Override
@@ -113,7 +113,7 @@ public class InputBasedRuleKeyBuilderFactory
     private final ImmutableList.Builder<Iterable<SourcePath>> inputs = ImmutableList.builder();
 
     private Builder() {
-      super(pathResolver, fileHashCache);
+      super(pathResolver, fileHashLoader);
     }
 
     @Override

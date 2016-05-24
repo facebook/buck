@@ -16,10 +16,10 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Preconditions;
 
 public class AbiRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactory {
@@ -28,10 +28,10 @@ public class AbiRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactory {
 
   public AbiRuleKeyBuilderFactory(
       int seed,
-      FileHashCache hashCache,
+      FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
       DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
-    super(seed, hashCache, pathResolver);
+    super(seed, hashLoader, pathResolver);
     this.defaultRuleKeyBuilderFactory = defaultRuleKeyBuilderFactory;
   }
 

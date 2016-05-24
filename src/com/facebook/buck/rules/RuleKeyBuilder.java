@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -23,7 +24,6 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.hash.AppendingHasher;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -55,26 +55,26 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
 
   private final SourcePathResolver resolver;
   private final Hasher hasher;
-  private final FileHashCache hashCache;
+  private final FileHashLoader hashLoader;
   private final RuleKeyLogger ruleKeyLogger;
   private Stack<String> keyStack;
 
   public RuleKeyBuilder(
       SourcePathResolver resolver,
-      FileHashCache hashCache,
+      FileHashLoader hashLoader,
       RuleKeyLogger ruleKeyLogger) {
     this.resolver = resolver;
     this.hasher = new AppendingHasher(Hashing.sha1(), /* numHashers */ 2);
-    this.hashCache = hashCache;
+    this.hashLoader = hashLoader;
     this.keyStack = new Stack<>();
     this.ruleKeyLogger = ruleKeyLogger;
   }
 
   public RuleKeyBuilder(
       SourcePathResolver resolver,
-      FileHashCache hashCache) {
+      FileHashLoader hashLoader) {
     this(resolver,
-        hashCache,
+        hashLoader,
         logger.isVerboseEnabled() ?
             new DefaultRuleKeyLogger() :
             new NullRuleKeyLogger());
@@ -240,7 +240,7 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
   public RuleKeyBuilder<T> setPath(Path absolutePath, Path ideallyRelative) throws IOException {
     // TODO(shs96c): Enable this precondition once setPath(Path) has been removed.
     // Preconditions.checkState(absolutePath.isAbsolute());
-    HashCode sha1 = hashCache.get(absolutePath);
+    HashCode sha1 = hashLoader.get(absolutePath);
     if (sha1 == null) {
       throw new RuntimeException("No SHA for " + absolutePath);
     }
@@ -267,7 +267,7 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
     Preconditions.checkState(absoluteArchiveMemberPath.isAbsolute());
     Preconditions.checkState(!relativeArchiveMemberPath.isAbsolute());
 
-    HashCode hash = hashCache.get(absoluteArchiveMemberPath);
+    HashCode hash = hashLoader.get(absoluteArchiveMemberPath);
     if (hash == null) {
       throw new RuntimeException("No hash for " + absoluteArchiveMemberPath);
     }

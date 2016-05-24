@@ -16,13 +16,13 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -40,7 +40,7 @@ import javax.annotation.Nonnull;
 public class ContentAgnosticRuleKeyBuilderFactory
     extends ReflectiveRuleKeyBuilderFactory<RuleKeyBuilder<RuleKey>, RuleKey> {
 
-  private final FileHashCache fileHashCache;
+  private final FileHashLoader fileHashLoader;
   private final SourcePathResolver pathResolver;
   private final LoadingCache<RuleKeyAppendable, RuleKey> ruleKeyCache;
 
@@ -60,7 +60,7 @@ public class ContentAgnosticRuleKeyBuilderFactory
         });
 
     this.pathResolver = pathResolver;
-    this.fileHashCache = new FileHashCache() {
+    this.fileHashLoader = new FileHashLoader() {
 
       @Override
       public HashCode get(Path path) throws IOException {
@@ -71,30 +71,11 @@ public class ContentAgnosticRuleKeyBuilderFactory
       public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
         throw new AssertionError();
       }
-
-      @Override
-      public boolean willGet(Path path) {
-        return true;
-      }
-
-      @Override
-      public boolean willGet(ArchiveMemberPath archiveMemberPath) {
-        return true;
-      }
-
-      @Override
-      public void invalidate(Path path) {}
-
-      @Override
-      public void invalidateAll() {}
-
-      @Override
-      public void set(Path path, HashCode hashCode) {}
     };
   }
 
   private RuleKeyBuilder<RuleKey> newBuilder() {
-    return new RuleKeyBuilder<RuleKey>(pathResolver, fileHashCache) {
+    return new RuleKeyBuilder<RuleKey>(pathResolver, fileHashLoader) {
       @Override
       protected RuleKeyBuilder<RuleKey> setBuildRule(BuildRule rule) {
         return setSingleValue(ContentAgnosticRuleKeyBuilderFactory.this.build(rule));

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
@@ -24,7 +25,6 @@ import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -38,12 +38,12 @@ public class DefaultRuleKeyBuilderFactory
     extends ReflectiveRuleKeyBuilderFactory<RuleKeyBuilder<RuleKey>, RuleKey> {
 
   protected final LoadingCache<RuleKeyAppendable, RuleKey> ruleKeyCache;
-  private final FileHashCache hashCache;
+  private final FileHashLoader hashLoader;
   private final SourcePathResolver pathResolver;
 
   public DefaultRuleKeyBuilderFactory(
       int seed,
-      FileHashCache hashCache,
+      FileHashLoader hashLoader,
       SourcePathResolver pathResolver) {
     super(seed);
     this.ruleKeyCache = CacheBuilder.newBuilder().weakKeys().build(
@@ -55,7 +55,7 @@ public class DefaultRuleKeyBuilderFactory
             return subKeyBuilder.build();
           }
         });
-    this.hashCache = hashCache;
+    this.hashLoader = hashLoader;
     this.pathResolver = pathResolver;
   }
 
@@ -64,7 +64,7 @@ public class DefaultRuleKeyBuilderFactory
   }
 
   private RuleKeyBuilder<RuleKey> newBuilder() {
-    return new RuleKeyBuilder<RuleKey>(pathResolver, hashCache) {
+    return new RuleKeyBuilder<RuleKey>(pathResolver, hashLoader) {
       @Override
       protected RuleKeyBuilder<RuleKey> setBuildRule(BuildRule rule) {
         return setSingleValue(getDefaultRuleKeyBuilderFactory().build(rule));

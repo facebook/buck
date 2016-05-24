@@ -16,13 +16,13 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -45,9 +45,9 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
 
   public DefaultDependencyFileRuleKeyBuilderFactory(
       int seed,
-      FileHashCache fileHashCache,
+      FileHashLoader fileHashLoader,
       SourcePathResolver pathResolver) {
-    super(seed, fileHashCache, pathResolver, InputHandling.IGNORE);
+    super(seed, fileHashLoader, pathResolver, InputHandling.IGNORE);
     this.pathResolver = pathResolver;
   }
 
