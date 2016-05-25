@@ -5,6 +5,7 @@ standard_java_library(
     'LoadCommand',
     'MachoHeader',
     'Nlist',
+    'Section',
   ],
   tests = [
     '//test/com/facebook/buck/macho:macho',
