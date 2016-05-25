@@ -159,8 +159,6 @@ public class AndroidBinaryGraphEnhancerTest {
         ImmutableSet.<SourcePath>of(),
         /* resourceUnionPackage */ Optional.<String>absent(),
         AndroidBinary.PackageType.DEBUG,
-        ANDROID_JAVAC_OPTIONS,
-        false,
         false,
         /* skipCrunchPngs */ false,
         /* manifestEntries */ ManifestEntries.empty());

@@ -249,8 +249,6 @@ public class AndroidBinaryGraphEnhancer {
         packageableCollection.getAssetsDirectories(),
         resourceUnionPackage,
         packageType,
-        javacOptions,
-        shouldPreDex,
         shouldBuildStringSourceMap,
         skipCrunchPngs,
         manifestEntries);

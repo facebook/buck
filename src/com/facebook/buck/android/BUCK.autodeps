@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY b4b8a66816243dcb709ca222e2f4d4d500f55883 #@#
+#@# GENERATED FILE: DO NOT MODIFY 8b33305f0d18773a2b66849b99a2784ecdba8027 #@#
 {
   "exceptions" : {
     "deps" : [
@@ -84,7 +84,6 @@
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/io:io",
-      "//src/com/facebook/buck/jvm/core:classhash",
       "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/jvm/java:steps",
       "//src/com/facebook/buck/jvm/java:support",

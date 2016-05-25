@@ -16,8 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
-
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -72,8 +70,6 @@ public class AaptPackageResourcesTest {
             ImmutableSet.<SourcePath>of(),
             /* resourceUnionPackage */ Optional.<String>absent(),
             PackageType.DEBUG,
-            DEFAULT_JAVAC_OPTIONS,
-            /* rDotJavaNeedsDexing */ false,
             /* shouldBuildStringSourceMap */ false,
             /* skipCrunchPngs */ false,
             /* manifestEntries */ ManifestEntries.empty());
