@@ -511,6 +511,34 @@ public class AndroidBinaryGraphEnhancer {
       AaptPackageResources aaptPackageResources,
       Iterable<DexProducedFromJavaLibrary> preDexRulesNotInThePackageableCollection,
       AndroidPackageableCollection packageableCollection) {
+    ImmutableSet<DexProducedFromJavaLibrary> allPreDexDeps = createPreDexRulesForLibraries(
+        preDexRulesNotInThePackageableCollection,
+        packageableCollection);
+
+    BuildRuleParams paramsForPreDexMerge = buildRuleParams.copyWithChanges(
+        createBuildTargetWithFlavor(DEX_MERGE_FLAVOR),
+        Suppliers.ofInstance(
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(getDexMergeDeps(aaptPackageResources, allPreDexDeps))
+                .build()),
+        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+    PreDexMerge preDexMerge = new PreDexMerge(
+        paramsForPreDexMerge,
+        pathResolver,
+        primaryDexPath,
+        dexSplitMode,
+        allPreDexDeps,
+        aaptPackageResources,
+        dxExecutorService,
+        xzCompressionLevel);
+    ruleResolver.addToIndex(preDexMerge);
+
+    return preDexMerge;
+  }
+
+  private ImmutableSet<DexProducedFromJavaLibrary> createPreDexRulesForLibraries(
+      Iterable<DexProducedFromJavaLibrary> preDexRulesNotInThePackageableCollection,
+      AndroidPackageableCollection packageableCollection) {
     ImmutableSet.Builder<DexProducedFromJavaLibrary> preDexDeps = ImmutableSet.builder();
     preDexDeps.addAll(preDexRulesNotInThePackageableCollection);
     for (BuildTarget buildTarget : packageableCollection.getJavaLibrariesToDex()) {
@@ -552,28 +580,7 @@ public class AndroidBinaryGraphEnhancer {
       ruleResolver.addToIndex(preDex);
       preDexDeps.add(preDex);
     }
-
-    ImmutableSet<DexProducedFromJavaLibrary> allPreDexDeps = preDexDeps.build();
-
-    BuildRuleParams paramsForPreDexMerge = buildRuleParams.copyWithChanges(
-        createBuildTargetWithFlavor(DEX_MERGE_FLAVOR),
-        Suppliers.ofInstance(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(getDexMergeDeps(aaptPackageResources, allPreDexDeps))
-                .build()),
-        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
-    PreDexMerge preDexMerge = new PreDexMerge(
-        paramsForPreDexMerge,
-        pathResolver,
-        primaryDexPath,
-        dexSplitMode,
-        allPreDexDeps,
-        aaptPackageResources,
-        dxExecutorService,
-        xzCompressionLevel);
-    ruleResolver.addToIndex(preDexMerge);
-
-    return preDexMerge;
+    return preDexDeps.build();
   }
 
   private BuildTarget createBuildTargetWithFlavor(Flavor flavor) {
