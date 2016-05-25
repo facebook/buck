@@ -524,7 +524,7 @@ public class AndroidBinaryIntegrationTest {
 
   @Test
   public void testApkEmptyResDirectoriesBuildsCorrectly() throws IOException {
-    workspace.runBuckBuild("//apps/sample:app_no_res").assertSuccess();
+    workspace.runBuckBuild("//apps/sample:app_with_aar_and_no_res").assertSuccess();
   }
 
   @Test

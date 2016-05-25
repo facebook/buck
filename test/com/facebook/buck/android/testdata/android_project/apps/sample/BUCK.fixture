@@ -284,7 +284,7 @@ android_binary(
 )
 
 android_binary(
-  name = 'app_no_res',
+  name = 'app_with_aar_and_no_res',
   manifest = 'AndroidManifestNoRes.xml',
   keystore = '//keystores:debug',
   deps = [
