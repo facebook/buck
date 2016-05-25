@@ -335,11 +335,6 @@ public class AppleLibraryDescription implements
     BuildTarget unstrippedTarget = params.getBuildTarget()
         .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
     BuildTarget existingTarget = unstrippedTarget;
-    if (existingTarget.getFlavors().contains(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR)) {
-      existingTarget = existingTarget
-          .withoutFlavors(ImmutableSet.of(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR))
-          .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
-    }
 
     Optional<BuildRule> existingRule = resolver.getRuleOptional(existingTarget);
     if (existingRule.isPresent()) {

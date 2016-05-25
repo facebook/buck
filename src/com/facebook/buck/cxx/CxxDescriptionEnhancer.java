@@ -433,8 +433,22 @@ public class CxxDescriptionEnhancer {
 
   public static BuildTarget createSharedLibraryBuildTarget(
       BuildTarget target,
-      Flavor platform) {
-    return BuildTarget.builder(target).addFlavors(platform).addFlavors(SHARED_FLAVOR).build();
+      Flavor platform,
+      Linker.LinkType linkType) {
+    Flavor linkFlavor;
+    switch (linkType) {
+      case SHARED:
+        linkFlavor = SHARED_FLAVOR;
+        break;
+      case MACH_O_BUNDLE:
+        linkFlavor = MACH_O_BUNDLE_FLAVOR;
+        break;
+      case EXECUTABLE:
+      default:
+        throw new IllegalStateException(
+            "Only SHARED and MACH_O_BUNDLE types expected, got: " + linkType);
+    }
+    return BuildTarget.builder(target).addFlavors(platform).addFlavors(linkFlavor).build();
   }
 
   public static Path getStaticLibraryPath(
@@ -499,13 +513,9 @@ public class CxxDescriptionEnhancer {
 
   public static Path getSharedLibraryPath(
       ProjectFilesystem filesystem,
-      BuildTarget target,
-      String soname,
-      CxxPlatform platform) {
-    return BuildTargets.getGenPath(
-        filesystem,
-        createSharedLibraryBuildTarget(target, platform.getFlavor()),
-        "%s/" + soname);
+      BuildTarget sharedLibraryTarget,
+      String soname) {
+    return BuildTargets.getGenPath(filesystem, sharedLibraryTarget, "%s/" + soname);
   }
 
   @VisibleForTesting

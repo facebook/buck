@@ -530,11 +530,6 @@ public class AppleDescriptions {
         .withoutFlavors(ImmutableSet.of(AppleDebuggableBinary.RULE_FLAVOR))
         .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
         .withoutFlavors(ImmutableSet.of(AppleBinaryDescription.APP_FLAVOR));
-    if (unstrippedTarget.getFlavors().contains(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR)) {
-      unstrippedTarget = unstrippedTarget
-          .withoutFlavors(ImmutableSet.of(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR))
-          .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
-    }
     if (unstrippedTarget.getFlavors().contains(AppleTestDescription.BUNDLE_FLAVOR)) {
       unstrippedTarget = unstrippedTarget.withAppendedFlavors(AppleDebuggableBinary.RULE_FLAVOR);
     }

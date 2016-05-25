@@ -114,7 +114,8 @@ public class CxxPythonExtensionDescription implements
         BuildTarget.builder(target)
             .addFlavors(pythonPlatform)
             .build(),
-        platform);
+        platform,
+        Linker.LinkType.SHARED);
   }
 
   @VisibleForTesting

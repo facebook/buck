@@ -625,7 +625,10 @@ public class CxxLibraryDescriptionTest {
         CxxSourceRuleFactory.PicType.PIC);
     rule.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.SHARED);
     BuildRule sharedRule = resolver.getRule(
-        CxxDescriptionEnhancer.createSharedLibraryBuildTarget(target, cxxPlatform.getFlavor()));
+        CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
+            target,
+            cxxPlatform.getFlavor(),
+            Linker.LinkType.SHARED));
     assertNotNull(sharedRule);
     assertEquals(
         ImmutableSet.of(

@@ -555,7 +555,7 @@ public class AppleTestIntegrationTest {
                 BuildTargets.getGenPath(
                     filesystem,
                     workspace.newBuildTarget(
-                        "//:AppTests#apple-test-library,iphonesimulator-x86_64,shared"),
+                        "//:AppTests#apple-test-library,iphonesimulator-x86_64,mach-o-bundle"),
                     "%s/libAppTests#apple-test-library.dylib"))
             .toString());
 

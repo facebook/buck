@@ -287,7 +287,8 @@ public class CxxLibraryDescription implements
     BuildTarget sharedTarget =
         CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
             params.getBuildTarget(),
-            cxxPlatform.getFlavor());
+            cxxPlatform.getFlavor(),
+            linkType);
 
     if (objects.isEmpty()) {
       return new NoopBuildRule(
@@ -306,9 +307,8 @@ public class CxxLibraryDescription implements
         cxxPlatform);
     Path sharedLibraryPath = CxxDescriptionEnhancer.getSharedLibraryPath(
         params.getProjectFilesystem(),
-        params.getBuildTarget(),
-        sharedLibrarySoname,
-        cxxPlatform);
+        sharedTarget,
+        sharedLibrarySoname);
     ImmutableList.Builder<String> extraLdFlagsBuilder = ImmutableList.builder();
     extraLdFlagsBuilder.addAll(linkerFlags);
     ImmutableList<String> extraLdFlags = extraLdFlagsBuilder.build();
