@@ -18,8 +18,10 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
@@ -28,7 +30,9 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -57,7 +61,7 @@ import java.util.concurrent.Callable;
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class ShTest
     extends NoopBuildRule
-    implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule {
+    implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule, BinaryBuildRule {
 
   @AddToRuleKey
   private final SourcePath test;
@@ -211,6 +215,21 @@ public class ShTest
   @Override
   public boolean supportsStreamingTests() {
     return false;
+  }
+
+  @Override
+  public Tool getExecutableCommand() {
+    CommandTool.Builder builder = new CommandTool.Builder()
+        .addArg(new SourcePathArg(getResolver(), test))
+        .addDeps(getResolver().filterBuildRuleInputs(resources));
+
+    for (Arg arg : args) {
+      builder.addArg(arg);
+    }
+    for (ImmutableMap.Entry<String, Arg> envVar : env.entrySet()) {
+      builder.addEnv(envVar.getKey(), envVar.getValue());
+    }
+    return builder.build();
   }
 
   @Override
