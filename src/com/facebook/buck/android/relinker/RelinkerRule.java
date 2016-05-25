@@ -39,7 +39,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Charsets;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -174,7 +174,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
     buildableContext.recordArtifact(getSymbolsNeededOutPath());
 
     return ImmutableList.of(
-        new MkdirStep(getProjectFilesystem(), getScratchDirPath()),
+        new MakeCleanDirectoryStep(getProjectFilesystem(), getScratchDirPath()),
         new AbstractExecutionStep("xdso-dce relinker") {
           @Override
           public StepExecutionResult execute(ExecutionContext context)
