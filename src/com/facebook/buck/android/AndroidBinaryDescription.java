@@ -210,6 +210,7 @@ public class AndroidBinaryDescription
         args.buildConfigValues.get(),
         args.buildConfigValuesFile,
         Optional.<Integer>absent(),
+        args.trimResourceIds.or(false),
         nativePlatforms,
         args.enableRelinker.or(false) ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
         dxExecutorService,
@@ -368,6 +369,7 @@ public class AndroidBinaryDescription
     public Optional<SourcePath> secondaryDexTailClassesFile;
     public Optional<Long> linearAllocHardLimit;
     public Optional<List<String>> resourceFilter;
+    public Optional<Boolean> trimResourceIds;
     public Optional<String> resourceUnionPackage;
     public Optional<ImmutableSet<String>> locales;
     public Optional<Boolean> buildStringSourceMap;

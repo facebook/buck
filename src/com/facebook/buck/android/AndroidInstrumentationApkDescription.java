@@ -144,6 +144,7 @@ public class AndroidInstrumentationApkDescription
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFile */ Optional.<SourcePath>absent(),
         /* xzCompressionLevel */ Optional.<Integer>absent(),
+        /* trimResourceIds */ false,
         nativePlatforms,
         AndroidBinary.RelinkerMode.DISABLED,
         dxExecutorService,

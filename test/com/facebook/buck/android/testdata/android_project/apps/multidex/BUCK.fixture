@@ -18,6 +18,7 @@ android_binary(
   manifest = 'AndroidManifest.xml',
   keystore = '//keystores:debug',
   use_split_dex = True,
+  # ARGS_FOR_APP
   dex_compression = 'jar',
   primary_dex_patterns = [
     '/MyApplication^',

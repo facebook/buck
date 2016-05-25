@@ -81,6 +81,7 @@ public class AndroidBinaryGraphEnhancer {
   private final BuildTarget originalBuildTarget;
   private final ImmutableSortedSet<BuildRule> originalDeps;
   private final BuildRuleParams buildRuleParams;
+  private final boolean trimResourceIds;
   private final ManifestEntries manifestEntries;
   private final BuildRuleResolver ruleResolver;
   private final SourcePathResolver pathResolver;
@@ -130,6 +131,7 @@ public class AndroidBinaryGraphEnhancer {
       BuildConfigFields buildConfigValues,
       Optional<SourcePath> buildConfigValuesFile,
       Optional<Integer> xzCompressionLevel,
+      boolean trimResourceIds,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       RelinkerMode relinkerMode,
       ListeningExecutorService dxExecutorService,
@@ -161,6 +163,7 @@ public class AndroidBinaryGraphEnhancer {
     this.buildConfigValuesFile = buildConfigValuesFile;
     this.dxExecutorService = dxExecutorService;
     this.xzCompressionLevel = xzCompressionLevel;
+    this.trimResourceIds = trimResourceIds;
     this.nativeLibsEnhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
             ruleResolver,
@@ -315,18 +318,20 @@ public class AndroidBinaryGraphEnhancer {
     }
 
     // Create rule to trim uber R.java sources.
+    Collection<DexProducedFromJavaLibrary> preDexedLibrariesForResourceIdFiltering =
+        trimResourceIds ? preDexedLibraries : ImmutableList.<DexProducedFromJavaLibrary>of();
     BuildRuleParams paramsForTrimUberRDotJava = buildRuleParams.copyWithChanges(
         createBuildTargetWithFlavor(TRIM_UBER_R_DOT_JAVA_FLAVOR),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>naturalOrder()
             .add(aaptPackageResources)
-            .addAll(preDexedLibraries)
+            .addAll(preDexedLibrariesForResourceIdFiltering)
             .build()),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
     TrimUberRDotJava trimUberRDotJava = new TrimUberRDotJava(
         paramsForTrimUberRDotJava,
         pathResolver,
         aaptPackageResources,
-        preDexedLibraries);
+        preDexedLibrariesForResourceIdFiltering);
     ruleResolver.addToIndex(trimUberRDotJava);
 
     // Create rule to compile uber R.java sources.

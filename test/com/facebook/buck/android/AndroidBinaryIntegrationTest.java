@@ -599,20 +599,47 @@ public class AndroidBinaryIntegrationTest {
 
   @Test
   public void testResourcesTrimming() throws IOException {
+    // Enable trimming.
+    workspace.replaceFileContents(
+        "apps/multidex/BUCK",
+        "# ARGS_FOR_APP",
+        "trim_resource_ids = True,  # ARGS_FOR_APP");
     workspace.runBuckCommand("build", "//apps/multidex:disassemble_app_r_dot_java").assertSuccess();
+    // Make sure we only see what we expect.
     verifyTrimmedRDotJava(ImmutableSet.of("top_layout", "title"));
 
+    // Make a change.
     workspace.replaceFileContents(
         "java/com/sample/lib/Sample.java",
         "R.layout.top_layout",
-        "0");
+        "0 /* NO RESOURCE HERE */");
 
+    // Make sure everything gets rebuilt, and we only see what we expect.
     workspace.resetBuildLogFile();
     workspace.runBuckCommand("build", "//apps/multidex:disassemble_app_r_dot_java").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//apps/multidex:app#compile_uber_r_dot_java");
     buildLog.assertTargetBuiltLocally("//apps/multidex:app#dex_uber_r_dot_java");
     verifyTrimmedRDotJava(ImmutableSet.of("title"));
+
+    // Turn off trimming and turn on exopackage, and rebuilt.
+    workspace.replaceFileContents(
+        "apps/multidex/BUCK",
+        "trim_resource_ids = True,  # ARGS_FOR_APP",
+        "exopackage_modes = ['secondary_dex'],  # ARGS_FOR_APP");
+    workspace.runBuckCommand("build", SIMPLE_TARGET).assertSuccess();
+
+    // Make a change.
+    workspace.replaceFileContents(
+        "java/com/sample/lib/Sample.java",
+        "0 /* NO RESOURCE HERE */",
+        "R.layout.top_layout");
+
+    // rebuilt and verify that we get an ABI hit.
+    workspace.resetBuildLogFile();
+    workspace.runBuckCommand("build", SIMPLE_TARGET).assertSuccess();
+    buildLog = workspace.getBuildLog();
+    buildLog.assertTargetHadMatchingDepsAbi(SIMPLE_TARGET);
   }
 
   public static final Pattern SMALI_STATIC_FINAL_INT_PATTERN = Pattern.compile(
