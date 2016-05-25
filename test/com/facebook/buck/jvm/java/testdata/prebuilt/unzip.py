@@ -29,6 +29,8 @@ def extractall(zf, path):
 def main():
     from_ = sys.argv[1]
     to = sys.argv[2]
+    if sys.platform in ('win32', 'cygwin'):
+        to = '\\\\?\\' + to  # use long path names.
 
     with zipfile.ZipFile(from_) as zf:
         extractall(zf, to)
