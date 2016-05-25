@@ -1,5 +1,5 @@
 install:
-  - cinst -y jdk8
+  - cinst -y jdk8 -version v8.0.92
   - cinst -y ant -ignoreDependencies
   - set JAVA_HOME=C:\Program Files\Java\jdk1.8.0_92
   - set PATH=%JAVA_HOME%\bin;%PATH%
@@ -14,7 +14,7 @@ build_script:
   - bin\\buck build buck
 
 test_script:
-  - bin\\buck test --all --test-selectors=@windows_failures.txt
+  - bin\\buck test --all --test-selectors=@windows_failures.txt --test-selectors=@windows_cxx_support.txt --explain-test-selectors
 
 artifacts:
   - path: buck-out\gen\programs\buck.pex
