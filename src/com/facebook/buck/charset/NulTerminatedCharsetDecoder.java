@@ -50,7 +50,7 @@ public class NulTerminatedCharsetDecoder {
 
     @Override
     public boolean equals(Object other) {
-      if (!(other instanceof NulTerminatedCharsetDecoder)) {
+      if (!(other instanceof NulTerminatedCharsetDecoder.Result)) {
         return false;
       }
 
@@ -67,6 +67,15 @@ public class NulTerminatedCharsetDecoder {
     @Override
     public int hashCode() {
       return Objects.hash(nulTerminatorReached, coderResult);
+    }
+
+    @Override
+    public String toString() {
+      return String.format(
+          "%s nulTerminatorReached=%s coderResult=%s",
+          super.toString(),
+          nulTerminatorReached,
+          coderResult);
     }
   }
 
