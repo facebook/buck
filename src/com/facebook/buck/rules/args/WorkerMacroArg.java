@@ -23,15 +23,20 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.shell.WorkerTool;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
+import java.nio.file.Path;
 
 public class WorkerMacroArg extends MacroArg {
 
   private final WorkerTool workerTool;
   private final ImmutableList<String> startupCommand;
+  private final ImmutableMap<String, String> startupEnvironment;
   private final String jobArgs;
 
   public WorkerMacroArg(
@@ -71,14 +76,23 @@ public class WorkerMacroArg extends MacroArg {
           target));
     }
     this.workerTool = (WorkerTool) workerTool;
-    startupCommand = this.workerTool
-        .getTool()
-        .getCommandPrefix(new SourcePathResolver(resolver));
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    Tool exe = this.workerTool.getTool();
+    startupCommand = exe.getCommandPrefix(pathResolver);
+    startupEnvironment = exe.getEnvironment(pathResolver);
     jobArgs = macroHandler.expand(target, cellNames, resolver, unexpanded).trim();
   }
 
   public ImmutableList<String> getStartupCommand() {
     return startupCommand;
+  }
+
+  public ImmutableMap<String, String> getEnvironment() {
+    return startupEnvironment;
+  }
+
+  public Path getTempDir() {
+    return workerTool.getTempDir();
   }
 
   public String getStartupArgs() {

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -26,35 +27,42 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.Tool;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.nio.file.Path;
+import java.util.Map;
 
 public class DefaultWorkerTool extends NoopBuildRule implements HasRuntimeDeps, WorkerTool {
 
   private final BinaryBuildRule exe;
-  private final Iterable<BuildRule> depsFromStartupArgs;
   private final String args;
+  private final ImmutableMap<String, String> env;
 
   protected DefaultWorkerTool(
       BuildRuleParams ruleParams,
       SourcePathResolver resolver,
       BinaryBuildRule exe,
-      Iterable<BuildRule> depsFromStartupArgs,
-      String args) {
+      String args,
+      ImmutableMap<String, String> env) {
     super(ruleParams, resolver);
     this.exe = exe;
-    this.depsFromStartupArgs = depsFromStartupArgs;
     this.args = args;
+    this.env = env;
   }
 
   @Override
   public Tool getTool() {
     Tool baseTool = this.exe.getExecutableCommand();
-    return new CommandTool.Builder(baseTool)
+    CommandTool.Builder builder = new CommandTool.Builder(baseTool)
         .addInputs(
             FluentIterable.from(this.getDeps())
                 .transform(SourcePaths.getToBuildTargetSourcePath())
-                .toList())
-        .build();
+                .toList());
+    for (Map.Entry<String, String> e : env.entrySet()) {
+      builder.addEnv(e.getKey(), e.getValue());
+    }
+    return builder.build();
   }
 
   @Override
@@ -63,11 +71,13 @@ public class DefaultWorkerTool extends NoopBuildRule implements HasRuntimeDeps, 
   }
 
   @Override
+  public Path getTempDir() {
+    return BuildTargets.getScratchPath(
+        getProjectFilesystem(), getBuildTarget(), "%s__worker");
+  }
+
+  @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .add(exe)
-        .addAll(exe.getExecutableCommand().getDeps(getResolver()))
-        .addAll(depsFromStartupArgs)
-        .build();
+    return getDeps();
   }
 }

@@ -18,13 +18,18 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
+
+import java.nio.file.Path;
 
 @Value.Immutable
 @BuckStyleTuple
 interface AbstractWorkerJobParams {
+  Path getTempDir();
   ImmutableList<String> getStartupCommand();
   String getStartupArgs();
+  ImmutableMap<String, String> getStartupEnvironment();
   String getJobArgs();
 }
