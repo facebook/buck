@@ -89,13 +89,14 @@ public class AppleTestDescription implements
   private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       LIBRARY_FLAVOR, BUNDLE_FLAVOR);
 
-  private static final Set<Flavor> NON_LIBRARY_FLAVORS = ImmutableSet.of(
+  /**
+   * Auxiliary build modes which makes this description emit just the results of the underlying
+   * library delegate.
+   */
+  private static final Set<Flavor> AUXILIARY_LIBRARY_FLAVORS = ImmutableSet.of(
       CxxCompilationDatabase.COMPILATION_DATABASE,
       CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
-      CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
-      AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
-      AppleDebugFormat.DWARF.getFlavor(),
-      AppleDebugFormat.NONE.getFlavor());
+      CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
 
   private final AppleConfig appleConfig;
   private final AppleLibraryDescription appleLibraryDescription;
@@ -167,11 +168,11 @@ public class AppleTestDescription implements
     }
     boolean createBundle = Sets.intersection(
         params.getBuildTarget().getFlavors(),
-        NON_LIBRARY_FLAVORS).isEmpty();
+        AUXILIARY_LIBRARY_FLAVORS).isEmpty();
     // Flavors pertaining to the library targets that are generated.
     Sets.SetView<Flavor> libraryFlavors = Sets.difference(
         params.getBuildTarget().getFlavors(),
-        NON_LIBRARY_FLAVORS);
+        AUXILIARY_LIBRARY_FLAVORS);
     boolean addDefaultPlatform = libraryFlavors.isEmpty();
     ImmutableSet.Builder<Flavor> extraFlavorsBuilder = ImmutableSet.builder();
     if (createBundle) {
