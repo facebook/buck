@@ -84,6 +84,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
@@ -636,13 +637,11 @@ public class AndroidBinary
         FluentIterable
             .from(enhancementResult.getClasspathEntriesToDex())
             .transform(getResolver().deprecatedPathFunction())
+            .append(Collections.singleton(
+                // Note: Need that call to Collections.singleton because
+                // unfortunately Path implements Iterable<Path>.
+                enhancementResult.getCompiledUberRDotJava().getPathToOutput()))
             .toSet();
-    if (enhancementResult.getAaptPackageResources().hasRDotJava()) {
-      classpathEntriesToDex = ImmutableSet.<Path>builder()
-          .addAll(classpathEntriesToDex)
-          .add(enhancementResult.getAaptPackageResources().getPathToCompiledRDotJavaFiles())
-          .build();
-    }
 
     // Execute preprocess_java_classes_binary, if appropriate.
     if (preprocessJavaClassesBash.isPresent()) {

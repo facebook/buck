@@ -30,6 +30,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
+import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.jvm.core.HasJavaClassHashes;
@@ -183,9 +184,21 @@ public class AndroidBinaryGraphEnhancerTest {
               ImmutableList.<DexProducedFromJavaLibrary>of(),
             collection);
 
+    BuildTarget fakeUberRDotJavaCompileTarget = BuildTargetFactory.newInstance(
+        "//fake:uber_r_dot_java#compile");
+    JavaLibrary fakeUberRDotJavaCompile = (JavaLibrary)
+        JavaLibraryBuilder.createBuilder(fakeUberRDotJavaCompileTarget).build(ruleResolver);
+    BuildTarget fakeUberRDotJavaDexTarget = BuildTargetFactory.newInstance(
+        "//fake:uber_r_dot_java#dex");
+    DexProducedFromJavaLibrary fakeUberRDotJavaDex = new DexProducedFromJavaLibrary(
+        new FakeBuildRuleParamsBuilder(fakeUberRDotJavaDexTarget).build(),
+        new SourcePathResolver(ruleResolver),
+        fakeUberRDotJavaCompile);
+    ruleResolver.addToIndex(fakeUberRDotJavaDex);
+
     BuildRule preDexMergeRule = graphEnhancer.createPreDexMergeRule(
         preDexedLibraries,
-        aaptPackageResources);
+        fakeUberRDotJavaDex);
     BuildTarget dexMergeTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#dex_merge");
     BuildRule dexMergeRule = ruleResolver.getRule(dexMergeTarget);
@@ -214,7 +227,7 @@ public class AndroidBinaryGraphEnhancerTest {
             Matchers.not(Matchers.hasItem(javaDep2BuildTarget)),
             Matchers.not(Matchers.hasItem(javaDep2DexBuildTarget)),
             Matchers.hasItem(javaLibDexBuildTarget),
-            Matchers.hasItem(aaptPackageResources.getBuildTarget())));
+            Matchers.hasItem(fakeUberRDotJavaDex.getBuildTarget())));
   }
 
   @Test

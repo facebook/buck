@@ -90,7 +90,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
   @AddToRuleKey
   private final DexSplitMode dexSplitMode;
   private final ImmutableSet<DexProducedFromJavaLibrary> preDexDeps;
-  private final AaptPackageResources aaptPackageResources;
+  private final DexProducedFromJavaLibrary dexForUberRDotJava;
   private final ListeningExecutorService dxExecutorService;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
   private final Optional<Integer> xzCompressionLevel;
@@ -101,14 +101,14 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
       Path primaryDexPath,
       DexSplitMode dexSplitMode,
       ImmutableSet<DexProducedFromJavaLibrary> preDexDeps,
-      AaptPackageResources aaptPackageResources,
+      DexProducedFromJavaLibrary dexForUberRDotJava,
       ListeningExecutorService dxExecutorService,
       Optional<Integer> xzCompressionLevel) {
     super(params, resolver);
     this.primaryDexPath = primaryDexPath;
     this.dexSplitMode = dexSplitMode;
     this.preDexDeps = preDexDeps;
-    this.aaptPackageResources = aaptPackageResources;
+    this.dexForUberRDotJava = dexForUberRDotJava;
     this.dxExecutorService = dxExecutorService;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
     this.xzCompressionLevel = xzCompressionLevel;
@@ -200,7 +200,8 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
     buildableContext.recordArtifact(paths.successDir);
 
     PreDexedFilesSorter preDexedFilesSorter = new PreDexedFilesSorter(
-        aaptPackageResources.getRDotJavaDexWithClasses(),
+        Optional.fromNullable(
+            DexWithClasses.TO_DEX_WITH_CLASSES.apply(dexForUberRDotJava)),
         dexFilesToMerge,
         dexSplitMode.getPrimaryDexPatterns(),
         paths.scratchDir,
@@ -283,8 +284,8 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
         .filter(Predicates.notNull());
 
     // If this APK has Android resources, then the generated R.class files also need to be dexed.
-    Optional<DexWithClasses> rDotJavaDexWithClasses =
-        aaptPackageResources.getRDotJavaDexWithClasses();
+    Optional<DexWithClasses> rDotJavaDexWithClasses = Optional.fromNullable(
+            DexWithClasses.TO_DEX_WITH_CLASSES.apply(dexForUberRDotJava));
     if (rDotJavaDexWithClasses.isPresent()) {
       filesToDex = Iterables.concat(
           filesToDex,

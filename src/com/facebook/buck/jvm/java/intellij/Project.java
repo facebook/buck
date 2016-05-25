@@ -818,6 +818,12 @@ public class Project {
 
       @Override
       public ImmutableSet<BuildRule> visit(BuildRule dep) {
+
+        // Hack: we don't want uber R.java to show up in the deps that IntelliJ sees.
+        if (dep.getBuildTarget().toString().endsWith("_uber_r_dot_java")) {
+          return ImmutableSet.of();
+        }
+
         ImmutableSet<BuildRule> depsToVisit;
         if (rule.getProperties().is(PACKAGING) ||
             dep instanceof AndroidResource ||

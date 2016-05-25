@@ -359,20 +359,20 @@ public class AndroidBinaryGraphEnhancer {
         new DexProducedFromJavaLibrary(paramsForDexUberRDotJava, pathResolver, compileUberRDotJava);
     ruleResolver.addToIndex(dexUberRDotJava);
 
-    // Uncomment this for manual testing.
-//    enhancedDeps.add(dexUberRDotJava);
-
     Optional<PreDexMerge> preDexMerge = Optional.absent();
     if (shouldPreDex) {
       ImmutableSet<DexProducedFromJavaLibrary> preDexedLibraries = createPreDexRulesForLibraries(
+          // TODO(dreiss): Put R.java here.
           preDexBuildConfigs,
           packageableCollection);
       preDexMerge = Optional.of(createPreDexMergeRule(
               preDexedLibraries,
-              aaptPackageResources));
+              dexUberRDotJava));
       enhancedDeps.add(preDexMerge.get());
     } else {
       enhancedDeps.addAll(getTargetsAsRules(packageableCollection.getJavaLibrariesToDex()));
+      // If not pre-dexing, AndroidBinary needs to ProGuard and/or dex the compiled R.java.
+      enhancedDeps.add(compileUberRDotJava);
     }
 
     // Add dependencies on all the build rules generating third-party JARs.  This is mainly to
@@ -511,12 +511,12 @@ public class AndroidBinaryGraphEnhancer {
   @VisibleForTesting
   PreDexMerge createPreDexMergeRule(
       ImmutableSet<DexProducedFromJavaLibrary> allPreDexDeps,
-      AaptPackageResources aaptPackageResources) {
+      DexProducedFromJavaLibrary dexForUberRDotJava) {
     BuildRuleParams paramsForPreDexMerge = buildRuleParams.copyWithChanges(
         createBuildTargetWithFlavor(DEX_MERGE_FLAVOR),
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(getDexMergeDeps(aaptPackageResources, allPreDexDeps))
+                .addAll(getDexMergeDeps(dexForUberRDotJava, allPreDexDeps))
                 .build()),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
     PreDexMerge preDexMerge = new PreDexMerge(
@@ -525,7 +525,7 @@ public class AndroidBinaryGraphEnhancer {
         primaryDexPath,
         dexSplitMode,
         allPreDexDeps,
-        aaptPackageResources,
+        dexForUberRDotJava,
         dxExecutorService,
         xzCompressionLevel);
     ruleResolver.addToIndex(preDexMerge);
@@ -608,10 +608,10 @@ public class AndroidBinaryGraphEnhancer {
   }
 
   private ImmutableSortedSet<BuildRule> getDexMergeDeps(
-      AaptPackageResources aaptPackageResources,
+      DexProducedFromJavaLibrary dexForUberRDotJava,
       ImmutableSet<DexProducedFromJavaLibrary> preDexDeps) {
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-    targets.add(aaptPackageResources.getBuildTarget());
+    targets.add(dexForUberRDotJava.getBuildTarget());
     for (DexProducedFromJavaLibrary preDex : preDexDeps) {
       targets.add(preDex.getBuildTarget());
     }
