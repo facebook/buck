@@ -16,7 +16,7 @@ MINIZ_CPPFLAGS := \
 	-DMINIZ_NO_ZLIB_COMPATIBLE_NAMES \
 
 LOCAL_CPPFLAGS := $(MINIZ_CPPFLAGS)
-LOCAL_CFLAGS := -Wall -Werror -std=gnu99
+LOCAL_CFLAGS := -Wall -Werror -Wno-strict-aliasing -std=gnu99
 
 LOCAL_MODULE := agent-disguised-exe
 
