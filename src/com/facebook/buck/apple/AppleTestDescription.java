@@ -58,11 +58,9 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -88,10 +86,8 @@ public class AppleTestDescription implements
   public static final Flavor BUNDLE_FLAVOR = ImmutableFlavor.of("apple-test-bundle");
   private static final Flavor UNZIP_XCTOOL_FLAVOR = ImmutableFlavor.of("unzip-xctool");
 
-  private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
+  private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       LIBRARY_FLAVOR, BUNDLE_FLAVOR);
-
-  private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = Predicates.in(SUPPORTED_FLAVORS);
 
   private static final Set<Flavor> NON_LIBRARY_FLAVORS = ImmutableSet.of(
       CxxCompilationDatabase.COMPILATION_DATABASE,
@@ -144,7 +140,8 @@ public class AppleTestDescription implements
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return FluentIterable.from(flavors).allMatch(IS_SUPPORTED_FLAVOR) ||
+    return
+        Sets.difference(flavors, SUPPORTED_FLAVORS).isEmpty() ||
         appleLibraryDescription.hasFlavors(flavors);
   }
 
