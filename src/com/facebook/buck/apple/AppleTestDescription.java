@@ -82,8 +82,8 @@ public class AppleTestDescription implements
   /**
    * Flavors for the additional generated build rules.
    */
-  private static final Flavor LIBRARY_FLAVOR = ImmutableFlavor.of("apple-test-library");
-  public static final Flavor BUNDLE_FLAVOR = ImmutableFlavor.of("apple-test-bundle");
+  static final Flavor LIBRARY_FLAVOR = ImmutableFlavor.of("apple-test-library");
+  static final Flavor BUNDLE_FLAVOR = ImmutableFlavor.of("apple-test-bundle");
   private static final Flavor UNZIP_XCTOOL_FLAVOR = ImmutableFlavor.of("unzip-xctool");
 
   private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
@@ -185,9 +185,32 @@ public class AppleTestDescription implements
       extraFlavorsBuilder.add(defaultCxxPlatform.getFlavor());
     }
 
-    CxxPlatform cxxPlatform = cxxPlatformFlavorDomain
-        .getValue(params.getBuildTarget())
-        .or(defaultCxxPlatform);
+    Optional<MultiarchFileInfo> multiarchFileInfo =
+        MultiarchFileInfos.create(appleCxxPlatformFlavorDomain, params.getBuildTarget());
+    AppleCxxPlatform appleCxxPlatform;
+    ImmutableList<CxxPlatform> cxxPlatforms;
+    if (multiarchFileInfo.isPresent()) {
+      ImmutableList.Builder<CxxPlatform> cxxPlatformBuilder = ImmutableList.builder();
+      for (BuildTarget thinTarget : multiarchFileInfo.get().getThinTargets()) {
+        cxxPlatformBuilder.add(cxxPlatformFlavorDomain.getValue(thinTarget).get());
+      }
+      cxxPlatforms = cxxPlatformBuilder.build();
+      appleCxxPlatform = multiarchFileInfo.get().getRepresentativePlatform();
+    } else {
+      CxxPlatform cxxPlatform = cxxPlatformFlavorDomain
+          .getValue(params.getBuildTarget())
+          .or(defaultCxxPlatform);
+      cxxPlatforms = ImmutableList.of(cxxPlatform);
+      try {
+        appleCxxPlatform = appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
+      } catch (FlavorDomainException e) {
+        throw new HumanReadableException(
+            e,
+            "%s: Apple test requires an Apple platform, found '%s'",
+            params.getBuildTarget(),
+            cxxPlatform.getFlavor().getName());
+      }
+    }
 
     Optional<TestHostInfo> testHostInfo;
     if (args.testHostApp.isPresent()) {
@@ -198,7 +221,7 @@ public class AppleTestDescription implements
               args.testHostApp.get(),
               debugFormat,
               libraryFlavors,
-              cxxPlatform));
+              cxxPlatforms));
     } else {
       testHostInfo = Optional.absent();
     }
@@ -218,16 +241,6 @@ public class AppleTestDescription implements
       return library;
     }
 
-    AppleCxxPlatform appleCxxPlatform;
-    try {
-      appleCxxPlatform = appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException(
-          e,
-          "%s: Apple test requires an Apple platform, found '%s'",
-          params.getBuildTarget(),
-          cxxPlatform.getFlavor().getName());
-    }
 
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     String platformName = appleCxxPlatform.getAppleSdk().getApplePlatform().getName();
@@ -391,7 +404,7 @@ public class AppleTestDescription implements
       BuildTarget testHostAppBuildTarget,
       AppleDebugFormat debugFormat,
       Iterable<Flavor> additionalFlavors,
-      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+      ImmutableList<CxxPlatform> cxxPlatforms) throws NoSuchBuildTargetException {
     BuildRule rule = resolver.requireRule(
         BuildTarget.builder(testHostAppBuildTarget)
             .addAllFlavors(additionalFlavors)
@@ -415,10 +428,16 @@ public class AppleTestDescription implements
         NativeLinkables.getNativeLinkableRoots(
             testHostApp.getBinary().get().getDeps(),
             Predicates.alwaysTrue());
-    ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
-        NativeLinkables.getTransitiveNativeLinkables(cxxPlatform, roots.values());
-    ImmutableSet<BuildTarget> blacklist = nativeLinkables.keySet();
-    return TestHostInfo.of(testHostApp, testHostAppBinarySourcePath, blacklist);
+
+    // Union the blacklist of all the platforms. This should give a superset for each particular
+    // platform, which should be acceptable as items in the blacklist thare are unmatched are simply
+    // ignored.
+    ImmutableSet.Builder<BuildTarget> blacklistBuilder = ImmutableSet.builder();
+    for (CxxPlatform platform : cxxPlatforms) {
+      blacklistBuilder.addAll(
+          NativeLinkables.getTransitiveNativeLinkables(platform, roots.values()).keySet());
+    }
+    return TestHostInfo.of(testHostApp, testHostAppBinarySourcePath, blacklistBuilder.build());
   }
 
   @Value.Immutable

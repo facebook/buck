@@ -72,8 +72,7 @@ public class AppleDsymTestUtil {
     }
 
     assertThat(
-        StringUtils.countMatches(
-        dwarfdumpMainStdout, "AT_name"),
+        StringUtils.countMatches(dwarfdumpMainStdout, "AT_name"),
         Matchers.equalTo(expectedMatchCount));
     assertThat(
         StringUtils.countMatches(dwarfdumpMainStdout, "AT_decl_file"),

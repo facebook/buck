@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -35,6 +36,10 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Optional;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -608,6 +613,85 @@ public class AppleTestIntegrationTest {
         "--test-runner-env", "FOO=bar",
         "//:foo#macosx-x86_64");
     result.assertSuccess("should pass when I pass correct environment");
+  }
+
+  @Test
+  public void appleTestWithoutTestHostShouldSupportMultiarch() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_test_xctest", tmp);
+    workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(this).resolve("xctool"),
+        Paths.get("xctool"));
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//:foo#iphonesimulator-i386,iphonesimulator-x86_64");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "--config", "apple.xctool_path=xctool/bin/xctool",
+            target.getFullyQualifiedName());
+    result.assertSuccess();
+    assertThat(
+        result.getStderr(),
+        containsString("1 Passed   0 Skipped   0 Failed   FooXCTest"));
+
+    result = workspace.runBuckCommand("targets", "--show-output", target.getFullyQualifiedName());
+    result.assertSuccess();
+    Path output = workspace.getDestPath().resolve(
+        Iterables.getLast(Splitter.on(' ').limit(2).split(result.getStdout().trim())));
+    // check result is actually multiarch.
+    ProcessExecutor.Result lipoVerifyResult = workspace.runCommand(
+        "lipo", output.resolve("foo").toString(), "-verify_arch", "i386", "x86_64");
+    assertEquals(
+        lipoVerifyResult.getStderr().or(""),
+        0,
+        lipoVerifyResult.getExitCode());
+  }
+
+  @Test
+  public void appleTestWithoutTestHostMultiarchShouldHaveMultiarchDsym() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_test_xctest", tmp);
+    workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(this).resolve("xctool"),
+        Paths.get("xctool"));
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//:foo#iphonesimulator-i386,iphonesimulator-x86_64");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "build",
+            "--config", "cxx.cflags=-g",
+            "--config", "apple.xctool_path=xctool/bin/xctool",
+            "--config", "apple.default_debug_info_format_for_binaries=DWARF_AND_DSYM",
+            "--config", "apple.default_debug_info_format_for_libraries=DWARF_AND_DSYM",
+            "--config", "apple.default_debug_info_format_for_tests=DWARF_AND_DSYM",
+            target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    BuildTarget libraryTarget =
+        target.withAppendedFlavors(
+            AppleTestDescription.LIBRARY_FLAVOR,
+            CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR);
+    Path output = workspace.getDestPath().resolve(
+        BuildTargets.getGenPath(
+            filesystem,
+            libraryTarget.withAppendedFlavors(AppleDsym.RULE_FLAVOR),
+            "%s.dSYM"))
+        .resolve("Contents/Resources/DWARF/" + libraryTarget.getShortNameAndFlavorPostfix());
+    ProcessExecutor.Result lipoVerifyResult = workspace.runCommand(
+        "lipo", output.toString(), "-verify_arch", "i386", "x86_64");
+    assertEquals(
+        lipoVerifyResult.getStderr().or(""),
+        0,
+        lipoVerifyResult.getExitCode());
+    AppleDsymTestUtil.checkDsymFileHasDebugSymbolForConcreteArchitectures(
+        "-[FooXCTest testTwoPlusTwoEqualsFour]",
+        workspace,
+        output,
+        Optional.of(ImmutableList.of("i386", "x86_64")));
   }
 
   private static void assertIsSymbolicLink(

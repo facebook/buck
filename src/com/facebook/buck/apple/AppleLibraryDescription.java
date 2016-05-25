@@ -298,7 +298,10 @@ public class AppleLibraryDescription implements
                 pathResolver));
       }
       return MultiarchFileInfos.requireMultiarchRule(
-          params,
+          // In the same manner that debug flavors are omitted from single-arch constituents, they
+          // are omitted here as well.
+          params.copyWithBuildTarget(
+              params.getBuildTarget().withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())),
           resolver,
           multiarchFileInfo.get(),
           thinRules.build());
@@ -334,9 +337,8 @@ public class AppleLibraryDescription implements
     // remove all debug format related flavors from cxx rule so it always ends up in the same output
     BuildTarget unstrippedTarget = params.getBuildTarget()
         .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
-    BuildTarget existingTarget = unstrippedTarget;
 
-    Optional<BuildRule> existingRule = resolver.getRuleOptional(existingTarget);
+    Optional<BuildRule> existingRule = resolver.getRuleOptional(unstrippedTarget);
     if (existingRule.isPresent()) {
       return existingRule.get();
     } else {
