@@ -25,6 +25,8 @@ import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistributedBuild;
 import com.facebook.buck.distributed.DistributedBuildState;
 import com.facebook.buck.distributed.thrift.BuildJobState;
+import com.facebook.buck.distributed.thrift.FrontendRequest;
+import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -44,6 +46,12 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
+import com.facebook.buck.slb.ClientSideSlb;
+import com.facebook.buck.slb.HttpService;
+import com.facebook.buck.slb.LoadBalancedService;
+import com.facebook.buck.slb.ThriftOverHttpService;
+import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
+import com.facebook.buck.slb.ThriftService;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDevice;
@@ -68,6 +76,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.squareup.okhttp.OkHttpClient;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TProtocol;
@@ -84,6 +93,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
@@ -390,11 +400,22 @@ public class BuildCommand extends AbstractCommand {
       }
     }
 
-    // TODO(ruibm): Add here distributed build magic.
-    DistributedBuild build = new DistributedBuild(
-        new DistBuildService(new DistBuildConfig(params.getBuckConfig()), params.getBuckEventBus())
-    );
-    return build.executeAndPrintFailuresToEventBus();
+    DistBuildConfig config = new DistBuildConfig(params.getBuckConfig());
+    ClientSideSlb slb = config.getFrontendConfig().createHttpClientSideSlb(
+        params.getClock(),
+        params.getBuckEventBus());
+    OkHttpClient client = new OkHttpClient();
+    client.setConnectTimeout(config.getFrontendRequestTimeoutMillis(), TimeUnit.MILLISECONDS);
+    client.setReadTimeout(config.getFrontendRequestTimeoutMillis(), TimeUnit.MILLISECONDS);
+    client.setWriteTimeout(config.getFrontendRequestTimeoutMillis(), TimeUnit.MILLISECONDS);
+
+    try (HttpService httpService = new LoadBalancedService(slb, client, params.getBuckEventBus());
+        ThriftService<FrontendRequest, FrontendResponse> service = new ThriftOverHttpService<>(
+            ThriftOverHttpServiceConfig.of(httpService))) {
+      DistributedBuild build = new DistributedBuild(
+          new DistBuildService(service, params.getBuckEventBus()));
+      return build.executeAndPrintFailuresToEventBus();
+    }
   }
 
   private void showOutputs(

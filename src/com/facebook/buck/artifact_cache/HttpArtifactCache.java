@@ -55,13 +55,15 @@ import okio.BufferedSink;
 
 public class HttpArtifactCache implements ArtifactCache {
 
+  public static final MediaType OCTET_STREAM_CONTENT_TYPE =
+      MediaType.parse("application/octet-stream");
+
   /**
    * If the user is offline, then we do not want to print every connection failure that occurs.
    * However, in practice, it appears that some connection failures can be intermittent, so we
    * should print enough to provide a signal of how flaky the connection is.
    */
   private static final Logger LOGGER = Logger.get(HttpArtifactCache.class);
-  private static final MediaType OCTET_STREAM = MediaType.parse("application/octet-stream");
 
   private final String name;
   private final HttpService fetchClient;
@@ -236,7 +238,7 @@ public class HttpArtifactCache implements ArtifactCache {
         new RequestBody() {
           @Override
           public MediaType contentType() {
-            return OCTET_STREAM;
+            return OCTET_STREAM_CONTENT_TYPE;
           }
 
           @Override

@@ -14,21 +14,26 @@
  * under the License.
  */
 
-package com.facebook.buck.distributed;
+package com.facebook.buck.slb;
 
-import java.io.IOException;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
-// TODO(ruibm): Currently this class only implements dummy behaviour to mock the distbuild.
-public class DistributedBuild {
+import org.immutables.value.Value;
 
-  private final DistBuildService distBuildService;
+@Value.Immutable
+@BuckStyleImmutable
+abstract class AbstractThriftOverHttpServiceConfig {
 
-  public DistributedBuild(DistBuildService distBuildService) {
-    this.distBuildService = distBuildService;
+  public static final String DEFAULT_THRIFT_PATH = "/thrift";
+
+  @Value.Parameter
+  public abstract HttpService getService();
+
+  public ThriftProtocol getThriftProtocol() {
+    return ThriftProtocol.BINARY;
   }
 
-  public int executeAndPrintFailuresToEventBus() throws IOException {
-    distBuildService.submitJob();
-    return 0;
+  public String getThriftPath() {
+    return DEFAULT_THRIFT_PATH;
   }
 }

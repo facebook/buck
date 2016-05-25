@@ -14,21 +14,16 @@
  * under the License.
  */
 
-package com.facebook.buck.distributed;
+package com.facebook.buck.slb;
 
+import org.apache.thrift.TBase;
+
+import java.io.Closeable;
 import java.io.IOException;
 
-// TODO(ruibm): Currently this class only implements dummy behaviour to mock the distbuild.
-public class DistributedBuild {
+public interface ThriftService
+    <ThriftRequest extends TBase<?, ?>, ThriftResponse extends TBase<?, ?>> extends Closeable {
 
-  private final DistBuildService distBuildService;
-
-  public DistributedBuild(DistBuildService distBuildService) {
-    this.distBuildService = distBuildService;
-  }
-
-  public int executeAndPrintFailuresToEventBus() throws IOException {
-    distBuildService.submitJob();
-    return 0;
-  }
+  void makeRequest(ThriftRequest thriftRequest, ThriftResponse thriftResponse)
+      throws ThriftServiceException, IOException;
 }

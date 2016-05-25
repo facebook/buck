@@ -14,21 +14,25 @@
  * under the License.
  */
 
-package com.facebook.buck.distributed;
+package com.facebook.buck.slb;
 
-import java.io.IOException;
+import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.protocol.TCompactProtocol;
+import org.apache.thrift.protocol.TJSONProtocol;
+import org.apache.thrift.protocol.TProtocolFactory;
 
-// TODO(ruibm): Currently this class only implements dummy behaviour to mock the distbuild.
-public class DistributedBuild {
+public enum ThriftProtocol {
+  JSON(new TJSONProtocol.Factory()),
+  BINARY(new TBinaryProtocol.Factory()),
+  COMPACT(new TCompactProtocol.Factory());
 
-  private final DistBuildService distBuildService;
+  private TProtocolFactory factory;
 
-  public DistributedBuild(DistBuildService distBuildService) {
-    this.distBuildService = distBuildService;
+  ThriftProtocol(TProtocolFactory factory) {
+    this.factory = factory;
   }
 
-  public int executeAndPrintFailuresToEventBus() throws IOException {
-    distBuildService.submitJob();
-    return 0;
+  public TProtocolFactory getFactory() {
+    return factory;
   }
 }

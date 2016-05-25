@@ -14,21 +14,17 @@
  * under the License.
  */
 
-package com.facebook.buck.distributed;
+package com.facebook.buck.slb;
 
 import java.io.IOException;
 
-// TODO(ruibm): Currently this class only implements dummy behaviour to mock the distbuild.
-public class DistributedBuild {
+public class ThriftServiceException extends IOException {
 
-  private final DistBuildService distBuildService;
-
-  public DistributedBuild(DistBuildService distBuildService) {
-    this.distBuildService = distBuildService;
+  public ThriftServiceException(String message, Throwable innerException) {
+    super(message, innerException);
   }
 
-  public int executeAndPrintFailuresToEventBus() throws IOException {
-    distBuildService.submitJob();
-    return 0;
+  public ThriftServiceException(String message) {
+    super(message);
   }
 }

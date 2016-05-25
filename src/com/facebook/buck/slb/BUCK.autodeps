@@ -1,8 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 2f15fcdc083a403d86304424b3a55b551fa101e8 #@#
+#@# GENERATED FILE: DO NOT MODIFY a832ed7071072ec8905c70618bdf6b2fd56864ae #@#
 {
   "slb" : {
     "deps" : [
       "//src/com/facebook/buck/counters:counters",
+      "//src/com/facebook/buck/log:api",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
@@ -11,7 +12,8 @@
       "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
-      "//third-party/java/okhttp:okhttp"
+      "//third-party/java/okhttp:okhttp",
+      "//third-party/java/thrift:libthrift"
     ]
   }
 }

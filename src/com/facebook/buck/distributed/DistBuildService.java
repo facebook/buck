@@ -27,13 +27,12 @@ import com.facebook.buck.distributed.thrift.LogRecord;
 import com.facebook.buck.distributed.thrift.StartBuildRequest;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.slb.HttpLoadBalancer;
-import com.facebook.buck.slb.NoHealthyServersException;
-import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.slb.ThriftService;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -42,112 +41,79 @@ import java.util.concurrent.TimeUnit;
 
 
 public class DistBuildService {
+
   private static final Logger LOG = Logger.get(DistBuildService.class);
-  private static final int BUILD_DURATION_MS = 10000;
 
-  private final DistBuildConfig distBuildConfig;
-  private final String frontendUrl;
+  private static final int MAX_BUILD_DURATION_MILLIS = 10000;
+  private static final DateFormat DATE_FORMAT = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]");
+
+  private final ThriftService<FrontendRequest, FrontendResponse> service;
   private final BuckEventBus eventBus;
-  private final DateFormat dateFormat = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]");
 
-  public DistBuildService(DistBuildConfig distBuildConfig, BuckEventBus eventBus)
-      throws NoHealthyServersException {
-    this.distBuildConfig = distBuildConfig;
+  public DistBuildService(
+      ThriftService<FrontendRequest, FrontendResponse> service,
+      BuckEventBus eventBus) {
+    this.service = service;
     this.eventBus = eventBus;
-    try {
-      HttpLoadBalancer client =
-          distBuildConfig.getFrontendConfig().createHttpClientSideSlb(new DefaultClock(), eventBus);
-      this.frontendUrl = client.getBestServer().toString();
-    } catch (NoHealthyServersException ex)  {
-      LOG.error("No healthy distributed build frontend server found. " +
-          "Do you have them listed in your .buckconfig or .buckconfig.local?");
-      throw ex;
-    }
   }
 
-  public DistBuildService(DistBuildConfig distBuildConfig, BuckEventBus eventBus,
-      String frontendUrl) {
-    Preconditions.checkNotNull(frontendUrl);
-    Preconditions.checkState(!frontendUrl.isEmpty(),
-        "Distributed build frontend URL cannot be empty.");
-    this.distBuildConfig = distBuildConfig;
-    this.eventBus = eventBus;
-    this.frontendUrl = frontendUrl;
-  }
+  public void submitJob() throws IOException {
 
-  public void submitJob() {
-    LOG.verbose(String.format("DistBuildConfig: [%s]", distBuildConfig.toString()));
-
-    StartBuildRequest startTime = new StartBuildRequest();
-    BuildStatusRequest status = new BuildStatusRequest();
+    // Tell server to start build and get the build id.
+    StartBuildRequest startTimeRequest = new StartBuildRequest();
+    startTimeRequest.setStartTimestampMillis(System.currentTimeMillis());
     FrontendRequest request = new FrontendRequest();
+    request.setType(FrontendRequestType.START_BUILD);
+    request.setStartBuild(startTimeRequest);
     FrontendResponse response = new FrontendResponse();
-    BuildJob job;
-    BuildId id;
+    service.makeRequest(request, response);
+    Preconditions.checkState(response.getType().equals(FrontendRequestType.START_BUILD));
+    BuildJob job = response.getStartBuild().getBuildJob();
+    final BuildId id = job.getBuildId();
+    LOG.info("Submitted job. Build id = " + id.getId());
+    logDebugInfo(job);
 
-    startTime.setStartTimestampMillis(System.currentTimeMillis());
+    // Create the poll for buildStatus request.
+    BuildStatusRequest statusRequest = new BuildStatusRequest();
+    statusRequest.setBuildId(id);
+    request.clear();
+    request.setType(FrontendRequestType.BUILD_STATUS);
+    request.setBuildStatus(statusRequest);
+    Stopwatch stopwatch = Stopwatch.createStarted();
 
-    try {
-      ThriftOverHttp thriftClient =
-          new ThriftOverHttp(frontendUrl, ThriftOverHttp.Encoding.json);
+    // Keep polling until the build is complete or failed.
+    do {
+      response.clear();
+      service.makeRequest(request, response);
+      Preconditions.checkState(response.getType().equals(FrontendRequestType.BUILD_STATUS));
+      job = response.getBuildStatus().getBuildJob();
+      Preconditions.checkState(job.getBuildId().equals(id));
+      LOG.info("Got build status: " + job.getStatus().toString());
 
-      // tell server to start build
-      request.setType(FrontendRequestType.START_BUILD);
-      request.setStartBuild(startTime);
-      thriftClient.writeAndSend(request);
-
-      // get build id
-      thriftClient.read(response);
-      Preconditions.checkState(response.getType().equals(FrontendRequestType.START_BUILD));
-      job = response.getStartBuild().getBuildJob();
-      id = job.getBuildId();
-      LOG.info("Submitted job. Build id = " + id.getId());
-      logDebugInfo(job);
-
-      // poll for buildStatus
-      status.setBuildId(id);
-      request.clear();
-      request.setType(FrontendRequestType.BUILD_STATUS);
-      request.setBuildStatus(status);
-      Stopwatch stopwatch = Stopwatch.createStarted();
-
-      do {
-        thriftClient.writeAndSend(request);
-
-        // check response
-        response.clear();
-        thriftClient.read(response);
-        Preconditions.checkState(response.getType().equals(FrontendRequestType.BUILD_STATUS));
-        job = response.getBuildStatus().getBuildJob();
-        Preconditions.checkState(job.getBuildId().equals(id));
-        LOG.info("Got build status: " + job.getStatus().toString());
-
-        DistBuildStatus distBuildStatus =
-            prepareStatusFromJob(job)
-            .setETAMillis(BUILD_DURATION_MS - stopwatch.elapsed(TimeUnit.MILLISECONDS))
-            .build();
-        eventBus.post(new DistBuildStatusEvent(distBuildStatus));
-
-        Thread.sleep(1000);
-      } while (!(job.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY) ||
-                 job.getStatus().equals(BuildStatus.FAILED)));
-
-      // log status
-      LOG.info("Build was " +
-          (response.isWasSuccessful() ? "" : "not ") +
-          "successful!");
-      if (response.isSetErrorMessage()) {
-        LOG.error("Error msg: " + response.getErrorMessage());
-      }
-      logDebugInfo(job);
-
-      DistBuildStatus distBuildStatus = prepareStatusFromJob(job).setETAMillis(0).build();
+      DistBuildStatus distBuildStatus =
+          prepareStatusFromJob(job)
+          .setETAMillis(MAX_BUILD_DURATION_MILLIS - stopwatch.elapsed(TimeUnit.MILLISECONDS))
+          .build();
       eventBus.post(new DistBuildStatusEvent(distBuildStatus));
 
-      thriftClient.close();
-    } catch (Exception e) {
-      LOG.error(e);
+      try {
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        LOG.error(e, "BuildStatus polling sleep call has been interrupted unexpectedly.");
+      }
+    } while (!(job.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY) ||
+               job.getStatus().equals(BuildStatus.FAILED)));
+
+    LOG.info("Build was " +
+        (response.isWasSuccessful() ? "" : "not ") +
+        "successful!");
+    if (response.isSetErrorMessage()) {
+      LOG.error("Error msg: " + response.getErrorMessage());
     }
+    logDebugInfo(job);
+
+    DistBuildStatus distBuildStatus = prepareStatusFromJob(job).setETAMillis(0).build();
+    eventBus.post(new DistBuildStatusEvent(distBuildStatus));
   }
 
   private DistBuildStatus.Builder prepareStatusFromJob(BuildJob job) {
@@ -170,7 +136,7 @@ public class DistBuildService {
     if (job.isSetDebug() && job.getDebug().getLogBook().size() > 0) {
       LOG.debug("Received debug info: ");
       for (LogRecord log : job.getDebug().getLogBook()) {
-        LOG.debug(dateFormat.format(new Date(log.getTimestampMillis())) + log.getName());
+        LOG.debug(DATE_FORMAT.format(new Date(log.getTimestampMillis())) + log.getName());
       }
     }
   }

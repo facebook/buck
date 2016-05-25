@@ -3,5 +3,6 @@ standard_java_library(
     'ClientSideSlbConfig',
     'PerServerData',
     'ServerHealthManagerEventData',
+    'ThriftOverHttpServiceConfig',
   ],
 )
