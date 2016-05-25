@@ -78,6 +78,25 @@ public class FileClassPathRunnerTest {
   }
 
   @Test
+  public void shouldHandleDirectoriesThatContainAtSign() throws IOException {
+    Path subdir = tmp.newFolder("carrots@3").toPath();
+    Path classfile = subdir.resolve("classfile");
+    Files.write(classfile, "peppers.jar".getBytes());
+
+    URL[] toLoad = {
+        new URL("file:" + subdir.toAbsolutePath() +
+                File.separator + "@" + classfile.toAbsolutePath())
+    };
+
+    List<Path> classpathFiles = FileClassPathRunner.getClasspathFiles(toLoad);
+    assertEquals(1, classpathFiles.size());
+    assertEquals(classfile, classpathFiles.get(0));
+
+    List<URL> readUrls = FileClassPathRunner.readUrls(classpathFiles, false);
+    assertEquals(ImmutableList.of(urlify("peppers.jar")), readUrls);
+  }
+
+  @Test
   public void shouldAddReadUrlsToGivenUrlClassLoader()
       throws IOException, ReflectiveOperationException {
     Path urlsAreHere = tmp.newFile().toPath();

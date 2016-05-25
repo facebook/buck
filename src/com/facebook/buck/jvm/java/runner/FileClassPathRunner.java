@@ -106,20 +106,28 @@ public class FileClassPathRunner {
       }
 
       // Segment the path, looking for a section that starts with "@". If one is found, reconstruct
-      // the rest of the path, and check to see if it's a file that's readable. If it's readable,
-      // pull it into memory, and scan it for entries to add to the classpath, using the standard
-      // format of "file/" to indicate a directory and assuming all other files are jars.
+      // the rest of the path.
+      // WARNING: While the classfile's path can contain directories that include "@", the path
+      // cannot contain a directory that starts with "@".
 
-      // I assume that Windows segments paths in URLs using a forward slash.
-      String[] split = url.getPath().split("@", 2);
-      if (split.length != 2) {
+      String path = url.getPath();
+      int found, splitIndex = -1;
+      if (path == null || path.length() == 0) {
         continue;
+      } else if (path.charAt(0) == '@') {
+        // path starts with '@'
+        splitIndex = 1;
+      } else if ((found = path.indexOf(File.separator + '@')) >= 0) {
+        // found first section that begins with '@'
+        splitIndex = found + 2;
       }
 
-      try {
-        paths.add(Paths.get(split[1]));
-      } catch (InvalidPathException e) {
-        // Carry on regardless
+      if (splitIndex > 0 && splitIndex < path.length()) {
+        try {
+          paths.add(Paths.get(path.substring(splitIndex)));
+        } catch (InvalidPathException e) {
+          // Carry on regardless
+        }
       }
     }
     return paths;
@@ -133,6 +141,9 @@ public class FileClassPathRunner {
 
     List<String> classPathEntries = new LinkedList<>();
 
+    // Check to see if each of the provided paths is a file that's readable. If it's readable,
+    // pull it into memory, and scan it for entries to add to the classpath, using the standard
+    // format of "file/" to indicate a directory and assuming all other files are jars.
     for (Path path : paths) {
       if (!Files.exists(path)) {
         continue;
