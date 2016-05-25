@@ -530,9 +530,6 @@ public class AppleDescriptions {
         .withoutFlavors(ImmutableSet.of(AppleDebuggableBinary.RULE_FLAVOR))
         .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
         .withoutFlavors(ImmutableSet.of(AppleBinaryDescription.APP_FLAVOR));
-    if (unstrippedTarget.getFlavors().contains(AppleTestDescription.BUNDLE_FLAVOR)) {
-      unstrippedTarget = unstrippedTarget.withAppendedFlavors(AppleDebuggableBinary.RULE_FLAVOR);
-    }
     BuildRule unstrippedBinaryRule = resolver.requireRule(unstrippedTarget);
 
     BuildRule targetDebuggableBinaryRule;
