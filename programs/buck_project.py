@@ -49,10 +49,9 @@ class BuckProject:
             self.root, ".nobuckcheck")))
 
         if self.has_no_buck_check:
-            print(textwrap.dedent("""\
-            :::
-            ::: '.nobuckcheck' file is present. Not updating buck.
-            :::"""), file=sys.stderr)
+            print(textwrap.dedent(
+                """::: '.nobuckcheck' file is present. Not updating buck."""),
+                file=sys.stderr)
 
         buck_version_path = os.path.join(self.root, ".buckversion")
         buck_version = get_file_contents_if_exists(buck_version_path)
