@@ -4,14 +4,10 @@
 original_java_library = java_library
 def java_library(
     name,
-    source='7',
-    target='7',
     **kwargs
     ):
   original_java_library(
     name,
-    source=source,
-    target=target,
     **kwargs
     )
 
@@ -19,8 +15,6 @@ def java_immutables_library(
     name,
     # These must be relative to the package implied by the path to the BUCK file.
     immutable_types=None,
-    source='7',
-    target='7',
     **kwargs
     ):
     if not immutable_types:
@@ -70,8 +64,6 @@ def java_immutables_library(
     return java_library(
       name,
       generated_symbols=all_generated_symbols,
-      source=source,
-      target=target,
       deps=deps,
       annotation_processors=annotation_processors,
       annotation_processor_deps=annotation_processor_deps,
@@ -97,16 +89,12 @@ def fully_qualified_name_for_immutable_type(immutable_type):
 original_java_test = java_test
 def java_test(
     name,
-    source='7',
-    target='7',
     deps=[],
     vm_args=[],
     **kwargs
     ):
   original_java_test(
     name,
-    source=source,
-    target=target,
     deps=deps + [
       # When actually running Buck, the launcher script loads the bootstrapper,
       # and the bootstrapper loads the rest of Buck. For unit tests, which don't
