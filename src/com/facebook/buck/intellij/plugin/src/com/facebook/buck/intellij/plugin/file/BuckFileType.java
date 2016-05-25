@@ -18,9 +18,10 @@ package com.facebook.buck.intellij.plugin.file;
 
 import com.facebook.buck.intellij.plugin.lang.BuckLanguage;
 import com.intellij.openapi.fileTypes.LanguageFileType;
-import icons.BuckIcons;
 
 import javax.swing.Icon;
+
+import icons.BuckIcons;
 
 /**
  * Buck language type
@@ -28,7 +29,8 @@ import javax.swing.Icon;
 public class BuckFileType extends LanguageFileType {
 
   public static final BuckFileType INSTANCE = new BuckFileType();
-  private static final String[] DEFAULT_EXTENSIONS = {"BUCK", ""};
+  // TODO(#11415116): Get the default extension from Buck or .buckconfig
+  private static final String DEFAULT_EXTENSION = "BUCK";
 
   private BuckFileType() {
     super(BuckLanguage.INSTANCE);
@@ -43,7 +45,7 @@ public class BuckFileType extends LanguageFileType {
   }
 
   public String getDefaultExtension() {
-    return DEFAULT_EXTENSIONS[0];
+    return DEFAULT_EXTENSION;
   }
 
   public Icon getIcon() {
