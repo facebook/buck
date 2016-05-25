@@ -1,0 +1,14 @@
+#@# GENERATED FILE: DO NOT MODIFY e00a1287d6d0b9140e709bded13986039c4da043 #@#
+{
+  "bsd" : {
+    "deps" : [
+      "//src/com/facebook/buck/charset:charset",
+      "//src/com/facebook/buck/util:exceptions",
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//third-party/java/guava:guava"
+    ]
+  }
+}

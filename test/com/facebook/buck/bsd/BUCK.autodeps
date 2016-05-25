@@ -1,0 +1,12 @@
+#@# GENERATED FILE: DO NOT MODIFY 482796b7c2aa16a44a2ef6a032adee7971e6b792 #@#
+{
+  "bsd" : {
+    "deps" : [
+      "//src/com/facebook/buck/bsd:bsd",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}
