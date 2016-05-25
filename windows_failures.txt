@@ -1,9 +1,6 @@
 !com.facebook.buck.android.CopyNativeLibrariesTest#testCopyNativeLibraryCommand
 !com.facebook.buck.android.CopyNativeLibrariesTest#testCopyNativeLibraryCommandWithMultipleCpuFilters
 !com.facebook.buck.cli.ExternalTestRunnerIntegrationTest
-!com.facebook.buck.cli.PublishCommandIntegrationTest#testBasicCase
-!com.facebook.buck.cli.PublishCommandIntegrationTest#testDependenciesTriggerPomGeneration
-!com.facebook.buck.cli.PublishCommandIntegrationTest#testDryDun
 !com.facebook.buck.cli.QueryCommandIntegrationTest#testBuildFileFunction
 !com.facebook.buck.cli.QueryCommandIntegrationTest#testBuildFileFunctionJson
 !com.facebook.buck.cli.RunCommandIntegrationTest

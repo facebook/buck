@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.maven.TestPublisher;
@@ -122,7 +123,7 @@ public class PublishCommandIntegrationTest {
     assertTrue(stdOut, stdOut.contains("com.example:foo:jar:1.0"));
     assertTrue(stdOut,
         stdOut.contains("com.example:foo:jar:" + AetherUtil.CLASSIFIER_SOURCES + ":1.0"));
-    assertTrue(stdOut, stdOut.contains("/foo#maven.jar"));
+    assertTrue(stdOut, stdOut.contains(MorePaths.pathWithPlatformSeparators("/foo#maven.jar")));
     assertTrue(stdOut, stdOut.contains(Javac.SRC_JAR));
     assertTrue(stdOut, stdOut.contains(getMockRepoUrl()));
   }

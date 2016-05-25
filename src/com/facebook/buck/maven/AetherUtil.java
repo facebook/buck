@@ -46,7 +46,7 @@ public class AetherUtil {
   }
 
   public static RemoteRepository toRemoteRepository(String remoteRepositoryUrl) {
-    return new RemoteRepository.Builder(remoteRepositoryUrl, "default", remoteRepositoryUrl)
+    return new RemoteRepository.Builder(null, "default", remoteRepositoryUrl)
         .setPolicy(new RepositoryPolicy(true, null, CHECKSUM_POLICY_FAIL))
         .build();
   }
