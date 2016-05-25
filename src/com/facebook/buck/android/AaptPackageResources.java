@@ -475,7 +475,7 @@ public class AaptPackageResources extends AbstractBuildRule
    * This directory contains both the generated {@code R.java} files under a directory path that
    * matches the corresponding package structure.
    */
-  private Path getPathToGeneratedRDotJavaSrcFiles() {
+  Path getPathToGeneratedRDotJavaSrcFiles() {
     return getPathToGeneratedRDotJavaSrcFiles(getBuildTarget(), getProjectFilesystem());
   }
 

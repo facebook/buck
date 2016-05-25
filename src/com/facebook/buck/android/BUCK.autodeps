@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY ea93d0cbfa7fed590d17166ce9b0898802170714 #@#
+#@# GENERATED FILE: DO NOT MODIFY b4b8a66816243dcb709ca222e2f4d4d500f55883 #@#
 {
   "exceptions" : {
     "deps" : [
@@ -68,6 +68,7 @@
       "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/zip:constants",
       "//src/com/facebook/buck/zip:steps",
+      "//src/com/facebook/buck/zip:stream",
       "//third-party/java/aosp:aosp",
       "//third-party/java/ddmlib:ddmlib",
       "//third-party/java/immutables:processor",

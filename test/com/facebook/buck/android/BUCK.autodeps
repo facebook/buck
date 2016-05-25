@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY abfe4e43263c848b75af772be206f2502d861b7b #@#
+#@# GENERATED FILE: DO NOT MODIFY d4ba4c212eaef49b49f824e0d50efaa53cf65c52 #@#
 {
   "aar-integration" : {
     "deps" : [
@@ -189,6 +189,7 @@
       "//test/com/facebook/buck/cxx:testutil",
       "//test/com/facebook/buck/event:testutil",
       "//test/com/facebook/buck/io:testutil",
+      "//test/com/facebook/buck/jvm/java:fakepackagefinder",
       "//test/com/facebook/buck/jvm/java:javac-env",
       "//test/com/facebook/buck/jvm/java:testutil",
       "//test/com/facebook/buck/model:testutil",
