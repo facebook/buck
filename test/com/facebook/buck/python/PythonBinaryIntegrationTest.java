@@ -326,6 +326,19 @@ public class PythonBinaryIntegrationTest {
     workspace.getBuildLog().assertTargetBuiltLocally("//:bin");
   }
 
+  /**
+   * Test a bug where a C/C++ library that is transitively excluded by a `python_library` containing
+   * native extensions (in this case, it has to be a 2nd-order dep of the `python_library`) but
+   * which is also a direct dependency of another Python rule, causes the node to be processed as
+   * both a linkable root and an excluded rule, causing an internal omnibus failure.
+   */
+  @Test
+  public void omnibusExcludedNativeLinkableRoot() throws IOException {
+    assumeThat(nativeLinkStrategy, Matchers.is(NativeLinkStrategy.MERGED));
+    workspace.runBuckCommand("targets", "--show-output", "//omnibus_excluded_root:bin")
+        .assertSuccess();
+  }
+
   private PythonBuckConfig getPythonBuckConfig() throws IOException {
     Config rawConfig = Configs.createDefaultConfig(tmp.getRootPath(), RawConfig.of());
     BuckConfig buckConfig =

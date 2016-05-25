@@ -26,6 +26,7 @@ import com.facebook.buck.cxx.SharedNativeLinkTarget;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.Omnibus;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
@@ -41,6 +42,7 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -54,6 +56,7 @@ import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -198,11 +201,25 @@ public class PythonUtil {
     // excluded native linkable roots.
     if (nativeLinkStrategy == NativeLinkStrategy.MERGED) {
 
+      // Recursively expand the excluded nodes, as we'll need this full list to know which roots
+      // to exclude from omnibus linking.
+      final Set<BuildTarget> transitivelyExcludedNativeLinkables = new HashSet<>();
+      new AbstractBreadthFirstTraversal<NativeLinkable>(
+          Iterables.transform(excludedNativeLinkableRoots, Functions.forMap(nativeLinkableRoots))) {
+        @Override
+        public Iterable<NativeLinkable> visit(NativeLinkable linkable) {
+          transitivelyExcludedNativeLinkables.add(linkable.getBuildTarget());
+          return Iterables.concat(
+              linkable.getNativeLinkableDeps(cxxPlatform),
+              linkable.getNativeLinkableExportedDeps(cxxPlatform));
+        }
+      }.start();
+
       // Include all native link targets we found which aren't explicitly excluded.
       Map<BuildTarget, SharedNativeLinkTarget> includedNativeLinkTargetRoots =
           new LinkedHashMap<>();
       for (Map.Entry<BuildTarget, SharedNativeLinkTarget> ent : nativeLinkTargetRoots.entrySet()) {
-        if (!excludedNativeLinkableRoots.contains(ent.getKey())) {
+        if (!transitivelyExcludedNativeLinkables.contains(ent.getKey())) {
           includedNativeLinkTargetRoots.put(ent.getKey(), ent.getValue());
         }
       }
