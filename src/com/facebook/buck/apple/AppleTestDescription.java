@@ -52,8 +52,10 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.zip.UnzipStep;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -66,6 +68,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
+
+import org.immutables.value.Value;
 
 import java.nio.file.Path;
 import java.util.Set;
@@ -167,10 +171,11 @@ public class AppleTestDescription implements
     boolean createBundle = Sets.intersection(
         params.getBuildTarget().getFlavors(),
         NON_LIBRARY_FLAVORS).isEmpty();
-    Sets.SetView<Flavor> nonLibraryFlavors = Sets.difference(
+    // Flavors pertaining to the library targets that are generated.
+    Sets.SetView<Flavor> libraryFlavors = Sets.difference(
         params.getBuildTarget().getFlavors(),
         NON_LIBRARY_FLAVORS);
-    boolean addDefaultPlatform = nonLibraryFlavors.isEmpty();
+    boolean addDefaultPlatform = libraryFlavors.isEmpty();
     ImmutableSet.Builder<Flavor> extraFlavorsBuilder = ImmutableSet.builder();
     if (createBundle) {
       extraFlavorsBuilder.add(
@@ -186,40 +191,18 @@ public class AppleTestDescription implements
         .getValue(params.getBuildTarget())
         .or(defaultCxxPlatform);
 
-    Optional<AppleBundle> testHostApp;
-    Optional<SourcePath> testHostAppBinarySourcePath;
-    ImmutableSet<BuildTarget> blacklist;
+    Optional<TestHostInfo> testHostInfo;
     if (args.testHostApp.isPresent()) {
-      BuildRule rule = resolver.requireRule(
-          BuildTarget.builder(args.testHostApp.get())
-              .addAllFlavors(nonLibraryFlavors)
-              .addFlavors(debugFormat.getFlavor())
-              .addFlavors(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor())
-              .build());
-
-      if (!(rule instanceof AppleBundle)) {
-        throw new HumanReadableException(
-            "Apple test rule '%s' has test_host_app '%s' not of type '%s'.",
-            params.getBuildTarget(),
-            args.testHostApp.get(),
-            AppleBundleDescription.TYPE);
-      }
-
-      testHostApp = Optional.of((AppleBundle) rule);
-      testHostAppBinarySourcePath = Optional.<SourcePath>of(
-          new BuildTargetSourcePath(testHostApp.get().getBinaryBuildRule().getBuildTarget()));
-
-      ImmutableMap<BuildTarget, NativeLinkable> roots =
-          NativeLinkables.getNativeLinkableRoots(
-              testHostApp.get().getBinary().get().getDeps(),
-              Predicates.alwaysTrue());
-      ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
-          NativeLinkables.getTransitiveNativeLinkables(cxxPlatform, roots.values());
-      blacklist = ImmutableSet.copyOf(nativeLinkables.keySet());
+      testHostInfo = Optional.of(
+          createTestHostInfo(
+              params,
+              resolver,
+              args.testHostApp.get(),
+              debugFormat,
+              libraryFlavors,
+              cxxPlatform));
     } else {
-      testHostApp = Optional.absent();
-      testHostAppBinarySourcePath = Optional.absent();
-      blacklist = ImmutableSet.of();
+      testHostInfo = Optional.absent();
     }
 
     BuildTarget libraryTarget = params.getBuildTarget()
@@ -229,8 +212,9 @@ public class AppleTestDescription implements
         params,
         resolver,
         args,
-        testHostAppBinarySourcePath,
-        blacklist,
+        testHostInfo.transform(TestHostInfo.GET_TEST_HOST_APP_BINARY_SOURCE_PATH_FUNCTION),
+        testHostInfo.transform(TestHostInfo.GET_BLACKLIST_FUNCTION)
+            .or(ImmutableSet.<BuildTarget>of()),
         libraryTarget);
     if (!createBundle) {
       return library;
@@ -296,7 +280,7 @@ public class AppleTestDescription implements
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         sourcePathResolver,
         bundle,
-        testHostApp,
+        testHostInfo.transform(TestHostInfo.GET_TEST_HOST_APP_FUNCTION),
         args.extension,
         args.contacts.get(),
         args.labels.get(),
@@ -401,6 +385,83 @@ public class AppleTestDescription implements
       deps.add(xctoolZipTarget.get());
     }
     return deps.build();
+  }
+
+  private TestHostInfo createTestHostInfo(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      BuildTarget testHostAppBuildTarget,
+      AppleDebugFormat debugFormat,
+      Iterable<Flavor> additionalFlavors,
+      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+    BuildRule rule = resolver.requireRule(
+        BuildTarget.builder(testHostAppBuildTarget)
+            .addAllFlavors(additionalFlavors)
+            .addFlavors(debugFormat.getFlavor())
+            .addFlavors(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor())
+            .build());
+
+    if (!(rule instanceof AppleBundle)) {
+      throw new HumanReadableException(
+          "Apple test rule '%s' has test_host_app '%s' not of type '%s'.",
+          params.getBuildTarget(),
+          testHostAppBuildTarget,
+          AppleBundleDescription.TYPE);
+    }
+
+    AppleBundle testHostApp = (AppleBundle) rule;
+    SourcePath testHostAppBinarySourcePath = new BuildTargetSourcePath(
+        testHostApp.getBinaryBuildRule().getBuildTarget());
+
+    ImmutableMap<BuildTarget, NativeLinkable> roots =
+        NativeLinkables.getNativeLinkableRoots(
+            testHostApp.getBinary().get().getDeps(),
+            Predicates.alwaysTrue());
+    ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
+        NativeLinkables.getTransitiveNativeLinkables(cxxPlatform, roots.values());
+    ImmutableSet<BuildTarget> blacklist = nativeLinkables.keySet();
+    return TestHostInfo.of(testHostApp, testHostAppBinarySourcePath, blacklist);
+  }
+
+  @Value.Immutable
+  @BuckStyleTuple
+  interface AbstractTestHostInfo {
+    AppleBundle getTestHostApp();
+
+    /**
+     * Location of the test host binary that can be passed as the "bundle loader" option when
+     * linking the test library.
+     */
+    SourcePath getTestHostAppBinarySourcePath();
+
+    /**
+     * Libraries included in test host that should not be linked into the test library.
+     */
+    ImmutableSet<BuildTarget> getBlacklist();
+
+    Function<TestHostInfo, AppleBundle> GET_TEST_HOST_APP_FUNCTION =
+        new Function<TestHostInfo, AppleBundle>() {
+          @Override
+          public AppleBundle apply(TestHostInfo input) {
+            return input.getTestHostApp();
+          }
+        };
+
+    Function<TestHostInfo, SourcePath> GET_TEST_HOST_APP_BINARY_SOURCE_PATH_FUNCTION =
+        new Function<TestHostInfo, SourcePath>() {
+          @Override
+          public SourcePath apply(TestHostInfo input) {
+            return input.getTestHostAppBinarySourcePath();
+          }
+        };
+
+    Function<TestHostInfo, ImmutableSet<BuildTarget>> GET_BLACKLIST_FUNCTION =
+        new Function<TestHostInfo, ImmutableSet<BuildTarget>>() {
+          @Override
+          public ImmutableSet<BuildTarget> apply(TestHostInfo input) {
+            return input.getBlacklist();
+          }
+        };
   }
 
   @SuppressFieldNotInitialized
