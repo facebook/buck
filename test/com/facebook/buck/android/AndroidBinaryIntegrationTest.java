@@ -27,11 +27,12 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.relinker.Symbols;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultOnDiskBuildInfo;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -40,11 +41,14 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.DefaultPropertyFinder;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.ZipConstants;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 
 import org.apache.commons.compress.archivers.zip.ZipUtil;
@@ -218,6 +222,21 @@ public class AndroidBinaryIntegrationTest {
     output = new String(Files.readAllBytes(outputFile), UTF_8);
     assertThat(output, containsString("content=3"));
   }
+
+  @Test
+  public void testDxFindsReferencedResources() throws IOException {
+    DefaultOnDiskBuildInfo buildInfo = new DefaultOnDiskBuildInfo(
+        BuildTargetFactory.newInstance("//java/com/sample/lib:lib#dex"),
+        new ProjectFilesystem(tmpFolder.getRoot()),
+        ObjectMappers.newDefaultInstance());
+    Optional<ImmutableList<String>> resourcesFromMetadata =
+        buildInfo.getValues(DexProducedFromJavaLibrary.REFERENCED_RESOURCES);
+    assertTrue(resourcesFromMetadata.isPresent());
+    assertEquals(
+        ImmutableSet.of("title", "top_layout"),
+        ImmutableSet.copyOf(resourcesFromMetadata.get()));
+  }
+
 
   @Test
   public void testCxxLibraryDep() throws IOException {

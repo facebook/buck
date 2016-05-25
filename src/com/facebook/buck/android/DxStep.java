@@ -32,10 +32,12 @@ import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Set;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nullable;
 
 public class DxStep extends ShellStep {
 
@@ -79,6 +81,9 @@ public class DxStep extends ShellStep {
   private final Set<Path> filesToDex;
   private final Set<Option> options;
   private final Supplier<String> getPathToCustomDx;
+
+  @Nullable
+  private Collection<String> resourcesReferencedInCode;
 
   /**
    * @param outputDexFile path to the file where the generated classes.dex should go.
@@ -191,11 +196,16 @@ public class DxStep extends ShellStep {
     ImmutableList<String> args = argv.subList(2, argv.size());
 
     try {
-      return new com.android.dx.command.dexer.Main().run(
+      com.android.dx.command.dexer.Main dexer = new com.android.dx.command.dexer.Main();
+      int returncode = dexer.run(
           args.toArray(new String[args.size()]),
           context.getStdOut(),
           context.getStdErr()
       );
+      if (returncode == 0) {
+        resourcesReferencedInCode = dexer.getReferencedResourceNames();
+      }
+      return returncode;
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
       return 1;
@@ -217,4 +227,15 @@ public class DxStep extends ShellStep {
     return "dx";
   }
 
+  /**
+   * Return the names of resources referenced in the code that was dexed.
+   * This is only valid after the step executes successfully and
+   * only when in-process dexing is used.
+   * It only returns resources referenced in java classes being dexed,
+   * not merged dex files.
+   */
+  @Nullable
+  Collection<String> getResourcesReferencedInCode() {
+    return resourcesReferencedInCode;
+  }
 }

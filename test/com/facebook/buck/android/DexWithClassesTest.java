@@ -30,7 +30,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
@@ -57,7 +59,8 @@ public class DexWithClassesTest {
             /* linearAllocEstimate */ 1600,
             /* classNamesToHashes */ ImmutableSortedMap.of(
                 "com/example/Main",
-                HashCode.fromString(Strings.repeat("cafebabe", 5)))));
+                HashCode.fromString(Strings.repeat("cafebabe", 5))),
+            Optional.<ImmutableList<String>>absent()));
 
     DexWithClasses dexWithClasses = DexWithClasses.TO_DEX_WITH_CLASSES.apply(dexFromJavaLibrary);
     assertEquals(
@@ -82,7 +85,8 @@ public class DexWithClassesTest {
     dexFromJavaLibrary.getBuildOutputInitializer().setBuildOutput(
         new DexProducedFromJavaLibrary.BuildOutput(
             /* linearAllocEstimate */ 1600,
-            /* classNamesToHashes */ ImmutableSortedMap.<String, HashCode>of()));
+            /* classNamesToHashes */ ImmutableSortedMap.<String, HashCode>of(),
+            Optional.<ImmutableList<String>>absent()));
 
     DexWithClasses dexWithClasses = DexWithClasses.TO_DEX_WITH_CLASSES.apply(dexFromJavaLibrary);
     assertNull(

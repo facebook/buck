@@ -46,17 +46,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
@@ -90,6 +93,8 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
   static final String LINEAR_ALLOC_KEY_ON_DISK_METADATA = "linearalloc";
   @VisibleForTesting
   static final String CLASSNAMES_TO_HASHES = "classnames_to_hashes";
+  @VisibleForTesting
+  static final String REFERENCED_RESOURCES = "referenced_resources";
 
   private final JavaLibrary javaLibrary;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
@@ -120,6 +125,10 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
         javaLibrary.getClassNamesToHashes();
     final boolean hasClassesToDx = !classNamesToHashes.isEmpty();
     final Supplier<Integer> linearAllocEstimate;
+
+    @Nullable
+    final DxStep dx;
+
     if (hasClassesToDx) {
       Path pathToOutputFile = javaLibrary.getPathToOutput();
       EstimateLinearAllocStep estimate = new EstimateLinearAllocStep(
@@ -130,7 +139,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
 
       // To be conservative, use --force-jumbo for these intermediate .dex files so that they can be
       // merged into a final classes.dex that uses jumbo instructions.
-      DxStep dx = new DxStep(
+      dx = new DxStep(
           getProjectFilesystem(),
           getPathToDex(),
           Collections.singleton(pathToOutputFile),
@@ -146,6 +155,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
       steps.add(new ZipScrubberStep(getProjectFilesystem(), getPathToDex()));
 
     } else {
+      dx = null;
       linearAllocEstimate = Suppliers.ofInstance(0);
     }
 
@@ -157,6 +167,14 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
       public StepExecutionResult execute(ExecutionContext context) throws IOException {
         if (hasClassesToDx) {
           buildableContext.recordArtifact(getPathToDex());
+
+          @Nullable
+          Collection<String> referencedResources = dx.getResourcesReferencedInCode();
+          if (referencedResources != null) {
+            buildableContext.addMetadata(
+                REFERENCED_RESOURCES,
+                Ordering.natural().immutableSortedCopy(referencedResources));
+          }
         }
 
         buildableContext.addMetadata(LINEAR_ALLOC_KEY_ON_DISK_METADATA,
@@ -186,7 +204,12 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
             new TypeReference<Map<String, String>>() {
             });
     Map<String, HashCode> classnamesToHashes = Maps.transformValues(map, TO_HASHCODE);
-    return new BuildOutput(linearAllocEstimate, ImmutableSortedMap.copyOf(classnamesToHashes));
+    Optional<ImmutableList<String>> referencedResources =
+        onDiskBuildInfo.getValues(REFERENCED_RESOURCES);
+    return new BuildOutput(
+        linearAllocEstimate,
+        ImmutableSortedMap.copyOf(classnamesToHashes),
+        referencedResources);
   }
 
   @Override
@@ -197,11 +220,15 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
   static class BuildOutput {
     private final int linearAllocEstimate;
     private final ImmutableSortedMap<String, HashCode> classnamesToHashes;
+    private final Optional<ImmutableList<String>> referencedResources;
+
     BuildOutput(
         int linearAllocEstimate,
-        ImmutableSortedMap<String, HashCode> classnamesToHashes) {
+        ImmutableSortedMap<String, HashCode> classnamesToHashes,
+        Optional<ImmutableList<String>> referencedResources) {
       this.linearAllocEstimate = linearAllocEstimate;
       this.classnamesToHashes = classnamesToHashes;
+      this.referencedResources = referencedResources;
     }
   }
 
@@ -228,6 +255,10 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
 
   int getLinearAllocEstimate() {
     return buildOutputInitializer.getBuildOutput().linearAllocEstimate;
+  }
+
+  Optional<ImmutableList<String>> getReferencedResources() {
+    return buildOutputInitializer.getBuildOutput().referencedResources;
   }
 
   /**

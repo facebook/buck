@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY d4ba4c212eaef49b49f824e0d50efaa53cf65c52 #@#
+#@# GENERATED FILE: DO NOT MODIFY 5eaa472eb49f7007bb2aed5002b504cd7fd42a59 #@#
 {
   "aar-integration" : {
     "deps" : [
@@ -23,6 +23,7 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/zip:stream",

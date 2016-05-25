@@ -38,6 +38,8 @@ import com.android.dx.dex.code.PositionList;
 import com.android.dx.dex.file.ClassDefItem;
 import com.android.dx.dex.file.DexFile;
 import com.android.dx.dex.file.EncodedMethod;
+import com.android.dx.dex.file.FieldIdItem;
+import com.android.dx.dex.file.Item;
 import com.android.dx.merge.CollisionPolicy;
 import com.android.dx.merge.DexMerger;
 import com.android.dx.rop.annotation.Annotation;
@@ -45,6 +47,7 @@ import com.android.dx.rop.annotation.Annotations;
 import com.android.dx.rop.annotation.AnnotationsList;
 import com.android.dx.rop.cst.CstNat;
 import com.android.dx.rop.cst.CstString;
+import com.android.dx.rop.cst.CstType;
 import com.google.common.collect.ImmutableList;
 
 import java.io.BufferedReader;
@@ -72,7 +75,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.Attributes;
@@ -321,6 +323,8 @@ public class Main {
             if (outArray == null) {
                 return 2;
             }
+
+            computeReferencedResources();
         }
 
         if (args.incremental) {
@@ -1632,6 +1636,27 @@ public class Main {
                 anyFilesProcessed = true;
             }
             return null;
+        }
+    }
+
+
+    // Facebook addition: compute the resources referenced by this dex file.
+    // Does not apply to any merging, just the input class.
+    private Set<String> resourceNames = new HashSet<>();
+
+    public Collection<String> getReferencedResourceNames() {
+        return resourceNames;
+    }
+
+    private void computeReferencedResources() {
+        for (Item genericItem : outputDex.getFieldIds().items()) {
+            FieldIdItem item = (FieldIdItem)genericItem;
+            CstType fieldClass = item.getDefiningClass();
+            CstString fieldName = item.getRef().getNat().getName();
+            if (fieldClass.getClassType().getDescriptor().contains("/R$")) {
+                // We ignore the name of the containing class for simplicity.
+                resourceNames.add(fieldName.getString());
+            }
         }
     }
 }
