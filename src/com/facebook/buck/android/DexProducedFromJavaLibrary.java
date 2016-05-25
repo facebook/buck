@@ -88,6 +88,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
 
   @VisibleForTesting
   static final String LINEAR_ALLOC_KEY_ON_DISK_METADATA = "linearalloc";
+  @VisibleForTesting
   static final String CLASSNAMES_TO_HASHES = "classnames_to_hashes";
 
   private final JavaLibrary javaLibrary;
