@@ -155,8 +155,13 @@ public class ProcessExecutor {
    * Launches a {@link java.lang.Process} given {@link ProcessExecutorParams}.
    */
   public LaunchedProcess launchProcess(ProcessExecutorParams params) throws IOException {
-    Process process = launchProcessInternal(params);
-    return new LaunchedProcessImpl(process);
+    try {
+      Process process = launchProcessInternal(params);
+      return new LaunchedProcessImpl(process);
+    } catch (IOException ex) {
+      stdErrStream.println("Failed to launch " + params);
+      throw ex;
+    }
   }
 
   @VisibleForTesting

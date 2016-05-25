@@ -24,6 +24,7 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
@@ -91,8 +92,9 @@ public class WorkerProcess {
   }
 
   public synchronized WorkerJobResult submitAndWaitForJob(String jobArgs) throws IOException {
-    assert protocol != null :
-        "Tried to submit a job to the worker process before the handshake was performed.";
+    Preconditions.checkState(
+        protocol != null,
+        "Tried to submit a job to the worker process before the handshake was performed.");
 
     int messageID = currentMessageID.getAndAdd(1);
     Path argsPath = Paths.get(
@@ -132,11 +134,11 @@ public class WorkerProcess {
   }
 
   public void close() {
-    assert protocol != null :
-        "Tried to close the worker process before the handshake was performed.";
     LOG.debug("Closing process %d", this.hashCode());
     try {
-      protocol.close();
+      if (protocol != null) {
+        protocol.close();
+      }
     } catch (IOException e) {
       LOG.debug(e, "Error closing worker process %s.", this.hashCode());
       throw new HumanReadableException(e,
