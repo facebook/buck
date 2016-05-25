@@ -30,6 +30,15 @@ android_binary(
   ],
 )
 
+genrule(
+  name = 'disassemble_app_r_dot_java',
+  bash = ' && '.join([
+      '$(exe //third-party/smali:baksmali) -o $TMP $(location :app)',
+      'cat $TMP/com/sample*/R*.smali | grep ^.field > $OUT',
+      ]),
+  out = 'all_r_fields.smali',
+)
+
 android_binary(
   name = 'app-art',
   manifest = 'AndroidManifest.xml',

@@ -28,6 +28,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
@@ -83,12 +84,27 @@ public class TrimUberRDotJavaTest {
     filesystem.createParentDirs(rDotJavaPath);
     filesystem.writeContentsToPath(rDotJavaContents, rDotJavaPath);
 
+    DexProducedFromJavaLibrary dexProducedFromJavaLibrary = new DexProducedFromJavaLibrary(
+        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dex"))
+            .setProjectFilesystem(filesystem)
+            .build(),
+        null,
+        null);
+    dexProducedFromJavaLibrary.getBuildOutputInitializer().setBuildOutput(
+        dexProducedFromJavaLibrary.initializeFromDisk(new FakeOnDiskBuildInfo()
+            .putMetadata(DexProducedFromJavaLibrary.LINEAR_ALLOC_KEY_ON_DISK_METADATA, "1")
+            .putMetadata(DexProducedFromJavaLibrary.CLASSNAMES_TO_HASHES, "{}")
+            .putMetadata(
+                DexProducedFromJavaLibrary.REFERENCED_RESOURCES,
+                ImmutableList.of("my_first_resource"))));
+
     TrimUberRDotJava trimUberRDotJava = new TrimUberRDotJava(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:trim"))
             .setProjectFilesystem(filesystem)
             .build(),
         pathResolver,
-        aaptPackageResources);
+        aaptPackageResources,
+        ImmutableList.of(dexProducedFromJavaLibrary));
 
     BuildContext buildContext = FakeBuildContext.newBuilder()
         .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
@@ -101,8 +117,17 @@ public class TrimUberRDotJavaTest {
       step.execute(executionContext);
     }
 
+    String rDotJavaContentsAfterFiltering =
+        "package com.test;\n" +
+            "\n" +
+            "public class R {\n" +
+            "  public static class string {\n" +
+            "    public static final int my_first_resource=0x7f08005c;\n" +
+            "  }\n" +
+            "}\n";
+
     ZipInspector inspector =
         new ZipInspector(filesystem.resolve(trimUberRDotJava.getPathToOutput()));
-    inspector.assertFileContents("com/test/R.java", rDotJavaContents);
+    inspector.assertFileContents("com/test/R.java", rDotJavaContentsAfterFiltering);
   }
 }

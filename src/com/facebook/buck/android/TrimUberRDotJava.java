@@ -31,13 +31,21 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.facebook.buck.zip.ZipScrubberStep;
+import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collection;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 
 /**
@@ -45,13 +53,19 @@ import java.util.zip.ZipEntry;
  */
 class TrimUberRDotJava extends AbstractBuildRule {
   private final AaptPackageResources aaptPackageResources;
+  private final Collection<DexProducedFromJavaLibrary> allPreDexRules;
+
+  private static final Pattern R_DOT_JAVA_LINE_PATTERN = Pattern.compile(
+      "^ *public static final int(?:\\[\\])? (\\w+)=");
 
   TrimUberRDotJava(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
-      AaptPackageResources aaptPackageResources) {
+      AaptPackageResources aaptPackageResources,
+      Collection<DexProducedFromJavaLibrary> allPreDexRules) {
     super(buildRuleParams, resolver);
     this.aaptPackageResources = aaptPackageResources;
+    this.allPreDexRules = allPreDexRules;
   }
 
   @Override
@@ -78,6 +92,15 @@ class TrimUberRDotJava extends AbstractBuildRule {
     @Override
     public StepExecutionResult execute(ExecutionContext context)
         throws IOException, InterruptedException {
+      ImmutableSet.Builder<String> allReferencedResourcesBuilder = ImmutableSet.builder();
+      for (DexProducedFromJavaLibrary preDexRule : allPreDexRules) {
+        Optional<ImmutableList<String>> referencedResources = preDexRule.getReferencedResources();
+        if (referencedResources.isPresent()) {
+          allReferencedResourcesBuilder.addAll(referencedResources.get());
+        }
+      }
+      final ImmutableSet<String> allReferencedResources = allReferencedResourcesBuilder.build();
+
       final ProjectFilesystem projectFilesystem = getProjectFilesystem();
       final Path sourceDir = aaptPackageResources.getPathToGeneratedRDotJavaSrcFiles();
       try (final CustomZipOutputStream output =
@@ -116,7 +139,16 @@ class TrimUberRDotJava extends AbstractBuildRule {
 
                   output.putNextEntry(new ZipEntry(
                       MorePaths.pathWithUnixSeparators(sourceDir.relativize(file))));
-                  projectFilesystem.copyToOutputStream(file, output);
+                  if (allPreDexRules.isEmpty()) {
+                    // If there are no pre-dexed inputs, we don't yet support trimming
+                    // R.java, so just copy it verbatim (instead of trimming it down to nothing).
+                    projectFilesystem.copyToOutputStream(file, output);
+                  } else {
+                    filterRDotJava(
+                        projectFilesystem.readLines(file),
+                        output,
+                        allReferencedResources);
+                  }
                   return FileVisitResult.CONTINUE;
                 }
               });
@@ -136,6 +168,24 @@ class TrimUberRDotJava extends AbstractBuildRule {
           "trim_uber_r_dot_java %s > %s",
           aaptPackageResources.getPathToGeneratedRDotJavaSrcFiles(),
           getPathToOutput());
+    }
+  }
+
+  private static void filterRDotJava(
+      List<String> rDotJavaLines,
+      OutputStream output,
+      ImmutableSet<String> allReferencedResources)
+      throws IOException {
+    for (String line : rDotJavaLines) {
+      Matcher m = R_DOT_JAVA_LINE_PATTERN.matcher(line);
+      // We ignore the containing nested class and just match on the resource name.
+      // This can cause us to keep (for example) R.layout.foo when only R.string.foo
+      // is referenced.  That is a very rare case, though, and not worth the complexity to fix.
+      if (m.find() && !allReferencedResources.contains(m.group(1))) {
+        continue;
+      }
+      output.write(line.getBytes(Charsets.UTF_8));
+      output.write('\n');
     }
   }
 }

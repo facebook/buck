@@ -53,6 +53,7 @@ import com.google.common.hash.Hashing;
 
 import org.apache.commons.compress.archivers.zip.ZipUtil;
 import org.hamcrest.Matchers;
+import org.hamcrest.collection.IsIn;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -66,8 +67,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -590,5 +595,40 @@ public class AndroidBinaryIntegrationTest {
         "error message for invalid keystore key alias is incorrect.",
         result.getStderr(),
         containsRegex("The keystore \\[.*\\] key\\.alias \\[.*\\].*does not exist"));
+  }
+
+  @Test
+  public void testResourcesTrimming() throws IOException {
+    workspace.runBuckCommand("build", "//apps/multidex:disassemble_app_r_dot_java").assertSuccess();
+    verifyTrimmedRDotJava(ImmutableSet.of("top_layout", "title"));
+
+    workspace.replaceFileContents(
+        "java/com/sample/lib/Sample.java",
+        "R.layout.top_layout",
+        "0");
+
+    workspace.resetBuildLogFile();
+    workspace.runBuckCommand("build", "//apps/multidex:disassemble_app_r_dot_java").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//apps/multidex:app#compile_uber_r_dot_java");
+    buildLog.assertTargetBuiltLocally("//apps/multidex:app#dex_uber_r_dot_java");
+    verifyTrimmedRDotJava(ImmutableSet.of("title"));
+  }
+
+  public static final Pattern SMALI_STATIC_FINAL_INT_PATTERN = Pattern.compile(
+      "\\.field public static final (\\w+):I = 0x[0-9A-fa-f]+");
+
+  private void verifyTrimmedRDotJava(ImmutableSet<String> expected) throws IOException {
+    List<String> lines = filesystem.readLines(
+        Paths.get("buck-out/gen/apps/multidex/disassemble_app_r_dot_java/all_r_fields.smali"));
+
+    ImmutableSet.Builder<String> found = ImmutableSet.builder();
+    for (String line : lines) {
+      Matcher m = SMALI_STATIC_FINAL_INT_PATTERN.matcher(line);
+      assertTrue("Could not match line: " + line, m.matches());
+      assertThat(m.group(1), IsIn.in(expected));
+      found.add(m.group(1));
+    }
+    assertEquals(expected, found.build());
   }
 }

@@ -306,15 +306,27 @@ public class AndroidBinaryGraphEnhancer {
       buildConfigJarFiles = buildConfigJarFilesBuilder.build();
     }
 
+    ImmutableSet<DexProducedFromJavaLibrary> preDexedLibraries = ImmutableSet.of();
+    if (shouldPreDex) {
+      preDexedLibraries = createPreDexRulesForLibraries(
+          // TODO(dreiss): Put R.java here.
+          preDexBuildConfigs,
+          packageableCollection);
+    }
+
     // Create rule to trim uber R.java sources.
     BuildRuleParams paramsForTrimUberRDotJava = buildRuleParams.copyWithChanges(
         createBuildTargetWithFlavor(TRIM_UBER_R_DOT_JAVA_FLAVOR),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(aaptPackageResources)),
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>naturalOrder()
+            .add(aaptPackageResources)
+            .addAll(preDexedLibraries)
+            .build()),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
     TrimUberRDotJava trimUberRDotJava = new TrimUberRDotJava(
         paramsForTrimUberRDotJava,
         pathResolver,
-        aaptPackageResources);
+        aaptPackageResources,
+        preDexedLibraries);
     ruleResolver.addToIndex(trimUberRDotJava);
 
     // Create rule to compile uber R.java sources.
@@ -359,10 +371,6 @@ public class AndroidBinaryGraphEnhancer {
 
     Optional<PreDexMerge> preDexMerge = Optional.absent();
     if (shouldPreDex) {
-      ImmutableSet<DexProducedFromJavaLibrary> preDexedLibraries = createPreDexRulesForLibraries(
-          // TODO(dreiss): Put R.java here.
-          preDexBuildConfigs,
-          packageableCollection);
       preDexMerge = Optional.of(createPreDexMergeRule(
               preDexedLibraries,
               dexUberRDotJava));
