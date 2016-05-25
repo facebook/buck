@@ -637,6 +637,12 @@ public class AndroidBinary
             .from(enhancementResult.getClasspathEntriesToDex())
             .transform(getResolver().deprecatedPathFunction())
             .toSet();
+    if (enhancementResult.getAaptPackageResources().hasRDotJava()) {
+      classpathEntriesToDex = ImmutableSet.<Path>builder()
+          .addAll(classpathEntriesToDex)
+          .add(enhancementResult.getAaptPackageResources().getPathToCompiledRDotJavaFiles())
+          .build();
+    }
 
     // Execute preprocess_java_classes_binary, if appropriate.
     if (preprocessJavaClassesBash.isPresent()) {

@@ -287,15 +287,6 @@ public class AndroidBinaryGraphEnhancer {
       enhancedDeps.add(packageStringAssets.get());
     }
 
-    // TODO(natthu): Try to avoid re-building the collection by passing UberRDotJava directly.
-    if (packageableCollection.getResourceDetails().hasResources()) {
-      collector.addClasspathEntry(
-          aaptPackageResources,
-          new BuildTargetSourcePath(
-              aaptPackageResources.getBuildTarget(),
-              aaptPackageResources.getPathToCompiledRDotJavaFiles()));
-    }
-
     // BuildConfig deps should not be added for instrumented APKs because BuildConfig.class has
     // already been added to the APK under test.
     ImmutableList<DexProducedFromJavaLibrary> preDexBuildConfigs;
@@ -370,8 +361,6 @@ public class AndroidBinaryGraphEnhancer {
 
     // Uncomment this for manual testing.
 //    enhancedDeps.add(dexUberRDotJava);
-
-    packageableCollection = collector.build();
 
     Optional<PreDexMerge> preDexMerge = Optional.absent();
     if (shouldPreDex) {
@@ -530,11 +519,6 @@ public class AndroidBinaryGraphEnhancer {
           "JavaLibrary should have been excluded from target to dex: %s", buildTarget);
 
       BuildRule libraryRule = ruleResolver.getRule(buildTarget);
-
-      // Skip uber R.java since AaptPackageResources takes care of dexing.
-      if (libraryRule.equals(aaptPackageResources)) {
-        continue;
-      }
 
       Preconditions.checkState(libraryRule instanceof JavaLibrary);
       JavaLibrary javaLibrary = (JavaLibrary) libraryRule;

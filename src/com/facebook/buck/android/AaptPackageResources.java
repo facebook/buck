@@ -254,7 +254,7 @@ public class AaptPackageResources extends AbstractBuildRule
     // always exists.
     steps.add(new TouchStep(getProjectFilesystem(), getPathToRDotTxtFile()));
 
-    if (!filteredResourcesProvider.getResDirectories().isEmpty()) {
+    if (hasRDotJava()) {
       generateAndCompileRDotJavaFiles(steps, buildableContext);
       if (rDotJavaNeedsDexing) {
         Path rDotJavaDexDir = getPathToRDotJavaDexFiles();
@@ -309,6 +309,13 @@ public class AaptPackageResources extends AbstractBuildRule
             buildableContext));
 
     return steps.build();
+  }
+
+  /**
+   * True iff an app has resources with ids (after filtering (like for display density)).
+   */
+  boolean hasRDotJava() {
+    return !filteredResourcesProvider.getResDirectories().isEmpty();
   }
 
   private void generateAndCompileRDotJavaFiles(
