@@ -271,4 +271,16 @@ public class ConfigTest {
     config.get("section", "field1");
   }
 
+  @Test
+  public void locationMacroIsPreserved() {
+    Config config =
+        new Config(
+            RawConfig.builder()
+                .put("section", "field", "hello $(location input) world")
+                .build());
+    assertThat(
+        config.get("section", "field"),
+        Matchers.equalTo(Optional.of("hello $(location input) world")));
+  }
+
 }

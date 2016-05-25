@@ -72,6 +72,17 @@ public class Config {
     this.rawConfig = rawConfig;
   }
 
+  // Some `.buckconfig`s embed genrule macros which break with recent changes to support the config
+  // macro.  So, add special expanders to preserve these until they get fixed.
+  private static MacroReplacer getMacroPreserver(final String name) {
+    return new MacroReplacer() {
+      @Override
+      public String replace(String input) throws MacroException {
+        return String.format("$(%s %s)", name, input);
+      }
+    };
+  }
+
   /**
    * @return the input after recursively expanding any config references.
    */
@@ -90,7 +101,12 @@ public class Config {
           }
         };
     try {
-      return MACRO_FINDER.replace(ImmutableMap.of("config", macroReplacer), input);
+      return MACRO_FINDER.replace(
+          ImmutableMap.of(
+              "config", macroReplacer,
+              "exe", getMacroPreserver("exe"),
+              "location", getMacroPreserver("location")),
+          input);
     } catch (MacroException e) {
       throw new HumanReadableException(e, e.getMessage());
     }
