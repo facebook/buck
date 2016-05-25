@@ -631,12 +631,14 @@ public class AndroidBinary
 
     AndroidPackageableCollection packageableCollection =
         enhancementResult.getPackageableCollection();
-    // Execute preprocess_java_classes_binary, if appropriate.
+
     ImmutableSet<Path> classpathEntriesToDex =
         FluentIterable
             .from(enhancementResult.getClasspathEntriesToDex())
             .transform(getResolver().deprecatedPathFunction())
             .toSet();
+
+    // Execute preprocess_java_classes_binary, if appropriate.
     if (preprocessJavaClassesBash.isPresent()) {
       // Symlink everything in dexTransitiveDependencies.classpathEntriesToDex to the input
       // directory. Expect parallel outputs in the output directory and update classpathEntriesToDex
