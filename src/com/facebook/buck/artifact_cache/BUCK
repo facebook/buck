@@ -25,12 +25,14 @@ java_immutables_library(
 )
 
 PROTOCOL_SOURCES = [
+  'AbstractArtifactInfo.java',
   'HttpArtifactCacheBinaryProtocol.java'
 ]
 java_immutables_library(
   name = 'binary_protocol',
   srcs = PROTOCOL_SOURCES,
   immutable_types = [
+    'ArtifactInfo',
     'MetadataAndPayloadReadResultInternal',
     'FetchResponseReadResult',
     'StoreResponseReadResult',

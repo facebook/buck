@@ -152,19 +152,18 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
 
   @Override
   public ListenableFuture<Void> store(
-      final ImmutableSet<RuleKey> ruleKeys,
-      final ImmutableMap<String, String> metadata,
+      final ArtifactInfo info,
       final BorrowablePath output) {
 
     return Futures.transformAsync(
-        attemptTwoLevelStore(ruleKeys, metadata, output),
+        attemptTwoLevelStore(info, output),
         new AsyncFunction<Boolean, Void>() {
           @Override
           public ListenableFuture<Void> apply(Boolean input) throws Exception {
             if (input) {
               return Futures.immediateFuture(null);
             }
-            return delegate.store(ruleKeys, metadata, output);
+            return delegate.store(info, output);
           }
         });
   }
@@ -175,8 +174,7 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
   }
 
   private ListenableFuture<Boolean> attemptTwoLevelStore(
-      final ImmutableSet<RuleKey> ruleKeys,
-      final ImmutableMap<String, String> metadata,
+      final ArtifactInfo info,
       final BorrowablePath output) {
 
     ListenableFuture<Optional<String>> contentHash = Futures.transformAsync(
@@ -200,8 +198,7 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
 
             return Futures.transform(
                 delegate.store(
-                    ImmutableSet.of(new RuleKey(hashCode)),
-                    ImmutableMap.<String, String>of(),
+                    ArtifactInfo.builder().addRuleKeys(new RuleKey(hashCode)).build(),
                     output),
                 Functions.constant(Optional.of(hashCode)));
           }
@@ -220,14 +217,16 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
 
             ImmutableMap<String, String> metadataWithCacheKey =
                 ImmutableMap.<String, String>builder()
-                    .putAll(metadata)
+                    .putAll(info.getMetadata())
                     .put(METADATA_KEY, contentHash.get())
                     .build();
 
             return Futures.transform(
                 delegate.store(
-                    ruleKeys,
-                    metadataWithCacheKey,
+                    ArtifactInfo.builder()
+                        .setRuleKeys(info.getRuleKeys())
+                        .setMetadata(metadataWithCacheKey)
+                        .build(),
                     BorrowablePath.notBorrowablePath(emptyFilePath)),
                 Functions.constant(true));
           }

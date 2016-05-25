@@ -28,7 +28,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpResponse;
 import com.facebook.buck.slb.HttpService;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -48,8 +47,8 @@ import java.net.HttpURLConnection;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.regex.Matcher;
 import java.util.Set;
+import java.util.regex.Matcher;
 
 import okio.BufferedSink;
 
@@ -207,8 +206,7 @@ public class HttpArtifactCache implements ArtifactCache {
   }
 
   protected void storeImpl(
-      ImmutableSet<RuleKey> ruleKeys,
-      final ImmutableMap<String, String> metadata,
+      ArtifactInfo info,
       final Path file,
       final Finished.Builder eventBuilder)
       throws IOException {
@@ -222,8 +220,7 @@ public class HttpArtifactCache implements ArtifactCache {
     Request.Builder builder = new Request.Builder();
     final HttpArtifactCacheBinaryProtocol.StoreRequest storeRequest =
         new HttpArtifactCacheBinaryProtocol.StoreRequest(
-            ruleKeys,
-            metadata,
+            info,
             new ByteSource() {
               @Override
               public InputStream openStream() throws IOException {
@@ -262,7 +259,7 @@ public class HttpArtifactCache implements ArtifactCache {
         reportFailure(
             "store(%s, %s): unexpected response: %d",
             response.requestUrl(),
-            ruleKeys,
+            info.getRuleKeys(),
             response.code());
       }
 
@@ -272,8 +269,7 @@ public class HttpArtifactCache implements ArtifactCache {
 
   @Override
   public ListenableFuture<Void> store(
-      final ImmutableSet<RuleKey> ruleKeys,
-      final ImmutableMap<String, String> metadata,
+      final ArtifactInfo info,
       final BorrowablePath output) {
     if (!isStoreSupported()) {
       return Futures.immediateFuture(null);
@@ -281,7 +277,7 @@ public class HttpArtifactCache implements ArtifactCache {
 
     final HttpArtifactCacheEvent.Scheduled scheduled =
         HttpArtifactCacheEvent.newStoreScheduledEvent(
-            ArtifactCacheEvent.getTarget(metadata), ruleKeys);
+            ArtifactCacheEvent.getTarget(info.getMetadata()), info.getRuleKeys());
     buckEventBus.post(scheduled);
 
     final Path tmp;
@@ -301,17 +297,17 @@ public class HttpArtifactCache implements ArtifactCache {
             buckEventBus.post(startedEvent);
             Finished.Builder finishedEventBuilder =
                 HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
-                    .setRuleKeys(ruleKeys);
+                    .setRuleKeys(info.getRuleKeys());
 
             try {
-              storeImpl(ruleKeys, metadata, tmp, finishedEventBuilder);
+              storeImpl(info, tmp, finishedEventBuilder);
               buckEventBus.post(finishedEventBuilder.build());
 
             } catch (IOException e) {
               reportFailure(
                   e,
                   "store(%s): %s: %s",
-                  ruleKeys,
+                  info.getRuleKeys(),
                   e.getClass().getName(),
                   e.getMessage());
 

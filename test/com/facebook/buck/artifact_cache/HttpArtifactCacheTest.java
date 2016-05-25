@@ -423,8 +423,7 @@ public class HttpArtifactCacheTest {
           }
         };
     cache.storeImpl(
-        ImmutableSet.of(ruleKey),
-        ImmutableMap.<String, String>of(),
+        ArtifactInfo.builder().addRuleKeys(ruleKey).build(),
         output,
         createFinishedEventBuilder());
     assertTrue(hasCalled.get());
@@ -453,8 +452,7 @@ public class HttpArtifactCacheTest {
           }
         };
     cache.storeImpl(
-        ImmutableSet.of(new RuleKey("00000000000000000000000000000000")),
-        ImmutableMap.<String, String>of(),
+        ArtifactInfo.builder().addRuleKeys(new RuleKey("00000000000000000000000000000000")).build(),
         output,
         createFinishedEventBuilder());
     cache.close();
@@ -502,8 +500,7 @@ public class HttpArtifactCacheTest {
           }
         };
     cache.storeImpl(
-        ImmutableSet.of(ruleKey1, ruleKey2),
-        ImmutableMap.<String, String>of(),
+        ArtifactInfo.builder().addRuleKeys(ruleKey1, ruleKey2).build(),
         output,
         createFinishedEventBuilder());
     assertThat(
@@ -682,8 +679,7 @@ public class HttpArtifactCacheTest {
           }
         };
     cache.storeImpl(
-        ImmutableSet.of(ruleKey),
-        ImmutableMap.<String, String>of(),
+        ArtifactInfo.builder().addRuleKeys(ruleKey).build(),
         output,
         createFinishedEventBuilder());
     cache.close();

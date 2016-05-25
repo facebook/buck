@@ -16,11 +16,9 @@
 
 package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.BorrowablePath;
+import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 
 public interface ArtifactCache extends AutoCloseable {
@@ -44,16 +42,33 @@ public interface ArtifactCache extends AutoCloseable {
    * <p>
    * This is a noop if {@link #isStoreSupported()} returns {@code false}.
    *
+   * @param info information to store with the artifact
+   * @param output path to read artifact from. If its borrowable, you may freely move the file into
+   *               cache without obtaining a copy of the file.
+   * @return {@link ListenableFuture} that completes once the store has finished.
+   */
+  ListenableFuture<Void> store(
+      ArtifactInfo info,
+      BorrowablePath output);
+
+  /**
+   * Store the artifact at path specified by output to cache, such that it can later be fetched
+   * using ruleKey as the lookup key.  If any internal errors occur, fail silently and continue
+   * execution.
+   * Store may be performed synchronously or asynchronously.
+   * <p>
+   * This is a noop if {@link #isStoreSupported()} returns {@code false}.
+   *
    * @param ruleKeys keys to store the artifact under
    * @param metadata additional information to store with the artifact
    * @param output path to read artifact from. If its borrowable, you may freely move the file into
    *               cache without obtaining a copy of the file.
    * @return {@link ListenableFuture} that completes once the store has finished.
    */
-  ListenableFuture<Void> store(
-      ImmutableSet<RuleKey> ruleKeys,
-      ImmutableMap<String, String> metadata,
-      BorrowablePath output);
+//  ListenableFuture<Void> store(
+//      ImmutableSet<RuleKey> ruleKeys,
+//      ImmutableMap<String, String> metadata,
+//      BorrowablePath output);
 
   /**
    * This method must return the same value over the lifetime of this object.

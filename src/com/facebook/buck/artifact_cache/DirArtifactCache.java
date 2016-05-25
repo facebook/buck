@@ -128,8 +128,7 @@ public class DirArtifactCache implements ArtifactCache {
 
   @Override
   public ListenableFuture<Void> store(
-      ImmutableSet<RuleKey> ruleKeys,
-      ImmutableMap<String, String> metadata,
+      ArtifactInfo info,
       BorrowablePath output) {
 
     if (!doStore) {
@@ -138,7 +137,7 @@ public class DirArtifactCache implements ArtifactCache {
 
     try {
       Optional<Path> borrowedAndStoredArtifactPath = Optional.absent();
-      for (RuleKey ruleKey : ruleKeys) {
+      for (RuleKey ruleKey : info.getRuleKeys()) {
         Path artifactPath = getPathForRuleKey(ruleKey, Optional.<String>absent());
         Path metadataPath = getPathForRuleKey(ruleKey, Optional.of(".metadata"));
 
@@ -167,8 +166,8 @@ public class DirArtifactCache implements ArtifactCache {
         Path tmp = filesystem.createTempFile(getPreparedTempFolder(), "metadata", TMP_EXTENSION);
         try {
           try (DataOutputStream out = new DataOutputStream(filesystem.newFileOutputStream(tmp))) {
-            out.writeInt(metadata.size());
-            for (Map.Entry<String, String> ent : metadata.entrySet()) {
+            out.writeInt(info.getMetadata().size());
+            for (Map.Entry<String, String> ent : info.getMetadata().entrySet()) {
               out.writeUTF(ent.getKey());
               byte[] val = ent.getValue().getBytes(Charsets.UTF_8);
               out.writeInt(val.length);
@@ -186,7 +185,7 @@ public class DirArtifactCache implements ArtifactCache {
       LOG.warn(
           e,
           "Artifact store(%s, %s) error",
-          ruleKeys,
+          info.getRuleKeys(),
           output);
     }
 

@@ -210,14 +210,13 @@ public class HttpArtifactCacheBinaryProtocol {
     private final long contentLength;
 
     public StoreRequest(
-        ImmutableSet<RuleKey> ruleKeys,
-        ImmutableMap<String, String> metadata,
+        ArtifactInfo info,
         ByteSource payloadSource) throws IOException {
       this.payloadSource = payloadSource;
-      this.rawKeys = createKeysHeader(ruleKeys);
+      this.rawKeys = createKeysHeader(info.getRuleKeys());
       this.rawMetadata = createMetadataHeader(
-          ruleKeys,
-          metadata,
+          info.getRuleKeys(),
+          info.getMetadata(),
           payloadSource);
       this.contentLength =
           rawKeys.length +

@@ -17,6 +17,7 @@
 package com.facebook.buck.httpserver;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.artifact_cache.ArtifactInfo;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheBinaryProtocol;
 import com.facebook.buck.io.BorrowablePath;
@@ -161,9 +162,12 @@ public class ArtifactCacheHandler extends AbstractHandler {
         return HttpServletResponse.SC_NOT_ACCEPTABLE;
       }
 
+
       artifactCache.get().store(
-          storeRequest.getRuleKeys(),
-          storeRequest.getMetadata(),
+          ArtifactInfo.builder()
+              .setRuleKeys(storeRequest.getRuleKeys())
+              .setMetadata(storeRequest.getMetadata())
+              .build(),
           BorrowablePath.notBorrowablePath(temp));
       return HttpServletResponse.SC_ACCEPTED;
     } finally {

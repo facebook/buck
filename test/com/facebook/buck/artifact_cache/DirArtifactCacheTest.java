@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -29,6 +28,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -147,8 +147,7 @@ public class DirArtifactCacheTest {
         .build(inputRuleX);
 
     dirArtifactCache.store(
-        ImmutableSet.of(ruleKeyX),
-        ImmutableMap.<String, String>of(),
+        ArtifactInfo.builder().addRuleKeys(ruleKeyX).build(),
         BorrowablePath.notBorrowablePath(fileX));
 
     // Test that artifact overwrite works.
@@ -190,14 +189,12 @@ public class DirArtifactCacheTest {
         .build(inputRuleX);
 
     dirArtifactCache.store(
-        ImmutableSet.of(ruleKeyX),
-        ImmutableMap.<String, String>of(),
+        ArtifactInfo.builder().addRuleKeys(ruleKeyX).build(),
         BorrowablePath.notBorrowablePath(fileX));
 
     // Overwrite.
     dirArtifactCache.store(
-        ImmutableSet.of(ruleKeyX),
-        ImmutableMap.<String, String>of(),
+        ArtifactInfo.builder().addRuleKeys(ruleKeyX).build(),
         BorrowablePath.notBorrowablePath(fileX));
 
     assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(ruleKeyX, LazyPath.ofInstance(fileX))
@@ -261,11 +258,14 @@ public class DirArtifactCacheTest {
             ruleKeyZ,
             LazyPath.ofInstance(fileZ)).getType());
 
-    dirArtifactCache.store(ImmutableSet.of(ruleKeyX), ImmutableMap.<String, String>of(),
+    dirArtifactCache.store(
+        ArtifactInfo.builder().addRuleKeys(ruleKeyX).build(),
         BorrowablePath.notBorrowablePath(fileX));
-    dirArtifactCache.store(ImmutableSet.of(ruleKeyY), ImmutableMap.<String, String>of(),
+    dirArtifactCache.store(
+        ArtifactInfo.builder().addRuleKeys(ruleKeyY).build(),
         BorrowablePath.notBorrowablePath(fileY));
-    dirArtifactCache.store(ImmutableSet.of(ruleKeyZ), ImmutableMap.<String, String>of(),
+    dirArtifactCache.store(
+        ArtifactInfo.builder().addRuleKeys(ruleKeyZ).build(),
         BorrowablePath.notBorrowablePath(fileZ));
 
     Files.delete(fileX);
@@ -341,9 +341,11 @@ public class DirArtifactCacheTest {
     RuleKey ruleKeyX = fakeRuleKeyBuilderFactory.build(inputRuleX);
     RuleKey ruleKeyY = fakeRuleKeyBuilderFactory.build(inputRuleY);
 
-    dirArtifactCache.store(ImmutableSet.of(ruleKeyX), ImmutableMap.<String, String>of(),
+    dirArtifactCache.store(
+        ArtifactInfo.builder().addRuleKeys(ruleKeyX).build(),
         BorrowablePath.borrowablePath(fileX));
-    dirArtifactCache.store(ImmutableSet.of(ruleKeyY), ImmutableMap.<String, String>of(),
+    dirArtifactCache.store(
+        ArtifactInfo.builder().addRuleKeys(ruleKeyY).build(),
         BorrowablePath.notBorrowablePath(fileY));
 
     assertThat(Files.exists(fileX), Matchers.is(false));
@@ -406,11 +408,14 @@ public class DirArtifactCacheTest {
             ruleKeyZ,
             LazyPath.ofInstance(fileZ)).getType());
 
-    dirArtifactCache.store(ImmutableSet.of(ruleKeyX), ImmutableMap.<String, String>of(),
+    dirArtifactCache.store(
+        ArtifactInfo.builder().addRuleKeys(ruleKeyX).build(),
         BorrowablePath.notBorrowablePath(fileX));
-    dirArtifactCache.store(ImmutableSet.of(ruleKeyY), ImmutableMap.<String, String>of(),
+    dirArtifactCache.store(
+        ArtifactInfo.builder().addRuleKeys(ruleKeyY).build(),
         BorrowablePath.notBorrowablePath(fileY));
-    dirArtifactCache.store(ImmutableSet.of(ruleKeyZ), ImmutableMap.<String, String>of(),
+    dirArtifactCache.store(
+        ArtifactInfo.builder().addRuleKeys(ruleKeyZ).build(),
         BorrowablePath.notBorrowablePath(fileZ));
 
     Files.delete(fileX);
@@ -578,7 +583,8 @@ public class DirArtifactCacheTest {
     RuleKey ruleKeyY = fakeRuleKeyBuilderFactory.build(inputRuleY);
     RuleKey ruleKeyZ = fakeRuleKeyBuilderFactory.build(inputRuleZ);
 
-    dirArtifactCache.store(ImmutableSet.of(ruleKeyX), ImmutableMap.<String, String>of(),
+    dirArtifactCache.store(
+        ArtifactInfo.builder().addRuleKeys(ruleKeyX).build(),
         BorrowablePath.notBorrowablePath(fileX));
     assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(
             ruleKeyX,
@@ -593,7 +599,8 @@ public class DirArtifactCacheTest {
         "lastAccessTime",
         FileTime.fromMillis(0));
 
-    dirArtifactCache.store(ImmutableSet.of(ruleKeyY), ImmutableMap.<String, String>of(),
+    dirArtifactCache.store(
+        ArtifactInfo.builder().addRuleKeys(ruleKeyY).build(),
         BorrowablePath.notBorrowablePath(fileY));
     assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(
             ruleKeyX,
@@ -611,7 +618,8 @@ public class DirArtifactCacheTest {
         "lastAccessTime",
         FileTime.fromMillis(1000));
 
-    dirArtifactCache.store(ImmutableSet.of(ruleKeyZ), ImmutableMap.<String, String>of(),
+    dirArtifactCache.store(
+        ArtifactInfo.builder().addRuleKeys(ruleKeyZ).build(),
         BorrowablePath.notBorrowablePath(fileZ));
 
     assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(
@@ -645,8 +653,7 @@ public class DirArtifactCacheTest {
     RuleKey ruleKey2 = new RuleKey("bbbb");
 
     dirArtifactCache.store(
-        ImmutableSet.of(ruleKey1, ruleKey2),
-        ImmutableMap.<String, String>of(),
+        ArtifactInfo.builder().addRuleKeys(ruleKey1, ruleKey2).build(),
         BorrowablePath.notBorrowablePath(fileX));
 
     // Test that artifact is available via both keys.
@@ -677,7 +684,9 @@ public class DirArtifactCacheTest {
     filesystem.touch(data);
 
     // Store the artifact with metadata then re-fetch.
-    cache.store(ImmutableSet.of(ruleKey), metadata, BorrowablePath.notBorrowablePath(data));
+    cache.store(
+        ArtifactInfo.builder().addRuleKeys(ruleKey).setMetadata(metadata).build(),
+        BorrowablePath.notBorrowablePath(data));
     CacheResult result = cache.fetch(ruleKey, LazyPath.ofInstance(Paths.get("out-data")));
 
     // Verify that the metadata is correct.

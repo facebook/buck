@@ -19,8 +19,6 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -43,10 +41,9 @@ public class DummyArtifactCache extends NoopArtifactCache {
 
   @Override
   public ListenableFuture<Void> store(
-      ImmutableSet<RuleKey> ruleKeys,
-      ImmutableMap<String, String> metadata,
+      ArtifactInfo info,
       BorrowablePath output) {
-    storeKey = Iterables.getFirst(ruleKeys, null);
+    storeKey = Iterables.getFirst(info.getRuleKeys(), null);
     return Futures.immediateFuture(null);
   }
 

@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.artifact_cache.ArtifactInfo;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.event.ArtifactCompressionEvent;
@@ -1571,8 +1572,7 @@ public class CachingBuildEngine implements BuildEngine {
     }
     cache
         .store(
-            ImmutableSet.of(manifestKey.getFirst()),
-            ImmutableMap.<String, String>of(),
+            ArtifactInfo.builder().addRuleKeys(manifestKey.getFirst()).build(),
             BorrowablePath.notBorrowablePath(tempFile))
         .addListener(
             new Runnable() {

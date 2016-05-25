@@ -29,6 +29,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.artifact_cache.ArtifactInfo;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.InMemoryArtifactCache;
@@ -336,16 +337,15 @@ public class CachingBuildEngineTest {
                   new NoopArtifactCache() {
                     @Override
                     public ListenableFuture<Void> store(
-                    ImmutableSet<RuleKey> ruleKeys,
-                    ImmutableMap<String, String> metadata,
-                    BorrowablePath output) {
+                        ArtifactInfo info,
+                        BorrowablePath output) {
                       try {
                         Thread.sleep(500);
                       } catch (InterruptedException e) {
                         throw Throwables.propagate(e);
                       }
                       return Futures.immediateFuture(null);
-                  }
+                    }
                   })
               .setEventBus(buckEventBus)
               .setJavaPackageFinder(new FakeJavaPackageFinder())
@@ -902,7 +902,7 @@ public class CachingBuildEngineTest {
             @Override
             public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
               return CacheResult.error("cache", "error");
-          }
+            }
           };
 
       // Use the artifact cache when running a simple rule that will build locally.
@@ -1061,7 +1061,7 @@ public class CachingBuildEngineTest {
           equalTo(BuildRuleStatus.FAIL));
       assertThat(
           Preconditions.checkNotNull(cachingBuildEngine.getBuildRuleResult(
-                  dep2.getBuildTarget())).getStatus(),
+              dep2.getBuildTarget())).getStatus(),
           equalTo(BuildRuleStatus.CANCELED));
       assertThat(
           Preconditions.checkNotNull(
@@ -1158,7 +1158,7 @@ public class CachingBuildEngineTest {
           equalTo(BuildRuleStatus.FAIL));
       assertThat(
           Preconditions.checkNotNull(cachingBuildEngine.getBuildRuleResult(
-                  dep2.getBuildTarget())).getStatus(),
+              dep2.getBuildTarget())).getStatus(),
           equalTo(BuildRuleStatus.CANCELED));
       assertThat(
           Preconditions.checkNotNull(
@@ -1463,12 +1463,15 @@ public class CachingBuildEngineTest {
               rule.getPathToOutput(),
               "stuff"));
       cache.store(
-          ImmutableSet.of(inputRuleKey),
-          ImmutableMap.of(
-              BuildInfo.METADATA_KEY_FOR_RULE_KEY,
-              new RuleKey("bbbb").toString(),
-              BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY,
-              inputRuleKey.toString()),
+          ArtifactInfo.builder()
+              .addRuleKeys(inputRuleKey)
+              .setMetadata(
+                  ImmutableMap.of(
+                      BuildInfo.METADATA_KEY_FOR_RULE_KEY,
+                      new RuleKey("bbbb").toString(),
+                      BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY,
+                      inputRuleKey.toString()))
+              .build(),
           BorrowablePath.notBorrowablePath(artifact));
 
       // Create the build engine.
@@ -2356,8 +2359,9 @@ public class CachingBuildEngineTest {
         manifest.serialize(outputStream);
       }
       cache.store(
-          ImmutableSet.of(cachingBuildEngine.getManifestRuleKey(rule).get()),
-          ImmutableMap.<String, String>of(),
+          ArtifactInfo.builder()
+              .addRuleKeys(cachingBuildEngine.getManifestRuleKey(rule).get())
+              .build(),
           byteArrayOutputStream.toByteArray());
 
       // Run the build.
@@ -2478,8 +2482,9 @@ public class CachingBuildEngineTest {
         manifest.serialize(outputStream);
       }
       cache.store(
-          ImmutableSet.of(cachingBuildEngine.getManifestRuleKey(rule).get()),
-          ImmutableMap.<String, String>of(),
+          ArtifactInfo.builder()
+              .addRuleKeys(cachingBuildEngine.getManifestRuleKey(rule).get())
+              .build(),
           byteArrayOutputStream.toByteArray());
 
       // Run the build.
@@ -2593,8 +2598,9 @@ public class CachingBuildEngineTest {
         manifest.serialize(outputStream);
       }
       cache.store(
-          ImmutableSet.of(cachingBuildEngine.getManifestRuleKey(rule).get()),
-          ImmutableMap.<String, String>of(),
+          ArtifactInfo.builder()
+              .addRuleKeys(cachingBuildEngine.getManifestRuleKey(rule).get())
+              .build(),
           byteArrayOutputStream.toByteArray());
       Path artifact = tmp.newFile("artifact.zip").toPath();
       writeEntriesToZip(
@@ -2606,8 +2612,9 @@ public class CachingBuildEngineTest {
               output,
               "stuff"));
       cache.store(
-          ImmutableSet.of(artifactKey),
-          ImmutableMap.<String, String>of(),
+          ArtifactInfo.builder()
+              .addRuleKeys(artifactKey)
+              .build(),
           BorrowablePath.notBorrowablePath(artifact));
 
       // Run the build.
@@ -3160,7 +3167,7 @@ public class CachingBuildEngineTest {
                               return String.format("%s@%s", event, event.getNanoTime());
                             }
                           })
-                        .toList()),
+                      .toList()),
               event1.getThreadId(),
               equalTo(event2.getThreadId()));
         }
@@ -3344,7 +3351,7 @@ public class CachingBuildEngineTest {
    * its constructor.
    * <p>
    * This makes it possible to react to a call to
-   * {@link ArtifactCache#store(ImmutableSet, ImmutableMap, BorrowablePath)} and ensure that
+   * {@link ArtifactCache#store(ArtifactInfo, BorrowablePath)} and ensure that
    * there will be a zip file in place immediately after the captured method has been invoked.
    */
   private static class FakeArtifactCacheThatWritesAZipFile implements ArtifactCache {
@@ -3367,8 +3374,7 @@ public class CachingBuildEngineTest {
 
     @Override
     public ListenableFuture<Void> store(
-        ImmutableSet<RuleKey> ruleKeys,
-        ImmutableMap<String, String> metadata,
+        ArtifactInfo info,
         BorrowablePath output) {
       throw new UnsupportedOperationException();
     }
@@ -3522,7 +3528,7 @@ public class CachingBuildEngineTest {
         /* maximumPoolSize */ CachingBuildEngine.MAX_TEST_NETWORK_THREADS,
         /* keepAliveTime */ 15L, TimeUnit.SECONDS,
         /* workQueue */ new LinkedBlockingQueue<Runnable>(
-            CachingBuildEngine.MAX_TEST_NETWORK_THREADS),
+        CachingBuildEngine.MAX_TEST_NETWORK_THREADS),
         /* threadFactory */ new ThreadFactoryBuilder()
         .setNameFormat("Network Test I/O" + "-%d")
         .build(),

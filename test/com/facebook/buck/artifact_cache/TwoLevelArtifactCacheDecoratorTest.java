@@ -28,7 +28,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import org.hamcrest.Matchers;
@@ -66,16 +65,14 @@ public class TwoLevelArtifactCacheDecoratorTest {
           Matchers.equalTo(CacheResultType.MISS));
 
       twoLevelCache.store(
-          ImmutableSet.of(dummyRuleKey),
-          ImmutableMap.<String, String>of(),
+          ArtifactInfo.builder().addRuleKeys(dummyRuleKey).build(),
           BorrowablePath.notBorrowablePath(dummyFile.get()));
       assertThat(
           twoLevelCache.fetch(dummyRuleKey, dummyFile).getType(),
           Matchers.equalTo(CacheResultType.HIT));
 
       twoLevelCache.store(
-          ImmutableSet.of(dummyRuleKey2),
-          ImmutableMap.<String, String>of(),
+          ArtifactInfo.builder().addRuleKeys(dummyRuleKey2).build(),
           BorrowablePath.notBorrowablePath(dummyFile.get()));
 
       assertThat(
@@ -104,8 +101,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
       Files.write(lazyPath.get(), new byte[artifactSize]);
 
       twoLevelCache.store(
-          ImmutableSet.of(dummyRuleKey),
-          ImmutableMap.<String, String>of(),
+          ArtifactInfo.builder().addRuleKeys(dummyRuleKey).build(),
           BorrowablePath.notBorrowablePath(lazyPath.get()));
       assertThat(
           inMemoryArtifactCache.getArtifactCount(),
@@ -149,12 +145,16 @@ public class TwoLevelArtifactCacheDecoratorTest {
 
       final String testMetadataKey = "testMetaKey";
       twoLevelCache.store(
-          ImmutableSet.of(dummyRuleKey),
-          ImmutableMap.of(testMetadataKey, "value1"),
+          ArtifactInfo.builder()
+              .addRuleKeys(dummyRuleKey)
+              .setMetadata(ImmutableMap.of(testMetadataKey, "value1"))
+              .build(),
           BorrowablePath.notBorrowablePath(dummyFile.get()));
       twoLevelCache.store(
-          ImmutableSet.of(dummyRuleKey2),
-          ImmutableMap.of(testMetadataKey, "value2"),
+          ArtifactInfo.builder()
+              .addRuleKeys(dummyRuleKey2)
+              .setMetadata(ImmutableMap.of(testMetadataKey, "value2"))
+              .build(),
           BorrowablePath.notBorrowablePath(dummyFile.get()));
 
       CacheResult fetch1 = twoLevelCache.fetch(dummyRuleKey, dummyFile);
@@ -193,8 +193,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
       LazyPath dummyFile = LazyPath.ofInstance(tmp.newFile());
 
       twoLevelCache.store(
-          ImmutableSet.of(dummyRuleKey),
-          ImmutableMap.<String, String>of(),
+          ArtifactInfo.builder().addRuleKeys(dummyRuleKey).build(),
           BorrowablePath.notBorrowablePath(dummyFile.get()));
       assertThat(
           inMemoryArtifactCache.getArtifactCount(),

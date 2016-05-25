@@ -196,8 +196,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
 
     HttpArtifactCacheBinaryProtocol.StoreRequest storeRequest =
         new HttpArtifactCacheBinaryProtocol.StoreRequest(
-            ImmutableSet.of(ruleKey, ruleKey2),
-            metadata,
+            ArtifactInfo.builder().addRuleKeys(ruleKey, ruleKey2).setMetadata(metadata).build(),
             new ByteSource() {
               @Override
               public InputStream openStream() throws IOException {
@@ -231,8 +230,10 @@ public class HttpArtifactCacheBinaryProtocolTest {
 
     HttpArtifactCacheBinaryProtocol.StoreRequest storeRequest =
         new HttpArtifactCacheBinaryProtocol.StoreRequest(
-            ImmutableSet.of(ruleKey, ruleKey2),
-            ImmutableMap.of("key", "value"),
+            ArtifactInfo.builder()
+                .addRuleKeys(ruleKey, ruleKey2)
+                .setMetadata(ImmutableMap.of("key", "value"))
+                .build(),
             new ByteSource() {
               @Override
               public InputStream openStream() throws IOException {

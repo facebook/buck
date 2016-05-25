@@ -26,7 +26,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -68,8 +67,7 @@ public class MultiArtifactCacheTest {
         multiArtifactCache.fetch(dummyRuleKey, dummyFile).getType());
 
     dummyArtifactCache1.store(
-        ImmutableSet.of(dummyRuleKey),
-        ImmutableMap.<String, String>of(),
+        ArtifactInfo.builder().addRuleKeys(dummyRuleKey).build(),
         BorrowablePath.notBorrowablePath(dummyFile.get()));
     assertEquals(
         "Fetch should succeed after store",
@@ -79,8 +77,7 @@ public class MultiArtifactCacheTest {
     dummyArtifactCache1.reset();
     dummyArtifactCache2.reset();
     dummyArtifactCache2.store(
-        ImmutableSet.of(dummyRuleKey),
-        ImmutableMap.<String, String>of(),
+        ArtifactInfo.builder().addRuleKeys(dummyRuleKey).build(),
         BorrowablePath.notBorrowablePath(dummyFile.get()));
     assertEquals("Fetch should succeed after store",
         CacheResultType.HIT,
@@ -98,8 +95,7 @@ public class MultiArtifactCacheTest {
         dummyArtifactCache2));
 
     multiArtifactCache.store(
-        ImmutableSet.of(dummyRuleKey),
-        ImmutableMap.<String, String>of(),
+        ArtifactInfo.builder().addRuleKeys(dummyRuleKey).build(),
         BorrowablePath.notBorrowablePath(dummyFile.get()));
 
     assertEquals(
@@ -134,7 +130,9 @@ public class MultiArtifactCacheTest {
     LazyPath output = LazyPath.ofInstance(tmp.newFile());
 
     ImmutableMap<String, String> metadata = ImmutableMap.of("hello", "world");
-    cache2.store(ImmutableSet.of(dummyRuleKey), metadata, new byte[0]);
+    cache2.store(
+        ArtifactInfo.builder().addRuleKeys(dummyRuleKey).setMetadata(metadata).build(),
+        new byte[0]);
     multiArtifactCache.fetch(dummyRuleKey, output);
 
     CacheResult result = cache1.fetch(dummyRuleKey, output);

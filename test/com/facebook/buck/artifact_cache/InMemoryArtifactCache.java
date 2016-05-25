@@ -21,7 +21,6 @@ import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.Futures;
@@ -63,24 +62,22 @@ public class InMemoryArtifactCache implements ArtifactCache {
   }
 
   public void store(
-      ImmutableSet<RuleKey> ruleKeys,
-      ImmutableMap<String, String> metadata,
+      ArtifactInfo info,
       byte[] data) {
     Artifact artifact = new Artifact();
-    artifact.metadata = metadata;
+    artifact.metadata = info.getMetadata();
     artifact.data = data;
-    for (RuleKey ruleKey : ruleKeys) {
+    for (RuleKey ruleKey : info.getRuleKeys()) {
       artifacts.put(ruleKey, artifact);
     }
   }
 
   @Override
   public ListenableFuture<Void> store(
-      ImmutableSet<RuleKey> ruleKeys,
-      ImmutableMap<String, String> metadata,
+      ArtifactInfo info,
       BorrowablePath output) {
     try (InputStream inputStream = Files.newInputStream(output.getPath())) {
-      store(ruleKeys, metadata, ByteStreams.toByteArray(inputStream));
+      store(info, ByteStreams.toByteArray(inputStream));
     } catch (IOException e) {
       throw Throwables.propagate(e);
     }

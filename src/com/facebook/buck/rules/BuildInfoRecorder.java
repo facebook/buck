@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.artifact_cache.ArtifactInfo;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -331,8 +332,7 @@ public class BuildInfoRecorder {
 
     // Store the artifact, including any additional metadata.
     ListenableFuture<Void> storeFuture = artifactCache.store(
-        ruleKeys,
-        buildMetadata,
+        ArtifactInfo.builder().setRuleKeys(ruleKeys).setMetadata(buildMetadata).build(),
         BorrowablePath.notBorrowablePath(zip));
     Futures.addCallback(
         storeFuture,

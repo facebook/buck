@@ -23,8 +23,6 @@ import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
@@ -82,7 +80,12 @@ public class MultiArtifactCache implements ArtifactCache {
           } else {
             outputPath = BorrowablePath.notBorrowablePath(output.getUnchecked());
           }
-          priorArtifactCache.store(ImmutableSet.of(ruleKey), cacheResult.getMetadata(), outputPath);
+          priorArtifactCache.store(
+              ArtifactInfo.builder()
+                  .addRuleKeys(ruleKey)
+                  .setMetadata(cacheResult.getMetadata())
+                  .build(),
+              outputPath);
         }
         return cacheResult;
       }
@@ -95,8 +98,7 @@ public class MultiArtifactCache implements ArtifactCache {
    */
   @Override
   public ListenableFuture<Void> store(
-      ImmutableSet<RuleKey> ruleKeys,
-      ImmutableMap<String, String> metadata,
+      ArtifactInfo info,
       BorrowablePath output) {
 
     List<ListenableFuture<Void>> storeFutures =
@@ -110,7 +112,7 @@ public class MultiArtifactCache implements ArtifactCache {
       } else {
         output = BorrowablePath.notBorrowablePath(output.getPath());
       }
-      storeFutures.add(artifactCache.store(ruleKeys, metadata, output));
+      storeFutures.add(artifactCache.store(info, output));
     }
 
     // Aggregate future to ensure all store operations have completed.

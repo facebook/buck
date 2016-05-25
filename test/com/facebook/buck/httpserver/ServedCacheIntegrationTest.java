@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
+import com.facebook.buck.artifact_cache.ArtifactInfo;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
@@ -43,7 +44,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -96,8 +96,7 @@ public class ServedCacheIntegrationTest {
         Optional.<String>absent(),
         DIRECT_EXECUTOR_SERVICE);
     dirCache.store(
-        ImmutableSet.of(A_FILE_RULE_KEY),
-        A_FILE_METADATA,
+        ArtifactInfo.builder().addRuleKeys(A_FILE_RULE_KEY).setMetadata(A_FILE_METADATA).build(),
         BorrowablePath.notBorrowablePath(A_FILE_PATH));
   }
 
@@ -345,8 +344,7 @@ public class ServedCacheIntegrationTest {
 
       @Override
       public ListenableFuture<Void> store(
-          ImmutableSet<RuleKey> ruleKeys,
-          ImmutableMap<String, String> metadata,
+          ArtifactInfo info,
           BorrowablePath output) {
         return Futures.immediateFuture(null);
       }
@@ -438,8 +436,7 @@ public class ServedCacheIntegrationTest {
     assertThat(cacheResult.getType().isSuccess(), Matchers.is(false));
 
     serverBackedCache.store(
-        ImmutableSet.of(ruleKey),
-        metadata,
+        ArtifactInfo.builder().addRuleKeys(ruleKey).setMetadata(metadata).build(),
         BorrowablePath.notBorrowablePath(originalDataPath));
 
     cacheResult = serverBackedCache.fetch(ruleKey, fetchedContents);
@@ -485,8 +482,7 @@ public class ServedCacheIntegrationTest {
     assertThat(cacheResult.getType().isSuccess(), Matchers.is(false));
 
     serverBackedCache.store(
-        ImmutableSet.of(ruleKey),
-        metadata,
+        ArtifactInfo.builder().addRuleKeys(ruleKey).setMetadata(metadata).build(),
         BorrowablePath.borrowablePath(originalDataPath));
 
     cacheResult = serverBackedCache.fetch(ruleKey, fetchedContents);
@@ -532,8 +528,7 @@ public class ServedCacheIntegrationTest {
     assertThat(cacheResult.getType().isSuccess(), Matchers.is(false));
 
     serverBackedCache.store(
-        ImmutableSet.of(ruleKey),
-        metadata,
+        ArtifactInfo.builder().addRuleKeys(ruleKey).setMetadata(metadata).build(),
         BorrowablePath.notBorrowablePath(originalDataPath));
 
     cacheResult = serverBackedCache.fetch(ruleKey, fetchedContents);
@@ -595,8 +590,7 @@ public class ServedCacheIntegrationTest {
     assertFalse(containsKey(serverBackedCache, ruleKey));
 
     serverBackedCache.store(
-        ImmutableSet.of(ruleKey),
-        metadata,
+        ArtifactInfo.builder().addRuleKeys(ruleKey).setMetadata(metadata).build(),
         BorrowablePath.borrowablePath(originalDataPath)).get();
 
     assertTrue(containsKey(serverBackedCache, ruleKey));
