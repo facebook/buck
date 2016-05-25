@@ -3,8 +3,6 @@ install:
   - cinst -y ant -ignoreDependencies
   - set JAVA_HOME=C:\Program Files\Java\jdk1.8.0_92
   - set PATH=%JAVA_HOME%\bin;%PATH%
-  - set GOROOT=
-  - set GOTOOLDIR=
   - set BUCK_EXTRA_JAVA_ARGS=-Djna.nosys=true
   - python --version
   - java -version
@@ -16,7 +14,7 @@ build_script:
   - bin\\buck build buck
 
 test_script:
-  - bin\\buck test --all --test-selectors=@windows_failures.txt --test-selectors=@windows_cxx_support.txt --explain-test-selectors
+  - bin\\buck test --config go.root=/nonexistent --all --test-selectors=@windows_failures.txt --test-selectors=@windows_cxx_support.txt --explain-test-selectors
 
 artifacts:
   - path: buck-out\gen\programs\buck.pex
