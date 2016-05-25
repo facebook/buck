@@ -364,10 +364,12 @@ public class AndroidBinaryGraphEnhancer {
 
     Optional<PreDexMerge> preDexMerge = Optional.absent();
     if (shouldPreDex) {
+      ImmutableSet<DexProducedFromJavaLibrary> preDexedLibraries = createPreDexRulesForLibraries(
+          preDexBuildConfigs,
+          packageableCollection);
       preDexMerge = Optional.of(createPreDexMergeRule(
-              aaptPackageResources,
-              preDexBuildConfigs,
-              packageableCollection));
+              preDexedLibraries,
+              aaptPackageResources));
       enhancedDeps.add(preDexMerge.get());
     } else {
       enhancedDeps.addAll(getTargetsAsRules(packageableCollection.getJavaLibrariesToDex()));
@@ -508,13 +510,8 @@ public class AndroidBinaryGraphEnhancer {
    */
   @VisibleForTesting
   PreDexMerge createPreDexMergeRule(
-      AaptPackageResources aaptPackageResources,
-      Iterable<DexProducedFromJavaLibrary> preDexRulesNotInThePackageableCollection,
-      AndroidPackageableCollection packageableCollection) {
-    ImmutableSet<DexProducedFromJavaLibrary> allPreDexDeps = createPreDexRulesForLibraries(
-        preDexRulesNotInThePackageableCollection,
-        packageableCollection);
-
+      ImmutableSet<DexProducedFromJavaLibrary> allPreDexDeps,
+      AaptPackageResources aaptPackageResources) {
     BuildRuleParams paramsForPreDexMerge = buildRuleParams.copyWithChanges(
         createBuildTargetWithFlavor(DEX_MERGE_FLAVOR),
         Suppliers.ofInstance(
@@ -536,7 +533,8 @@ public class AndroidBinaryGraphEnhancer {
     return preDexMerge;
   }
 
-  private ImmutableSet<DexProducedFromJavaLibrary> createPreDexRulesForLibraries(
+  @VisibleForTesting
+  ImmutableSet<DexProducedFromJavaLibrary> createPreDexRulesForLibraries(
       Iterable<DexProducedFromJavaLibrary> preDexRulesNotInThePackageableCollection,
       AndroidPackageableCollection packageableCollection) {
     ImmutableSet.Builder<DexProducedFromJavaLibrary> preDexDeps = ImmutableSet.builder();

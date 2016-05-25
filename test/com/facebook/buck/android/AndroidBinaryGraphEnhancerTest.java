@@ -177,12 +177,15 @@ public class AndroidBinaryGraphEnhancerTest {
             ((HasJavaClassHashes) javaLib), new FakeSourcePath("ignored"))
         .build();
 
+    ImmutableSet<DexProducedFromJavaLibrary> preDexedLibraries =
+        graphEnhancer.createPreDexRulesForLibraries(
+            /* preDexRulesNotInThePackageableCollection */
+              ImmutableList.<DexProducedFromJavaLibrary>of(),
+            collection);
 
     BuildRule preDexMergeRule = graphEnhancer.createPreDexMergeRule(
-        aaptPackageResources,
-        /* preDexRulesNotInThePackageableCollection */ ImmutableList
-            .<DexProducedFromJavaLibrary>of(),
-        collection);
+        preDexedLibraries,
+        aaptPackageResources);
     BuildTarget dexMergeTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#dex_merge");
     BuildRule dexMergeRule = ruleResolver.getRule(dexMergeTarget);
