@@ -1,3 +1,5 @@
+# Copyright 2016 Facebook. All Rights Reserved.
+#
 #!/usr/local/bin/thrift -cpp -py -java
 #
 # This .thrift file contains the protocol required by the buck client to
@@ -93,12 +95,16 @@ enum FrontendRequestType {
   UNKNOWN = 0,
   START_BUILD = 1,
   BUILD_STATUS = 2,
+
+  // [100-199] Values are reserved for the buck cache request types.
 }
 
 struct FrontendRequest {
   1: optional FrontendRequestType type = FrontendRequestType.UNKNOWN;
   2: optional StartBuildRequest startBuild;
   3: optional BuildStatusRequest buildStatus;
+
+  // [100-199] Values are reserved for the buck cache request types.
 }
 
 struct FrontendResponse {
@@ -108,4 +114,6 @@ struct FrontendResponse {
   10: optional FrontendRequestType type = FrontendRequestType.UNKNOWN;
   11: optional StartBuildResponse startBuild;
   12: optional BuildStatusResponse buildStatus;
+
+  // [100-199] Values are reserved for the buck cache request types.
 }
