@@ -280,10 +280,40 @@ public class AppleTestDescription implements
         args.getTests(),
         debugFormat);
 
+    Optional<SourcePath> xctool = getXctool(params, resolver, sourcePathResolver);
+
+    return new AppleTest(
+        xctool,
+        appleConfig.getXctoolStutterTimeoutMs(),
+        appleCxxPlatform.getXctest(),
+        appleCxxPlatform.getOtest(),
+        appleConfig.getXctestPlatformNames().contains(platformName),
+        platformName,
+        appleConfig.getXctoolDefaultDestinationSpecifier(),
+        args.destinationSpecifier,
+        params.copyWithDeps(
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(bundle)),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+        sourcePathResolver,
+        bundle,
+        testHostApp,
+        args.extension,
+        args.contacts.get(),
+        args.labels.get(),
+        args.getRunTestSeparately(),
+        xcodeDeveloperDirectorySupplier,
+        appleConfig.getTestLogDirectoryEnvironmentVariable(),
+        appleConfig.getTestLogLevelEnvironmentVariable(),
+        appleConfig.getTestLogLevel());
+  }
+
+  private Optional<SourcePath> getXctool(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      final SourcePathResolver sourcePathResolver) {
     // If xctool is specified as a build target in the buck config, it's wrapping ZIP file which
     // we need to unpack to get at the actual binary.  Otherwise, if it's specified as a path, we
     // can use that directly.
-    Optional<SourcePath> xctool;
     if (appleConfig.getXctoolZipTarget().isPresent()) {
       final BuildRule xctoolZipBuildRule = resolver.getRule(appleConfig.getXctoolZipTarget().get());
       BuildTarget unzipXctoolTarget =
@@ -318,40 +348,14 @@ public class AppleTestDescription implements
               }
             });
       }
-      xctool =
-          Optional.<SourcePath>of(
-              new BuildTargetSourcePath(unzipXctoolTarget, outputDirectory.resolve("bin/xctool")));
+      return Optional.<SourcePath>of(
+          new BuildTargetSourcePath(unzipXctoolTarget, outputDirectory.resolve("bin/xctool")));
     } else if (appleConfig.getXctoolPath().isPresent()) {
-      xctool =
-          Optional.<SourcePath>of(
-              new PathSourcePath(params.getProjectFilesystem(), appleConfig.getXctoolPath().get()));
+      return Optional.<SourcePath>of(
+          new PathSourcePath(params.getProjectFilesystem(), appleConfig.getXctoolPath().get()));
     } else {
-      xctool = Optional.absent();
+      return Optional.absent();
     }
-
-    return new AppleTest(
-        xctool,
-        appleConfig.getXctoolStutterTimeoutMs(),
-        appleCxxPlatform.getXctest(),
-        appleCxxPlatform.getOtest(),
-        appleConfig.getXctestPlatformNames().contains(platformName),
-        platformName,
-        appleConfig.getXctoolDefaultDestinationSpecifier(),
-        args.destinationSpecifier,
-        params.copyWithDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(bundle)),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
-        sourcePathResolver,
-        bundle,
-        testHostApp,
-        args.extension,
-        args.contacts.get(),
-        args.labels.get(),
-        args.getRunTestSeparately(),
-        xcodeDeveloperDirectorySupplier,
-        appleConfig.getTestLogDirectoryEnvironmentVariable(),
-        appleConfig.getTestLogLevelEnvironmentVariable(),
-        appleConfig.getTestLogLevel());
   }
 
   private <A extends Arg> BuildRule createTestLibraryRule(
