@@ -206,8 +206,9 @@ public class AndroidBinaryGraphEnhancerTest {
             "list.  And we should depend on uber_r_dot_java",
         Iterables.transform(dexMergeRule.getDeps(), HasBuildTarget.TO_TARGET),
         Matchers.allOf(
-            Matchers.hasItem(javaDep1BuildTarget),
+            Matchers.not(Matchers.hasItem(javaDep1BuildTarget)),
             Matchers.hasItem(javaDep1DexBuildTarget),
+            Matchers.not(Matchers.hasItem(javaDep2BuildTarget)),
             Matchers.not(Matchers.hasItem(javaDep2DexBuildTarget)),
             Matchers.hasItem(javaLibDexBuildTarget),
             Matchers.hasItem(aaptPackageResources.getBuildTarget())));

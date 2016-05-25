@@ -21,3 +21,13 @@ android_library(
     'PUBLIC',
   ],
 )
+
+android_library(
+  name = 'lib_depending_on_main_lib',
+  deps = [
+    ':lib',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

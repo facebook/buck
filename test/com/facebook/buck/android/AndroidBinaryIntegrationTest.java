@@ -186,6 +186,23 @@ public class AndroidBinaryIntegrationTest {
   }
 
   @Test
+  public void testNotAllJavaLibrariesFetched() throws IOException {
+    String target = "//apps/multidex:app_with_deeper_deps";
+    workspace.runBuckCommand("build", target).assertSuccess();
+    workspace.replaceFileContents(
+        "java/com/sample/app/MyApplication.java",
+        "package com",
+        "package\ncom");
+
+    workspace.resetBuildLogFile();
+    workspace.runBuckCommand("build", target).assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetBuiltLocally(target);
+    buildLog.assertTargetIsAbsent("//java/com/sample/lib:lib");
+  }
+
+  @Test
   public void testPreprocessorForcesReDex() throws IOException {
     String target = "//java/com/preprocess:disassemble";
     Path outputFile = workspace.buildAndReturnOutput(target);

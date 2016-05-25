@@ -64,6 +64,13 @@ public class BuckBuildLog {
     assertNotEquals(BuildRuleSuccessType.BUILT_LOCALLY, logEntry.successType.get());
   }
 
+  public void assertTargetIsAbsent(String buildTargetRaw) {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(root, buildTargetRaw);
+    if (buildLogEntries.containsKey(buildTarget)) {
+      fail(String.format("Build target %s was not expected in log, but found result: %s",
+          buildTargetRaw, buildLogEntries.get(buildTarget)));
+    }
+  }
 
   public void assertTargetWasFetchedFromCache(String buildTargetRaw) {
     assertBuildSuccessType(buildTargetRaw, BuildRuleSuccessType.FETCHED_FROM_CACHE);
