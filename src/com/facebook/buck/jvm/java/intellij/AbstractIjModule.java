@@ -144,17 +144,4 @@ abstract class AbstractIjModule implements IjProjectElement {
     }
     dependencyListBuilder.addModule(getName(), scope, false /* exported */);
   }
-
-  /**
-   * There are source folders if they are specified, generated, or if the Android facet is enabled
-   * (because it may create R java files or other derived source code artifacts).
-   *
-   * @return true if this module will contain source code.
-   */
-  @Value.Derived
-  public boolean hasSourceFolders() {
-    return !getFolders().isEmpty() ||
-           !getGeneratedSourceCodeFolders().isEmpty() ||
-           getAndroidFacet().isPresent();
-  }
 }

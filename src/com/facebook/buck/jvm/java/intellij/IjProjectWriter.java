@@ -106,9 +106,6 @@ public class IjProjectWriter {
     moduleContents.add(
         "androidFacet",
         projectDataPreparer.getAndroidProperties(module));
-    moduleContents.add(
-        "hasSourceFolders",
-        module.hasSourceFolders());
 
     writeToFile(moduleContents, path);
     return path;

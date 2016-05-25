@@ -50,9 +50,7 @@
     </content>
 }%
     <orderEntry type="inheritedJdk" />
-%if(hasSourceFolders)%
     <orderEntry type="sourceFolder" forTests="false" />
-%endif%
 %dependencies:{dep |
   %if(dep.module)%
     <orderEntry type="%dep.type%" module-name="%dep.module.name%" scope="%dep.module.scope%" %\\%
