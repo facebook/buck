@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY e3eb8a325b84a6f6b2f6bd08f80bb713b2a76cd9 #@#
+#@# GENERATED FILE: DO NOT MODIFY fcff49181051e811201d1aac5f53de107b21e883 #@#
 {
   "artifact_cache" : {
     "deps" : [
+      "//src-gen:thrift",
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
       "//src/com/facebook/buck/artifact_cache:binary_protocol",
       "//src/com/facebook/buck/artifact_cache:config",
@@ -25,13 +26,15 @@
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
       "//test/com/facebook/buck/timing:testutil",
+      "//test/com/facebook/buck/util/concurrent:testutil",
       "//third-party/java/easymock:easymock",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/jackson:jackson-databind",
       "//third-party/java/junit:junit",
       "//third-party/java/okhttp:okhttp",
-      "//third-party/java/okio:okio"
+      "//third-party/java/okio:okio",
+      "//third-party/java/thrift:libthrift"
     ],
     "exported_deps" : [ ]
   },

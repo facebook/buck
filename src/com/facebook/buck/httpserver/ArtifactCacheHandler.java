@@ -20,9 +20,9 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactInfo;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheBinaryProtocol;
+import com.facebook.buck.artifact_cache.StoreResponseReadResult;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
-import com.facebook.buck.artifact_cache.StoreResponseReadResult;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
@@ -161,7 +161,6 @@ public class ArtifactCacheHandler extends AbstractHandler {
         response.getWriter().write("Checksum mismatch.");
         return HttpServletResponse.SC_NOT_ACCEPTABLE;
       }
-
 
       artifactCache.get().store(
           ArtifactInfo.builder()

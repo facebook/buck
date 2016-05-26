@@ -20,7 +20,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -596,14 +595,14 @@ public class HttpArtifactCacheTest {
   @Test
   public void errorTextReplaced() throws InterruptedException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    final String cacheName = "http cache";
+    final String name = "http cache";
     final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
     final RuleKey otherRuleKey = new RuleKey("11111111111111111111111111111111");
     final String data = "data";
     final AtomicBoolean consoleEventReceived = new AtomicBoolean(false);
     HttpArtifactCache cache =
         new HttpArtifactCache(
-            cacheName,
+            name,
             fetchService,
             storeService,
             /* doStore */ true,
@@ -616,7 +615,7 @@ public class HttpArtifactCacheTest {
                   ConsoleEvent consoleEvent = (ConsoleEvent) event;
                   assertThat(
                       consoleEvent.getMessage(),
-                      Matchers.containsString(cacheName));
+                      Matchers.containsString(name));
                   assertThat(
                       consoleEvent.getMessage(),
                       Matchers.containsString("incorrect key name"));
@@ -649,39 +648,6 @@ public class HttpArtifactCacheTest {
     assertEquals(CacheResultType.ERROR, result.getType());
     assertEquals(Optional.<String>absent(), filesystem.readFileIfItExists(output));
     assertTrue(consoleEventReceived.get());
-    cache.close();
-  }
-
-  @Test
-  public void testStoreBiggerThanMaxStoreSize() throws Exception {
-    final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
-    final String data = "data";
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path output = Paths.get("output/file");
-    filesystem.writeContentsToPath(data, output);
-    System.out.println(filesystem.getFileSize(output));
-    HttpArtifactCache cache =
-        new HttpArtifactCache(
-            "http",
-            fetchService,
-            storeService,
-            /* doStore */ true,
-            filesystem,
-            BUCK_EVENT_BUS,
-            DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE,
-            Optional.of(2L)) {
-          @Override
-          protected HttpResponse storeCall(Request.Builder requestBuilder)
-              throws IOException {
-            fail("should not have called store");
-            throw new IllegalStateException();
-          }
-        };
-    cache.storeImpl(
-        ArtifactInfo.builder().addRuleKeys(ruleKey).build(),
-        output,
-        createFinishedEventBuilder());
     cache.close();
   }
 

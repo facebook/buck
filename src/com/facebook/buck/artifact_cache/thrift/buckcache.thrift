@@ -25,6 +25,7 @@ struct ArtifactMetadata {
   2: optional map<string, string> metadata;
   3: optional string buildTarget;
   4: optional string repository;
+  5: optional string artifactPayloadCrc32;
 }
 
 struct BuckCacheStoreRequest {

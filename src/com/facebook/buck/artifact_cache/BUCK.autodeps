@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY f73067db885b3ff9beb115a54bfc0e59733931f8 #@#
+#@# GENERATED FILE: DO NOT MODIFY 0eb75012508c0ae3b90d5afeeec4a81939b29b79 #@#
 {
   "artifact_cache" : {
     "deps" : [
@@ -52,9 +52,12 @@
       "//src/com/facebook/buck/counters:counters",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util/collect:collect"
+      "//src/com/facebook/buck/util:util",
+      "//src/com/facebook/buck/util/collect:collect",
+      "//third-party/java/thrift:libthrift"
     ],
     "exported_deps" : [
+      "//src-gen:thrift",
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
       "//src/com/facebook/buck/artifact_cache:binary_protocol",
       "//src/com/facebook/buck/event:event",
