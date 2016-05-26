@@ -16,9 +16,9 @@
 
 package com.facebook.buck.intellij.plugin.config;
 
-import com.facebook.buck.intellij.plugin.debugger.AndroidDebugger;
-import com.facebook.buck.intellij.plugin.file.BuckFileType;
 import com.facebook.buck.intellij.plugin.autodeps.BuckAutoDepsContributor;
+import com.facebook.buck.intellij.plugin.debugger.AndroidDebugger;
+import com.facebook.buck.intellij.plugin.file.BuckFileUtil;
 import com.facebook.buck.intellij.plugin.ui.BuckEventsConsumer;
 import com.facebook.buck.intellij.plugin.ui.BuckToolWindowFactory;
 import com.facebook.buck.intellij.plugin.ui.BuckUIManager;
@@ -33,16 +33,10 @@ import com.intellij.ide.ui.UISettings;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.fileTypes.FileNameMatcher;
-import com.intellij.openapi.fileTypes.FileType;
-import com.intellij.openapi.fileTypes.FileTypeManager;
-import com.intellij.openapi.fileTypes.UnknownFileType;
-import com.intellij.openapi.fileTypes.impl.FileTypeManagerImpl;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiDocumentManager;
 
 import java.io.IOException;
-import java.util.List;
 
 public final class BuckModule implements ProjectComponent {
 
@@ -158,30 +152,7 @@ public final class BuckModule implements ProjectComponent {
                 }
             }
         });
-
-        ApplicationManager.getApplication().runWriteAction(new Runnable() {
-            @Override
-            public void run() {
-                FileTypeManager fileTypeManager = FileTypeManagerImpl.getInstance();
-
-              FileType fileType = fileTypeManager
-                  .getFileTypeByFileName(BuckFileType.INSTANCE.getDefaultExtension());
-
-              // Remove all FileType associations for BUCK files that are not BuckFileType
-              while (!(fileType instanceof  BuckFileType || fileType instanceof UnknownFileType)) {
-                List<FileNameMatcher> fileNameMatchers = fileTypeManager.getAssociations(fileType);
-
-                for (FileNameMatcher fileNameMatcher : fileNameMatchers) {
-                  if (fileNameMatcher.accept(BuckFileType.INSTANCE.getDefaultExtension())) {
-                    fileTypeManager.removeAssociation(fileType, fileNameMatcher);
-                  }
-                }
-
-                fileType = fileTypeManager
-                    .getFileTypeByFileName(BuckFileType.INSTANCE.getDefaultExtension());
-              }
-            }
-        });
+        BuckFileUtil.setBuckFileType();
     }
 
     public void attach(BuckEventsConsumer bu, String target) {

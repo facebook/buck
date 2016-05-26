@@ -16,7 +16,21 @@
 
 package com.facebook.buck.intellij.plugin.file;
 
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.fileTypes.FileNameMatcher;
+import com.intellij.openapi.fileTypes.FileType;
+import com.intellij.openapi.fileTypes.FileTypeManager;
+import com.intellij.openapi.fileTypes.UnknownFileType;
+import com.intellij.openapi.fileTypes.impl.FileTypeManagerImpl;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.stubs.BinaryFileStubBuilder;
+import com.intellij.psi.stubs.BinaryFileStubBuilders;
+import com.intellij.psi.stubs.Stub;
+import com.intellij.util.indexing.FileContent;
+
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 public final class BuckFileUtil {
 
@@ -68,5 +82,52 @@ public final class BuckFileUtil {
       parent = parent.getParent();
     }
     return buckFile;
+  }
+
+  public static void setBuckFileType() {
+    ApplicationManager.getApplication().runWriteAction(new Runnable() {
+      @Override
+      public void run() {
+        FileTypeManager fileTypeManager = FileTypeManagerImpl.getInstance();
+
+        FileType fileType = fileTypeManager
+            .getFileTypeByFileName(BuckFileType.INSTANCE.getDefaultExtension());
+
+        // Remove all FileType associations for BUCK files that are not BuckFileType
+        while (!(fileType instanceof  BuckFileType || fileType instanceof UnknownFileType)) {
+          List<FileNameMatcher> fileNameMatchers = fileTypeManager.getAssociations(fileType);
+
+          for (FileNameMatcher fileNameMatcher : fileNameMatchers) {
+            if (fileNameMatcher.accept(BuckFileType.INSTANCE.getDefaultExtension())) {
+              fileTypeManager.removeAssociation(fileType, fileNameMatcher);
+            }
+          }
+
+          fileType = fileTypeManager
+              .getFileTypeByFileName(BuckFileType.INSTANCE.getDefaultExtension());
+        }
+
+        // Use a simple BinaryFileStubBuilder, that doesn't offer stubbing
+        BinaryFileStubBuilders.INSTANCE.addExplicitExtension(
+            fileType,
+            new BinaryFileStubBuilder() {
+              @Override
+              public boolean acceptsFile(VirtualFile virtualFile) {
+                return false;
+              }
+
+              @Nullable
+              @Override
+              public Stub buildStubTree(FileContent fileContent) {
+                return null;
+              }
+
+              @Override
+              public int getStubVersion() {
+                return 0;
+              }
+            });
+      }
+    });
   }
 }
