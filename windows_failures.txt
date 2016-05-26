@@ -40,7 +40,6 @@
 !com.facebook.buck.io.WatchmanTest#successfulExecutionPopulatesAWatchmanInstance
 !com.facebook.buck.io.WatchmanTest#watchmanVersionTakingThirtySecondsReturnsEmpty
 !com.facebook.buck.io.WatchmanTest#watchmanWatchProjectTakingThirtySecondsReturnsEmpty
-!com.facebook.buck.jvm.java.ExternalJavacEscaperTest
 !com.facebook.buck.jvm.java.intellij.DefaultIjLibraryFactoryTest#testLibraryFromOtherTargets
 !com.facebook.buck.jvm.java.intellij.DefaultIjLibraryFactoryTest#testPrebuiltAar
 !com.facebook.buck.jvm.java.intellij.DefaultIjLibraryFactoryTest#testPrebuiltJar

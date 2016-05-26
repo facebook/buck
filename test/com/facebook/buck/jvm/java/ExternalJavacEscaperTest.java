@@ -22,6 +22,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Rule;
@@ -46,10 +47,10 @@ public class ExternalJavacEscaperTest {
   public static Collection<Object[]> data() {
     return Arrays.asList(
         new Object[][]{
-            {"Poundsign", "pound#sign"},
-            {"Whitespace", "space present"},
-            {"SingleQuote", "quote'"},
-            {"DoubleQuote", "double_quote\""}
+            {"Poundsign", "pound#sign", true},
+            {"Whitespace", "space present", true},
+            {"SingleQuote", "quote'", true},
+            {"DoubleQuote", "double_quote\"", false}
         });
   }
 
@@ -59,8 +60,12 @@ public class ExternalJavacEscaperTest {
   @Parameterized.Parameter(value = 1)
   public String badDir;
 
+  @Parameterized.Parameter(value = 2)
+  public boolean runOnWindows;
+
   @Test
   public void testSpecialCharsInSourcePath() throws IOException {
+    assumeTrue(runOnWindows || Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "external_javac", tmp);
     workspace.setUp();

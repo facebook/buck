@@ -49,6 +49,12 @@ public final class Escaper {
       public String quote(String str) {
         return '"' + str.replace("\"", "\\\"") + '"';
       }
+    },
+    DOUBLE_WINDOWS_JAVAC('"') {
+      @Override
+      public String quote(String str) {
+        return '"' + str.replace("\\", "\\\\") + '"';
+      }
     }
     ;
 
@@ -99,6 +105,18 @@ public final class Escaper {
         return escape(quoter, matcher, input);
       }
     };
+  }
+
+  public static Function<String, String> javacEscaper() {
+    if (Platform.detect() == Platform.WINDOWS) {
+      return Escaper.escaper(
+          Quoter.DOUBLE_WINDOWS_JAVAC,
+          CharMatcher.anyOf("#'").or(CharMatcher.whitespace()));
+    } else {
+      return Escaper.escaper(
+          Escaper.Quoter.DOUBLE,
+          CharMatcher.anyOf("#\"'").or(CharMatcher.whitespace()));
+    }
   }
 
   private static final CharMatcher BASH_SPECIAL_CHARS =

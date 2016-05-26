@@ -23,7 +23,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -37,10 +36,7 @@ public interface Javac extends RuleKeyAppendable, Tool {
   /**
    * An escaper for arguments written to @argfiles.
    */
-  Function<String, String> ARGFILES_ESCAPER =
-      Escaper.escaper(
-          Escaper.Quoter.DOUBLE,
-          CharMatcher.anyOf("#\"'").or(CharMatcher.whitespace()));
+  Function<String, String> ARGFILES_ESCAPER = Escaper.javacEscaper();
   String SRC_ZIP = ".src.zip";
   String SRC_JAR = "-sources.jar";
 
