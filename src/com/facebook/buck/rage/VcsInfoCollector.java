@@ -58,6 +58,7 @@ public class VcsInfoCollector {
     }
 
     return SourceControlInfo.builder()
+        .setRevisionId(vcCmdLineInterface.currentRevisionId())
         .setDirtyFiles(vcCmdLineInterface.changedFiles("."))
         .setFilesChangedFromMasterBranchPoint(filesChangedFromMasterBranchPoint)
         .build();
@@ -66,6 +67,7 @@ public class VcsInfoCollector {
   @Value.Immutable
   @BuckStyleImmutable
   interface AbstractSourceControlInfo {
+    String getRevisionId();
     ImmutableSet<String> getDirtyFiles();
     Optional<ImmutableSet<String>> getFilesChangedFromMasterBranchPoint();
   }
