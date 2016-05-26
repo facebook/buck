@@ -46,8 +46,11 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.intellij.execution.ui.ConsoleViewContentType;
+import com.intellij.ide.SaveAndSyncHandler;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.util.messages.MessageBusConnection;
 
 import java.util.ArrayList;
@@ -435,11 +438,12 @@ public class BuckEventsConsumer implements
             public void run() {
                 BuckEventsConsumer.this.mProjectGenerationProgress.setDetail(message);
                 BuckEventsConsumer.this.mTreeModel.reload();
+                // IntelliJ's synchronize action
+                FileDocumentManager.getInstance().saveAllDocuments();
+                SaveAndSyncHandler.getInstance().refreshOpenFiles();
+                VirtualFileManager.getInstance().refreshWithoutFileWatcher(true);
             }
         });
-        // Get the Base Dir and refresh with the following parameters
-        // 'asynchronous' set to false and 'recursive' set to true
-        mProject.getBaseDir().refresh(false, true);
     }
 
     @Override
