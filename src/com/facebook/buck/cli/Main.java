@@ -1192,18 +1192,13 @@ public final class Main {
   }
 
   private static ListeningExecutorService getNetworkExecutorService() {
-    ThreadPoolExecutor networkExecutor = new ThreadPoolExecutor(
+    return listeningDecorator(new ThreadPoolExecutor(
         /* corePoolSize */ MAX_NETWORK_THREADS,
         /* maximumPoolSize */ MAX_NETWORK_THREADS,
         /* keepAliveTime */ 500L, TimeUnit.MILLISECONDS,
         /* workQueue */ new LinkedBlockingQueue<Runnable>(MAX_NETWORK_THREADS),
-        /* threadFactory */ new ThreadFactoryBuilder()
-        .setNameFormat("Network I/O" + "-%d")
-        .build(),
-        /* handler */ new ThreadPoolExecutor.CallerRunsPolicy());
-    networkExecutor.allowCoreThreadTimeOut(true);
-
-    return listeningDecorator(networkExecutor);
+        /* threadFactory */ new ThreadFactoryBuilder().setNameFormat("Network I/O" + "-%d").build(),
+        /* handler */ new ThreadPoolExecutor.CallerRunsPolicy()));
   }
 
   @VisibleForTesting
