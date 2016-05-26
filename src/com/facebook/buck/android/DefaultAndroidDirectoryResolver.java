@@ -361,7 +361,10 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
       }
     } else if (oldNdkPathFound) {
       try (BufferedReader reader = Files.newBufferedReader(oldNdk, Charsets.UTF_8)) {
-        return Optional.fromNullable(reader.readLine().split("\\s+")[0]);
+        // Android NDK r10e for Linux is mislabeled as r10e-rc4 instead of r10e. This is a work
+        // around since we should consider them equivalent.
+        return Optional.fromNullable(
+            reader.readLine().split("\\s+")[0].replace("r10e-rc4", "r10e"));
       } catch (IOException e) {
         throw new HumanReadableException("Failed to read NDK version from " + oldNdk + ".");
       }
