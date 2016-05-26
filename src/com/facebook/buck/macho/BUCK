@@ -6,6 +6,7 @@ standard_java_library(
     'MachoHeader',
     'Nlist',
     'Section',
+    'UUIDCommand',
   ],
   tests = [
     '//test/com/facebook/buck/macho:macho',

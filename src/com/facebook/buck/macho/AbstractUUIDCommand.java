@@ -16,16 +16,26 @@
 package com.facebook.buck.macho;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.google.common.base.Preconditions;
 import com.google.common.primitives.UnsignedInteger;
 
 import org.immutables.value.Value;
 
+import java.util.UUID;
+
 @Value.Immutable
 @BuckStyleTuple
-interface AbstractLoadCommand {
-  public int getOffsetInBinary();
-  public UnsignedInteger getCmd();        // 32 bit
-  public UnsignedInteger getCmdsize();    // 32 bit
+abstract class AbstractUUIDCommand {
+  public static final UnsignedInteger LC_UUID = UnsignedInteger.fromIntBits(0x1b);
+  public static final int SIZE_IN_BYTES = LoadCommand.CMD_AND_CMDSIZE_SIZE + 16;
 
-  public static final int CMD_AND_CMDSIZE_SIZE = 8;
+  public abstract LoadCommand getLoadCommand();
+  public abstract UUID getUuid();
+
+  @Value.Check
+  protected void check() {
+    Preconditions.checkArgument(getLoadCommand().getCmd().equals(LC_UUID));
+    Preconditions.checkArgument(getLoadCommand().getCmdsize().equals(
+        UnsignedInteger.fromIntBits(SIZE_IN_BYTES)));
+  }
 }
