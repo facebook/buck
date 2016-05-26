@@ -1,17 +1,17 @@
 /*
  * Copyright 2014-present Facebook, Inc.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License. You may obtain
- *  a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- *  License for the specific language governing permissions and limitations
- *  under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
  */
 
 package com.facebook.buck.android;
@@ -44,6 +44,7 @@ import com.google.common.collect.Iterables;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -51,55 +52,58 @@ public class CopyNativeLibrariesTest {
 
   @Test
   public void testCopyNativeLibraryCommandWithoutCpuFilter() {
-    final Path source = Paths.get("/path/to/source");
-    final Path destination = Paths.get("/path/to/destination/");
+    final Path source = Paths.get("/path/to/source").toAbsolutePath();
+    final Path destination = Paths.get("/path/to/destination/").toAbsolutePath();
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
         ImmutableSet.<TargetCpuType>of() /* cpuFilters */,
         source,
         destination,
         ImmutableList.of(
-            String.format("cp -R %s/* %s", source, destination),
+            String.format("cp -R %s%s* %s", source, File.separator, destination),
             "rename_native_executables"));
   }
 
   @Test
   public void testCopyNativeLibraryCommand() {
-    final Path source = Paths.get("/path/to/source");
-    final Path destination = Paths.get("/path/to/destination/");
+    final Path source = Paths.get("/path/to/source").toAbsolutePath();
+    final Path destination = Paths.get("/path/to/destination/").toAbsolutePath();
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
         ImmutableSet.of(NdkCxxPlatforms.TargetCpuType.ARMV7),
         source,
         destination,
         ImmutableList.of(
             String.format(
-                "[ -d %s ] && mkdir -p %s && cp -R %s/* %s",
+                "[ -d %s ] && mkdir -p %s && cp -R %s%s* %s",
                 source.resolve("armeabi-v7a"),
                 destination.resolve("armeabi-v7a"),
                 source.resolve("armeabi-v7a"),
+                File.separator,
                 destination.resolve("armeabi-v7a")),
             "rename_native_executables"));
   }
 
   @Test
   public void testCopyNativeLibraryCommandWithMultipleCpuFilters() {
-    final Path source = Paths.get("/path/to/source");
-    final Path destination = Paths.get("/path/to/destination/");
+    final Path source = Paths.get("/path/to/source").toAbsolutePath();
+    final Path destination = Paths.get("/path/to/destination/").toAbsolutePath();
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
         ImmutableSet.of(NdkCxxPlatforms.TargetCpuType.ARM, NdkCxxPlatforms.TargetCpuType.X86),
         source,
         destination,
         ImmutableList.of(
             String.format(
-                "[ -d %s ] && mkdir -p %s && cp -R %s/* %s",
+                "[ -d %s ] && mkdir -p %s && cp -R %s%s* %s",
                 source.resolve("armeabi"),
                 destination.resolve("armeabi"),
                 source.resolve("armeabi"),
+                File.separator,
                 destination.resolve("armeabi")),
             String.format(
-                "[ -d %s ] && mkdir -p %s && cp -R %s/* %s",
+                "[ -d %s ] && mkdir -p %s && cp -R %s%s* %s",
                 source.resolve("x86"),
                 destination.resolve("x86"),
                 source.resolve("x86"),
+                File.separator,
                 destination.resolve("x86")),
             "rename_native_executables"));
   }

@@ -25,6 +25,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -129,7 +130,7 @@ public class CopyStep implements Step {
         // N.B., on Windows, java.nio.AbstractPath does not resolve *
         // as a path, causing InvalidPathException. Since this is purely a
         // description, manually create the source argument.
-        args.add(source.toString() + "/*");
+        args.add(source.toString() + File.separator + "*");
         break;
     }
     args.add(destination.toString());
