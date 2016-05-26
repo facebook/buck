@@ -157,8 +157,8 @@ public class BuckClient {
                 synchronized (syncObject) {
                     mLastActionTime = (new Date()).getTime();
                 }
-            } catch (Throwable t) {
-                LOG.error("Could not send ping");
+            }  catch (Exception e) {
+                LOG.error("Buck plugin, could not send ping because: " + e);
             }
         }
     }
