@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 0eb75012508c0ae3b90d5afeeec4a81939b29b79 #@#
+#@# GENERATED FILE: DO NOT MODIFY 4d552e238cbb0dfca2120b3b418ba82695910ae4 #@#
 {
   "artifact_cache" : {
     "deps" : [
@@ -21,8 +21,11 @@
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:rule_key",
+      "//src/com/facebook/buck/slb:slb",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava"
     ]
@@ -30,6 +33,7 @@
   "config" : {
     "deps" : [
       "//src/com/facebook/buck/artifact_cache:impl",
+      "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/slb:slb",
       "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:exceptions",
@@ -38,6 +42,7 @@
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
+      "//src/com/facebook/buck/artifact_cache:binary_protocol",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/io:io",

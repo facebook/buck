@@ -103,6 +103,8 @@ public class ArtifactCacheBuckConfig {
       "two_level_cache_maximum_size";
   private static final long TWO_LEVEL_CACHING_MIN_SIZE_DEFAULT = 20 * 1024L;
 
+  private static final String HYBRID_THRIFT_ENDPOINT = "hybrid_thrift_endpoint";
+
   public enum LoadBalancingType {
     SINGLE_SERVER,
     CLIENT_SLB,
@@ -118,6 +120,10 @@ public class ArtifactCacheBuckConfig {
 
   public SlbBuckConfig getSlbConfig() {
     return slbConfig;
+  }
+
+  public Optional<String> getHybridThriftEndpoint() {
+    return buckConfig.getValue(CACHE_SECTION_NAME, HYBRID_THRIFT_ENDPOINT);
   }
 
   public LoadBalancingType getLoadBalancingType() {
@@ -368,7 +374,8 @@ public class ArtifactCacheBuckConfig {
 
   public enum ArtifactCacheMode {
     dir,
-    http
+    http,
+    thrift_over_http,
   }
 
   public enum CacheReadMode {

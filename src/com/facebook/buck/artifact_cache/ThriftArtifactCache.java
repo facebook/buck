@@ -23,21 +23,17 @@ import com.facebook.buck.artifact_cache.thrift.BuckCacheRequestType;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheResponse;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheStoreRequest;
 import com.facebook.buck.artifact_cache.thrift.PayloadInfo;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.LazyPath;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpResponse;
-import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteSource;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
@@ -64,30 +60,14 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   public static final String PROTOCOL_HEADER = "X-Thrift-Protocol";
   public static final ThriftProtocol PROTOCOL = ThriftProtocol.COMPACT;
 
-  private final String thriftEndpointPath;
+  private final String hybridThriftEndpoint;
 
-  public ThriftArtifactCache(
-      String name,
-      HttpService fetchClient,
-      HttpService storeClient,
-      boolean doStore,
-      ProjectFilesystem projectFilesystem,
-      BuckEventBus buckEventBus,
-      ListeningExecutorService httpWriteExecutorService,
-      String errorTextTemplate,
-      Optional<Long> maxStoreSize,
-      String thriftEndpointPath) {
-    super(
-        name,
-        fetchClient,
-        storeClient,
-        doStore,
-        projectFilesystem,
-        buckEventBus,
-        httpWriteExecutorService,
-        errorTextTemplate,
-        maxStoreSize);
-    this.thriftEndpointPath = thriftEndpointPath;
+  public ThriftArtifactCache(NetworkCacheArgs args) {
+    super(args);
+    Preconditions.checkArgument(
+        args.getThriftEndpointPath().isPresent(),
+        "Hybrid thrift endpoint path is mandatory for the ThriftArtifactCache.");
+    this.hybridThriftEndpoint = args.getThriftEndpointPath().or("");
   }
 
   @Override
@@ -104,7 +84,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     final ThriftArtifactCacheProtocol.Request request =
         ThriftArtifactCacheProtocol.createRequest(PROTOCOL, cacheRequest);
     Request.Builder builder = toOkHttpRequest(request);
-    try (HttpResponse httpResponse = fetchClient.makeRequest(thriftEndpointPath, builder)) {
+    try (HttpResponse httpResponse = fetchClient.makeRequest(hybridThriftEndpoint, builder)) {
       if (httpResponse.code() != 200) {
         String message = String.format(
             "Failed to fetch cache artifact with HTTP status code [%d] " +
@@ -186,7 +166,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     final ThriftArtifactCacheProtocol.Request request =
         ThriftArtifactCacheProtocol.createRequest(PROTOCOL, cacheRequest, artifact);
     Request.Builder builder = toOkHttpRequest(request);
-    try (HttpResponse httpResponse = storeClient.makeRequest(thriftEndpointPath, builder)) {
+    try (HttpResponse httpResponse = storeClient.makeRequest(hybridThriftEndpoint, builder)) {
       if (httpResponse.code() != 200) {
         throw new IOException(String.format(
             "Failed to store cache artifact with HTTP status code [%d] " +

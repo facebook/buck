@@ -54,25 +54,16 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
 
   private final Set<String> seenErrors = Sets.newConcurrentHashSet();
 
-  public AbstractNetworkCache(
-      String name,
-      HttpService fetchClient,
-      HttpService storeClient,
-      boolean doStore,
-      ProjectFilesystem projectFilesystem,
-      BuckEventBus buckEventBus,
-      ListeningExecutorService httpWriteExecutorService,
-      String errorTextTemplate,
-      Optional<Long> maxStoreSize) {
-    this.name = name;
-    this.fetchClient = fetchClient;
-    this.storeClient = storeClient;
-    this.doStore = doStore;
-    this.projectFilesystem = projectFilesystem;
-    this.buckEventBus = buckEventBus;
-    this.httpWriteExecutorService = httpWriteExecutorService;
-    this.errorTextTemplate = errorTextTemplate;
-    this.maxStoreSize = maxStoreSize;
+  public AbstractNetworkCache(NetworkCacheArgs args) {
+    this.name = args.getCacheName();
+    this.fetchClient = args.getFetchClient();
+    this.storeClient = args.getStoreClient();
+    this.doStore = args.getDoStore();
+    this.projectFilesystem = args.getProjectFilesystem();
+    this.buckEventBus = args.getBuckEventBus();
+    this.httpWriteExecutorService = args.getHttpWriteExecutorService();
+    this.errorTextTemplate = args.getErrorTextTemplate();
+    this.maxStoreSize = args.getMaxStoreSizeBytes();
   }
 
   protected abstract CacheResult fetchImpl(

@@ -17,17 +17,12 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Finished;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.LazyPath;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpResponse;
-import com.facebook.buck.slb.HttpService;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.io.ByteSource;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
@@ -54,25 +49,8 @@ public class HttpArtifactCache extends AbstractNetworkCache {
    */
   private static final Logger LOG = Logger.get(HttpArtifactCache.class);
 
-  public HttpArtifactCache(
-      String name,
-      HttpService fetchClient,
-      HttpService storeClient,
-      boolean doStore,
-      ProjectFilesystem projectFilesystem,
-      BuckEventBus buckEventBus,
-      ListeningExecutorService httpWriteExecutorService,
-      String errorTextTemplate,
-      Optional<Long> maxStoreSize) {
-    super(name,
-        fetchClient,
-        storeClient,
-        doStore,
-        projectFilesystem,
-        buckEventBus,
-        httpWriteExecutorService,
-        errorTextTemplate,
-        maxStoreSize);
+  public HttpArtifactCache(NetworkCacheArgs args) {
+    super(args);
   }
 
   @Override

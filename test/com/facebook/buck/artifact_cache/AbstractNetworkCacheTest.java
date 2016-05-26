@@ -70,15 +70,17 @@ public class AbstractNetworkCacheTest {
     };
 
     AbstractNetworkCache cache = new AbstractNetworkCache(
-        "AbstractNetworkCacheTest",
-        EasyMock.createMock(HttpService.class),
-        EasyMock.createMock(HttpService.class),
-        true,
-        filesystem,
-        EasyMock.createMock(BuckEventBus.class),
-        service,
-        "super error message",
-        maxArtifactSizeBytes) {
+        NetworkCacheArgs.builder()
+            .setCacheName("AbstractNetworkCacheTest")
+            .setFetchClient(EasyMock.createMock(HttpService.class))
+            .setStoreClient(EasyMock.createMock(HttpService.class))
+            .setDoStore(true)
+            .setProjectFilesystem(filesystem)
+            .setBuckEventBus(EasyMock.createMock(BuckEventBus.class))
+            .setHttpWriteExecutorService(service)
+            .setErrorTextTemplate("super error message")
+            .setMaxStoreSizeBytes(maxArtifactSizeBytes)
+            .build()) {
       @Override
       protected CacheResult fetchImpl(
           RuleKey ruleKey,

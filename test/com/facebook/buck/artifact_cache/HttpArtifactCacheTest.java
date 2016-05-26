@@ -80,6 +80,7 @@ public class HttpArtifactCacheTest {
 
   private HttpService fetchService;
   private HttpService storeService;
+  private NetworkCacheArgs.Builder argsBuilder;
 
   private ResponseBody createResponseBody(
       ImmutableSet<RuleKey> ruleKeys,
@@ -114,22 +115,22 @@ public class HttpArtifactCacheTest {
   public void setUp() {
     this.fetchService = EasyMock.createMock(HttpService.class);
     this.storeService = EasyMock.createMock(HttpService.class);
+    this.argsBuilder = NetworkCacheArgs.builder()
+        .setCacheName("http")
+        .setFetchClient(fetchService)
+        .setStoreClient(storeService)
+        .setDoStore(true)
+        .setProjectFilesystem(new FakeProjectFilesystem())
+        .setBuckEventBus(BUCK_EVENT_BUS)
+        .setHttpWriteExecutorService(DIRECT_EXECUTOR_SERVICE)
+        .setErrorTextTemplate(ERROR_TEXT_TEMPLATE);
   }
 
   @Test
   public void testFetchNotFound() throws Exception {
     final List<Response> responseList = Lists.newArrayList();
     HttpArtifactCache cache =
-        new HttpArtifactCache(
-            "http",
-            fetchService,
-            storeService,
-            /* doStore */ true,
-            new FakeProjectFilesystem(),
-            BUCK_EVENT_BUS,
-            DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE,
-            Optional.<Long>absent()) {
+        new HttpArtifactCache(argsBuilder.build()) {
           @Override
           protected HttpResponse fetchCall(String path, Request.Builder requestBuilder)
               throws IOException {
@@ -164,17 +165,9 @@ public class HttpArtifactCacheTest {
     final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     final List<Response> responseList = Lists.newArrayList();
+    argsBuilder.setProjectFilesystem(filesystem);
     HttpArtifactCache cache =
-        new HttpArtifactCache(
-            "http",
-            fetchService,
-            storeService,
-            /* doStore */ true,
-            filesystem,
-            BUCK_EVENT_BUS,
-            DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE,
-            Optional.<Long>absent()) {
+        new HttpArtifactCache(argsBuilder.build()) {
           @Override
           protected HttpResponse fetchCall(String path, Request.Builder requestBuilder)
               throws IOException {
@@ -212,16 +205,7 @@ public class HttpArtifactCacheTest {
         "/artifacts/key/00000000000000000000000000000000";
 
     HttpArtifactCache cache =
-        new HttpArtifactCache(
-            "http",
-            fetchService,
-            storeService,
-            /* doStore */ true,
-            new FakeProjectFilesystem(),
-            BUCK_EVENT_BUS,
-            DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE,
-            Optional.<Long>absent()) {
+        new HttpArtifactCache(argsBuilder.build()) {
           @Override
           protected HttpResponse fetchCall(String path, Request.Builder requestBuilder)
               throws IOException {
@@ -250,16 +234,7 @@ public class HttpArtifactCacheTest {
     final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
     final List<Response> responseList = Lists.newArrayList();
     HttpArtifactCache cache =
-        new HttpArtifactCache(
-            "http",
-            fetchService,
-            storeService,
-            /* doStore */ true,
-            filesystem,
-            BUCK_EVENT_BUS,
-            DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE,
-            Optional.<Long>absent()) {
+        new HttpArtifactCache(argsBuilder.build()) {
           @Override
           protected HttpResponse fetchCall(String path, Request.Builder requestBuilder)
               throws IOException {
@@ -296,16 +271,7 @@ public class HttpArtifactCacheTest {
     final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
     final List<Response> responseList = Lists.newArrayList();
     HttpArtifactCache cache =
-        new HttpArtifactCache(
-            "http",
-            fetchService,
-            storeService,
-            /* doStore */ true,
-            filesystem,
-            BUCK_EVENT_BUS,
-            DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE,
-            Optional.<Long>absent()) {
+        new HttpArtifactCache(argsBuilder.build()) {
           @Override
           protected HttpResponse fetchCall(String path, Request.Builder requestBuilder)
               throws IOException {
@@ -340,16 +306,7 @@ public class HttpArtifactCacheTest {
   public void testFetchIOException() throws Exception {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     HttpArtifactCache cache =
-        new HttpArtifactCache(
-            "http",
-            fetchService,
-            storeService,
-            /* doStore */ true,
-            filesystem,
-            BUCK_EVENT_BUS,
-            DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE,
-            Optional.<Long>absent()) {
+        new HttpArtifactCache(argsBuilder.build()) {
           @Override
           protected HttpResponse fetchCall(String path, Request.Builder requestBuilder)
               throws IOException {
@@ -373,17 +330,9 @@ public class HttpArtifactCacheTest {
     Path output = Paths.get("output/file");
     filesystem.writeContentsToPath(data, output);
     final AtomicBoolean hasCalled = new AtomicBoolean(false);
+    argsBuilder.setProjectFilesystem(filesystem);
     HttpArtifactCache cache =
-        new HttpArtifactCache(
-            "http",
-            fetchService,
-            storeService,
-            /* doStore */ true,
-            filesystem,
-            BUCK_EVENT_BUS,
-            DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE,
-            Optional.<Long>absent()) {
+        new HttpArtifactCache(argsBuilder.build()) {
           @Override
           protected HttpResponse storeCall(Request.Builder requestBuilder)
               throws IOException {
@@ -435,16 +384,7 @@ public class HttpArtifactCacheTest {
     Path output = Paths.get("output/file");
     filesystem.writeContentsToPath("data", output);
     HttpArtifactCache cache =
-        new HttpArtifactCache(
-            "http",
-            fetchService,
-            storeService,
-            /* doStore */ true,
-            filesystem,
-            BUCK_EVENT_BUS,
-            DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE,
-            Optional.<Long>absent()) {
+        new HttpArtifactCache(argsBuilder.build()) {
           @Override
           protected HttpResponse storeCall(Request.Builder requestBuilder) throws IOException {
             throw new IOException();
@@ -466,17 +406,9 @@ public class HttpArtifactCacheTest {
     Path output = Paths.get("output/file");
     filesystem.writeContentsToPath(data, output);
     final Set<RuleKey> stored = Sets.newHashSet();
+    argsBuilder.setProjectFilesystem(filesystem);
     HttpArtifactCache cache =
-        new HttpArtifactCache(
-            "http",
-            fetchService,
-            storeService,
-            /* doStore */ true,
-            filesystem,
-            BUCK_EVENT_BUS,
-            DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE,
-            Optional.<Long>absent()) {
+        new HttpArtifactCache(argsBuilder.build()) {
           @Override
           protected HttpResponse storeCall(Request.Builder requestBuilder) throws IOException {
             Request request = requestBuilder.url(SERVER).build();
@@ -515,16 +447,7 @@ public class HttpArtifactCacheTest {
     final RuleKey otherRuleKey = new RuleKey("11111111111111111111111111111111");
     final String data = "data";
     HttpArtifactCache cache =
-        new HttpArtifactCache(
-            "http",
-            fetchService,
-            storeService,
-            /* doStore */ true,
-            filesystem,
-            BUCK_EVENT_BUS,
-            DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE,
-            Optional.<Long>absent()) {
+        new HttpArtifactCache(argsBuilder.build()) {
           @Override
           protected HttpResponse fetchCall(String path, Request.Builder requestBuilder)
               throws IOException {
@@ -556,18 +479,8 @@ public class HttpArtifactCacheTest {
     final String data = "test";
     final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
     final ImmutableMap<String, String> metadata = ImmutableMap.of("some", "metadata");
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     HttpArtifactCache cache =
-        new HttpArtifactCache(
-            "http",
-            fetchService,
-            storeService,
-            /* doStore */ true,
-            filesystem,
-            BUCK_EVENT_BUS,
-            DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE,
-            Optional.<Long>absent()) {
+        new HttpArtifactCache(argsBuilder.build()) {
           @Override
           protected HttpResponse fetchCall(String path, Request.Builder requestBuilder)
               throws IOException {
@@ -595,36 +508,33 @@ public class HttpArtifactCacheTest {
   @Test
   public void errorTextReplaced() throws InterruptedException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    final String name = "http cache";
+    final String cacheName = "http cache";
     final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
     final RuleKey otherRuleKey = new RuleKey("11111111111111111111111111111111");
     final String data = "data";
     final AtomicBoolean consoleEventReceived = new AtomicBoolean(false);
     HttpArtifactCache cache =
         new HttpArtifactCache(
-            name,
-            fetchService,
-            storeService,
-            /* doStore */ true,
-            filesystem,
-            new BuckEventBus(new IncrementingFakeClock(), new BuildId()) {
-              @Override
-              public void post(BuckEvent event) {
-                if (event instanceof ConsoleEvent) {
-                  consoleEventReceived.set(true);
-                  ConsoleEvent consoleEvent = (ConsoleEvent) event;
-                  assertThat(
-                      consoleEvent.getMessage(),
-                      Matchers.containsString(name));
-                  assertThat(
-                      consoleEvent.getMessage(),
-                      Matchers.containsString("incorrect key name"));
-                }
-              }
-            },
-            DIRECT_EXECUTOR_SERVICE,
-            ERROR_TEXT_TEMPLATE,
-            Optional.<Long>absent()) {
+            argsBuilder
+                .setCacheName(cacheName)
+                .setProjectFilesystem(filesystem)
+                .setBuckEventBus(
+                    new BuckEventBus(new IncrementingFakeClock(), new BuildId()) {
+                      @Override
+                      public void post(BuckEvent event) {
+                        if (event instanceof ConsoleEvent) {
+                          consoleEventReceived.set(true);
+                          ConsoleEvent consoleEvent = (ConsoleEvent) event;
+                          assertThat(
+                              consoleEvent.getMessage(),
+                              Matchers.containsString(cacheName));
+                          assertThat(
+                              consoleEvent.getMessage(),
+                              Matchers.containsString("incorrect key name"));
+                        }
+                      }
+                    })
+                .build()) {
           @Override
           protected HttpResponse fetchCall(String path, Request.Builder requestBuilder)
               throws IOException {

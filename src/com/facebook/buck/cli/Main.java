@@ -1216,7 +1216,7 @@ public final class Main {
     // and passes it from above all the way through, but it is not parameterized by Cell.
     //
     // TODO(bolinfest): Every build rule that uses AndroidPlatformTarget must include the result
-    // of its getName() method in its RuleKey.
+    // of its getCacheName() method in its RuleKey.
     return new Supplier<AndroidPlatformTarget>() {
 
       @Nullable
