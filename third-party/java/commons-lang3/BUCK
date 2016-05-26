@@ -1,0 +1,11 @@
+prebuilt_jar(
+  name = 'commons-lang3',
+  binary_jar = 'commons-lang3-3.1.jar',
+  licenses = [
+    'LICENSE',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
