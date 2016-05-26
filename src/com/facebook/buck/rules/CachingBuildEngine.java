@@ -1588,91 +1588,102 @@ public class CachingBuildEngine implements BuildEngine {
   private ListenableFuture<Optional<BuildResult>> performManifestBasedCacheFetch(
       final BuildRule rule,
       final BuildContext context,
-      BuildInfoRecorder buildInfoRecorder)
+      final BuildInfoRecorder buildInfoRecorder)
       throws IOException, InterruptedException {
     if (!useManifestCaching(rule)) {
       return Futures.immediateFuture(Optional.<BuildResult>absent());
     }
 
-    Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> manifestKey =
+    final Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> manifestKey =
         ruleKeyFactories.getUnchecked(rule.getProjectFilesystem())
             .depFileRuleKeyBuilderFactory.buildManifestKey(rule);
     if (!manifestKey.isPresent()) {
       return Futures.immediateFuture(Optional.<BuildResult>absent());
     }
 
-    LazyPath tempFile = new LazyPath() {
+    final LazyPath tempFile = new LazyPath() {
       @Override
       protected Path create() throws IOException {
         return Files.createTempFile("buck.", ".manifest");
       }
     };
 
-    CacheResult manifestResult =
-        context.getArtifactCache().fetch(manifestKey.get().getFirst(), tempFile);
-    if (!manifestResult.getType().isSuccess()) {
-      return Futures.immediateFuture(Optional.<BuildResult>absent());
-    }
+    final ListenableFuture<CacheResult> manifestResult = asyncFetchArtifactForBuildable(
+        manifestKey.get().getFirst(),
+        tempFile,
+        context.getArtifactCache(),
+        buildInfoRecorder);
 
-    Path manifestPath = getManifestPath(rule);
-
-    // Clear out any existing manifest.
-    rule.getProjectFilesystem().deleteFileAtPathIfExists(manifestPath);
-
-    // Now, fetch an existing manifest from the cache.
-    rule.getProjectFilesystem().createParentDirs(manifestPath);
-
-    try (OutputStream outputStream =
-             rule.getProjectFilesystem().newFileOutputStream(manifestPath);
-         InputStream inputStream =
-             new GZIPInputStream(new BufferedInputStream(Files.newInputStream(tempFile.get())))) {
-      ByteStreams.copy(inputStream, outputStream);
-    }
-    Files.delete(tempFile.get());
-
-    // Deserialize the manifest.
-    Manifest manifest;
-    try (InputStream input =
-             rule.getProjectFilesystem().newFileInputStream(manifestPath)) {
-      manifest = new Manifest(input);
-    }
-
-    // Lookup the rule for the current state of our inputs.
-    Optional<RuleKey> ruleKey =
-        manifest.lookup(
-            fileHashCaches.getUnchecked(rule.getProjectFilesystem()),
-            pathResolver,
-            manifestKey.get().getSecond());
-    if (!ruleKey.isPresent()) {
-      return Futures.immediateFuture(Optional.<BuildResult>absent());
-    }
-
-    ListenableFuture<CacheResult> cacheResult =
-        tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-            rule,
-            ruleKey.get(),
-            buildInfoRecorder,
-            context.getArtifactCache(),
-            // TODO(shs96c): This should be shared between all tests, not one per cell
-            rule.getProjectFilesystem(),
-            context);
-
-    // Do another cache fetch using the rule key we found above.
-    return Futures.transform(
-        cacheResult,
-        new Function<CacheResult, Optional<BuildResult>>() {
+    return Futures.transformAsync(
+        manifestResult,
+        new AsyncFunction<CacheResult, Optional<BuildResult>>() {
           @Override
-          public Optional<BuildResult> apply(CacheResult cacheResult) {
-            if (cacheResult.getType().isSuccess()) {
-              return Optional.of(BuildResult.success(
-                  rule,
-                  BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED,
-                  cacheResult));
+          public ListenableFuture<Optional<BuildResult>> apply(CacheResult manifestResult)
+              throws IOException, InterruptedException {
+            if (!manifestResult.getType().isSuccess()) {
+              return Futures.immediateFuture(Optional.<BuildResult>absent());
             }
-            return Optional.absent();
+
+            Path manifestPath = getManifestPath(rule);
+
+            // Clear out any existing manifest.
+            rule.getProjectFilesystem().deleteFileAtPathIfExists(manifestPath);
+
+            // Now, fetch an existing manifest from the cache.
+            rule.getProjectFilesystem().createParentDirs(manifestPath);
+
+            try (OutputStream outputStream =
+                     rule.getProjectFilesystem().newFileOutputStream(manifestPath);
+                 InputStream inputStream = new GZIPInputStream(
+                     new BufferedInputStream(Files.newInputStream(tempFile.get())))) {
+              ByteStreams.copy(inputStream, outputStream);
+            }
+            Files.delete(tempFile.get());
+
+            // Deserialize the manifest.
+            Manifest manifest;
+            try (InputStream input =
+                     rule.getProjectFilesystem().newFileInputStream(manifestPath)) {
+              manifest = new Manifest(input);
+            }
+
+            // Lookup the rule for the current state of our inputs.
+            Optional<RuleKey> ruleKey =
+                manifest.lookup(
+                    fileHashCaches.getUnchecked(rule.getProjectFilesystem()),
+                    pathResolver,
+                    manifestKey.get().getSecond());
+            if (!ruleKey.isPresent()) {
+              return Futures.immediateFuture(Optional.<BuildResult>absent());
+            }
+
+            ListenableFuture<CacheResult> cacheResult =
+                tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+                    rule,
+                    ruleKey.get(),
+                    buildInfoRecorder,
+                    context.getArtifactCache(),
+                    // TODO(shs96c): This should be shared between all tests, not one per cell
+                    rule.getProjectFilesystem(),
+                    context);
+
+            return Futures.transform(
+                cacheResult,
+                new Function<CacheResult, Optional<BuildResult>>() {
+                  @Override
+                  public Optional<BuildResult> apply(CacheResult cacheResult) {
+                    if (cacheResult.getType().isSuccess()) {
+                      return Optional.of(BuildResult.success(
+                          rule,
+                          BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED,
+                          cacheResult));
+                    }
+                    return Optional.absent();
+                  }
+                },
+                service);
           }
-        },
-        service);
+        }, service);
   }
 
   private static RuleScheduleInfo getRuleScheduleInfo(BuildRule rule) {
