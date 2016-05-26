@@ -16,7 +16,7 @@
 
 package com.facebook.buck.slb;
 
-import com.squareup.okhttp.Request;
+import okhttp3.Request;
 
 import java.io.IOException;
 

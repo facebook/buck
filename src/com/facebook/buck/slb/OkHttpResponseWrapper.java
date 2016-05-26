@@ -16,7 +16,7 @@
 
 package com.facebook.buck.slb;
 
-import com.squareup.okhttp.Response;
+import okhttp3.Response;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,7 +45,7 @@ public class OkHttpResponseWrapper implements HttpResponse {
 
   @Override
   public String requestUrl() {
-    return response.request().urlString();
+    return response.request().url().toString();
   }
 
   @Override

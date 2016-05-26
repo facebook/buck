@@ -1,6 +1,6 @@
 prebuilt_jar(
   name = 'okio',
-  binary_jar = 'okio-1.6.0.jar',
+  binary_jar = 'okio-1.8.0.jar',
   javadoc_url = 'http://square.github.io/okio',
   licenses = [
     'LICENSE.txt',

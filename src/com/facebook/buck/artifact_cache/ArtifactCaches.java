@@ -31,13 +31,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.squareup.okhttp.ConnectionPool;
-import com.squareup.okhttp.Interceptor;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
+import okhttp3.ConnectionPool;
+import okhttp3.Interceptor;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 import java.io.IOException;
 import java.net.URI;
@@ -215,8 +215,8 @@ public class ArtifactCaches {
       ArtifactCacheBuckConfig config) {
 
     // Setup the default client to use.
-    OkHttpClient storeClient = new OkHttpClient();
-    storeClient.networkInterceptors().add(
+    OkHttpClient.Builder storeClientBuilder = new OkHttpClient.Builder();
+    storeClientBuilder.networkInterceptors().add(
         new Interceptor() {
           @Override
           public Response intercept(Chain chain) throws IOException {
@@ -228,22 +228,20 @@ public class ArtifactCaches {
           }
         });
     int timeoutSeconds = cacheDescription.getTimeoutSeconds();
-    storeClient.setConnectTimeout(timeoutSeconds, TimeUnit.SECONDS);
-    storeClient.setConnectionPool(
+    storeClientBuilder.connectTimeout(timeoutSeconds, TimeUnit.SECONDS);
+    storeClientBuilder.connectionPool(
         new ConnectionPool(
             /* maxIdleConnections */ (int) config.getThreadPoolSize(),
-            /* keepAliveDurationMs */ config.getThreadPoolKeepAliveDurationMillis()));
-
-    // For fetches, use a client with a read timeout.
-    OkHttpClient fetchClient = storeClient.clone();
-    fetchClient.setReadTimeout(timeoutSeconds, TimeUnit.SECONDS);
+            /* keepAliveDurationMs */ config.getThreadPoolKeepAliveDurationMillis(),
+            TimeUnit.MILLISECONDS)
+        );
 
     final ImmutableMap<String, String> readHeaders = cacheDescription.getReadHeaders();
     final ImmutableMap<String, String> writeHeaders = cacheDescription.getWriteHeaders();
 
     // If write headers are specified, add them to every default client request.
     if (!writeHeaders.isEmpty()) {
-      storeClient.networkInterceptors().add(
+      storeClientBuilder.networkInterceptors().add(
           new Interceptor() {
             @Override
             public Response intercept(Chain chain) throws IOException {
@@ -254,9 +252,15 @@ public class ArtifactCaches {
           });
     }
 
+    OkHttpClient storeClient = storeClientBuilder.build();
+
+    // For fetches, use a client with a read timeout.
+    OkHttpClient.Builder fetchClientBuilder = storeClient.newBuilder();
+    fetchClientBuilder.readTimeout(timeoutSeconds, TimeUnit.SECONDS);
+
     // If read headers are specified, add them to every read client request.
     if (!readHeaders.isEmpty()) {
-      fetchClient.networkInterceptors().add(
+      fetchClientBuilder.networkInterceptors().add(
           new Interceptor() {
             @Override
             public Response intercept(Chain chain) throws IOException {
@@ -267,7 +271,7 @@ public class ArtifactCaches {
           });
     }
 
-    fetchClient.networkInterceptors().add((new Interceptor() {
+    fetchClientBuilder.networkInterceptors().add((new Interceptor() {
       @Override
       public Response intercept(Chain chain) throws IOException {
         Response originalResponse = chain.proceed(chain.request());
@@ -276,6 +280,7 @@ public class ArtifactCaches {
             .build();
       }
     }));
+    OkHttpClient fetchClient = fetchClientBuilder.build();
 
     HttpService fetchService;
     HttpService storeService;
@@ -344,12 +349,12 @@ public class ArtifactCaches {
     }
 
     @Override
-    public long contentLength() throws IOException {
+    public long contentLength() {
       return responseBody.contentLength();
     }
 
     @Override
-    public BufferedSource source() throws IOException {
+    public BufferedSource source() {
       return bufferedSource;
     }
 

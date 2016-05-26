@@ -20,7 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
-import com.squareup.okhttp.OkHttpClient;
+import okhttp3.OkHttpClient;
 
 import org.immutables.value.Value;
 
