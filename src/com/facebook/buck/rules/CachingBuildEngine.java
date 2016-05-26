@@ -435,112 +435,84 @@ public class CachingBuildEngine implements BuildEngine {
                 }
 
                 // Input-based rule keys.
-                if (rule instanceof SupportsInputBasedRuleKey) {
-                  // Calculate the input-based rule key and record it in the metadata.
-                  Optional<RuleKey> inputRuleKey = ruleKeyFactory
-                      .inputBasedRuleKeyBuilderFactory
-                      .build(rule);
-                  if (inputRuleKey.isPresent()) {
-                    buildInfoRecorder.addBuildMetadata(
-                        BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY,
-                        inputRuleKey.get().toString());
+                ListenableFuture<Optional<BuildResult>> inputResult =
+                    performInputBasedCacheFetch(
+                        rule,
+                        context,
+                        onDiskBuildInfo,
+                        buildInfoRecorder,
+                        ruleKeyFactory);
 
-                    // Check the input-based rule key says we're already built.
-                    Optional<RuleKey> lastInputRuleKey = onDiskBuildInfo.getRuleKey(
-                        BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY);
-                    if (inputRuleKey.get().equals(lastInputRuleKey.orNull())) {
-                      return Futures.immediateFuture(
-                          Optional.of(
-                              BuildResult.success(
-                                  rule,
-                                  BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY,
-                                  CacheResult.localKeyUnchangedHit())));
-                    }
+                return Futures.transformAsync(
+                    inputResult,
+                    new AsyncFunction<Optional<BuildResult>, Optional<BuildResult>>() {
+                      @Override
+                      public ListenableFuture<Optional<BuildResult>> apply(
+                          Optional<BuildResult> result) {
+                        if (result.isPresent()) {
+                          return Futures.immediateFuture(result);
+                        }
 
-                    // Try to fetch the artifact using the input-based rule key.
-                    ListenableFuture<CacheResult> cacheResult =
-                        tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-                            rule,
-                            inputRuleKey.get(),
-                            buildInfoRecorder,
-                            context.getArtifactCache(),
-                            // TODO(shs96c): Share this between all tests, not one per cell.
-                            rule.getProjectFilesystem(),
-                            context);
+                        // ABI check:
+                        // Deciding whether we need to rebuild is tricky business. We want to
+                        // rebuild as little as possible while always being sound.
+                        //
+                        // For java_library rules that depend only on their first-order deps,
+                        // they only need to rebuild themselves if any of the following conditions
+                        // hold:
+                        // (1) The definition of the build rule has changed.
+                        // (2) Any of the input files (which includes resources as well as .java
+                        //     files) have changed.
+                        // (3) The ABI of any of its dependent java_library rules has changed.
+                        //
+                        // For other types of build rules, we have to be more conservative when
+                        // rebuilding
+                        // In those cases, we rebuild if any of the following conditions hold:
+                        // (1) The definition of the build rule has changed.
+                        // (2) Any of the input files have changed.
+                        // (3) Any of the RuleKeys of this rule's deps have changed.
+                        //
+                        // Because a RuleKey for a rule will change if any of its transitive deps
+                        // have changed, that means a change in one of the leaves can result in
+                        // almost all rules being rebuilt, which is slow. Fortunately, we limit
+                        // the effects of this when building Java code when checking the ABI of
+                        // deps instead of the RuleKey for deps.
+                        if (rule instanceof AbiRule) {
+                          RuleKey abiRuleKey = ruleKeyFactory.abiRuleKeyBuilderFactory.build(rule);
+                          buildInfoRecorder.addBuildMetadata(
+                              BuildInfo.METADATA_KEY_FOR_ABI_RULE_KEY,
+                              abiRuleKey.toString());
 
-                    try {
-                      if (cacheResult.get().getType().isSuccess()) {
-                        return Futures.immediateFuture(
-                            Optional.of(
-                                BuildResult.success(
-                                    rule,
-                                    BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED,
-                                    cacheResult.get())));
+                          Optional<RuleKey> lastAbiRuleKey =
+                              onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_ABI_RULE_KEY);
+                          if (abiRuleKey.equals(lastAbiRuleKey.orNull())) {
+                            return Futures.immediateFuture(
+                                Optional.of(
+                                    BuildResult.success(
+                                        rule,
+                                        BuildRuleSuccessType.MATCHING_ABI_RULE_KEY,
+                                        CacheResult.localKeyUnchangedHit())));
+                          }
+                        }
+
+                        // Cache lookups failed, so if we're just trying to populate, we've failed.
+                        if (buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE) {
+                          LOG.info("Cannot populate cache for " +
+                              rule.getBuildTarget().getFullyQualifiedName());
+                          return Futures.immediateFuture(
+                              Optional.of(
+                                  BuildResult.canceled(
+                                      rule,
+                                      new HumanReadableException(
+                                          "Skipping %s: in cache population mode local " +
+                                              "builds are disabled",
+                                          rule))));
+                        }
+                        return Futures.immediateFuture(Optional.<BuildResult>absent());
                       }
-                    } catch (ExecutionException e) {
-                      Throwables.propagateIfInstanceOf(e.getCause(), InterruptedException.class);
-                      throw new RuntimeException(e.getCause());
-                    }
-                  }
-                }
-
-                // ABI check:
-                // Deciding whether we need to rebuild is tricky business. We want to rebuild as
-                // little as possible while always being sound.
-                //
-                // For java_library rules that depend only on their first-order deps,
-                // they only need to rebuild themselves if any of the following conditions hold:
-                // (1) The definition of the build rule has changed.
-                // (2) Any of the input files (which includes resources as well as .java files)
-                //     have changed.
-                // (3) The ABI of any of its dependent java_library rules has changed.
-                //
-                // For other types of build rules, we have to be more conservative when rebuilding
-                // In those cases, we rebuild if any of the following conditions hold:
-                // (1) The definition of the build rule has changed.
-                // (2) Any of the input files have changed.
-                // (3) Any of the RuleKeys of this rule's deps have changed.
-                //
-                // Because a RuleKey for a rule will change if any of its transitive deps have
-                // changed, that means a change in one of the leaves can result in almost all
-                // rules being rebuilt, which is slow. Fortunately, we limit the effects of this
-                // when building Java code when checking the ABI of deps instead of the RuleKey
-                // for deps.
-                if (rule instanceof AbiRule) {
-                  RuleKey abiRuleKey = ruleKeyFactory.abiRuleKeyBuilderFactory.build(rule);
-                  buildInfoRecorder.addBuildMetadata(
-                      BuildInfo.METADATA_KEY_FOR_ABI_RULE_KEY,
-                      abiRuleKey.toString());
-
-                  Optional<RuleKey> lastAbiRuleKey =
-                      onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_ABI_RULE_KEY);
-                  if (abiRuleKey.equals(lastAbiRuleKey.orNull())) {
-                    return Futures.immediateFuture(
-                        Optional.of(
-                            BuildResult.success(
-                                rule,
-                                BuildRuleSuccessType.MATCHING_ABI_RULE_KEY,
-                                CacheResult.localKeyUnchangedHit())));
-                  }
-                }
-
-                // Cache lookups failed, so if we're just trying to populate, we've failed.
-                if (buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE) {
-                  LOG.info("Cannot populate cache for " +
-                      rule.getBuildTarget().getFullyQualifiedName());
-                  return Futures.immediateFuture(
-                      Optional.of(
-                          BuildResult.canceled(
-                              rule,
-                              new HumanReadableException(
-                                  "Skipping %s: in cache population mode local builds are " +
-                                      "disabled",
-                                  rule))));
-                }
-                return Futures.immediateFuture(Optional.<BuildResult>absent());
+                    }, service);
               }
-            },
-            service);
+            }, service);
       }
     };
   }
@@ -1683,7 +1655,66 @@ public class CachingBuildEngine implements BuildEngine {
                 },
                 service);
           }
-        }, service);
+        },
+        service);
+  }
+
+  private ListenableFuture<Optional<BuildResult>> performInputBasedCacheFetch(
+      final BuildRule rule,
+      final BuildContext context,
+      final OnDiskBuildInfo onDiskBuildInfo,
+      BuildInfoRecorder buildInfoRecorder,
+      final RuleKeyFactories ruleKeyFactory) throws InterruptedException {
+    if (!(rule instanceof SupportsInputBasedRuleKey)) {
+      return Futures.immediateFuture(Optional.<BuildResult>absent());
+    }
+
+    Optional<RuleKey> inputRuleKey = ruleKeyFactory.inputBasedRuleKeyBuilderFactory.build(rule);
+    if (!inputRuleKey.isPresent()) {
+      return Futures.immediateFuture(Optional.<BuildResult>absent());
+    }
+
+    buildInfoRecorder.addBuildMetadata(
+        BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY,
+        inputRuleKey.get().toString());
+
+    // Check the input-based rule key says we're already built.
+    Optional<RuleKey> lastInputRuleKey = onDiskBuildInfo.getRuleKey(
+        BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY);
+    if (inputRuleKey.get().equals(lastInputRuleKey.orNull())) {
+      return Futures.immediateFuture(
+          Optional.of(
+              BuildResult.success(
+                  rule,
+                  BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY,
+                  CacheResult.localKeyUnchangedHit())));
+    }
+
+    // Try to fetch the artifact using the input-based rule key.
+    ListenableFuture<CacheResult> cacheResult =
+        tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+            rule,
+            inputRuleKey.get(),
+            buildInfoRecorder,
+            context.getArtifactCache(),
+            // TODO(shs96c): Share this between all tests, not one per cell.
+            rule.getProjectFilesystem(),
+            context);
+
+    return Futures.transform(
+        cacheResult,
+        new Function<CacheResult, Optional<BuildResult>>() {
+          @Override
+          public Optional<BuildResult> apply(CacheResult cacheResult) {
+            if (cacheResult.getType().isSuccess()) {
+              return Optional.of(BuildResult.success(
+                  rule,
+                  BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED,
+                  cacheResult));
+            }
+            return Optional.<BuildResult>absent();
+          }},
+        service);
   }
 
   private static RuleScheduleInfo getRuleScheduleInfo(BuildRule rule) {
