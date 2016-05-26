@@ -21,7 +21,6 @@ import com.facebook.buck.intellij.plugin.build.BuckBuildManager;
 import com.facebook.buck.intellij.plugin.build.BuckCommand;
 import com.facebook.buck.intellij.plugin.config.BuckModule;
 import com.facebook.buck.intellij.plugin.config.BuckSettingsProvider;
-import com.facebook.buck.intellij.plugin.ui.BuckEventsConsumer;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 
 import java.util.regex.Matcher;
@@ -62,15 +61,13 @@ public class BuckInstallAction extends BuckBaseAction {
     }
 
     // Initiate a buck install
-    BuckEventsConsumer buckEventsConsumer = new BuckEventsConsumer(e.getProject());
     BuckModule buckModule = e.getProject().getComponent(BuckModule.class);
-    buckModule.attach(buckEventsConsumer, target);
+    buckModule.attach(target);
 
     BuckBuildCommandHandler handler = new BuckBuildCommandHandler(
         e.getProject(),
         e.getProject().getBaseDir(),
-        BuckCommand.INSTALL,
-        buckEventsConsumer);
+        BuckCommand.INSTALL);
     if (state.customizedInstallSetting) {
       // Split the whole command line into different parameters.
       String commands = state.customizedInstallSettingCommand;

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.intellij.plugin.build;
 
-import com.facebook.buck.intellij.plugin.ui.BuckEventsConsumer;
 import com.facebook.buck.intellij.plugin.ui.BuckToolWindowFactory;
 import com.facebook.buck.intellij.plugin.ui.utils.BuckPluginNotifications;
 import com.intellij.execution.ui.ConsoleViewContentType;
@@ -34,9 +33,8 @@ public class BuckBuildCommandHandler extends BuckCommandHandler {
   public BuckBuildCommandHandler(
       final Project project,
       final VirtualFile root,
-      final BuckCommand command,
-      final BuckEventsConsumer buckEventsConsumer) {
-    super(project, VfsUtil.virtualToIoFile(root), command, buckEventsConsumer);
+      final BuckCommand command) {
+    super(project, VfsUtil.virtualToIoFile(root), command);
   }
 
   @Override

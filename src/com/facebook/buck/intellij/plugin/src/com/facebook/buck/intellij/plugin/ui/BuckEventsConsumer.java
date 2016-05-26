@@ -25,6 +25,7 @@ import com.facebook.buck.intellij.plugin.ui.tree.BuckTreeNodeTarget;
 import com.facebook.buck.intellij.plugin.ui.utils.CompilerErrorItem;
 import com.facebook.buck.intellij.plugin.ui.utils.ErrorExtractor;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckBuildEndConsumer;
+import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckBuildProgressUpdateConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckBuildStartConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckConsoleEventConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckInstallFinishedConsumer;
@@ -32,13 +33,12 @@ import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckProjectGene
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckProjectGenerationProgressConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckProjectGenerationStartedConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.CompilerErrorConsumer;
-import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckBuildProgressUpdateConsumer;
-import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingStartConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingEndConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingProgressUpdateConsumer;
-import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.TestRunStartedConsumer;
+import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.RulesParsingStartConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.TestResultsAvailableConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.TestRunCompleteConsumer;
+import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.TestRunStartedConsumer;
 import com.facebook.buck.intellij.plugin.ws.buckevents.parts.TestCaseSummary;
 import com.facebook.buck.intellij.plugin.ws.buckevents.parts.TestResults;
 import com.facebook.buck.intellij.plugin.ws.buckevents.parts.TestResultsSummary;
@@ -50,15 +50,15 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.messages.MessageBusConnection;
 
-import javax.swing.tree.DefaultTreeModel;
-
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.LinkedList;
+
+import javax.swing.tree.DefaultTreeModel;
 
 public class BuckEventsConsumer implements
     BuckBuildStartConsumer,
@@ -111,7 +111,13 @@ public class BuckEventsConsumer implements
     BuckTreeNodeDetail mProjectGenerationProgress;
 
     public void detach() {
-        mConnection.disconnect();
+        if (mConnection != null) {
+            mConnection.disconnect();
+        }
+        mBuildProgress = null;
+        mParseProgress = null;
+        mTestResults = null;
+        mProjectGenerationProgress = null;
     }
 
     public void detachWithMessage(String message) {

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.plugin.build;
 
+import com.facebook.buck.intellij.plugin.config.BuckModule;
 import com.facebook.buck.intellij.plugin.config.BuckSettingsProvider;
 import com.facebook.buck.intellij.plugin.ui.BuckEventsConsumer;
 import com.intellij.execution.ExecutionException;
@@ -52,7 +53,6 @@ public abstract class BuckCommandHandler {
   private final File workingDirectory;
   private final GeneralCommandLine commandLine;
   private final Object processStateLock = new Object();
-  private BuckEventsConsumer buckEventsConsumer;
   private static final Pattern CHARACTER_DIGITS_PATTERN = Pattern.compile("(?s).*[A-Z0-9a-z]+.*");
 
   @SuppressWarnings({"FieldAccessedSynchronizedAndUnsynchronized"})
@@ -99,21 +99,6 @@ public abstract class BuckCommandHandler {
     for (String parameter : command.getParameters()) {
       commandLine.addParameter(parameter);
     }
-  }
-
-  /**
-   * @param project            a project
-   * @param directory          a process directory
-   * @param command            a command to execute (if empty string, the parameter is ignored)
-   * @param buckEventsConsumer the buck events consume
-   */
-  public BuckCommandHandler(
-      Project project,
-      File directory,
-      BuckCommand command,
-      BuckEventsConsumer buckEventsConsumer) {
-    this(project, directory, command);
-    this.buckEventsConsumer = buckEventsConsumer;
   }
 
   /**
@@ -315,7 +300,9 @@ public abstract class BuckCommandHandler {
       final Key outputType,
       final Iterator<String> lines,
       final StringBuilder lineBuilder) {
-    if (outputType == ProcessOutputTypes.STDERR && buckEventsConsumer != null) {
+    BuckEventsConsumer buckEventsConsumer =
+        project.getComponent(BuckModule.class).getBuckEventsConsumer();
+    if (outputType == ProcessOutputTypes.STDERR) {
       StringBuilder stderr = new StringBuilder();
       while (lines.hasNext()) {
         String line = lines.next();

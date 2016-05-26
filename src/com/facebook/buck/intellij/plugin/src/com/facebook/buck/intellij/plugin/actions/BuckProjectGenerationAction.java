@@ -20,7 +20,6 @@ import com.facebook.buck.intellij.plugin.build.BuckBuildCommandHandler;
 import com.facebook.buck.intellij.plugin.build.BuckBuildManager;
 import com.facebook.buck.intellij.plugin.build.BuckCommand;
 import com.facebook.buck.intellij.plugin.config.BuckModule;
-import com.facebook.buck.intellij.plugin.ui.BuckEventsConsumer;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 
 import icons.BuckIcons;
@@ -48,15 +47,13 @@ public class BuckProjectGenerationAction extends BuckBaseAction {
     }
 
     // Initiate a buck build
-    BuckEventsConsumer buckEventsConsumer = new BuckEventsConsumer(e.getProject());
     BuckModule buckModule = e.getProject().getComponent(BuckModule.class);
-    buckModule.attach(buckEventsConsumer, target);
+    buckModule.attach(target);
 
     BuckBuildCommandHandler handler = new BuckBuildCommandHandler(
         e.getProject(),
         e.getProject().getBaseDir(),
-        BuckCommand.PROJECT,
-        buckEventsConsumer);
+        BuckCommand.PROJECT);
     handler.command().addParameter(target);
     buildManager.runBuckCommandWhileConnectedToBuck(handler, ACTION_TITLE, buckModule);
   }

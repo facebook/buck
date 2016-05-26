@@ -43,7 +43,7 @@ public final class BuckModule implements ProjectComponent {
     private Project mProject;
     private BuckClient mClient = new BuckClient();
     private BuckEventsHandler mEventHandler;
-    private BuckEventsConsumer mBu;
+    private BuckEventsConsumer mBuckEventsConsumer;
     private static final Logger LOG = Logger.getInstance(BuckModule.class);
 
     public BuckModule(final Project project) {
@@ -87,6 +87,8 @@ public final class BuckModule implements ProjectComponent {
         if (!UISettings.getInstance().SHOW_MAIN_TOOLBAR) {
             BuckPluginNotifications.notifyActionToolbar(mProject);
         }
+
+        mBuckEventsConsumer = new BuckEventsConsumer(project);
     }
 
     @Override
@@ -111,6 +113,9 @@ public final class BuckModule implements ProjectComponent {
     public void projectClosed() {
         disconnect();
         AndroidDebugger.disconnect();
+        if (mBuckEventsConsumer != null) {
+            mBuckEventsConsumer.detach();
+        }
     }
 
     public boolean isConnected() {
@@ -119,9 +124,6 @@ public final class BuckModule implements ProjectComponent {
 
     public void disconnect() {
         if (mClient.isConnected()) {
-            if (mBu != null) {
-                mBu.detach();
-            }
             mClient.disconnect();
         }
     }
@@ -144,10 +146,7 @@ public final class BuckModule implements ProjectComponent {
                     } catch (IOException e) {
                         LOG.error(e);
                     } catch (HumanReadableException e) {
-                        if (mBu == null) {
-                          attach(new BuckEventsConsumer(mProject), "");
-                        }
-                        mBu.consumeConsoleEvent(e.toString());
+                        mBuckEventsConsumer.consumeConsoleEvent(e.toString());
                     }
                 }
             }
@@ -155,11 +154,12 @@ public final class BuckModule implements ProjectComponent {
         BuckFileUtil.setBuckFileType();
     }
 
-    public void attach(BuckEventsConsumer bu, String target) {
-        if (mBu != null) {
-            mBu.detach();
-        }
-        mBu = bu;
-        mBu.attach(target, BuckUIManager.getInstance(mProject).getTreeModel());
+    public void attach(String target) {
+        mBuckEventsConsumer.detach();
+        mBuckEventsConsumer.attach(target, BuckUIManager.getInstance(mProject).getTreeModel());
+    }
+
+    public BuckEventsConsumer getBuckEventsConsumer() {
+        return mBuckEventsConsumer;
     }
 }

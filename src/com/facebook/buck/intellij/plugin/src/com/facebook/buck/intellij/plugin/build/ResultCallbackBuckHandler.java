@@ -16,7 +16,6 @@
 
 package com.facebook.buck.intellij.plugin.build;
 
-import com.facebook.buck.intellij.plugin.ui.BuckEventsConsumer;
 import com.google.common.util.concurrent.FutureCallback;
 import com.intellij.execution.process.ProcessOutputTypes;
 import com.intellij.openapi.project.Project;
@@ -34,9 +33,8 @@ public class ResultCallbackBuckHandler extends BuckCommandHandler {
       final Project project,
       final VirtualFile root,
       final BuckCommand command,
-      BuckEventsConsumer buckEventsConsumer,
       final FutureCallback futureCallback) {
-    super(project, VfsUtil.virtualToIoFile(root), command, buckEventsConsumer);
+    super(project, VfsUtil.virtualToIoFile(root), command);
     this.futureCallback = futureCallback;
     this.stdout = new StringBuilder();
   }
