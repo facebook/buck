@@ -56,11 +56,15 @@ public final class BuckModule implements ProjectComponent {
                     ApplicationManager.getApplication().invokeLater(new Runnable() {
                         @Override
                         public void run() {
-                        BuckToolWindowFactory.outputConsoleMessage(
-                            project,
-                            "Connected to buck!\n",
-                            ConsoleViewContentType.SYSTEM_OUTPUT
-                        );
+                            // If we connected to Buck and then closed the project, before getting
+                            // the success message
+                            if (!project.isDisposed()) {
+                                BuckToolWindowFactory.outputConsoleMessage(
+                                    project,
+                                    "Connected to buck!\n",
+                                    ConsoleViewContentType.SYSTEM_OUTPUT
+                                );
+                            }
                         }
                     });
                 }
@@ -71,11 +75,14 @@ public final class BuckModule implements ProjectComponent {
                     ApplicationManager.getApplication().invokeLater(new Runnable() {
                         @Override
                         public void run() {
-                        BuckToolWindowFactory.outputConsoleMessage(
-                            project,
-                            "Disconnected from buck!\n",
-                            ConsoleViewContentType.SYSTEM_OUTPUT
-                        );
+                            // If we haven't closed the project, then we show the message
+                            if (!project.isDisposed()) {
+                                BuckToolWindowFactory.outputConsoleMessage(
+                                    project,
+                                    "Disconnected from buck!\n",
+                                    ConsoleViewContentType.SYSTEM_OUTPUT
+                                );
+                            }
                         }
                     });
                     BuckModule mod = project.getComponent(BuckModule.class);
