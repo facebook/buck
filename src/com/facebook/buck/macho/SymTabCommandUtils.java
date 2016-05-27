@@ -30,10 +30,7 @@ public class SymTabCommandUtils {
 
   public static SymTabCommand createFromBuffer(ByteBuffer buffer) {
     return SymTabCommand.of(
-        LoadCommand.of(
-            buffer.position(),
-            UnsignedInteger.fromIntBits(buffer.getInt()),
-            UnsignedInteger.fromIntBits(buffer.getInt())),
+        LoadCommandUtils.createFromBuffer(buffer),
         UnsignedInteger.fromIntBits(buffer.getInt()),
         UnsignedInteger.fromIntBits(buffer.getInt()),
         UnsignedInteger.fromIntBits(buffer.getInt()),

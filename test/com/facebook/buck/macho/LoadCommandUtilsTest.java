@@ -32,7 +32,6 @@ import java.util.List;
 public class LoadCommandUtilsTest {
   @Test
   public void testEnumeratingLoadCommands() throws Exception {
-    MachoMagicInfo info = new MachoMagicInfo(UnsignedInteger.fromIntBits(0xFEEDFACF));
     byte[] header = MachoHeaderTestData.getBigEndian64Bit();
     header[19] = 2;   // ncmds
     header[23] = 16;  // sizeofcmds
@@ -51,7 +50,6 @@ public class LoadCommandUtilsTest {
     buffer.position(0);
     LoadCommandUtils.enumerateLoadCommandsInFile(
         buffer,
-        info,
         new Function<LoadCommand, Boolean>() {
           @Override
           public Boolean apply(LoadCommand input) {

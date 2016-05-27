@@ -43,8 +43,7 @@ public class SegmentCommandUtilsTest {
     byte[] bytes = SegmentCommandTestData.getBigEndian64Bits();
     final int commandSize = bytes.length;
     SegmentCommand command = SegmentCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN),
-        true);
+        ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN));
     SegmentCommand updated = command
         .withFilesize(UnsignedLong.fromLongBits(1234))
         .withVmsize(UnsignedLong.fromLongBits(SegmentCommandUtils.alignValue(4321)));
@@ -53,7 +52,7 @@ public class SegmentCommandUtilsTest {
     SegmentCommandUtils.updateSegmentCommand(buffer, command, updated, true);
     buffer.position(0);
 
-    SegmentCommand commandInBuffer = SegmentCommandUtils.createFromBuffer(buffer, true);
+    SegmentCommand commandInBuffer = SegmentCommandUtils.createFromBuffer(buffer);
     assertThat(commandInBuffer.getFilesize(), equalToObject(updated.getFilesize()));
     assertThat(commandInBuffer.getVmsize(), equalToObject(updated.getVmsize()));
   }
@@ -64,7 +63,7 @@ public class SegmentCommandUtilsTest {
     final int commandSize = bytes.length;
 
     SegmentCommand command = SegmentCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN), false);
+        ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN));
     SegmentCommand updated = command
         .withFilesize(UnsignedLong.fromLongBits(1234))
         .withVmsize(UnsignedLong.fromLongBits(SegmentCommandUtils.alignValue(4321)));
@@ -73,7 +72,7 @@ public class SegmentCommandUtilsTest {
     SegmentCommandUtils.updateSegmentCommand(buffer, command, updated, false);
     buffer.position(0);
 
-    SegmentCommand commandInBuffer = SegmentCommandUtils.createFromBuffer(buffer, false);
+    SegmentCommand commandInBuffer = SegmentCommandUtils.createFromBuffer(buffer);
     assertThat(commandInBuffer.getFilesize(), equalToObject(updated.getFilesize()));
     assertThat(commandInBuffer.getVmsize(), equalToObject(updated.getVmsize()));
   }
@@ -98,7 +97,7 @@ public class SegmentCommandUtilsTest {
     segmentBytes[67] = (byte) 0x03;  // nsects = 3
 
     SegmentCommand command = SegmentCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(segmentBytes).order(ByteOrder.BIG_ENDIAN), true);
+        ByteBuffer.wrap(segmentBytes).order(ByteOrder.BIG_ENDIAN));
 
     ByteBuffer buffer = ByteBuffer.allocate(
         command.getLoadCommand().getCmdsize().intValue() + 3 * sectionSize);
@@ -163,7 +162,7 @@ public class SegmentCommandUtilsTest {
     segmentBytes[51] = (byte) 0x03;  // nsects = 3
 
     SegmentCommand command = SegmentCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(segmentBytes).order(ByteOrder.BIG_ENDIAN), false);
+        ByteBuffer.wrap(segmentBytes).order(ByteOrder.BIG_ENDIAN));
 
     ByteBuffer buffer = ByteBuffer.allocate(
         command.getLoadCommand().getCmdsize().intValue() + 3 * sectionSize);

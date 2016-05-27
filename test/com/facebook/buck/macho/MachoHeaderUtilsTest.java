@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.equalToObject;
 import static org.junit.Assert.assertThat;
 
+import com.google.common.base.Optional;
 import com.google.common.primitives.UnsignedInteger;
 
 import java.nio.ByteBuffer;
@@ -30,8 +31,30 @@ public class MachoHeaderUtilsTest {
 
   @Test
   public void testGettingSize() {
-    assertThat(MachoHeaderUtils.getHeaderSize(false), equalTo(MachoHeader.MACH_HEADER_SIZE_32));
-    assertThat(MachoHeaderUtils.getHeaderSize(true), equalTo(MachoHeader.MACH_HEADER_SIZE_64));
+    assertThat(
+        MachoHeaderUtils.getHeaderSize(
+            MachoHeader.of(
+                MachoHeader.MH_MAGIC,
+                0,
+                0,
+                UnsignedInteger.ZERO,
+                UnsignedInteger.ZERO,
+                UnsignedInteger.ZERO,
+                UnsignedInteger.ZERO,
+                Optional.<UnsignedInteger>absent())),
+        equalTo(MachoHeader.MACH_HEADER_SIZE_32));
+    assertThat(
+        MachoHeaderUtils.getHeaderSize(
+            MachoHeader.of(
+                MachoHeader.MH_MAGIC_64,
+                0,
+                0,
+                UnsignedInteger.ZERO,
+                UnsignedInteger.ZERO,
+                UnsignedInteger.ZERO,
+                UnsignedInteger.ZERO,
+                Optional.of(UnsignedInteger.ZERO))),
+        equalTo(MachoHeader.MACH_HEADER_SIZE_64));
   }
 
   @Test
@@ -39,7 +62,7 @@ public class MachoHeaderUtilsTest {
     ByteBuffer buffer = ByteBuffer
         .wrap(MachoHeaderTestData.getBigEndian64Bit())
         .order(ByteOrder.BIG_ENDIAN);
-    MachoHeader header = MachoHeaderUtils.createHeader(buffer, true);
+    MachoHeader header = MachoHeaderUtils.createFromBuffer(buffer);
     assertThat(header.getMagic(), equalToObject(UnsignedInteger.fromIntBits(0xFEEDFACF)));
     MachoHeaderTestData.assertHeaderHasValidFields(header);
   }
@@ -49,7 +72,7 @@ public class MachoHeaderUtilsTest {
     ByteBuffer buffer = ByteBuffer
         .wrap(MachoHeaderTestData.getLittleEndian64Bit())
         .order(ByteOrder.LITTLE_ENDIAN);
-    MachoHeader header = MachoHeaderUtils.createHeader(buffer, true);
+    MachoHeader header = MachoHeaderUtils.createFromBuffer(buffer);
     assertThat(header.getMagic(), equalToObject(UnsignedInteger.fromIntBits(0xFEEDFACF)));
     MachoHeaderTestData.assertHeaderHasValidFields(header);
   }
@@ -59,7 +82,7 @@ public class MachoHeaderUtilsTest {
     ByteBuffer buffer = ByteBuffer
         .wrap(MachoHeaderTestData.getBigEndian32Bit())
         .order(ByteOrder.BIG_ENDIAN);
-    MachoHeader header = MachoHeaderUtils.createHeader(buffer, false);
+    MachoHeader header = MachoHeaderUtils.createFromBuffer(buffer);
     assertThat(header.getMagic(), equalToObject(UnsignedInteger.fromIntBits(0xFEEDFACE)));
     MachoHeaderTestData.assertHeaderHasValidFields(header);
   }
@@ -69,7 +92,7 @@ public class MachoHeaderUtilsTest {
     ByteBuffer buffer = ByteBuffer
         .wrap(MachoHeaderTestData.getLittleEndian32Bit())
         .order(ByteOrder.LITTLE_ENDIAN);
-    MachoHeader header = MachoHeaderUtils.createHeader(buffer, false);
+    MachoHeader header = MachoHeaderUtils.createFromBuffer(buffer);
     assertThat(header.getMagic(), equalToObject(UnsignedInteger.fromIntBits(0xFEEDFACE)));
     MachoHeaderTestData.assertHeaderHasValidFields(header);
   }

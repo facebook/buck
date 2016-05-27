@@ -58,7 +58,6 @@ public class LoadCommandUtils {
    * Enumerates the load commands in the given mach binary which is represented by the buffer
    * by calling the given callback, starting at buffer's position.
    * @param buffer The buffer which holds all data.
-   * @param magicInfo Mach Header Magic info.
    * @param callback The Function object which should be called on each LoadCommand enumeration
    *                 event. The argument of the function is the LoadCommand object.
    *                 If Function returns Boolean.TRUE then enumeration will continue;
@@ -67,13 +66,9 @@ public class LoadCommandUtils {
    */
   public static void enumerateLoadCommandsInFile(
       ByteBuffer buffer,
-      MachoMagicInfo magicInfo,
       Function<LoadCommand, Boolean> callback) throws IOException {
-    int headerSize = MachoHeaderUtils.getHeaderSize(magicInfo.is64Bit());
-    int firstCommandOffset = headerSize;
-
-    MachoHeader header = MachoHeaderUtils.createHeader(buffer, magicInfo.is64Bit());
-
+    MachoHeader header = MachoHeaderUtils.createFromBuffer(buffer);
+    int firstCommandOffset = MachoHeaderUtils.getHeaderSize(header);
     int relativeCommandOffset = 0;
     for (int i = 0; i < header.getNcmds().intValue(); i++) {
       buffer.position(firstCommandOffset + relativeCommandOffset);

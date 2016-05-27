@@ -114,10 +114,12 @@ public class SegmentCommandUtils {
   }
 
   @SuppressWarnings("PMD.PrematureDeclaration")
-  public static SegmentCommand createFromBuffer(ByteBuffer buffer, boolean is64Bit) {
-    int offset = buffer.position();
-    UnsignedInteger cmd = UnsignedInteger.fromIntBits(buffer.getInt());
-    UnsignedInteger cmdsize = UnsignedInteger.fromIntBits(buffer.getInt());
+  public static SegmentCommand createFromBuffer(ByteBuffer buffer) {
+    LoadCommand loadCommand = LoadCommandUtils.createFromBuffer(buffer);
+    Preconditions.checkArgument(
+        loadCommand.getCmd().equals(SegmentCommand.LC_SEGMENT) ||
+            loadCommand.getCmd().equals(SegmentCommand.LC_SEGMENT_64));
+    boolean is64Bit = loadCommand.getCmd().equals(SegmentCommand.LC_SEGMENT_64);
 
     String segname = null;
     try {
@@ -125,17 +127,14 @@ public class SegmentCommandUtils {
     } catch (CharacterCodingException e) {
       throw new HumanReadableException(
           e,
-          "Cannot read segname for SegmentCommand at %d", offset);
+          "Cannot read segname for SegmentCommand at %d", loadCommand.getOffsetInBinary());
     }
     buffer.position(
-        offset +
+        loadCommand.getOffsetInBinary() +
         LoadCommand.CMD_AND_CMDSIZE_SIZE +
         SegmentCommand.SEGNAME_SIZE_IN_BYTES);
     return SegmentCommand.of(
-        LoadCommand.of(
-            offset,
-            cmd,
-            cmdsize),
+        loadCommand,
         segname,
         UnsignedLong.fromLongBits(is64Bit ? buffer.getLong() : buffer.getInt() & 0xFFFFFFFFL),
         UnsignedLong.fromLongBits(is64Bit ? buffer.getLong() : buffer.getInt() & 0xFFFFFFFFL),

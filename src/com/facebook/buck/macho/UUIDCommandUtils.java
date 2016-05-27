@@ -16,7 +16,6 @@
 package com.facebook.buck.macho;
 
 import com.google.common.base.Preconditions;
-import com.google.common.primitives.UnsignedInteger;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -27,10 +26,7 @@ public class UUIDCommandUtils {
   private UUIDCommandUtils() {}
 
   public static UUIDCommand createFromBuffer(ByteBuffer buffer) {
-    LoadCommand loadCommand = LoadCommand.of(
-        buffer.position(),
-        UnsignedInteger.fromIntBits(buffer.getInt()),
-        UnsignedInteger.fromIntBits(buffer.getInt()));
+    LoadCommand loadCommand = LoadCommandUtils.createFromBuffer(buffer);
 
     ByteOrder order = buffer.order();
     buffer.order(ByteOrder.BIG_ENDIAN);
