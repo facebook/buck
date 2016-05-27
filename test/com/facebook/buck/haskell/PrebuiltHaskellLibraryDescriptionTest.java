@@ -18,8 +18,12 @@ package com.facebook.buck.haskell;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxPlatformUtils;
+import com.facebook.buck.cxx.CxxPreprocessables;
+import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
+import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
@@ -27,12 +31,14 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -169,6 +175,31 @@ public class PrebuiltHaskellLibraryDescriptionTest {
     assertThat(
         sharedInput.getFlags(),
         Matchers.contains(flag));
+  }
+
+  @Test
+  public void cxxHeaderDirs() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePath interfaces = new FakeSourcePath("interfaces");
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    PathSourcePath path = new FakeSourcePath("include_dir");
+    PrebuiltHaskellLibrary library =
+        (PrebuiltHaskellLibrary) new PrebuiltHaskellLibraryBuilder(target)
+            .setStaticInterfaces(interfaces)
+            .setCxxHeaderDirs(ImmutableSortedSet.<SourcePath>of(path))
+            .build(resolver);
+    assertThat(
+        library.getCxxPreprocessorInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            HeaderVisibility.PUBLIC),
+        Matchers.equalTo(
+            CxxPreprocessorInput.builder()
+                .addIncludes(
+                    CxxHeadersDir.of(
+                        CxxPreprocessables.IncludeType.SYSTEM,
+                        path))
+                .build()));
   }
 
 }

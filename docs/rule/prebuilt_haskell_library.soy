@@ -81,6 +81,14 @@ prebuilt libraries and their associated interface files.
 
 {call haskell_common.exported_linker_flags_arg /}
 
+{call buck.arg}
+  {param name: 'cxxHeaderDirs' /}
+  {param default : '[]' /}
+  {param desc}
+  Directories with C/C++ headers which can be included by dependent C/C++ rules.
+  {/param}
+{/call}
+
 {/param} // close args
 
 {param examples}

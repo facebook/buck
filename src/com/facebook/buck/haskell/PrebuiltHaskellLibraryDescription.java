@@ -16,8 +16,15 @@
 
 package com.facebook.buck.haskell;
 
+import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPreprocessables;
+import com.facebook.buck.cxx.CxxPreprocessorDep;
+import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
+import com.facebook.buck.cxx.HeaderSymlinkTree;
+import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.cxx.ImmutableCxxPreprocessorInputCacheKey;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
@@ -35,6 +42,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -63,6 +71,12 @@ public class PrebuiltHaskellLibraryDescription
       final A args) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     return new PrebuiltHaskellLibrary(params, pathResolver) {
+
+      private final LoadingCache<
+                  CxxPreprocessables.CxxPreprocessorInputCacheKey,
+                  ImmutableMap<BuildTarget, CxxPreprocessorInput>
+              > transitiveCxxPreprocessorInputCache =
+          CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
       @Override
       public HaskellCompileInput getCompileInput(
@@ -117,6 +131,39 @@ public class PrebuiltHaskellLibraryDescription
         return args.sharedLibs.or(ImmutableMap.<String, SourcePath>of());
       }
 
+      @Override
+      public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(
+          CxxPlatform cxxPlatform) {
+        return FluentIterable.from(getDeps())
+            .filter(CxxPreprocessorDep.class);
+      }
+
+      @Override
+      public Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(CxxPlatform cxxPlatform) {
+        return Optional.absent();
+      }
+
+      @Override
+      public CxxPreprocessorInput getCxxPreprocessorInput(
+          CxxPlatform cxxPlatform,
+          HeaderVisibility headerVisibility)
+          throws NoSuchBuildTargetException {
+        CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
+        for (SourcePath headerDir : args.cxxHeaderDirs.or(ImmutableSortedSet.<SourcePath>of())) {
+          builder.addIncludes(CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, headerDir));
+        }
+        return builder.build();
+      }
+
+      @Override
+      public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+          CxxPlatform cxxPlatform,
+          HeaderVisibility headerVisibility)
+          throws NoSuchBuildTargetException {
+        return transitiveCxxPreprocessorInputCache.getUnchecked(
+            ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
+      }
+
     };
   }
 
@@ -129,6 +176,7 @@ public class PrebuiltHaskellLibraryDescription
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<ImmutableList<String>> exportedLinkerFlags;
     public Optional<ImmutableList<String>> exportedCompilerFlags;
+    public Optional<ImmutableSortedSet<SourcePath>> cxxHeaderDirs;
   }
 
 }

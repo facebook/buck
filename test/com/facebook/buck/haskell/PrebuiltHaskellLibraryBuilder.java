@@ -63,6 +63,12 @@ public class PrebuiltHaskellLibraryBuilder
     return this;
   }
 
+  public PrebuiltHaskellLibraryBuilder setCxxHeaderDirs(
+      ImmutableSortedSet<SourcePath> cxxHeaderDirs) {
+    arg.cxxHeaderDirs = Optional.of(cxxHeaderDirs);
+    return this;
+  }
+
   public PrebuiltHaskellLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
     arg.deps = Optional.of(deps);
     return this;
