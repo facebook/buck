@@ -38,7 +38,7 @@ public class SegmentCommandTest {
     ByteBuffer byteBuffer = bufferWithBytes(SegmentCommandTestData.getBigEndian64Bits(), 10);
     byteBuffer.order(ByteOrder.BIG_ENDIAN);
     SegmentCommand command = SegmentCommandUtils.createFromBuffer(byteBuffer);
-    assertThat(command.getLoadCommand().getOffsetInBinary(), equalTo(10));
+    assertThat(command.getLoadCommandCommonFields().getOffsetInBinary(), equalTo(10));
     SegmentCommandTestData.checkValues(command, true);
   }
 
@@ -47,7 +47,7 @@ public class SegmentCommandTest {
     ByteBuffer byteBuffer = bufferWithBytes(SegmentCommandTestData.getBigEndian32Bits(), 10);
     byteBuffer.order(ByteOrder.BIG_ENDIAN);
     SegmentCommand command = SegmentCommandUtils.createFromBuffer(byteBuffer);
-    assertThat(command.getLoadCommand().getOffsetInBinary(), equalTo(10));
+    assertThat(command.getLoadCommandCommonFields().getOffsetInBinary(), equalTo(10));
     SegmentCommandTestData.checkValues(command, false);
   }
 
@@ -56,7 +56,7 @@ public class SegmentCommandTest {
     ByteBuffer byteBuffer = bufferWithBytes(SegmentCommandTestData.getLittleEndian64Bits(), 10);
     byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
     SegmentCommand command = SegmentCommandUtils.createFromBuffer(byteBuffer);
-    assertThat(command.getLoadCommand().getOffsetInBinary(), equalTo(10));
+    assertThat(command.getLoadCommandCommonFields().getOffsetInBinary(), equalTo(10));
     SegmentCommandTestData.checkValues(command, true);
   }
 
@@ -65,7 +65,7 @@ public class SegmentCommandTest {
     ByteBuffer byteBuffer = bufferWithBytes(SegmentCommandTestData.getLittleEndian32Bits(), 10);
     byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
     SegmentCommand command = SegmentCommandUtils.createFromBuffer(byteBuffer);
-    assertThat(command.getLoadCommand().getOffsetInBinary(), equalTo(10));
+    assertThat(command.getLoadCommandCommonFields().getOffsetInBinary(), equalTo(10));
     SegmentCommandTestData.checkValues(command, false);
   }
 }

@@ -21,6 +21,7 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractUnknownCommand {
-  public abstract LoadCommand getLoadCommand();
+abstract class AbstractUnknownCommand implements LoadCommand {
+  @Override
+  public abstract LoadCommandCommonFields getLoadCommandCommonFields();
 }

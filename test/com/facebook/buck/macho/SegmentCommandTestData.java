@@ -137,11 +137,15 @@ public class SegmentCommandTestData {
 
   public static void checkValues(SegmentCommand command, boolean is64Bit) {
     if (is64Bit) {
-      assertThat(command.getLoadCommand().getCmd(), equalToObject(SegmentCommand.LC_SEGMENT_64));
-      assertThat(command.getLoadCommand().getCmdsize().intValue(), equalTo(72));
+      assertThat(
+          command.getLoadCommandCommonFields().getCmd(),
+          equalToObject(SegmentCommand.LC_SEGMENT_64));
+      assertThat(command.getLoadCommandCommonFields().getCmdsize().intValue(), equalTo(72));
     } else {
-      assertThat(command.getLoadCommand().getCmd(), equalToObject(SegmentCommand.LC_SEGMENT));
-      assertThat(command.getLoadCommand().getCmdsize().intValue(), equalTo(56));
+      assertThat(
+          command.getLoadCommandCommonFields().getCmd(),
+          equalToObject(SegmentCommand.LC_SEGMENT));
+      assertThat(command.getLoadCommandCommonFields().getCmdsize().intValue(), equalTo(56));
     }
 
     assertThat(command.getSegname(), equalToObject("SEGNAME"));

@@ -26,7 +26,7 @@ public class UUIDCommandUtils {
   private UUIDCommandUtils() {}
 
   public static UUIDCommand createFromBuffer(ByteBuffer buffer) {
-    LoadCommand loadCommand = LoadCommandUtils.createFromBuffer(buffer);
+    LoadCommandCommonFields fields = LoadCommandCommonFieldsUtils.createFromBuffer(buffer);
 
     ByteOrder order = buffer.order();
     buffer.order(ByteOrder.BIG_ENDIAN);
@@ -35,11 +35,11 @@ public class UUIDCommandUtils {
     buffer.order(order);
     UUID uuid = new UUID(high, low);
 
-    return UUIDCommand.of(loadCommand, uuid);
+    return UUIDCommand.of(fields, uuid);
   }
 
   public static void writeCommandToBuffer(UUIDCommand command, ByteBuffer buffer) {
-    LoadCommandUtils.writeCommandToBuffer(command.getLoadCommand(), buffer);
+    LoadCommandCommonFieldsUtils.writeCommandToBuffer(command.getLoadCommandCommonFields(), buffer);
 
     ByteBuffer uuidBuffer = ByteBuffer.allocate(16).order(ByteOrder.BIG_ENDIAN);
     uuidBuffer
@@ -52,9 +52,9 @@ public class UUIDCommandUtils {
   public static void updateUuidCommand(ByteBuffer buffer, UUIDCommand old, UUIDCommand updated)
       throws IOException {
     Preconditions.checkArgument(
-        old.getLoadCommand().getOffsetInBinary() ==
-            updated.getLoadCommand().getOffsetInBinary());
-    buffer.position(updated.getLoadCommand().getOffsetInBinary());
+        old.getLoadCommandCommonFields().getOffsetInBinary() ==
+            updated.getLoadCommandCommonFields().getOffsetInBinary());
+    buffer.position(updated.getLoadCommandCommonFields().getOffsetInBinary());
     writeCommandToBuffer(updated, buffer);
   }
 }

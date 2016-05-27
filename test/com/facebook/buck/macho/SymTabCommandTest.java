@@ -49,10 +49,12 @@ public class SymTabCommandTest {
         .wrap(SymTabCommandTestData.getBigEndian())
         .order(ByteOrder.BIG_ENDIAN);
     SymTabCommand command = SymTabCommandUtils.createFromBuffer(buffer);
-    ByteBuffer bigEndian = ByteBuffer.allocate(command.getLoadCommand().getCmdsize().intValue())
+    ByteBuffer bigEndian = ByteBuffer
+        .allocate(command.getLoadCommandCommonFields().getCmdsize().intValue())
         .order(ByteOrder.BIG_ENDIAN);
     SymTabCommandUtils.writeCommandToBuffer(command, bigEndian);
-    ByteBuffer littleEndian = ByteBuffer.allocate(command.getLoadCommand().getCmdsize().intValue())
+    ByteBuffer littleEndian = ByteBuffer
+        .allocate(command.getLoadCommandCommonFields().getCmdsize().intValue())
         .order(ByteOrder.LITTLE_ENDIAN);
     SymTabCommandUtils.writeCommandToBuffer(command, littleEndian);
 
@@ -66,10 +68,12 @@ public class SymTabCommandTest {
         .wrap(SymTabCommandTestData.getLittleEndian())
         .order(ByteOrder.LITTLE_ENDIAN);
     SymTabCommand command = SymTabCommandUtils.createFromBuffer(buffer);
-    ByteBuffer bigEndian = ByteBuffer.allocate(command.getLoadCommand().getCmdsize().intValue())
+    ByteBuffer bigEndian = ByteBuffer
+        .allocate(command.getLoadCommandCommonFields().getCmdsize().intValue())
         .order(ByteOrder.BIG_ENDIAN);
     SymTabCommandUtils.writeCommandToBuffer(command, bigEndian);
-    ByteBuffer littleEndian = ByteBuffer.allocate(command.getLoadCommand().getCmdsize().intValue())
+    ByteBuffer littleEndian = ByteBuffer
+        .allocate(command.getLoadCommandCommonFields().getCmdsize().intValue())
         .order(ByteOrder.LITTLE_ENDIAN);
     SymTabCommandUtils.writeCommandToBuffer(command, littleEndian);
     assertThat(SymTabCommandTestData.getLittleEndian(), equalTo(littleEndian.array()));

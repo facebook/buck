@@ -100,7 +100,7 @@ public class SegmentCommandUtilsTest {
         ByteBuffer.wrap(segmentBytes).order(ByteOrder.BIG_ENDIAN));
 
     ByteBuffer buffer = ByteBuffer.allocate(
-        command.getLoadCommand().getCmdsize().intValue() + 3 * sectionSize);
+        command.getLoadCommandCommonFields().getCmdsize().intValue() + 3 * sectionSize);
     buffer.order(ByteOrder.BIG_ENDIAN);
     SegmentCommandUtils.writeCommandToBuffer(command, buffer, true);
     buffer.put(sectionData1);
@@ -165,7 +165,7 @@ public class SegmentCommandUtilsTest {
         ByteBuffer.wrap(segmentBytes).order(ByteOrder.BIG_ENDIAN));
 
     ByteBuffer buffer = ByteBuffer.allocate(
-        command.getLoadCommand().getCmdsize().intValue() + 3 * sectionSize);
+        command.getLoadCommandCommonFields().getCmdsize().intValue() + 3 * sectionSize);
     buffer.order(ByteOrder.BIG_ENDIAN);
     SegmentCommandUtils.writeCommandToBuffer(command, buffer, false);
     buffer.put(sectionData1);

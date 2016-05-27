@@ -53,8 +53,10 @@ public class SymTabCommandTestData {
   }
 
   public static void checkValues(SymTabCommand command) {
-    assertThat(command.getLoadCommand().getCmd(), equalToObject(UnsignedInteger.fromIntBits(0x2)));
-    assertThat(command.getLoadCommand().getCmdsize(),
+    assertThat(
+        command.getLoadCommandCommonFields().getCmd(),
+        equalToObject(UnsignedInteger.fromIntBits(0x2)));
+    assertThat(command.getLoadCommandCommonFields().getCmdsize(),
         equalToObject(UnsignedInteger.fromIntBits(0x18)));
     assertThat(command.getSymoff(), equalToObject(UnsignedInteger.fromIntBits(0x10)));
     assertThat(command.getNsyms(), equalToObject(UnsignedInteger.fromIntBits(0x20)));

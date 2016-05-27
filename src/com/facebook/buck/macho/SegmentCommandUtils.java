@@ -74,12 +74,15 @@ public class SegmentCommandUtils {
       SegmentCommand updated,
       boolean is64Bit) throws IOException {
     Preconditions.checkArgument(
-        old.getLoadCommand().getOffsetInBinary() == updated.getLoadCommand().getOffsetInBinary());
+        old.getLoadCommandCommonFields().getOffsetInBinary() ==
+            updated.getLoadCommandCommonFields().getOffsetInBinary());
     Preconditions.checkArgument(
-        old.getLoadCommand().getCmd().equals(updated.getLoadCommand().getCmd()));
+        old.getLoadCommandCommonFields().getCmd().equals(
+            updated.getLoadCommandCommonFields().getCmd()));
     Preconditions.checkArgument(
-        old.getLoadCommand().getCmdsize().equals(updated.getLoadCommand().getCmdsize()));
-    buffer.position(old.getLoadCommand().getOffsetInBinary());
+        old.getLoadCommandCommonFields().getCmdsize().equals(
+            updated.getLoadCommandCommonFields().getCmdsize()));
+    buffer.position(old.getLoadCommandCommonFields().getOffsetInBinary());
     writeCommandToBuffer(updated, buffer, is64Bit);
   }
 
@@ -100,8 +103,8 @@ public class SegmentCommandUtils {
       SegmentCommand segmentCommand,
       Function<Section, Boolean> callback) throws IOException {
     final int sectionHeaderSize = SectionUtils.sizeOfSectionHeader(magicInfo.is64Bit());
-    final int sectionsOffset = segmentCommand.getLoadCommand().getOffsetInBinary() +
-        segmentCommand.getLoadCommand().getCmdsize().intValue();
+    final int sectionsOffset = segmentCommand.getLoadCommandCommonFields().getOffsetInBinary() +
+        segmentCommand.getLoadCommandCommonFields().getCmdsize().intValue();
     for (int i = 0; i < segmentCommand.getNsects().intValue(); i++) {
       int offsetInBinary = sectionsOffset + sectionHeaderSize * i;
       buffer.position(offsetInBinary);
@@ -115,11 +118,11 @@ public class SegmentCommandUtils {
 
   @SuppressWarnings("PMD.PrematureDeclaration")
   public static SegmentCommand createFromBuffer(ByteBuffer buffer) {
-    LoadCommand loadCommand = LoadCommandUtils.createFromBuffer(buffer);
+    LoadCommandCommonFields fields = LoadCommandCommonFieldsUtils.createFromBuffer(buffer);
     Preconditions.checkArgument(
-        loadCommand.getCmd().equals(SegmentCommand.LC_SEGMENT) ||
-            loadCommand.getCmd().equals(SegmentCommand.LC_SEGMENT_64));
-    boolean is64Bit = loadCommand.getCmd().equals(SegmentCommand.LC_SEGMENT_64);
+        fields.getCmd().equals(SegmentCommand.LC_SEGMENT) ||
+            fields.getCmd().equals(SegmentCommand.LC_SEGMENT_64));
+    boolean is64Bit = fields.getCmd().equals(SegmentCommand.LC_SEGMENT_64);
 
     String segname = null;
     try {
@@ -127,14 +130,14 @@ public class SegmentCommandUtils {
     } catch (CharacterCodingException e) {
       throw new HumanReadableException(
           e,
-          "Cannot read segname for SegmentCommand at %d", loadCommand.getOffsetInBinary());
+          "Cannot read segname for SegmentCommand at %d", fields.getOffsetInBinary());
     }
     buffer.position(
-        loadCommand.getOffsetInBinary() +
-        LoadCommand.CMD_AND_CMDSIZE_SIZE +
+        fields.getOffsetInBinary() +
+        LoadCommandCommonFields.CMD_AND_CMDSIZE_SIZE +
         SegmentCommand.SEGNAME_SIZE_IN_BYTES);
     return SegmentCommand.of(
-        loadCommand,
+        fields,
         segname,
         UnsignedLong.fromLongBits(is64Bit ? buffer.getLong() : buffer.getInt() & 0xFFFFFFFFL),
         UnsignedLong.fromLongBits(is64Bit ? buffer.getLong() : buffer.getInt() & 0xFFFFFFFFL),
@@ -150,7 +153,7 @@ public class SegmentCommandUtils {
       SegmentCommand command,
       ByteBuffer buffer,
       boolean is64Bit) {
-    LoadCommandUtils.writeCommandToBuffer(command.getLoadCommand(), buffer);
+    LoadCommandCommonFieldsUtils.writeCommandToBuffer(command.getLoadCommandCommonFields(), buffer);
     byte[] segnameStringBytes = command.getSegname().getBytes(StandardCharsets.UTF_8);
     buffer
         .put(segnameStringBytes)

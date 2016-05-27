@@ -22,7 +22,7 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
-interface AbstractLoadCommand {
+interface AbstractLoadCommandCommonFields {
   public int getOffsetInBinary();
   public UnsignedInteger getCmd();        // 32 bit
   public UnsignedInteger getCmdsize();    // 32 bit

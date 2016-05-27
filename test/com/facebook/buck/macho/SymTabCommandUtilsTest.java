@@ -263,7 +263,7 @@ public class SymTabCommandUtilsTest {
             UnsignedInteger.fromIntBits(
                 SymTabCommandUtils.sizeOfStringTableEntryWithContents(content)))));
 
-    byteBuffer.position(updated.getLoadCommand().getOffsetInBinary());
+    byteBuffer.position(updated.getLoadCommandCommonFields().getOffsetInBinary());
 
     byte[] updatedBytes = new byte[commandBytes.length];
     byteBuffer.get(updatedBytes, 0, updatedBytes.length);

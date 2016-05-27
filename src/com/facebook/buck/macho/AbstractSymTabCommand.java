@@ -23,11 +23,12 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractSymTabCommand {
+abstract class AbstractSymTabCommand implements LoadCommand {
   public static final UnsignedInteger LC_SYMTAB = UnsignedInteger.fromIntBits(0x2);
   public static final int SIZE_IN_BYTES = 24;
 
-  public abstract LoadCommand getLoadCommand();
+  @Override
+  public abstract LoadCommandCommonFields getLoadCommandCommonFields();
   public abstract UnsignedInteger getSymoff();      // 32 bit
   public abstract UnsignedInteger getNsyms();       // 32 bit
   public abstract UnsignedInteger getStroff();      // 32 bit
@@ -35,8 +36,8 @@ abstract class AbstractSymTabCommand {
 
   @Value.Check
   protected void check() {
-    Preconditions.checkArgument(getLoadCommand().getCmd().equals(LC_SYMTAB));
-    Preconditions.checkArgument(getLoadCommand().getCmdsize().equals(
+    Preconditions.checkArgument(getLoadCommandCommonFields().getCmd().equals(LC_SYMTAB));
+    Preconditions.checkArgument(getLoadCommandCommonFields().getCmdsize().equals(
         UnsignedInteger.fromIntBits(SIZE_IN_BYTES)));
   }
 }

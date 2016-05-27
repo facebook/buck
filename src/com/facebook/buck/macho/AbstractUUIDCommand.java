@@ -25,17 +25,18 @@ import java.util.UUID;
 
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractUUIDCommand {
+abstract class AbstractUUIDCommand implements LoadCommand {
   public static final UnsignedInteger LC_UUID = UnsignedInteger.fromIntBits(0x1b);
-  public static final int SIZE_IN_BYTES = LoadCommand.CMD_AND_CMDSIZE_SIZE + 16;
+  public static final int SIZE_IN_BYTES = LoadCommandCommonFields.CMD_AND_CMDSIZE_SIZE + 16;
 
-  public abstract LoadCommand getLoadCommand();
+  @Override
+  public abstract LoadCommandCommonFields getLoadCommandCommonFields();
   public abstract UUID getUuid();
 
   @Value.Check
   protected void check() {
-    Preconditions.checkArgument(getLoadCommand().getCmd().equals(LC_UUID));
-    Preconditions.checkArgument(getLoadCommand().getCmdsize().equals(
+    Preconditions.checkArgument(getLoadCommandCommonFields().getCmd().equals(LC_UUID));
+    Preconditions.checkArgument(getLoadCommandCommonFields().getCmdsize().equals(
         UnsignedInteger.fromIntBits(SIZE_IN_BYTES)));
   }
 }

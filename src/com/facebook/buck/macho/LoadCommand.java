@@ -15,12 +15,10 @@
  */
 package com.facebook.buck.macho;
 
-import java.nio.ByteBuffer;
-
-public class UnknownCommandUtils {
-  private UnknownCommandUtils() {}
-
-  public static UnknownCommand createFromBuffer(ByteBuffer buffer) {
-    return UnknownCommand.of(LoadCommandCommonFieldsUtils.createFromBuffer(buffer));
-  }
+/**
+ * Mach O Load Command struct just defines 2 fields - cmd and cmdsize. They are represented by
+ * LoadCommandCommonFields interface. Load Command is expected to contain at least these fields.
+ */
+public interface LoadCommand {
+  public LoadCommandCommonFields getLoadCommandCommonFields();
 }

@@ -16,7 +16,6 @@
 package com.facebook.buck.macho;
 
 import com.google.common.base.Function;
-import com.google.common.primitives.UnsignedInteger;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -24,34 +23,15 @@ import java.nio.ByteBuffer;
 public class LoadCommandUtils {
   private LoadCommandUtils() {}
 
-  public static LoadCommand createFromBuffer(ByteBuffer buffer) {
-    return LoadCommand.of(
-        buffer.position(),
-        UnsignedInteger.fromIntBits(buffer.getInt()),
-        UnsignedInteger.fromIntBits(buffer.getInt()));
-  }
-
   /**
    * This is a kind of umbrella method that returns you LoadCommand object depending on the contents
    * of the given bytes array.
-   * @param buffer Buffer which contains at least values for the LoadCommandCommonMethods fields,
+   * @param buffer Buffer which contains at least values for the LoadCommand fields,
    *               positioned at the first byte of the command (cmd field)
-   * @return LoadCommand that is suitable to handle the given bytes array.
+   * @return LoadCommandCommonFields that is suitable to handle the given bytes array.
    */
   public static LoadCommand createLoadCommandFromBuffer(ByteBuffer buffer) throws IOException {
-    return createFromBuffer(buffer);
-  }
-
-
-  /**
-   * Writes a byte representation of the load command into the given buffer.
-   * @param command LoadCommand to write into the buffer.
-   * @param buffer ByteBuffer, positioned and prepared to accept new data.
-   */
-  public static void writeCommandToBuffer(LoadCommand command, ByteBuffer buffer) {
-    buffer
-        .putInt(command.getCmd().intValue())
-        .putInt(command.getCmdsize().intValue());
+    return UnknownCommandUtils.createFromBuffer(buffer);
   }
 
   /**
@@ -73,10 +53,10 @@ public class LoadCommandUtils {
     for (int i = 0; i < header.getNcmds().intValue(); i++) {
       buffer.position(firstCommandOffset + relativeCommandOffset);
       LoadCommand command = LoadCommandUtils.createLoadCommandFromBuffer(buffer);
-      if (!callback.apply(command).booleanValue()) {
+      if (!callback.apply(command)) {
         break;
       }
-      relativeCommandOffset += command.getCmdsize().intValue();
+      relativeCommandOffset += command.getLoadCommandCommonFields().getCmdsize().intValue();
     }
   }
 }

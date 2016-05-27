@@ -30,7 +30,7 @@ public class SymTabCommandUtils {
 
   public static SymTabCommand createFromBuffer(ByteBuffer buffer) {
     return SymTabCommand.of(
-        LoadCommandUtils.createFromBuffer(buffer),
+        LoadCommandCommonFieldsUtils.createFromBuffer(buffer),
         UnsignedInteger.fromIntBits(buffer.getInt()),
         UnsignedInteger.fromIntBits(buffer.getInt()),
         UnsignedInteger.fromIntBits(buffer.getInt()),
@@ -38,7 +38,7 @@ public class SymTabCommandUtils {
   }
 
   public static void writeCommandToBuffer(SymTabCommand command, ByteBuffer buffer) {
-    LoadCommandUtils.writeCommandToBuffer(command.getLoadCommand(), buffer);
+    LoadCommandCommonFieldsUtils.writeCommandToBuffer(command.getLoadCommandCommonFields(), buffer);
     buffer
         .putInt(command.getSymoff().intValue())
         .putInt(command.getNsyms().intValue())
@@ -153,16 +153,16 @@ public class SymTabCommandUtils {
       SymTabCommand command,
       SymTabCommand updatedCommand) throws IOException {
     Preconditions.checkArgument(
-        command.getLoadCommand().getOffsetInBinary() ==
-            updatedCommand.getLoadCommand().getOffsetInBinary());
+        command.getLoadCommandCommonFields().getOffsetInBinary() ==
+            updatedCommand.getLoadCommandCommonFields().getOffsetInBinary());
     Preconditions.checkArgument(
-        command.getLoadCommand().getCmd().equals(
-            updatedCommand.getLoadCommand().getCmd()));
+        command.getLoadCommandCommonFields().getCmd().equals(
+            updatedCommand.getLoadCommandCommonFields().getCmd()));
     Preconditions.checkArgument(
-        command.getLoadCommand().getCmdsize().equals(
-            updatedCommand.getLoadCommand().getCmdsize()));
+        command.getLoadCommandCommonFields().getCmdsize().equals(
+            updatedCommand.getLoadCommandCommonFields().getCmdsize()));
 
-    buffer.position(command.getLoadCommand().getOffsetInBinary());
+    buffer.position(command.getLoadCommandCommonFields().getOffsetInBinary());
     writeCommandToBuffer(updatedCommand, buffer);
   }
 

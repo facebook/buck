@@ -26,16 +26,17 @@ import java.nio.charset.StandardCharsets;
 
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractSegmentCommand {
+abstract class AbstractSegmentCommand implements LoadCommand {
   public static final UnsignedInteger LC_SEGMENT = UnsignedInteger.fromIntBits(0x1);
   public static final UnsignedInteger LC_SEGMENT_64 = UnsignedInteger.fromIntBits(0x19);
   public static final int SEGNAME_SIZE_IN_BYTES = 16;
   public static final int SIZE_IN_BYTES_32_BIT =
-      LoadCommand.CMD_AND_CMDSIZE_SIZE + SEGNAME_SIZE_IN_BYTES + 32;
+      LoadCommandCommonFields.CMD_AND_CMDSIZE_SIZE + SEGNAME_SIZE_IN_BYTES + 32;
   public static final int SIZE_IN_BYTES_64_BIT =
-      LoadCommand.CMD_AND_CMDSIZE_SIZE + SEGNAME_SIZE_IN_BYTES + 48;
+      LoadCommandCommonFields.CMD_AND_CMDSIZE_SIZE + SEGNAME_SIZE_IN_BYTES + 48;
 
-  public abstract LoadCommand getLoadCommand();
+  @Override
+  public abstract LoadCommandCommonFields getLoadCommandCommonFields();
 
   public abstract String getSegname();            // 128 bit / 16 bytes
   public abstract UnsignedLong getVmaddr();       // 32 bit on 32 bit arch / 64 bit on 64 bit arch
@@ -50,10 +51,10 @@ abstract class AbstractSegmentCommand {
   @Value.Check
   protected void check() {
     Preconditions.checkArgument(
-        (getLoadCommand().getCmd().equals(LC_SEGMENT) &&
-            getLoadCommand().getCmdsize().intValue() >= SIZE_IN_BYTES_32_BIT) ||
-            (getLoadCommand().getCmd().equals(LC_SEGMENT_64) &&
-                getLoadCommand().getCmdsize().intValue() >= SIZE_IN_BYTES_64_BIT));
+        (getLoadCommandCommonFields().getCmd().equals(LC_SEGMENT) &&
+            getLoadCommandCommonFields().getCmdsize().intValue() >= SIZE_IN_BYTES_32_BIT) ||
+            (getLoadCommandCommonFields().getCmd().equals(LC_SEGMENT_64) &&
+                getLoadCommandCommonFields().getCmdsize().intValue() >= SIZE_IN_BYTES_64_BIT));
     Preconditions.checkArgument(
         getSegname().getBytes(StandardCharsets.UTF_8).length + 1 <= SEGNAME_SIZE_IN_BYTES);
   }

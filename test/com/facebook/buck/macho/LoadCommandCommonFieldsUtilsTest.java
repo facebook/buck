@@ -27,10 +27,10 @@ import org.junit.Test;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class LoadCommandTest {
+public class LoadCommandCommonFieldsUtilsTest {
   @Test
   public void testCanCreate() {
-    LoadCommand command = LoadCommand.of(
+    LoadCommandCommonFields command = LoadCommandCommonFields.of(
         123,
         UnsignedInteger.fromIntBits(111),
         UnsignedInteger.fromIntBits(222));
@@ -45,15 +45,15 @@ public class LoadCommandTest {
 
     ByteBuffer buffer = ByteBuffer.wrap(commandBytes).order(ByteOrder.BIG_ENDIAN);
     buffer.position(2);
-    LoadCommand command = LoadCommandUtils.createFromBuffer(buffer);
-    assertThat(command.getCmd(), equalToObject(UnsignedInteger.fromIntBits(0xAA)));
-    assertThat(command.getCmdsize(), equalToObject(UnsignedInteger.fromIntBits(0x08)));
-    assertThat(command.getOffsetInBinary(), equalTo(2));
+    LoadCommandCommonFields fields = LoadCommandCommonFieldsUtils.createFromBuffer(buffer);
+    assertThat(fields.getCmd(), equalToObject(UnsignedInteger.fromIntBits(0xAA)));
+    assertThat(fields.getCmdsize(), equalToObject(UnsignedInteger.fromIntBits(0x08)));
+    assertThat(fields.getOffsetInBinary(), equalTo(2));
   }
 
   @Test
   public void testGetBytes() {
-    LoadCommand command = LoadCommand.of(
+    LoadCommandCommonFields fields = LoadCommandCommonFields.of(
         1,
         UnsignedInteger.fromIntBits(2),
         UnsignedInteger.fromIntBits(3));
@@ -62,9 +62,9 @@ public class LoadCommandTest {
     byte[] expectedSwapped = BaseEncoding.base16().decode("0200000003000000");
 
     ByteBuffer bigEndian = ByteBuffer.allocate(expected.length).order(ByteOrder.BIG_ENDIAN);
-    LoadCommandUtils.writeCommandToBuffer(command, bigEndian);
+    LoadCommandCommonFieldsUtils.writeCommandToBuffer(fields, bigEndian);
     ByteBuffer littleEndian = ByteBuffer.allocate(expected.length).order(ByteOrder.LITTLE_ENDIAN);
-    LoadCommandUtils.writeCommandToBuffer(command, littleEndian);
+    LoadCommandCommonFieldsUtils.writeCommandToBuffer(fields, littleEndian);
 
     assertThat(bigEndian.array(), equalTo(expected));
     assertThat(littleEndian.array(), equalTo(expectedSwapped));

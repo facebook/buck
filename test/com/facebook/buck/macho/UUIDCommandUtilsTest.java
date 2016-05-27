@@ -36,14 +36,15 @@ public class UUIDCommandUtilsTest {
     UUIDCommand updated = command.withUuid(newValue);
 
     ByteBuffer buffer = ByteBuffer
-        .allocate(command.getLoadCommand().getCmdsize().intValue())
+        .allocate(command.getLoadCommandCommonFields().getCmdsize().intValue())
         .order(ByteOrder.BIG_ENDIAN);
     UUIDCommandUtils.updateUuidCommand(buffer, command, updated);
 
     buffer.position(0);
     UUIDCommand fromBuffer = UUIDCommandUtils.createFromBuffer(buffer);
 
-    ByteBuffer newBuffer = ByteBuffer.allocate(fromBuffer.getLoadCommand().getCmdsize().intValue())
+    ByteBuffer newBuffer = ByteBuffer
+        .allocate(fromBuffer.getLoadCommandCommonFields().getCmdsize().intValue())
         .order(ByteOrder.BIG_ENDIAN);
     UUIDCommandUtils.writeCommandToBuffer(fromBuffer, newBuffer);
 
@@ -82,10 +83,12 @@ public class UUIDCommandUtilsTest {
     UUIDCommand command = UUIDCommandUtils.createFromBuffer(
         ByteBuffer.wrap(UUIDCommandTestData.getBigEndian()).order(ByteOrder.BIG_ENDIAN));
 
-    ByteBuffer bigEndian = ByteBuffer.allocate(command.getLoadCommand().getCmdsize().intValue())
+    ByteBuffer bigEndian = ByteBuffer
+        .allocate(command.getLoadCommandCommonFields().getCmdsize().intValue())
         .order(ByteOrder.BIG_ENDIAN);
     UUIDCommandUtils.writeCommandToBuffer(command, bigEndian);
-    ByteBuffer littleEndian = ByteBuffer.allocate(command.getLoadCommand().getCmdsize().intValue())
+    ByteBuffer littleEndian = ByteBuffer
+        .allocate(command.getLoadCommandCommonFields().getCmdsize().intValue())
         .order(ByteOrder.LITTLE_ENDIAN);
     UUIDCommandUtils.writeCommandToBuffer(command, littleEndian);
 
@@ -98,10 +101,12 @@ public class UUIDCommandUtilsTest {
     UUIDCommand command = UUIDCommandUtils.createFromBuffer(
         ByteBuffer.wrap(UUIDCommandTestData.getLittleEndian()).order(ByteOrder.LITTLE_ENDIAN));
 
-    ByteBuffer bigEndian = ByteBuffer.allocate(command.getLoadCommand().getCmdsize().intValue())
+    ByteBuffer bigEndian = ByteBuffer
+        .allocate(command.getLoadCommandCommonFields().getCmdsize().intValue())
         .order(ByteOrder.BIG_ENDIAN);
     UUIDCommandUtils.writeCommandToBuffer(command, bigEndian);
-    ByteBuffer littleEndian = ByteBuffer.allocate(command.getLoadCommand().getCmdsize().intValue())
+    ByteBuffer littleEndian = ByteBuffer
+        .allocate(command.getLoadCommandCommonFields().getCmdsize().intValue())
         .order(ByteOrder.LITTLE_ENDIAN);
     UUIDCommandUtils.writeCommandToBuffer(command, littleEndian);
 

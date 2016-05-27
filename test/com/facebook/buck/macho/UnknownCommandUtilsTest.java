@@ -37,11 +37,11 @@ public class UnknownCommandUtilsTest {
     buffer.position(2);
     UnknownCommand command = UnknownCommandUtils.createFromBuffer(buffer);
     assertThat(
-        command.getLoadCommand().getCmd(),
+        command.getLoadCommandCommonFields().getCmd(),
         equalToObject(UnsignedInteger.fromIntBits(0xAA)));
     assertThat(
-        command.getLoadCommand().getCmdsize(),
+        command.getLoadCommandCommonFields().getCmdsize(),
         equalToObject(UnsignedInteger.fromIntBits(0x08)));
-    assertThat(command.getLoadCommand().getOffsetInBinary(), equalTo(2));
+    assertThat(command.getLoadCommandCommonFields().getOffsetInBinary(), equalTo(2));
   }
 }

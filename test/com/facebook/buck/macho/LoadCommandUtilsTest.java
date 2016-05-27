@@ -60,10 +60,18 @@ public class LoadCommandUtilsTest {
 
     assertThat(result.size(), equalTo(2));
 
-    assertThat(result.get(0).getCmd(), equalTo(UnsignedInteger.fromIntBits(0xAA)));
-    assertThat(result.get(0).getCmdsize(), equalTo(UnsignedInteger.fromIntBits(0x08)));
+    assertThat(
+        result.get(0).getLoadCommandCommonFields().getCmd(),
+        equalTo(UnsignedInteger.fromIntBits(0xAA)));
+    assertThat(
+        result.get(0).getLoadCommandCommonFields().getCmdsize(),
+        equalTo(UnsignedInteger.fromIntBits(0x08)));
 
-    assertThat(result.get(1).getCmd(), equalTo(UnsignedInteger.fromIntBits(0xBB)));
-    assertThat(result.get(1).getCmdsize(), equalTo(UnsignedInteger.fromIntBits(0x08)));
+    assertThat(
+        result.get(1).getLoadCommandCommonFields().getCmd(),
+        equalTo(UnsignedInteger.fromIntBits(0xBB)));
+    assertThat(
+        result.get(1).getLoadCommandCommonFields().getCmdsize(),
+        equalTo(UnsignedInteger.fromIntBits(0x08)));
   }
 }
