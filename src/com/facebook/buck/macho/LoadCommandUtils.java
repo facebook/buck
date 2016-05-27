@@ -16,6 +16,7 @@
 package com.facebook.buck.macho;
 
 import com.google.common.base.Function;
+import com.google.common.primitives.UnsignedInteger;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -31,7 +32,19 @@ public class LoadCommandUtils {
    * @return LoadCommandCommonFields that is suitable to handle the given bytes array.
    */
   public static LoadCommand createLoadCommandFromBuffer(ByteBuffer buffer) throws IOException {
-    return UnknownCommandUtils.createFromBuffer(buffer);
+    int position = buffer.position();
+    UnsignedInteger cmd = UnsignedInteger.fromIntBits(buffer.getInt());
+    buffer.position(position);
+
+    if (cmd.equals(SegmentCommand.LC_SEGMENT) || cmd.equals(SegmentCommand.LC_SEGMENT_64)) {
+      return SegmentCommandUtils.createFromBuffer(buffer);
+    } else if (cmd.equals(SymTabCommand.LC_SYMTAB)) {
+      return SymTabCommandUtils.createFromBuffer(buffer);
+    } else if (cmd.equals(UUIDCommand.LC_UUID)) {
+      return UUIDCommandUtils.createFromBuffer(buffer);
+    } else {
+      return UnknownCommandUtils.createFromBuffer(buffer);
+    }
   }
 
   /**

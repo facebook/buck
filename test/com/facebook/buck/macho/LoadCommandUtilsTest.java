@@ -16,6 +16,7 @@
 package com.facebook.buck.macho;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.base.Function;
@@ -73,5 +74,39 @@ public class LoadCommandUtilsTest {
     assertThat(
         result.get(1).getLoadCommandCommonFields().getCmdsize(),
         equalTo(UnsignedInteger.fromIntBits(0x08)));
+  }
+
+  @Test
+  public void testCreatingLoadCommandsFromBuffer() throws Exception {
+    byte[] segmentBytes = SegmentCommandTestData.getBigEndian64Bits();
+    byte[] symtabBytes = SymTabCommandTestData.getBigEndian();
+    byte[] uuidBytes = UUIDCommandTestData.getBigEndian();
+    byte[] unknownBytes = {
+        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x99,
+        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x08,
+    };
+
+    ByteBuffer byteBuffer = ByteBuffer
+        .allocate(segmentBytes.length + symtabBytes.length + uuidBytes.length + unknownBytes.length)
+        .order(ByteOrder.BIG_ENDIAN);
+    byteBuffer
+        .put(segmentBytes)
+        .put(symtabBytes)
+        .put(uuidBytes)
+        .put(unknownBytes);
+    byteBuffer.position(0);
+
+    assertThat(
+        LoadCommandUtils.createLoadCommandFromBuffer(byteBuffer),
+        instanceOf(SegmentCommand.class));
+    assertThat(
+        LoadCommandUtils.createLoadCommandFromBuffer(byteBuffer),
+        instanceOf(SymTabCommand.class));
+    assertThat(
+        LoadCommandUtils.createLoadCommandFromBuffer(byteBuffer),
+        instanceOf(UUIDCommand.class));
+    assertThat(
+        LoadCommandUtils.createLoadCommandFromBuffer(byteBuffer),
+        instanceOf(UnknownCommand.class));
   }
 }
