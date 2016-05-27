@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 4d552e238cbb0dfca2120b3b418ba82695910ae4 #@#
+#@# GENERATED FILE: DO NOT MODIFY 6efc69b05d93f9fa409d8336d607373b0c5f4835 #@#
 {
   "artifact_cache" : {
     "deps" : [
@@ -42,7 +42,6 @@
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
-      "//src/com/facebook/buck/artifact_cache:binary_protocol",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/io:io",

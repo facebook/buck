@@ -119,8 +119,8 @@
     <include name="jetty/jetty-all-9.2.10.v20150310.jar" />
     <include name="jimfs/jimfs-1.0.jar" />
     <include name="jsr/javax.inject-1.jar" />
-    <include name="okhttp/okhttp-2.7.4.jar" />
-    <include name="okio/okio-1.6.0.jar" />
+    <include name="okhttp/okhttp-3.3.0.jar" />
+    <include name="okio/okio-1.8.0.jar" />
     <include name="servlet-api/javax.servlet-api-3.1.0.jar" />
     <include name="slf4j/slf4j-jdk14-1.7.5.jar" /><!-- redirect slf4j to java.util.logging -->
     <include name="stringtemplate/ST-4.0.8.jar" />
@@ -191,7 +191,7 @@
   </target>
 
   <!-- Default target so that a command line build can
-       do more than one thing. 
+       do more than one thing.
 
        clear-successful-build must be first, and mark-successful-build last, in the list of dependencies.-->
   <target name="default" depends="clear-successful-build, compile, dx, javac-tracing, report-generator-jar, mark-successful-build" />

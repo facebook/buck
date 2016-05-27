@@ -19,13 +19,13 @@ package com.facebook.buck.slb;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.timing.Clock;
 import com.google.common.collect.ImmutableList;
-import com.squareup.okhttp.Call;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Protocol;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
+import okhttp3.Call;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 import org.easymock.Capture;
 import org.easymock.EasyMock;
@@ -71,7 +71,6 @@ public class ClientSideSlbTest {
     config = ClientSideSlbConfig.builder()
         .setClock(mockClock)
         .setSchedulerService(mockScheduler)
-        .setPingHttpClient(mockClient)
         .setServerPool(SERVERS)
         .setEventBus(mockBus)
         .build();
@@ -90,7 +89,7 @@ public class ClientSideSlbTest {
         .once();
     EasyMock.replay(mockScheduler);
 
-    try (ClientSideSlb slb = new ClientSideSlb(config)) {
+    try (ClientSideSlb slb = new ClientSideSlb(config, mockClient)) {
       Assert.assertTrue(capture.hasCaptured());
     }
 
@@ -122,7 +121,7 @@ public class ClientSideSlbTest {
         .times(SERVERS.size());
     EasyMock.replay(mockClient, mockCall, mockScheduler);
 
-    try (ClientSideSlb slb = new ClientSideSlb(config)) {
+    try (ClientSideSlb slb = new ClientSideSlb(config, mockClient)) {
       Runnable healthCheckLoop = capture.getValue();
       healthCheckLoop.run();
     }

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 0a011c34172967c45850c75f98befcda541afba7 #@#
+#@# GENERATED FILE: DO NOT MODIFY 8e0ca911a59ecf63503fa8f0ca36573a4a08e9e0 #@#
 {
   "distributed" : {
     "deps" : [
@@ -15,6 +15,7 @@
       "//src/com/facebook/buck/slb:slb",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
+      "//third-party/java/okhttp:okhttp",
       "//third-party/java/thrift:libthrift"
     ]
   }

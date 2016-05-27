@@ -19,6 +19,10 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.SlbBuckConfig;
 
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.OkHttpClient;
+
 public class DistBuildConfig {
 
   private static final String CACHE_SECTION_NAME = "distributed_build";
@@ -41,5 +45,13 @@ public class DistBuildConfig {
   public long getFrontendRequestTimeoutMillis() {
     return buckConfig.getLong(CACHE_SECTION_NAME, FRONTEND_REQUEST_TIMEOUT_MILLIS)
         .or(DEFAULT_DEFAULT_REQUEST_TIMEOUT_MILLIS);
+  }
+
+  public OkHttpClient createOkHttpClient() {
+    return new OkHttpClient.Builder()
+        .connectTimeout(getFrontendRequestTimeoutMillis(), TimeUnit.MILLISECONDS)
+        .readTimeout(getFrontendRequestTimeoutMillis(), TimeUnit.MILLISECONDS)
+        .writeTimeout(getFrontendRequestTimeoutMillis(), TimeUnit.MILLISECONDS)
+        .build();
   }
 }

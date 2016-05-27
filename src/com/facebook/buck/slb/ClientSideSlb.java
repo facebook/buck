@@ -18,13 +18,14 @@ package com.facebook.buck.slb;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.timing.Clock;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,6 +47,15 @@ public class ClientSideSlb implements HttpLoadBalancer {
 
   // Use the Builder.
   public ClientSideSlb(ClientSideSlbConfig config) {
+    this(config, new OkHttpClient.Builder()
+        .connectTimeout(config.getConnectionTimeoutMillis(), TimeUnit.MILLISECONDS)
+        .readTimeout(config.getConnectionTimeoutMillis(), TimeUnit.MILLISECONDS)
+        .writeTimeout(config.getConnectionTimeoutMillis(), TimeUnit.MILLISECONDS)
+        .build());
+  }
+
+  @VisibleForTesting
+  ClientSideSlb(ClientSideSlbConfig config, OkHttpClient pingClient) {
     this.clock = config.getClock();
     this.pingEndpoint = Preconditions.checkNotNull(config.getPingEndpoint());
     this.serverPool = Preconditions.checkNotNull(config.getServerPool());
@@ -59,10 +69,7 @@ public class ClientSideSlb implements HttpLoadBalancer {
         config.getLatencyCheckTimeRangeMillis(),
         config.getMaxAcceptableLatencyMillis(),
         config.getEventBus());
-    this.pingClient = config.getPingHttpClient();
-    this.pingClient.setConnectTimeout(config.getConnectionTimeoutMillis(), TimeUnit.MILLISECONDS);
-    this.pingClient.setReadTimeout(config.getConnectionTimeoutMillis(), TimeUnit.MILLISECONDS);
-    this.pingClient.setWriteTimeout(config.getConnectionTimeoutMillis(), TimeUnit.MILLISECONDS);
+    this.pingClient = pingClient;
 
     this.schedulerService = config.getSchedulerService();
     backgroundHealthChecker = this.schedulerService.scheduleWithFixedDelay(

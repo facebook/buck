@@ -76,7 +76,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.squareup.okhttp.OkHttpClient;
+import okhttp3.OkHttpClient;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TProtocol;
@@ -93,7 +93,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
@@ -404,10 +403,7 @@ public class BuildCommand extends AbstractCommand {
     ClientSideSlb slb = config.getFrontendConfig().createHttpClientSideSlb(
         params.getClock(),
         params.getBuckEventBus());
-    OkHttpClient client = new OkHttpClient();
-    client.setConnectTimeout(config.getFrontendRequestTimeoutMillis(), TimeUnit.MILLISECONDS);
-    client.setReadTimeout(config.getFrontendRequestTimeoutMillis(), TimeUnit.MILLISECONDS);
-    client.setWriteTimeout(config.getFrontendRequestTimeoutMillis(), TimeUnit.MILLISECONDS);
+    OkHttpClient client = config.createOkHttpClient();
 
     try (HttpService httpService = new LoadBalancedService(slb, client, params.getBuckEventBus());
         ThriftService<FrontendRequest, FrontendResponse> service = new ThriftOverHttpService<>(

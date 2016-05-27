@@ -23,9 +23,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpResponse;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.ByteSource;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -35,6 +32,9 @@ import java.net.HttpURLConnection;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import okio.BufferedSink;
 
 public class HttpArtifactCache extends AbstractNetworkCache {

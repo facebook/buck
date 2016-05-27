@@ -20,7 +20,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
-import com.squareup.okhttp.OkHttpClient;
 
 import org.immutables.value.Value;
 
@@ -48,7 +47,6 @@ abstract class AbstractClientSideSlbConfig {
   public abstract Clock getClock();
   public abstract ScheduledExecutorService getSchedulerService();
   public abstract ImmutableList<URI> getServerPool();
-  public abstract OkHttpClient getPingHttpClient();
   public abstract BuckEventBus getEventBus();
 
   @Value.Default

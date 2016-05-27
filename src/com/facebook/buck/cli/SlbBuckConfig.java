@@ -23,7 +23,6 @@ import com.facebook.buck.timing.Clock;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.squareup.okhttp.OkHttpClient;
 
 import java.net.URI;
 import java.util.concurrent.Executors;
@@ -70,7 +69,6 @@ public class SlbBuckConfig {
     ClientSideSlbConfig.Builder configBuilder = ClientSideSlbConfig.builder()
         .setSchedulerService(Executors.newScheduledThreadPool(1))
         .setClock(clock)
-        .setPingHttpClient(new OkHttpClient())
         .setServerPool(getServerPool())
         .setEventBus(eventBus);
 

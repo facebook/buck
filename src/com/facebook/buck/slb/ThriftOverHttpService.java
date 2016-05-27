@@ -17,9 +17,9 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.log.Logger;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 
 import org.apache.thrift.TBase;
 import org.apache.thrift.TException;

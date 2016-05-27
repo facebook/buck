@@ -41,11 +41,11 @@ import com.google.common.collect.Sets;
 import com.google.common.io.ByteSource;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.Protocol;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
+import okhttp3.MediaType;
+import okhttp3.Protocol;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
@@ -210,7 +210,7 @@ public class HttpArtifactCacheTest {
           protected HttpResponse fetchCall(String path, Request.Builder requestBuilder)
               throws IOException {
             Request request = requestBuilder.url(SERVER + path).build();
-            assertEquals(expectedUri, request.url().getPath());
+            assertEquals(expectedUri, request.url().encodedPath());
             return new OkHttpResponseWrapper(new Response.Builder()
                 .request(request)
                 .protocol(Protocol.HTTP_1_1)

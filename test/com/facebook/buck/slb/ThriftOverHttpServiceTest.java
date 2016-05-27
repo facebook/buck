@@ -19,7 +19,7 @@ package com.facebook.buck.slb;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
-import com.squareup.okhttp.Request;
+import okhttp3.Request;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.TSerializer;
