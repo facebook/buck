@@ -571,6 +571,16 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'build' /}
+  {param name: 'network_threads' /}
+  {param example_value: '8' /}
+  {param description}
+    The number of threads to be used for network I/O. The default value is number of cores of the
+    machine.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'build' /}
   {param name: 'work_queue_execution_order' /}
   {param example_value: 'LIFO' /}
   {param description}

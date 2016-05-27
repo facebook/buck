@@ -195,11 +195,6 @@ public final class Main {
       new TimeSpan(5, TimeUnit.MINUTES);
 
   /**
-   * Number of maximum threads for network operations.
-   */
-  private static final int MAX_NETWORK_THREADS = 23;
-
-  /**
    * Path to a directory of static content that should be served by the {@link WebServer}.
    */
   private static final String STATIC_CONTENT_DIRECTORY = System.getProperty(
@@ -891,7 +886,7 @@ public final class Main {
         executors.put(ExecutionContext.ExecutorPool.CPU, listeningDecorator(
                 Executors.newCachedThreadPool()));
         // Create a thread pool for network I/O tasks
-        executors.put(ExecutionContext.ExecutorPool.NETWORK, getNetworkExecutorService());
+        executors.put(ExecutionContext.ExecutorPool.NETWORK, getNetworkExecutorService(buckConfig));
 
         // The order of resources in the try-with-resources block is important: the BuckEventBus
         // must be the last resource, so that it is closed first and can deliver its queued events
@@ -1191,12 +1186,12 @@ public final class Main {
     }
   }
 
-  private static ListeningExecutorService getNetworkExecutorService() {
+  private static ListeningExecutorService getNetworkExecutorService(BuckConfig buckConfig) {
     return listeningDecorator(new ThreadPoolExecutor(
-        /* corePoolSize */ MAX_NETWORK_THREADS,
-        /* maximumPoolSize */ MAX_NETWORK_THREADS,
-        /* keepAliveTime */ 500L, TimeUnit.MILLISECONDS,
-        /* workQueue */ new LinkedBlockingQueue<Runnable>(MAX_NETWORK_THREADS),
+        /* corePoolSize */ buckConfig.getNumThreadsForNetwork(),
+        /* maximumPoolSize */ buckConfig.getNumThreadsForNetwork(),
+        /* keepAliveTime */ 1L, TimeUnit.SECONDS,
+        /* workQueue */ new LinkedBlockingQueue<Runnable>(buckConfig.getNumThreadsForNetwork()),
         /* threadFactory */ new ThreadFactoryBuilder().setNameFormat("Network I/O" + "-%d").build(),
         /* handler */ new ThreadPoolExecutor.CallerRunsPolicy()));
   }
