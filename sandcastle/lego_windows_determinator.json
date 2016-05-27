@@ -20,6 +20,15 @@
         "shell": ".\\bin\\buck build buck"
       },
       {
+        "name": "Testing with Buck",
+        "shell": ".\\bin\\buck test --all --test-selectors='@windows_failures.txt' --test-selectors='@windows_cxx_support.txt' --explain-test-selectors"
+      },
+      {
+        "name": "Testing with ant",
+        "shell": "ant test",
+        "required": false
+      },
+      {
         "name": "Ensuring that the 'buck targets' works correctly",
         "shell": ".\\bin\\buck targets"
       }
