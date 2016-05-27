@@ -6,6 +6,7 @@ standard_java_library(
     'MachoHeader',
     'Nlist',
     'Section',
+    'SegmentCommand',
     'UUIDCommand',
   ],
   tests = [
