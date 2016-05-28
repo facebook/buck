@@ -405,6 +405,9 @@ public class CachingBuildEngine implements BuildEngine {
           if (depFileRuleKeyAndInputs.isPresent()) {
 
             RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getFirst();
+            buildInfoRecorder.addBuildMetadata(
+                BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY,
+                depFileRuleKey.toString());
 
             // Check the input-based rule key says we're already built.
             Optional<RuleKey> lastDepFileRuleKey =
@@ -696,6 +699,9 @@ public class CachingBuildEngine implements BuildEngine {
                       ruleKeyFactories.getUnchecked(rule.getProjectFilesystem())
                           .depFileRuleKeyBuilderFactory.buildManifestKey(rule);
                   if (manifestKey.isPresent()) {
+                    buildInfoRecorder.addBuildMetadata(
+                        BuildInfo.METADATA_KEY_FOR_MANIFEST_KEY,
+                        manifestKey.get().getFirst().toString());
                     updateAndStoreManifest(
                         rule,
                         depFileRuleKeyAndInputs.get().getFirst(),
@@ -1536,6 +1542,9 @@ public class CachingBuildEngine implements BuildEngine {
         ruleKeyFactories.getUnchecked(rule.getProjectFilesystem())
             .depFileRuleKeyBuilderFactory.buildManifestKey(rule);
     if (!manifestKey.isPresent()) {
+      buildInfoRecorder.addBuildMetadata(
+          BuildInfo.METADATA_KEY_FOR_MANIFEST_KEY,
+          manifestKey.get().getFirst().toString());
       return Futures.immediateFuture(Optional.<BuildResult>absent());
     }
 

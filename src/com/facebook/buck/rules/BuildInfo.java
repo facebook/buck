@@ -76,6 +76,11 @@ public class BuildInfo {
   static final String METADATA_KEY_FOR_TARGET = "TARGET";
 
   /**
+   * Key for {@link OnDiskBuildInfo} to store the cache key of the manifest.
+   */
+  static final String METADATA_KEY_FOR_MANIFEST_KEY = "MANIFEST_KEY";
+
+  /**
    * Key for {@link OnDiskBuildInfo} to store the manifest for build rules supporting manifest-based
    * caching.
    */
