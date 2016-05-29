@@ -394,59 +394,59 @@ public class CachingBuildEngine implements BuildEngine {
           return Futures.immediateFuture(Optional.of(BuildResult.canceled(rule, firstFailure)));
         }
 
-        // Dep-file rule keys.
-        if (useDependencyFileRuleKey(rule)) {
-          // Try to get the current dep-file rule key.
-          Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> depFileRuleKeyAndInputs =
-              calculateDepFileRuleKey(
-                  rule,
-                  onDiskBuildInfo.getValues(BuildInfo.METADATA_KEY_FOR_DEP_FILE),
-                  /* allowMissingInputs */ true);
-          if (depFileRuleKeyAndInputs.isPresent()) {
-
-            RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getFirst();
-            buildInfoRecorder.addBuildMetadata(
-                BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY,
-                depFileRuleKey.toString());
-
-            // Check the input-based rule key says we're already built.
-            Optional<RuleKey> lastDepFileRuleKey =
-                onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY);
-            if (lastDepFileRuleKey.isPresent() &&
-                depFileRuleKey.equals(lastDepFileRuleKey.get())) {
-              return Futures.immediateFuture(Optional.of(
-                  BuildResult.success(
-                      rule,
-                      BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY,
-                      CacheResult.localKeyUnchangedHit())));
-            }
-          }
-        }
-
-        // Manifest caching
-        ListenableFuture<Optional<BuildResult>> manifestResult =
-            performManifestBasedCacheFetch(rule, context, buildInfoRecorder);
+        // Input-based rule keys.
+        ListenableFuture<Optional<BuildResult>> inputResult = performInputBasedCacheFetch(
+            rule,
+            context,
+            onDiskBuildInfo,
+            buildInfoRecorder,
+            ruleKeyFactory);
 
         return Futures.transformAsync(
-            manifestResult,
+            inputResult,
             new AsyncFunction<Optional<BuildResult>, Optional<BuildResult>>() {
               @Override
               public ListenableFuture<Optional<BuildResult>> apply(Optional<BuildResult> result)
-                  throws InterruptedException {
+                  throws InterruptedException, IOException {
                 if (result.isPresent()) {
                   return Futures.immediateFuture(result);
                 }
 
-                // Input-based rule keys.
-                ListenableFuture<Optional<BuildResult>> inputResult = performInputBasedCacheFetch(
-                    rule,
-                    context,
-                    onDiskBuildInfo,
-                    buildInfoRecorder,
-                    ruleKeyFactory);
+                // Dep-file rule keys.
+                if (useDependencyFileRuleKey(rule)) {
+                  // Try to get the current dep-file rule key.
+                  Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> depFileRuleKeyAndInputs =
+                      calculateDepFileRuleKey(
+                          rule,
+                          onDiskBuildInfo.getValues(BuildInfo.METADATA_KEY_FOR_DEP_FILE),
+                  /* allowMissingInputs */ true);
+                  if (depFileRuleKeyAndInputs.isPresent()) {
+
+                    RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getFirst();
+                    buildInfoRecorder.addBuildMetadata(
+                        BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY,
+                        depFileRuleKey.toString());
+
+                    // Check the input-based rule key says we're already built.
+                    Optional<RuleKey> lastDepFileRuleKey =
+                        onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY);
+                    if (lastDepFileRuleKey.isPresent() &&
+                        depFileRuleKey.equals(lastDepFileRuleKey.get())) {
+                      return Futures.immediateFuture(Optional.of(
+                          BuildResult.success(
+                              rule,
+                              BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY,
+                              CacheResult.localKeyUnchangedHit())));
+                    }
+                  }
+                }
+
+                // Manifest caching
+                ListenableFuture<Optional<BuildResult>> manifestResult =
+                    performManifestBasedCacheFetch(rule, context, buildInfoRecorder);
 
                 return Futures.transform(
-                    inputResult,
+                    manifestResult,
                     new Function<Optional<BuildResult>, Optional<BuildResult>>() {
                       @Override
                       public Optional<BuildResult> apply(Optional<BuildResult> result) {

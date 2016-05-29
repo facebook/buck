@@ -73,7 +73,7 @@ public class AndroidXmlFileIntegrationTest {
     assertThat(
         buildLog.getLogEntry(BuildTargetFactory.newInstance(MAIN_BUILD_TARGET))
             .getSuccessType(),
-        Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY)));
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
   }
 
   @Test
@@ -92,7 +92,7 @@ public class AndroidXmlFileIntegrationTest {
     assertThat(
         buildLog.getLogEntry(BuildTargetFactory.newInstance(MAIN_BUILD_TARGET))
             .getSuccessType(),
-        Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY)));
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
   }
 
   @Test
@@ -113,7 +113,7 @@ public class AndroidXmlFileIntegrationTest {
     assertThat(
         buildLog.getLogEntry(BuildTargetFactory.newInstance(MAIN_BUILD_TARGET))
             .getSuccessType(),
-        Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY)));
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
   }
 
   @Test
@@ -133,7 +133,7 @@ public class AndroidXmlFileIntegrationTest {
     assertThat(
         buildLog.getLogEntry(BuildTargetFactory.newInstance(MAIN_BUILD_TARGET))
             .getSuccessType(),
-        Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY)));
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
   }
 
   @Test

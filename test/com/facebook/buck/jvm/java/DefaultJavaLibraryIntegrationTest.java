@@ -349,7 +349,7 @@ public class DefaultJavaLibraryIntegrationTest {
 
     assertThat(bizRuleKey, not(equalTo(getContents(bizRuleKeyPath))));
     assertEquals(bizAbiRuleKey, getContents(bizAbiRuleKeyPath));
-    workspace.getBuildLog().assertTargetHadMatchingDepfileRuleKey(bizTarget.toString());
+    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey(bizTarget.toString());
 
     assertThat(
         "util.jar should have been rewritten, so its file size should have changed.",
@@ -400,7 +400,7 @@ public class DefaultJavaLibraryIntegrationTest {
     // but still rebuild //:main because the code of the annotation processor has changed
     workspace.getBuildLog().assertTargetBuiltLocally("//:util");
     workspace.getBuildLog().assertTargetBuiltLocally("//:main");
-    workspace.getBuildLog().assertTargetHadMatchingDepfileRuleKey("//:annotation_processor");
+    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey("//:annotation_processor");
   }
 
   @Test
