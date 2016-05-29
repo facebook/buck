@@ -122,6 +122,12 @@ abstract class GoDescriptors {
         platform,
         deps);
 
+    ImmutableList.Builder<BuildRule> linkableDepsBuilder = ImmutableList.builder();
+    for (GoLinkable linkable : linkables) {
+      linkableDepsBuilder.addAll(linkable.getDeps(pathResolver));
+    }
+    ImmutableList<BuildRule> linkableDeps = linkableDepsBuilder.build();
+
     BuildTarget target = createSymlinkTreeTarget(params.getBuildTarget());
     SymlinkTree symlinkTree = makeSymlinkTree(
         params.copyWithBuildTarget(target),
@@ -134,7 +140,9 @@ abstract class GoDescriptors {
         params.getBuildTarget(), symlinkTree.getLinks());
 
     return new GoCompile(
-        params.appendExtraDeps(ImmutableList.of(symlinkTree)),
+        params
+            .appendExtraDeps(linkableDeps)
+            .appendExtraDeps(ImmutableList.of(symlinkTree)),
         pathResolver,
         symlinkTree,
         packageName,
