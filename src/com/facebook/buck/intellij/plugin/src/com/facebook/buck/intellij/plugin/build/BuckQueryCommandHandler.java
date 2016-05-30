@@ -16,7 +16,7 @@
 
 package com.facebook.buck.intellij.plugin.build;
 
-import com.facebook.buck.intellij.plugin.actions.choosetargets.ChooseTargetContributor;
+import com.google.common.base.Function;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -34,12 +34,14 @@ import java.util.List;
  * Created by theodordidii on 1/27/16.
  */
 public class BuckQueryCommandHandler extends BuckCommandHandler {
-
+    private Function<List<String>, Void> actionsToExecute;
     public BuckQueryCommandHandler(
-            final Project project,
-            final VirtualFile root,
-            final BuckCommand command) {
+        final Project project,
+        final VirtualFile root,
+        final BuckCommand command,
+        Function<List<String>, Void> actionsToExecute) {
         super(project, VfsUtil.virtualToIoFile(root), command);
+        this.actionsToExecute = actionsToExecute;
     }
 
     @Override
@@ -60,12 +62,7 @@ public class BuckQueryCommandHandler extends BuckCommandHandler {
                     }
                 }
             }
-            List<String> commandParameters = this.command().getParametersList().getParameters();
-            // last parameter is the target
-            ChooseTargetContributor.addToOtherTargets(
-                    project,
-                    targetList,
-                    commandParameters.get(commandParameters.size() - 1));
+            actionsToExecute.apply(targetList);
         }
     }
 

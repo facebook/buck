@@ -18,6 +18,7 @@ package com.facebook.buck.intellij.plugin.actions.choosetargets;
 
 import com.facebook.buck.intellij.plugin.actions.BuckQueryAction;
 import com.facebook.buck.intellij.plugin.build.BuckBuildTargetAliasParser;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.intellij.ide.util.gotoByName.ChooseByNamePopup;
 import com.intellij.navigation.ChooseByNameContributor;
@@ -28,32 +29,17 @@ import com.intellij.openapi.vfs.VirtualFile;
 
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 public class ChooseTargetContributor implements ChooseByNameContributor {
 
   public static final String ALIAS_SEPARATOR = "::";
   public static final String TARGET_NAME_SEPARATOR = ":";
 
-  private static Map<String, List<String>> otherTargets = new HashMap<String, List<String>>();
-
-  public static void addToOtherTargets(
-          final Project project,
-          List<String> targets,
-          String target) {
-    otherTargets.put(target, targets);
-    ApplicationManager.getApplication().invokeLater(
-            new Runnable() {
-              public void run() {
-                project.getUserData(
-                        ChooseByNamePopup.CHOOSE_BY_NAME_POPUP_IN_PROJECT_KEY).rebuildList(true);
-              }
-            });
-  }
-
-  public void addPathSugestions(List<String> names, Project project) {
+  public void addPathSugestions(final List<String> names, final Project project) {
     String currentText = project.getUserData(
             ChooseByNamePopup.CHOOSE_BY_NAME_POPUP_IN_PROJECT_KEY).getEnteredText();
 
@@ -104,11 +90,32 @@ public class ChooseTargetContributor implements ChooseByNameContributor {
         }
         String target = "//" + currentText.substring(0, end) + ":";
 
-        if (otherTargets.containsKey(target)) {
-          names.addAll(otherTargets.get(target));
-        } else {
-          BuckQueryAction.execute(project, target);
-        }
+        // we need the aliases now
+        names.addAll(
+            BuckQueryAction.execute(
+            project,
+            target,
+            new Function<List<String>, Void>() {
+              @Nullable
+              @Override
+              public Void apply(@Nullable List<String> strings) {
+                ApplicationManager.getApplication().invokeLater(
+                    new Runnable() {
+                      public void run() {
+                        ChooseByNamePopup chooseByNamePopup = project.getUserData(
+                            ChooseByNamePopup.CHOOSE_BY_NAME_POPUP_IN_PROJECT_KEY);
+                        // the user might have closed the window
+                        if (chooseByNamePopup != null) {
+                          // if we don't have them, just refresh the view when we do, if the
+                          // window is still open
+                          chooseByNamePopup.rebuildList(true);
+                        }
+                      }
+                    });
+                return null;
+              }
+            }
+        ));
       }
     }
   }
