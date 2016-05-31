@@ -27,6 +27,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.jimfs.Configuration;
@@ -98,12 +99,15 @@ public class StackedDownloaderTest {
 
   @Test
   public void createDownloadersForEachEntryInTheMavenRepositoriesSection() throws IOException {
-    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
-    Path m2Root = vfs.getPath("/home/user/.m2/repository");
+    boolean isWindows = Platform.detect() == Platform.WINDOWS;
+    Configuration configuration = isWindows ? Configuration.windows() : Configuration.unix();
+    FileSystem vfs = Jimfs.newFileSystem(configuration);
+
+    Path m2Root = vfs.getPath(jimfAbsolutePath("/home/user/.m2/repository"));
     Files.createDirectories(m2Root);
 
     // Set up a config so we expect to see both a local and a remote maven repo.
-    Path projectRoot = vfs.getPath("/opt/local/src");
+    Path projectRoot = vfs.getPath(jimfAbsolutePath("/opt/local/src"));
     Files.createDirectories(projectRoot);
     BuckConfig config = FakeBuckConfig.builder()
         .setFilesystem(new ProjectFilesystem(projectRoot))
@@ -129,6 +133,14 @@ public class StackedDownloaderTest {
 
     assertTrue(seenLocal);
     assertTrue(seenRemote);
+  }
+
+  private static String jimfAbsolutePath(String path) {
+    boolean isWindows = Platform.detect() == Platform.WINDOWS;
+    if (isWindows) {
+      path = "C:" + path;
+    }
+    return path;
   }
 
   @Test
