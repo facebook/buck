@@ -155,8 +155,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
 /**
  * Generator for xcode project and associated files from a set of xcode/ios rules.
  */
@@ -816,9 +814,8 @@ public class ProjectGenerator {
           Iterables.transform(
               targetNode.getConstructorArg().srcs.get(),
               new Function<SourceWithFlags, Path>() {
-                @Nullable
                 @Override
-                public Path apply(@Nullable SourceWithFlags input) {
+                public Path apply(SourceWithFlags input) {
                   return sourcePathResolver.apply(input.getSourcePath());
                 }
               }
