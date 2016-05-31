@@ -24,13 +24,31 @@ import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.channels.FileChannel;
 import java.nio.charset.CharacterCodingException;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 public class CompDirReplacer {
 
   private static final Logger LOG = Logger.get(CompDirReplacer.class);
 
   private final ByteBuffer buffer;
+
+  public static void replaceCompDirInFile(
+      Path path,
+      String oldCompDir,
+      String newCompDir) throws IOException {
+    try (FileChannel file =
+             FileChannel.open(
+                 path,
+                 StandardOpenOption.READ,
+                 StandardOpenOption.WRITE)) {
+      ByteBuffer byteBuffer = file.map(FileChannel.MapMode.READ_WRITE, 0, file.size());
+      CompDirReplacer compDirReplacer = new CompDirReplacer(byteBuffer);
+      compDirReplacer.replaceCompDir(oldCompDir, newCompDir);
+    }
+  }
 
   public CompDirReplacer(ByteBuffer byteBuffer) {
     this.buffer = byteBuffer;

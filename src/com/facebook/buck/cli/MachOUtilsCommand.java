@@ -30,6 +30,7 @@ public class MachOUtilsCommand extends AbstractContainerCommand {
   @Argument(handler = AdditionalOptionsSubCommandHandler.class)
   @SubCommands({
       @SubCommand(name = "fix_compdir", impl = MachOFixCompDirCommand.class),
+      @SubCommand(name = "absolutify_object_paths", impl = MachOAbsolutifyObjectPathsCommand.class),
   })
   @SuppressFieldNotInitialized
   Command subcommand;

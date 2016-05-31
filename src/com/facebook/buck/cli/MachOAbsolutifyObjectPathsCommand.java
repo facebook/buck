@@ -15,21 +15,29 @@
  */
 package com.facebook.buck.cli;
 
-import com.facebook.buck.macho.CompDirReplacer;
+import com.facebook.buck.macho.ObjectPathsAbsolutifier;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
 
-public class MachOFixCompDirCommand extends MachOAbstractCommand {
+public class MachOAbsolutifyObjectPathsCommand extends MachOAbstractCommand {
 
   @Override
   protected int invokeWithParams(CommandRunnerParams params)
       throws IOException, InterruptedException {
-    CompDirReplacer.replaceCompDirInFile(getOutput(), getOldCompDir(), getUpdatedCompDir());
+    try (RandomAccessFile file = new RandomAccessFile(getOutput().toFile(), "rw")) {
+      ObjectPathsAbsolutifier updater = new ObjectPathsAbsolutifier(
+          file,
+          getOldCompDir(),
+          getUpdatedCompDir(),
+          params.getCell().getFilesystem());
+      updater.updatePaths();
+    }
     return 0;
   }
 
   @Override
   public String getShortDescription() {
-    return "fixes compilation directory inside Mach O binary";
+    return "absolutifies the paths inside Mach O binary and satellite object files";
   }
 }

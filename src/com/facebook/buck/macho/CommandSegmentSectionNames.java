@@ -20,4 +20,5 @@ public class CommandSegmentSectionNames {
 
   public static final String SEGMENT_NAME_DWARF = "__DWARF";
   public static final String SECTION_NAME_DEBUG_STR  = "__debug_str";
+  public static final String SEGMENT_LINKEDIT = "__LINKEDIT";
 }
