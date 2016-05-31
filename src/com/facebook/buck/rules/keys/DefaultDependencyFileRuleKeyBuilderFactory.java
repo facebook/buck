@@ -47,7 +47,7 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
       int seed,
       FileHashLoader fileHashLoader,
       SourcePathResolver pathResolver) {
-    super(seed, fileHashLoader, pathResolver, InputHandling.IGNORE);
+    super(seed, fileHashLoader, pathResolver, InputHandling.IGNORE, ArchiveHandling.MEMBERS);
     this.pathResolver = pathResolver;
   }
 

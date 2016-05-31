@@ -51,6 +51,7 @@ public class InputBasedRuleKeyBuilderFactory
 
   private final FileHashLoader fileHashLoader;
   private final SourcePathResolver pathResolver;
+  private final ArchiveHandling archiveHandling;
   private final InputHandling inputHandling;
   private final LoadingCache<RuleKeyAppendable, Result> cache;
 
@@ -58,11 +59,13 @@ public class InputBasedRuleKeyBuilderFactory
       int seed,
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
-      InputHandling inputHandling) {
+      InputHandling inputHandling,
+      ArchiveHandling archiveHandling) {
     super(seed);
     this.fileHashLoader = hashLoader;
     this.pathResolver = pathResolver;
     this.inputHandling = inputHandling;
+    this.archiveHandling = archiveHandling;
 
     // Build the cache around the sub-rule-keys and their dep lists.
     cache = CacheBuilder.newBuilder().weakKeys().build(
@@ -81,7 +84,7 @@ public class InputBasedRuleKeyBuilderFactory
       int seed,
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver) {
-    this(seed, hashLoader, pathResolver, InputHandling.HASH);
+    this(seed, hashLoader, pathResolver, InputHandling.HASH, ArchiveHandling.ARCHIVES);
   }
 
   @Override
@@ -127,7 +130,8 @@ public class InputBasedRuleKeyBuilderFactory
 
     @Override
     public Builder setReflectively(String key, @Nullable Object val) {
-      if (val instanceof ArchiveDependencySupplier) {
+      if (val instanceof ArchiveDependencySupplier &&
+          archiveHandling == ArchiveHandling.MEMBERS) {
         super.setReflectively(
             key,
             ((ArchiveDependencySupplier) val).getArchiveMembers(pathResolver));
@@ -211,6 +215,23 @@ public class InputBasedRuleKeyBuilderFactory
      */
     IGNORE,
 
+  }
+
+  /**
+   * How to handle adding {@link ArchiveDependencySupplier}s to the {@link RuleKey}.
+   */
+  protected enum ArchiveHandling {
+
+    /**
+     * Add the archives (call {@link ArchiveDependencySupplier#get()}).
+     */
+    ARCHIVES,
+
+    /**
+     * Add all the members of the archives
+     * (call {@link ArchiveDependencySupplier#getArchiveMembers(SourcePathResolver)}).
+     */
+    MEMBERS,
   }
 
   protected static class Result {
