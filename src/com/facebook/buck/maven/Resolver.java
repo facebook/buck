@@ -20,6 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.eclipse.aether.util.artifact.JavaScopes.TEST;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.io.MorePaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -524,7 +525,7 @@ public class Resolver {
     private String formatDep(Path buckThirdPartyRelativePath, Artifact artifact) {
       return String.format(
           "//%s/%s:%s",
-          buckThirdPartyRelativePath,
+          MorePaths.pathWithUnixSeparators(buckThirdPartyRelativePath),
           getProjectName(artifact),
           artifact.getArtifactId());
     }

@@ -218,14 +218,20 @@ public class ResolverIntegrationTest {
     @SuppressWarnings("unchecked")
     List<String> visibility = (List<String>) noDeps.get("visibility");
     assertEquals(1, visibility.size());
-    assertEquals(ImmutableList.of(String.format("//%s:with-deps", exampleDir)), visibility);
+    assertEquals(
+        ImmutableList.of(
+            String.format("//%s:with-deps", MorePaths.pathWithUnixSeparators(exampleDir))),
+        visibility);
     assertEquals(ImmutableList.of(), noDeps.get("deps"));
 
     assertEquals(ImmutableList.of(), withDeps.get("visibility"));
     @SuppressWarnings("unchecked")
     List<String> deps = (List<String>) withDeps.get("deps");
     assertEquals(1, deps.size());
-    assertEquals(ImmutableList.of(String.format("//%s:no-deps", otherDir)), deps);
+    assertEquals(
+        ImmutableList.of(
+            String.format("//%s:no-deps", MorePaths.pathWithUnixSeparators(otherDir))),
+        deps);
   }
 
   @Test

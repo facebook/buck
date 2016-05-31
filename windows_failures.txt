@@ -49,8 +49,6 @@
 !com.facebook.buck.jvm.java.intellij.IjProjectDataPreparerTest#testWriteModule
 !com.facebook.buck.jvm.java.intellij.ProjectIntegrationTest
 !com.facebook.buck.jvm.java.intellij.ProjectTest
-!com.facebook.buck.maven.PublisherIntegrationTest#testPublishFiles
-!com.facebook.buck.maven.ResolverIntegrationTest#shouldSetVisibilityOfTargetToGiveDependenciesAccess
 !com.facebook.buck.model.InMemoryBuildFileTreeTest
 !com.facebook.buck.python.PrebuiltPythonLibraryIntegrationTest
 !com.facebook.buck.python.PythonBinaryDescriptionTest#extensionDepUsingMergedNativeLinkStrategy
