@@ -1038,7 +1038,6 @@ public class ManifestMerger {
             !destImplied.get() ? "" :   //$NON-NLS-1$
                 "\nNote: main manifest lacks a <uses-sdk android:targetSdkVersion> declaration, which defaults to value minSdkVersion or 1."
         );
-        result = false;
       }
     }
 
