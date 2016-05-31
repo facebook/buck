@@ -126,9 +126,7 @@ public class ChromeTraceBuildListenerTest {
         /* tracesToKeep */ 3,
         false);
 
-    projectFilesystem.deleteFileAtPath(listener.getTracePath());
-
-    listener.deleteOldTraces();
+    listener.outputTrace(buildId);
 
     ImmutableList<String> files = FluentIterable.
         from(Arrays.asList(projectFilesystem.listFiles(BuckConstant.getBuckTraceDir()))).
@@ -142,7 +140,7 @@ public class ChromeTraceBuildListenerTest {
     assertEquals(ImmutableSortedSet.of("build.trace",
                                        "build.1009.trace",
                                        "build.1008.trace",
-                                       "build.1007.trace"),
+                                       "build.2014-09-02.16-55-51.BUILD_ID.trace"),
         ImmutableSortedSet.copyOf(files));
   }
 
