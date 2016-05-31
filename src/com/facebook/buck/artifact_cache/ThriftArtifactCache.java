@@ -77,6 +77,11 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       HttpArtifactCacheEvent.Finished.Builder eventBuilder) throws IOException {
 
     BuckCacheFetchRequest fetchRequest = new BuckCacheFetchRequest();
+    com.facebook.buck.artifact_cache.thrift.RuleKey thriftRuleKey =
+        new com.facebook.buck.artifact_cache.thrift.RuleKey();
+    thriftRuleKey.setHashString(ruleKey.getHashCode().toString());
+    fetchRequest.setRuleKey(thriftRuleKey);
+
     BuckCacheRequest cacheRequest = new BuckCacheRequest();
     cacheRequest.setType(BuckCacheRequestType.FETCH);
     cacheRequest.setFetchRequest(fetchRequest);
@@ -122,7 +127,8 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
           return CacheResult.error(name, msg);
         }
 
-        if (readResult.getCrc32Hash() != fetchResponse.getMetadata().getArtifactPayloadCrc32()) {
+        if (!readResult.getCrc32Hash()
+            .equals(fetchResponse.getMetadata().getArtifactPayloadCrc32())) {
           String msg = String.format(
               "The artifact fetched from cache is corrupted. ExpectedCRC32=[%s] ActualCRC32=[%s]",
               fetchResponse.getMetadata().getArtifactPayloadCrc32(),
@@ -180,13 +186,14 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       try (ThriftArtifactCacheProtocol.Response response =
           ThriftArtifactCacheProtocol.parseResponse(PROTOCOL, httpResponse.getBody())) {
         if (!response.getThriftData().isWasSuccessful()) {
-          throw new IOException(String.format(
+          reportFailure(
               "Failed to store artifact with thriftErrorMessage=[%s] " +
                   "url=[%s] artifactSizeBytes=[%d]",
               response.getThriftData().getErrorMessage(),
               httpResponse.requestUrl(),
-              artifact.size()));
+              artifact.size());
         }
+        eventBuilder.setWasUploadSuccessful(response.getThriftData().isWasSuccessful());
       }
     }
   }
