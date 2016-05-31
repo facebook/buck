@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.dd.plist.NSArray;
 import com.dd.plist.NSObject;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
@@ -35,8 +36,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Map.Entry;
+
+import javax.annotation.Nullable;
 
 /**
  * A collection of provisioning profiles.
@@ -68,6 +73,20 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
       }
     }
     return Optional.absent();
+  }
+
+  private static boolean matchesOrArrayIsSubsetOf(@Nullable NSObject lhs, @Nullable NSObject rhs) {
+    if (lhs == null) {
+      return (rhs == null);
+    }
+
+    if (lhs instanceof NSArray && rhs instanceof NSArray) {
+      List<NSObject> lhsList = Arrays.asList(((NSArray) lhs).getArray());
+      List<NSObject> rhsList = Arrays.asList(((NSArray) rhs).getArray());
+      return rhsList.containsAll(lhsList);
+    }
+
+    return lhs.equals(rhs);
   }
 
   // If multiple valid ones, find the one which matches the most specifically.  I.e.,
@@ -120,7 +139,9 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
               if (!(entry.getKey().equals("keychain-access-groups") ||
                   entry.getKey().equals("application-identifier") ||
                   entry.getKey().equals("com.apple.developer.associated-domains") ||
-                  entry.getValue().equals(profileEntitlements.get(entry.getKey())))) {
+                  matchesOrArrayIsSubsetOf(
+                      entry.getValue(),
+                      profileEntitlements.get(entry.getKey())))) {
                 match = false;
                 LOG.debug("Ignoring profile " + profile.getUUID() +
                     " with mismatched entitlement " + entry.getKey() + "; value is " +

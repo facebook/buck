@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertFalse;
 
 import com.dd.plist.NSArray;
 import com.dd.plist.NSObject;
@@ -121,14 +122,23 @@ public class ProvisioningProfileStoreTest {
             "keychain-access-groups",
             fakeKeychainAccessGroupsArray,
             "aps-environment",
-            new NSString("development"));
+            new NSString("development"),
+            "com.apple.security.application-groups",
+            new NSArray(
+                new NSString("foo"),
+                new NSString("bar")));
 
     ImmutableMap<String, NSObject> fakeProductionEntitlements =
         ImmutableMap.of(
             "keychain-access-groups",
             fakeKeychainAccessGroupsArray,
             "aps-environment",
-            new NSString("production"));
+            new NSString("production"),
+            "com.apple.security.application-groups",
+            new NSArray(
+                new NSString("foo"),
+                new NSString("bar"),
+                new NSString("baz")));
 
     ProvisioningProfileMetadata expected =
         makeTestMetadata("AAAAAAAAAA.com.facebook.test", new Date(Long.MAX_VALUE),
@@ -143,10 +153,33 @@ public class ProvisioningProfileStoreTest {
     Optional<ProvisioningProfileMetadata> actual =
         profiles.getBestProvisioningProfile(
             "com.facebook.test",
-            Optional.of(fakeProductionEntitlements),
+            Optional.of(ImmutableMap.of(
+                "keychain-access-groups",
+                fakeKeychainAccessGroupsArray,
+                "aps-environment",
+                new NSString("production"),
+                "com.apple.security.application-groups",
+                new NSArray(
+                    new NSString("foo"),
+                    new NSString("bar")))),
             ProvisioningProfileStore.MATCH_ANY_IDENTITY);
 
     assertThat(actual.get(), is(equalTo(expected)));
+
+    actual =
+        profiles.getBestProvisioningProfile(
+            "com.facebook.test",
+            Optional.of(ImmutableMap.of(
+                "keychain-access-groups",
+                fakeKeychainAccessGroupsArray,
+                "aps-environment",
+                new NSString("production"),
+                "com.apple.security.application-groups",
+                new NSArray(
+                    new NSString("foo"),
+                    new NSString("xxx")))),
+            ProvisioningProfileStore.MATCH_ANY_IDENTITY);
+    assertFalse(actual.isPresent());
   }
 
   @Test
