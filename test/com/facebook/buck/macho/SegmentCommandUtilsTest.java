@@ -39,6 +39,24 @@ public class SegmentCommandUtilsTest {
   }
 
   @Test
+  public void testGettingHeaderSize64Bit() throws Exception {
+    byte[] bytes = SegmentCommandTestData.getBigEndian64Bits();
+    final int commandSize = bytes.length;
+    SegmentCommand command = SegmentCommandUtils.createFromBuffer(
+        ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN));
+    assertThat(SegmentCommandUtils.getSegmentCommandHeaderSize(command), equalTo(commandSize));
+  }
+
+  @Test
+  public void testGettingHeaderSize32Bit() throws Exception {
+    byte[] bytes = SegmentCommandTestData.getBigEndian32Bits();
+    final int commandSize = bytes.length;
+    SegmentCommand command = SegmentCommandUtils.createFromBuffer(
+        ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN));
+    assertThat(SegmentCommandUtils.getSegmentCommandHeaderSize(command), equalTo(commandSize));
+  }
+
+  @Test
   public void testUpdatingSegmentCommandInByteBuffer64Bit() throws Exception {
     byte[] bytes = SegmentCommandTestData.getBigEndian64Bits();
     final int commandSize = bytes.length;
@@ -177,6 +195,77 @@ public class SegmentCommandUtilsTest {
     SegmentCommandUtils.enumerateSectionsInSegmentLoadCommand(
         buffer,
         new MachoMagicInfo(UnsignedInteger.fromIntBits(0xFEEDFACE)),
+        command,
+        new Function<Section, Boolean>() {
+          @Override
+          public Boolean apply(Section input) {
+            enumeratedSections.add(input);
+            return Boolean.TRUE;
+          }
+        });
+
+    assertThat(enumeratedSections.size(), equalTo(3));
+
+    assertThat(enumeratedSections.get(0).getSectname(), equalToObject("SECTNAME"));
+    assertThat(enumeratedSections.get(0).getSegname(), equalToObject("SEGNAME"));
+    assertThat(
+        enumeratedSections.get(0).getOffset(),
+        equalToObject(UnsignedInteger.fromIntBits(0x01)));
+
+    assertThat(enumeratedSections.get(1).getSectname(), equalToObject("DECTNAME"));
+    assertThat(enumeratedSections.get(1).getSegname(), equalToObject("DEGNAME"));
+    assertThat(
+        enumeratedSections.get(1).getOffset(),
+        equalToObject(UnsignedInteger.fromIntBits(0x02)));
+
+    assertThat(enumeratedSections.get(2).getSectname(), equalToObject("LECTNAME"));
+    assertThat(enumeratedSections.get(2).getSegname(), equalToObject("LEGNAME"));
+    assertThat(
+        enumeratedSections.get(2).getOffset(),
+        equalToObject(UnsignedInteger.fromIntBits(0x03)));
+  }
+
+  @Test
+  public void testEnumeratingSectionsWorksRegardingOfCmdsize() throws Exception {
+    // There was a bug when section's offset was computed incorrectly: offset = cmd.offset + cmdsize
+    // It was fixed roughly by the next formula: offset = cmd.offset + cmd.sizeOfHeader
+    // So this test checks this
+
+    final int sectionSize = SectionTestData.getBigEndian64Bit().length;
+    byte[] sectionData1 = SectionTestData.getBigEndian64Bit();
+    sectionData1[51] = (byte) 0x01;  // offset = 1
+
+    byte[] sectionData2 = SectionTestData.getBigEndian64Bit();
+    sectionData2[0] = (byte) 0x44;   // sectname = "DECTNAME"
+    sectionData2[16] = (byte) 0x44;  // segname = "DEGNAME"
+    sectionData2[51] = (byte) 0x02;  // offset = 2
+
+    byte[] sectionData3 = SectionTestData.getBigEndian64Bit();
+    sectionData3[0] = (byte) 0x4C;   // sectname = "LECTNAME"
+    sectionData3[16] = (byte) 0x4C;  // segname = "LEGNAME"
+    sectionData3[51] = (byte) 0x03;  // offset = 3
+
+    byte[] segmentBytes = SegmentCommandTestData.getBigEndian64Bits();
+    segmentBytes[6] = (byte) 0xAA;
+    segmentBytes[7] = (byte) 0xFF;   // cmdsize = 0xAAFF == 43755 bytes!!!
+    segmentBytes[67] = (byte) 0x03;  // nsects = 3
+
+    SegmentCommand command = SegmentCommandUtils.createFromBuffer(
+        ByteBuffer.wrap(segmentBytes).order(ByteOrder.BIG_ENDIAN));
+
+    ByteBuffer buffer = ByteBuffer.allocate(
+        command.getLoadCommandCommonFields().getCmdsize().intValue() + 3 * sectionSize);
+    buffer.order(ByteOrder.BIG_ENDIAN);
+    SegmentCommandUtils.writeCommandToBuffer(command, buffer, true);
+    buffer.put(sectionData1);
+    buffer.put(sectionData2);
+    buffer.put(sectionData3);
+
+    final List<Section> enumeratedSections = new ArrayList<>();
+
+    SegmentCommandUtils.enumerateSectionsInSegmentLoadCommand(
+        buffer,
+        new MachoMagicInfo(UnsignedInteger.fromIntBits(0xFEEDFACF)),
         command,
         new Function<Section, Boolean>() {
           @Override

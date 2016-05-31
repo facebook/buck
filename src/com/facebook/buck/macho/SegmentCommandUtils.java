@@ -17,6 +17,7 @@ package com.facebook.buck.macho;
 
 import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.UnsignedInteger;
@@ -58,6 +59,21 @@ public class SegmentCommandUtils {
      */
     final int universalAlignment = 32 * 1024;
     return universalAlignment * (int) (Math.ceil((double) value / universalAlignment));
+  }
+
+  /**
+   * This method returns the amount of bytes that segment command is taking. Segment's section bytes
+   * are laid out in binary after the segment command header.
+   * @param segmentCommand Command which header size is being determined
+   * @return The size of the segment command header, after which the sections are present.
+   */
+  @VisibleForTesting
+  static int getSegmentCommandHeaderSize(SegmentCommand segmentCommand) {
+    if (segmentCommand.getLoadCommandCommonFields().getCmd().equals(SegmentCommand.LC_SEGMENT_64)) {
+      return SegmentCommand.SIZE_IN_BYTES_64_BIT;
+    } else {
+      return SegmentCommand.SIZE_IN_BYTES_32_BIT;
+    }
   }
 
   /**
@@ -104,7 +120,7 @@ public class SegmentCommandUtils {
       Function<Section, Boolean> callback) throws IOException {
     final int sectionHeaderSize = SectionUtils.sizeOfSectionHeader(magicInfo.is64Bit());
     final int sectionsOffset = segmentCommand.getLoadCommandCommonFields().getOffsetInBinary() +
-        segmentCommand.getLoadCommandCommonFields().getCmdsize().intValue();
+        SegmentCommandUtils.getSegmentCommandHeaderSize(segmentCommand);
     for (int i = 0; i < segmentCommand.getNsects().intValue(); i++) {
       int offsetInBinary = sectionsOffset + sectionHeaderSize * i;
       buffer.position(offsetInBinary);
