@@ -106,6 +106,8 @@
     <include name="eclipse/org.eclipse.equinox.preferences_3.6.0.v20160120-1756.jar"/>
     <include name="eclipse/org.eclipse.jdt.core_3.12.0.v20160426-1326.jar"/>
     <include name="eclipse/org.eclipse.osgi_3.11.0.v20160427-2120.jar"/>
+    <include name="eden/eden.jar" />
+    <include name="eden/java-thrift-dependencies.jar" />
     <include name="guice/guice-3.0.jar" />
     <include name="guice/guice-assistedinject-3.0.jar" />
     <include name="guice/guice-multibindings-3.0.jar" />
