@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY a7b5feb3a1c8126331e62fddd7f2652c1630c478 #@#
+#@# GENERATED FILE: DO NOT MODIFY 9c710f69654cda9949a3908a5d265c29e7a27bb2 #@#
 {
   "cli" : {
     "deps" : [
@@ -32,6 +32,7 @@
       "//src/com/facebook/buck/jvm/java/autodeps:autodeps",
       "//src/com/facebook/buck/jvm/java/intellij:intellij",
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/macho:macho",
       "//src/com/facebook/buck/maven:maven",
       "//src/com/facebook/buck/parser:config",
       "//src/com/facebook/buck/python:config",

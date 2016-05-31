@@ -112,6 +112,7 @@ public class MainIntegrationTest {
         "  clean       deletes any generated files",
         "  fetch       downloads remote resources to your local machine",
         "  install     builds and installs an application",
+        "  machoutils  provides some utils for Mach O binary files",
         "  project     generates project configuration files for an IDE",
         "  publish     builds and publishes a library to a central repository",
         "  query       provides facilities to query information about the target nodes graph",
