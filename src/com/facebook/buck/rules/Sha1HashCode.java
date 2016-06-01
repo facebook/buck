@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
 
+import java.nio.ByteBuffer;
 import java.util.regex.Pattern;
 
 /**
@@ -32,33 +33,30 @@ public final class Sha1HashCode {
   private static final Pattern SHA1_PATTERN = Pattern.compile(
       String.format("[a-f0-9]{%d}", NUM_BYTES_IN_HEX_REPRESENTATION));
 
-  private final byte[] bytes;
+  final int firstFourBytes;
+  final long nextEightBytes;
+  final long lastEightBytes;
 
-  /**
-   * @param bytes may not be modified once it is passed to this constructor. If the caller cannot
-   *     guarantee this, then the caller is responsible for passing {@code bytes.clone()} instead of
-   *     {@code bytes}.
-   */
-  private Sha1HashCode(byte[] bytes) {
-    Preconditions.checkArgument(
-        bytes.length == NUM_BYTES_IN_HASH,
-        "Length of bytes must be %d but was %d.",
-        NUM_BYTES_IN_HASH,
-        bytes.length);
-    this.bytes = bytes;
+  private Sha1HashCode(int firstFourBytes, long nextEightBytes, long lastEightBytes) {
+    this.firstFourBytes = firstFourBytes;
+    this.nextEightBytes = nextEightBytes;
+    this.lastEightBytes = lastEightBytes;
   }
 
   /**
    * Clones the specified bytes and uses the clone to create a new {@link Sha1HashCode}.
    */
   public static Sha1HashCode fromBytes(byte[] bytes) {
-    // TODO(bolinfest): Investigate the performance impact of skipping this clone.
-    return new Sha1HashCode(bytes.clone());
+    // TODO(bolinfest): Direct bit-shifting manipulations might be more efficient to avoid
+    // allocating a ByteBuffer.
+    Preconditions.checkArgument(bytes.length == NUM_BYTES_IN_HASH);
+    ByteBuffer buffer = ByteBuffer.wrap(bytes);
+    return new Sha1HashCode(buffer.getInt(), buffer.getLong(), buffer.getLong());
   }
 
   public static Sha1HashCode fromHashCode(HashCode hashCode) {
     // Note that hashCode.asBytes() does a clone of its internal byte[], but we cannot avoid it.
-    return new Sha1HashCode(hashCode.asBytes());
+    return fromBytes(hashCode.asBytes());
   }
 
   public static Sha1HashCode of(String hash) {
@@ -68,22 +66,16 @@ public final class Sha1HashCode {
     // Note that this could be done with less memory if we created the byte[20] ourselves and
     // walked the string and converted the hex chars into bytes as we went.
     byte[] bytes = HashCode.fromString(hash).asBytes();
-    return new Sha1HashCode(bytes);
-  }
-
-  /**
-   * @return a fresh copy of the internal bytes
-   */
-  byte[] getBytes() {
-    // TODO(bolinfest): Investigate the performance impact of skipping this clone.
-    return bytes.clone();
+    return fromBytes(bytes);
   }
 
   /**
    * @return the hash as a 40-character string from the alphabet [a-f0-9].
    */
   public String getHash() {
-    return HashCode.fromBytes(bytes).toString();
+    return String.format("%08x", firstFourBytes) +
+        String.format("%016x", nextEightBytes) +
+        String.format("%016x", lastEightBytes);
   }
 
   /** Same as {@link #getHash()}. */
@@ -96,22 +88,15 @@ public final class Sha1HashCode {
   public boolean equals(Object obj) {
     if (obj instanceof Sha1HashCode) {
       Sha1HashCode that = (Sha1HashCode) obj;
-      for (int i = 0; i < NUM_BYTES_IN_HASH; i++) {
-        if (this.bytes[i] != that.bytes[i]) {
-          return false;
-        }
-      }
-      return true;
+      return this.firstFourBytes == that.firstFourBytes &&
+          this.nextEightBytes == that.nextEightBytes &&
+          this.lastEightBytes == that.lastEightBytes;
     }
     return false;
   }
 
   @Override
   public int hashCode() {
-    return
-        ((bytes[0] & 0xff) << 24) |
-        ((bytes[1] & 0xff) << 16) |
-        ((bytes[2] & 0xff) <<  8) |
-        ((bytes[3] & 0xff));
+    return firstFourBytes;
   }
 }

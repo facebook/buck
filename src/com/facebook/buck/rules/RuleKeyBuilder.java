@@ -92,6 +92,20 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
     return this;
   }
 
+  private RuleKeyBuilder<T> feed(Sha1HashCode sha1) {
+    while (!keyStack.isEmpty()) {
+      String key = keyStack.pop();
+      hasher.putBytes(key.getBytes(StandardCharsets.UTF_8));
+      hasher.putByte(SEPARATOR);
+    }
+
+    hasher.putInt(sha1.firstFourBytes);
+    hasher.putLong(sha1.nextEightBytes);
+    hasher.putLong(sha1.lastEightBytes);
+    hasher.putByte(SEPARATOR);
+    return this;
+  }
+
   protected RuleKeyBuilder<T> setSourcePath(SourcePath sourcePath) {
     if (sourcePath instanceof ArchiveMemberSourcePath) {
       ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) sourcePath;
@@ -360,7 +374,7 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
       }
     } else if (val instanceof Sha1HashCode) {
       Sha1HashCode hashCode = (Sha1HashCode) val;
-      feed(hashCode.getBytes());
+      feed(hashCode);
     } else if (val instanceof byte[]) {
       byte[] bytes = (byte[]) val;
       ruleKeyLogger.addValue(bytes);

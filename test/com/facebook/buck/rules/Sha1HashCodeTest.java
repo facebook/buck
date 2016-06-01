@@ -18,13 +18,10 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Strings;
 
 import org.junit.Test;
-
-import java.util.Arrays;
 
 public class Sha1HashCodeTest {
 
@@ -91,7 +88,9 @@ public class Sha1HashCodeTest {
       (byte) 0x0c,
     };
     Sha1HashCode hashCodeFromRawBytes = Sha1HashCode.fromBytes(bytes);
-    assertTrue(Arrays.equals(bytes, hashCodeFromRawBytes.getBytes()));
+    assertEquals(0xfaceb00c, hashCodeFromRawBytes.firstFourBytes);
+    assertEquals(0xfaceb00cfaceb00cL, hashCodeFromRawBytes.nextEightBytes);
+    assertEquals(0xfaceb00cfaceb00cL, hashCodeFromRawBytes.lastEightBytes);
 
     Sha1HashCode hashCodeFromString = Sha1HashCode.of(Strings.repeat("faceb00c", 5));
     assertEquals(hashCodeFromString, hashCodeFromRawBytes);
