@@ -124,7 +124,6 @@ import com.google.common.reflect.ClassPath;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ServiceManager;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGContext;
 import com.martiansoftware.nailgun.NGServer;
@@ -162,7 +161,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
@@ -885,7 +883,7 @@ public final class Main {
         executors.put(ExecutionContext.ExecutorPool.CPU, listeningDecorator(
                 Executors.newCachedThreadPool()));
         // Create a thread pool for network I/O tasks
-        executors.put(ExecutionContext.ExecutorPool.NETWORK, getNetworkExecutorService(buckConfig));
+        executors.put(ExecutionContext.ExecutorPool.NETWORK, newDirectExecutorService());
 
         // The order of resources in the try-with-resources block is important: the BuckEventBus
         // must be the last resource, so that it is closed first and can deliver its queued events
@@ -1183,16 +1181,6 @@ public final class Main {
     } else {
       return newDirectExecutorService();
     }
-  }
-
-  private static ListeningExecutorService getNetworkExecutorService(BuckConfig buckConfig) {
-    return listeningDecorator(new ThreadPoolExecutor(
-        /* corePoolSize */ buckConfig.getNumThreadsForNetwork(),
-        /* maximumPoolSize */ buckConfig.getNumThreadsForNetwork(),
-        /* keepAliveTime */ 1L, TimeUnit.SECONDS,
-        /* workQueue */ buckConfig.getWorkQueueExecutionOrder().newWorkQueue(),
-        /* threadFactory */ new ThreadFactoryBuilder().setNameFormat("Network I/O" + "-%d").build(),
-        /* handler */ new ThreadPoolExecutor.CallerRunsPolicy()));
   }
 
   @VisibleForTesting
