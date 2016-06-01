@@ -18,12 +18,18 @@ package com.facebook.buck.lua;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.testutil.TargetGraphFactory;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -69,6 +75,36 @@ public class LuaBinaryDescriptionTest {
             .setMainModule("main")
             .build(resolver);
     assertThat(binary.getLua(), Matchers.is(override));
+  }
+
+  @Test
+  public void versionLessNativeLibraryExtension() throws Exception {
+    CxxLibraryBuilder cxxLibraryBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setSoname("libfoo.so.1.0")
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("hello.c"))));
+    LuaBinaryBuilder binaryBuilder =
+        new LuaBinaryBuilder(
+            BuildTargetFactory.newInstance("//:rule"),
+            FakeLuaConfig.DEFAULT.withPackageStyle(LuaConfig.PackageStyle.INPLACE))
+            .setMainModule("main")
+            .setDeps(ImmutableSortedSet.of(cxxLibraryBuilder.getTarget()));
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(
+                cxxLibraryBuilder.build(),
+                binaryBuilder.build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
+    cxxLibraryBuilder.build(resolver);
+    binaryBuilder.build(resolver);
+    SymlinkTree tree =
+        resolver.getRuleWithType(
+            LuaBinaryDescription.getNativeLibsSymlinkTreeTarget(binaryBuilder.getTarget()),
+            SymlinkTree.class);
+    assertThat(
+        tree.getLinks().keySet(),
+        Matchers.hasItem(
+            tree.getProjectFilesystem().getRootPath().getFileSystem().getPath("libfoo.so")));
   }
 
 }

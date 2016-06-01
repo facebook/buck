@@ -37,7 +37,6 @@ import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -64,9 +63,13 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
+import com.google.common.base.Splitter;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -74,6 +77,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -85,6 +89,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class LuaBinaryDescription implements
     Description<LuaBinaryDescription.Arg>,
@@ -120,6 +126,11 @@ public class LuaBinaryDescription implements
   @Override
   public Arg createUnpopulatedConstructorArg() {
     return new Arg();
+  }
+
+  @VisibleForTesting
+  protected static BuildTarget getNativeLibsSymlinkTreeTarget(BuildTarget target) {
+    return target.withAppendedFlavors(ImmutableFlavor.of("native-libs-link-tree"));
   }
 
   private Path getOutputPath(BuildTarget target, ProjectFilesystem filesystem) {
@@ -494,12 +505,11 @@ public class LuaBinaryDescription implements
   }
 
   private SymlinkTree createSymlinkTree(
+      BuildTarget linkTreeTarget,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
-      Flavor flavor,
       ImmutableMap<String, SourcePath> components) {
-    BuildTarget linkTreeTarget = params.getBuildTarget().withAppendedFlavors(flavor);
     Path linkTreeRoot =
         params.getProjectFilesystem().resolve(
             BuildTargets.getGenPath(params.getProjectFilesystem(), linkTreeTarget, "%s"));
@@ -512,6 +522,38 @@ public class LuaBinaryDescription implements
             pathResolver,
             linkTreeRoot,
             components));
+  }
+
+  /**
+   * @return the native library map with additional entries for library names with the version
+   *     suffix stripped (e.g. libfoo.so.1.0 -> libfoo.so) to appease LuaJIT, which wants to load
+   *     libraries using the build-time name.
+   */
+  private ImmutableSortedMap<String, SourcePath> addVersionLessLibraries(
+      CxxPlatform cxxPlatform,
+      ImmutableSortedMap<String, SourcePath> libraries) {
+    Pattern versionedExtension =
+        Pattern.compile(
+            Joiner.on("[.\\d]*").join(
+                Iterables.transform(
+                    Splitter.on("%s").split(cxxPlatform.getSharedLibraryVersionedExtensionFormat()),
+                    new Function<String, String>() {
+                      @Override
+                      public String apply(String input) {
+                        return input.isEmpty() ? input : Pattern.quote(input);
+                      }
+                    })));
+    ImmutableSortedMap.Builder<String, SourcePath> builder = ImmutableSortedMap.naturalOrder();
+    for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {
+      String name = ent.getKey();
+      builder.put(name, ent.getValue());
+      Matcher matcher = versionedExtension.matcher(name);
+      String versionLessName = matcher.replaceAll(cxxPlatform.getSharedLibraryExtension());
+      if (!versionLessName.equals(ent.getKey()) && !libraries.containsKey(versionLessName)) {
+        builder.put(versionLessName, ent.getValue());
+      }
+    }
+    return builder.build();
   }
 
   private Tool getInPlaceBinary(
@@ -529,10 +571,12 @@ public class LuaBinaryDescription implements
     final SymlinkTree modulesLinkTree =
         resolver.addToIndex(
             createSymlinkTree(
+                params.getBuildTarget()
+                    .withAppendedFlavors(ImmutableFlavor.of("modules-link-tree")),
                 params,
                 resolver,
                 pathResolver,
-                ImmutableFlavor.of("modules-link-tree"), components.getModules()));
+                components.getModules()));
     final Path relativeModulesLinkTreeRoot =
         output.getParent().relativize(
             params.getProjectFilesystem().getRootPath().relativize(modulesLinkTree.getRoot()));
@@ -543,10 +587,11 @@ public class LuaBinaryDescription implements
       SymlinkTree symlinkTree =
           resolver.addToIndex(
               createSymlinkTree(
+                  getNativeLibsSymlinkTreeTarget(params.getBuildTarget()),
                   params,
                   resolver,
                   pathResolver,
-                  ImmutableFlavor.of("native-libs-link-tree"), components.getNativeLibraries()));
+                  addVersionLessLibraries(cxxPlatform, components.getNativeLibraries())));
       nativeLibsLinktree.add(symlinkTree);
       relativeNativeLibsLinkTreeRoot =
           Optional.of(

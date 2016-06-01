@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 8da60b63afeacaea8a07e8d15689e0c3184656b7 #@#
+#@# GENERATED FILE: DO NOT MODIFY 591a7ce1f140b7a18969863385b88bf4a9ed387d #@#
 {
   "project_generator" : {
     "deps" : [
@@ -11,6 +11,7 @@
       "//src/com/facebook/buck/util:exceptions",
       "//third-party/java/dd-plist:dd-plist",
       "//third-party/java/immutables:processor",
+      "//third-party/java/jsr:jsr305",
       "//third-party/java/stringtemplate:stringtemplate"
     ],
     "exported_deps" : [
@@ -29,8 +30,7 @@
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/immutables:immutables",
-      "//third-party/java/guava:guava",
-      "//third-party/java/jsr:jsr305"
+      "//third-party/java/guava:guava"
     ]
   }
 }
