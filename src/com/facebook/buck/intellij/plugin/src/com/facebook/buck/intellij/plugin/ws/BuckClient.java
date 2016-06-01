@@ -22,6 +22,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventsHandlerInterface;
 import com.intellij.openapi.application.ApplicationManager;
@@ -35,7 +36,7 @@ public class BuckClient {
 
     private final WebSocketClient mWSClient = new WebSocketClient();
     private BuckSocket mWSSocket;
-    private boolean mConnected = false;
+    private AtomicBoolean mConnected = new AtomicBoolean(false);
     private long mLastActionTime = 0;
     private static final long PING_PERIOD = 1000 * 60;
     private Object syncObject = new Object();
@@ -109,7 +110,10 @@ public class BuckClient {
                 synchronized (syncObject) {
                     mLastActionTime = (new Date()).getTime();
                 }
-                mConnected = true;
+                mConnected.set(true);
+                if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
+                    scheduledFuture.cancel(true);
+                }
                 scheduledFuture = scheduledThreadPoolExecutor.scheduleAtFixedRate(
                         new Runnable() {
                             @Override
@@ -121,20 +125,21 @@ public class BuckClient {
                         10,
                         TimeUnit.SECONDS);
             } catch (Throwable t) {
-                mConnected = false;
+                mConnected.set(false);
             }
         }
     }
 
     public void disconnect() {
-        if (mConnected) {
+        if (mConnected.get()) {
             scheduledFuture.cancel(true);
+            scheduledThreadPoolExecutor.shutdown();
             ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
                 @Override
                 public void run() {
                     try {
                         mWSClient.stop();
-                        mConnected = false;
+                        mConnected.set(false);
                     } catch (InterruptedException e) {
                         LOG.debug(
                             "Could not disconnect from buck. " + e);
@@ -151,7 +156,7 @@ public class BuckClient {
         if ((new Date()).getTime() - mLastActionTime < PING_PERIOD) {
             return;
         }
-        if (mConnected) {
+        if (mConnected.get()) {
             try {
                 mWSSocket.sendMessage("ping");
                 synchronized (syncObject) {
