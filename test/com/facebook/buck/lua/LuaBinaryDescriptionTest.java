@@ -24,17 +24,25 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class LuaBinaryDescriptionTest {
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void mainModule() throws Exception {
@@ -106,5 +114,48 @@ public class LuaBinaryDescriptionTest {
         Matchers.hasItem(
             tree.getProjectFilesystem().getRootPath().getFileSystem().getPath("libfoo.so")));
   }
+
+  @Test
+  public void duplicateIdenticalModules() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    LuaLibrary libraryA =
+        (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:a"))
+            .setSrcs(
+                ImmutableSortedMap.<String, SourcePath>of("foo.lua", new FakeSourcePath("test")))
+            .build(resolver);
+    LuaLibrary libraryB =
+        (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:b"))
+            .setSrcs(
+                ImmutableSortedMap.<String, SourcePath>of("foo.lua", new FakeSourcePath("test")))
+            .build(resolver);
+    new LuaBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+        .setMainModule("hello.world")
+        .setDeps(ImmutableSortedSet.of(libraryA.getBuildTarget(), libraryB.getBuildTarget()))
+        .build(resolver);
+  }
+
+  @Test
+  public void duplicateConflictingModules() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    LuaLibrary libraryA =
+        (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:a"))
+            .setSrcs(
+                ImmutableSortedMap.<String, SourcePath>of("foo.lua", new FakeSourcePath("foo")))
+            .build(resolver);
+    LuaLibrary libraryB =
+        (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:b"))
+            .setSrcs(
+                ImmutableSortedMap.<String, SourcePath>of("foo.lua", new FakeSourcePath("bar")))
+            .build(resolver);
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(Matchers.containsString("conflicting modules for foo.lua"));
+    new LuaBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+        .setMainModule("hello.world")
+        .setDeps(ImmutableSortedSet.of(libraryA.getBuildTarget(), libraryB.getBuildTarget()))
+        .build(resolver);
+  }
+
 
 }

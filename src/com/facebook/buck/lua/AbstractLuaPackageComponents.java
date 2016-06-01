@@ -21,17 +21,21 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.immutables.value.Value;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * Components that contribute to a Lua package.
  */
 @Value.Immutable
-@BuckStyleImmutable
+@BuckStyleTuple
 abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
 
   /**
@@ -71,6 +75,61 @@ abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
         .addAll(getModules().values())
         .addAll(getNativeLibraries().values())
         .build();
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder {
+
+    private final Map<String, SourcePath> modules = new LinkedHashMap<>();
+    private final Map<String, SourcePath> nativeLibraries = new LinkedHashMap<>();
+
+    public Builder putModules(String name, SourcePath path) {
+      SourcePath existing = modules.get(name);
+      if (existing != null && !existing.equals(path)) {
+        throw new HumanReadableException(
+            "conflicting modules for %s: %s != %s",
+            name,
+            path,
+            existing);
+      }
+      modules.put(name, path);
+      return this;
+    }
+
+    public Builder putAllModules(Map<String, SourcePath> modules) {
+      for (Map.Entry<String, SourcePath> entry : modules.entrySet()) {
+        putModules(entry.getKey(), entry.getValue());
+      }
+      return this;
+    }
+
+    public Builder putNativeLibraries(String name, SourcePath path) {
+      SourcePath existing = nativeLibraries.get(name);
+      if (existing != null && !existing.equals(path)) {
+        throw new HumanReadableException(
+            "conflicting native libraries for %s: %s != %s",
+            name,
+            path,
+            existing);
+      }
+      nativeLibraries.put(name, path);
+      return this;
+    }
+
+    public Builder putAllNativeLibraries(Map<String, SourcePath> nativeLibraries) {
+      for (Map.Entry<String, SourcePath> entry : nativeLibraries.entrySet()) {
+        putNativeLibraries(entry.getKey(), entry.getValue());
+      }
+      return this;
+    }
+
+    public LuaPackageComponents build() {
+      return LuaPackageComponents.of(modules, nativeLibraries);
+    }
+
   }
 
 }
