@@ -572,17 +572,32 @@ public class AppleBundleIntegrationTest {
         BuildTargetFactory.newInstance("//:DemoApp#no-debug");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    workspace.verify();
-
-    Path appPath = BuildTargets
-        .getGenPath(
-            filesystem,
-            BuildTarget.builder(target)
-                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                .build(),
-            "%s")
-        .resolve(target.getShortName() + ".app");
+    Path outputPath = BuildTargets.getGenPath(
+        filesystem,
+        BuildTarget.builder(target)
+            .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+            .build(),
+        "%s");
+    workspace.verify(Paths.get("DemoApp_output.expected"), outputPath);
+    Path appPath = outputPath.resolve(target.getShortName() + ".app");
     assertTrue(Files.exists(workspace.getPath(appPath.resolve("Assets.car"))));
+  }
+
+  @Test
+  public void appleAssetCatalogsWithMoreThanOneAppIconOrLaunchImageShouldFail() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage("At most one asset catalog in the dependencies of");
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "apple_asset_catalogs_are_included_in_bundle",
+        tmp);
+    workspace.setUp();
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//:DemoAppWithMoreThanOneIconAndLaunchImage#no-debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName());
   }
 
   @Test

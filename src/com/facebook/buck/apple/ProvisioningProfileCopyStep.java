@@ -161,6 +161,7 @@ class ProvisioningProfileCopyStep implements Step {
       return (new PlistProcessStep(
           filesystem,
           entitlementsPlist.get(),
+          Optional.<Path>absent(),
           signingEntitlementsTempPath,
           bestProfile.get().getEntitlements(),
           ImmutableMap.<String, NSObject>of(),

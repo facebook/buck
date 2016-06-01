@@ -57,4 +57,44 @@ apple_asset_catalog(
 apple_asset_catalog(
   name = 'Assets3',
   dirs = [ 'Assets3.xcassets' ],
+  app_icon = 'Icon',
+  launch_image = 'LaunchImage',
+)
+
+apple_asset_catalog(
+  name = 'ExtraIconAndLaunchImage',
+  dirs = [ 'ExtraIconAndLaunchImage.xcassets' ],
+  app_icon = 'Icon2',
+  launch_image = 'LaunchImage2',
+)
+
+apple_binary(
+  name = 'DemoAppBinaryWithMoreThanOneIconAndLaunchImage',
+  preprocessor_flags = ['-fobjc-arc'],
+  headers = glob([
+    'DemoAppBinary/*.h',
+  ]),
+  srcs = glob([
+    'DemoAppBinary/*.m',
+  ]),
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+  ],
+  libraries = [
+    '$SDKROOT/usr/lib/libobjc.dylib',
+  ],
+  deps = [
+    ':DemoAppLibrary',
+    ':Assets1',
+    ':Assets2',
+    ':ExtraIconAndLaunchImage',
+  ],
+)
+
+apple_bundle(
+  name = 'DemoAppWithMoreThanOneIconAndLaunchImage',
+  binary = ':DemoAppBinaryWithMoreThanOneIconAndLaunchImage',
+  extension = 'app',
+  info_plist = 'Info.plist',
 )

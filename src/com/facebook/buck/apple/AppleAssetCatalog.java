@@ -29,6 +29,8 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -59,12 +61,22 @@ public class AppleAssetCatalog extends AbstractBuildRule {
   @AddToRuleKey(stringify = true)
   private final Path outputDir;
 
+  private final Path outputPlist;
+
+  @AddToRuleKey
+  private final Optional<String> appIcon;
+
+  @AddToRuleKey
+  private final Optional<String> launchImage;
+
   AppleAssetCatalog(
       BuildRuleParams params,
       final SourcePathResolver resolver,
       String applePlatformName,
       Tool actool,
       SortedSet<SourcePath> assetCatalogDirs,
+      Optional<String> appIcon,
+      Optional<String> launchImage,
       String bundleName) {
     super(params, resolver);
     Preconditions.checkArgument(
@@ -83,6 +95,12 @@ public class AppleAssetCatalog extends AbstractBuildRule {
     this.assetCatalogDirs = ImmutableSortedSet.copyOf(assetCatalogDirs);
     this.outputDir = BuildTargets.getGenPath(getProjectFilesystem(), params.getBuildTarget(), "%s")
         .resolve(bundleName + BUNDLE_DIRECTORY_EXTENSION);
+    this.outputPlist = BuildTargets.getScratchPath(
+        getProjectFilesystem(),
+        params.getBuildTarget(),
+        "%s-output.plist");
+    this.appIcon = appIcon;
+    this.launchImage = launchImage;
   }
 
   @Override
@@ -91,7 +109,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
 
     stepsBuilder.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDir));
-
+    stepsBuilder.add(new MkdirStep(getProjectFilesystem(), outputPlist.getParent()));
     ImmutableSortedSet<Path> absoluteAssetCatalogDirs =
         ImmutableSortedSet.copyOf(
             Iterables.transform(
@@ -104,10 +122,13 @@ public class AppleAssetCatalog extends AbstractBuildRule {
             actool.getEnvironment(getResolver()),
             actool.getCommandPrefix(getResolver()),
             absoluteAssetCatalogDirs,
-            getProjectFilesystem().resolve(outputDir)));
+            getProjectFilesystem().resolve(outputDir),
+            getProjectFilesystem().resolve(outputPlist),
+            appIcon,
+            launchImage));
 
     buildableContext.recordArtifact(getOutputDir());
-
+    buildableContext.recordArtifact(outputPlist);
     return stepsBuilder.build();
   }
 
@@ -119,5 +140,9 @@ public class AppleAssetCatalog extends AbstractBuildRule {
 
   public Path getOutputDir() {
     return outputDir;
+  }
+
+  public Path getOutputPlist() {
+    return outputPlist;
   }
 }

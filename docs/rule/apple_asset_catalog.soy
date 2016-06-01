@@ -38,6 +38,26 @@ that the bundle rule depends on are merged and placed into the final output bund
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'app_icon' /}
+  {param default: 'None' /}
+  {param desc}
+  An optional reference to a <code>.appiconset</code> containing a image set representing an
+  application icon.  (The extension itself should not be included.)  This parameter
+  may be specified at most once in a given <code>apple_bundle</code>'s transitive dependencies.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'launch_image' /}
+  {param default: 'None' /}
+  {param desc}
+  An optional reference to a <code>.launchimage</code> containing a image set representing an
+  application launch image.  (The extension itself should not be included.)  This parameter
+  may be specified at most once in a given <code>apple_bundle</code>'s transitive dependencies.
+  {/param}
+{/call}
+
 {/param} // args
 
 {param examples}
@@ -47,6 +67,14 @@ apple_asset_catalog(
   dirs = [
     'MyResources.xcassets',
   ],
+)
+
+# A asset catalog with a app icon and launch image
+apple_asset_catalog(
+  name = 'AssetCatalog',
+  dirs = [ 'AssetCatalog.xcassets' ],
+  app_icon = 'Icon',
+  launch_image = 'LaunchImage',
 )
 </pre>{/literal}
 {/param} // examples

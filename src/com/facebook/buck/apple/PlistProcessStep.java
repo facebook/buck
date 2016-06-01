@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import com.dd.plist.BinaryPropertyListWriter;
@@ -46,6 +47,7 @@ class PlistProcessStep implements Step {
 
   private final ProjectFilesystem filesystem;
   private final Path input;
+  private final Optional<Path> additionalInputToMerge;
   private final Path output;
 
   /** Only valid if the input .plist is a NSDictionary; ignored otherwise. */
@@ -58,12 +60,14 @@ class PlistProcessStep implements Step {
   public PlistProcessStep(
       ProjectFilesystem filesystem,
       Path input,
+      Optional<Path> additionalInputToMerge,
       Path output,
       ImmutableMap<String, NSObject> additionalKeys,
       ImmutableMap<String, NSObject> overrideKeys,
       OutputFormat outputFormat) {
     this.filesystem = filesystem;
     this.input = input;
+    this.additionalInputToMerge = additionalInputToMerge;
     this.output = output;
     this.additionalKeys = additionalKeys;
     this.overrideKeys = overrideKeys;
@@ -83,6 +87,22 @@ class PlistProcessStep implements Step {
 
       if (infoPlist instanceof NSDictionary) {
         NSDictionary dictionary = (NSDictionary) infoPlist;
+
+        if (additionalInputToMerge.isPresent()) {
+          try (InputStream mergeStream =
+                   filesystem.newFileInputStream(additionalInputToMerge.get());
+               BufferedInputStream mergeBufferedStream = new BufferedInputStream(mergeStream)) {
+            NSObject mergeInfoPlist;
+            try {
+              mergeInfoPlist = PropertyListParser.parse(mergeBufferedStream);
+            } catch (Exception e) {
+              throw new IOException(additionalInputToMerge.toString() + ": " + e);
+            }
+
+            dictionary.putAll(((NSDictionary) mergeInfoPlist).getHashMap());
+          }
+        }
+
         for (ImmutableMap.Entry<String, NSObject> entry : additionalKeys.entrySet()) {
           if (!dictionary.containsKey(entry.getKey())) {
             dictionary.put(entry.getKey(), entry.getValue());

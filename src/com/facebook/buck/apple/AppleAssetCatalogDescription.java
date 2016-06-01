@@ -26,6 +26,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Optional;
 
 import java.util.SortedSet;
 
@@ -58,5 +59,7 @@ public class AppleAssetCatalogDescription implements Description<AppleAssetCatal
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public SortedSet<SourcePath> dirs;
+    public Optional<String> appIcon;
+    public Optional<String> launchImage;
   }
 }

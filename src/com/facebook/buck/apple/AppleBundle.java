@@ -285,6 +285,19 @@ public class AppleBundle
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
 
+    stepsBuilder.add(
+        new MakeCleanDirectoryStep(getProjectFilesystem(), bundleRoot));
+
+    if (assetCatalog.isPresent()) {
+      Path bundleDir = assetCatalog.get().getOutputDir();
+      stepsBuilder.add(
+          CopyStep.forDirectory(
+              getProjectFilesystem(),
+              bundleDir,
+              bundleRoot,
+              CopyStep.DirectoryMode.CONTENTS_ONLY));
+    }
+
     Path metadataPath = getMetadataPath();
 
     Path infoPlistInputPath = getResolver().getAbsolutePath(infoPlist);
@@ -293,7 +306,6 @@ public class AppleBundle
     Path infoPlistOutputPath = metadataPath.resolve("Info.plist");
 
     stepsBuilder.add(
-        new MakeCleanDirectoryStep(getProjectFilesystem(), bundleRoot),
         new MkdirStep(getProjectFilesystem(), metadataPath),
         // TODO(bhamiltoncx): This is only appropriate for .app bundles.
         new WriteFileStep(
@@ -317,6 +329,9 @@ public class AppleBundle
         new PlistProcessStep(
             getProjectFilesystem(),
             infoPlistSubstitutionTempPath,
+            assetCatalog.isPresent() ?
+                Optional.of(assetCatalog.get().getOutputPlist()) :
+                Optional.<Path>absent(),
             infoPlistOutputPath,
             getInfoPlistAdditionalKeys(),
             getInfoPlistOverrideKeys(),
@@ -392,16 +407,6 @@ public class AppleBundle
                 frameworksDestinationPath,
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
       }
-    }
-
-    if (assetCatalog.isPresent()) {
-      Path bundleDir = assetCatalog.get().getOutputDir();
-      stepsBuilder.add(
-          CopyStep.forDirectory(
-              getProjectFilesystem(),
-              bundleDir,
-              bundleRoot,
-              CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
 
     if (needCodeSign()) {
@@ -747,6 +752,7 @@ public class AppleBundle
             new PlistProcessStep(
                 getProjectFilesystem(),
                 sourcePath,
+                Optional.<Path>absent(),
                 destinationPath,
                 ImmutableMap.<String, NSObject>of(),
                 ImmutableMap.<String, NSObject>of(),

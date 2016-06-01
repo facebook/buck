@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -34,6 +35,9 @@ class ActoolStep extends ShellStep {
   private final ImmutableList<String> actoolCommand;
   private final SortedSet<Path> assetCatalogDirs;
   private final Path output;
+  private final Path outputPlist;
+  private final Optional<String> appIcon;
+  private final Optional<String> launchImage;
 
   public ActoolStep(
       Path workingDirectory,
@@ -41,13 +45,19 @@ class ActoolStep extends ShellStep {
       ImmutableMap<String, String> environment,
       List<String> actoolCommand,
       SortedSet<Path> assetCatalogDirs,
-      Path output) {
+      Path output,
+      Path outputPlist,
+      Optional<String> appIcon,
+      Optional<String> launchImage) {
     super(workingDirectory);
     this.applePlatformName = applePlatformName;
     this.environment = environment;
     this.actoolCommand = ImmutableList.copyOf(actoolCommand);
     this.assetCatalogDirs = assetCatalogDirs;
     this.output = output;
+    this.outputPlist = outputPlist;
+    this.appIcon = appIcon;
+    this.launchImage = launchImage;
   }
 
   @Override
@@ -70,7 +80,17 @@ class ActoolStep extends ShellStep {
         "--target-device", "ipad",
         "--compress-pngs",
         "--compile",
-        output.toString());
+        output.toString(),
+        "--output-partial-info-plist",
+        outputPlist.toString());
+
+    if (appIcon.isPresent()) {
+      commandBuilder.add("--app-icon", appIcon.get());
+    }
+
+    if (launchImage.isPresent()) {
+      commandBuilder.add("--launch-image", launchImage.get());
+    }
 
     commandBuilder.addAll(Iterables.transform(assetCatalogDirs, Functions.toStringFunction()));
 

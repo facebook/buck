@@ -38,6 +38,7 @@ import java.nio.file.Path;
 public class PlistProcessStepTest {
 
   private static final Path INPUT_PATH = Paths.get("input.plist");
+  private static final Path MERGE_PATH = Paths.get("merge.plist");
   private static final Path OUTPUT_PATH = Paths.get("output.plist");
 
   @Test
@@ -47,6 +48,7 @@ public class PlistProcessStepTest {
     PlistProcessStep plistProcessStep = new PlistProcessStep(
         projectFilesystem,
         INPUT_PATH,
+        Optional.<Path>absent(),
         OUTPUT_PATH,
         ImmutableMap.<String, NSObject>of(),
         ImmutableMap.<String, NSObject>of(),
@@ -70,6 +72,7 @@ public class PlistProcessStepTest {
     PlistProcessStep plistProcessStep = new PlistProcessStep(
         projectFilesystem,
         INPUT_PATH,
+        Optional.<Path>absent(),
         OUTPUT_PATH,
         ImmutableMap.<String, NSObject>of(),
         ImmutableMap.<String, NSObject>of(
@@ -100,6 +103,7 @@ public class PlistProcessStepTest {
     PlistProcessStep plistProcessStep = new PlistProcessStep(
         projectFilesystem,
         INPUT_PATH,
+        Optional.<Path>absent(),
         OUTPUT_PATH,
         ImmutableMap.<String, NSObject>of(
             "Key1", new NSString("OverrideValue")),
@@ -129,6 +133,7 @@ public class PlistProcessStepTest {
     PlistProcessStep plistProcessStep = new PlistProcessStep(
         projectFilesystem,
         INPUT_PATH,
+        Optional.<Path>absent(),
         OUTPUT_PATH,
         ImmutableMap.<String, NSObject>of(),
         ImmutableMap.<String, NSObject>of(
@@ -149,5 +154,41 @@ public class PlistProcessStepTest {
     assertThat(
         projectFilesystem.readFileIfItExists(OUTPUT_PATH),
         equalTo(Optional.of(array.toXMLPropertyList())));
+  }
+
+  @Test
+  public void testMergeFromFileReplacesExistingKey() throws Exception {
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
+    PlistProcessStep plistProcessStep = new PlistProcessStep(
+        projectFilesystem,
+        INPUT_PATH,
+        Optional.of(MERGE_PATH),
+        OUTPUT_PATH,
+        ImmutableMap.<String, NSObject>of(),
+        ImmutableMap.<String, NSObject>of(),
+        PlistProcessStep.OutputFormat.XML);
+
+    NSDictionary dict = new NSDictionary();
+    dict.put("Key1", "Value1");
+    dict.put("Key2", "Value2");
+    projectFilesystem.writeContentsToPath(
+        dict.toXMLPropertyList(),
+        INPUT_PATH);
+
+    NSDictionary overrideDict = new NSDictionary();
+    overrideDict.put("Key1", "OverrideValue");
+    projectFilesystem.writeContentsToPath(
+        overrideDict.toXMLPropertyList(),
+        MERGE_PATH);
+
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    int errorCode = plistProcessStep.execute(executionContext).getExitCode();
+    assertThat(errorCode, equalTo(0));
+
+    dict.put("Key1", "OverrideValue");
+    assertThat(
+        projectFilesystem.readFileIfItExists(OUTPUT_PATH),
+        equalTo(Optional.of(dict.toXMLPropertyList())));
   }
 }
