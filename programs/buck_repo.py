@@ -87,6 +87,8 @@ JAVA_CLASSPATHS = [
     "third-party/java/slf4j/slf4j-api-1.7.5.jar",
     "third-party/java/plexus/plexus-utils-3.0.20.jar",
     "third-party/java/plexus/plexus-interpolation-1.21.jar",
+    "third-party/java/eden/eden.jar",
+    "third-party/java/eden/java-thrift-dependencies.jar",
 ]
 
 RESOURCES = {

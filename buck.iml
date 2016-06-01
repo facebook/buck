@@ -68,5 +68,7 @@
     <orderEntry type="library" name="oracle-jdk-stubs" level="project" />
     <orderEntry type="library" name="junit" level="project" />
     <orderEntry type="library" name="testng" level="project" />
+    <orderEntry type="library" name="eden" level="project" />
+    <orderEntry type="library" name="java-thrift-dependencies" level="project" />
   </component>
 </module>
