@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import contextlib
 import os
 import sys
 import zipfile
@@ -32,7 +33,7 @@ def main():
     if sys.platform in ('win32', 'cygwin'):
         to = '\\\\?\\' + to  # use long path names.
 
-    with zipfile.ZipFile(from_) as zf:
+    with contextlib.closing(zipfile.ZipFile(from_)) as zf:
         extractall(zf, to)
 
 if __name__ == '__main__':
