@@ -200,4 +200,8 @@ public class CxxLibraryIntegrationTest {
     }
   }
 
+  @Test
+  public void symlinkTreesInstantiatedCorrectlyForCompile() throws IOException {
+  }
+
 }

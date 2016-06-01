@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -23,7 +24,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -34,6 +34,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DependencyAggregationTestUtil;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -131,13 +133,17 @@ public class CxxSourceRuleFactoryTest {
           cxxSourceRuleFactory.requirePreprocessBuildRule(
               name,
               cxxSource);
-      assertEquals(ImmutableSortedSet.<BuildRule>of(dep), cxxPreprocess.getDeps());
+      assertThat(
+          DependencyAggregationTestUtil.getDisaggregatedDeps(cxxPreprocess),
+          contains((BuildRule) dep));
       cxxPreprocess =
           cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
               name,
               cxxSource,
               CxxPreprocessMode.SEPARATE);
-      assertEquals(ImmutableSortedSet.<BuildRule>of(dep), cxxPreprocess.getDeps());
+      assertThat(
+          DependencyAggregationTestUtil.getDisaggregatedDeps(cxxPreprocess),
+          contains((BuildRule) dep));
     }
 
     @Test
@@ -236,7 +242,9 @@ public class CxxSourceRuleFactoryTest {
               namePreprocessAndCompile,
               cxxSourcePreprocessAndCompile,
               CxxPreprocessMode.SEPARATE);
-      assertEquals(ImmutableSortedSet.<BuildRule>of(dep), cxxPreprocessAndCompile.getDeps());
+      assertThat(
+          DependencyAggregationTestUtil.getDisaggregatedDeps(cxxPreprocessAndCompile),
+          contains((BuildRule) dep));
     }
 
     @Test

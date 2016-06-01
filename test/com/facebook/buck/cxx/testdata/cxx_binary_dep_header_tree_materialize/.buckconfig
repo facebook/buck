@@ -1,0 +1,8 @@
+[build]
+engine = shallow
+
+[cache]
+mode = dir
+
+[cxx]
+preprocess_mode = combined

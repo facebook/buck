@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DependencyAggregation;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -68,6 +69,8 @@ abstract class AbstractCxxSourceRuleFactory {
   private static final String COMPILE_FLAVOR_PREFIX = "compile-";
   private static final String PREPROCESS_FLAVOR_PREFIX = "preprocess-";
   private static final String PCH_FLAVOR_PREFIX = "pch-";
+  private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
+      ImmutableFlavor.of("preprocessor-deps");
 
   @Value.Parameter
   public abstract BuildRuleParams getParams();
@@ -88,11 +91,9 @@ abstract class AbstractCxxSourceRuleFactory {
   @Value.Parameter
   public abstract PicType getPicType();
 
-  @Value.Lazy
-  protected ImmutableList<BuildRule> getPreprocessDeps() {
-    ImmutableList.Builder<BuildRule> builder = ImmutableList.builder();
-    ImmutableList<CxxPreprocessorInput> inputs = getCxxPreprocessorInput();
-    for (CxxPreprocessorInput input : inputs) {
+  private ImmutableSortedSet<BuildRule> getPreprocessDeps() {
+    ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
+    for (CxxPreprocessorInput input : getCxxPreprocessorInput()) {
       builder.addAll(input.getDeps(getResolver(), getPathResolver()));
     }
     if (getPrefixHeader().isPresent()) {
@@ -139,6 +140,37 @@ abstract class AbstractCxxSourceRuleFactory {
   private final LoadingCache<PreprocessorDelegateCacheKey, PreprocessorDelegateCacheValue>
       preprocessorDelegates = CacheBuilder.newBuilder()
       .build(new PreprocessorDelegateCacheLoader());
+
+  /**
+   * Returns the no-op rule that aggregates the preprocessor dependencies.
+   *
+   * Individual compile rules can depend on it, instead of having to depend on every preprocessor
+   * dep themselves. This turns O(n*m) dependencies into O(n+m) dependencies, where n is number of
+   * files in a target, and m is the number of targets.
+   */
+  private BuildRule requireAggregatedPreprocessDepsRule() {
+    BuildTarget target = createAggregatedPreprocessDepsBuildTarget();
+    Optional<DependencyAggregation> existingRule =
+        getResolver().getRuleOptionalWithType(target, DependencyAggregation.class);
+    if (existingRule.isPresent()) {
+      return existingRule.get();
+    } else {
+      BuildRuleParams params = getParams().copyWithChanges(
+          target,
+          Suppliers.ofInstance(getPreprocessDeps()),
+          Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+      DependencyAggregation rule = new DependencyAggregation(params, getPathResolver());
+      getResolver().addToIndex(rule);
+      return rule;
+    }
+  }
+
+  @VisibleForTesting
+  BuildTarget createAggregatedPreprocessDepsBuildTarget() {
+    return BuildTarget.builder(getParams().getBuildTarget())
+        .addFlavors(getCxxPlatform().getFlavor(), AGGREGATED_PREPROCESS_DEPS_FLAVOR)
+        .build();
+  }
 
   private String getOutputName(String name) {
     List<String> parts = Lists.newArrayList();
@@ -218,7 +250,7 @@ abstract class AbstractCxxSourceRuleFactory {
                 target,
                 Suppliers.ofInstance(
                   new DepsBuilder()
-                      .addPreprocessDeps()
+                      .addAggregatedPreprocessDeps()
                       .add(preprocessorDelegateValue.getPreprocessorDelegate().getPreprocessor())
                       // We shouldn't really need to depend on the compiler for preprocess-only
                       // rules, but the `CxxPreprocessAndCompile` class adds the entire
@@ -464,7 +496,7 @@ abstract class AbstractCxxSourceRuleFactory {
             target,
             Suppliers.ofInstance(
                 new DepsBuilder()
-                    .addPreprocessDeps()
+                    .addAggregatedPreprocessDeps()
                     .add(preprocessorDelegateValue.getPreprocessorDelegate().getPreprocessor())
                     .add(source)
                     .build()),
@@ -509,7 +541,7 @@ abstract class AbstractCxxSourceRuleFactory {
         PreprocessorDelegateCacheKey.of(source.getType(), source.getFlags()));
     PreprocessorDelegate preprocessorDelegate = preprocessorDelegateValue.getPreprocessorDelegate();
     DepsBuilder depsBuilder = new DepsBuilder()
-        .addPreprocessDeps()
+        .addAggregatedPreprocessDeps()
         .add(preprocessorDelegate.getPreprocessor())
         .add(compiler)
         .add(source);
@@ -597,7 +629,7 @@ abstract class AbstractCxxSourceRuleFactory {
             target,
             Suppliers.ofInstance(
               new DepsBuilder()
-                  .addPreprocessDeps()
+                  .addAggregatedPreprocessDeps()
                   .add(preprocessorDelegate.getPreprocessor())
                   .add(path)
                   .build()),
@@ -849,8 +881,8 @@ abstract class AbstractCxxSourceRuleFactory {
       return this;
     }
 
-    public DepsBuilder addPreprocessDeps() {
-      builder.addAll(getPreprocessDeps());
+    public DepsBuilder addAggregatedPreprocessDeps() {
+      builder.add(requireAggregatedPreprocessDepsRule());
       return this;
     }
   }

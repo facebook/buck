@@ -86,6 +86,7 @@ java_immutables_library(
     'DefaultOnDiskBuildInfo.java',
     'DefaultRuleKeyLogger.java',
     'DefaultTargetNodeToBuildRuleTransformer.java',
+    'DependencyAggregation.java',
     'Description.java',
     'ExportDependencies.java',
     'HasPostBuildSteps.java',

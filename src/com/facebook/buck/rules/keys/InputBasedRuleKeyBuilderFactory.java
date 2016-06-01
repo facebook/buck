@@ -19,6 +19,7 @@ package com.facebook.buck.rules.keys;
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.DependencyAggregation;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
@@ -89,7 +90,17 @@ public class InputBasedRuleKeyBuilderFactory
 
   @Override
   protected Builder newBuilder(final BuildRule rule) {
+    final Iterable<DependencyAggregation> aggregatedRules =
+        Iterables.filter(rule.getDeps(), DependencyAggregation.class);
     return new Builder() {
+      private boolean hasEffectiveDirectDep(BuildRule dep) {
+        for (BuildRule aggregationRule : aggregatedRules) {
+          if (aggregationRule.getDeps().contains(dep)) {
+            return true;
+          }
+        }
+        return false;
+      }
 
       // Construct the rule key, verifying that all the deps we saw when constructing it
       // are explicit dependencies of the rule.
@@ -98,7 +109,7 @@ public class InputBasedRuleKeyBuilderFactory
         Result result = buildResult();
         for (BuildRule usedDep : result.getDeps()) {
           Preconditions.checkState(
-              rule.getDeps().contains(usedDep),
+              rule.getDeps().contains(usedDep) || hasEffectiveDirectDep(usedDep),
               "%s: %s not in deps (%s)",
               rule.getBuildTarget(),
               usedDep.getBuildTarget(),

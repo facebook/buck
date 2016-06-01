@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -30,6 +29,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.DependencyAggregationTestUtil;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -48,6 +49,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -153,17 +155,17 @@ public class CxxBinaryDescriptionTest {
     // for the various header rules.
     BuildRule preprocessRule1 = resolver.getRule(
         cxxSourceRuleFactory.createPreprocessBuildTarget("test/bar.cpp", CxxSource.Type.CXX));
-    assertEquals(
-        ImmutableSet.of(
+    assertThat(
+        Iterables.transform(
+            DependencyAggregationTestUtil.getDisaggregatedDeps(preprocessRule1),
+            HasBuildTarget.TO_TARGET),
+        Matchers.containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
                 cxxPlatform.getFlavor(),
-                HeaderVisibility.PRIVATE)),
-        FluentIterable.from(preprocessRule1.getDeps())
-            .transform(HasBuildTarget.TO_TARGET)
-            .toSet());
+                HeaderVisibility.PRIVATE)));
 
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
@@ -181,18 +183,18 @@ public class CxxBinaryDescriptionTest {
     // for the various header rules.
     BuildRule preprocessRule2 = resolver.getRule(
         cxxSourceRuleFactory.createPreprocessBuildTarget(genSourceName, CxxSource.Type.CXX));
-    assertEquals(
-        ImmutableSet.of(
+    assertThat(
+        Iterables.transform(
+            DependencyAggregationTestUtil.getDisaggregatedDeps(preprocessRule2),
+            HasBuildTarget.TO_TARGET),
+        Matchers.containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,
             headerSymlinkTreeTarget,
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
                 cxxPlatform.getFlavor(),
-                HeaderVisibility.PRIVATE)),
-        FluentIterable.from(preprocessRule2.getDeps())
-            .transform(HasBuildTarget.TO_TARGET)
-            .toSet());
+                HeaderVisibility.PRIVATE)));
 
     // Verify that the compile rule for our genrule-generated source has correct deps setup
     // for the various header rules and the generating genrule.

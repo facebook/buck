@@ -443,21 +443,8 @@ public class OCamlIntegrationTest {
             cxxPlatform.getFlavor(),
             HeaderVisibility.PUBLIC);
 
-    ImmutableSet<BuildTarget> targets = ImmutableSet.of(
-        target,
-        binary,
-        libplus,
-        libplusStatic,
-        cclib,
-        cclibbin,
-        ccObj,
-        ppObj,
-        headerSymlinkTreeTarget,
-        exportedHeaderSymlinkTreeTarget);
-
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    assertTrue(buildLog.getAllTargets().containsAll(targets));
     buildLog.assertTargetBuiltLocally(target.toString());
     buildLog.assertTargetBuiltLocally(binary.toString());
     buildLog.assertTargetBuiltLocally(libplus.toString());
@@ -471,7 +458,6 @@ public class OCamlIntegrationTest {
     workspace.resetBuildLogFile();
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertEquals(ImmutableSet.of(binary, target), buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(binary.toString());
     buildLog.assertTargetHadMatchingRuleKey(target.toString());
 
@@ -479,7 +465,6 @@ public class OCamlIntegrationTest {
     workspace.replaceFileContents("clib/cc/cc.cpp", "Hi there", "hi there");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertTrue(buildLog.getAllTargets().containsAll(targets));
     buildLog.assertTargetBuiltLocally(target.toString());
     buildLog.assertTargetBuiltLocally(binary.toString());
     buildLog.assertTargetBuiltLocally(libplus.toString());
@@ -487,8 +472,6 @@ public class OCamlIntegrationTest {
     buildLog.assertTargetBuiltLocally(cclibbin.toString());
     buildLog.assertTargetBuiltLocally(ccObj.toString());
     buildLog.assertTargetBuiltLocally(ppObj.toString());
-    buildLog.assertTargetHadMatchingRuleKey(headerSymlinkTreeTarget.toString());
-    buildLog.assertTargetHadMatchingRuleKey(exportedHeaderSymlinkTreeTarget.toString());
   }
 
   @Test
