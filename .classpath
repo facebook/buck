@@ -25,6 +25,8 @@
 	<classpathentry kind="lib" path="third-party/java/dd-plist/dd-plist.jar" sourcepath="third-party/java/dd-plist/dd-plist-sources.jar"/>
 	<classpathentry kind="lib" path="third-party/java/ddmlib/ddmlib-22.5.3.jar"/>
 	<classpathentry kind="lib" path="third-party/java/easymock/easymock-3.3.1.jar"/>
+	<classpathentry kind="lib" path="third-party/java/eden/eden.jar"/>
+	<classpathentry kind="lib" path="third-party/java/eden/java-thrift-dependencies.jar"/>
 	<classpathentry kind="lib" path="third-party/java/gson/gson-2.2.4.jar" sourcepath="third-party/java/gson/gson-2.2.4-sources.jar"/>
 	<classpathentry kind="lib" path="third-party/java/guava/guava-19.0.jar" sourcepath="third-party/java/guava/guava-19.0-sources.jar"/>
 	<classpathentry kind="lib" path="third-party/java/guice/guice-3.0.jar"/>
@@ -80,8 +82,6 @@
 	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.equinox.preferences_3.6.0.v20160120-1756.jar"/>
 	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.jdt.core_3.12.0.v20160426-1326.jar"/>
 	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.osgi_3.11.0.v20160427-2120.jar"/>
-  <classpathentry kind="lib" path="third-party/java/eden/eden.jar"/>
-  <classpathentry kind="lib" path="third-party/java/eden/java-thrift-dependencies.jar"/>
 	<classpathentry kind="src" path=".apt_generated">
 		<attributes>
 			<attribute name="optional" value="true"/>
