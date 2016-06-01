@@ -47,8 +47,11 @@ the top-level target you've built."""
 
 
 class RuleKeyStructureInfo(object):
-    def __init__(self, buck_out_path):
-        self._entries = RuleKeyStructureInfo._parseBuckOut(buck_out_path)
+    def __init__(self, buck_out):
+        if isinstance(buck_out, basestring):
+            self._entries = RuleKeyStructureInfo._parseBuckOut(buck_out)
+        else:
+            self._entries = RuleKeyStructureInfo._parseLogFile(buck_out)
         self._key_to_struct = RuleKeyStructureInfo._makeKeyToStructureMap(
             self._entries)
         self._name_to_key = RuleKeyStructureInfo._makeNameToKeyMap(
@@ -99,9 +102,6 @@ class RuleKeyStructureInfo(object):
             name = RuleKeyStructureInfo._nameFromStruct(structure)
             if name is None:
                 continue
-            if name in result and result[name] != top_key:
-                print('Conflict for name ' + name + ' ' + top_key +
-                      ' ' + result[name])
             result[name] = top_key
         return result
 
@@ -137,18 +137,21 @@ class RuleKeyStructureInfo(object):
 
         return (top_key, structure_map)
 
+    @staticmethod
+    def _parseLogFile(buck_out):
+        rule_key_structures = []
+        for line in buck_out.readlines():
+            match = RULE_LINE_REGEX.match(line)
+            if match is None:
+                continue
+            parsed_line = RuleKeyStructureInfo._parseRuleKeyLine(match)
+            rule_key_structures.append(parsed_line)
+        return rule_key_structures
 
     @staticmethod
     def _parseBuckOut(file_path):
-        rule_key_structures = []
         with open(file_path, 'r') as buck_out:
-            for line in buck_out.readlines():
-                match = RULE_LINE_REGEX.match(line)
-                if match is None:
-                    continue
-                parsed_line = RuleKeyStructureInfo._parseRuleKeyLine(match)
-                rule_key_structures.append(parsed_line)
-        return rule_key_structures
+            return RuleKeyStructureInfo._parseLogFile(buck_out)
 
 RULE_KEY_REF_START = 'ruleKey(sha1='
 RULE_KEY_REF_END = ')'
