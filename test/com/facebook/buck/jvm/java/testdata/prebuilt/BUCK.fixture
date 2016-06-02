@@ -17,3 +17,40 @@ prebuilt_jar(
   name = 'jar_from_gen',
   binary_jar = ':genjar',
 )
+
+python_binary(
+  name = 'unzip',
+  main = 'unzip.py',
+)
+
+genrule(
+  name = 'genjardir',
+  out = 'junit2',
+  cmd = 'mkdir -p $OUT && $(exe :unzip) $SRCS $OUT',
+  srcs = [
+    'junit.jar'
+  ],
+)
+
+prebuilt_jar(
+  name = 'jar_from_gen_dir',
+  binary_jar = ':genjardir',
+)
+
+java_library(
+  name = 'lib_from_gen_dir',
+  srcs = [
+    'PrebuiltJunitMain.java',
+  ],
+  deps = [
+    ':jar_from_gen_dir',
+  ],
+)
+
+java_binary(
+  name = 'bin_from_gen_dir',
+  main_class = 'PrebuiltJunitMain',
+  deps = [
+    ':lib_from_gen_dir',
+  ],
+)
