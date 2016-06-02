@@ -150,7 +150,7 @@ public class CxxLibrary
         params,
         ruleResolver,
         hasHeaderSymlinkTree,
-        cxxPlatform.getFlavor(),
+        cxxPlatform,
         headerVisibility,
         CxxPreprocessables.IncludeType.LOCAL,
         exportedPreprocessorFlags.apply(cxxPlatform),

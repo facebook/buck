@@ -87,7 +87,7 @@ public class HalideLibrary
             params,
             ruleResolver,
             /* hasHeaderSymlinkTree */ true,
-            cxxPlatform.getFlavor(),
+            cxxPlatform,
             headerVisibility,
             CxxPreprocessables.IncludeType.SYSTEM,
             ImmutableMultimap.<CxxSource.Type, String>of(),

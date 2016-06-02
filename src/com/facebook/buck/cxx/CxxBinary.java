@@ -117,7 +117,7 @@ public class CxxBinary
         params,
         ruleResolver,
         /* hasHeaderSymlinkTree */ true,
-        cxxPlatform.getFlavor(),
+        cxxPlatform,
         headerVisibility,
         CxxPreprocessables.IncludeType.LOCAL,
         ImmutableMultimap.<CxxSource.Type, String>of(),

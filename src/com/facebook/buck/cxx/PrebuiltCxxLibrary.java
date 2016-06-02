@@ -235,7 +235,7 @@ public class PrebuiltCxxLibrary
               builder,
               getBuildTarget(),
               ruleResolver,
-              cxxPlatform.getFlavor(),
+              cxxPlatform,
               headerVisibility,
               CxxPreprocessables.IncludeType.SYSTEM);
         }
