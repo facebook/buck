@@ -33,6 +33,7 @@ import com.facebook.buck.android.DummyRDotJava;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaBinary;
@@ -62,7 +63,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
@@ -111,7 +111,9 @@ public class Project {
    * users to target
    */
   public static String getAndroidGenDir(ProjectFilesystem filesystem) {
-    return filesystem.getBuckPaths().getBuckOut().resolve("android").toString();
+    return MorePaths.pathWithUnixSeparators(
+        filesystem.getBuckPaths().getBuckOut().resolve("android")
+    );
   }
 
   public static Path getAndroidGenPath(ProjectFilesystem filesystem) {
@@ -243,7 +245,8 @@ public class Project {
 
   @VisibleForTesting
   static String createPathToProjectDotPropertiesFileFor(SerializableModule module) {
-    return module.getModuleDirectoryPath().resolve("project.properties").toString();
+    return MorePaths.pathWithUnixSeparators(
+        module.getModuleDirectoryPath().resolve("project.properties"));
   }
 
   /**
@@ -562,10 +565,9 @@ public class Project {
    * @return the relative path of gen from the base path of current module.
    */
   static Path generateRelativeGenPath(ProjectFilesystem filesystem, Path basePathOfModule) {
-    return basePathOfModule
-        .relativize(Paths.get(""))
+    return MorePaths.relativize(basePathOfModule, Paths.get(""))
         .resolve(getAndroidGenDir(filesystem))
-        .resolve(Paths.get("").relativize(basePathOfModule))
+        .resolve(MorePaths.relativize(Paths.get(""), basePathOfModule))
         .resolve("gen");
   }
 
@@ -573,9 +575,9 @@ public class Project {
       ProjectFilesystem filesystem,
       String targetName,
       Path basePathOfModule) {
-    return basePathOfModule
-        .relativize(Paths.get("")).resolve(getAndroidApkDir(filesystem))
-        .resolve(Paths.get("").relativize(basePathOfModule))
+    return MorePaths.relativize(basePathOfModule, Paths.get(""))
+        .resolve(getAndroidApkDir(filesystem))
+        .resolve(MorePaths.relativize(Paths.get(""), basePathOfModule))
         .resolve(targetName + ".apk");
   }
 
@@ -601,7 +603,8 @@ public class Project {
           Path pathToTarget = resolver.getRelativePath(path);
           Path relativePath = basePath.relativize(Paths.get(""))
             .resolve(pathToTarget).getParent();
-          String url = String.format("file://$MODULE_DIR$/%s", relativePath.toString());
+          String url = String.format("file://$MODULE_DIR$/%s",
+              MorePaths.pathWithUnixSeparators(relativePath));
           SerializableModule.SourceFolder sourceFolder =
               new SerializableModule.SourceFolder(url, isTestSource, "");
           module.sourceFolders.add(sourceFolder);
@@ -710,7 +713,7 @@ public class Project {
   private static void addRootExclude(SerializableModule module, Path path) {
     module.excludeFolders.add(
         new SerializableModule.SourceFolder(
-            String.format("file://$MODULE_DIR$/%s", path),
+            String.format("file://$MODULE_DIR$/%s", MorePaths.pathWithUnixSeparators(path)),
             /* isTestSource */ false));
   }
 
@@ -955,14 +958,15 @@ public class Project {
     if (rule instanceof PrebuiltJar) {
       PrebuiltJar prebuiltJar = (PrebuiltJar) rule;
       Path absolutePath = resolver.getAbsolutePath(prebuiltJar.getBinaryJar());
-      String binaryJar = projectFilesystem.getRootPath().relativize(absolutePath).toString();
-      return getIntellijNameForBinaryJar(binaryJar);
+      Path relativePath = projectFilesystem.getRootPath().relativize(absolutePath);
+      String binaryJarUnixPath = MorePaths.pathWithUnixSeparators(relativePath);
+      return getIntellijNameForBinaryJar(binaryJarUnixPath);
     } else {
       Path basePath = rule.getBuildTarget().getBasePath();
       if (basePathToAliasMap != null && basePathToAliasMap.containsKey(basePath)) {
         name = Preconditions.checkNotNull(basePathToAliasMap.get(basePath));
       } else {
-        name = rule.getBuildTarget().getBasePath().toString();
+        name = MorePaths.pathWithUnixSeparators(rule.getBuildTarget().getBasePath());
         name = name.replace('/', '_');
         // Must add a prefix to ensure that name is non-empty.
         name = "module_" + name;
@@ -973,7 +977,7 @@ public class Project {
   }
 
   private static String getIntellijNameForBinaryJar(Path binaryJar) {
-    return getIntellijNameForBinaryJar(binaryJar.toString());
+    return getIntellijNameForBinaryJar(MorePaths.pathWithUnixSeparators(binaryJar));
   }
 
   private static String getIntellijNameForBinaryJar(String binaryJar) {
@@ -1018,11 +1022,13 @@ public class Project {
       PrebuiltJar prebuiltJar = (PrebuiltJar) libraryJar;
 
       Path binaryJarAbsolutePath = resolver.getAbsolutePath(prebuiltJar.getBinaryJar());
-      String binaryJar = projectFilesystem.getRelativizer().apply(binaryJarAbsolutePath).toString();
+      String binaryJar = MorePaths.pathWithUnixSeparators(
+          projectFilesystem.getRelativizer().apply(binaryJarAbsolutePath)
+      );
       String sourceJar = prebuiltJar.getSourceJar()
           .transform(resolver.getAbsolutePathFunction())
           .transform(projectFilesystem.getRelativizer())
-          .transform(Functions.toStringFunction())
+          .transform(MorePaths.UNIX_PATH)
           .orNull();
       String javadocUrl = prebuiltJar.getJavadocUrl().orNull();
       libraries.add(new SerializablePrebuiltJarRule(name, binaryJar, sourceJar, javadocUrl));

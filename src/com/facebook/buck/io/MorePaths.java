@@ -53,6 +53,13 @@ public class MorePaths {
     }
   };
 
+  public static final Function<Path, String> UNIX_PATH = new Function<Path, String>() {
+    @Override
+    public String apply(Path path) {
+      return pathWithUnixSeparators(path);
+    }
+  };
+
   private static final Path EMPTY_PATH = Paths.get("");
 
   public static String pathWithUnixSeparators(String path) {

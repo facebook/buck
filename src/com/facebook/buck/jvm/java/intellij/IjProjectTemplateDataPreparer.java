@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.intellij;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.rules.TargetNode;
@@ -178,7 +179,7 @@ public class IjProjectTemplateDataPreparer {
     if (path.isEmpty()) {
       return "file://$PROJECT_DIR$";
     } else {
-      return "file://$PROJECT_DIR$/" + path;
+      return "file://$PROJECT_DIR$/" + MorePaths.pathWithUnixSeparators(path);
     }
   }
 
@@ -444,13 +445,14 @@ public class IjProjectTemplateDataPreparer {
   private void addAndroidGenPath(
       Map<String, Object> androidProperties,
       Path moduleBasePath) {
+    Path genPath = moduleBasePath
+        .relativize(Paths.get(""))
+        .resolve(Project.getAndroidGenDir(projectFilesystem))
+        .resolve(Paths.get("").relativize(moduleBasePath))
+        .resolve("gen");
     androidProperties.put(
         "module_gen_path",
-        "/" + moduleBasePath
-            .relativize(Paths.get(""))
-            .resolve(Project.getAndroidGenDir(projectFilesystem))
-            .resolve(Paths.get("").relativize(moduleBasePath))
-            .resolve("gen"));
+        "/" + MorePaths.pathWithUnixSeparators(genPath));
   }
 
   private void addAndroidManifestPath(

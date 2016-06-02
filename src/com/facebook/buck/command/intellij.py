@@ -306,7 +306,8 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_dis
         for exclude_folder in sorted(additional_excludes[module['pathToImlFile']]):
             normalized_dir = os.path.dirname(os.path.normpath(
                 module['pathToImlFile']))
-            xml += '\n      <excludeFolder url="file://$MODULE_DIR$/%s" />' % os.path.relpath(exclude_folder, normalized_dir)
+            xml += '\n      <excludeFolder url="file://$MODULE_DIR$/%s" />' % \
+                   os.path.relpath(exclude_folder, normalized_dir).replace('\\', '/')
         xml += '\n    </content>'
 
         xml = add_annotation_generated_source_folder(xml, module)

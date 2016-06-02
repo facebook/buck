@@ -28,6 +28,7 @@ import com.facebook.buck.android.AndroidResourceRuleBuilder;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.android.NdkLibraryBuilder;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
@@ -926,7 +927,8 @@ public class ProjectTest {
       if (!ignorePath.equals(projectFilesystem.getBuckPaths().getBuckOut()) &&
           !ignorePath.equals(projectFilesystem.getBuckPaths().getGenDir())) {
         expectedExcludeFolders.add(
-            new SourceFolder("file://$MODULE_DIR$/" + ignorePath, /* isTestSource */ false));
+            new SourceFolder("file://$MODULE_DIR$/" + MorePaths.pathWithUnixSeparators(ignorePath),
+                /* isTestSource */ false));
       }
     }
     assertEquals(

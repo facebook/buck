@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -61,17 +62,33 @@ final class SerializableModule {
    * Let intellij generate the gen directory to specific path.
    */
   @Nullable
-  @JsonProperty
   Path moduleGenPath;
   @Nullable
-  @JsonProperty
+  @JsonProperty("moduleGenPath")
+  public String getModuleGenPath() {
+    return Optional.fromNullable(moduleGenPath).transform(MorePaths.UNIX_PATH).orNull();
+  }
+
+  @Nullable
   Path moduleRJavaPath;
+  @Nullable
+  @JsonProperty("moduleRJavaPath")
+  public String getModuleRJavaPath() {
+    return Optional.fromNullable(moduleRJavaPath).transform(MorePaths.UNIX_PATH).orNull();
+  }
+
   @Nullable
   @JsonProperty
   String name;
+
   @Nullable
-  @JsonProperty
   Path pathToImlFile;
+  @Nullable
+  @JsonProperty("pathToImlFile")
+  public String getPathToImlFile() {
+    return Optional.fromNullable(pathToImlFile).transform(MorePaths.UNIX_PATH).orNull();
+  }
+
   @JsonProperty
   List<SourceFolder> sourceFolders = Lists.newArrayList();
   @JsonProperty
@@ -91,24 +108,54 @@ final class SerializableModule {
   @Nullable
   @JsonProperty
   Boolean isAndroidLibraryProject;
+
   @Nullable
-  @JsonProperty
   Path proguardConfigPath;
   @Nullable
-  @JsonProperty
+  @JsonProperty("proguardConfigPath")
+  public String getProguardConfigPath() {
+    return Optional.fromNullable(proguardConfigPath).transform(MorePaths.UNIX_PATH).orNull();
+  }
+
+  @Nullable
   Path resFolder;
   @Nullable
-  @JsonProperty
-  Path assetFolder;
+  @JsonProperty("resFolder")
+  public String getResFolder() {
+    return Optional.fromNullable(resFolder).transform(MorePaths.UNIX_PATH).orNull();
+  }
+
   @Nullable
-  @JsonProperty
+  Path assetFolder;
+  @JsonProperty("assetFolder")
+  public String getAssetFolder() {
+    return Optional.fromNullable(assetFolder).transform(MorePaths.UNIX_PATH).orNull();
+  }
+
+  @Nullable
   Path keystorePath;
   @Nullable
-  @JsonProperty
+  @JsonProperty("keystorePath")
+  public String getKeystorePath() {
+    return Optional.fromNullable(keystorePath).transform(MorePaths.UNIX_PATH).orNull();
+  }
+
+  @Nullable
   Path androidManifest;
   @Nullable
-  @JsonProperty
+  @JsonProperty("androidManifest")
+  public String getAndroidManifest() {
+    return Optional.fromNullable(androidManifest).transform(MorePaths.UNIX_PATH).orNull();
+  }
+
+  @Nullable
   Path nativeLibs;
+  @Nullable
+  @JsonProperty("nativeLibs")
+  public String getNativeLibs() {
+    return Optional.fromNullable(nativeLibs).transform(MorePaths.UNIX_PATH).orNull();
+  }
+
   @Nullable
   @JsonProperty
   Boolean isIntelliJPlugin;
@@ -119,9 +166,14 @@ final class SerializableModule {
   @Nullable
   @JsonProperty
   Boolean annotationGenIsForTest;
+
   @Nullable
-  @JsonProperty
   Path binaryPath;
+  @Nullable
+  @JsonProperty("binaryPath")
+  public String getBinaryPath() {
+    return Optional.fromNullable(binaryPath).transform(MorePaths.UNIX_PATH).orNull();
+  }
 
   // In IntelliJ, options in an .iml file that correspond to file paths should be relative to the
   // location of the .iml file itself.

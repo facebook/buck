@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.intellij;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -65,8 +66,8 @@ class CompilerXml {
   private ImmutableSet<String> getTopLevelExcludeDirs() {
     return ImmutableSet.of(
         Project.getAndroidGenDir(filesystem),
-        filesystem.getBuckPaths().getScratchDir().toString(),
-        filesystem.getBuckPaths().getGenDir().toString());
+        MorePaths.pathWithUnixSeparators(filesystem.getBuckPaths().getScratchDir()),
+        MorePaths.pathWithUnixSeparators(filesystem.getBuckPaths().getGenDir()));
   }
 
   private String generateXml() {
@@ -88,7 +89,8 @@ class CompilerXml {
 
     // Exclude several files associated with each module.
     for (SerializableModule module : modules) {
-      String url = "file://$PROJECT_DIR$/" + module.getModuleDirectoryPath();
+      String url = "file://$PROJECT_DIR$/" +
+          MorePaths.pathWithUnixSeparators(module.getModuleDirectoryPath());
       buffer.append("      <file url=\"" + url + "/BUCK\" />\n");
 
       if (module.isAndroidModule()) {

@@ -16,14 +16,13 @@
 
 package com.facebook.buck.jvm.java.intellij;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
-
-import java.nio.file.Path;
 
 public abstract class Util {
 
-  public static String intelliJModuleNameFromPath(Path path) {
-    String name = path.toString();
+  public static String intelliJModuleNameFromPath(String path) {
+    String name = path;
     if (name.isEmpty()) {
       return "project_root";
     } else {
@@ -34,7 +33,7 @@ public abstract class Util {
 
   public static String intelliJLibraryName(BuildTarget target) {
     StringBuilder sb = new StringBuilder("library_");
-    sb.append(intelliJModuleNameFromPath(target.getBasePath()));
+    sb.append(intelliJModuleNameFromPath(MorePaths.pathWithUnixSeparators(target.getBasePath())));
     sb.append("_");
     sb.append(target.getShortName());
     return normalizeIntelliJName(sb.toString());

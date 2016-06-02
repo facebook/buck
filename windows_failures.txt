@@ -38,15 +38,6 @@
 !com.facebook.buck.io.WatchmanTest#successfulExecutionPopulatesAWatchmanInstance
 !com.facebook.buck.io.WatchmanTest#watchmanVersionTakingThirtySecondsReturnsEmpty
 !com.facebook.buck.io.WatchmanTest#watchmanWatchProjectTakingThirtySecondsReturnsEmpty
-!com.facebook.buck.jvm.java.intellij.DefaultIjLibraryFactoryTest#testLibraryFromOtherTargets
-!com.facebook.buck.jvm.java.intellij.DefaultIjLibraryFactoryTest#testPrebuiltAar
-!com.facebook.buck.jvm.java.intellij.DefaultIjLibraryFactoryTest#testPrebuiltJar
-!com.facebook.buck.jvm.java.intellij.IjModuleTest#testPathToModuleFile
-!com.facebook.buck.jvm.java.intellij.IjProjectDataPreparerTest#testDependencies
-!com.facebook.buck.jvm.java.intellij.IjProjectDataPreparerTest#testModuleIndex
-!com.facebook.buck.jvm.java.intellij.IjProjectDataPreparerTest#testWriteModule
-!com.facebook.buck.jvm.java.intellij.ProjectIntegrationTest
-!com.facebook.buck.jvm.java.intellij.ProjectTest
 !com.facebook.buck.model.InMemoryBuildFileTreeTest
 !com.facebook.buck.python.PrebuiltPythonLibraryIntegrationTest
 !com.facebook.buck.python.PythonBinaryDescriptionTest#extensionDepUsingMergedNativeLinkStrategy

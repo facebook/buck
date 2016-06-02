@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.intellij;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -49,7 +50,7 @@ abstract class AbstractIjModule implements IjProjectElement {
   @Override
   @Value.Derived
   public String getName() {
-    return Util.intelliJModuleNameFromPath(getModuleBasePath());
+    return Util.intelliJModuleNameFromPath(MorePaths.pathWithUnixSeparators(getModuleBasePath()));
   }
 
   @Override
