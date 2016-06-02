@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static org.hamcrest.Matchers.empty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -292,7 +293,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         FluentIterable.from(nativeLinkableInput.getArgs())
             .transformAndConcat(Arg.getDepsFunction(pathResolver))
             .toList(),
-        Matchers.empty());
+        empty());
   }
 
   @Test
@@ -950,6 +951,50 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertThat(
         rule.getPreferredLinkage(CXX_PLATFORM),
         Matchers.equalTo(NativeLinkable.Linkage.ANY));
+  }
+
+  @Test
+  public void supportedPlatforms() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+
+    // First, make sure without any platform regex, we get something back for each of the interface
+    // methods.
+    PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
+        new PrebuiltCxxLibraryBuilder(target);
+    TargetGraph targetGraph1 = TargetGraphFactory.newInstance(prebuiltCxxLibraryBuilder.build());
+    BuildRuleResolver resolver1 =
+        new BuildRuleResolver(targetGraph1, new DefaultTargetNodeToBuildRuleTransformer());
+    PrebuiltCxxLibrary prebuiltCxxLibrary = (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder
+        .build(resolver1, filesystem, targetGraph1);
+    assertThat(
+        prebuiltCxxLibrary.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM).entrySet(),
+        Matchers.not(empty()));
+    assertThat(
+        prebuiltCxxLibrary
+            .getNativeLinkableInput(
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                Linker.LinkableDepType.SHARED)
+            .getArgs(),
+        Matchers.not(empty()));
+
+    // Now, verify we get nothing when the supported platform regex excludes our platform.
+    prebuiltCxxLibraryBuilder.setSupportedPlatformsRegex(Pattern.compile("nothing"));
+    TargetGraph targetGraph2 = TargetGraphFactory.newInstance(prebuiltCxxLibraryBuilder.build());
+    BuildRuleResolver resolver2 =
+        new BuildRuleResolver(targetGraph2, new DefaultTargetNodeToBuildRuleTransformer());
+    prebuiltCxxLibrary = (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder
+        .build(resolver2, filesystem, targetGraph2);
+    assertThat(
+        prebuiltCxxLibrary.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM).entrySet(),
+        empty());
+    assertThat(
+        prebuiltCxxLibrary
+            .getNativeLinkableInput(
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                Linker.LinkableDepType.SHARED)
+            .getArgs(),
+        empty());
   }
 
 }

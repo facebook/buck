@@ -124,4 +124,9 @@ public class PrebuiltCxxLibraryBuilder
     return this;
   }
 
+  public PrebuiltCxxLibraryBuilder setSupportedPlatformsRegex(Pattern supportedPlatformsRegex) {
+    arg.supportedPlatformsRegex = Optional.of(supportedPlatformsRegex);
+    return this;
+  }
+
 }

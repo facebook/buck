@@ -24,6 +24,8 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.MacroException;
+import com.facebook.buck.model.MacroFinder;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
@@ -44,8 +46,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.model.MacroException;
-import com.facebook.buck.model.MacroFinder;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.StringExpander;
 import com.facebook.buck.util.HumanReadableException;
@@ -63,6 +63,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class PrebuiltCxxLibraryDescription implements
     Description<PrebuiltCxxLibraryDescription.Arg>,
@@ -545,7 +546,8 @@ public class PrebuiltCxxLibraryDescription implements
             }
             return false;
           }
-        });
+        },
+    args.supportedPlatformsRegex);
   }
 
   @Override
@@ -624,6 +626,7 @@ public class PrebuiltCxxLibraryDescription implements
     public Optional<ImmutableSortedSet<FrameworkPath>> libraries;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
+    public Optional<Pattern> supportedPlatformsRegex;
   }
 
 }

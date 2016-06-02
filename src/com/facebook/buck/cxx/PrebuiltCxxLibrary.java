@@ -49,6 +49,7 @@ import com.google.common.collect.Iterables;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class PrebuiltCxxLibrary
     extends NoopBuildRule
@@ -72,6 +73,7 @@ public class PrebuiltCxxLibrary
   private final boolean headerOnly;
   private final boolean linkWhole;
   private final boolean provided;
+  private final Optional<Pattern> supportedPlatformsRegex;
 
   private final Map<Pair<Flavor, Linker.LinkableDepType>, NativeLinkableInput> nativeLinkableCache =
       new HashMap<>();
@@ -101,7 +103,8 @@ public class PrebuiltCxxLibrary
       boolean headerOnly,
       boolean linkWhole,
       boolean provided,
-      Function<CxxPlatform, Boolean> hasHeaders) {
+      Function<CxxPlatform, Boolean> hasHeaders,
+      Optional<Pattern> supportedPlatformsRegex) {
     super(params, pathResolver);
     Preconditions.checkArgument(!forceStatic || !provided);
     this.params = params;
@@ -121,6 +124,7 @@ public class PrebuiltCxxLibrary
     this.headerOnly = headerOnly;
     this.linkWhole = linkWhole;
     this.provided = provided;
+    this.supportedPlatformsRegex = supportedPlatformsRegex;
   }
 
   protected String getSoname(CxxPlatform cxxPlatform) {
@@ -131,6 +135,13 @@ public class PrebuiltCxxLibrary
         cxxPlatform,
         soname,
         libName);
+  }
+
+  private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
+    return !supportedPlatformsRegex.isPresent() ||
+        supportedPlatformsRegex.get()
+            .matcher(cxxPlatform.getFlavor().toString())
+            .find();
   }
 
   /**
@@ -204,6 +215,9 @@ public class PrebuiltCxxLibrary
 
   @Override
   public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+    if (!isPlatformSupported(cxxPlatform)) {
+      return ImmutableList.of();
+    }
     return FluentIterable.from(getDeps())
         .filter(CxxPreprocessorDep.class);
   }
@@ -280,18 +294,28 @@ public class PrebuiltCxxLibrary
 
   @Override
   public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+    if (!isPlatformSupported(cxxPlatform)) {
+      return ImmutableList.of();
+    }
     return FluentIterable.from(getDeclaredDeps())
         .filter(NativeLinkable.class);
   }
 
   @Override
   public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+    if (!isPlatformSupported(cxxPlatform)) {
+      return ImmutableList.of();
+    }
     return exportedDeps;
   }
 
   public NativeLinkableInput getNativeLinkableInputUncached(
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+    if (!isPlatformSupported(cxxPlatform)) {
+      return NativeLinkableInput.of();
+    }
+
     // Build the library path and linker arguments that we pass through the
     // {@link NativeLinkable} interface for linking.
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
@@ -387,6 +411,10 @@ public class PrebuiltCxxLibrary
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException {
+    if (!isPlatformSupported(cxxPlatform)) {
+      return ImmutableMap.of();
+    }
+
     String resolvedSoname = getSoname(cxxPlatform);
     ImmutableMap.Builder<String, SourcePath> solibs = ImmutableMap.builder();
     if (!headerOnly && !provided) {
