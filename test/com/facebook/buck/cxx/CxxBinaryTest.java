@@ -77,7 +77,8 @@ public class CxxBinaryTest {
                             new BuildTargetSourcePath(cxxLink.getBuildTarget())))
                     .build(),
                 ImmutableSortedSet.<FrameworkPath>of(),
-                ImmutableList.<BuildTarget>of()));
+                ImmutableList.<BuildTarget>of(),
+                params.getBuildTarget()));
     ImmutableList<String> command = binary.getExecutableCommand().getCommandPrefix(pathResolver);
     assertTrue(Paths.get(command.get(0)).isAbsolute());
   }

@@ -50,6 +50,7 @@ public class CxxBinary
   private final Tool executable;
   private final ImmutableSortedSet<BuildTarget> tests;
   private final ImmutableSortedSet<FrameworkPath> frameworks;
+  private final BuildTarget platformlessTarget;
 
   public CxxBinary(
       BuildRuleParams params,
@@ -58,7 +59,8 @@ public class CxxBinary
       BuildRule linkRule,
       Tool executable,
       Iterable<FrameworkPath> frameworks,
-      Iterable<BuildTarget> tests) {
+      Iterable<BuildTarget> tests,
+      BuildTarget platformlessTarget) {
     super(params, resolver);
     this.params = params;
     this.ruleResolver = ruleResolver;
@@ -66,21 +68,27 @@ public class CxxBinary
     this.executable = executable;
     this.tests = ImmutableSortedSet.copyOf(tests);
     this.frameworks = ImmutableSortedSet.copyOf(frameworks);
-    performChecks(linkRule);
+    this.platformlessTarget = platformlessTarget;
+    performChecks();
   }
 
-  private void performChecks(BuildRule linkRule) {
+  private void performChecks() {
     Preconditions.checkArgument(
         linkRule instanceof CxxLink || linkRule instanceof CxxStrip,
-        "CxxBinary (%s) link rule (%s) is expected to be instance of either CxxLink or CxxStrip");
+        "CxxBinary (%s) link rule (%s) is expected to be instance of either CxxLink or CxxStrip",
+        this, linkRule);
     Preconditions.checkArgument(
         getDeps().contains(linkRule),
-        "CxxBinary (%s) must depend on its link rule (%s) via deps");
+        "CxxBinary (%s) must depend on its link rule (%s) via deps",
+        this, linkRule);
     Preconditions.checkArgument(
         !params.getBuildTarget().getFlavors().contains(CxxStrip.RULE_FLAVOR),
         "CxxBinary (%s) build target should not contain CxxStrip rule flavor %s. Otherwise " +
             "it may be not possible to distinguish CxxBinary (%s) and link rule (%s) in graph.",
         this, CxxStrip.RULE_FLAVOR, this, linkRule);
+    Preconditions.checkArgument(
+        this.platformlessTarget.getUnflavoredBuildTarget()
+            .equals(this.params.getBuildTarget().getUnflavoredBuildTarget()));
   }
 
   @Override
@@ -114,7 +122,7 @@ public class CxxBinary
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
     return CxxPreprocessables.getCxxPreprocessorInput(
-        params,
+        params.copyWithBuildTarget(platformlessTarget),
         ruleResolver,
         /* hasHeaderSymlinkTree */ true,
         cxxPlatform,

@@ -248,7 +248,8 @@ public class CxxBinaryDescription implements
         cxxLinkAndCompileRules.getBinaryRule(),
         cxxLinkAndCompileRules.executable,
         args.frameworks.get(),
-        args.tests.get());
+        args.tests.get(),
+        params.getBuildTarget().withoutFlavors(cxxPlatforms.getFlavors()));
     resolver.addToIndex(cxxBinary);
     return cxxBinary;
   }

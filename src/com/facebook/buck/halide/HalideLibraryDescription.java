@@ -174,7 +174,8 @@ public class HalideLibraryDescription
         cxxLinkAndCompileRules.getBinaryRule(),
         cxxLinkAndCompileRules.executable,
         ImmutableSortedSet.<FrameworkPath>of(),
-        ImmutableSortedSet.<BuildTarget>of());
+        ImmutableSortedSet.<BuildTarget>of(),
+        params.getBuildTarget().withoutFlavors(cxxPlatforms.getFlavors()));
     ruleResolver.addToIndex(cxxBinary);
     return cxxBinary;
   }
