@@ -528,8 +528,6 @@ public class BuildCommand extends AbstractCommand {
             params.getBuckConfig().getBuildArtifactCacheSizeLimit(),
             params.getObjectMapper(),
             actionGraphAndResolver.getResolver(),
-            Preconditions.checkNotNull(
-                params.getExecutors().get(ExecutionContext.ExecutorPool.NETWORK)),
             params.getBuckConfig().getKeySeed()),
         artifactCache,
         params.getConsole(),

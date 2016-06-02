@@ -105,7 +105,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.easymock.EasyMockSupport;
 import org.hamcrest.Matchers;
@@ -132,9 +131,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -267,7 +264,6 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService(),
               0);
 
       // Add a build step so we can verify that the steps are executed.
@@ -365,7 +361,6 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService(),
               0);
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
 
@@ -450,7 +445,6 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService(),
               0);
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
       buckEventBus.post(
@@ -536,7 +530,6 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService(),
               0);
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
       buckEventBus.post(
@@ -595,7 +588,6 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService(),
               0);
 
       // Run the build.
@@ -675,7 +667,6 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService(),
               0);
 
       // Run the build.
@@ -787,7 +778,6 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService(),
               0);
 
       // Run the build.
@@ -886,7 +876,6 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService(),
               0);
 
       // Run the build.
@@ -930,7 +919,6 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService(),
               0);
 
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -968,7 +956,6 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService(),
               0);
 
       // Run the build.
@@ -1047,7 +1034,6 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService(),
               0);
 
       // Run the build.
@@ -1144,7 +1130,6 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService(),
               0);
 
       // Run the build.
@@ -1205,7 +1190,6 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService(),
               0);
 
       assertThat(
@@ -1239,7 +1223,6 @@ public class CachingBuildEngineTest {
               Optional.of(2L),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService(),
               0);
 
       // Verify that after building successfully, nothing is cached.
@@ -1274,7 +1257,6 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService(),
               0);
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
       assertEquals(
@@ -1299,7 +1281,6 @@ public class CachingBuildEngineTest {
               Optional.<Long>absent(),
               ObjectMappers.newDefaultInstance(),
               resolver,
-              createTestExecutorService(),
               0);
       result = cachingBuildEngine.build(buildContext, rule).get();
       assertEquals(
@@ -3520,19 +3501,6 @@ public class CachingBuildEngineTest {
         .build();
 
     return new DefaultStepRunner(executionContext);
-  }
-
-  private static ListeningExecutorService createTestExecutorService() {
-    return listeningDecorator(new ThreadPoolExecutor(
-        /* corePoolSize */ CachingBuildEngine.MAX_TEST_NETWORK_THREADS,
-        /* maximumPoolSize */ CachingBuildEngine.MAX_TEST_NETWORK_THREADS,
-        /* keepAliveTime */ 15L, TimeUnit.SECONDS,
-        /* workQueue */ new LinkedBlockingQueue<Runnable>(
-        CachingBuildEngine.MAX_TEST_NETWORK_THREADS),
-        /* threadFactory */ new ThreadFactoryBuilder()
-        .setNameFormat("Network Test I/O" + "-%d")
-        .build(),
-        /* handler */ new ThreadPoolExecutor.CallerRunsPolicy()));
   }
 
   private static WeightedListeningExecutorService toWeighted(ListeningExecutorService service) {

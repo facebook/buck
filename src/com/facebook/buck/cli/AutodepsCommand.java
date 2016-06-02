@@ -43,7 +43,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -118,8 +117,6 @@ public class AutodepsCommand extends AbstractCommand {
           params.getBuckConfig().getBuildArtifactCacheSizeLimit(),
           params.getObjectMapper(),
           buildRuleResolver,
-          Preconditions.checkNotNull(
-              params.getExecutors().get(ExecutionContext.ExecutorPool.NETWORK)),
           params.getBuckConfig().getKeySeed());
 
       // Create a BuildEngine because we store symbol information as build artifacts.
