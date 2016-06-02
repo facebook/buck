@@ -167,12 +167,6 @@ public class ZipStepTest {
         Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
-    // Make sure we have the right attributes.
-    try (ZipFile zip = new ZipFile(out.toFile())) {
-      ZipArchiveEntry entry = zip.getEntry("file.txt");
-      assertTrue(entry.isUnixSymlink());
-    }
-
     try (Zip zip = new Zip(out, false)) {
       assertEquals(ImmutableSet.of("file.txt"), zip.getFileNames());
       byte[] contents = zip.readFully("file.txt");

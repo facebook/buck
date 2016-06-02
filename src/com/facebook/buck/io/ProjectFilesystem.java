@@ -1074,10 +1074,6 @@ public class ProjectFilesystem {
       mode |= S_IFDIR;
     }
 
-    if (isSymLink(path)) {
-      mode |= S_IFLNK;
-    }
-
     // Propagate any additional permissions
     mode |= MorePosixFilePermissions.toMode(getPosixFilePermissions(path));
 
