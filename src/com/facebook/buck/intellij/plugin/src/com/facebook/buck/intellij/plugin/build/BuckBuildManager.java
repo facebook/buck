@@ -104,6 +104,10 @@ public class BuckBuildManager {
    * Also provide a hyperlink which can directly jump to "Choose Target" GUI window.
    */
   public void showNoTargetMessage(Project project) {
+    BuckModule buckModule = project.getComponent(BuckModule.class);
+    buckModule.getBuckEventsConsumer()
+        .consumeConsoleEvent("Please choose a build target!");
+
     BuckToolWindowFactory.outputConsoleMessage(
         project, "Please ", ConsoleViewContentType.ERROR_OUTPUT);
     BuckToolWindowFactory.outputConsoleHyperlink(

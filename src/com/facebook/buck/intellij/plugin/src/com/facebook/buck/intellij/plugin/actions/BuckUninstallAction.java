@@ -40,15 +40,14 @@ public class BuckUninstallAction extends BuckBaseAction {
   public void actionPerformed(AnActionEvent e) {
     BuckBuildManager buildManager = BuckBuildManager.getInstance(e.getProject());
     String target = buildManager.getCurrentSavedTarget(e.getProject());
+    BuckModule buckModule = e.getProject().getComponent(BuckModule.class);
+    buckModule.attach(target);
     if (target == null) {
       buildManager.showNoTargetMessage(e.getProject());
       return;
     }
 
     // Initiate a buck uninstall
-    BuckModule buckModule = e.getProject().getComponent(BuckModule.class);
-    buckModule.attach(target);
-
     BuckBuildCommandHandler handler = new BuckBuildCommandHandler(
         e.getProject(),
         e.getProject().getBaseDir(),

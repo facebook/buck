@@ -153,12 +153,23 @@ public final class BuckModule implements ProjectComponent {
                     } catch (IOException e) {
                         LOG.error(e);
                     } catch (HumanReadableException e) {
+                        attachIfDetached();
                         mBuckEventsConsumer.consumeConsoleEvent(e.toString());
                     }
                 }
             }
         });
         BuckFileUtil.setBuckFileType();
+    }
+
+    public void attachIfDetached() {
+        attachIfDetached("");
+    }
+
+    public void attachIfDetached(String target) {
+        if (!mBuckEventsConsumer.isAttached()) {
+            attach(target);
+        }
     }
 
     public void attach(String target) {

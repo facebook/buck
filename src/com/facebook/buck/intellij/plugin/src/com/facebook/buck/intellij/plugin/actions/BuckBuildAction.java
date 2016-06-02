@@ -41,14 +41,14 @@ public class BuckBuildAction extends BuckBaseAction {
     BuckBuildManager buildManager = BuckBuildManager.getInstance(e.getProject());
 
     String target = buildManager.getCurrentSavedTarget(e.getProject());
+    // Initiate a buck build
+    BuckModule buckModule = e.getProject().getComponent(BuckModule.class);
+    buckModule.attach(target);
+
     if (target == null) {
       buildManager.showNoTargetMessage(e.getProject());
       return;
     }
-
-    // Initiate a buck build
-    BuckModule buckModule = e.getProject().getComponent(BuckModule.class);
-    buckModule.attach(target);
 
     BuckBuildCommandHandler handler = new BuckBuildCommandHandler(
         e.getProject(),

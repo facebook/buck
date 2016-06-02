@@ -102,6 +102,7 @@ public class BuckEventsConsumer implements
     private long mTestingStartTimestamp = 0;
     private List<TestResults> mTestResultsList =
             Collections.synchronizedList(new LinkedList<TestResults>());
+    private boolean attached = false;
 
 
     private long mProjectGenerationStartTimestamp = 0;
@@ -121,15 +122,16 @@ public class BuckEventsConsumer implements
         mParseProgress = null;
         mTestResults = null;
         mProjectGenerationProgress = null;
+        attached = false;
     }
 
-    public void detachWithMessage(String message) {
-        detach();
+    public boolean isAttached() {
+        return attached;
     }
 
     public void attach(String target, DefaultTreeModel treeModel) {
         mTreeModel = treeModel;
-        mTarget = target;
+        mTarget = target == null ? "NONE" : target;
         mCurrentBuildRootElement = new BuckTreeNodeBuild(mTarget);
 
         mTreeModel.setRoot(mCurrentBuildRootElement);
@@ -161,6 +163,8 @@ public class BuckEventsConsumer implements
         mConnection.subscribe(TestResultsAvailableConsumer.BUCK_TEST_RESULTS_AVAILABLE, this);
 
         mConnection.subscribe(BuckInstallFinishedConsumer.INSTALL_FINISHED_CONSUMER, this);
+
+        attached = true;
     }
     @Override
     public void consumeBuckBuildProgressUpdate(long timestamp,
