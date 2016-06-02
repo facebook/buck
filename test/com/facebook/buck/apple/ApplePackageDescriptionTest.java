@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
@@ -113,13 +114,15 @@ public class ApplePackageDescriptionTest {
 
   private ApplePackageDescription descriptionWithCommand(String command) {
     return new ApplePackageDescription(
-      new AppleConfig(FakeBuckConfig.builder()
-          .setSections(
-              "[apple]",
-              "macosx_package_command = " + command.replace("$", "\\$"),
-              "macosx_package_extension = api"
-          )
-          .build()),
-      FakeAppleRuleDescriptions.DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN);
+        new AppleConfig(
+            FakeBuckConfig.builder()
+                .setSections(
+                    "[apple]",
+                    "macosx_package_command = " + command.replace("$", "\\$"),
+                    "macosx_package_extension = api"
+                )
+                .build()),
+        CxxPlatformUtils.DEFAULT_PLATFORM,
+        FakeAppleRuleDescriptions.DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN);
   }
 }

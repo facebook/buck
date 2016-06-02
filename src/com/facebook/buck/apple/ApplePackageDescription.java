@@ -16,10 +16,12 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
@@ -34,7 +36,6 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
-import com.facebook.buck.model.MacroException;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -56,12 +57,15 @@ public class ApplePackageDescription implements
     ImplicitDepsInferringDescription<ApplePackageDescription.Arg> {
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_package");
 
+  CxxPlatform defaultCxxPlatform;
   AppleConfig config;
   FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
 
   public ApplePackageDescription(
       AppleConfig config,
+      CxxPlatform defaultCxxPlatform,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain) {
+    this.defaultCxxPlatform = defaultCxxPlatform;
     this.config = config;
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
   }
@@ -74,6 +78,16 @@ public class ApplePackageDescription implements
       A args) throws NoSuchBuildTargetException {
     final BuildRule bundle = resolver.getRule(
         propagateFlavorsToTarget(params.getBuildTarget(), args.bundle));
+    BuildTarget targetWithPlatform;
+    if (
+        !Sets.intersection(
+            appleCxxPlatformFlavorDomain.getFlavors(),
+            params.getBuildTarget().getFlavors()).isEmpty()) {
+      targetWithPlatform = params.getBuildTarget();
+    } else {
+      targetWithPlatform = params.getBuildTarget()
+          .withAppendedFlavors(defaultCxxPlatform.getFlavor());
+    }
     if (!(bundle instanceof BuildRuleWithAppleBundle)) {
       throw new HumanReadableException(
           "In %s, bundle='%s' must be an apple_bundle() but was %s().",
@@ -85,7 +99,7 @@ public class ApplePackageDescription implements
 
     final Optional<ApplePackageConfigAndPlatformInfo> applePackageConfigAndPlatformInfo =
         getApplePackageConfig(
-            params.getBuildTarget(),
+            targetWithPlatform,
             MacroArg.toMacroArgFunction(
                 AbstractGenruleDescription.MACRO_HANDLER,
                 params.getBuildTarget(),
