@@ -74,6 +74,18 @@ public abstract class AbstractCxxSourceBuilder<
     return getThis();
   }
 
+  public U setPlatformCompilerFlags(
+      PatternMatchedCollection<ImmutableList<String>> platformCompilerFlags) {
+    arg.platformCompilerFlags = Optional.of(platformCompilerFlags);
+    return getThis();
+  }
+
+  public U setPlatformPreprocessorFlags(
+      PatternMatchedCollection<ImmutableList<String>> platformPreprocessorFlags) {
+    arg.platformPreprocessorFlags = Optional.of(platformPreprocessorFlags);
+    return getThis();
+  }
+
   public U setPlatformLinkerFlags(
       PatternMatchedCollection<ImmutableList<String>> platformLinkerFlags) {
     arg.platformLinkerFlags = Optional.of(platformLinkerFlags);

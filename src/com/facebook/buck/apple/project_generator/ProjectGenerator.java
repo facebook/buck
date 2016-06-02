@@ -83,6 +83,7 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasTests;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -154,6 +155,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Generator for xcode project and associated files from a set of xcode/ios rules.
@@ -230,6 +232,33 @@ public class ProjectGenerator {
         @Override
         public Iterable<String> apply(TargetNode<AppleNativeTargetDescriptionArg> input) {
           return input.getConstructorArg().exportedPreprocessorFlags.get();
+        }
+      };
+
+  public static final Function<
+      TargetNode<AppleNativeTargetDescriptionArg>,
+      Iterable<Pair<Pattern, ImmutableList<String>>>> GET_EXPORTED_PLATFORM_LINKER_FLAGS =
+      new Function<
+          TargetNode<AppleNativeTargetDescriptionArg>,
+          Iterable<Pair<Pattern, ImmutableList<String>>>>() {
+        @Override
+        public Iterable<Pair<Pattern, ImmutableList<String>>> apply(
+            TargetNode<AppleNativeTargetDescriptionArg> input) {
+          return input.getConstructorArg().exportedPlatformLinkerFlags.get().getPatternsAndValues();
+        }
+      };
+
+  public static final Function<
+      TargetNode<AppleNativeTargetDescriptionArg>,
+      Iterable<Pair<Pattern, ImmutableList<String>>>> GET_EXPORTED_PLATFORM_PREPROCESSOR_FLAGS =
+      new Function<
+          TargetNode<AppleNativeTargetDescriptionArg>,
+          Iterable<Pair<Pattern, ImmutableList<String>>>>() {
+        @Override
+        public Iterable<Pair<Pattern, ImmutableList<String>>> apply(
+            TargetNode<AppleNativeTargetDescriptionArg> input) {
+          return input.getConstructorArg().exportedPlatformPreprocessorFlags.get()
+            .getPatternsAndValues();
         }
       };
 
@@ -1373,6 +1402,59 @@ public class ProjectGenerator {
                               collectRecursiveExportedLinkerFlags(
                                   ImmutableList.of(targetNode))),
                           Escaper.BASH_ESCAPER)));
+
+      ImmutableMultimap.Builder<String, ImmutableList<String>> platformFlagsBuilder =
+          ImmutableMultimap.builder();
+      for (Pair<Pattern, ImmutableList<String>> flags :
+             Iterables.concat(
+                 targetNode.getConstructorArg().platformCompilerFlags.get()
+                     .getPatternsAndValues(),
+                 targetNode.getConstructorArg().platformPreprocessorFlags.get()
+                     .getPatternsAndValues(),
+                 collectRecursiveExportedPlatformPreprocessorFlags(
+                     ImmutableList.of(targetNode)))) {
+        String sdk = flags.getFirst().pattern().replaceAll("[*.]", "");
+        platformFlagsBuilder.put(sdk, flags.getSecond());
+      }
+      ImmutableMultimap<String, ImmutableList<String>> platformFlags = platformFlagsBuilder.build();
+      for (String sdk : platformFlags.keySet()) {
+        appendConfigsBuilder
+            .put(
+                String.format("OTHER_CFLAGS[sdk=*%s*]", sdk),
+                Joiner.on(' ').join(
+                    Iterables.transform(
+                        Iterables.concat(platformFlags.get(sdk)),
+                        Escaper.BASH_ESCAPER)))
+            .put(
+                String.format("OTHER_CPLUSPLUSFLAGS[sdk=*%s*]", sdk),
+                Joiner.on(' ').join(
+                    Iterables.transform(
+                        Iterables.concat(platformFlags.get(sdk)),
+                        Escaper.BASH_ESCAPER)));
+      }
+
+      ImmutableMultimap.Builder<String, ImmutableList<String>> platformLinkerFlagsBuilder =
+          ImmutableMultimap.builder();
+      for (Pair<Pattern, ImmutableList<String>> flags :
+             Iterables.concat(
+                 targetNode.getConstructorArg().platformLinkerFlags.get()
+                     .getPatternsAndValues(),
+                 collectRecursiveExportedPlatformLinkerFlags(
+                     ImmutableList.of(targetNode)))) {
+        String sdk = flags.getFirst().pattern().replaceAll("[*.]", "");
+        platformLinkerFlagsBuilder.put(sdk, flags.getSecond());
+      }
+      ImmutableMultimap<String, ImmutableList<String>> platformLinkerFlags =
+          platformLinkerFlagsBuilder.build();
+      for (String sdk : platformLinkerFlags.keySet()) {
+        appendConfigsBuilder
+            .put(
+                String.format("OTHER_LDFLAGS[sdk=*%s*]", sdk),
+                Joiner.on(' ').join(
+                    Iterables.transform(
+                        Iterables.concat(platformLinkerFlags.get(sdk)),
+                        Escaper.BASH_ESCAPER)));
+      }
     }
 
     ImmutableMap<String, String> appendedConfig = appendConfigsBuilder.build();
@@ -2386,6 +2468,30 @@ public class ProjectGenerator {
             });
   }
 
+  private <T> Iterable<Pair<Pattern, ImmutableList<String>>>
+      collectRecursiveExportedPlatformPreprocessorFlags(Iterable<TargetNode<T>> targetNodes) {
+    return FluentIterable
+        .from(targetNodes)
+        .transformAndConcat(
+            AppleBuildRules.newRecursiveRuleDependencyTransformer(
+                targetGraph,
+                AppleBuildRules.RecursiveDependenciesMode.BUILDING,
+                ImmutableSet.of(
+                    AppleLibraryDescription.TYPE,
+                    CxxLibraryDescription.TYPE)))
+        .append(targetNodes)
+        .transformAndConcat(
+            new Function<TargetNode<?>, Iterable<Pair<Pattern, ImmutableList<String>>>>() {
+              @Override
+              public Iterable<Pair<Pattern, ImmutableList<String>>> apply(TargetNode<?> input) {
+                return input
+                    .castArg(AppleNativeTargetDescriptionArg.class)
+                    .transform(GET_EXPORTED_PLATFORM_PREPROCESSOR_FLAGS)
+                    .or(ImmutableSet.<Pair<Pattern, ImmutableList<String>>>of());
+              }
+            });
+  }
+
   private <T> Iterable<String> collectRecursiveExportedLinkerFlags(
       Iterable<TargetNode<T>> targetNodes) {
     return FluentIterable
@@ -2407,6 +2513,31 @@ public class ProjectGenerator {
                     .castArg(AppleNativeTargetDescriptionArg.class)
                     .transform(GET_EXPORTED_LINKER_FLAGS)
                     .or(ImmutableSet.<String>of());
+              }
+            });
+  }
+
+  private <T> Iterable<Pair<Pattern, ImmutableList<String>>>
+      collectRecursiveExportedPlatformLinkerFlags(Iterable<TargetNode<T>> targetNodes) {
+    return FluentIterable
+        .from(targetNodes)
+        .transformAndConcat(
+            AppleBuildRules.newRecursiveRuleDependencyTransformer(
+                targetGraph,
+                AppleBuildRules.RecursiveDependenciesMode.LINKING,
+                ImmutableSet.of(
+                    AppleLibraryDescription.TYPE,
+                    CxxLibraryDescription.TYPE,
+                    HalideLibraryDescription.TYPE)))
+        .append(targetNodes)
+        .transformAndConcat(
+            new Function<TargetNode<?>, Iterable<Pair<Pattern, ImmutableList<String>>>>() {
+              @Override
+              public Iterable<Pair<Pattern, ImmutableList<String>>> apply(TargetNode<?> input) {
+                return input
+                    .castArg(AppleNativeTargetDescriptionArg.class)
+                    .transform(GET_EXPORTED_PLATFORM_LINKER_FLAGS)
+                    .or(ImmutableSet.<Pair<Pattern, ImmutableList<String>>>of());
               }
             });
   }

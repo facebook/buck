@@ -22,6 +22,7 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.google.common.base.Optional;
@@ -52,8 +53,20 @@ public abstract class AbstractAppleNativeTargetBuilder<
     return getThis();
   }
 
+  public BUILDER setPlatformCompilerFlags(
+      Optional<PatternMatchedCollection<ImmutableList<String>>> platformPreprocessorFlags) {
+    arg.platformPreprocessorFlags = platformPreprocessorFlags;
+    return getThis();
+  }
+
   public BUILDER setPreprocessorFlags(Optional<ImmutableList<String>> preprocessorFlags) {
     arg.preprocessorFlags = preprocessorFlags;
+    return getThis();
+  }
+
+  public BUILDER setPlatformPreprocessorFlags(
+      Optional<PatternMatchedCollection<ImmutableList<String>>> platformPreprocessorFlags) {
+    arg.platformPreprocessorFlags = platformPreprocessorFlags;
     return getThis();
   }
 

@@ -104,6 +104,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.ExportFileDescription;
@@ -147,6 +148,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 public class ProjectGeneratorTest {
 
@@ -1517,6 +1519,172 @@ public class ProjectGeneratorTest {
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals("$(inherited) -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
+  }
+
+  @Test
+  public void testCxxLibraryCompilerAndPreprocessorFlags() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    TargetNode<?> node = new CxxLibraryBuilder(buildTarget)
+        .setCompilerFlags(ImmutableList.of("-ffoo"))
+        .setPreprocessorFlags(ImmutableList.of("-fbar"))
+        .setLinkerFlags(ImmutableList.of("-lbaz"))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.<ProjectGenerator.Option>of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+    assertHasConfigurations(target, "Debug", "Release", "Profile");
+    ImmutableMap<String, String> settings = ProjectGeneratorTestUtils.getBuildSettings(
+        projectFilesystem, buildTarget, target, "Debug");
+
+    assertEquals(
+        "-Wno-deprecated -Wno-conversion -ffoo -fbar " +
+        "-Wno-deprecated -Wno-conversion -ffoo -fbar",
+        settings.get("OTHER_CFLAGS"));
+    assertEquals(
+        "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo -fbar " +
+        "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo -fbar",
+        settings.get("OTHER_CPLUSPLUSFLAGS"));
+    assertEquals(
+        "-lbaz -lbaz",
+        settings.get("OTHER_LDFLAGS"));
+  }
+
+  @Test
+  public void testCxxLibraryPlatformFlags() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    TargetNode<?> node = new CxxLibraryBuilder(buildTarget)
+        .setPlatformCompilerFlags(
+            PatternMatchedCollection
+                .<ImmutableList<String>>builder()
+                .add(Pattern.compile("android.*"), ImmutableList.of("-ffoo-android"))
+                .add(Pattern.compile("iphone.*"), ImmutableList.of("-ffoo-iphone"))
+                .add(Pattern.compile("macosx.*"), ImmutableList.of("-ffoo-macosx"))
+                .build())
+        .setPlatformPreprocessorFlags(
+            PatternMatchedCollection
+                .<ImmutableList<String>>builder()
+                .add(Pattern.compile("android.*"), ImmutableList.of("-fbar-android"))
+                .add(Pattern.compile("iphone.*"), ImmutableList.of("-fbar-iphone"))
+                .add(Pattern.compile("macosx.*"), ImmutableList.of("-fbar-macosx"))
+                .build())
+        .setPlatformLinkerFlags(
+            PatternMatchedCollection
+                .<ImmutableList<String>>builder()
+                .add(Pattern.compile("android.*"), ImmutableList.of("-lbaz-android"))
+                .add(Pattern.compile("iphone.*"), ImmutableList.of("-lbaz-iphone"))
+                .add(Pattern.compile("macosx.*"), ImmutableList.of("-lbaz-macosx"))
+                .build())
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.<ProjectGenerator.Option>of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+    assertHasConfigurations(target, "Debug", "Release", "Profile");
+    ImmutableMap<String, String> settings = ProjectGeneratorTestUtils.getBuildSettings(
+        projectFilesystem, buildTarget, target, "Debug");
+
+    assertEquals(
+        "-Wno-deprecated -Wno-conversion -Wno-deprecated -Wno-conversion",
+        settings.get("OTHER_CFLAGS"));
+    assertEquals(
+        "-Wundeclared-selector -Wno-objc-designated-initializers " +
+        "-Wundeclared-selector -Wno-objc-designated-initializers",
+        settings.get("OTHER_CPLUSPLUSFLAGS"));
+    assertEquals(
+        "$(inherited) ",
+        settings.get("OTHER_LDFLAGS"));
+
+    assertEquals(
+        "-ffoo-iphone -fbar-iphone -ffoo-iphone -fbar-iphone",
+        settings.get("OTHER_CFLAGS[sdk=*iphone*]"));
+    assertEquals(
+        "-ffoo-iphone -fbar-iphone -ffoo-iphone -fbar-iphone",
+        settings.get("OTHER_CPLUSPLUSFLAGS[sdk=*iphone*]"));
+    assertEquals(
+        "-lbaz-iphone -lbaz-iphone",
+        settings.get("OTHER_LDFLAGS[sdk=*iphone*]"));
+  }
+
+  @Test
+  public void testCxxLibraryExportedPlatformFlags() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    TargetNode<?> node = new CxxLibraryBuilder(buildTarget)
+        .setExportedPlatformPreprocessorFlags(
+            PatternMatchedCollection
+                .<ImmutableList<String>>builder()
+                .add(Pattern.compile("iphone.*"), ImmutableList.of("-fbar-iphone"))
+                .build())
+        .setExportedPlatformLinkerFlags(
+            PatternMatchedCollection
+                .<ImmutableList<String>>builder()
+                .add(Pattern.compile("macosx.*"), ImmutableList.of("-lbaz-macosx"))
+                .build())
+        .build();
+
+    BuildTarget dependentBuildTarget = BuildTarget.builder(rootPath, "//foo", "bin").build();
+    TargetNode<?> dependentNode = AppleBinaryBuilder
+        .createBuilder(dependentBuildTarget)
+        .setPlatformCompilerFlags(
+            Optional.of(
+                PatternMatchedCollection
+                    .<ImmutableList<String>>builder()
+                    .add(Pattern.compile("iphone.*"), ImmutableList.of("-ffoo-iphone"))
+                    .build()))
+        .setDeps(Optional.of(ImmutableSortedSet.of(buildTarget)))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node, dependentNode),
+        ImmutableSet.<ProjectGenerator.Option>of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+    assertHasConfigurations(target, "Debug", "Release", "Profile");
+    ImmutableMap<String, String> settings = ProjectGeneratorTestUtils.getBuildSettings(
+        projectFilesystem, buildTarget, target, "Debug");
+
+    assertEquals(
+        null,
+        settings.get("OTHER_CFLAGS[sdk=*iphone*]"));
+    assertEquals(
+        null,
+        settings.get("OTHER_CPLUSPLUSFLAGS[sdk=*iphone*]"));
+    assertEquals(
+        null,
+        settings.get("OTHER_LDFLAGS[sdk=*iphone*]"));
+
+    PBXTarget dependentTarget = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:bin");
+    assertHasConfigurations(target, "Debug", "Release", "Profile");
+    ImmutableMap<String, String> dependentSettings = ProjectGeneratorTestUtils.getBuildSettings(
+        projectFilesystem, dependentBuildTarget, dependentTarget, "Debug");
+
+    assertEquals(
+        "-ffoo-iphone -ffoo-iphone",
+        dependentSettings.get("OTHER_CFLAGS[sdk=*iphone*]"));
+    assertEquals(
+        "-ffoo-iphone -ffoo-iphone",
+        dependentSettings.get("OTHER_CPLUSPLUSFLAGS[sdk=*iphone*]"));
+    assertEquals(
+        null,
+        dependentSettings.get("OTHER_LDFLAGS[sdk=*iphone*]"));
   }
 
   @Test
