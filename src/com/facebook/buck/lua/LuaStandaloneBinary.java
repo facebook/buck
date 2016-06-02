@@ -118,6 +118,12 @@ public class LuaStandaloneBinary extends AbstractBuildRule {
                               Functions.compose(
                                   Functions.toStringFunction(),
                                   getResolver().getAbsolutePathFunction())),
+                          "pythonModules",
+                          Maps.transformValues(
+                              components.getPythonModules(),
+                              Functions.compose(
+                                  Functions.toStringFunction(),
+                                  getResolver().getAbsolutePathFunction())),
                           "nativeLibraries",
                           Maps.transformValues(
                               components.getNativeLibraries(),

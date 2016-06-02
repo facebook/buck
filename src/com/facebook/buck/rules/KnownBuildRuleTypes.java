@@ -652,7 +652,12 @@ public class KnownBuildRuleTypes {
             testTempDirOverride));
     builder.register(new KeystoreDescription());
     builder.register(
-        new LuaBinaryDescription(luaConfig, cxxBuckConfig, defaultCxxPlatform, cxxPlatforms));
+        new LuaBinaryDescription(
+            luaConfig,
+            cxxBuckConfig,
+            defaultCxxPlatform,
+            cxxPlatforms,
+            pythonPlatforms));
     builder.register(new LuaLibraryDescription());
     builder.register(new NdkLibraryDescription(ndkVersion, ndkCxxPlatforms));
     OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(platform, config);

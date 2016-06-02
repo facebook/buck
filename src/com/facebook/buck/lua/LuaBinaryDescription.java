@@ -37,10 +37,14 @@ import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.python.PythonPackagable;
+import com.facebook.buck.python.PythonPackageComponents;
+import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -62,10 +66,12 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreMaps;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -106,16 +112,19 @@ public class LuaBinaryDescription implements
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform defaultCxxPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
+  private final FlavorDomain<PythonPlatform> pythonPlatforms;
 
   public LuaBinaryDescription(
       LuaConfig luaConfig,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      FlavorDomain<CxxPlatform> cxxPlatforms,
+      FlavorDomain<PythonPlatform> pythonPlatforms) {
     this.luaConfig = luaConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
+    this.pythonPlatforms = pythonPlatforms;
   }
 
   @Override
@@ -154,7 +163,8 @@ public class LuaBinaryDescription implements
       SourcePathResolver pathResolver,
       final CxxPlatform cxxPlatform,
       final String mainModule,
-      final Optional<Path> relativeModulesDir) {
+      final Optional<Path> relativeModulesDir,
+      final Optional<Path> relativePythonModulesDir) {
 
     BuildTarget templateTarget =
         BuildTarget.builder(baseParams.getBuildTarget())
@@ -193,6 +203,10 @@ public class LuaBinaryDescription implements
                 "MODULES_DIR",
                 relativeModulesDir.isPresent() ?
                     Escaper.escapeAsPythonString(relativeModulesDir.get().toString()) :
+                    "NULL",
+                "PY_MODULES_DIR",
+                relativePythonModulesDir.isPresent() ?
+                    Escaper.escapeAsPythonString(relativePythonModulesDir.get().toString()) :
                     "NULL",
                 "EXT_SUFFIX",
                 Escaper.escapeAsPythonString(cxxPlatform.getSharedLibraryExtension())),
@@ -249,6 +263,7 @@ public class LuaBinaryDescription implements
       Optional<BuildTarget> nativeStarterLibrary,
       String mainModule,
       Optional<Path> relativeModulesDir,
+      Optional<Path> relativePythonModulesDir,
       Optional<Path> relativeNativeLibsDir)
       throws NoSuchBuildTargetException {
     BuildTarget target =
@@ -286,7 +301,8 @@ public class LuaBinaryDescription implements
                     pathResolver,
                     cxxPlatform,
                     mainModule,
-                    relativeModulesDir)),
+                    relativeModulesDir,
+                    relativePythonModulesDir)),
             CxxSourceRuleFactory.PicType.PDC);
     ruleResolver.addToIndex(
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
@@ -335,7 +351,8 @@ public class LuaBinaryDescription implements
       final CxxPlatform cxxPlatform,
       Path output,
       final String mainModule,
-      final Optional<Path> relativeModulesDir) {
+      final Optional<Path> relativeModulesDir,
+      final Optional<Path> relativePythonModulesDir) {
 
     BuildTarget templateTarget =
         BuildTarget.builder(baseParams.getBuildTarget())
@@ -376,6 +393,10 @@ public class LuaBinaryDescription implements
                 relativeModulesDir.isPresent() ?
                     Escaper.escapeAsPythonString(relativeModulesDir.get().toString()) :
                     "nil",
+                "PY_MODULES_DIR",
+                relativePythonModulesDir.isPresent() ?
+                    Escaper.escapeAsPythonString(relativePythonModulesDir.get().toString()) :
+                    "nil",
                 "EXT_SUFFIX",
                 Escaper.escapeAsPythonString(cxxPlatform.getSharedLibraryExtension())),
             /* executable */ true));
@@ -398,6 +419,7 @@ public class LuaBinaryDescription implements
       Optional<BuildTarget> nativeStarterLibrary,
       String mainModule,
       Optional<Path> relativeModulesDir,
+      Optional<Path> relativePythonModulesDir,
       Optional<Path> relativeNativeLibsDir)
       throws NoSuchBuildTargetException {
     switch (starterType) {
@@ -414,7 +436,8 @@ public class LuaBinaryDescription implements
             cxxPlatform,
             output,
             mainModule,
-            relativeModulesDir);
+            relativeModulesDir,
+            relativePythonModulesDir);
       case NATIVE:
         return getNativeStarter(
             baseParams,
@@ -425,6 +448,7 @@ public class LuaBinaryDescription implements
             nativeStarterLibrary,
             mainModule,
             relativeModulesDir,
+            relativePythonModulesDir,
             relativeNativeLibsDir);
     }
     throw new IllegalStateException(
@@ -436,7 +460,8 @@ public class LuaBinaryDescription implements
 
   private LuaPackageComponents getPackageComponentsFromDeps(
       Iterable<BuildRule> deps,
-      final CxxPlatform cxxPlatform)
+      final CxxPlatform cxxPlatform,
+      final PythonPlatform pythonPlatform)
       throws NoSuchBuildTargetException {
 
     final LuaPackageComponents.Builder builder = LuaPackageComponents.builder();
@@ -451,6 +476,19 @@ public class LuaBinaryDescription implements
         if (rule instanceof LuaPackageable) {
           LuaPackageable packageable = (LuaPackageable) rule;
           LuaPackageComponents.addComponents(builder, packageable.getLuaPackageComponents());
+          deps = rule.getDeps();
+        } else if (rule instanceof PythonPackagable) {
+          PythonPackagable packageable = (PythonPackagable) rule;
+          PythonPackageComponents components =
+              packageable.getPythonPackageComponents(pythonPlatform, cxxPlatform);
+          builder.putAllPythonModules(
+              MoreMaps.transformKeys(
+                  components.getModules(),
+                  Functions.toStringFunction()));
+          builder.putAllNativeLibraries(
+              MoreMaps.transformKeys(
+                  components.getNativeLibraries(),
+                  Functions.toStringFunction()));
           deps = rule.getDeps();
         } else if (rule instanceof CxxLuaExtension) {
           CxxLuaExtension extension = (CxxLuaExtension) rule;
@@ -581,6 +619,26 @@ public class LuaBinaryDescription implements
         output.getParent().relativize(
             params.getProjectFilesystem().getRootPath().relativize(modulesLinkTree.getRoot()));
 
+    Optional<Path> relativePythonModulesLinkTreeRoot = Optional.absent();
+    final List<SymlinkTree> pythonModulesLinktree = new ArrayList<>();
+    if (!components.getPythonModules().isEmpty()) {
+      final SymlinkTree symlinkTree =
+          resolver.addToIndex(
+              createSymlinkTree(
+                  params.getBuildTarget()
+                      .withAppendedFlavors(ImmutableFlavor.of("python-modules-link-tree")),
+                  params,
+                  resolver,
+                  pathResolver,
+                  components.getPythonModules()));
+      pythonModulesLinktree.add(symlinkTree);
+      relativePythonModulesLinkTreeRoot =
+          Optional.of(
+              output.getParent().relativize(
+                  params.getProjectFilesystem().getRootPath()
+                      .relativize(symlinkTree.getRoot())));
+    }
+
     final List<SymlinkTree> nativeLibsLinktree = new ArrayList<>();
     Optional<Path> relativeNativeLibsLinkTreeRoot = Optional.absent();
     if (!components.getNativeLibraries().isEmpty()) {
@@ -611,6 +669,7 @@ public class LuaBinaryDescription implements
             nativeStarterLibrary,
             mainModule,
             Optional.of(relativeModulesLinkTreeRoot),
+            relativePythonModulesLinkTreeRoot,
             relativeNativeLibsLinkTreeRoot);
     return new Tool() {
 
@@ -621,6 +680,7 @@ public class LuaBinaryDescription implements
             .addAll(components.getDeps(resolver))
             .add(modulesLinkTree)
             .addAll(nativeLibsLinktree)
+            .addAll(pythonModulesLinktree)
             .build();
       }
 
@@ -679,6 +739,7 @@ public class LuaBinaryDescription implements
                       "%s-native-starter"),
                   nativeStarterLibrary,
                   mainModule,
+                  Optional.<Path>absent(),
                   Optional.<Path>absent(),
                   Optional.<Path>absent()));
     }
@@ -762,7 +823,14 @@ public class LuaBinaryDescription implements
       throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
-    LuaPackageComponents components = getPackageComponentsFromDeps(params.getDeps(), cxxPlatform);
+    PythonPlatform pythonPlatform =
+        pythonPlatforms.getValue(params.getBuildTarget())
+            .or(pythonPlatforms.getValue(
+                args.pythonPlatform
+                    .transform(Flavor.TO_FLAVOR)
+                    .or(pythonPlatforms.getFlavors().iterator().next())));
+    LuaPackageComponents components =
+        getPackageComponentsFromDeps(params.getDeps(), cxxPlatform, pythonPlatform);
     StarterType starterType = getStarterType(components);
     Optional<BuildTarget> nativeStarterLibrary =
         args.nativeStarterLibrary.or(luaConfig.getNativeStarterLibrary());
@@ -816,6 +884,7 @@ public class LuaBinaryDescription implements
     public String mainModule;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<BuildTarget> nativeStarterLibrary;
+    public Optional<String> pythonPlatform;
   }
 
 }

@@ -45,6 +45,12 @@ abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
   public abstract ImmutableSortedMap<String, SourcePath> getModules();
 
   /**
+   * @return mapping of python module names to their respective {@link SourcePath}s.
+   */
+  @Value.NaturalOrder
+  public abstract ImmutableSortedMap<String, SourcePath> getPythonModules();
+
+  /**
    * @return a mapping of shared native library names to their respective {@link SourcePath}s.
    */
   @Value.NaturalOrder
@@ -54,18 +60,21 @@ abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
       LuaPackageComponents.Builder builder,
       LuaPackageComponents components) {
     builder.putAllModules(components.getModules());
+    builder.putAllPythonModules(components.getPythonModules());
     builder.putAllNativeLibraries(components.getNativeLibraries());
   }
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("modules", getModules());
+    sink.setReflectively("pythonModules", getPythonModules());
     sink.setReflectively("nativeLibraries", getNativeLibraries());
   }
 
   public ImmutableSortedSet<BuildRule> getDeps(SourcePathResolver resolver) {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(resolver.filterBuildRuleInputs(getModules().values()))
+        .addAll(resolver.filterBuildRuleInputs(getPythonModules().values()))
         .addAll(resolver.filterBuildRuleInputs(getNativeLibraries().values()))
         .build();
   }
@@ -73,6 +82,7 @@ abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
   public ImmutableSortedSet<SourcePath> getInputs() {
     return ImmutableSortedSet.<SourcePath>naturalOrder()
         .addAll(getModules().values())
+        .addAll(getPythonModules().values())
         .addAll(getNativeLibraries().values())
         .build();
   }
@@ -84,6 +94,7 @@ abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
   public static class Builder {
 
     private final Map<String, SourcePath> modules = new LinkedHashMap<>();
+    private final Map<String, SourcePath> pythonModules = new LinkedHashMap<>();
     private final Map<String, SourcePath> nativeLibraries = new LinkedHashMap<>();
 
     public Builder putModules(String name, SourcePath path) {
@@ -102,6 +113,26 @@ abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
     public Builder putAllModules(Map<String, SourcePath> modules) {
       for (Map.Entry<String, SourcePath> entry : modules.entrySet()) {
         putModules(entry.getKey(), entry.getValue());
+      }
+      return this;
+    }
+
+    public Builder putPythonModules(String name, SourcePath path) {
+      SourcePath existing = pythonModules.get(name);
+      if (existing != null && !existing.equals(path)) {
+        throw new HumanReadableException(
+            "conflicting python modules for %s: %s != %s",
+            name,
+            path,
+            existing);
+      }
+      pythonModules.put(name, path);
+      return this;
+    }
+
+    public Builder putAllPythonModules(Map<String, SourcePath> modules) {
+      for (Map.Entry<String, SourcePath> entry : modules.entrySet()) {
+        putPythonModules(entry.getKey(), entry.getValue());
       }
       return this;
     }
@@ -127,7 +158,7 @@ abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
     }
 
     public LuaPackageComponents build() {
-      return LuaPackageComponents.of(modules, nativeLibraries);
+      return LuaPackageComponents.of(modules, pythonModules, nativeLibraries);
     }
 
   }

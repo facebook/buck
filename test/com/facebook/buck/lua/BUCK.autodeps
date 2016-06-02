@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 173e3ec026d52f5123fe95aca3953f58de29ad01 #@#
+#@# GENERATED FILE: DO NOT MODIFY b5588c4e80ce0e1d54b357caabc5b766417882d4 #@#
 {
   "lua" : {
     "deps" : [
@@ -12,6 +12,8 @@
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/rules:rules",
+      "//src/com/facebook/buck/rules/coercer:coercer",
+      "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util/environment:platform",
@@ -19,6 +21,7 @@
       "//test/com/facebook/buck/cxx:testutil",
       "//test/com/facebook/buck/lua:testutil",
       "//test/com/facebook/buck/model:testutil",
+      "//test/com/facebook/buck/python:builders",
       "//test/com/facebook/buck/rules:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
@@ -34,6 +37,7 @@
     "deps" : [
       "//src/com/facebook/buck/rules:command_tool",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
+      "//test/com/facebook/buck/python:testutil",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [

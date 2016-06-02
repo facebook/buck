@@ -39,7 +39,7 @@ public class MoreMaps {
 
   public static <K1, K2, V> ImmutableMap<K2, V> transformKeys(
       Map<K1, V> map,
-      Function<K1, K2> transformer) {
+      Function<? super K1, K2> transformer) {
     ImmutableMap.Builder<K2, V> transformedMap = ImmutableMap.builder();
     for (Map.Entry<K1, V> ent : map.entrySet()) {
       transformedMap.put(

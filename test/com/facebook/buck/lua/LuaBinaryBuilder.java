@@ -20,6 +20,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.python.PythonTestUtils;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.Description;
 import com.google.common.base.Optional;
@@ -39,7 +40,8 @@ public class LuaBinaryBuilder extends AbstractNodeBuilder<LuaBinaryDescription.A
             config,
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS),
+            CxxPlatformUtils.DEFAULT_PLATFORMS,
+            PythonTestUtils.PYTHON_PLATFORMS),
         target);
   }
 

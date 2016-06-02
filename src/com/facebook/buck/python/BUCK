@@ -45,6 +45,7 @@ java_immutables_library(
   autodeps = True,
   visibility = [
     '//src/com/facebook/buck/cxx:rules',
+    '//src/com/facebook/buck/lua:lua',
     '//src/com/facebook/buck/ocaml:rules',
     '//src/com/facebook/buck/rules:types',
     '//src/com/facebook/buck/thrift:thrift',

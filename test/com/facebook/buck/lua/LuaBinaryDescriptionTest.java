@@ -19,6 +19,8 @@ package com.facebook.buck.lua;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cxx.CxxLibraryBuilder;
+import com.facebook.buck.python.PythonLibrary;
+import com.facebook.buck.python.PythonLibraryBuilder;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -29,6 +31,7 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSortedMap;
@@ -157,5 +160,24 @@ public class LuaBinaryDescriptionTest {
         .build(resolver);
   }
 
+  @Test
+  public void pythonDeps() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    PythonLibrary pythonLibrary =
+        (PythonLibrary) new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setSrcs(
+                SourceList.ofUnnamedSources(
+                    ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("foo.py"))))
+            .build(resolver);
+    LuaBinary luaBinary =
+        (LuaBinary) new LuaBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setMainModule("hello.world")
+            .setDeps(ImmutableSortedSet.of(pythonLibrary.getBuildTarget()))
+            .build(resolver);
+    assertThat(
+        luaBinary.getComponents().getPythonModules().keySet(),
+        Matchers.hasItem("foo.py"));
+  }
 
 }
