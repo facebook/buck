@@ -367,7 +367,8 @@ public class CxxDescriptionEnhancer {
       Iterable<CxxPreprocessorInput> cxxPreprocessorInputFromDeps)
       throws NoSuchBuildTargetException {
 
-    // Add the private includes of any rules which list this rule as a test.
+    // Add the private includes of any rules which this rule depends on, and which list this rule as
+    // a test.
     BuildTarget targetWithoutFlavor = BuildTarget.of(
         params.getBuildTarget().getUnflavoredBuildTarget());
     ImmutableList.Builder<CxxPreprocessorInput> cxxPreprocessorInputFromTestedRulesBuilder =

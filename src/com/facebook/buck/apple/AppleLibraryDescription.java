@@ -216,6 +216,10 @@ public class AppleLibraryDescription implements
         debugFormat);
   }
 
+  /**
+   * @param bundleLoader The binary in which the current library will be (dynamically) loaded into.
+   *                     Only valid when building a shared library with MACH_O_BUNDLE link type.
+   */
   public <A extends AppleNativeTargetDescriptionArg> BuildRule createLibraryBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,

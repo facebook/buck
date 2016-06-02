@@ -694,6 +694,40 @@ public class AppleTestIntegrationTest {
         Optional.of(ImmutableList.of("i386", "x86_64")));
   }
 
+  @Test
+  public void appleTestWithTestHostShouldSupportMultiarch() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_test_with_host_app", tmp);
+    workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(this).resolve("xctool"),
+        Paths.get("xctool"));
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//:AppTest#iphonesimulator-i386,iphonesimulator-x86_64");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "--config", "apple.xctool_path=xctool/bin/xctool",
+            target.getFullyQualifiedName());
+    result.assertSuccess();
+    assertThat(
+        result.getStderr(),
+        containsString("1 Passed   0 Skipped   0 Failed   AppTest"));
+
+    result = workspace.runBuckCommand("targets", "--show-output", target.getFullyQualifiedName());
+    result.assertSuccess();
+    Path output = workspace.getDestPath().resolve(
+        Iterables.getLast(Splitter.on(' ').limit(2).split(result.getStdout().trim())));
+    // check result is actually multiarch.
+    ProcessExecutor.Result lipoVerifyResult = workspace.runCommand(
+        "lipo", output.resolve("AppTest").toString(), "-verify_arch", "i386", "x86_64");
+    assertEquals(
+        lipoVerifyResult.getStderr().or(""),
+        0,
+        lipoVerifyResult.getExitCode());
+  }
+
   private static void assertIsSymbolicLink(
       Path link,
       Path target) throws IOException {
