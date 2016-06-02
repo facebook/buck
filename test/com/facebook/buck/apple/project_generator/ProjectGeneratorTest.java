@@ -1619,6 +1619,65 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testCxxLibraryExportedPreprocessorFlags() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    TargetNode<?> node = new CxxLibraryBuilder(buildTarget)
+        .setExportedPreprocessorFlags(ImmutableList.of("-DHELLO"))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.<ProjectGenerator.Option>of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+
+    assertHasConfigurations(target, "Debug", "Release", "Profile");
+    ImmutableMap<String, String> settings = ProjectGeneratorTestUtils.getBuildSettings(
+        projectFilesystem, buildTarget, target, "Debug");
+    assertEquals("-Wno-deprecated -Wno-conversion -DHELLO -Wno-deprecated -Wno-conversion -DHELLO",
+        settings.get("OTHER_CFLAGS"));
+  }
+
+  @Test
+  public void testCxxLibraryExportedPreprocessorFlagsPropagate() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    TargetNode<?> node = new CxxLibraryBuilder(buildTarget)
+        .setExportedPreprocessorFlags(ImmutableList.of("-DHELLO"))
+        .build();
+
+    BuildTarget dependentBuildTarget = BuildTarget.builder(rootPath, "//foo", "bin").build();
+    TargetNode<?> dependentNode = AppleBinaryBuilder
+        .createBuilder(dependentBuildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .setPreprocessorFlags(Optional.of(ImmutableList.of("-D__APPLE__")))
+        .setDeps(Optional.of(ImmutableSortedSet.of(buildTarget)))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node, dependentNode),
+        ImmutableSet.<ProjectGenerator.Option>of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:bin");
+
+    ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
+    assertEquals(
+        "$(inherited) -Wno-deprecated -Wno-conversion -DHELLO -D__APPLE__",
+        settings.get("OTHER_CFLAGS"));
+  }
+
+  @Test
   public void testCxxLibraryExportedPlatformFlags() throws IOException {
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?> node = new CxxLibraryBuilder(buildTarget)
@@ -1660,10 +1719,10 @@ public class ProjectGeneratorTest {
         projectFilesystem, buildTarget, target, "Debug");
 
     assertEquals(
-        null,
+        "-fbar-iphone -fbar-iphone",
         settings.get("OTHER_CFLAGS[sdk=*iphone*]"));
     assertEquals(
-        null,
+        "-fbar-iphone -fbar-iphone",
         settings.get("OTHER_CPLUSPLUSFLAGS[sdk=*iphone*]"));
     assertEquals(
         null,
@@ -1677,10 +1736,10 @@ public class ProjectGeneratorTest {
         projectFilesystem, dependentBuildTarget, dependentTarget, "Debug");
 
     assertEquals(
-        "-ffoo-iphone -ffoo-iphone",
+        "-ffoo-iphone -fbar-iphone -ffoo-iphone -fbar-iphone",
         dependentSettings.get("OTHER_CFLAGS[sdk=*iphone*]"));
     assertEquals(
-        "-ffoo-iphone -ffoo-iphone",
+        "-ffoo-iphone -fbar-iphone -ffoo-iphone -fbar-iphone",
         dependentSettings.get("OTHER_CPLUSPLUSFLAGS[sdk=*iphone*]"));
     assertEquals(
         null,

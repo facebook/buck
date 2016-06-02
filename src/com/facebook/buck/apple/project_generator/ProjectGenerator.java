@@ -216,47 +216,47 @@ public class ProjectGenerator {
               PosixFilePermission.OTHERS_READ));
 
   public static final Function<
-      TargetNode<AppleNativeTargetDescriptionArg>,
+      TargetNode<CxxLibraryDescription.Arg>,
       Iterable<String>> GET_EXPORTED_LINKER_FLAGS =
-      new Function<TargetNode<AppleNativeTargetDescriptionArg>, Iterable<String>>() {
+      new Function<TargetNode<CxxLibraryDescription.Arg>, Iterable<String>>() {
         @Override
-        public Iterable<String> apply(TargetNode<AppleNativeTargetDescriptionArg> input) {
+        public Iterable<String> apply(TargetNode<CxxLibraryDescription.Arg> input) {
           return input.getConstructorArg().exportedLinkerFlags.get();
         }
       };
 
   public static final Function<
-      TargetNode<AppleNativeTargetDescriptionArg>,
+      TargetNode<CxxLibraryDescription.Arg>,
       Iterable<String>> GET_EXPORTED_PREPROCESSOR_FLAGS =
-      new Function<TargetNode<AppleNativeTargetDescriptionArg>, Iterable<String>>() {
+      new Function<TargetNode<CxxLibraryDescription.Arg>, Iterable<String>>() {
         @Override
-        public Iterable<String> apply(TargetNode<AppleNativeTargetDescriptionArg> input) {
+        public Iterable<String> apply(TargetNode<CxxLibraryDescription.Arg> input) {
           return input.getConstructorArg().exportedPreprocessorFlags.get();
         }
       };
 
   public static final Function<
-      TargetNode<AppleNativeTargetDescriptionArg>,
+      TargetNode<CxxLibraryDescription.Arg>,
       Iterable<Pair<Pattern, ImmutableList<String>>>> GET_EXPORTED_PLATFORM_LINKER_FLAGS =
       new Function<
-          TargetNode<AppleNativeTargetDescriptionArg>,
+          TargetNode<CxxLibraryDescription.Arg>,
           Iterable<Pair<Pattern, ImmutableList<String>>>>() {
         @Override
         public Iterable<Pair<Pattern, ImmutableList<String>>> apply(
-            TargetNode<AppleNativeTargetDescriptionArg> input) {
+            TargetNode<CxxLibraryDescription.Arg> input) {
           return input.getConstructorArg().exportedPlatformLinkerFlags.get().getPatternsAndValues();
         }
       };
 
   public static final Function<
-      TargetNode<AppleNativeTargetDescriptionArg>,
+      TargetNode<CxxLibraryDescription.Arg>,
       Iterable<Pair<Pattern, ImmutableList<String>>>> GET_EXPORTED_PLATFORM_PREPROCESSOR_FLAGS =
       new Function<
-          TargetNode<AppleNativeTargetDescriptionArg>,
+          TargetNode<CxxLibraryDescription.Arg>,
           Iterable<Pair<Pattern, ImmutableList<String>>>>() {
         @Override
         public Iterable<Pair<Pattern, ImmutableList<String>>> apply(
-            TargetNode<AppleNativeTargetDescriptionArg> input) {
+            TargetNode<CxxLibraryDescription.Arg> input) {
           return input.getConstructorArg().exportedPlatformPreprocessorFlags.get()
             .getPatternsAndValues();
         }
@@ -2461,7 +2461,7 @@ public class ProjectGenerator {
               @Override
               public Iterable<? extends String> apply(TargetNode<?> input) {
                 return input
-                    .castArg(AppleNativeTargetDescriptionArg.class)
+                    .castArg(CxxLibraryDescription.Arg.class)
                     .transform(GET_EXPORTED_PREPROCESSOR_FLAGS)
                     .or(ImmutableSet.<String>of());
               }
@@ -2485,7 +2485,7 @@ public class ProjectGenerator {
               @Override
               public Iterable<Pair<Pattern, ImmutableList<String>>> apply(TargetNode<?> input) {
                 return input
-                    .castArg(AppleNativeTargetDescriptionArg.class)
+                    .castArg(CxxLibraryDescription.Arg.class)
                     .transform(GET_EXPORTED_PLATFORM_PREPROCESSOR_FLAGS)
                     .or(ImmutableSet.<Pair<Pattern, ImmutableList<String>>>of());
               }
@@ -2510,7 +2510,7 @@ public class ProjectGenerator {
               @Override
               public Iterable<String> apply(TargetNode<?> input) {
                 return input
-                    .castArg(AppleNativeTargetDescriptionArg.class)
+                    .castArg(CxxLibraryDescription.Arg.class)
                     .transform(GET_EXPORTED_LINKER_FLAGS)
                     .or(ImmutableSet.<String>of());
               }
@@ -2535,7 +2535,7 @@ public class ProjectGenerator {
               @Override
               public Iterable<Pair<Pattern, ImmutableList<String>>> apply(TargetNode<?> input) {
                 return input
-                    .castArg(AppleNativeTargetDescriptionArg.class)
+                    .castArg(CxxLibraryDescription.Arg.class)
                     .transform(GET_EXPORTED_PLATFORM_LINKER_FLAGS)
                     .or(ImmutableSet.<Pair<Pattern, ImmutableList<String>>>of());
               }
