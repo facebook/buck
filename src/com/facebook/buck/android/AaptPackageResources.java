@@ -35,8 +35,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.google.common.annotations.VisibleForTesting;
@@ -128,7 +128,8 @@ public class AaptPackageResources extends AbstractBuildRule
     // Symlink the manifest to a path named AndroidManifest.xml. Do this before running any other
     // commands to ensure that it is available at the desired path.
     steps.add(
-        new MkdirAndSymlinkFileStep(
+        new MkdirStep(getProjectFilesystem(), getAndroidManifestXml().getParent()),
+        CopyStep.forFile(
             getProjectFilesystem(),
             getResolver().getAbsolutePath(manifest),
             getAndroidManifestXml()));
