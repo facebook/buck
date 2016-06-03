@@ -132,4 +132,13 @@ public class CxxGenruleIntegrationTest {
             Matchers.containsString("-c-ld-flag")));
   }
 
+  @Test
+  public void platformName() throws IOException {
+    workspace.replaceFileContents("BUCK", "@CMD@", "echo -- $(platform-name)");
+    Path output = workspace.buildAndReturnOutput("//:rule#default");
+    assertThat(
+        workspace.getFileContents(output),
+        Matchers.containsString("default"));
+  }
+
 }

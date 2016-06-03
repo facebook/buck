@@ -81,6 +81,7 @@ public class CxxGenruleDescription
               .put("ldflags-shared", new ParseTimeDepsExpander())
               .put("ldflags-static", new ParseTimeDepsExpander())
               .put("ldflags-static-pic", new ParseTimeDepsExpander())
+              .put("platform-name", new StringExpander(""))
               .build());
 
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
@@ -174,6 +175,7 @@ public class CxxGenruleDescription
                     params,
                     cxxPlatform.get(),
                     Linker.LinkableDepType.STATIC_PIC, args.out))
+            .put("platform-name", new StringExpander(cxxPlatform.get().getFlavor().toString()))
             .build());
   }
 
