@@ -48,15 +48,20 @@ public class BuckKillAction extends BuckBaseAction {
   }
 
   @Override
-  public void actionPerformed(final AnActionEvent e) {
-    BuckModule buckModule = e.getProject().getComponent(BuckModule.class);
+  public void executeOnPooledThread(final AnActionEvent e) {
+    Project project = e.getProject();
+    // stop the current running process
+    BuckBuildManager.getInstance(project).getCurrentRunningBuckCommandHandler().stop();
+
+    BuckModule buckModule = project.getComponent(BuckModule.class);
     buckModule.disconnect();
 
+    // run the buck kill command
     BuckKillCommandHandler handler = new BuckKillCommandHandler(
-        e.getProject(),
-        e.getProject().getBaseDir(),
+        project,
+        project.getBaseDir(),
         BuckCommand.KILL);
-    BuckBuildManager.getInstance(e.getProject())
+    BuckBuildManager.getInstance(project)
         .runBuckCommandWhileConnectedToBuck(handler, ACTION_TITLE, buckModule);
   }
 }

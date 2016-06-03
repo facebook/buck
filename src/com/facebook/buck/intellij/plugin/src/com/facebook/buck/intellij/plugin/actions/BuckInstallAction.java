@@ -48,7 +48,7 @@ public class BuckInstallAction extends BuckBaseAction {
   }
 
   @Override
-  public void actionPerformed(AnActionEvent e) {
+  public void executeOnPooledThread(final AnActionEvent e) {
     Project project = e.getProject();
     BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
     String target = buildManager.getCurrentSavedTarget(project);
@@ -64,8 +64,6 @@ public class BuckInstallAction extends BuckBaseAction {
     if (state == null) {
       return;
     }
-
-    // Initiate a buck install
     BuckBuildCommandHandler handler = new BuckBuildCommandHandler(
         project,
         project.getBaseDir(),

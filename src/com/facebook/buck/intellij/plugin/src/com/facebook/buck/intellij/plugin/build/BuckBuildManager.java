@@ -27,6 +27,7 @@ import com.intellij.openapi.actionSystem.ActionPlaces;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -51,6 +52,7 @@ import javax.swing.JComponent;
 public class BuckBuildManager {
 
   public static final String NOT_BUCK_PROJECT_ERROR_MESSAGE = "Not a valid Buck project!\n";
+  private BuckCommandHandler currentRunningBuckCommandHandler;
 
   private boolean isBuilding = false;
   private boolean isKilling = false;
@@ -71,6 +73,10 @@ public class BuckBuildManager {
       return null;
     }
     return BuckSettingsProvider.getInstance().getState().lastAlias.get(project.getBasePath());
+  }
+
+  public BuckCommandHandler getCurrentRunningBuckCommandHandler() {
+    return currentRunningBuckCommandHandler;
   }
 
   public boolean isBuilding() {
@@ -133,18 +139,23 @@ public class BuckBuildManager {
    * @param handler        a handler
    * @param operationTitle an operation title shown in progress dialog
    */
-  public void runBuckCommand(
+  public synchronized void runBuckCommand(
       final BuckCommandHandler handler,
       final String operationTitle) {
+    if (!(handler instanceof BuckKillCommandHandler)) {
+      currentRunningBuckCommandHandler = handler;
+      // Save files for anything besides buck kill
+      ApplicationManager.getApplication().invokeAndWait(
+          new Runnable() {
+            @Override
+            public void run() {
+              FileDocumentManager.getInstance().saveAllDocuments();
+            }
+          },
+          ModalityState.NON_MODAL);
+    }
     Project project = handler.project();
 
-    // Always save files
-    ApplicationManager.getApplication().invokeLater(new Runnable() {
-      @Override
-      public void run() {
-        FileDocumentManager.getInstance().saveAllDocuments();
-      }
-    });
 
     String exec = BuckSettingsProvider.getInstance().getState().buckExecutable;
     if (exec == null) {
@@ -181,13 +192,10 @@ public class BuckBuildManager {
    * @param operationTitle an operation title shown in progress dialog
    * @param module         the BuckModule throught which we connect to Buck
    */
-  public void runBuckCommandWhileConnectedToBuck(
+  public synchronized void runBuckCommandWhileConnectedToBuck(
       final BuckCommandHandler handler,
       final String operationTitle,
       final BuckModule module) {
-    if (!module.isConnected()) {
-      module.connect();
-    }
     runBuckCommand(handler, operationTitle);
   }
 

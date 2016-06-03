@@ -38,7 +38,7 @@ public class BuckUninstallAction extends BuckBaseAction {
   }
 
   @Override
-  public void actionPerformed(AnActionEvent e) {
+  public void executeOnPooledThread(final AnActionEvent e) {
     Project project = e.getProject();
     BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
     String target = buildManager.getCurrentSavedTarget(project);

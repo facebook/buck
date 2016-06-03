@@ -38,24 +38,24 @@ public class BuckBuildAction extends BuckBaseAction {
   }
 
   @Override
-  public void actionPerformed(AnActionEvent e) {
-    Project project = e.getProject();
-    BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
+  public void executeOnPooledThread(final AnActionEvent e) {
+        Project project = e.getProject();
+        BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
 
-    String target = buildManager.getCurrentSavedTarget(project);
-    // Initiate a buck build
-    BuckModule buckModule = project.getComponent(BuckModule.class);
-    buckModule.attach(target);
+        String target = buildManager.getCurrentSavedTarget(project);
+        // Initiate a buck build
+        BuckModule buckModule = project.getComponent(BuckModule.class);
+        buckModule.attach(target);
 
-    if (target == null) {
-      buildManager.showNoTargetMessage(project);
-      return;
-    }
+        if (target == null) {
+          buildManager.showNoTargetMessage(project);
+          return;
+        }
 
-    BuckBuildCommandHandler handler = new BuckBuildCommandHandler(
-        project,
-        project.getBaseDir(),
-        BuckCommand.BUILD);
+        BuckBuildCommandHandler handler = new BuckBuildCommandHandler(
+            project,
+            project.getBaseDir(),
+            BuckCommand.BUILD);
     handler.command().addParameter(target);
     buildManager.runBuckCommandWhileConnectedToBuck(handler, ACTION_TITLE, buckModule);
   }

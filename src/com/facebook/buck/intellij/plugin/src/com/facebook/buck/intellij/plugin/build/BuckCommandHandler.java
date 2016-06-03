@@ -121,6 +121,13 @@ public abstract class BuckCommandHandler {
   }
 
   /**
+   * Stop process
+   */
+  public synchronized void stop() {
+    process.destroy();
+  }
+
+  /**
    * @return true if process is started.
    */
   public final synchronized boolean isStarted() {

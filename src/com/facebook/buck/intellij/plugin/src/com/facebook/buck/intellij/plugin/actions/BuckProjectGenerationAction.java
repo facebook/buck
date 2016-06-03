@@ -38,7 +38,7 @@ public class BuckProjectGenerationAction extends BuckBaseAction {
   }
 
   @Override
-  public void actionPerformed(AnActionEvent e) {
+  public void executeOnPooledThread(final AnActionEvent e) {
     Project project = e.getProject();
     BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
 
@@ -51,7 +51,6 @@ public class BuckProjectGenerationAction extends BuckBaseAction {
       return;
     }
 
-    // Initiate a buck build
     BuckBuildCommandHandler handler = new BuckBuildCommandHandler(
         project,
         project.getBaseDir(),

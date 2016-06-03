@@ -19,6 +19,7 @@ package com.facebook.buck.intellij.plugin.actions;
 import com.facebook.buck.intellij.plugin.build.BuckBuildManager;
 import com.facebook.buck.intellij.plugin.config.BuckModule;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
 
@@ -28,6 +29,18 @@ abstract class BuckBaseAction extends DumbAwareAction {
 
     public BuckBaseAction(String title, String desc, Icon icon) {
         super(title, desc, icon);
+    }
+
+    public abstract void executeOnPooledThread(final AnActionEvent e);
+
+    @Override
+    public void actionPerformed(final AnActionEvent e) {
+        ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
+            @Override
+            public void run() {
+                executeOnPooledThread(e);
+            }
+        });
     }
 
     @Override
