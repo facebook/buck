@@ -42,6 +42,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.python.CxxPythonExtension;
 import com.facebook.buck.python.PythonPackagable;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.python.PythonPlatform;
@@ -466,8 +467,10 @@ public class LuaBinaryDescription implements
 
     final LuaPackageComponents.Builder builder = LuaPackageComponents.builder();
 
-    // Walk the deps to find all Lua packageables and native linkables.
     final Map<BuildTarget, NativeLinkable> nativeLinkables = new LinkedHashMap<>();
+    final Map<BuildTarget, CxxPythonExtension> pythonExtensions = new LinkedHashMap<>();
+
+    // Walk the deps to find all Lua packageables and native linkables.
     new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(deps) {
       private final ImmutableSet<BuildRule> empty = ImmutableSet.of();
       @Override
@@ -477,6 +480,8 @@ public class LuaBinaryDescription implements
           LuaPackageable packageable = (LuaPackageable) rule;
           LuaPackageComponents.addComponents(builder, packageable.getLuaPackageComponents());
           deps = rule.getDeps();
+        } else if (rule instanceof CxxPythonExtension) {
+          pythonExtensions.put(rule.getBuildTarget(), (CxxPythonExtension) rule);
         } else if (rule instanceof PythonPackagable) {
           PythonPackagable packageable = (PythonPackagable) rule;
           PythonPackageComponents components =
@@ -504,6 +509,26 @@ public class LuaBinaryDescription implements
         return deps;
       }
     }.start();
+
+    // For regular linking, add all extensions via the package components interface and their
+    // python-platform specific deps to the native linkables.
+    for (Map.Entry<BuildTarget, CxxPythonExtension> entry : pythonExtensions.entrySet()) {
+      PythonPackageComponents components =
+          entry.getValue().getPythonPackageComponents(pythonPlatform, cxxPlatform);
+      builder.putAllPythonModules(
+          MoreMaps.transformKeys(
+              components.getModules(),
+              Functions.toStringFunction()));
+      builder.putAllNativeLibraries(
+          MoreMaps.transformKeys(
+              components.getNativeLibraries(),
+              Functions.toStringFunction()));
+      nativeLinkables.putAll(
+          Maps.uniqueIndex(
+              entry.getValue().getNativeLinkTarget(pythonPlatform)
+                  .getSharedNativeLinkTargetDeps(cxxPlatform),
+              HasBuildTarget.TO_TARGET));
+    }
 
     // Add shared libraries from all native linkables.
     for (NativeLinkable nativeLinkable :
