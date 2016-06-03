@@ -783,9 +783,10 @@ public class LuaBinaryDescription implements
       StarterType starterType,
       Optional<BuildTarget> nativeStarterLibrary,
       String mainModule,
-      final LuaPackageComponents components)
+      final LuaPackageComponents components,
+      LuaConfig.PackageStyle packageStyle)
       throws NoSuchBuildTargetException {
-    switch (luaConfig.getPackageStyle()) {
+    switch (packageStyle) {
       case STANDALONE:
         return getStandaloneBinary(
             params,
@@ -811,7 +812,7 @@ public class LuaBinaryDescription implements
         String.format(
             "%s: unexpected package style %s",
             params.getBuildTarget(),
-            luaConfig.getPackageStyle()));
+            packageStyle));
   }
 
   @Override
@@ -850,7 +851,8 @@ public class LuaBinaryDescription implements
             starterType,
             nativeStarterLibrary,
             args.mainModule,
-            components);
+            components,
+            args.packageStyle.or(luaConfig.getPackageStyle()));
     return new LuaBinary(
         params.appendExtraDeps(binary.getDeps(pathResolver)),
         pathResolver,
@@ -885,6 +887,7 @@ public class LuaBinaryDescription implements
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<BuildTarget> nativeStarterLibrary;
     public Optional<String> pythonPlatform;
+    public Optional<LuaConfig.PackageStyle> packageStyle;
   }
 
 }
