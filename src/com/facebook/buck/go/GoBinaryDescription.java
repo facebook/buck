@@ -17,6 +17,7 @@
 package com.facebook.buck.go;
 
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -92,11 +93,17 @@ public class GoBinaryDescription implements
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg) {
+
     ImmutableList.Builder<BuildTarget> targets = ImmutableList.builder();
 
     // Add the C/C++ linker parse time deps.
-    CxxPlatform cxxPlatform = goBuckConfig.getDefaultPlatform().getCxxPlatform().get();
-    targets.addAll(cxxPlatform.getLd().getParseTimeDeps());
+    GoPlatform goPlatform =
+        goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget)
+            .or(goBuckConfig.getDefaultPlatform());
+    Optional<CxxPlatform> cxxPlatform = goPlatform.getCxxPlatform();
+    if (cxxPlatform.isPresent()) {
+      targets.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform.get()));
+    }
 
     return targets.build();
   }

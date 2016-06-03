@@ -16,6 +16,8 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -29,7 +31,9 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.NoopBuildRule;
@@ -56,7 +60,8 @@ import java.util.List;
 public class GoTestDescription implements
     Description<GoTestDescription.Arg>,
     Flavored,
-    MetadataProvidingDescription<GoTestDescription.Arg> {
+    MetadataProvidingDescription<GoTestDescription.Arg>,
+    ImplicitDepsInferringDescription<GoTestDescription.Arg> {
 
   private static final BuildRuleType TYPE = BuildRuleType.of("go_test");
   private static final Flavor TEST_LIBRARY_FLAVOR = ImmutableFlavor.of("test-library");
@@ -339,6 +344,26 @@ public class GoTestDescription implements
     }
 
     return testLibrary;
+  }
+
+  @Override
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      Arg constructorArg) {
+
+    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
+
+    // Add the C/C++ linker parse time deps.
+    GoPlatform goPlatform =
+        goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget)
+            .or(goBuckConfig.getDefaultPlatform());
+    Optional<CxxPlatform> cxxPlatform = goPlatform.getCxxPlatform();
+    if (cxxPlatform.isPresent()) {
+      targets.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform.get()));
+    }
+
+    return targets.build();
   }
 
   @SuppressFieldNotInitialized
