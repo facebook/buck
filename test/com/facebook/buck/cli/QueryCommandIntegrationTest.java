@@ -25,6 +25,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -576,7 +577,8 @@ public class QueryCommandIntegrationTest {
         "buildfile(owner('example/1.txt'))");
 
     result.assertSuccess();
-    assertThat(result.getStdout(), is(equalToIgnoringPlatformNewlines("example/BUCK\n")));
+    assertThat(result.getStdout(),
+        is(equalToIgnoringPlatformNewlines(Paths.get("example/BUCK") + "\n")));
   }
 
   @Test
@@ -593,8 +595,10 @@ public class QueryCommandIntegrationTest {
         "other/8-test.txt");
 
     result.assertSuccess();
+    String expectedJson = Platform.detect() == Platform.WINDOWS ?
+        "stdout-buildfile-eight-nine-win.json" : "stdout-buildfile-eight-nine.json";
     assertThat(
         parseJSON(result.getStdout()),
-        is(equalTo(parseJSON(workspace.getFileContents("stdout-buildfile-eight-nine.json")))));
+        is(equalTo(parseJSON(workspace.getFileContents(expectedJson)))));
   }
 }

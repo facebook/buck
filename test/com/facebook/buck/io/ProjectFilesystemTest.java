@@ -45,6 +45,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.compress.archivers.zip.ZipUtil;
 import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -53,6 +54,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileSystems;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -461,6 +463,7 @@ public class ProjectFilesystemTest {
 
   @Test
   public void testCreateReadOnlyFileSetsPermissions() throws IOException {
+    Assume.assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
     Path path = Paths.get("hello.txt");
     ImmutableSet<PosixFilePermission> permissions =
       ImmutableSet.of(

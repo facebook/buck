@@ -16,6 +16,7 @@
 
 package com.facebook.buck.model;
 
+import com.facebook.buck.io.MorePaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -118,7 +119,7 @@ public class InMemoryBuildFileTree extends BuildFileTree {
           new Function<Node, Path>() {
             @Override
             public Path apply(Node child) {
-              return path.relativize(child.basePath);
+              return MorePaths.relativize(path, child.basePath);
             }
           }).toList();
     }

@@ -43,8 +43,8 @@ import java.util.Map;
 
 public class WatchmanTest {
 
-  private String root = "/some/root";
-  private String exe = "/opt/bin/watchman";
+  private String root = Paths.get("/some/root").toAbsolutePath().toString();
+  private String exe = Paths.get("/opt/bin/watchman").toAbsolutePath().toString();
   private FakeExecutableFinder finder = new FakeExecutableFinder(Paths.get(exe));
   private ImmutableMap<String, String> env = ImmutableMap.of();
   private static final Function<Path, Optional<WatchmanClient>> NULL_WATCHMAN_CONNECTOR =

@@ -74,10 +74,10 @@ public class DirectoryTraversalTest {
     // Only the files flagged by '*' should be visited, because the directories flagged by 'i' are
     // ignored.
     final ImmutableSet<String> expectedVisitedPaths = ImmutableSet.of(
-        "b/b_file",
-        "b/d/b_d_file",
-        ".buckconfig.local",
-        "file"
+        Paths.get("b/b_file").toString(),
+        Paths.get("b/d/b_d_file").toString(),
+        Paths.get(".buckconfig.local").toString(),
+        Paths.get("file").toString()
     );
     final ImmutableSet.Builder<String> visitedPaths = ImmutableSet.builder();
     new DirectoryTraversal(

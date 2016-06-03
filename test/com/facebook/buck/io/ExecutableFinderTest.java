@@ -21,10 +21,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -55,6 +57,9 @@ public class ExecutableFinderTest {
 
   @Test
   public void testSearchPathsNonExecutableFileIsIgnored() throws IOException {
+    // file.canExecute() always true for Windows
+    Assume.assumeFalse(Platform.detect() == Platform.WINDOWS);
+
     Path dir1 = tmp.newFolder("foo");
     // Note this is not executable.
     tmp.newFile("foo/blech");
@@ -161,6 +166,8 @@ public class ExecutableFinderTest {
 
   @Test
   public void testSearchPathsWithIsExecutableFunctionFailure() throws IOException {
+    Assume.assumeFalse(Platform.detect() == Platform.WINDOWS);
+
     // Path to search
     Path baz = tmp.newFolder("baz");
 
