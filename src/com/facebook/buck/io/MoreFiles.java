@@ -52,6 +52,13 @@ import java.util.UUID;
 
 public final class MoreFiles {
 
+  // Extended attribute bits for directories and symlinks; see:
+  // http://unix.stackexchange.com/questions/14705/the-zip-formats-external-file-attribute
+  @SuppressWarnings("PMD.AvoidUsingOctalValues")
+  public static final long S_IFDIR = 0040000;
+  @SuppressWarnings("PMD.AvoidUsingOctalValues")
+  public static final long S_IFLNK = 0120000;
+
   public enum DeleteRecursivelyOptions {
       IGNORE_NO_SUCH_FILE_EXCEPTION,
       DELETE_CONTENTS_ONLY,

@@ -120,13 +120,6 @@ public class ProjectFilesystem {
       DIRECTORY_AND_CONTENTS,
   }
 
-  // Extended attribute bits for directories and symlinks; see:
-  // http://unix.stackexchange.com/questions/14705/the-zip-formats-external-file-attribute
-  @SuppressWarnings("PMD.AvoidUsingOctalValues")
-  public static final long S_IFDIR = 0040000;
-  @SuppressWarnings("PMD.AvoidUsingOctalValues")
-  public static final long S_IFLNK = 0120000;
-
   // A non-exhaustive list of characters that might indicate that we're about to deal with a glob.
   private static final Pattern GLOB_CHARS = Pattern.compile("[\\*\\?\\{\\[]");
 
@@ -1071,7 +1064,7 @@ public class ProjectFilesystem {
     }
 
     if (isDirectory(path)) {
-      mode |= S_IFDIR;
+      mode |= MoreFiles.S_IFDIR;
     }
 
     // Propagate any additional permissions

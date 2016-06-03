@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -136,7 +137,7 @@ public class ZipStepTest {
     // Make sure we have the right attributes.
     try (ZipFile zip = new ZipFile(out.toFile())) {
       ZipArchiveEntry entry = zip.getEntry("child/");
-      assertNotEquals(entry.getUnixMode() & ProjectFilesystem.S_IFDIR, 0);
+      assertNotEquals(entry.getUnixMode() & MoreFiles.S_IFDIR, 0);
     }
 
     try (Zip zip = new Zip(out, false)) {

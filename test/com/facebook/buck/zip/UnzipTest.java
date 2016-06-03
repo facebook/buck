@@ -17,15 +17,21 @@
 package com.facebook.buck.zip;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePosixFilePermissions;
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -110,4 +116,32 @@ public class UnzipTest {
     assertTrue(Files.isExecutable(exe));
     assertEquals(ImmutableList.of(extractFolder.resolve("test.exe")), result);
   }
+
+  @Test
+  public void testExtractSymlink() throws IOException {
+    assumeThat(Platform.detect(), Matchers.is(Matchers.not(Platform.WINDOWS)));
+
+    // Create a simple zip archive using apache's commons-compress to store executable info.
+    try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
+      ZipArchiveEntry entry = new ZipArchiveEntry("link.txt");
+      entry.setUnixMode((int) MoreFiles.S_IFLNK);
+      String target = "target.txt";
+      entry.setSize(target.getBytes(Charsets.UTF_8).length);
+      entry.setMethod(ZipEntry.STORED);
+      zip.putArchiveEntry(entry);
+      zip.write(target.getBytes(Charsets.UTF_8));
+      zip.closeArchiveEntry();
+    }
+
+    // Now run `Unzip.extractZipFile` on our test zip and verify that the file is executable.
+    Path extractFolder = tmpFolder.newFolder();
+    Unzip.extractZipFile(
+        zipFile.toAbsolutePath(),
+        extractFolder.toAbsolutePath(),
+        Unzip.ExistingFileMode.OVERWRITE);
+    Path link = extractFolder.toAbsolutePath().resolve("link.txt");
+    assertTrue(Files.isSymbolicLink(link));
+    assertThat(Files.readSymbolicLink(link).toString(), Matchers.equalTo("target.txt"));
+  }
+
 }

@@ -19,6 +19,7 @@ package com.facebook.buck.zip;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePosixFilePermissions;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -87,9 +88,18 @@ public class Unzip {
 
           filesWritten.add(target);
           // Write file
-          try (OutputStream out = filesystem.newFileOutputStream(target);
-               InputStream is = zip.getInputStream(entry)) {
-            ByteStreams.copy(is, out);
+          try (InputStream is = zip.getInputStream(entry)) {
+            if (entry.isUnixSymlink()) {
+              filesystem.createSymLink(
+                  target,
+                  filesystem.getRootPath().getFileSystem()
+                      .getPath(new String(ByteStreams.toByteArray(is), Charsets.UTF_8)),
+                  /* force */ true);
+            } else {
+              try (OutputStream out = filesystem.newFileOutputStream(target)) {
+                ByteStreams.copy(is, out);
+              }
+            }
           }
 
           // TODO(shs96c): Implement what the comment below says we should do.
