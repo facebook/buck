@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 6efc69b05d93f9fa409d8336d607373b0c5f4835 #@#
+#@# GENERATED FILE: DO NOT MODIFY f4859b33fed1953d4a92ff9011b9474bae702475 #@#
 {
   "artifact_cache" : {
     "deps" : [
@@ -72,5 +72,14 @@
       "//third-party/java/okhttp:okhttp",
       "//third-party/java/okio:okio"
     ]
+  },
+  "lib-generate-hybrid-payloads" : {
+    "deps" : [
+      "//src-gen:thrift",
+      "//src/com/facebook/buck/artifact_cache:impl",
+      "//src/com/facebook/buck/slb:slb",
+      "//third-party/java/guava:guava"
+    ],
+    "exported_deps" : [ ]
   }
 }

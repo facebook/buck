@@ -45,6 +45,7 @@ java_immutables_library(
   ],
   autodeps = True,
   visibility = [
+    '//src/com/facebook/buck/artifact_cache:generate_hybrid_payloads',
     '//src/com/facebook/buck/httpserver:cache_handler',
     '//test/com/facebook/buck/artifact_cache:artifact_cache',
   ],
@@ -78,10 +79,14 @@ java_immutables_library(
   ]
 )
 
+GENERATOR_SOURCE = [
+  'HybridPayloadGenerator.java'
+]
+
 java_library(
   name = 'impl',
   srcs = glob(['*.java'],
-              excludes=PUBLIC_API_SOURCES + CONFIG_SOURCES + PROTOCOL_SOURCES),
+              excludes=PUBLIC_API_SOURCES + CONFIG_SOURCES + PROTOCOL_SOURCES + GENERATOR_SOURCE),
   tests = [
     '//test/com/facebook/buck/artifact_cache:artifact_cache',
   ],
@@ -89,4 +94,19 @@ java_library(
   visibility = [
     '//test/com/facebook/buck/artifact_cache/...',
   ],
+)
+
+java_binary(
+  name = 'generate-hybrid-payloads',
+  main_class = 'com.facebook.buck.artifact_cache.HybridPayloadGenerator',
+  deps = [
+    ':lib-generate-hybrid-payloads',
+  ],
+)
+
+java_library(
+  name = 'lib-generate-hybrid-payloads',
+  srcs = GENERATOR_SOURCE,
+  autodeps = True,
+  visibility = [ 'PUBLIC' ],
 )
