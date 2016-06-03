@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -39,7 +40,6 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.macros.BuildTargetsMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.StringExpander;
@@ -70,6 +70,7 @@ public class CxxGenruleDescription
           ImmutableMap.<String, MacroExpander>builder()
               .put("exe", new ExecutableMacroExpander())
               .put("location", new LocationMacroExpander())
+              .put("location-platform", new LocationMacroExpander())
               .put("cc", new StringExpander(""))
               .put("cxx", new StringExpander(""))
               .put("cflags", new StringExpander(""))
@@ -140,12 +141,23 @@ public class CxxGenruleDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    Optional<CxxPlatform> cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget());
+    final Optional<CxxPlatform> cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget());
     Preconditions.checkState(cxxPlatform.isPresent());
     return new MacroHandler(
         ImmutableMap.<String, MacroExpander>builder()
             .put("exe", new ExecutableMacroExpander())
             .put("location", new LocationMacroExpander())
+            .put("location-platform", new LocationMacroExpander() {
+              @Override
+              protected BuildRule resolve(BuildRuleResolver resolver, BuildTarget input)
+                  throws MacroException {
+                try {
+                  return resolver.requireRule(input.withFlavors(cxxPlatform.get().getFlavor()));
+                } catch (NoSuchBuildTargetException e) {
+                  throw new MacroException(e.getHumanReadableErrorMessage());
+                }
+              }
+            })
             .put("cc", new ToolExpander(cxxPlatform.get().getCc().resolve(resolver)))
             .put("cxx", new ToolExpander(cxxPlatform.get().getCxx().resolve(resolver)))
             .put("cflags", new StringExpander(shquoteJoin(cxxPlatform.get().getCflags())))

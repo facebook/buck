@@ -42,13 +42,21 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
       BuildRule rule)
       throws MacroException;
 
+  protected BuildRule resolve(BuildRuleResolver resolver, BuildTarget input)
+      throws MacroException {
+    Optional<BuildRule> rule = resolver.getRuleOptional(input);
+    if (!rule.isPresent()) {
+      throw new MacroException(String.format("no rule %s", input));
+    }
+    return rule.get();
+  }
+
   protected BuildRule resolve(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException {
-
     BuildTarget other;
     try {
       other = BuildTargetParser.INSTANCE.parse(
@@ -58,11 +66,7 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
     } catch (BuildTargetParseException e) {
       throw new MacroException(e.getMessage(), e);
     }
-    Optional<BuildRule> rule = resolver.getRuleOptional(other);
-    if (!rule.isPresent()) {
-      throw new MacroException(String.format("no rule %s", other));
-    }
-    return rule.get();
+    return resolve(resolver, other);
   }
 
   @Override
@@ -112,11 +116,7 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
       String input) throws MacroException {
-    return new BuildTargetSourcePath(
-        BuildTargetParser.INSTANCE.parse(
-            input,
-            BuildTargetPatternParser.forBaseName(target.getBaseName()),
-            cellNames));
+    return new BuildTargetSourcePath(resolve(target, cellNames, resolver, input).getBuildTarget());
   }
 
 }

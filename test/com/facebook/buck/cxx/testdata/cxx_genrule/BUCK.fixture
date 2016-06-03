@@ -50,6 +50,13 @@ cxx_library(
   },
 )
 
+cxx_binary(
+  name = 'binary',
+  srcs = [
+    'binary.c'
+  ],
+)
+
 cxx_genrule(
   name = 'rule',
   out = 'rule.out',

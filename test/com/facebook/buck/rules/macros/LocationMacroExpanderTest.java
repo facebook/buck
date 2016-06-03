@@ -21,19 +21,22 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.model.MacroException;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -123,19 +126,25 @@ public class LocationMacroExpanderTest {
   }
 
   @Test
-  public void extractRuleKeyAppendable() throws MacroException {
+  public void extractRuleKeyAppendable() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    String input = "//some/other:rule";
+    TargetNode<?> node = GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance(input))
+        .setOut("out")
+        .build();
+    BuildRuleResolver resolver = new BuildRuleResolver(
+        TargetGraphFactory.newInstance(node),
+        new DefaultTargetNodeToBuildRuleTransformer());
+    resolver.requireRule(node.getBuildTarget());
     LocationMacroExpander macroExpander = new LocationMacroExpander();
     assertThat(
         macroExpander.extractRuleKeyAppendables(
             target,
             createCellRoots(new FakeProjectFilesystem()),
             resolver,
-            "//some/other:rule"),
+            input),
         Matchers.<Object>equalTo(
-            new BuildTargetSourcePath(BuildTargetFactory.newInstance("//some/other:rule"))));
+            new BuildTargetSourcePath(BuildTargetFactory.newInstance(input))));
   }
 
 }
