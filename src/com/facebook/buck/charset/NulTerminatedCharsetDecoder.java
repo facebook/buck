@@ -37,7 +37,9 @@ import javax.annotation.concurrent.NotThreadSafe;
  */
 @NotThreadSafe
 public class NulTerminatedCharsetDecoder {
+  public static final int DEFAULT_INITIAL_CHAR_BUFFER_CAPACITY = 512;
   private final CharsetDecoder decoder;
+  private CharBuffer charBuffer;
 
   public static class Result {
     public final boolean nulTerminatorReached;
@@ -80,29 +82,43 @@ public class NulTerminatedCharsetDecoder {
   }
 
   public NulTerminatedCharsetDecoder(CharsetDecoder decoder) {
+    this(decoder, DEFAULT_INITIAL_CHAR_BUFFER_CAPACITY);
+  }
+
+  public NulTerminatedCharsetDecoder(CharsetDecoder decoder, int initialCapacity) {
     this.decoder = decoder;
+    this.charBuffer = CharBuffer.allocate(
+        (int) (initialCapacity * decoder.averageCharsPerByte()));
   }
 
   public static String decodeUTF8String(ByteBuffer in) throws CharacterCodingException {
     return new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()).decodeString(in);
   }
 
+  @SuppressWarnings("PMD.PrematureDeclaration")
   public String decodeString(ByteBuffer in) throws CharacterCodingException {
+    int startPosition = in.position();
     int nulOffset = findNulOffset(in);
     if (nulOffset == in.limit()) {
       throw new BufferUnderflowException();
     }
-    CharBuffer out = CharBuffer.allocate((int) (nulOffset * decoder.averageCharsPerByte()));
+    int charBufferNeeded = (int) ((nulOffset - startPosition) * decoder.averageCharsPerByte());
+    if (charBuffer.capacity() < charBufferNeeded) {
+      charBuffer = CharBuffer.allocate(charBufferNeeded);
+    } else {
+      charBuffer.clear();
+    }
+
     StringBuilder sb = new StringBuilder();
 
     while (true) {
-      Result result = decodeChunk(in, nulOffset, out, true);
+      Result result = decodeChunk(in, nulOffset, charBuffer, true);
       if (result.coderResult.isError()) {
         result.coderResult.throwException();
       }
-      out.flip();
-      sb.append(out);
-      out.compact();
+      charBuffer.flip();
+      sb.append(charBuffer);
+      charBuffer.compact();
       if (result.nulTerminatorReached || !in.hasRemaining()) {
         break;
       }
@@ -154,6 +170,7 @@ public class NulTerminatedCharsetDecoder {
   }
 
   public void reset() {
+    charBuffer.clear();
     decoder.reset();
   }
 }
