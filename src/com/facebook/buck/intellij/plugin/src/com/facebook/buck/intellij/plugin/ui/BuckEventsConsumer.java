@@ -577,6 +577,9 @@ public class BuckEventsConsumer implements
 
     @Override
     public void consumeConsoleEvent(final String message) {
+        if (!BuckToolWindowFactory.isToolWindowInstantiated(mProject)) {
+            return;
+        }
         if (!BuckToolWindowFactory.isToolWindowVisible(mProject)) {
             BuckToolWindowFactory.showToolWindow(mProject);
         }

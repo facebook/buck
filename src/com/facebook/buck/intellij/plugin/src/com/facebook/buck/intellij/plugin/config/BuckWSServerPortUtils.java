@@ -57,7 +57,7 @@ public final class BuckWSServerPortUtils {
               mPort + ".\nTry adding to your '.buckconfig.local' file:\n" +
               "[httpserver]\n" +
               "    port = 0\n" +
-              "After that, try running the command again.\n";
+              "After that, try running the restarting IntelliJ and run the action again.\n";
           break;
         }
       }

@@ -17,7 +17,6 @@
 package com.facebook.buck.intellij.plugin.ui;
 
 import com.facebook.buck.intellij.plugin.build.BuckBuildManager;
-
 import com.facebook.buck.intellij.plugin.config.BuckSettingsProvider;
 import com.facebook.buck.intellij.plugin.ui.tree.BuckTreeNodeDetail;
 import com.facebook.buck.intellij.plugin.ui.tree.BuckTreeNodeDetailError;
@@ -30,12 +29,12 @@ import com.intellij.execution.ui.RunnerLayoutUi;
 import com.intellij.execution.ui.layout.PlaceInGrid;
 import com.intellij.ide.DataManager;
 import com.intellij.ide.ui.UISettings;
-import com.intellij.openapi.actionSystem.ActionPlaces;
 import com.intellij.openapi.actionSystem.ActionGroup;
 import com.intellij.openapi.actionSystem.ActionManager;
+import com.intellij.openapi.actionSystem.ActionPlaces;
 import com.intellij.openapi.actionSystem.DataContext;
-import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.actionSystem.DataKeys;
+import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
@@ -53,11 +52,12 @@ import com.intellij.ui.tabs.TabInfo;
 import com.intellij.ui.tabs.impl.JBTabsImpl;
 import com.intellij.ui.treeStructure.Tree;
 
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+
 import javax.swing.JComponent;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 
 public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
 
@@ -96,6 +96,10 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
         }
       }
     });
+  }
+
+  public static boolean isToolWindowInstantiated(Project project) {
+    return !project.isDisposed() && ToolWindowManager.getInstance(project) != null;
   }
 
   public static boolean isToolWindowVisible(Project project) {
