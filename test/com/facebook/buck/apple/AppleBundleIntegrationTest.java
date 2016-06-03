@@ -756,7 +756,8 @@ public class AppleBundleIntegrationTest {
         tmp);
     workspace.setUp();
 
-    BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp#no-debug");
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//:DemoApp#no-debug,iphonesimulator-x86_64,iphonesimulator-i386");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
     workspace.verify(
@@ -782,6 +783,7 @@ public class AppleBundleIntegrationTest {
     Path watchExtensionPath = appPath.resolve("Plugins/DemoWatchAppExtension.appex");
     assertTrue(Files.exists(watchExtensionPath.resolve("DemoWatchAppExtension")));
     assertTrue(Files.exists(watchExtensionPath.resolve("DemoWatchApp.app/DemoWatchApp")));
+    assertTrue(Files.exists(watchExtensionPath.resolve("DemoWatchApp.app/_WatchKitStub/WK")));
   }
 
   @Test

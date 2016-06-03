@@ -288,6 +288,15 @@ public class AppleBinaryDescription implements
         platformFlavorsToAppleCxxPlatforms,
         params.getBuildTarget());
     if (fatBinaryInfo.isPresent()) {
+      if (shouldUseStubBinary(params)) {
+        BuildTarget thinTarget = Iterables.getFirst(fatBinaryInfo.get().getThinTargets(), null);
+        return requireThinBinary(
+            targetGraph,
+            params.copyWithBuildTarget(thinTarget),
+            resolver,
+            args);
+      }
+
       ImmutableSortedSet.Builder<BuildRule> thinRules = ImmutableSortedSet.naturalOrder();
       for (BuildTarget thinTarget : fatBinaryInfo.get().getThinTargets()) {
         Optional<BuildRule> existingThinRule = resolver.getRuleOptional(thinTarget);

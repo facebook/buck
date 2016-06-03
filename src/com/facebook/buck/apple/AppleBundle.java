@@ -520,8 +520,9 @@ public class AppleBundle
   private void copyAnotherCopyOfWatchKitStub(
       ImmutableList.Builder<Step> stepsBuilder,
       Path binaryOutputPath) {
-    if (platformName.contains("watch") &&
-        minOSVersion.equals("2.0") &&
+    if ((isLegacyWatchApp() ||
+        (platformName.contains("watch") &&
+            minOSVersion.equals("2.0"))) &&
         binary.get() instanceof WriteFile) {
       final Path watchKitStubDir = bundleRoot.resolve("_WatchKitStub");
       stepsBuilder.add(
