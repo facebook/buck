@@ -32,10 +32,6 @@
 !com.facebook.buck.python.PythonSrcZipIntegrationTest
 !com.facebook.buck.python.PythonTestIntegrationTest
 !com.facebook.buck.rules.KnownBuildRuleTypesTest#whenJavacIsSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithDifferentRuleKey
-!com.facebook.buck.shell.ShellStepTest#testDescription
-!com.facebook.buck.shell.ShellStepTest#testDescriptionWithEnvironment
-!com.facebook.buck.shell.ShellStepTest#testDescriptionWithEnvironmentAndPath
-!com.facebook.buck.shell.ShellStepTest#testDescriptionWithPath
 !com.facebook.buck.step.fs.SymCopyStepTest#testSymCopyStep
 !com.facebook.buck.thrift.ThriftLibraryIntegrationTest#shouldBeAbleToConstructACxxLibraryFromThrift
 !com.facebook.buck.util.ListeningProcessExecutorTest#clearsEnvWhenExplicitlySet

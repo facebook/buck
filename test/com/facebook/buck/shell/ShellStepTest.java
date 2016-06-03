@@ -28,6 +28,7 @@ import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -157,9 +158,12 @@ public class ShellStepTest {
         .newBuilder()
         .setProcessExecutor(new FakeProcessExecutor())
         .build();
+    String template = Platform.detect() == Platform.WINDOWS ?
+        "(cd %s && V1=\"two words\" V2=$foo'bar' bash -c \"echo $V1 $V2\")" :
+        "(cd %s && V1='two words' V2='$foo'\\''bar'\\''' bash -c 'echo $V1 $V2')";
     assertEquals(
         String.format(
-            "(cd %s && V1='two words' V2='$foo'\\''bar'\\''' bash -c 'echo $V1 $V2')",
+            template,
             Escaper.escapeAsBashString(workingDirectory)),
         command.getDescription(context));
   }
@@ -171,9 +175,11 @@ public class ShellStepTest {
         .newBuilder()
         .setProcessExecutor(new FakeProcessExecutor())
         .build();
+    String template = Platform.detect() == Platform.WINDOWS ?
+        "(cd %s && V1=\"two words\" V2=$foo'bar' bash -c \"echo $V1 $V2\")" :
+        "(cd %s && V1='two words' V2='$foo'\\''bar'\\''' bash -c 'echo $V1 $V2')";
     assertEquals(
-        String.format("(cd %s && V1='two words' V2='$foo'\\''bar'\\''' bash -c 'echo $V1 $V2')",
-            Escaper.escapeAsBashString(PATH)),
+        String.format(template, Escaper.escapeAsBashString(PATH)),
         command.getDescription(context));
   }
 
@@ -184,24 +190,29 @@ public class ShellStepTest {
         .newBuilder()
         .setProcessExecutor(new FakeProcessExecutor())
         .build();
+    String template = Platform.detect() == Platform.WINDOWS ?
+        "(cd %s && bash -c \"echo $V1 $V2\")" : "(cd %s && bash -c 'echo $V1 $V2')";
     assertEquals(
         String.format(
-            "(cd %s && bash -c 'echo $V1 $V2')",
+            template,
             Escaper.escapeAsBashString(PATH)),
         command.getDescription(context));
   }
 
   @Test
   public void testDescription() {
+
     Path workingDirectory = Paths.get(".").toAbsolutePath().normalize();
     ShellStep command = createCommand(ImmutableMap.<String, String>of(), ARGS, null);
     ExecutionContext context = TestExecutionContext
         .newBuilder()
         .setProcessExecutor(new FakeProcessExecutor())
         .build();
+    String expectedDescription = Platform.detect() == Platform.WINDOWS ?
+        "(cd %s && bash -c \"echo $V1 $V2\")" : "(cd %s && bash -c 'echo $V1 $V2')";
     assertEquals(
         String.format(
-            "(cd %s && bash -c 'echo $V1 $V2')",
+            expectedDescription,
             Escaper.escapeAsBashString(workingDirectory)),
         command.getDescription(context));
   }
