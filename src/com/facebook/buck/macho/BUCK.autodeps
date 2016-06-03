@@ -1,10 +1,11 @@
-#@# GENERATED FILE: DO NOT MODIFY 699d8cb169c276a21a46fdef300b86f6b496fbbe #@#
+#@# GENERATED FILE: DO NOT MODIFY 64189529be675ce6b2fec6af780b842c92c89cb7 #@#
 {
   "macho" : {
     "deps" : [
       "//src/com/facebook/buck/bsd:bsd",
       "//src/com/facebook/buck/charset:charset",
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/util:exceptions",
       "//third-party/java/immutables:processor"
     ],

@@ -19,9 +19,12 @@ import com.facebook.buck.bsd.UnixArchive;
 import com.facebook.buck.bsd.UnixArchiveEntry;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.google.common.base.Function;
+import com.facebook.buck.model.Pair;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
@@ -40,7 +43,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class ObjectPathsAbsolutifier {
   private static final Logger LOG = Logger.get(ObjectPathsAbsolutifier.class);
@@ -83,90 +85,145 @@ public class ObjectPathsAbsolutifier {
   }
 
   private void processThinBinary(final MachoMagicInfo magicInfo) throws IOException {
+    Optional<Pair<LinkEditDataCommand, ByteBuffer>> codeSignatureData =
+        getCodeSignatureDataToRelocate();
+
     updateBinaryUuid();
     int stringTableSizeIncrease = updateStringTableContents(magicInfo);
     updateLinkeditSegment(magicInfo, stringTableSizeIncrease);
+    restoreOriginalCodeSignatureData(codeSignatureData, stringTableSizeIncrease);
   }
 
-  private int updateBinaryUuid() throws IOException {
-    final AtomicInteger stringTableSizeIncrease = new AtomicInteger();
+  private Optional<Pair<LinkEditDataCommand, ByteBuffer>> getCodeSignatureDataToRelocate()
+      throws IOException {
+
     buffer.position(0);
-    LoadCommandUtils.enumerateLoadCommandsInFile(
-        buffer,
-        new Function<LoadCommand, Boolean>() {
+    ImmutableList<SymTabCommand> symTabCommands = LoadCommandUtils.findLoadCommandsWithClass(
+        buffer, SymTabCommand.class);
+    Preconditions.checkArgument(symTabCommands.size() <= 1, "Found more that one SymTabCommand");
+    if (symTabCommands.size() == 0) {
+      LOG.verbose("SymTabCommand was not found, so there is no need to work with " +
+          "LinkEditDataCommand to fix code sign, as string table was not found");
+      return Optional.absent();
+    }
+
+    buffer.position(0);
+    ImmutableList<LinkEditDataCommand> linkEditDataCommands =
+        LoadCommandUtils.findLoadCommandsWithClass(buffer, LinkEditDataCommand.class);
+    ImmutableList<LinkEditDataCommand> codeSignatureCommands = FluentIterable
+        .from(linkEditDataCommands)
+        .filter(new Predicate<LinkEditDataCommand>() {
           @Override
-          public Boolean apply(LoadCommand input) {
-            boolean isUuidCommand = input instanceof UUIDCommand;
-            if (isUuidCommand) {
-              try {
-                UUIDCommand uuidCommand = (UUIDCommand) input;
-                UUIDCommand updatedCommand = uuidCommand.withUuid(UUID.randomUUID());
-                UUIDCommandUtils.updateUuidCommand(
-                    buffer,
-                    uuidCommand,
-                    updatedCommand);
-              } catch (IOException e) {
-                LOG.error(e, "Unable to update UUID");
-              }
-            }
-            return !isUuidCommand;
+          public boolean apply(LinkEditDataCommand input) {
+            return input.getLoadCommandCommonFields().getCmd()
+                .equals(LinkEditDataCommand.LC_CODE_SIGNATURE);
           }
-        });
-    return stringTableSizeIncrease.intValue();
+        })
+        .toList();
+    if (codeSignatureCommands.size() == 0) {
+      LOG.verbose("LinkEditDataCommand for code signature was not found");
+      return Optional.absent();
+    }
+    Preconditions.checkArgument(
+        codeSignatureCommands.size() == 1,
+        "Found more than one LC_CODE_SIGNATURE");
+
+    SymTabCommand symTabCommand = symTabCommands.get(0);
+    LinkEditDataCommand codeSignatureCommand = codeSignatureCommands.get(0);
+
+    if (symTabCommand.getStroff().intValue() >=
+        codeSignatureCommand.getDataoff().intValue()) {
+      LOG.verbose("String table location > Code signature data location. " +
+          "Skipping code signature relocation.");
+      return Optional.absent();
+    }
+    Preconditions.checkArgument(
+        symTabCommand.getStroff().plus(symTabCommand.getStrsize()).intValue() <
+            codeSignatureCommand.getDataoff().intValue(),
+        "String table offset+size overlaps with code signature, something is wrong!");
+
+    byte[] contents = new byte[codeSignatureCommand.getDatasize().intValue()];
+    Preconditions.checkArgument(
+        contents.length > 0,
+        "Contents of code signature is 0 bytes");
+    buffer.position(codeSignatureCommand.getDataoff().intValue());
+    buffer.get(contents);
+
+    return Optional.of(
+        new Pair<>(
+            codeSignatureCommand,
+            ByteBuffer.wrap(contents).order(buffer.order())));
+  }
+
+  private void updateBinaryUuid() throws IOException {
+    buffer.position(0);
+    ImmutableList<UUIDCommand> commands =
+        LoadCommandUtils.findLoadCommandsWithClass(buffer, UUIDCommand.class);
+    Preconditions.checkArgument(
+        commands.size() == 1,
+        "Found %d UUIDCommands, expected 1", commands.size());
+
+    try {
+      UUIDCommand uuidCommand = commands.get(0);
+      UUIDCommand updatedCommand = uuidCommand.withUuid(UUID.randomUUID());
+      UUIDCommandUtils.updateUuidCommand(
+          buffer,
+          uuidCommand,
+          updatedCommand);
+    } catch (IOException e) {
+      LOG.error(e, "Unable to update UUID");
+    }
   }
 
   private int updateStringTableContents(final MachoMagicInfo magicInfo) throws IOException {
-    final AtomicInteger stringTableSizeIncrease = new AtomicInteger();
     buffer.position(0);
-    LoadCommandUtils.enumerateLoadCommandsInFile(
-        buffer,
-        new Function<LoadCommand, Boolean>() {
-          @Override
-          public Boolean apply(LoadCommand input) {
-            boolean isSymTabCommand = input instanceof SymTabCommand;
-            if (isSymTabCommand) {
-              try {
-                stringTableSizeIncrease.set(processSymTabCommand(magicInfo, (SymTabCommand) input));
-              } catch (IOException e) {
-                LOG.error(e, "Unable to absolutify object paths");
-              }
-            }
-            return !isSymTabCommand;
-          }
-        });
-    return stringTableSizeIncrease.intValue();
+    ImmutableList<SymTabCommand> commands =
+        LoadCommandUtils.findLoadCommandsWithClass(buffer, SymTabCommand.class);
+    Preconditions.checkArgument(
+        commands.size() == 1,
+        "Found %d SymTabCommands, expected 1", commands.size());
+    return processSymTabCommand(magicInfo, commands.get(0));
   }
 
   private void updateLinkeditSegment(
       final MachoMagicInfo magicInfo,
       final int stringTableSizeIncrease) throws IOException {
     buffer.position(0);
-    LoadCommandUtils.enumerateLoadCommandsInFile(
-        buffer,
-        new Function<LoadCommand, Boolean>() {
-          @Override
-          public Boolean apply(LoadCommand input) {
-            boolean isSegmentCommand = input instanceof SegmentCommand;
-            if (isSegmentCommand) {
-              SegmentCommand segmentCommand = (SegmentCommand) input;
-              if (segmentCommand.getSegname().equals(CommandSegmentSectionNames.SEGMENT_LINKEDIT)) {
-                try {
-                  processLinkeditSegmentCommand(
-                      segmentCommand,
-                      stringTableSizeIncrease,
-                      magicInfo.is64Bit());
-                } catch (IOException e) {
-                  LOG.error(
-                      e,
-                      "Unable to update the size of %s segment",
-                      CommandSegmentSectionNames.SEGMENT_LINKEDIT);
-                }
-                return false;
-              }
-            }
-            return true;
-          }
-        });
+    ImmutableList<SegmentCommand> commands =
+        LoadCommandUtils.findLoadCommandsWithClass(buffer, SegmentCommand.class);
+
+    for (SegmentCommand segmentCommand : commands) {
+      if (segmentCommand.getSegname().equals(CommandSegmentSectionNames.SEGMENT_LINKEDIT)) {
+        processLinkeditSegmentCommand(segmentCommand, stringTableSizeIncrease, magicInfo.is64Bit());
+        break;
+      }
+    }
+  }
+
+  private void restoreOriginalCodeSignatureData(
+      Optional<Pair<LinkEditDataCommand, ByteBuffer>> codeSignatureData,
+      int stringTableSizeIncrease) throws IOException {
+    if (!codeSignatureData.isPresent()) {
+      LOG.info("Code had no code signature to relocate, skipping code signature update");
+      return;
+    }
+    if (stringTableSizeIncrease == 0) {
+      LOG.info("String table size did not change, skipping code signature update");
+      return;
+    }
+    LinkEditDataCommand command = codeSignatureData.get().getFirst();
+    ByteBuffer contents = codeSignatureData.get().getSecond();
+    contents.position(0);
+
+    Preconditions.checkArgument(contents.capacity() > 0, "Contents of code signature is 0 bytes");
+
+    LinkEditDataCommand updated = command.withDataoff(
+        command.getDataoff().plus(UnsignedInteger.fromIntBits(stringTableSizeIncrease)));
+    LOG.verbose("Re-positioning code signature to " + updated.getDataoff().intValue());
+    buffer.position(updated.getDataoff().intValue());
+    buffer.put(contents);
+    LOG.verbose("Updating LC_CODE_SIGNATURE for new code signature position");
+    LinkEditDataCommandUtils.updateLinkEditDataCommand(buffer, command, updated);
   }
 
   private void processLinkeditSegmentCommand(

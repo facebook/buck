@@ -16,10 +16,13 @@
 package com.facebook.buck.macho;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.UnsignedInteger;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LoadCommandUtils {
   private LoadCommandUtils() {}
@@ -42,6 +45,8 @@ public class LoadCommandUtils {
       return SymTabCommandUtils.createFromBuffer(buffer);
     } else if (cmd.equals(UUIDCommand.LC_UUID)) {
       return UUIDCommandUtils.createFromBuffer(buffer);
+    } else if (LinkEditDataCommand.VALID_CMD_VALUES.contains(cmd)) {
+      return LinkEditDataCommandUtils.createFromBuffer(buffer);
     } else {
       return UnknownCommandUtils.createFromBuffer(buffer);
     }
@@ -71,5 +76,34 @@ public class LoadCommandUtils {
       }
       relativeCommandOffset += command.getLoadCommandCommonFields().getCmdsize().intValue();
     }
+  }
+
+  /**
+   * Finds all load commands with the given type in the buffer starting at the buffer's position.
+   * Example usage is:
+   *
+   * ImmutableList<MyLoadCommand> results = findLoadCommandsWithClass(buffer, MyLoadCommand.class);
+   *
+   * @param buffer The buffer which holds all data.
+   * @param type Load command's class, like SomeLoadCommand.class.
+   * @param <T> Return type of the load command, like SomeLoadCommand.
+   * @return List with all load commands of the given type.
+   * @throws IOException
+   */
+  @SuppressWarnings("unchecked")
+  public static <T extends LoadCommand> ImmutableList<T> findLoadCommandsWithClass(
+      ByteBuffer buffer,
+      final Class<T> type) throws IOException {
+    final List<T> results = new ArrayList<>();
+    enumerateLoadCommandsInFile(buffer, new Function<LoadCommand, Boolean>() {
+      @Override
+      public Boolean apply(LoadCommand input) {
+        if (type.isInstance(input)) {
+          results.add((T) input);
+        }
+        return true;
+      }
+    });
+    return ImmutableList.copyOf(results);
   }
 }

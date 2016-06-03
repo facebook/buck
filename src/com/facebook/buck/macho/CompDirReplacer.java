@@ -20,6 +20,7 @@ import com.facebook.buck.log.Logger;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -59,22 +60,17 @@ public class CompDirReplacer {
       final String oldCompDir,
       final String updatedCompDir) throws IOException {
     buffer.position(0);
-    LoadCommandUtils.enumerateLoadCommandsInFile(
-        buffer,
-        new Function<LoadCommand, Boolean>() {
-          @Override
-          public Boolean apply(LoadCommand input) {
-            boolean isSegmentCommand = input instanceof SegmentCommand;
-            if (isSegmentCommand) {
-              processSectionsInSegmentCommand(
-                  (SegmentCommand) input,
-                  magicInfo,
-                  oldCompDir,
-                  updatedCompDir);
-            }
-            return !isSegmentCommand;
-          }
-        });
+    ImmutableList<SegmentCommand> segmentCommands =
+        LoadCommandUtils.findLoadCommandsWithClass(buffer, SegmentCommand.class);
+    Preconditions.checkArgument(
+        segmentCommands.size() == 1,
+        "Found %d SegmentCommands, expected 1", segmentCommands.size());
+
+    processSectionsInSegmentCommand(
+        segmentCommands.get(0),
+        magicInfo,
+        oldCompDir,
+        updatedCompDir);
   }
 
   private void processSectionsInSegmentCommand(
