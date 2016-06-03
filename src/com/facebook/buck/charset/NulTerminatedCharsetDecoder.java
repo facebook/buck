@@ -97,6 +97,8 @@ public class NulTerminatedCharsetDecoder {
 
   @SuppressWarnings("PMD.PrematureDeclaration")
   public String decodeString(ByteBuffer in) throws CharacterCodingException {
+    reset();
+
     int startPosition = in.position();
     int nulOffset = findNulOffset(in);
     if (nulOffset == in.limit()) {
