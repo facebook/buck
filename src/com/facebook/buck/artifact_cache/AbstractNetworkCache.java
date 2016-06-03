@@ -79,7 +79,7 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
   @Override
   public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
     HttpArtifactCacheEvent.Started startedEvent = HttpArtifactCacheEvent.newFetchStartedEvent(
-        ImmutableSet.<RuleKey>of());
+        ImmutableSet.of(ruleKey));
     buckEventBus.post(startedEvent);
     HttpArtifactCacheEvent.Finished.Builder eventBuilder =
         HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
