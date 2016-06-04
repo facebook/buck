@@ -100,16 +100,6 @@ public class AppleConfigTest {
   }
 
   @Test
-  public void getShouldAttemptToDetectBestPlatform() {
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
-        ImmutableMap.of(
-            "apple",
-            ImmutableMap.of("attempt_to_detect_best_platform", "true"))).build();
-    AppleConfig config = new AppleConfig(buckConfig);
-    assertThat(config.shouldAttemptToDetermineBestCxxPlatform(), equalTo(true));
-  }
-
-  @Test
   public void getXcodeSelectDetectedAppleDeveloperDirectorySupplier() {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     AppleConfig config = new AppleConfig(buckConfig);

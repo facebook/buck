@@ -907,7 +907,6 @@ public class ProjectCommand extends BuildCommand {
           buildWithBuckFlags,
           focusModules,
           !appleConfig.getXcodeDisableParallelizeBuild(),
-          appleConfig.shouldAttemptToDetermineBestCxxPlatform(),
           new ExecutableFinder(),
           params.getEnvironment(),
           params.getCell().getKnownBuildRuleTypes().getCxxPlatforms(),
@@ -924,7 +923,8 @@ public class ProjectCommand extends BuildCommand {
           },
           params.getBuckEventBus(),
           halideBuckConfig,
-          cxxBuckConfig);
+          cxxBuckConfig,
+          appleConfig);
       generator.setGroupableTests(groupableTests);
       generator.generateWorkspaceAndDependentProjects(projectGenerators);
       ImmutableSet<BuildTarget> requiredBuildTargetsForWorkspace =

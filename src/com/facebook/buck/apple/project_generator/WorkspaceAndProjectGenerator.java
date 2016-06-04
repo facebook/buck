@@ -19,6 +19,7 @@ package com.facebook.buck.apple.project_generator;
 import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleBundleDescription;
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.xcode.XCScheme;
@@ -94,12 +95,12 @@ public class WorkspaceAndProjectGenerator {
   private final String buildFileName;
   private final Function<TargetNode<?>, SourcePathResolver> sourcePathResolverForNode;
   private final BuckEventBus buckEventBus;
-  private final boolean attemptToDetermineBestCxxPlatform;
 
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
   private final HalideBuckConfig halideBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
+  private final AppleConfig appleConfig;
 
   public WorkspaceAndProjectGenerator(
       Cell cell,
@@ -112,7 +113,6 @@ public class WorkspaceAndProjectGenerator {
       ImmutableList<String> buildWithBuckFlags,
       ImmutableList<BuildTarget> focusModules,
       boolean parallelizeBuild,
-      boolean attemptToDetermineBestCxxPlatform,
       ExecutableFinder executableFinder,
       ImmutableMap<String, String> environment,
       FlavorDomain<CxxPlatform> cxxPlatforms,
@@ -121,7 +121,8 @@ public class WorkspaceAndProjectGenerator {
       Function<TargetNode<?>, SourcePathResolver> sourcePathResolverForNode,
       BuckEventBus buckEventBus,
       HalideBuckConfig halideBuckConfig,
-      CxxBuckConfig cxxBuckConfig) {
+      CxxBuckConfig cxxBuckConfig,
+      AppleConfig appleConfig) {
     this.rootCell = cell;
     this.projectGraph = projectGraph;
     this.workspaceArguments = workspaceArguments;
@@ -140,9 +141,9 @@ public class WorkspaceAndProjectGenerator {
     this.sourcePathResolverForNode = sourcePathResolverForNode;
     this.buckEventBus = buckEventBus;
     this.combinedProjectGenerator = Optional.absent();
-    this.attemptToDetermineBestCxxPlatform = attemptToDetermineBestCxxPlatform;
     this.halideBuckConfig = halideBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.appleConfig = appleConfig;
   }
 
   @VisibleForTesting
@@ -271,9 +272,9 @@ public class WorkspaceAndProjectGenerator {
           defaultCxxPlatform,
           sourcePathResolverForNode,
           buckEventBus,
-          attemptToDetermineBestCxxPlatform,
           halideBuckConfig,
-          cxxBuckConfig)
+          cxxBuckConfig,
+          appleConfig)
           .setAdditionalCombinedTestTargets(groupedTests)
           .setTestsToGenerateAsStaticLibraries(groupableTests);
       combinedProjectGenerator = Optional.of(generator);
@@ -358,9 +359,9 @@ public class WorkspaceAndProjectGenerator {
                 defaultCxxPlatform,
                 sourcePathResolverForNode,
                 buckEventBus,
-                attemptToDetermineBestCxxPlatform,
                 halideBuckConfig,
-                cxxBuckConfig)
+                cxxBuckConfig,
+                appleConfig)
                 .setTestsToGenerateAsStaticLibraries(groupableTests);
 
             generator.createXcodeProjects();
@@ -400,9 +401,9 @@ public class WorkspaceAndProjectGenerator {
             defaultCxxPlatform,
             sourcePathResolverForNode,
             buckEventBus,
-            attemptToDetermineBestCxxPlatform,
             halideBuckConfig,
-            cxxBuckConfig);
+            cxxBuckConfig,
+            appleConfig);
         combinedTestsProjectGenerator
             .setAdditionalCombinedTestTargets(groupedTests)
             .createXcodeProjects();

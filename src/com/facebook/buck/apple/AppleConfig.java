@@ -297,13 +297,6 @@ public class AppleConfig {
     }
   }
 
-  public boolean shouldAttemptToDetermineBestCxxPlatform() {
-    return delegate.getBooleanValue(
-        "apple",
-        "attempt_to_detect_best_platform",
-        false);
-  }
-
   public boolean shouldUseHeaderMapsInXcodeProject() {
     return delegate.getBooleanValue(
         "apple",
@@ -351,6 +344,13 @@ public class AppleConfig {
         "apple",
         "default_debug_info_format_for_libraries",
         AppleDebugFormat.class).or(AppleDebugFormat.DWARF);
+  }
+
+  public boolean forceDsymModeInBuildWithBuck() {
+    return delegate.getBooleanValue(
+        "apple",
+        "force_dsym_mode_in_build_with_buck",
+        true);
   }
 
   /**

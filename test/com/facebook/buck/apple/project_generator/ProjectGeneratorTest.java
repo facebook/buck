@@ -40,6 +40,7 @@ import com.facebook.buck.apple.AppleAssetCatalogBuilder;
 import com.facebook.buck.apple.AppleBinaryBuilder;
 import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleResourceBuilder;
@@ -68,6 +69,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -168,6 +170,7 @@ public class ProjectGeneratorTest {
   private FakeProjectFilesystem fakeProjectFilesystem;
   private HalideBuckConfig halideBuckConfig;
   private CxxBuckConfig cxxBuckConfig;
+  private AppleConfig appleConfig;
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -198,8 +201,12 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
         "cxx", ImmutableMap.of(
             "cflags", "-Wno-deprecated -Wno-conversion",
-            "cxxflags", "-Wundeclared-selector -Wno-objc-designated-initializers"));
-    cxxBuckConfig = new CxxBuckConfig(FakeBuckConfig.builder().setSections(sections).build());
+            "cxxflags", "-Wundeclared-selector -Wno-objc-designated-initializers"),
+        "apple", ImmutableMap.of(
+            "force_dsym_mode_in_build_with_buck", "false"));
+    BuckConfig config = FakeBuckConfig.builder().setSections(sections).build();
+    cxxBuckConfig = new CxxBuckConfig(config);
+    appleConfig = new AppleConfig(config);
   }
 
   @Test
@@ -3494,9 +3501,9 @@ public class ProjectGeneratorTest {
         DEFAULT_PLATFORM,
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
-        false,
         halideBuckConfig,
-        cxxBuckConfig)
+        cxxBuckConfig,
+        appleConfig)
         .setTestsToGenerateAsStaticLibraries(ImmutableSet.of(xctest1, xctest2))
         .setAdditionalCombinedTestTargets(
             ImmutableMultimap.of(
@@ -3742,9 +3749,9 @@ public class ProjectGeneratorTest {
         DEFAULT_PLATFORM,
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
-        false,
         halideBuckConfig,
-        cxxBuckConfig);
+        cxxBuckConfig,
+        appleConfig);
     projectGenerator.createXcodeProjects();
 
     PBXTarget buildWithBuckTarget = null;
@@ -3761,9 +3768,11 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         buildWithBuckTarget);
 
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
     assertEquals(
         "Should have exact number of build phases",
-        3,
+        2,
         buildWithBuckTarget.getBuildPhases().size());
     PBXBuildPhase buildPhase = Iterables.get(buildWithBuckTarget.getBuildPhases(), 0);
     assertThat(buildPhase, instanceOf(PBXShellScriptBuildPhase.class));
@@ -3771,28 +3780,42 @@ public class ProjectGeneratorTest {
     assertThat(
         shellScriptBuildPhase.getShellScript(),
         containsString(
-            "buck build --report-absolute-paths --flag 'value with spaces' " +
-                bundleTarget.getFullyQualifiedName()));
+            "-- \"--show-output --report-absolute-paths --flag 'value with spaces'\" " +
+                bundleTarget.getFullyQualifiedName() + " dwarf dwarf-and-dsym"));
 
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-
-    PBXBuildPhase fixUUIDPhase = buildWithBuckTarget.getBuildPhases().get(1);
-    assertThat(fixUUIDPhase, instanceOf(PBXShellScriptBuildPhase.class));
-    PBXShellScriptBuildPhase fixUUIDShellScriptBuildPhase = (PBXShellScriptBuildPhase) fixUUIDPhase;
     Path fixUUIDScriptPath = ProjectGenerator.getFixUUIDScriptPath(filesystem);
     assertThat(
-        fixUUIDShellScriptBuildPhase.getShellScript(),
+        shellScriptBuildPhase.getShellScript(),
         containsString(
-            "python " + fixUUIDScriptPath + " --verbose"));
+            "python " + fixUUIDScriptPath + " --verbose " +
+                filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
+                    .resolve("bin/foo/bundle-unsanitised/bundle.app") + " " +
+                filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
+                    .resolve("bin/foo/bundle-unsanitised/bundle.dSYM") + " " +
+                bundleTarget.getShortName()));
 
-    PBXBuildPhase codesignPhase = buildWithBuckTarget.getBuildPhases().get(2);
+    assertThat(
+        shellScriptBuildPhase.getShellScript(),
+        containsString(
+            "machoutils absolutify_object_paths --binary $BUCK_BUNDLE_OUTPUT_PATH/bundle " +
+                "--output " + filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
+                .resolve("bin/foo/bundle-unsanitised/bundle.app/bundle") + " --old_compdir " +
+                "\"./////////////////////"));
+    // skipping some slashes: ".//////////// ..... ///////"
+    assertThat(
+        shellScriptBuildPhase.getShellScript(),
+        containsString("////////\" --new_compdir \"" + filesystem.getRootPath().toString() + "\""));
+
+    PBXBuildPhase codesignPhase = buildWithBuckTarget.getBuildPhases().get(1);
     assertThat(codesignPhase, instanceOf(PBXShellScriptBuildPhase.class));
     PBXShellScriptBuildPhase codesignShellScriptPhase = (PBXShellScriptBuildPhase) codesignPhase;
     Path codesignScriptPath = ProjectGenerator.getCodesignScriptPath(filesystem);
     assertThat(
         codesignShellScriptPhase.getShellScript(),
         containsString(
-            "python " + codesignScriptPath + " /usr/bin/codesign"));
+            "python " + codesignScriptPath + " /usr/bin/codesign " +
+                filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
+                    .resolve("bin/foo/bundle-unsanitised/bundle.app")));
   }
 
   @Test
@@ -3831,9 +3854,9 @@ public class ProjectGeneratorTest {
         DEFAULT_PLATFORM,
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
-        false,
         halideBuckConfig,
-        cxxBuckConfig);
+        cxxBuckConfig,
+        appleConfig);
     projectGenerator.createXcodeProjects();
 
     PBXTarget buildWithBuckTarget = null;
@@ -3860,8 +3883,19 @@ public class ProjectGeneratorTest {
     assertThat(
         shellScriptBuildPhase.getShellScript(),
         containsString(
-            "buck build --report-absolute-paths --flag 'value with spaces' " +
-                binaryTarget.getFullyQualifiedName()));
+            "buck -- \"--show-output --report-absolute-paths --flag 'value with spaces'\" " +
+                binaryTarget.getFullyQualifiedName() + " dwarf dwarf-and-dsym"));
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path fixUUIDScriptPath = ProjectGenerator.getFixUUIDScriptPath(filesystem);
+    assertThat(
+        shellScriptBuildPhase.getShellScript(),
+        containsString(
+            "python " + fixUUIDScriptPath + " --verbose " +
+                filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
+                    .resolve("bin/foo/binary-unsanitised/binary.app") + " " +
+                filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
+                    .resolve("bin/foo/binary-unsanitised/binary.dSYM") + " " +
+                binaryTarget.getShortName()));
   }
 
   @Test
@@ -3900,9 +3934,9 @@ public class ProjectGeneratorTest {
         DEFAULT_PLATFORM,
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
-        false,
         halideBuckConfig,
-        cxxBuckConfig);
+        cxxBuckConfig,
+        appleConfig);
     projectGenerator.createXcodeProjects();
 
     PBXTarget buildWithBuckTarget = null;
@@ -3926,11 +3960,12 @@ public class ProjectGeneratorTest {
     PBXBuildPhase buildPhase = Iterables.getOnlyElement(buildWithBuckTarget.getBuildPhases());
     assertThat(buildPhase, instanceOf(PBXShellScriptBuildPhase.class));
     PBXShellScriptBuildPhase shellScriptBuildPhase = (PBXShellScriptBuildPhase) buildPhase;
+
     assertThat(
         shellScriptBuildPhase.getShellScript(),
         containsString(
-            "buck build --report-absolute-paths --flag 'value with spaces' " +
-                libraryTarget.getFullyQualifiedName()));
+            "buck -- \"--show-output --report-absolute-paths --flag 'value with spaces'\" " +
+                libraryTarget.getFullyQualifiedName() + " dwarf dwarf-and-dsym"));
   }
 
   @Test
@@ -4514,9 +4549,9 @@ public class ProjectGeneratorTest {
         DEFAULT_PLATFORM,
         sourcePathResolverForNode,
         getFakeBuckEventBus(),
-        false,
         halideBuckConfig,
-        cxxBuckConfig);
+        cxxBuckConfig,
+        appleConfig);
   }
 
   private Function<TargetNode<?>, SourcePathResolver> getSourcePathResolverForNodeFunction(

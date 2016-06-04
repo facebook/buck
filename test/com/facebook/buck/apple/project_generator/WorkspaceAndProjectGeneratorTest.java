@@ -22,7 +22,6 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
@@ -38,6 +37,7 @@ import com.facebook.buck.apple.AppleBinaryBuilder;
 import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleTestBuilder;
@@ -46,9 +46,9 @@ import com.facebook.buck.apple.XcodeWorkspaceConfigBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -114,6 +114,7 @@ public class WorkspaceAndProjectGeneratorTest {
   private Cell rootCell;
   private HalideBuckConfig halideBuckConfig;
   private CxxBuckConfig cxxBuckConfig;
+  private AppleConfig appleConfig;
 
   private TargetGraph targetGraph;
   private TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceNode;
@@ -128,6 +129,7 @@ public class WorkspaceAndProjectGeneratorTest {
     ProjectFilesystem projectFilesystem = rootCell.getFilesystem();
     halideBuckConfig = HalideLibraryBuilder.createDefaultHalideConfig(projectFilesystem);
     cxxBuckConfig = CxxLibraryBuilder.createDefaultConfig();
+    appleConfig = new AppleConfig(FakeBuckConfig.builder().build());
     setUpWorkspaceAndProjects();
   }
 
@@ -256,7 +258,6 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableList.<String>of(),
         ImmutableList.<BuildTarget>of(),
         false /* parallelizeBuild */,
-        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -265,7 +266,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
-        cxxBuckConfig);
+        cxxBuckConfig,
+        appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -328,7 +330,6 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableList.<String>of(),
         ImmutableList.<BuildTarget>of(),
         false /* parallelizeBuild */,
-        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -337,7 +338,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
-        cxxBuckConfig);
+        cxxBuckConfig,
+        appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -384,7 +386,6 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableList.<String>of(),
         ImmutableList.<BuildTarget>of(),
         false /* parallelizeBuild */,
-        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -393,7 +394,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
-        cxxBuckConfig);
+        cxxBuckConfig,
+        appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -446,7 +448,6 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableList.<String>of(),
         ImmutableList.<BuildTarget>of(),
         false /* parallelizeBuild */,
-        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -455,7 +456,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
-        cxxBuckConfig);
+        cxxBuckConfig,
+        appleConfig);
 
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
@@ -519,7 +521,6 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableList.<String>of(),
         ImmutableList.<BuildTarget>of(),
         false /* parallelizeBuild */,
-        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -528,7 +529,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
-        cxxBuckConfig);
+        cxxBuckConfig,
+        appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -573,7 +575,6 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableList.<String>of(),
         ImmutableList.<BuildTarget>of(),
         false /* parallelizeBuild */,
-        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -582,7 +583,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
-        cxxBuckConfig);
+        cxxBuckConfig,
+        appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -609,7 +611,6 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableList.<String>of(),
         ImmutableList.<BuildTarget>of(),
         false /* parallelizeBuild */,
-        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -618,7 +619,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
-        cxxBuckConfig);
+        cxxBuckConfig,
+        appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -675,7 +677,6 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableList.<String>of(),
         ImmutableList.of(BuildTargetFactory.newInstance(fooLib)),
         false /* parallelizeBuild */,
-        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -684,7 +685,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
-        cxxBuckConfig);
+        cxxBuckConfig,
+        appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -721,7 +723,6 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableList.<String>of(),
         ImmutableList.of(BuildTargetFactory.newInstance(fooLib)),
         false /* parallelizeBuild */,
-        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -730,7 +731,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
-        cxxBuckConfig);
+        cxxBuckConfig,
+        appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
 
     try {
@@ -742,59 +744,6 @@ public class WorkspaceAndProjectGeneratorTest {
       return;
     }
     fail("Project generation should fail because there is no " + fooLib + " target in the graph!");
-  }
-
-  @Test
-  public void buildWithBuckWithCxxPlatformDetection() throws IOException {
-    Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
-        Paths.get("buck"),
-        ImmutableMap.<String, String>of());
-    assumeThat(buck.isPresent(), is(true));
-    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
-        rootCell,
-        targetGraph,
-        workspaceNode.getConstructorArg(),
-        workspaceNode.getBuildTarget(),
-        ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS,
-            ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
-        false /* combinedProject */,
-        true /* buildWithBuck */,
-        ImmutableList.<String>of(),
-        ImmutableList.<BuildTarget>of(),
-        false /* parallelizeBuild */,
-        true /* attemptToDetermineBestCxxPlatform */,
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.<String, String>of(),
-        PLATFORMS,
-        DEFAULT_PLATFORM,
-        "BUCK",
-        getSourcePathResolverForNodeFunction(targetGraph),
-        getFakeBuckEventBus(),
-        halideBuckConfig,
-        cxxBuckConfig);
-    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(projectGenerators);
-
-    ProjectGenerator fooProjectGenerator = projectGenerators.get(Paths.get("foo"));
-    assertThat(fooProjectGenerator, is(notNullValue()));
-
-    PBXTarget buildWithBuckTarget = null;
-    for (PBXTarget target : fooProjectGenerator.getGeneratedProject().getTargets()) {
-      if (target.getProductName() != null && target.getProductName().endsWith("-Buck")) {
-        buildWithBuckTarget = target;
-        break;
-      }
-    }
-    assertThat(buildWithBuckTarget, is(notNullValue()));
-    assertThat(buildWithBuckTarget, is(instanceOf(PBXAggregateTarget.class)));
-
-    // build with buck should contain script that would set config based on evironment variables
-    PBXShellScriptBuildPhase phase = (PBXShellScriptBuildPhase) buildWithBuckTarget
-        .getBuildPhases().get(0);
-    String script = phase.getShellScript();
-    assertThat(
-        script,
-        containsString("$PLATFORM_NAME-$arch"));
   }
 
   @Test
@@ -861,7 +810,6 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableList.<String>of(),
         ImmutableList.<BuildTarget>of(),
         false /* parallelizeBuild */,
-        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -870,7 +818,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
-        cxxBuckConfig);
+        cxxBuckConfig,
+        appleConfig);
     generator.setGroupableTests(AppleBuildRules.filterGroupableTests(targetGraph.getNodes()));
     Map<Path, ProjectGenerator> projectGenerators = Maps.newHashMap();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
@@ -1284,7 +1233,6 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableList.<String>of(),
         ImmutableList.<BuildTarget>of(),
         false /* parallelizeBuild */,
-        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -1293,7 +1241,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
-        cxxBuckConfig);
+        cxxBuckConfig,
+        appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -1439,7 +1388,6 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableList.<String>of(),
         ImmutableList.<BuildTarget>of(),
         false /* parallelizeBuild */,
-        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -1448,7 +1396,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
-        cxxBuckConfig);
+        cxxBuckConfig,
+        appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -1532,7 +1481,6 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableList.<String>of(),
         ImmutableList.<BuildTarget>of(),
         true /* parallelizeBuild */,
-        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -1541,7 +1489,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
-        cxxBuckConfig);
+        cxxBuckConfig,
+        appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -1591,7 +1540,6 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableList.<String>of(),
         ImmutableList.<BuildTarget>of(),
         true /* parallelizeBuild */,
-        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -1600,7 +1548,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getSourcePathResolverForNodeFunction(targetGraph),
         getFakeBuckEventBus(),
         halideBuckConfig,
-        cxxBuckConfig);
+        cxxBuckConfig,
+        appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 

@@ -26,6 +26,8 @@ import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleBundleExtension;
+import com.facebook.buck.apple.AppleConfig;
+import com.facebook.buck.apple.AppleDebugFormat;
 import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
@@ -165,14 +167,14 @@ public class ProjectGenerator {
 
   private static final Logger LOG = Logger.get(ProjectGenerator.class);
   private static final String BUILD_WITH_BUCK_TEMPLATE = "build-with-buck.st";
-  private static final String FIX_UUID_TEMPLATE = "fix-uuid.st";
+  private static final String BUILD_WITH_BUCK_PY_TEMPLATE = "build_with_buck.py";
   private static final String FIX_UUID_PY_RESOURCE = "fix_uuid.py";
   private static final String CODESIGN_TEMPLATE = "codesign.st";
   private static final String CODESIGN_PY_RESOURCE = "codesign.py";
   private static final ImmutableList<String> DEFAULT_CFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_CXXFLAGS = ImmutableList.of();
   public static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
-  public static final String XCODE_BUILD_SCRIPT_FLAVOR_VALUE = "#$PLATFORM_NAME-$arch";
+  public static final String SHOW_OUTPUT = "--show-output";
   public static final String PRODUCT_NAME = "PRODUCT_NAME";
 
   public enum Option {
@@ -299,7 +301,6 @@ public class ProjectGenerator {
       ImmutableSet.builder();
   private final Function<? super TargetNode<?>, SourcePathResolver> sourcePathResolverForNode;
   private final BuckEventBus buckEventBus;
-  private boolean attemptToDetermineBestCxxPlatform;
 
   /**
    * Populated while generating project configurations, in order to collect the possible
@@ -310,6 +311,7 @@ public class ProjectGenerator {
   private final Map<String, String> gidsToTargetNames;
   private final HalideBuckConfig halideBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
+  private final AppleConfig appleConfig;
   private final ImmutableList<BuildTarget> focusModules;
 
   public ProjectGenerator(
@@ -329,9 +331,9 @@ public class ProjectGenerator {
       CxxPlatform defaultCxxPlatform,
       Function<? super TargetNode<?>, SourcePathResolver> sourcePathResolverForNode,
       BuckEventBus buckEventBus,
-      boolean attemptToDetermineBestCxxPlatform,
       HalideBuckConfig halideBuckConfig,
-      CxxBuckConfig cxxBuckConfig) {
+      CxxBuckConfig cxxBuckConfig,
+      AppleConfig appleConfig) {
     this.sourcePathResolver = new Function<SourcePath, Path>() {
       @Override
       public Path apply(SourcePath input) {
@@ -355,7 +357,6 @@ public class ProjectGenerator {
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.sourcePathResolverForNode = sourcePathResolverForNode;
     this.buckEventBus = buckEventBus;
-    this.attemptToDetermineBestCxxPlatform = attemptToDetermineBestCxxPlatform;
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
     this.pathRelativizer = new PathRelativizer(
@@ -384,6 +385,7 @@ public class ProjectGenerator {
     gidsToTargetNames = new HashMap<>();
     this.halideBuckConfig = halideBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.appleConfig = appleConfig;
     this.focusModules = focusModules;
 
     for (BuildTarget focusedTarget : focusModules) {
@@ -431,6 +433,11 @@ public class ProjectGenerator {
       ExecutableFinder executableFinder,
       ImmutableMap<String, String> environment) {
     return executableFinder.getExecutable(Paths.get("buck"), environment);
+  }
+
+  @VisibleForTesting
+  static Path getBuildWithBuckPythonScriptPath(ProjectFilesystem filesystem) {
+    return getPackagedResourceNamed(filesystem, BUILD_WITH_BUCK_PY_TEMPLATE).get();
   }
 
   @VisibleForTesting
@@ -541,10 +548,6 @@ public class ProjectGenerator {
 
     // Only add a shell script for fixing UUIDs if it is an AppleBundle
     if (targetNode.getType().equals(AppleBundleDescription.TYPE)) {
-      PBXShellScriptBuildPhase fixUUIDShellScriptBuildPhase = new PBXShellScriptBuildPhase();
-      fixUUIDShellScriptBuildPhase.setShellScript(getFixUUIDShellScript(targetNode));
-      buildWithBuckTarget.getBuildPhases().add(fixUUIDShellScriptBuildPhase);
-
       PBXShellScriptBuildPhase codesignPhase = new PBXShellScriptBuildPhase();
       codesignPhase.setShellScript(getCodesignShellScript(targetNode));
       buildWithBuckTarget.getBuildPhases().add(codesignPhase);
@@ -600,6 +603,9 @@ public class ProjectGenerator {
     if (!flags.contains(REPORT_ABSOLUTE_PATHS)) {
       flags.add(0, REPORT_ABSOLUTE_PATHS);
     }
+    if (!flags.contains(SHOW_OUTPUT)) {
+      flags.add(0, SHOW_OUTPUT);
+    }
     flags = new ArrayList<String>(
         FluentIterable.<String>from(flags).transform(Escaper.BASH_ESCAPER).toList());
     return Joiner.on(' ').join(flags);
@@ -619,37 +625,6 @@ public class ProjectGenerator {
     String buildFlags = getBuildFlags();
     String escapedBuildTarget = Escaper.escapeAsBashString(
         targetNode.getBuildTarget().getFullyQualifiedName());
-    if (attemptToDetermineBestCxxPlatform) {
-      escapedBuildTarget += XCODE_BUILD_SCRIPT_FLAVOR_VALUE;
-    }
-
-    template.add("repo_root", projectFilesystem.getRootPath());
-    template.add("path_to_buck", getPathToBuck(executableFinder, environment));
-    template.add("build_flags", buildFlags);
-    template.add("escaped_build_target", escapedBuildTarget);
-
-    return template.render();
-  }
-
-  private String getFixUUIDShellScript(TargetNode<?> targetNode) {
-    ST template;
-    try {
-      template = new ST(Resources.toString(
-          Resources.getResource(ProjectGenerator.class, FIX_UUID_TEMPLATE), Charsets.UTF_8));
-    } catch (IOException e) {
-      throw new RuntimeException(
-          "There was an error loading '" + FIX_UUID_TEMPLATE + "' template", e);
-    }
-
-    ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(targetNode.getBuildTarget().getFlavors());
-    CxxPlatform cxxPlatform = cxxPlatforms.getValue(flavors).or(defaultCxxPlatform);
-    String compDir = cxxPlatform.getDebugPathSanitizer().getCompilationDirectory();
-    // Use the hostname for padding instead of the directory, this way the directory matches without
-    // having to resolve it.
-    String sourceDir = Strings.padStart(
-        ":" + projectFilesystem.getRootPath().toString(),
-        compDir.length(),
-        'f');
 
     Optional<String> productName = getProductNameForTargetNode(targetNode);
     String binaryName = AppleBundle.getBinaryName(targetNode.getBuildTarget(), productName);
@@ -659,25 +634,39 @@ public class ProjectGenerator {
         getScratchPathForDsymBundle(projectFilesystem, targetNode.getBuildTarget(), binaryName);
     Path resolvedBundleDestination = projectFilesystem.resolve(bundleDestination);
     Path resolvedDsymDestination = projectFilesystem.resolve(dsymDestination);
-    Path fixUUIDScriptPath = getFixUUIDScriptPath(projectFilesystem);
 
-    if (attemptToDetermineBestCxxPlatform) {
-      template.add("buck_flavor", XCODE_BUILD_SCRIPT_FLAVOR_VALUE);
-    } else {
-      template.add("buck_flavor", "");
-    }
+    ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(targetNode.getBuildTarget().getFlavors());
+    CxxPlatform cxxPlatform = cxxPlatforms.getValue(flavors).or(defaultCxxPlatform);
+    String oldCompDir = cxxPlatform.getDebugPathSanitizer().getCompilationDirectory();
+    // Use the hostname for padding instead of the directory, this way the directory matches without
+    // having to resolve it.
+    String dsymPaddedCompDirWithHost = Strings.padStart(
+        ":" + projectFilesystem.getRootPath().toString(),
+        oldCompDir.length(),
+        'f');
+
+
+    template.add("path_to_build_with_buck_py", getBuildWithBuckPythonScriptPath(projectFilesystem));
+    template.add("path_to_fix_uuid_script", getFixUUIDScriptPath(projectFilesystem));
+    template.add("repo_root", projectFilesystem.getRootPath());
     template.add("path_to_buck", getPathToBuck(executableFinder, environment));
-    template.add("buck_target", targetNode.getBuildTarget().getFullyQualifiedName());
-    template.add("root_path", projectFilesystem.getRootPath());
-
-    template.add("comp_dir", compDir);
-    template.add("source_dir", sourceDir);
-
+    template.add("build_flags", buildFlags);
+    template.add("escaped_build_target", escapedBuildTarget);
+    template.add(
+        "buck_dwarf_flavor",
+        (appleConfig.forceDsymModeInBuildWithBuck() ?
+            AppleDebugFormat.DWARF_AND_DSYM :
+            AppleDebugFormat.DWARF)
+            .getFlavor().getName());
+    template.add("buck_dsym_flavor", AppleDebugFormat.DWARF_AND_DSYM.getFlavor().getName());
+    template.add("binary_name", binaryName);
+    template.add("comp_dir", oldCompDir);
+    template.add("new_comp_dir", projectFilesystem.getRootPath().toString());
+    template.add("padded_source_dir", dsymPaddedCompDirWithHost);
     template.add("resolved_bundle_destination", resolvedBundleDestination);
     template.add("resolved_bundle_destination_parent", resolvedBundleDestination.getParent());
     template.add("resolved_dsym_destination", resolvedDsymDestination);
-    template.add("binary_name", binaryName);
-    template.add("path_to_fix_uuid_script", fixUUIDScriptPath);
+    template.add("force_dsym", appleConfig.forceDsymModeInBuildWithBuck() ? "true" : "false");
 
     return template.render();
   }

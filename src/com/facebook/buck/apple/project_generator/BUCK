@@ -6,9 +6,9 @@ standard_java_library(
     'build-with-buck.st',
     'codesign.st',
     'codesign.py',
-    'fix-uuid.st',
     'rn-package.st',
     'fix_uuid.py',
+    'build_with_buck.py',
   ],
   tests = [
     '//test/com/facebook/buck/apple/project_generator:project_generator',
@@ -28,4 +28,18 @@ python_test(
   srcs = ['fix_uuid_test.py'],
   resources = glob(['uuid_test_app/**/*']),
   deps = [':fixuuid'],
+)
+
+python_library(
+  name = 'build_with_buck',
+  srcs = [
+    'build_with_buck.py'
+  ],
+  deps = [],
+)
+
+python_test(
+  name = 'build_with_buck_test',
+  srcs = ['build_with_buck_test.py'],
+  deps = [':build_with_buck'],
 )
