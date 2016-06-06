@@ -17,6 +17,7 @@ package com.facebook.buck.macho;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
 
@@ -29,6 +30,9 @@ import java.nio.charset.StandardCharsets;
 abstract class AbstractSegmentCommand implements LoadCommand {
   public static final UnsignedInteger LC_SEGMENT = UnsignedInteger.fromIntBits(0x1);
   public static final UnsignedInteger LC_SEGMENT_64 = UnsignedInteger.fromIntBits(0x19);
+  public static final ImmutableSet<UnsignedInteger> VALID_CMD_VALUES =
+      ImmutableSet.of(LC_SEGMENT, LC_SEGMENT_64);
+
   public static final int SEGNAME_SIZE_IN_BYTES = 16;
   public static final int SIZE_IN_BYTES_32_BIT =
       LoadCommandCommonFields.CMD_AND_CMDSIZE_SIZE + SEGNAME_SIZE_IN_BYTES + 32;

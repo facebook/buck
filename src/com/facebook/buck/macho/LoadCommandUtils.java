@@ -42,7 +42,7 @@ public class LoadCommandUtils {
     UnsignedInteger cmd = UnsignedInteger.fromIntBits(buffer.getInt());
     buffer.position(position);
 
-    if (cmd.equals(SegmentCommand.LC_SEGMENT) || cmd.equals(SegmentCommand.LC_SEGMENT_64)) {
+    if (SegmentCommand.VALID_CMD_VALUES.contains(cmd)) {
       return SegmentCommandUtils.createFromBuffer(buffer, nulTerminatedCharsetDecoder);
     } else if (cmd.equals(SymTabCommand.LC_SYMTAB)) {
       return SymTabCommandUtils.createFromBuffer(buffer);
