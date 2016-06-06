@@ -130,10 +130,20 @@ public class InterCellIntegrationTest {
   public void shouldBeAbleToUseQueryCommandXCell() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
-    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
-        "inter-cell/export-file/primary",
-        "inter-cell/export-file/secondary");
-    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace primary = createWorkspace("inter-cell/multi-cell/primary");
+    primary.setUp();
+    ProjectWorkspace secondary = createWorkspace("inter-cell/multi-cell/secondary");
+    secondary.setUp();
+    ProjectWorkspace ternary = createWorkspace("inter-cell/multi-cell/ternary");
+    ternary.setUp();
+    registerCell(secondary, "ternary", ternary);
+    registerCell(primary, "secondary", secondary);
+    registerCell(primary, "ternary", ternary);
+
+    primary.runBuckCommand("targets", "--show-target-hash", "//:cxxbinary");
+    secondary.runBuckCommand("targets", "--show-target-hash", "//:cxxlib");
+    ternary.runBuckCommand("targets", "--show-target-hash", "//:cxxlib2");
+
     ProjectWorkspace.ProcessResult result = primary.runBuckCommand(
         "query",
         "deps(%s)",

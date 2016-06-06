@@ -17,6 +17,7 @@ java_immutables_library(
     'AbstractTargetNodePredicateSpec.java',
     'BuildTargetPatternTargetNodeParser.java',
     'ConcurrentMapCache.java',
+    'DaemonicCellState.java',
     'DaemonicParserState.java',
     'MissingBuildFileException.java',
     'ParseEvent.java',

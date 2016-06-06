@@ -58,7 +58,6 @@ import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -66,7 +65,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
-import com.google.common.collect.SetMultimap;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -75,13 +73,12 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
@@ -119,6 +116,12 @@ class DaemonicParserState implements ParsePipeline.Cache {
   private static final String RULES_INVALIDATED_BY_WATCH_EVENTS_COUNTER_NAME =
       "rules_invalidated_by_watch_events";
 
+  /**
+   * Taken from {@link ConcurrentMap}.
+   */
+  static final int DEFAULT_INITIAL_CAPACITY = 16;
+  static final float DEFAULT_LOAD_FACTOR = 0.75f;
+
   private final TypeCoercerFactory typeCoercerFactory;
   private final TagSetCounter cacheInvalidatedByEnvironmentVariableChangeCounter;
   private final IntegerCounter cacheInvalidatedByDefaultIncludesChangeCounter;
@@ -126,24 +129,17 @@ class DaemonicParserState implements ParsePipeline.Cache {
   private final IntegerCounter buildFilesInvalidatedByFileAddOrRemoveCounter;
   private final IntegerCounter filesChangedCounter;
   private final IntegerCounter rulesInvalidatedByWatchEventsCounter;
-  @GuardedBy("nodesAndTargetsLock")
-  private final ConcurrentMapCache<Path, ImmutableList<Map<String, Object>>> allRawNodes;
-  @GuardedBy("nodesAndTargetsLock")
-  private final HashMultimap<UnflavoredBuildTarget, BuildTarget> targetsCornucopia;
-  @GuardedBy("nodesAndTargetsLock")
-  private final ConcurrentMapCache<BuildTarget, TargetNode<?>> allTargetNodes;
-  private final LoadingCache<Cell, BuildFileTree> buildFileTrees;
 
   /**
-   * A map from absolute included files ({@code /foo/BUILD_DEFS}, for example) to the build files
-   * that depend on them (typically {@code /foo/BUCK} files).
+   * The set of {@link Cell} instances that have been seen by this state. This information is used
+   * for cache invalidation. Please see {@link #invalidateBasedOn(WatchEvent)} for example usage.
    */
-  @GuardedBy("this")
-  private final SetMultimap<Path, Path> buildFileDependents;
+  @GuardedBy("cellStateLock")
+  private final ConcurrentMap<Path, DaemonicCellState> cellPathToDaemonicState;
 
-  @GuardedBy("this")
-  private final Map<Path, ImmutableMap<String, ImmutableMap<String, Optional<String>>>>
-      buildFileConfigs;
+  private final int parsingThreads;
+
+  private final LoadingCache<Cell, BuildFileTree> buildFileTrees;
 
   /**
    * Environment used by build files. If the environment is changed, then build files need to be
@@ -161,24 +157,18 @@ class DaemonicParserState implements ParsePipeline.Cache {
   @GuardedBy("cachedStateLock")
   private Map<Path, Iterable<String>> cachedIncludes;
 
-  /**
-   * The set of {@link Cell} instances that have been seen by this state. This information is used
-   * for cache invalidation. Please see {@link #invalidateBasedOn(WatchEvent)} for example usage.
-   */
-  private final Set<Cell> knownCells;
-
   private final AutoCloseableReadWriteUpdateLock cachedStateLock;
-  private final AutoCloseableReadWriteUpdateLock nodesAndTargetsLock;
+  private final AutoCloseableReadWriteUpdateLock cellStateLock;
 
   public DaemonicParserState(
       TypeCoercerFactory typeCoercerFactory,
       int parsingThreads) {
+    this.parsingThreads = parsingThreads;
     this.typeCoercerFactory = typeCoercerFactory;
     this.cacheInvalidatedByEnvironmentVariableChangeCounter = new TagSetCounter(
         COUNTER_CATEGORY,
         INVALIDATED_BY_ENV_VARS_COUNTER_NAME,
         ImmutableMap.<String, String>of());
-    this.allRawNodes = new ConcurrentMapCache<>(parsingThreads);
     this.cacheInvalidatedByDefaultIncludesChangeCounter = new IntegerCounter(
         COUNTER_CATEGORY,
         INVALIDATED_BY_DEFAULT_INCLUDES_COUNTER_NAME,
@@ -199,8 +189,6 @@ class DaemonicParserState implements ParsePipeline.Cache {
         COUNTER_CATEGORY,
         RULES_INVALIDATED_BY_WATCH_EVENTS_COUNTER_NAME,
         ImmutableMap.<String, String>of());
-    this.targetsCornucopia = HashMultimap.create();
-    this.allTargetNodes = new ConcurrentMapCache<>(parsingThreads);
     this.buildFileTrees = CacheBuilder.newBuilder().build(
         new CacheLoader<Cell, BuildFileTree>() {
           @Override
@@ -208,14 +196,16 @@ class DaemonicParserState implements ParsePipeline.Cache {
             return new FilesystemBackedBuildFileTree(cell.getFilesystem(), cell.getBuildFileName());
           }
         });
-    this.buildFileDependents = HashMultimap.create();
-    this.buildFileConfigs = new HashMap<>();
     this.cachedEnvironment = ImmutableMap.of();
     this.cachedIncludes = new ConcurrentHashMap<>();
-    this.knownCells = Collections.synchronizedSet(new HashSet<Cell>());
+    this.cellPathToDaemonicState =
+        new ConcurrentHashMap<Path, DaemonicCellState>(
+            DEFAULT_INITIAL_CAPACITY,
+            DEFAULT_LOAD_FACTOR,
+            parsingThreads);
 
     this.cachedStateLock = new AutoCloseableReadWriteUpdateLock();
-    this.nodesAndTargetsLock = new AutoCloseableReadWriteUpdateLock();
+    this.cellStateLock = new AutoCloseableReadWriteUpdateLock();
   }
 
   public TypeCoercerFactory getTypeCoercerFactory() {
@@ -229,8 +219,24 @@ class DaemonicParserState implements ParsePipeline.Cache {
     invalidateIfProjectBuildFileParserStateChanged(cell);
     final Path buildFile = cell.getAbsolutePathToBuildFile(target);
     invalidateIfBuckConfigHasChanged(cell, buildFile);
-    try (AutoCloseableLock readLock = nodesAndTargetsLock.readLock()) {
-      return Optional.<TargetNode<?>>fromNullable(allTargetNodes.getIfPresent(target));
+
+    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+      DaemonicCellState state = cellPathToDaemonicState.get(cell.getRoot());
+      if (state == null) {
+        return Optional.<TargetNode<?>>absent();
+      }
+      return state.lookupTargetNode(target);
+    }
+  }
+
+  private DaemonicCellState getCellState(Cell cell) {
+    try (AutoCloseableLock writeLock = cellStateLock.writeLock()) {
+      DaemonicCellState state = cellPathToDaemonicState.get(cell.getRoot());
+      if (state == null) {
+        state = new DaemonicCellState(cell, parsingThreads);
+        cellPathToDaemonicState.put(cell.getRoot(), state);
+      }
+      return state;
     }
   }
 
@@ -242,13 +248,8 @@ class DaemonicParserState implements ParsePipeline.Cache {
     invalidateIfProjectBuildFileParserStateChanged(cell);
     final Path buildFile = cell.getAbsolutePathToBuildFile(target);
     invalidateIfBuckConfigHasChanged(cell, buildFile);
-    try (AutoCloseableLock writeLock = nodesAndTargetsLock.writeLock()) {
-      TargetNode<?> updatedNode = allTargetNodes.get(target, targetNode);
-      if (updatedNode == targetNode) {
-        targetsCornucopia.put(target.getUnflavoredBuildTarget(), target);
-      }
-      return updatedNode;
-    }
+
+    return getCellState(cell).putTargetNodeIfNotPresent(target, targetNode);
   }
 
   @Override
@@ -317,22 +318,11 @@ class DaemonicParserState implements ParsePipeline.Cache {
       dependentsOfEveryNode.add(cell.getFilesystem().resolve(include.substring(2)));
     }
 
-    synchronized (this) {
-      try (AutoCloseableLock writeLock = nodesAndTargetsLock.writeLock()) {
-        ImmutableList<Map<String, Object>> updated =
-            allRawNodes.get(buildFile, withoutMetaIncludes);
-        buildFileConfigs.put(buildFile, configs);
-
-        if (updated == withoutMetaIncludes) {
-          // We now know all the nodes. They all implicitly depend on everything in
-          // the "dependentsOfEveryNode" set.
-          for (Path dependent : dependentsOfEveryNode.build()) {
-            buildFileDependents.put(dependent, buildFile);
-          }
-        }
-        return updated;
-      }
-    }
+    return getCellState(cell).putRawNodesIfNotPresentAndStripMetaEntries(
+        buildFile,
+        withoutMetaIncludes,
+        dependentsOfEveryNode.build(),
+        configs);
   }
 
   @Override
@@ -343,8 +333,12 @@ class DaemonicParserState implements ParsePipeline.Cache {
     invalidateIfProjectBuildFileParserStateChanged(cell);
     invalidateIfBuckConfigHasChanged(cell, buildFile);
 
-    try (AutoCloseableLock readLock = nodesAndTargetsLock.readLock()) {
-      return Optional.fromNullable(allRawNodes.getIfPresent(buildFile));
+    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+      DaemonicCellState state = cellPathToDaemonicState.get(cell.getRoot());
+      if (state == null) {
+        return Optional.<ImmutableList<Map<String, Object>>>absent();
+      }
+      return state.lookupRawNodes(buildFile);
     }
   }
 
@@ -481,42 +475,41 @@ class DaemonicParserState implements ParsePipeline.Cache {
 
     Path path = (Path) event.context();
 
-    Preconditions.checkState(
-        allTargetNodes.isEmpty() || !knownCells.isEmpty(),
-        "There are cached target nodes but no known cells. Cache invalidation will not work.");
-
-    for (Cell cell : knownCells) {
-      try {
-        // We only care about creation and deletion events because modified should result in a rule
-        // key change.  For parsing, these are the only events we need to care about.
-        if (isPathCreateOrDeleteEvent(event)) {
-          BuildFileTree buildFiles = buildFileTrees.get(cell);
-
-          if (path.endsWith(cell.getBuildFileName())) {
-            LOG.debug(
-                "Build file %s changed, invalidating build file tree for cell %s",
-                path,
-                cell);
-            // If a build file has been added or removed, reconstruct the build file tree.
-            buildFileTrees.invalidate(cell);
-          }
-
-          // Added or removed files can affect globs, so invalidate the package build file
-          // "containing" {@code path} unless its filename matches a temp file pattern.
-          if (!isTempFile(cell, path)) {
-            invalidateContainingBuildFile(cell, buildFiles, path);
-          } else {
-            LOG.debug(
-                "Not invalidating the owning build file of %s because it is a temporary file.",
-                cell.getFilesystem().resolve(path).toAbsolutePath().toString());
-          }
-        }
-      } catch (ExecutionException | UncheckedExecutionException e) {
+    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+      for (DaemonicCellState state : cellPathToDaemonicState.values()) {
         try {
-          Throwables.propagateIfInstanceOf(e, BuildFileParseException.class);
-          Throwables.propagate(e);
-        } catch (BuildFileParseException bfpe) {
-          LOG.warn("Unable to parse already parsed build file.", bfpe);
+          // We only care about creation and deletion events because modified should result in a
+          // rule key change.  For parsing, these are the only events we need to care about.
+          if (isPathCreateOrDeleteEvent(event)) {
+            Cell cell = state.getCell();
+            BuildFileTree buildFiles = buildFileTrees.get(cell);
+
+            if (path.endsWith(cell.getBuildFileName())) {
+              LOG.debug(
+                  "Build file %s changed, invalidating build file tree for cell %s",
+                  path,
+                  cell);
+              // If a build file has been added or removed, reconstruct the build file tree.
+              buildFileTrees.invalidate(cell);
+            }
+
+            // Added or removed files can affect globs, so invalidate the package build file
+            // "containing" {@code path} unless its filename matches a temp file pattern.
+            if (!isTempFile(cell, path)) {
+              invalidateContainingBuildFile(cell, buildFiles, path);
+            } else {
+              LOG.debug(
+                  "Not invalidating the owning build file of %s because it is a temporary file.",
+                  state.getCellRoot().resolve(path).toAbsolutePath().toString());
+            }
+          }
+        } catch (ExecutionException | UncheckedExecutionException e) {
+          try {
+            Throwables.propagateIfInstanceOf(e, BuildFileParseException.class);
+            Throwables.propagate(e);
+          } catch (BuildFileParseException bfpe) {
+            LOG.warn("Unable to parse already parsed build file.", bfpe);
+          }
         }
       }
     }
@@ -525,14 +518,13 @@ class DaemonicParserState implements ParsePipeline.Cache {
   }
 
   public void invalidatePath(Path path) {
-    Preconditions.checkState(
-        allTargetNodes.isEmpty() || !knownCells.isEmpty(),
-        "There are cached target nodes but no known cells. Cache invalidation will not work.");
 
     // The paths from watchman are not absolute. Because of this, we adopt a conservative approach
     // to invalidating the caches.
-    for (Cell cell : knownCells) {
-      invalidatePath(cell, path);
+    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+      for (DaemonicCellState state : cellPathToDaemonicState.values()) {
+        invalidatePath(state, path);
+      }
     }
   }
 
@@ -574,9 +566,12 @@ class DaemonicParserState implements ParsePipeline.Cache {
 
     buildFilesInvalidatedByFileAddOrRemoveCounter.inc(packageBuildFiles.size());
 
-    // Invalidate all the packages we found.
-    for (Path buildFile : packageBuildFiles) {
-      invalidatePath(cell, buildFile.resolve(cell.getBuildFileName()));
+    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+      DaemonicCellState state = cellPathToDaemonicState.get(cell.getRoot());
+      // Invalidate all the packages we found.
+      for (Path buildFile : packageBuildFiles) {
+        invalidatePath(state, buildFile.resolve(cell.getBuildFileName()));
+      }
     }
   }
 
@@ -585,47 +580,13 @@ class DaemonicParserState implements ParsePipeline.Cache {
    * the targets and rules defined by files that transitively include {@code path} from the cache.
    * @param path The File that has changed.
    */
-  private synchronized void invalidatePath(Cell cell, Path path) {
-    LOG.debug("Invalidating path %s for cell %s", path, cell);
+  private void invalidatePath(DaemonicCellState state, Path path) {
+    LOG.debug("Invalidating path %s for cell %s", path, state.getCellRoot());
+
     // Paths from Watchman are not absolute.
-    path = cell.getFilesystem().resolve(path);
-
-
-
-    try (AutoCloseableLock writeLock = nodesAndTargetsLock.writeLock()) {
-      // If the path is a build file for the cell, nuke the targets that it owns first. We don't
-      // need to check whether or not the path ends in the build file name, since we know that
-      // these are the only things that get added. Which makes for an easy life.
-      List<Map<String, Object>> rawNodes = allRawNodes.getIfPresent(path);
-      if (rawNodes != null) {
-        rulesInvalidatedByWatchEventsCounter.inc(rawNodes.size());
-
-        // Invalidate the target nodes first
-        for (Map<String, Object> rawNode : rawNodes) {
-          UnflavoredBuildTarget target =
-              ParsePipeline.parseBuildTargetFromRawRule(cell.getRoot(), rawNode, path);
-          LOG.debug("Invalidating target for path %s: %s", path, target);
-          allTargetNodes.invalidateAll(targetsCornucopia.get(target));
-          targetsCornucopia.removeAll(target);
-        }
-
-        // And then the raw node itself.
-        allRawNodes.invalidate(path);
-      }
-    }
-
-    // We may have been given a file that other build files depend on. Iteratively remove those.
-    Iterable<Path> dependents = buildFileDependents.get(path);
-    LOG.debug("Invalidating dependents for path %s: %s", path, dependents);
-    for (Path dependent : dependents) {
-      if (dependent.equals(path)) {
-        continue;
-      }
-      invalidatePath(cell, dependent);
-    }
-    buildFileDependents.removeAll(path);
-
-    buildFileConfigs.remove(path);
+    path = state.getCellRoot().resolve(path);
+    int invalidatedNodes = state.invalidatePath(path);
+    rulesInvalidatedByWatchEventsCounter.inc(invalidatedNodes);
   }
 
   public static boolean isPathCreateOrDeleteEvent(WatchEvent<?> event) {
@@ -649,20 +610,13 @@ class DaemonicParserState implements ParsePipeline.Cache {
   }
 
   private synchronized void invalidateIfBuckConfigHasChanged(Cell cell, Path buildFile) {
-    ImmutableMap<String, ImmutableMap<String, Optional<String>>> usedConfigs =
-        buildFileConfigs.get(buildFile);
-    if (usedConfigs != null) {
-      for (Map.Entry<String, ImmutableMap<String, Optional<String>>> keyEnt :
-          usedConfigs.entrySet()) {
-        for (Map.Entry<String, Optional<String>> valueEnt : keyEnt.getValue().entrySet()) {
-          Optional<String> value =
-              cell.getBuckConfig().getValue(keyEnt.getKey(), valueEnt.getKey());
-          if (!value.equals(valueEnt.getValue())) {
-            invalidatePath(cell, buildFile);
-            return;
-          }
-        }
+    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+      DaemonicCellState state = cellPathToDaemonicState.get(cell.getRoot());
+      if (state == null) {
+        return;
       }
+      // Invalidates and also keeps the state cell up-to-date
+      state.invalidateIfBuckConfigHasChanged(cell, buildFile);
     }
   }
 
@@ -698,7 +652,8 @@ class DaemonicParserState implements ParsePipeline.Cache {
       }
     }
     synchronized (this) {
-      if (invalidateAllCaches()) {
+      if ((invalidatedByEnvironmentVariableChange && invalidateAllCaches()) ||
+          invalidateCellCaches(cell)) {
         if (invalidatedByEnvironmentVariableChange) {
           MapDifference<String, String> diff = Maps.difference(originalCachedEnvironment, cellEnv);
           LOG.warn("Invalidating cache on environment change (%s)", diff);
@@ -716,36 +671,29 @@ class DaemonicParserState implements ParsePipeline.Cache {
           cacheInvalidatedByDefaultIncludesChangeCounter.inc();
         }
       }
-      knownCells.clear();
-      knownCells.add(cell);
     }
   }
 
-  public synchronized boolean invalidateAllCaches() {
-    LOG.debug("Starting to invalidate all caches..");
-    try (AutoCloseableLock writeLock = nodesAndTargetsLock.writeLock()) {
-      boolean invalidated = false;
-      if (!allTargetNodes.isEmpty()) {
-        invalidated = true;
+  public boolean invalidateCellCaches(Cell cell) {
+    LOG.debug("Starting to invalidate caches for %s..", cell.getRoot());
+    try (AutoCloseableLock writeLock = cellStateLock.writeLock()) {
+      boolean invalidated = cellPathToDaemonicState.containsKey(cell.getRoot());
+      cellPathToDaemonicState.remove(cell.getRoot());
+      if (invalidated) {
+        LOG.debug("Cell cache data invalidated.");
+      } else {
+        LOG.debug("Cell caches were empty, no data invalidated.");
       }
-      allTargetNodes.invalidateAll();
-      if (!targetsCornucopia.isEmpty()) {
-        invalidated = true;
-      }
-      targetsCornucopia.clear();
-      if (!allRawNodes.isEmpty()) {
-        invalidated = true;
-      }
-      allRawNodes.invalidateAll();
-      if (!buildFileDependents.isEmpty()) {
-        invalidated = true;
-      }
-      buildFileDependents.clear();
-      if (!buildFileConfigs.isEmpty()) {
-        invalidated = true;
-      }
-      buildFileConfigs.clear();
 
+      return invalidated;
+    }
+  }
+
+  public boolean invalidateAllCaches() {
+    LOG.debug("Starting to invalidate all caches..");
+    try (AutoCloseableLock writeLock = cellStateLock.writeLock()) {
+      boolean invalidated = !cellPathToDaemonicState.isEmpty();
+      cellPathToDaemonicState.clear();
       if (invalidated) {
         LOG.debug("Cache data invalidated.");
       } else {
@@ -770,8 +718,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
   @Override
   public String toString() {
     return String.format(
-        "memoized=%s known-cells=%s",
-        allTargetNodes,
-        knownCells);
+        "memoized=%s",
+        cellPathToDaemonicState);
   }
 }

@@ -773,6 +773,8 @@ public class ParserTest {
         executorService,
         testBuildFile);
 
+    assertEquals("Should have parsed at all.", 1, counter.calls);
+
     // Process event.
     WatchEvent<Path> event = createPathEvent(
         MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile),
@@ -1326,6 +1328,43 @@ public class ParserTest {
         executorService);
 
     assertEquals("Should have invalidated cache.", 2, counter.calls);
+  }
+
+  @Test
+  public void whenAllRulesAreRequestedWithDifferingCellsThenRulesAreParsedOnce()
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
+    filterAllTargetsInProject(
+        parser,
+        cell,
+        Predicates.<TargetNode<?>>alwaysTrue(),
+        eventBus,
+        executorService);
+
+    assertEquals("Should have parsed once.", 1, counter.calls);
+
+    Path newTempDir = Files.createTempDirectory("junit-temp-path").toRealPath();
+    Files.createFile(newTempDir.resolve("bar.py"));
+    ProjectFilesystem newFilesystem = new ProjectFilesystem(newTempDir);
+    BuckConfig config = FakeBuckConfig.builder()
+        .setFilesystem(newFilesystem)
+        .setSections(
+            ImmutableMap.of(
+                ParserConfig.BUILDFILE_SECTION_NAME,
+                ImmutableMap.of(ParserConfig.INCLUDES_PROPERTY_NAME, "//bar.py")))
+        .build();
+    Cell cell = new TestCellBuilder()
+        .setFilesystem(newFilesystem)
+        .setBuckConfig(config)
+        .build();
+
+    filterAllTargetsInProject(
+        parser,
+        cell,
+        Predicates.<TargetNode<?>>alwaysTrue(),
+        eventBus,
+        executorService);
+
+    assertEquals("Should not have invalidated cache.", 1, counter.calls);
   }
 
   @Test
