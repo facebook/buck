@@ -87,8 +87,7 @@ public class SegmentCommandUtils {
   public static void updateSegmentCommand(
       ByteBuffer buffer,
       SegmentCommand old,
-      SegmentCommand updated,
-      boolean is64Bit) throws IOException {
+      SegmentCommand updated) throws IOException {
     Preconditions.checkArgument(
         old.getLoadCommandCommonFields().getOffsetInBinary() ==
             updated.getLoadCommandCommonFields().getOffsetInBinary());
@@ -99,7 +98,10 @@ public class SegmentCommandUtils {
         old.getLoadCommandCommonFields().getCmdsize().equals(
             updated.getLoadCommandCommonFields().getCmdsize()));
     buffer.position(old.getLoadCommandCommonFields().getOffsetInBinary());
-    writeCommandToBuffer(updated, buffer, is64Bit);
+    writeCommandToBuffer(
+        updated,
+        buffer,
+        updated.getLoadCommandCommonFields().getCmd().equals(SegmentCommand.LC_SEGMENT_64));
   }
 
   /**

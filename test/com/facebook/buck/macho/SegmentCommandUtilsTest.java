@@ -72,7 +72,7 @@ public class SegmentCommandUtilsTest {
         .withVmsize(UnsignedLong.fromLongBits(SegmentCommandUtils.alignValue(4321)));
 
     ByteBuffer buffer = ByteBuffer.allocate(commandSize);
-    SegmentCommandUtils.updateSegmentCommand(buffer, command, updated, true);
+    SegmentCommandUtils.updateSegmentCommand(buffer, command, updated);
     buffer.position(0);
 
     SegmentCommand commandInBuffer = SegmentCommandUtils.createFromBuffer(
@@ -95,7 +95,7 @@ public class SegmentCommandUtilsTest {
         .withVmsize(UnsignedLong.fromLongBits(SegmentCommandUtils.alignValue(4321)));
 
     ByteBuffer buffer = ByteBuffer.allocate(commandSize);
-    SegmentCommandUtils.updateSegmentCommand(buffer, command, updated, false);
+    SegmentCommandUtils.updateSegmentCommand(buffer, command, updated);
     buffer.position(0);
 
     SegmentCommand commandInBuffer = SegmentCommandUtils.createFromBuffer(

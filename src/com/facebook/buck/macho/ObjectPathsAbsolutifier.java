@@ -94,7 +94,7 @@ public class ObjectPathsAbsolutifier {
 
     updateBinaryUuid();
     int stringTableSizeIncrease = updateStringTableContents(magicInfo);
-    updateLinkeditSegment(magicInfo, stringTableSizeIncrease);
+    updateLinkeditSegment(stringTableSizeIncrease);
     restoreOriginalCodeSignatureData(codeSignatureData, stringTableSizeIncrease);
   }
 
@@ -198,9 +198,7 @@ public class ObjectPathsAbsolutifier {
     return processSymTabCommand(magicInfo, commands.get(0));
   }
 
-  private void updateLinkeditSegment(
-      final MachoMagicInfo magicInfo,
-      final int stringTableSizeIncrease) throws IOException {
+  private void updateLinkeditSegment(final int stringTableSizeIncrease) throws IOException {
     buffer.position(0);
     ImmutableList<SegmentCommand> commands = LoadCommandUtils.findLoadCommandsWithClass(
         buffer,
@@ -209,7 +207,7 @@ public class ObjectPathsAbsolutifier {
 
     for (SegmentCommand segmentCommand : commands) {
       if (segmentCommand.getSegname().equals(CommandSegmentSectionNames.SEGMENT_LINKEDIT)) {
-        processLinkeditSegmentCommand(segmentCommand, stringTableSizeIncrease, magicInfo.is64Bit());
+        processLinkeditSegmentCommand(segmentCommand, stringTableSizeIncrease);
         break;
       }
     }
@@ -243,15 +241,14 @@ public class ObjectPathsAbsolutifier {
 
   private void processLinkeditSegmentCommand(
       SegmentCommand original,
-      int stringTableSizeIncrease,
-      boolean is64Bit) throws IOException {
+      int stringTableSizeIncrease) throws IOException {
     UnsignedLong updatedFileSize = original.getFilesize()
         .plus(UnsignedLong.valueOf(stringTableSizeIncrease));
     UnsignedLong updatedVmSize = UnsignedLong.fromLongBits(
         SegmentCommandUtils.alignValue(
             original.getVmsize().intValue() + stringTableSizeIncrease));
     SegmentCommand updated = original.withFilesize(updatedFileSize).withVmsize(updatedVmSize);
-    SegmentCommandUtils.updateSegmentCommand(buffer, original, updated, is64Bit);
+    SegmentCommandUtils.updateSegmentCommand(buffer, original, updated);
   }
 
   private int processSymTabCommand(
