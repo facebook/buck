@@ -431,6 +431,7 @@ public class ProjectWorkspace {
           context,
           env.or(sanizitedEnv),
           /* setupLogging */ false,
+          /* readGlobalConfigs */ false,
           args);
     } catch (InterruptedException e) {
       e.printStackTrace(stderr);
