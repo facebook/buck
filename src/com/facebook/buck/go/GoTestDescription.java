@@ -145,11 +145,7 @@ public class GoTestDescription implements
       BuildRuleResolver resolver,
       ImmutableSet<SourcePath> srcs,
       Path packageName) throws NoSuchBuildTargetException {
-    Tool testMainGenerator = GoDescriptors.getTestMainGenerator(
-        goBuckConfig,
-        params,
-        resolver,
-        params.getProjectFilesystem());
+    Tool testMainGenerator = GoDescriptors.getTestMainGenerator(goBuckConfig, params, resolver);
 
     SourcePathResolver sourceResolver = new SourcePathResolver(resolver);
     GoTestMain generatedTestMain = new GoTestMain(

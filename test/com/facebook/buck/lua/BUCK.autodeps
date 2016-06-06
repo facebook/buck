@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY b5588c4e80ce0e1d54b357caabc5b766417882d4 #@#
+#@# GENERATED FILE: DO NOT MODIFY 2f08a281c2aaacb6e011823441d414fcd6acb3d0 #@#
 {
   "lua" : {
     "deps" : [
@@ -9,6 +9,8 @@
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/lua:lua",
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/python:support",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/rules:rules",

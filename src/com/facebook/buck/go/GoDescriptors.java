@@ -18,9 +18,9 @@ package com.facebook.buck.go;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -32,13 +32,14 @@ import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -52,11 +53,7 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -66,7 +63,7 @@ abstract class GoDescriptors {
 
   private static final Logger LOG = Logger.get(GoDescriptors.class);
 
-  private static final String TEST_MAIN_GEN_PATH = "testmaingen.go";
+  private static final String TEST_MAIN_GEN_PATH = "com/facebook/buck/go/testmaingen.go";
   public static final Flavor TRANSITIVE_LINKABLES_FLAVOR =
       ImmutableFlavor.of("transitive-linkables");
 
@@ -255,8 +252,9 @@ abstract class GoDescriptors {
   static Tool getTestMainGenerator(
       GoBuckConfig goBuckConfig,
       BuildRuleParams sourceParams,
-      BuildRuleResolver resolver,
-      ProjectFilesystem projectFilesystem) throws NoSuchBuildTargetException {
+      BuildRuleResolver resolver)
+      throws NoSuchBuildTargetException {
+
     Optional<Tool> configTool = goBuckConfig.getGoTestMainGenerator(resolver);
     if (configTool.isPresent()) {
       return configTool.get();
@@ -271,50 +269,46 @@ abstract class GoDescriptors {
       return ((BinaryBuildRule) generator.get()).getExecutableCommand();
     }
 
-    BuildRuleParams params = sourceParams.copyWithChanges(
-        generatorTarget,
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())
-    );
+    BuildTarget generatorSourceTarget =
+        sourceParams.getBuildTarget()
+            .withAppendedFlavors(ImmutableFlavor.of("test-main-gen-source"));
+    WriteFile writeFile =
+        resolver.addToIndex(
+            new WriteFile(
+                sourceParams.copyWithChanges(
+                    generatorSourceTarget,
+                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                new SourcePathResolver(resolver),
+                extractTestMainGenerator(),
+                BuildTargets.getGenPath(
+                    sourceParams.getProjectFilesystem(),
+                    generatorSourceTarget,
+                    "%s/main.go"),
+                /* executable */ false));
 
-    GoBinary binary = createGoBinaryRule(
-        params,
-        resolver,
-        goBuckConfig,
-        ImmutableSet.<SourcePath>of(new PathSourcePath(
-                projectFilesystem,
-                MorePaths.relativize(projectFilesystem.getRootPath(), extractTestMainGenerator()))),
-        ImmutableList.<String>of(),
-        ImmutableList.<String>of(),
-        ImmutableList.<String>of(),
-        goBuckConfig.getDefaultPlatform());
-    resolver.addToIndex(binary);
+    GoBinary binary =
+        resolver.addToIndex(
+            createGoBinaryRule(
+                sourceParams.copyWithChanges(
+                    generatorTarget,
+                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(writeFile))),
+                resolver,
+                goBuckConfig,
+                ImmutableSet.<SourcePath>of(new BuildTargetSourcePath(generatorSourceTarget)),
+                ImmutableList.<String>of(),
+                ImmutableList.<String>of(),
+                ImmutableList.<String>of(),
+                goBuckConfig.getDefaultPlatform()));
     return binary.getExecutableCommand();
   }
 
-  private static Path extractTestMainGenerator() {
-    final URL resourceURL =
-        GoDescriptors.class.getResource(TEST_MAIN_GEN_PATH);
-    Preconditions.checkNotNull(resourceURL);
-    if ("file".equals(resourceURL.getProtocol())) {
-      // When Buck is running from the repo, the file is actually already on disk, so no extraction
-      // is necessary
-      try {
-        return Paths.get(resourceURL.toURI());
-      } catch (URISyntaxException e) {
-        throw new RuntimeException(e);
-      }
-    } else {
-      // Running from a .pex file, extraction is required
-      try {
-        File tempFile = File.createTempFile("testmaingen", ".go");
-        tempFile.deleteOnExit();
-
-        Resources.copy(resourceURL, new FileOutputStream(tempFile));
-        return tempFile.toPath();
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
+  private static String extractTestMainGenerator() {
+    try {
+      return Resources.toString(Resources.getResource(TEST_MAIN_GEN_PATH), Charsets.UTF_8);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 
