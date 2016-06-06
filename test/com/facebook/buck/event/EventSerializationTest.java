@@ -175,7 +175,7 @@ public class EventSerializationTest {
     assertJsonEquals(
         "{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
         "\"buildRule\":{\"type\":\"fake_build_rule\",\"name\":\"//fake:rule\"}," +
-        "\"type\":\"BuildRuleStarted\"," +
+        "\"type\":\"BuildRuleStarted\",\"ruleRunningAfterThisEvent\":true," +
         "\"eventKey\":{\"value\":1024186770}}",
         message);
   }
@@ -201,7 +201,7 @@ public class EventSerializationTest {
             "\"metadata\":{\"present\":false},\"artifactSizeBytes\":{\"present\":false}}," +
             "\"buildRule\":{\"type\":" +
             "\"fake_build_rule\",\"name\":\"//fake:rule\"}," +
-            "\"type\":\"BuildRuleFinished\"," +
+            "\"type\":\"BuildRuleFinished\",\"ruleRunningAfterThisEvent\":false," +
             "\"eventKey\":{\"value\":1024186770}}",
         message);
   }

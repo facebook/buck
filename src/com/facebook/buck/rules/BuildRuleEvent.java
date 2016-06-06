@@ -49,6 +49,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     return new Started(rule);
   }
 
+  public abstract boolean isRuleRunningAfterThisEvent();
+
   public static Finished finished(
       BuildRule rule,
       BuildRuleKeys ruleKeys,
@@ -82,6 +84,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
   public static class Started extends BuildRuleEvent {
     protected Started(BuildRule rule) {
       super(rule);
+    }
+
+    @Override
+    public boolean isRuleRunningAfterThisEvent() {
+      return true;
     }
 
     @Override
@@ -159,6 +166,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     }
 
     @Override
+    public boolean isRuleRunningAfterThisEvent() {
+      return false;
+    }
+
+    @Override
     public String getEventName() {
       return "BuildRuleFinished";
     }
@@ -193,6 +205,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     }
 
     @Override
+    public boolean isRuleRunningAfterThisEvent() {
+      return false;
+    }
+
+    @Override
     public String getEventName() {
       return "BuildRuleSuspended";
     }
@@ -211,6 +228,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     @JsonIgnore
     public String getRuleKey() {
       return ruleKey;
+    }
+
+    @Override
+    public boolean isRuleRunningAfterThisEvent() {
+      return true;
     }
 
     @Override

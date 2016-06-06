@@ -508,7 +508,8 @@ public class CachingBuildEngine implements BuildEngine {
                       markRuleAsUsed(rule, context.getEventBus()),
                       Functions.constant(input));
                 }
-              });
+              },
+              service);
 
       // 4. Return to the current rule and check caches to see if we can avoid building
       // locally.
@@ -518,7 +519,8 @@ public class CachingBuildEngine implements BuildEngine {
       ListenableFuture<Optional<BuildResult>> checkCachesResult =
           Futures.transformAsync(
               getDepResults,
-              ruleAsyncFunction(rule, context, checkCachesCallback));
+              ruleAsyncFunction(rule, context, checkCachesCallback),
+              service);
 
       // 5. Build the current rule locally, if we have to.
       return Futures.transformAsync(

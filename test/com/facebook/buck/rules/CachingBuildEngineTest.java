@@ -3113,12 +3113,14 @@ public class CachingBuildEngineTest {
      * Verify that the begin and end events in build rule event pairs occur on the same thread.
      */
     private void assertRelatedBuildRuleEventsOnSameThread(Iterable<BuildRuleEvent> events) {
-      Map<BuildTarget, List<BuildRuleEvent>> grouped = new HashMap<>();
+      Map<Long, List<BuildRuleEvent>> grouped = new HashMap<>();
       for (BuildRuleEvent event : events) {
-        if (!grouped.containsKey(event.getBuildRule().getBuildTarget())) {
-          grouped.put(event.getBuildRule().getBuildTarget(), new ArrayList<BuildRuleEvent>());
+        if (!grouped.containsKey(event.getThreadId())) {
+          grouped.put(
+              event.getThreadId(),
+              new ArrayList<BuildRuleEvent>());
         }
-        grouped.get(event.getBuildRule().getBuildTarget()).add(event);
+        grouped.get(event.getThreadId()).add(event);
       }
       for (List<BuildRuleEvent> queue : grouped.values()) {
         Collections.sort(
@@ -3129,28 +3131,39 @@ public class CachingBuildEngineTest {
                 return Long.compare(o1.getNanoTime(), o2.getNanoTime());
               }
             });
+        ImmutableList<String> queueDescription = FluentIterable.from(queue)
+            .transform(
+                new Function<BuildRuleEvent, String>() {
+                  @Override
+                  public String apply(BuildRuleEvent event) {
+                    return String.format("%s@%s", event, event.getNanoTime());
+                  }
+                })
+            .toList();
         Iterator<BuildRuleEvent> itr = queue.iterator();
+
         while (itr.hasNext()) {
           BuildRuleEvent event1 = itr.next();
           BuildRuleEvent event2 = itr.next();
+
           assertThat(
               String.format(
-                  "%s (%d) != %s (%d) (%s)",
+                  "Two consecutive events (%s,%s) should have the same BuildTarget. (%s)",
                   event1,
-                  event1.getThreadId(),
                   event2,
-                  event2.getThreadId(),
-                  FluentIterable.from(queue)
-                      .transform(
-                          new Function<BuildRuleEvent, String>() {
-                            @Override
-                            public String apply(BuildRuleEvent event) {
-                              return String.format("%s@%s", event, event.getNanoTime());
-                            }
-                          })
-                      .toList()),
-              event1.getThreadId(),
-              equalTo(event2.getThreadId()));
+                  queueDescription),
+              event1.getBuildRule().getBuildTarget(),
+              equalTo(event2.getBuildRule().getBuildTarget())
+          );
+          assertThat(
+              String.format(
+                  "Two consecutive events (%s,%s) should be suspend/resume or resume/suspend. (%s)",
+                  event1,
+                  event2,
+                  queueDescription),
+              event1.isRuleRunningAfterThisEvent(),
+              equalTo(!event2.isRuleRunningAfterThisEvent())
+          );
         }
       }
     }
