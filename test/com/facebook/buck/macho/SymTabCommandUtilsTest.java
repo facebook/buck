@@ -19,8 +19,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.equalToObject;
 import static org.junit.Assert.assertThat;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
+import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.google.common.primitives.UnsignedInteger;
 
 import org.junit.Test;
@@ -28,6 +27,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class SymTabCommandUtilsTest {
@@ -132,7 +132,7 @@ public class SymTabCommandUtilsTest {
         .put(commandBytes)
         .put(nlistBytes)
         .put((byte) 0x00)
-        .put(stringTableEntry.getBytes(Charsets.UTF_8))
+        .put(stringTableEntry.getBytes(StandardCharsets.UTF_8))
         .put((byte) 0x00);
 
     byteBuffer.position(0);
@@ -148,50 +148,12 @@ public class SymTabCommandUtilsTest {
     Nlist nlist = NlistUtils.createFromBuffer(byteBuffer, true);
     assertThat(nlist.getN_strx(), equalToObject(UnsignedInteger.fromIntBits(1)));
 
-    Optional<String> result = SymTabCommandUtils.getStringTableEntryForNlist(
+    String result = SymTabCommandUtils.getStringTableEntryForNlist(
         byteBuffer,
         symTabCommand,
-        nlist);
-    assertThat(result.isPresent(), equalTo(true));
-    assertThat(result.get(), equalToObject(stringTableEntry));
-  }
-
-  @Test
-  public void testGettingStringTableNullValueForNlist() throws Exception {
-    byte[] nlistBytes = NlistTestData.getBigEndian64Bit();
-    nlistBytes[3] = (byte) 0x00;  // strx - first entry
-
-    byte[] commandBytes = SymTabCommandTestData.getBigEndian();
-    final int cmdSize = commandBytes.length;
-    commandBytes[11] = (byte) cmdSize;   // symoff
-    commandBytes[15] = (byte) 1;         // nsyms
-    commandBytes[19] = (byte) (cmdSize + nlistBytes.length);   // stroff
-    commandBytes[23] = (byte) 0x00;                            // strsize
-
-    ByteBuffer byteBuffer = ByteBuffer
-        .allocate(cmdSize + nlistBytes.length)
-        .order(ByteOrder.BIG_ENDIAN)
-        .put(commandBytes)
-        .put(nlistBytes);
-
-    byteBuffer.position(cmdSize);
-    Nlist nlist = NlistUtils.createFromBuffer(byteBuffer, false);
-    assertThat(nlist.getN_strx(), equalToObject(UnsignedInteger.ZERO));
-
-    SymTabCommand symTabCommand = SymTabCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(commandBytes).order(ByteOrder.BIG_ENDIAN));
-    assertThat(
-        symTabCommand.getSymoff(),
-        equalToObject(UnsignedInteger.fromIntBits(cmdSize)));
-    assertThat(
-        symTabCommand.getNsyms(),
-        equalToObject(UnsignedInteger.fromIntBits(1)));
-
-    Optional<String> result = SymTabCommandUtils.getStringTableEntryForNlist(
-        byteBuffer,
-        symTabCommand,
-        nlist);
-    assertThat(result.isPresent(), equalTo(false));
+        nlist,
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
+    assertThat(result, equalToObject(stringTableEntry));
   }
 
   @Test
@@ -228,7 +190,7 @@ public class SymTabCommandUtilsTest {
     byteBuffer.position(symTabCommand.getStroff().plus(offset).intValue());
     byte[] entryBytes = new byte[content.length()];
     byteBuffer.get(entryBytes, 0, content.length());
-    assertThat(entryBytes, equalTo(content.getBytes(Charsets.UTF_8)));
+    assertThat(entryBytes, equalTo(content.getBytes(StandardCharsets.UTF_8)));
   }
 
   @Test
@@ -274,5 +236,97 @@ public class SymTabCommandUtilsTest {
     assertThat(commandFromBuffer.getNsyms(), equalToObject(updated.getNsyms()));
     assertThat(commandFromBuffer.getStroff(), equalToObject(updated.getStroff()));
     assertThat(commandFromBuffer.getStrsize(), equalToObject(updated.getStrsize()));
+  }
+
+  @Test
+  public void testCheckingForNulValue() throws Exception {
+    byte[] nlistBytes = NlistTestData.getBigEndian64Bit();
+    nlistBytes[3] = (byte) 0x00;  // strx - first entry
+
+    byte[] commandBytes = SymTabCommandTestData.getBigEndian();
+    final int cmdSize = commandBytes.length;
+    commandBytes[11] = (byte) cmdSize;   // symoff
+    commandBytes[15] = (byte) 1;         // nsyms
+    commandBytes[19] = (byte) (cmdSize + nlistBytes.length);   // stroff
+    commandBytes[23] = (byte) 0x00;                            // strsize
+
+    ByteBuffer byteBuffer = ByteBuffer
+        .allocate(cmdSize + nlistBytes.length)
+        .order(ByteOrder.BIG_ENDIAN)
+        .put(commandBytes)
+        .put(nlistBytes);
+
+    byteBuffer.position(cmdSize);
+    Nlist nlist = NlistUtils.createFromBuffer(byteBuffer, false);
+
+    assertThat(SymTabCommandUtils.stringTableEntryIsNull(nlist), equalTo(true));
+  }
+
+  @Test
+  public void testCheckingSlashesAtStartAndEnd() throws Exception {
+    byte[] nlistBytes = NlistTestData.getBigEndian64Bit();
+    nlistBytes[3] = (byte) 0x01;  // strx
+
+    String entryContents = "/some/path/";
+
+    byte[] commandBytes = SymTabCommandTestData.getBigEndian();
+    final int cmdSize = commandBytes.length;
+    commandBytes[11] = (byte) cmdSize;   // symoff
+    commandBytes[15] = (byte) 1;         // nsyms
+    commandBytes[19] = (byte) (cmdSize + nlistBytes.length);   // stroff
+    commandBytes[23] = (byte) (1 + entryContents.length() + 1);    // strsize - nul + contents + nul
+
+    ByteBuffer byteBuffer = ByteBuffer
+        .allocate(cmdSize + nlistBytes.length + 1 + entryContents.length() + 1)
+        .order(ByteOrder.BIG_ENDIAN)
+        .put(commandBytes)
+        .put(nlistBytes)
+        .put((byte) 0x00)
+        .put(entryContents.getBytes(StandardCharsets.UTF_8))
+        .put((byte) 0x00);
+
+    byteBuffer.position(0);
+    SymTabCommand symTabCommand = SymTabCommandUtils.createFromBuffer(byteBuffer);
+
+    byteBuffer.position(cmdSize);
+    Nlist nlist = NlistUtils.createFromBuffer(byteBuffer, false);
+
+    assertThat(
+        SymTabCommandUtils.stringTableEntryStartsWithSlash(byteBuffer, symTabCommand, nlist),
+        equalTo(true));
+    assertThat(
+        SymTabCommandUtils.stringTableEntryEndsWithSlash(byteBuffer, symTabCommand, nlist),
+        equalTo(true));
+  }
+
+  @Test
+  public void testCheckingForEmptyString() throws Exception {
+    byte[] nlistBytes = NlistTestData.getBigEndian64Bit();
+    nlistBytes[3] = (byte) 0x01;  // strx
+
+    byte[] commandBytes = SymTabCommandTestData.getBigEndian();
+    final int cmdSize = commandBytes.length;
+    commandBytes[11] = (byte) cmdSize;   // symoff
+    commandBytes[15] = (byte) 1;         // nsyms
+    commandBytes[19] = (byte) (cmdSize + nlistBytes.length);   // stroff
+    commandBytes[23] = (byte) (1 + 1);    // strsize - nul + nul
+
+    ByteBuffer byteBuffer = ByteBuffer
+        .allocate(cmdSize + nlistBytes.length + 1 + 1)
+        .order(ByteOrder.BIG_ENDIAN)
+        .put(commandBytes)
+        .put(nlistBytes)
+        .put((byte) 0x00)
+        .put((byte) 0x00);
+
+    byteBuffer.position(0);
+    SymTabCommand symTabCommand = SymTabCommandUtils.createFromBuffer(byteBuffer);
+
+    byteBuffer.position(cmdSize);
+    Nlist nlist = NlistUtils.createFromBuffer(byteBuffer, false);
+
+    assertThat(
+        SymTabCommandUtils.stringTableEntryIsEmptyString(byteBuffer, symTabCommand, nlist),
+        equalTo(true));
   }
 }

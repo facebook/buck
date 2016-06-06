@@ -49,8 +49,11 @@ public class UnixArchive {
   private final FileChannel fileChannel;
   private final ByteBuffer buffer;
   private final Supplier<ImmutableList<UnixArchiveEntry>> entries;
+  private final NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder;
 
-  public UnixArchive(FileChannel fileChannel) throws IOException {
+  public UnixArchive(
+      FileChannel fileChannel,
+      NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder) throws IOException {
     this.fileChannel = fileChannel;
     this.buffer = fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, fileChannel.size());
     if (!checkHeader(buffer)) {
@@ -62,6 +65,7 @@ public class UnixArchive {
         return loadEntries();
       }
     });
+    this.nulTerminatedCharsetDecoder = nulTerminatedCharsetDecoder;
   }
 
   public static boolean checkHeader(ByteBuffer byteBuffer) throws IOException {
@@ -120,7 +124,7 @@ public class UnixArchive {
       offset = buffer.position();
       String filename = null;
       try {
-        filename = NulTerminatedCharsetDecoder.decodeUTF8String(buffer);
+        filename = nulTerminatedCharsetDecoder.decodeString(buffer);
       } catch (CharacterCodingException e) {
         throw new HumanReadableException(e,
             "Unable to read filename from buffer starting at %d", offset);

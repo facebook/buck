@@ -19,6 +19,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.equalToObject;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.google.common.base.Function;
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
@@ -27,6 +28,7 @@ import org.junit.Test;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,7 +45,8 @@ public class SegmentCommandUtilsTest {
     byte[] bytes = SegmentCommandTestData.getBigEndian64Bits();
     final int commandSize = bytes.length;
     SegmentCommand command = SegmentCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN));
+        ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN),
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     assertThat(SegmentCommandUtils.getSegmentCommandHeaderSize(command), equalTo(commandSize));
   }
 
@@ -52,7 +55,8 @@ public class SegmentCommandUtilsTest {
     byte[] bytes = SegmentCommandTestData.getBigEndian32Bits();
     final int commandSize = bytes.length;
     SegmentCommand command = SegmentCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN));
+        ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN),
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     assertThat(SegmentCommandUtils.getSegmentCommandHeaderSize(command), equalTo(commandSize));
   }
 
@@ -61,7 +65,8 @@ public class SegmentCommandUtilsTest {
     byte[] bytes = SegmentCommandTestData.getBigEndian64Bits();
     final int commandSize = bytes.length;
     SegmentCommand command = SegmentCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN));
+        ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN),
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     SegmentCommand updated = command
         .withFilesize(UnsignedLong.fromLongBits(1234))
         .withVmsize(UnsignedLong.fromLongBits(SegmentCommandUtils.alignValue(4321)));
@@ -70,7 +75,9 @@ public class SegmentCommandUtilsTest {
     SegmentCommandUtils.updateSegmentCommand(buffer, command, updated, true);
     buffer.position(0);
 
-    SegmentCommand commandInBuffer = SegmentCommandUtils.createFromBuffer(buffer);
+    SegmentCommand commandInBuffer = SegmentCommandUtils.createFromBuffer(
+        buffer,
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     assertThat(commandInBuffer.getFilesize(), equalToObject(updated.getFilesize()));
     assertThat(commandInBuffer.getVmsize(), equalToObject(updated.getVmsize()));
   }
@@ -81,7 +88,8 @@ public class SegmentCommandUtilsTest {
     final int commandSize = bytes.length;
 
     SegmentCommand command = SegmentCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN));
+        ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN),
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     SegmentCommand updated = command
         .withFilesize(UnsignedLong.fromLongBits(1234))
         .withVmsize(UnsignedLong.fromLongBits(SegmentCommandUtils.alignValue(4321)));
@@ -90,7 +98,9 @@ public class SegmentCommandUtilsTest {
     SegmentCommandUtils.updateSegmentCommand(buffer, command, updated, false);
     buffer.position(0);
 
-    SegmentCommand commandInBuffer = SegmentCommandUtils.createFromBuffer(buffer);
+    SegmentCommand commandInBuffer = SegmentCommandUtils.createFromBuffer(
+        buffer,
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     assertThat(commandInBuffer.getFilesize(), equalToObject(updated.getFilesize()));
     assertThat(commandInBuffer.getVmsize(), equalToObject(updated.getVmsize()));
   }
@@ -115,7 +125,8 @@ public class SegmentCommandUtilsTest {
     segmentBytes[67] = (byte) 0x03;  // nsects = 3
 
     SegmentCommand command = SegmentCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(segmentBytes).order(ByteOrder.BIG_ENDIAN));
+        ByteBuffer.wrap(segmentBytes).order(ByteOrder.BIG_ENDIAN),
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
 
     ByteBuffer buffer = ByteBuffer.allocate(
         command.getLoadCommandCommonFields().getCmdsize().intValue() + 3 * sectionSize);
@@ -131,6 +142,7 @@ public class SegmentCommandUtilsTest {
         buffer,
         new MachoMagicInfo(UnsignedInteger.fromIntBits(0xFEEDFACF)),
         command,
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()),
         new Function<Section, Boolean>() {
           @Override
           public Boolean apply(Section input) {
@@ -180,7 +192,8 @@ public class SegmentCommandUtilsTest {
     segmentBytes[51] = (byte) 0x03;  // nsects = 3
 
     SegmentCommand command = SegmentCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(segmentBytes).order(ByteOrder.BIG_ENDIAN));
+        ByteBuffer.wrap(segmentBytes).order(ByteOrder.BIG_ENDIAN),
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
 
     ByteBuffer buffer = ByteBuffer.allocate(
         command.getLoadCommandCommonFields().getCmdsize().intValue() + 3 * sectionSize);
@@ -196,6 +209,7 @@ public class SegmentCommandUtilsTest {
         buffer,
         new MachoMagicInfo(UnsignedInteger.fromIntBits(0xFEEDFACE)),
         command,
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()),
         new Function<Section, Boolean>() {
           @Override
           public Boolean apply(Section input) {
@@ -251,7 +265,8 @@ public class SegmentCommandUtilsTest {
     segmentBytes[67] = (byte) 0x03;  // nsects = 3
 
     SegmentCommand command = SegmentCommandUtils.createFromBuffer(
-        ByteBuffer.wrap(segmentBytes).order(ByteOrder.BIG_ENDIAN));
+        ByteBuffer.wrap(segmentBytes).order(ByteOrder.BIG_ENDIAN),
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
 
     ByteBuffer buffer = ByteBuffer.allocate(
         command.getLoadCommandCommonFields().getCmdsize().intValue() + 3 * sectionSize);
@@ -267,6 +282,7 @@ public class SegmentCommandUtilsTest {
         buffer,
         new MachoMagicInfo(UnsignedInteger.fromIntBits(0xFEEDFACF)),
         command,
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()),
         new Function<Section, Boolean>() {
           @Override
           public Boolean apply(Section input) {

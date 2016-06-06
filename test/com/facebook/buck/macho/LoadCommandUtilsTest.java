@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
@@ -29,6 +30,7 @@ import org.junit.Test;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,6 +55,7 @@ public class LoadCommandUtilsTest {
     buffer.position(0);
     LoadCommandUtils.enumerateLoadCommandsInFile(
         buffer,
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()),
         new Function<LoadCommand, Boolean>() {
           @Override
           public Boolean apply(LoadCommand input) {
@@ -100,8 +103,10 @@ public class LoadCommandUtilsTest {
         .put(uuid2Bytes);
 
     buffer.position(0);
-    ImmutableList<UUIDCommand> uuidCommands =
-        LoadCommandUtils.findLoadCommandsWithClass(buffer, UUIDCommand.class);
+    ImmutableList<UUIDCommand> uuidCommands = LoadCommandUtils.findLoadCommandsWithClass(
+        buffer,
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()),
+        UUIDCommand.class);
 
     assertThat(uuidCommands.size(), equalTo(2));
     assertThat(uuidCommands.get(0).getUuid().toString(), startsWith("11"));
@@ -114,8 +119,10 @@ public class LoadCommandUtilsTest {
         equalTo(header.length + 48));
 
     buffer.position(0);
-    ImmutableList<SymTabCommand> symTabCommands =
-        LoadCommandUtils.findLoadCommandsWithClass(buffer, SymTabCommand.class);
+    ImmutableList<SymTabCommand> symTabCommands = LoadCommandUtils.findLoadCommandsWithClass(
+        buffer,
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()),
+        SymTabCommand.class);
     assertThat(symTabCommands.size(), equalTo(1));
     assertThat(
         symTabCommands.get(0).getLoadCommandCommonFields().getOffsetInBinary(),
@@ -150,19 +157,29 @@ public class LoadCommandUtilsTest {
     byteBuffer.position(0);
 
     assertThat(
-        LoadCommandUtils.createLoadCommandFromBuffer(byteBuffer),
+        LoadCommandUtils.createLoadCommandFromBuffer(
+            byteBuffer,
+            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder())),
         instanceOf(SegmentCommand.class));
     assertThat(
-        LoadCommandUtils.createLoadCommandFromBuffer(byteBuffer),
+        LoadCommandUtils.createLoadCommandFromBuffer(
+            byteBuffer,
+            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder())),
         instanceOf(SymTabCommand.class));
     assertThat(
-        LoadCommandUtils.createLoadCommandFromBuffer(byteBuffer),
+        LoadCommandUtils.createLoadCommandFromBuffer(
+            byteBuffer,
+            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder())),
         instanceOf(UUIDCommand.class));
     assertThat(
-        LoadCommandUtils.createLoadCommandFromBuffer(byteBuffer),
+        LoadCommandUtils.createLoadCommandFromBuffer(
+            byteBuffer,
+            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder())),
         instanceOf(LinkEditDataCommand.class));
     assertThat(
-        LoadCommandUtils.createLoadCommandFromBuffer(byteBuffer),
+        LoadCommandUtils.createLoadCommandFromBuffer(
+            byteBuffer,
+            new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder())),
         instanceOf(UnknownCommand.class));
   }
 }

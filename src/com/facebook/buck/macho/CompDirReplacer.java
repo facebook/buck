@@ -17,7 +17,6 @@ package com.facebook.buck.macho;
 
 import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.facebook.buck.log.Logger;
-import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -27,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.nio.charset.CharacterCodingException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
@@ -35,24 +35,29 @@ public class CompDirReplacer {
   private static final Logger LOG = Logger.get(CompDirReplacer.class);
 
   private final ByteBuffer buffer;
+  private final NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder;
 
   public static void replaceCompDirInFile(
       Path path,
       String oldCompDir,
-      String newCompDir) throws IOException {
+      String newCompDir,
+      NulTerminatedCharsetDecoder decoder) throws IOException {
     try (FileChannel file =
              FileChannel.open(
                  path,
                  StandardOpenOption.READ,
                  StandardOpenOption.WRITE)) {
       ByteBuffer byteBuffer = file.map(FileChannel.MapMode.READ_WRITE, 0, file.size());
-      CompDirReplacer compDirReplacer = new CompDirReplacer(byteBuffer);
+      CompDirReplacer compDirReplacer = new CompDirReplacer(byteBuffer, decoder);
       compDirReplacer.replaceCompDir(oldCompDir, newCompDir);
     }
   }
 
-  public CompDirReplacer(ByteBuffer byteBuffer) {
+  public CompDirReplacer(
+      ByteBuffer byteBuffer,
+      NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder) {
     this.buffer = byteBuffer;
+    this.nulTerminatedCharsetDecoder = nulTerminatedCharsetDecoder;
   }
 
   private void processThinBinary(
@@ -61,7 +66,10 @@ public class CompDirReplacer {
       final String updatedCompDir) throws IOException {
     buffer.position(0);
     ImmutableList<SegmentCommand> segmentCommands =
-        LoadCommandUtils.findLoadCommandsWithClass(buffer, SegmentCommand.class);
+        LoadCommandUtils.findLoadCommandsWithClass(
+            buffer,
+            nulTerminatedCharsetDecoder,
+            SegmentCommand.class);
     Preconditions.checkArgument(
         segmentCommands.size() == 1,
         "Found %d SegmentCommands, expected 1", segmentCommands.size());
@@ -83,6 +91,7 @@ public class CompDirReplacer {
           buffer,
           magicInfo,
           segmentCommand,
+          nulTerminatedCharsetDecoder,
           new Function<Section, Boolean>() {
             @Override
             public Boolean apply(Section input) {
@@ -116,7 +125,7 @@ public class CompDirReplacer {
       buffer.position(offset);
       String string = null;
       try {
-        string = NulTerminatedCharsetDecoder.decodeUTF8String(buffer);
+        string = nulTerminatedCharsetDecoder.decodeString(buffer);
       } catch (CharacterCodingException e) {
         LOG.error(e, "Unable to read read string from debug string table, offset %d", offset);
         break;
@@ -124,7 +133,7 @@ public class CompDirReplacer {
       if (string.equals(oldCompDir)) {
         LOG.verbose("Found comp dir at %d, overwriting it with %s", offset, updatedCompDir);
         buffer.position(offset);
-        buffer.put(updatedCompDir.getBytes(Charsets.UTF_8));
+        buffer.put(updatedCompDir.getBytes(StandardCharsets.UTF_8));
         buffer.put((byte) 0x00);
         break;
       }

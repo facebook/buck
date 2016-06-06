@@ -15,16 +15,24 @@
  */
 package com.facebook.buck.cli;
 
+import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.facebook.buck.macho.CompDirReplacer;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 public class MachOFixCompDirCommand extends MachOAbstractCommand {
 
   @Override
   protected int invokeWithParams(CommandRunnerParams params)
       throws IOException, InterruptedException {
-    CompDirReplacer.replaceCompDirInFile(getOutput(), getOldCompDir(), getUpdatedCompDir());
+    NulTerminatedCharsetDecoder decoder = new NulTerminatedCharsetDecoder(
+        StandardCharsets.UTF_8.newDecoder());
+    CompDirReplacer.replaceCompDirInFile(
+        getOutput(),
+        getOldCompDir(),
+        getUpdatedCompDir(),
+        decoder);
     return 0;
   }
 

@@ -117,6 +117,7 @@ public class SegmentCommandUtils {
       ByteBuffer buffer,
       MachoMagicInfo magicInfo,
       SegmentCommand segmentCommand,
+      NulTerminatedCharsetDecoder decoder,
       Function<Section, Boolean> callback) throws IOException {
     final int sectionHeaderSize = SectionUtils.sizeOfSectionHeader(magicInfo.is64Bit());
     final int sectionsOffset = segmentCommand.getLoadCommandCommonFields().getOffsetInBinary() +
@@ -124,7 +125,7 @@ public class SegmentCommandUtils {
     for (int i = 0; i < segmentCommand.getNsects().intValue(); i++) {
       int offsetInBinary = sectionsOffset + sectionHeaderSize * i;
       buffer.position(offsetInBinary);
-      Section section = SectionUtils.createFromBuffer(buffer, magicInfo.is64Bit());
+      Section section = SectionUtils.createFromBuffer(buffer, magicInfo.is64Bit(), decoder);
       boolean shouldContinue = callback.apply(section);
       if (!shouldContinue) {
         break;
@@ -133,7 +134,9 @@ public class SegmentCommandUtils {
   }
 
   @SuppressWarnings("PMD.PrematureDeclaration")
-  public static SegmentCommand createFromBuffer(ByteBuffer buffer) {
+  public static SegmentCommand createFromBuffer(
+      ByteBuffer buffer,
+      NulTerminatedCharsetDecoder decoder) {
     LoadCommandCommonFields fields = LoadCommandCommonFieldsUtils.createFromBuffer(buffer);
     Preconditions.checkArgument(
         fields.getCmd().equals(SegmentCommand.LC_SEGMENT) ||
@@ -142,7 +145,7 @@ public class SegmentCommandUtils {
 
     String segname = null;
     try {
-      segname = NulTerminatedCharsetDecoder.decodeUTF8String(buffer);
+      segname = decoder.decodeString(buffer);
     } catch (CharacterCodingException e) {
       throw new HumanReadableException(
           e,

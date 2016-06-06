@@ -18,10 +18,13 @@ package com.facebook.buck.macho;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
+
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 
 public class SegmentCommandTest {
 
@@ -37,7 +40,8 @@ public class SegmentCommandTest {
   public void testCreatingFromBytes64BitsBigEndian() throws Exception {
     ByteBuffer byteBuffer = bufferWithBytes(SegmentCommandTestData.getBigEndian64Bits(), 10);
     byteBuffer.order(ByteOrder.BIG_ENDIAN);
-    SegmentCommand command = SegmentCommandUtils.createFromBuffer(byteBuffer);
+    SegmentCommand command = SegmentCommandUtils.createFromBuffer(
+        byteBuffer, new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     assertThat(command.getLoadCommandCommonFields().getOffsetInBinary(), equalTo(10));
     SegmentCommandTestData.checkValues(command, true);
   }
@@ -46,7 +50,8 @@ public class SegmentCommandTest {
   public void testCreatingFromBytes32BitsBigEndian() throws Exception {
     ByteBuffer byteBuffer = bufferWithBytes(SegmentCommandTestData.getBigEndian32Bits(), 10);
     byteBuffer.order(ByteOrder.BIG_ENDIAN);
-    SegmentCommand command = SegmentCommandUtils.createFromBuffer(byteBuffer);
+    SegmentCommand command = SegmentCommandUtils.createFromBuffer(
+        byteBuffer, new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     assertThat(command.getLoadCommandCommonFields().getOffsetInBinary(), equalTo(10));
     SegmentCommandTestData.checkValues(command, false);
   }
@@ -55,7 +60,8 @@ public class SegmentCommandTest {
   public void testCreatingFromBytes64BitsLittleEndian() throws Exception {
     ByteBuffer byteBuffer = bufferWithBytes(SegmentCommandTestData.getLittleEndian64Bits(), 10);
     byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-    SegmentCommand command = SegmentCommandUtils.createFromBuffer(byteBuffer);
+    SegmentCommand command = SegmentCommandUtils.createFromBuffer(
+        byteBuffer, new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     assertThat(command.getLoadCommandCommonFields().getOffsetInBinary(), equalTo(10));
     SegmentCommandTestData.checkValues(command, true);
   }
@@ -64,7 +70,8 @@ public class SegmentCommandTest {
   public void testCreatingFromBytes32BitsLittleEndian() throws Exception {
     ByteBuffer byteBuffer = bufferWithBytes(SegmentCommandTestData.getLittleEndian32Bits(), 10);
     byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-    SegmentCommand command = SegmentCommandUtils.createFromBuffer(byteBuffer);
+    SegmentCommand command = SegmentCommandUtils.createFromBuffer(
+        byteBuffer, new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     assertThat(command.getLoadCommandCommonFields().getOffsetInBinary(), equalTo(10));
     SegmentCommandTestData.checkValues(command, false);
   }

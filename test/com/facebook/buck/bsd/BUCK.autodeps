@@ -1,8 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 482796b7c2aa16a44a2ef6a032adee7971e6b792 #@#
+#@# GENERATED FILE: DO NOT MODIFY 96644bed27a9710f217f3b1d054257006f2a88e3 #@#
 {
   "bsd" : {
     "deps" : [
       "//src/com/facebook/buck/bsd:bsd",
+      "//src/com/facebook/buck/charset:charset",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/junit:junit"

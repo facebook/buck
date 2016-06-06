@@ -15,10 +15,12 @@
  */
 package com.facebook.buck.cli;
 
+import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.facebook.buck.macho.ObjectPathsAbsolutifier;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.charset.StandardCharsets;
 
 public class MachOAbsolutifyObjectPathsCommand extends MachOAbstractCommand {
 
@@ -26,11 +28,14 @@ public class MachOAbsolutifyObjectPathsCommand extends MachOAbstractCommand {
   protected int invokeWithParams(CommandRunnerParams params)
       throws IOException, InterruptedException {
     try (RandomAccessFile file = new RandomAccessFile(getOutput().toFile(), "rw")) {
+      NulTerminatedCharsetDecoder decoder =
+          new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder());
       ObjectPathsAbsolutifier updater = new ObjectPathsAbsolutifier(
           file,
           getOldCompDir(),
           getUpdatedCompDir(),
-          params.getCell().getFilesystem());
+          params.getCell().getFilesystem(),
+          decoder);
       updater.updatePaths();
     }
     return 0;

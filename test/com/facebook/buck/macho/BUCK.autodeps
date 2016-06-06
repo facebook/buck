@@ -1,8 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY edd0cd3309db12136973b17ddc2a0038214289e6 #@#
+#@# GENERATED FILE: DO NOT MODIFY 4630eb4cbc650fc64d16309226b126ea5efab7de #@#
 {
   "macho" : {
     "deps" : [
       "//src/com/facebook/buck/apple:rules",
+      "//src/com/facebook/buck/charset:charset",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/io:io",

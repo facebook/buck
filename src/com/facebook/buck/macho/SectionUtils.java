@@ -42,13 +42,15 @@ public class SectionUtils {
    * @param is64Bit Indicator if architecture is 64 or 32 bit.
    * @return Section object
    */
-  public static Section createFromBuffer(ByteBuffer buffer, boolean is64Bit)
-      throws CharacterCodingException {
+  public static Section createFromBuffer(
+      ByteBuffer buffer,
+      boolean is64Bit,
+      NulTerminatedCharsetDecoder decoder) throws CharacterCodingException {
 
     int offset = buffer.position();
-    String sectname = NulTerminatedCharsetDecoder.decodeUTF8String(buffer);
+    String sectname = decoder.decodeString(buffer);
     buffer.position(offset + Section.LENGTH_OF_STRING_FIELDS_IN_BYTES);
-    String segname = NulTerminatedCharsetDecoder.decodeUTF8String(buffer);
+    String segname = decoder.decodeString(buffer);
     buffer.position(offset + Section.LENGTH_OF_STRING_FIELDS_IN_BYTES * 2);
     return Section.of(
         offset,

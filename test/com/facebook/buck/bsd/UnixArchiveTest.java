@@ -16,6 +16,7 @@
 
 package com.facebook.buck.bsd;
 
+import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.google.common.base.Charsets;
 
 import static org.hamcrest.Matchers.containsString;
@@ -68,7 +69,8 @@ public class UnixArchiveTest {
         FileChannel.open(
             path,
             StandardOpenOption.READ,
-            StandardOpenOption.WRITE));
+            StandardOpenOption.WRITE),
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
     assertThat(archive.getEntries().size(), equalTo(3));
 
     assertThat(archive.getEntries().get(0).getFileName(), equalToObject("__.SYMDEF SORTED"));
@@ -105,7 +107,8 @@ public class UnixArchiveTest {
         FileChannel.open(
             path,
             StandardOpenOption.READ,
-            StandardOpenOption.WRITE));
+            StandardOpenOption.WRITE),
+        new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()));
 
     MappedByteBuffer buffer = archive.getMapForEntry(archive.getEntries().get(1));
     byte[] bytes = new byte[(int) archive.getEntries().get(1).getFileSize()];

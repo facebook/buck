@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.macho;
 
+import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.UnsignedInteger;
@@ -34,13 +35,15 @@ public class LoadCommandUtils {
    *               positioned at the first byte of the command (cmd field)
    * @return LoadCommandCommonFields that is suitable to handle the given bytes array.
    */
-  public static LoadCommand createLoadCommandFromBuffer(ByteBuffer buffer) throws IOException {
+  public static LoadCommand createLoadCommandFromBuffer(
+      ByteBuffer buffer,
+      NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder) throws IOException {
     int position = buffer.position();
     UnsignedInteger cmd = UnsignedInteger.fromIntBits(buffer.getInt());
     buffer.position(position);
 
     if (cmd.equals(SegmentCommand.LC_SEGMENT) || cmd.equals(SegmentCommand.LC_SEGMENT_64)) {
-      return SegmentCommandUtils.createFromBuffer(buffer);
+      return SegmentCommandUtils.createFromBuffer(buffer, nulTerminatedCharsetDecoder);
     } else if (cmd.equals(SymTabCommand.LC_SYMTAB)) {
       return SymTabCommandUtils.createFromBuffer(buffer);
     } else if (cmd.equals(UUIDCommand.LC_UUID)) {
@@ -64,13 +67,16 @@ public class LoadCommandUtils {
    */
   public static void enumerateLoadCommandsInFile(
       ByteBuffer buffer,
+      NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder,
       Function<LoadCommand, Boolean> callback) throws IOException {
     MachoHeader header = MachoHeaderUtils.createFromBuffer(buffer);
     int firstCommandOffset = MachoHeaderUtils.getHeaderSize(header);
     int relativeCommandOffset = 0;
     for (int i = 0; i < header.getNcmds().intValue(); i++) {
       buffer.position(firstCommandOffset + relativeCommandOffset);
-      LoadCommand command = LoadCommandUtils.createLoadCommandFromBuffer(buffer);
+      LoadCommand command = LoadCommandUtils.createLoadCommandFromBuffer(
+          buffer,
+          nulTerminatedCharsetDecoder);
       if (!callback.apply(command)) {
         break;
       }
@@ -93,17 +99,21 @@ public class LoadCommandUtils {
   @SuppressWarnings("unchecked")
   public static <T extends LoadCommand> ImmutableList<T> findLoadCommandsWithClass(
       ByteBuffer buffer,
+      NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder,
       final Class<T> type) throws IOException {
     final List<T> results = new ArrayList<>();
-    enumerateLoadCommandsInFile(buffer, new Function<LoadCommand, Boolean>() {
-      @Override
-      public Boolean apply(LoadCommand input) {
-        if (type.isInstance(input)) {
-          results.add((T) input);
-        }
-        return true;
-      }
-    });
+    enumerateLoadCommandsInFile(
+        buffer,
+        nulTerminatedCharsetDecoder,
+        new Function<LoadCommand, Boolean>() {
+          @Override
+          public Boolean apply(LoadCommand input) {
+            if (type.isInstance(input)) {
+              results.add((T) input);
+            }
+            return true;
+          }
+        });
     return ImmutableList.copyOf(results);
   }
 }

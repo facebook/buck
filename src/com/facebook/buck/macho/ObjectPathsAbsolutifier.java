@@ -17,6 +17,7 @@ package com.facebook.buck.macho;
 
 import com.facebook.buck.bsd.UnixArchive;
 import com.facebook.buck.bsd.UnixArchiveEntry;
+import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
@@ -52,12 +53,14 @@ public class ObjectPathsAbsolutifier {
   private final String oldCompDir;
   private final String newCompDir;
   private ByteBuffer buffer;
+  private final NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder;
 
   public ObjectPathsAbsolutifier(
       RandomAccessFile file,
       String oldCompDir,
       String newCompDir,
-      ProjectFilesystem filesystem) throws IOException {
+      ProjectFilesystem filesystem,
+      NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder) throws IOException {
     Path compDir = Paths.get(newCompDir);
     Preconditions.checkArgument(compDir.isAbsolute());
     Preconditions.checkArgument(compDir.equals(filesystem.getRootPath()));
@@ -65,6 +68,7 @@ public class ObjectPathsAbsolutifier {
     this.filesystem = filesystem;
     this.oldCompDir = oldCompDir;
     this.newCompDir = newCompDir;
+    this.nulTerminatedCharsetDecoder = nulTerminatedCharsetDecoder;
     remapBuffer();
   }
 
@@ -99,7 +103,9 @@ public class ObjectPathsAbsolutifier {
 
     buffer.position(0);
     ImmutableList<SymTabCommand> symTabCommands = LoadCommandUtils.findLoadCommandsWithClass(
-        buffer, SymTabCommand.class);
+        buffer,
+        nulTerminatedCharsetDecoder,
+        SymTabCommand.class);
     Preconditions.checkArgument(symTabCommands.size() <= 1, "Found more that one SymTabCommand");
     if (symTabCommands.size() == 0) {
       LOG.verbose("SymTabCommand was not found, so there is no need to work with " +
@@ -109,7 +115,10 @@ public class ObjectPathsAbsolutifier {
 
     buffer.position(0);
     ImmutableList<LinkEditDataCommand> linkEditDataCommands =
-        LoadCommandUtils.findLoadCommandsWithClass(buffer, LinkEditDataCommand.class);
+        LoadCommandUtils.findLoadCommandsWithClass(
+            buffer,
+            nulTerminatedCharsetDecoder,
+            LinkEditDataCommand.class);
     ImmutableList<LinkEditDataCommand> codeSignatureCommands = FluentIterable
         .from(linkEditDataCommands)
         .filter(new Predicate<LinkEditDataCommand>() {
@@ -157,8 +166,10 @@ public class ObjectPathsAbsolutifier {
 
   private void updateBinaryUuid() throws IOException {
     buffer.position(0);
-    ImmutableList<UUIDCommand> commands =
-        LoadCommandUtils.findLoadCommandsWithClass(buffer, UUIDCommand.class);
+    ImmutableList<UUIDCommand> commands = LoadCommandUtils.findLoadCommandsWithClass(
+        buffer,
+        nulTerminatedCharsetDecoder,
+        UUIDCommand.class);
     Preconditions.checkArgument(
         commands.size() == 1,
         "Found %d UUIDCommands, expected 1", commands.size());
@@ -177,8 +188,10 @@ public class ObjectPathsAbsolutifier {
 
   private int updateStringTableContents(final MachoMagicInfo magicInfo) throws IOException {
     buffer.position(0);
-    ImmutableList<SymTabCommand> commands =
-        LoadCommandUtils.findLoadCommandsWithClass(buffer, SymTabCommand.class);
+    ImmutableList<SymTabCommand> commands = LoadCommandUtils.findLoadCommandsWithClass(
+        buffer,
+        nulTerminatedCharsetDecoder,
+        SymTabCommand.class);
     Preconditions.checkArgument(
         commands.size() == 1,
         "Found %d SymTabCommands, expected 1", commands.size());
@@ -189,8 +202,10 @@ public class ObjectPathsAbsolutifier {
       final MachoMagicInfo magicInfo,
       final int stringTableSizeIncrease) throws IOException {
     buffer.position(0);
-    ImmutableList<SegmentCommand> commands =
-        LoadCommandUtils.findLoadCommandsWithClass(buffer, SegmentCommand.class);
+    ImmutableList<SegmentCommand> commands = LoadCommandUtils.findLoadCommandsWithClass(
+        buffer,
+        nulTerminatedCharsetDecoder,
+        SegmentCommand.class);
 
     for (SegmentCommand segmentCommand : commands) {
       if (segmentCommand.getSegname().equals(CommandSegmentSectionNames.SEGMENT_LINKEDIT)) {
@@ -265,35 +280,35 @@ public class ObjectPathsAbsolutifier {
         continue;
       }
 
-      Optional<String> optionalPath = SymTabCommandUtils.getStringTableEntryForNlist(
-          buffer,
-          symTabCommand,
-          nlist);
       Preconditions.checkArgument(
-          optionalPath.isPresent(),
-          "Path to object file is `null`, this is unexpected. Could be broken binary.");
+          !SymTabCommandUtils.stringTableEntryIsNull(nlist),
+          "Path to object file is `null` string, this is unexpected.");
 
-      String stringPath = optionalPath.get();
-      if (stringPath.equals("")) {
+      if (SymTabCommandUtils.stringTableEntryIsEmptyString(buffer, symTabCommand, nlist)) {
         continue;
       }
 
-      LOG.debug("Found path: %s", stringPath);
-
       boolean entryIsContinuation = lastEntryWasContinuation;
-      lastEntryWasContinuation = stringPath.endsWith("/");
+      lastEntryWasContinuation =
+          SymTabCommandUtils.stringTableEntryEndsWithSlash(buffer, symTabCommand, nlist);
 
       if (entryIsContinuation) {
         // If this entry is a continuation, nothing to do, the first
         // entry in the sequence would have been adjusted as needed.
-        LOG.debug("Path is continuation, skipping");
         continue;
       }
 
-      if (stringPath.startsWith("/") && !stabIsObjectFile) {
-        LOG.debug("Path for non-symbol file is absolute, skipping");
+      if (SymTabCommandUtils.stringTableEntryStartsWithSlash(buffer, symTabCommand, nlist) &&
+          !stabIsObjectFile) {
+        // already absolute, skipping
         continue;
       }
+
+      String stringPath = SymTabCommandUtils.getStringTableEntryForNlist(
+          buffer,
+          symTabCommand,
+          nlist,
+          nulTerminatedCharsetDecoder);
 
       Path absolutePath = getAbsolutePath(stringPath);
       // absolutePathString is the string that will be used as a value inside binary. It may be
@@ -333,7 +348,6 @@ public class ObjectPathsAbsolutifier {
       if (lastEntryWasContinuation) {
         absolutePathString += "/";
       }
-      LOG.debug("Real path: %s", absolutePathString);
 
       symTabCommand = updateSymTabCommandByUpdatingNlistEntry(
           magicInfo,
@@ -395,7 +409,11 @@ public class ObjectPathsAbsolutifier {
       }
 
       if (destination.getFileName().toString().endsWith(".o")) {
-        CompDirReplacer.replaceCompDirInFile(destination, oldCompDir, newCompDir);
+        CompDirReplacer.replaceCompDirInFile(
+            destination,
+            oldCompDir,
+            newCompDir,
+            nulTerminatedCharsetDecoder);
       } else if (destination.getFileName().toString().endsWith(".a")) {
         fixCompDirInStaticLibrary(destination);
       }
@@ -413,11 +431,11 @@ public class ObjectPathsAbsolutifier {
       return;
     }
 
-    UnixArchive archive = new UnixArchive(channel);
+    UnixArchive archive = new UnixArchive(channel, nulTerminatedCharsetDecoder);
     for (UnixArchiveEntry archiveEntry : archive.getEntries()) {
       if (archiveEntry.getFileName().endsWith(".o")) {
         MappedByteBuffer map = archive.getMapForEntry(archiveEntry);
-        CompDirReplacer replacer = new CompDirReplacer(map);
+        CompDirReplacer replacer = new CompDirReplacer(map, nulTerminatedCharsetDecoder);
         replacer.replaceCompDir(oldCompDir, newCompDir);
       }
     }

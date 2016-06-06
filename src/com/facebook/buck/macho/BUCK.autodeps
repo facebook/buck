@@ -1,15 +1,15 @@
-#@# GENERATED FILE: DO NOT MODIFY 64189529be675ce6b2fec6af780b842c92c89cb7 #@#
+#@# GENERATED FILE: DO NOT MODIFY f80e060a15b626127a1fec1aa4e9d0e65aafcc69 #@#
 {
   "macho" : {
     "deps" : [
       "//src/com/facebook/buck/bsd:bsd",
-      "//src/com/facebook/buck/charset:charset",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/util:exceptions",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/charset:charset",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava"

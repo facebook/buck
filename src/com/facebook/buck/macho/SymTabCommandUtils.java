@@ -16,8 +16,6 @@
 package com.facebook.buck.macho;
 
 import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
-import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.UnsignedInteger;
 
@@ -26,6 +24,10 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 public class SymTabCommandUtils {
+
+  private static final byte SLASH_BYTE = (byte) 0x2F;
+  private static final byte NUL_BYTE = (byte) 0x00;
+
   private SymTabCommandUtils() {}
 
   public static SymTabCommand createFromBuffer(ByteBuffer buffer) {
@@ -73,23 +75,91 @@ public class SymTabCommandUtils {
    * @param command SymTabCommand that has reference to the string table.
    * @param nlist The entry which describes the reference to the string table which value
    *              should be returned.
-   * @return Optional which may contain String object if Nlist has non-null value in the string
-   * table; otherwise returns absent value.
+   * @return The value from string table that Nlist refers to.
    * @throws IOException
    */
-  public static Optional<String> getStringTableEntryForNlist(
+  public static String getStringTableEntryForNlist(
       ByteBuffer buffer,
       SymTabCommand command,
-      Nlist nlist) throws IOException {
+      Nlist nlist,
+      NulTerminatedCharsetDecoder decoder) throws IOException {
     int entryIndex = nlist.getN_strx().intValue();
-    if (entryIndex == 0) {
-      return Optional.absent();
-    }
-
+    Preconditions.checkArgument(entryIndex != 0, "Nlist has null strx value");
     int offset = command.getStroff().intValue() + nlist.getN_strx().intValue();
     buffer.position(offset);
-    String result = NulTerminatedCharsetDecoder.decodeUTF8String(buffer);
-    return Optional.of(result);
+    return decoder.decodeString(buffer);
+  }
+
+  /**
+   * Quick check if Nlist string table entry is a null value.
+   * @param nlist Nlist which strx value should be checked for null value.
+   * @return true if Nlist string table value is null.
+   */
+  public static boolean stringTableEntryIsNull(Nlist nlist) {
+    return nlist.getN_strx().intValue() == 0;
+  }
+
+  /**
+   * Quick check if Nlist string table entry starts with a slash symbol. Nlist's string value must
+   * not be null.
+   * @param nlist Nlist which strx value should be checked .
+   * @return true if Nlist string table value is null.
+   */
+  public static boolean stringTableEntryStartsWithSlash(
+      ByteBuffer buffer,
+      SymTabCommand command,
+      Nlist nlist) {
+    Preconditions.checkArgument(
+        !stringTableEntryIsNull(nlist),
+        "Provided nlist object has null string table value");
+    int offset = command.getStroff().intValue() + nlist.getN_strx().intValue();
+    buffer.position(offset);
+    byte value = buffer.get();
+    buffer.position(offset);
+    return value == SLASH_BYTE;
+  }
+
+  /**
+   * Quick check if Nlist string table entry ends with a slash symbol. Nlist's string value must
+   * not be null.
+   * @param nlist Nlist which strx value should be checked .
+   * @return true if Nlist string table value is null.
+   */
+  public static boolean stringTableEntryEndsWithSlash(
+      ByteBuffer buffer,
+      SymTabCommand command,
+      Nlist nlist) {
+    Preconditions.checkArgument(!stringTableEntryIsNull(nlist));
+    int offset = command.getStroff().intValue() + nlist.getN_strx().intValue();
+    buffer.position(offset);
+    byte lastNonNullValue = 0;
+    byte lastValue = 0;
+    do {
+      lastNonNullValue = lastValue;
+      lastValue = buffer.get();
+    } while (lastValue != NUL_BYTE);
+    buffer.position(offset);
+    return lastNonNullValue == SLASH_BYTE;
+  }
+
+  /**
+   * Quick check if Nlist string table entry is an empty string value. Nlist's string value must not
+   * be null.
+   * @param nlist Nlist which strx value should be checked for empty string value.
+   * @return true if Nlist string table value is empty string.
+   */
+  public static boolean stringTableEntryIsEmptyString(
+      ByteBuffer buffer,
+      SymTabCommand command,
+      Nlist nlist) {
+    Preconditions.checkArgument(
+        !stringTableEntryIsNull(nlist),
+        "Provided nlist object has null string table value");
+    int offset = command.getStroff().intValue() + nlist.getN_strx().intValue();
+    buffer.position(offset);
+    byte value = buffer.get();
+    buffer.position(offset);
+    return value == NUL_BYTE;
   }
 
   /**
@@ -136,8 +206,8 @@ public class SymTabCommandUtils {
       SymTabCommand command,
       String newEntryContents) throws IOException {
     buffer.position(command.getStroff().intValue() + command.getStrsize().intValue());
-    buffer.put(newEntryContents.getBytes(Charsets.UTF_8));
-    buffer.put((byte) 0x00);
+    buffer.put(newEntryContents.getBytes(StandardCharsets.UTF_8));
+    buffer.put(NUL_BYTE);
     return command.getStrsize();
   }
 
