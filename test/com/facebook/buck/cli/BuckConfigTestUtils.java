@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.config.Config;
 import com.facebook.buck.config.ConfigBuilder;
+import com.facebook.buck.config.Configs;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.environment.Architecture;
@@ -51,7 +51,7 @@ public class BuckConfigTestUtils {
       ImmutableMap<String, String> environment)
       throws IOException {
     return new BuckConfig(
-        new Config(ConfigBuilder.rawFromReader(reader)),
+        Configs.createConfig(ConfigBuilder.rawFromReader(reader)),
         projectFilesystem,
         architecture,
         platform,

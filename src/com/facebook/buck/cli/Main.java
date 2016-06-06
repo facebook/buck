@@ -29,6 +29,7 @@ import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.config.Config;
+import com.facebook.buck.config.ConfigConfig;
 import com.facebook.buck.config.Configs;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
@@ -684,7 +685,8 @@ public final class Main {
 
     // Setup filesystem and buck config.
     Path canonicalRootPath = projectRoot.toRealPath().normalize();
-    Config config = Configs.createDefaultConfig(canonicalRootPath, command.getConfigOverrides());
+    Config config = Configs.createConfig(
+        ConfigConfig.of(true, Optional.of(canonicalRootPath), command.getConfigOverrides()));
     ProjectFilesystem filesystem = new ProjectFilesystem(canonicalRootPath, config);
     BuckConfig buckConfig = new BuckConfig(
         config,

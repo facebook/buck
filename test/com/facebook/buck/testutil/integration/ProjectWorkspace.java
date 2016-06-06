@@ -30,6 +30,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.Main;
 import com.facebook.buck.cli.TestRunning;
 import com.facebook.buck.config.Config;
+import com.facebook.buck.config.ConfigConfig;
 import com.facebook.buck.config.Configs;
 import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.io.ExecutableFinder;
@@ -545,7 +546,8 @@ public class ProjectWorkspace {
   }
 
   public Cell asCell() throws IOException, InterruptedException {
-    Config config = Configs.createDefaultConfig(getDestPath(), RawConfig.of());
+    Config config = Configs.createConfig(
+        ConfigConfig.of(false, Optional.of(getDestPath()), RawConfig.of()));
 
     ProjectFilesystem filesystem = new ProjectFilesystem(getDestPath(), config);
     TestConsole console = new TestConsole();
