@@ -438,7 +438,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
         targetNdkVersion,
         propertyFinder,
         (sdk.isPresent()) ? (sdk.get()) : "SDK not available",
-        (sdk.isPresent()) ? (buildTools.get()) : "Build tools not available",
+        (buildTools.isPresent()) ? (buildTools.get()) : "Build tools not available",
         (ndk.isPresent()) ? (ndk.get()) : "NDK not available");
   }
 
