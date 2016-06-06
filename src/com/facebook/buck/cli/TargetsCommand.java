@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.apple.BuildRuleWithAppleBundle;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
@@ -780,13 +779,7 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   public static Optional<Path> getUserFacingOutputPath(BuildRule rule) {
-    Path outputPath;
-    if (rule instanceof BuildRuleWithAppleBundle) {
-      outputPath = ((BuildRuleWithAppleBundle) rule).getAppleBundle().getPathToOutput();
-    } else {
-      outputPath = rule.getPathToOutput();
-    }
-    return Optional.fromNullable(outputPath);
+    return Optional.fromNullable(rule.getPathToOutput());
   }
 
   private TargetGraphAndTargetNodes computeTargetsAndGraphToShowTargetHash(

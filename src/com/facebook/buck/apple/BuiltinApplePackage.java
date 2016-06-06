@@ -106,8 +106,8 @@ public class BuiltinApplePackage extends AbstractBuildRule {
     // We can't use the copy of the binary in the bundle because that has already been re-signed
     // with our own identity.
     for (BuildRule rule : bundle.getDeps()) {
-      if (rule instanceof BuildRuleWithAppleBundle) {
-        AppleBundle appleBundle = ((BuildRuleWithAppleBundle) rule).getAppleBundle();
+      if (rule instanceof AppleBundle) {
+        AppleBundle appleBundle = (AppleBundle) rule;
         if (appleBundle.getBinary().isPresent() &&
             appleBundle.getPlatformName().startsWith("watch")) {
           BuildRule binary = appleBundle.getBinary().get();

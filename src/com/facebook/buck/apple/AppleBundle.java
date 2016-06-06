@@ -79,7 +79,7 @@ import java.util.Set;
  */
 public class AppleBundle
     extends AbstractBuildRule
-    implements NativeTestable, BuildRuleWithAppleBundle, BuildRuleWithBinary, HasRuntimeDeps {
+    implements NativeTestable, BuildRuleWithBinary, HasRuntimeDeps {
 
   private static final Logger LOG = Logger.get(AppleBundle.class);
   private static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
@@ -815,11 +815,6 @@ public class AppleBundle
 
   private boolean needCodeSign() {
     return binary.isPresent() && ApplePlatform.needsCodeSign(this.platformName);
-  }
-
-  @Override
-  public AppleBundle getAppleBundle() {
-    return this;
   }
 
   @Override

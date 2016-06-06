@@ -88,7 +88,7 @@ public class ApplePackageDescription implements
       targetWithPlatform = params.getBuildTarget()
           .withAppendedFlavors(defaultCxxPlatform.getFlavor());
     }
-    if (!(bundle instanceof BuildRuleWithAppleBundle)) {
+    if (!(bundle instanceof AppleBundle)) {
       throw new HumanReadableException(
           "In %s, bundle='%s' must be an apple_bundle() but was %s().",
           params.getBuildTarget(),
@@ -125,7 +125,7 @@ public class ApplePackageDescription implements
       return new BuiltinApplePackage(
           params,
           sourcePathResolver,
-          ((BuildRuleWithAppleBundle) bundle).getAppleBundle());
+          (AppleBundle) bundle);
     }
   }
   @Override

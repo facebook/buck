@@ -116,7 +116,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
 
 
   @Override
-  public <A extends Arg> BuildRuleWithAppleBundle createBuildRule(
+  public <A extends Arg> AppleBundle createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -125,11 +125,11 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         .getValue(params.getBuildTarget())
         .or(defaultDebugFormat);
     if (!params.getBuildTarget().getFlavors().contains(flavoredDebugFormat.getFlavor())) {
-      return (BuildRuleWithAppleBundle) resolver.requireRule(
+      return (AppleBundle) resolver.requireRule(
           params.getBuildTarget().withAppendedFlavors(flavoredDebugFormat.getFlavor()));
     }
     if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
-      return (BuildRuleWithAppleBundle) resolver.requireRule(
+      return (AppleBundle) resolver.requireRule(
           params.getBuildTarget().withAppendedFlavors(
               AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR));
     }

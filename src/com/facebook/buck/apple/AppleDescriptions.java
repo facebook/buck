@@ -726,8 +726,8 @@ public class AppleDescriptions {
     // We only care about the direct layer of dependencies. ExtensionBundles inside ExtensionBundles
     // do not get pulled in to the top-level Bundle.
     for (BuildRule rule : deps) {
-      if (rule instanceof BuildRuleWithAppleBundle) {
-        AppleBundle appleBundle = ((BuildRuleWithAppleBundle) rule).getAppleBundle();
+      if (rule instanceof AppleBundle) {
+        AppleBundle appleBundle = (AppleBundle) rule;
         Path outputPath = Preconditions.checkNotNull(
             appleBundle.getPathToOutput(),
             "Path cannot be null for AppleBundle [%s].",
