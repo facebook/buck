@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.apple;
 
-import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -32,6 +32,22 @@ public class ExternalApplePackageIntegrationTest {
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Test
+  public void usesExternalPackagerAndSetsSdkroot() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "external_apple_package",
+        tmp);
+    workspace.setUp();
+    workspace.runBuckBuild(
+        "//:FooPackage#iphonesimulator-x86_64")
+        .assertSuccess();
+    assertThat(
+        workspace.getFileContents("buck-out/gen/FooPackage/FooPackage.omg"),
+        matchesPattern("I AM A BUNDLE FROM .*/iPhoneSimulator\\.sdk .*/FooBundle.app\n"));
+  }
+
+  @Test
   public void useDefaultPlatformToDeterminePackagerIfPlatformFlavorIsOmitted() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -45,6 +61,6 @@ public class ExternalApplePackageIntegrationTest {
         .assertSuccess();
     assertThat(
         workspace.getFileContents("buck-out/gen/FooPackage/FooPackage.omg"),
-        containsString("I AM A BUNDLE FROM"));
+        matchesPattern("I AM A BUNDLE FROM .*/iPhoneSimulator\\.sdk .*/FooBundle.app\n"));
   }
 }

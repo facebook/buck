@@ -57,9 +57,9 @@ public class ApplePackageDescription implements
     ImplicitDepsInferringDescription<ApplePackageDescription.Arg> {
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_package");
 
-  CxxPlatform defaultCxxPlatform;
-  AppleConfig config;
-  FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
+  private final CxxPlatform defaultCxxPlatform;
+  private final AppleConfig config;
+  private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
 
   public ApplePackageDescription(
       AppleConfig config,
@@ -78,16 +78,6 @@ public class ApplePackageDescription implements
       A args) throws NoSuchBuildTargetException {
     final BuildRule bundle = resolver.getRule(
         propagateFlavorsToTarget(params.getBuildTarget(), args.bundle));
-    BuildTarget targetWithPlatform;
-    if (
-        !Sets.intersection(
-            appleCxxPlatformFlavorDomain.getFlavors(),
-            params.getBuildTarget().getFlavors()).isEmpty()) {
-      targetWithPlatform = params.getBuildTarget();
-    } else {
-      targetWithPlatform = params.getBuildTarget()
-          .withAppendedFlavors(defaultCxxPlatform.getFlavor());
-    }
     if (!(bundle instanceof AppleBundle)) {
       throw new HumanReadableException(
           "In %s, bundle='%s' must be an apple_bundle() but was %s().",
@@ -99,7 +89,7 @@ public class ApplePackageDescription implements
 
     final Optional<ApplePackageConfigAndPlatformInfo> applePackageConfigAndPlatformInfo =
         getApplePackageConfig(
-            targetWithPlatform,
+            params.getBuildTarget(),
             MacroArg.toMacroArgFunction(
                 AbstractGenruleDescription.MACRO_HANDLER,
                 params.getBuildTarget(),
@@ -179,9 +169,7 @@ public class ApplePackageDescription implements
   private Optional<ApplePackageConfigAndPlatformInfo> getApplePackageConfig(
       BuildTarget target,
       Function<String, com.facebook.buck.rules.args.Arg> macroExpander) {
-    Set<Flavor> platformFlavors = Sets.intersection(
-        appleCxxPlatformFlavorDomain.getFlavors(),
-        target.getFlavors());
+    Set<Flavor> platformFlavors = getPlatformFlavorsOrDefault(target);
 
     // Ensure that different platforms generate the same config.
     // The value of this map is just for error reporting.
@@ -217,17 +205,15 @@ public class ApplePackageDescription implements
 
   /**
    * Retrieve deps from macros in externally configured rules.
+   *
+   * This is used for ImplicitDepsInferringDescription, so it is flavor agnostic.
    */
   private void addDepsFromParam(
       ImmutableSet.Builder<BuildTarget> builder,
       BuildTarget target,
       CellPathResolver cellNames) {
-    Set<Flavor> platformFlavors = Sets.intersection(
-        appleCxxPlatformFlavorDomain.getFlavors(),
-        target.getFlavors());
-
     // Add all macro expanded dependencies for these platforms.
-    for (Flavor flavor : platformFlavors) {
+    for (Flavor flavor : appleCxxPlatformFlavorDomain.getFlavors()) {
       AppleCxxPlatform platform = appleCxxPlatformFlavorDomain.getValue(flavor);
       Optional<ApplePackageConfig> packageConfig =
           config.getPackageConfigForPlatform(platform.getAppleSdk().getApplePlatform());
@@ -248,6 +234,16 @@ public class ApplePackageDescription implements
               e.getMessage());
         }
       }
+    }
+  }
+
+  private ImmutableSet<Flavor> getPlatformFlavorsOrDefault(BuildTarget target) {
+    Sets.SetView<Flavor> intersection =
+        Sets.intersection(appleCxxPlatformFlavorDomain.getFlavors(), target.getFlavors());
+    if (intersection.isEmpty()) {
+      return ImmutableSet.of(defaultCxxPlatform.getFlavor());
+    } else {
+      return intersection.immutableCopy();
     }
   }
 }
