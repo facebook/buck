@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY c550646e1a0eedc60e0b589134ac4d6a4efcf313 #@#
+#@# GENERATED FILE: DO NOT MODIFY 586d45c5e83e6583a9db4593463c77fa6caefdef #@#
 {
   "FakeBuckConfig" : {
     "deps" : [
@@ -91,8 +91,11 @@
   },
   "cli-apple-integration" : {
     "deps" : [
+      "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/environment:platform",
+      "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/junit:junit"
     ],

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.io.FileScrubber;
+import com.facebook.buck.io.FileContentsScrubber;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -42,15 +42,15 @@ public class ObjectFileScrubbers {
 
   private ObjectFileScrubbers() {}
 
-  private static boolean checkHeader(byte[] header) throws FileScrubber.ScrubException {
+  private static boolean checkHeader(byte[] header) throws FileContentsScrubber.ScrubException {
     checkArchive(
         Arrays.equals(GLOBAL_HEADER, header) || Arrays.equals(GLOBAL_THIN_HEADER, header),
         "invalid global header");
     return Arrays.equals(GLOBAL_THIN_HEADER, header);
   }
 
-  public static FileScrubber createDateUidGidScrubber() {
-    return new FileScrubber() {
+  public static FileContentsScrubber createDateUidGidScrubber() {
+    return new FileContentsScrubber() {
 
       /**
        * Efficiently modifies the archive backed by the given buffer to remove any non-deterministic
@@ -92,7 +92,10 @@ public class ObjectFileScrubbers {
             String fileName = new String(getBytes(buffer, 16), Charsets.US_ASCII).trim();
 
             // Inject 0's for the non-deterministic meta-data entries.
-            /* File modification timestamp */ putIntAsDecimalString(buffer, 12, 0);
+            /* File modification timestamp */ putIntAsDecimalString(
+                buffer,
+                12,
+                ObjectFileCommonModificationDate.COMMON_MODIFICATION_TIME_STAMP);
             /* Owner ID */ putIntAsDecimalString(buffer, 6, 0);
             /* Group ID */ putIntAsDecimalString(buffer, 6, 0);
 
@@ -226,9 +229,9 @@ public class ObjectFileScrubbers {
   }
 
   public static void checkArchive(boolean expression, String msg)
-      throws FileScrubber.ScrubException {
+      throws FileContentsScrubber.ScrubException {
     if (!expression) {
-      throw new FileScrubber.ScrubException(msg);
+      throw new FileContentsScrubber.ScrubException(msg);
     }
   }
 

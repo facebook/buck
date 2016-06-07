@@ -13,14 +13,21 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.io;
+package com.facebook.buck.cxx;
 
-public interface FileScrubber {
+import com.facebook.buck.io.FileAttributesScrubber;
 
-  @SuppressWarnings("serial")
-  class ScrubException extends Exception {
-    public ScrubException(String msg) {
-      super(msg);
-    }
+import java.io.IOException;
+import java.nio.file.Path;
+
+/**
+ * Resets the file's last modification date.
+ */
+public class FileLastModifiedDateContentsScrubber implements FileAttributesScrubber {
+
+  @Override
+  public void scrubFileWithPath(Path path) throws IOException {
+    path.toFile().setLastModified(
+        (long) ObjectFileCommonModificationDate.COMMON_MODIFICATION_TIME_STAMP * 1000);
   }
 }

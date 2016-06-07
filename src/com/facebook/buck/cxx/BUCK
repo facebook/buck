@@ -22,6 +22,7 @@ PLATFORM_SRCS = [
   'Linkers.java',
   'NativeLinkable.java',
   'NativeLinkables.java',
+  'ObjectFileCommonModificationDate.java',
   'ObjectFileScrubbers.java',
   'PosixNmSymbolNameTool.java',
   'Preprocessor.java',

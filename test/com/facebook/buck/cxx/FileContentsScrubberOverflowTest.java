@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.FileContentsScrubber;
 import com.facebook.buck.io.FileScrubber;
 
 import org.junit.Test;
@@ -30,7 +31,7 @@ import java.nio.channels.WritableByteChannel;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class FileScrubberOverflowTest {
+public class FileContentsScrubberOverflowTest {
 
   private static class FakeFileChannel extends FileChannel {
 
@@ -168,7 +169,7 @@ public class FileScrubberOverflowTest {
 
   @Test
   public void thatFileSizesOver32BitsIsOkay() throws IOException, FileScrubber.ScrubException {
-    FileScrubber scrubber = ObjectFileScrubbers.createDateUidGidScrubber();
+    FileContentsScrubber scrubber = ObjectFileScrubbers.createDateUidGidScrubber();
     scrubber.scrubFile(new FakeFileChannel());
   }
 

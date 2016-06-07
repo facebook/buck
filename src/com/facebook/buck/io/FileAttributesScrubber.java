@@ -15,12 +15,17 @@
  */
 package com.facebook.buck.io;
 
-public interface FileScrubber {
+import java.io.IOException;
+import java.nio.file.Path;
 
-  @SuppressWarnings("serial")
-  class ScrubException extends Exception {
-    public ScrubException(String msg) {
-      super(msg);
-    }
-  }
+/**
+ * Created by beefon on 06/06/2016.
+ */
+public interface FileAttributesScrubber extends FileScrubber {
+  /**
+   * Override this method to perform the modification of the file attributes
+   * (modification date, creation date, etc.)
+   * WARNING: You should not delete, rename or move the file, as the the behaviour is undefined.
+   */
+  void scrubFileWithPath(Path path) throws IOException;
 }

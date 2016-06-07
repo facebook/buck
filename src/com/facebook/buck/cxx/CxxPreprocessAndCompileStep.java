@@ -68,6 +68,8 @@ public class CxxPreprocessAndCompileStep implements Step {
    * Directory to use to store intermediate/temp files used for compilation.
    */
   private final Path scratchDir;
+  private static final FileLastModifiedDateContentsScrubber FILE_LAST_MODIFIED_DATE_SCRUBBER =
+      new FileLastModifiedDateContentsScrubber();
 
   public CxxPreprocessAndCompileStep(
       ProjectFilesystem filesystem,
@@ -468,9 +470,11 @@ public class CxxPreprocessAndCompileStep implements Step {
       // compilation directory with the one we really want.
       if (exitCode == 0 && shouldSanitizeOutputBinary()) {
         try {
+          Path path = filesystem.getRootPath().toAbsolutePath().resolve(output);
           sanitizer.restoreCompilationDirectory(
-              filesystem.getRootPath().toAbsolutePath().resolve(output),
+              path,
               filesystem.getRootPath().toAbsolutePath());
+          FILE_LAST_MODIFIED_DATE_SCRUBBER.scrubFileWithPath(path);
         } catch (IOException e) {
           context.logError(e, "error updating compilation directory");
           return StepExecutionResult.ERROR;

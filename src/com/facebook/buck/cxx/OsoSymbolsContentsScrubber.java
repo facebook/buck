@@ -16,18 +16,18 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.io.FileScrubber;
+import com.facebook.buck.io.FileContentsScrubber;
 import com.google.common.collect.ImmutableCollection;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 
-public class OsoSymbolsScrubber implements FileScrubber {
+public class OsoSymbolsContentsScrubber implements FileContentsScrubber {
 
   private final ImmutableCollection<Path> cellRoots;
 
-  public OsoSymbolsScrubber(ImmutableCollection<Path> cellRoots) {
+  public OsoSymbolsContentsScrubber(ImmutableCollection<Path> cellRoots) {
     this.cellRoots = cellRoots;
   }
 
@@ -41,7 +41,5 @@ public class OsoSymbolsScrubber implements FileScrubber {
     } catch (Machos.MachoException e) {
       throw new ScrubException(e.getMessage());
     }
-
   }
-
 }

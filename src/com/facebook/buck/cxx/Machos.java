@@ -235,10 +235,11 @@ public class Machos {
             }
 
             map.position(valuePosition);
+            int lastModifiedValue = ObjectFileCommonModificationDate.COMMON_MODIFICATION_TIME_STAMP;
             if (header.getIs64Bit()) {
-              ObjectFileScrubbers.putLittleEndianLong(map, 0);
+              ObjectFileScrubbers.putLittleEndianLong(map, lastModifiedValue);
             } else {
-              ObjectFileScrubbers.putLittleEndianInt(map, 0);
+              ObjectFileScrubbers.putLittleEndianInt(map, lastModifiedValue);
             }
           }
           map.position(currentStringTableOffset);

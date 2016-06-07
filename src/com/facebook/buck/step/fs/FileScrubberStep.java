@@ -16,6 +16,8 @@
 
 package com.facebook.buck.step.fs;
 
+import com.facebook.buck.io.FileAttributesScrubber;
+import com.facebook.buck.io.FileContentsScrubber;
 import com.facebook.buck.io.FileScrubber;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
@@ -56,10 +58,14 @@ public class FileScrubberStep implements Step {
     try {
       for (FileScrubber scrubber : scrubbers) {
         try (FileChannel channel = readWriteChannel(filePath)) {
-          scrubber.scrubFile(channel);
+          if (scrubber instanceof FileContentsScrubber) {
+            ((FileContentsScrubber) scrubber).scrubFile(channel);
+          } else if (scrubber instanceof FileAttributesScrubber) {
+            ((FileAttributesScrubber) scrubber).scrubFileWithPath(filePath);
+          }
         }
       }
-    } catch (IOException | FileScrubber.ScrubException e) {
+    } catch (IOException | FileContentsScrubber.ScrubException e) {
       context.logError(e, "Error scrubbing non-deterministic metadata from %s", filePath);
       return StepExecutionResult.ERROR;
     }

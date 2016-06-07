@@ -100,7 +100,9 @@ public class ArchiveStepIntegrationTest {
     try (ArArchiveInputStream stream =
              new ArArchiveInputStream(new FileInputStream(filesystem.resolve(output).toFile()))) {
       ArArchiveEntry entry = stream.getNextArEntry();
-      assertEquals(0, entry.getLastModified());
+      assertEquals(
+          ObjectFileCommonModificationDate.COMMON_MODIFICATION_TIME_STAMP,
+          entry.getLastModified());
       assertEquals(0, entry.getUserId());
       assertEquals(0, entry.getGroupId());
       assertEquals(String.format("0%o", entry.getMode()), 0100644, entry.getMode());

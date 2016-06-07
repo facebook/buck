@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 641d662002ab6d49c63b6afdf438b94596dd42af #@#
+#@# GENERATED FILE: DO NOT MODIFY 70ffa941ff5594ee7318ea041c6659a8f1bfacf9 #@#
 {
   "project_generator" : {
     "deps" : [
@@ -6,6 +6,7 @@
       "//src/com/facebook/buck/apple/clang:headermap",
       "//src/com/facebook/buck/apple/project_generator:project_generator",
       "//src/com/facebook/buck/apple/xcode:xcode",
+      "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/event:event",

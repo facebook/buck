@@ -102,6 +102,9 @@ public class Unzip {
             }
           }
 
+          // restore mtime for the file
+          filesystem.resolve(target).toFile().setLastModified(entry.getTime());
+
           // TODO(shs96c): Implement what the comment below says we should do.
           //
           // Sets the file permissions of the output file given the information in {@code entry}'s
@@ -178,7 +181,6 @@ public class Unzip {
           if (permissions.contains(PosixFilePermission.OWNER_EXECUTE)) {
             MoreFiles.makeExecutable(filesystem.resolve(target));
           }
-
         }
       }
     }

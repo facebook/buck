@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.io.FileScrubber;
+import com.facebook.buck.io.FileContentsScrubber;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
@@ -25,7 +25,7 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Arrays;
 
-public class LcUuidScrubber implements FileScrubber {
+public class LcUuidContentsScrubber implements FileContentsScrubber {
 
   private static final byte[] ZERO_UUID = new byte[16];
 
@@ -57,5 +57,4 @@ public class LcUuidScrubber implements FileScrubber {
       throw new ScrubException(e.getMessage());
     }
   }
-
 }

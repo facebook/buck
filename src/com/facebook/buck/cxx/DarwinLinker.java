@@ -74,9 +74,9 @@ public class DarwinLinker implements Linker, HasLinkerMap {
 
   @Override
   public ImmutableList<FileScrubber> getScrubbers(ImmutableCollection<Path> cellRoots) {
-    return ImmutableList.of(
-        new OsoSymbolsScrubber(cellRoots),
-        new LcUuidScrubber());
+    return ImmutableList.<FileScrubber>of(
+        new OsoSymbolsContentsScrubber(cellRoots),
+        new LcUuidContentsScrubber());
   }
 
   @Override

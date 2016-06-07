@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,14 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.facebook.buck.io;
 
-public interface FileScrubber {
+import java.io.IOException;
+import java.nio.channels.FileChannel;
 
-  @SuppressWarnings("serial")
-  class ScrubException extends Exception {
-    public ScrubException(String msg) {
-      super(msg);
-    }
-  }
+public interface FileContentsScrubber extends FileScrubber {
+
+  /**
+   * Override this method to perform the content modification.
+   */
+  void scrubFile(FileChannel file) throws IOException, ScrubException;
 }

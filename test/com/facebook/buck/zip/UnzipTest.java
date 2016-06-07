@@ -91,7 +91,12 @@ public class UnzipTest {
   }
 
   @Test
-  public void testExtractZipFilePreservesExecutePermissions() throws IOException {
+  public void testExtractZipFilePreservesExecutePermissionsAndModificationTime()
+      throws IOException {
+
+    // getFakeTime returs time with some non-zero millis. By doing division and multiplication by
+    // 1000 we get rid of that.
+    final long time = ZipConstants.getFakeTime() / 1000 * 1000;
 
     // Create a simple zip archive using apache's commons-compress to store executable info.
     try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
@@ -100,6 +105,7 @@ public class UnzipTest {
           PosixFilePermissions.fromString("r-x------")));
       entry.setSize(DUMMY_FILE_CONTENTS.length);
       entry.setMethod(ZipEntry.STORED);
+      entry.setTime(time);
       zip.putArchiveEntry(entry);
       zip.write(DUMMY_FILE_CONTENTS);
       zip.closeArchiveEntry();
@@ -113,6 +119,9 @@ public class UnzipTest {
         Unzip.ExistingFileMode.OVERWRITE);
     Path exe = extractFolder.toAbsolutePath().resolve("test.exe");
     assertTrue(Files.exists(exe));
+    assertThat(
+        Files.getLastModifiedTime(exe).toMillis(),
+        Matchers.equalTo(time));
     assertTrue(Files.isExecutable(exe));
     assertEquals(ImmutableList.of(extractFolder.resolve("test.exe")), result);
   }
