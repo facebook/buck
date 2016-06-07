@@ -34,7 +34,9 @@ handlers=com.facebook.buck.cli.bootstrapper.ConsoleHandler,java.util.logging.Fil
 com.facebook.buck.log.ConsoleHandler.level=SEVERE
 
 # http client is way too chatty at FINER level.
-org.apache.http.level=SEVERE
+httpclient.wire.content.level=SEVERE
+httpclient.wire.header.level=SEVERE
+
 
 # Log to buck-out/log/buck-*log.
 java.util.logging.FileHandler.pattern=<default_file_pattern>

@@ -1,0 +1,11 @@
+prebuilt_jar(
+  name = 'commons-httpclient',
+  binary_jar = 'commons-httpclient-3.1.jar',
+  licenses = [
+    'LICENSE',
+  ],
+  visibility = [
+    '//third-party/java/commons-httpclient:commons-httpclient',
+  ],
+)
+

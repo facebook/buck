@@ -94,7 +94,6 @@
     <include name="asm/asm-debug-all-5.0.3.jar" />
     <include name="closure-templates/soy-excluding-deps.jar" />
     <include name="commons-compress/commons-compress-1.8.1.jar" />
-    <include name="commons-lang/commons-lang3/commons-lang3-3.1.jar" />
     <include name="commons-logging/commons-logging-1.2.jar" />
     <include name="concurrent-locks/concurrent-locks-1.0.0.jar" />
     <include name="dd-plist/dd-plist.jar" />
