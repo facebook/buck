@@ -16,157 +16,149 @@
 
 package com.facebook.buck.intellij.plugin.ws;
 
-import java.net.URI;
-import java.util.Date;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
+import com.facebook.buck.intellij.plugin.config.BuckModule;
+import com.facebook.buck.intellij.plugin.config.BuckWSServerPortUtils;
 import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventsHandlerInterface;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.annotations.VisibleForTesting;
+import com.intellij.execution.ExecutionException;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.project.Project;
+
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 
+import java.io.IOException;
+import java.net.URI;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class BuckClient {
+  private static final Logger LOG = Logger.getInstance(BuckClient.class);
+  private static final Map<Project, BuckClient> clientKeeper =
+      Collections.synchronizedMap(new HashMap<Project, BuckClient>());
+  private BuckSocket mBuckSocket;
+  private WebSocketClient mWSClient;
+  private AtomicBoolean mConnecting;
+  private Project mProject;
 
-    private int mPort = -1;
-    private String mHost = "localhost";;
+  private BuckClient(final BuckEventsHandlerInterface buckEventHandler, Project project) {
+    mWSClient = new WebSocketClient();
+    mProject = project;
+    mConnecting = new AtomicBoolean(false);
 
-    private final WebSocketClient mWSClient = new WebSocketClient();
-    private BuckSocket mWSSocket;
-    private AtomicBoolean mConnected = new AtomicBoolean(false);
-    private long mLastActionTime = 0;
-    private static final long PING_PERIOD = 1000 * 60;
-    private Object syncObject = new Object();
+    mBuckSocket = new BuckSocket(
+        new BuckEventsHandlerInterface() {
+          @Override
+          public void onConnect() {
+            buckEventHandler.onConnect();
+            mConnecting.set(false);
+          }
 
-    private ScheduledThreadPoolExecutor scheduledThreadPoolExecutor;
-    private ScheduledFuture<?> scheduledFuture;
-    private static final Logger LOG = Logger.getInstance(BuckClient.class);
+          @Override
+          public void onDisconnect() {
+            buckEventHandler.onDisconnect();
+          }
 
-    public boolean isConnected() {
-        return mConnected;
+          @Override
+          public void onMessage(String message) {
+            buckEventHandler.onMessage(message);
+          }
+        }
+    );
+  }
+
+  public static synchronized BuckClient getOrInstantiate(
+      Project project,
+      BuckEventsHandlerInterface buckEventHandler) {
+    if (!clientKeeper.containsKey(project)) {
+      clientKeeper.put(project, new BuckClient(buckEventHandler, project));
     }
+    return clientKeeper.get(project);
+  }
 
-    public BuckClient(String host, int port, final BuckEventsHandlerInterface handler) {
-
-        scheduledThreadPoolExecutor =
-            new ScheduledThreadPoolExecutor(
-                    1,
-                    new ThreadFactory() {
-                        @Override
-                        public Thread newThread(Runnable r) {
-                            return new Thread(r, "ideabuck keep alive");
-                        }
-                    }
-            );
-        mWSSocket = new BuckSocket(
-            new BuckEventsHandlerInterface() {
-                @Override
-                public void onConnect() {
-                    handler.onConnect();
-                    BuckClient.this.mConnected = true;
-                }
-
-                @Override
-                public void onDisconnect() {
-                    handler.onDisconnect();
-                    BuckClient.this.mConnected = false;
-                }
-
-                @Override
-                public void onMessage(String message) {
-                    synchronized (syncObject) {
-                        BuckClient.this.mLastActionTime = (new Date()).getTime();
-                    }
-                    handler.onMessage(message);
-                }
+  public void connect() {
+    if (isConnected() || mConnecting.get()) {
+      return;
+    }
+    mConnecting.set(true);
+    ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
+      @Override
+      public void run() {
+          BuckWSServerPortUtils wsPortUtils = new BuckWSServerPortUtils();
+          try {
+            // Get port
+            int port = wsPortUtils.getPort(mProject.getBasePath());
+            // Connect to WebServer
+            connectToWebServer("localhost", port);
+          } catch (NumberFormatException e) {
+            LOG.error(e);
+          } catch (ExecutionException e) {
+            LOG.error(e);
+          } catch (IOException e) {
+            LOG.error(e);
+          } catch (HumanReadableException e) {
+            if (!mProject.isDisposed()) {
+              BuckModule buckModule = mProject.getComponent(BuckModule.class);
+              buckModule.attachIfDetached();
+              buckModule.getBuckEventsConsumer().consumeConsoleEvent(e.toString());
             }
-        );
+          }
+      }
+    });
+  }
 
-        mHost = host;
-        mPort = port;
+
+  @VisibleForTesting
+  protected void setBuckSocket(BuckSocket buckSocket) {
+    mBuckSocket = buckSocket;
+  }
+
+  private void connectToWebServer(String host, int port) {
+    try {
+      mWSClient.start();
+      URI uri = new URI("ws://" + host + ":" + port + "/ws/build");
+      mWSClient.connect(mBuckSocket, uri);
+    } catch (Throwable t) {
+      LOG.error(t);
+      mConnecting.set(false);
     }
+  }
 
-    public BuckClient(int port, BuckEventsHandlerInterface handler) {
-        this("localhost", port, handler);
-    }
+  public boolean isConnected() {
+    return mBuckSocket.isConnected();
+  }
 
-    public BuckClient() {
-        this(-1, null);
-    }
+  public void disconnectWithRetry() {
+    disconnect(true);
+  }
 
-    public void setSocket(BuckSocket socket) {
-        mWSSocket = socket;
-    }
+  public void disconnectWithoutRetry() {
+    disconnect(false);
+  }
 
-    public void connect() {
-        if (mPort != -1) {
-            try {
-                mWSClient.start();
-                URI uri = new URI("ws://" + mHost + ":" + mPort + "/ws/build");
-                mWSClient.connect(mWSSocket, uri);
-                synchronized (syncObject) {
-                    mLastActionTime = (new Date()).getTime();
-                }
-                mConnected.set(true);
-                if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
-                    scheduledFuture.cancel(true);
-                }
-                scheduledFuture = scheduledThreadPoolExecutor.scheduleAtFixedRate(
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                BuckClient.this.ping();
-                            }
-                        },
-                        10,
-                        10,
-                        TimeUnit.SECONDS);
-            } catch (Throwable t) {
-                mConnected.set(false);
-            }
+  private void disconnect(final boolean retry) {
+    ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          mWSClient.stop();
+          if (retry) {
+            connect();
+          } else {
+            mWSClient.destroy();
+            clientKeeper.remove(mProject);
+          }
+        } catch (InterruptedException e) {
+          LOG.error(
+              "Could not disconnect from buck. " + e);
+        } catch (Throwable t) {
+          LOG.error(
+              "Could not disconnect from buck. " + t.getMessage());
         }
-    }
-
-    public void disconnect() {
-        if (mConnected.get()) {
-            scheduledFuture.cancel(true);
-            scheduledThreadPoolExecutor.shutdown();
-            ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        mWSClient.stop();
-                        mConnected.set(false);
-                    } catch (InterruptedException e) {
-                        LOG.debug(
-                            "Could not disconnect from buck. " + e);
-                    } catch (Throwable t) {
-                        LOG.error(
-                            "Could not disconnect from buck. " + t.getMessage());
-                    }
-                }
-            });
-        }
-    }
-
-    private void ping() {
-        if ((new Date()).getTime() - mLastActionTime < PING_PERIOD) {
-            return;
-        }
-        if (mConnected.get()) {
-            try {
-                mWSSocket.sendMessage("ping");
-                synchronized (syncObject) {
-                    mLastActionTime = (new Date()).getTime();
-                }
-            }  catch (Exception e) {
-                LOG.error("Buck plugin, could not send ping because: " + e);
-            }
-        }
-    }
-
-
+      }
+    });
+  }
 }

@@ -26,81 +26,34 @@ import com.facebook.buck.intellij.plugin.ui.utils.BuckPluginNotifications;
 import com.facebook.buck.intellij.plugin.ws.BuckClient;
 import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventsHandler;
 import com.facebook.buck.intellij.plugin.ws.buckevents.consumers.BuckEventsConsumerFactory;
-import com.facebook.buck.util.HumanReadableException;
-import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.ide.ui.UISettings;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ProjectComponent;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiDocumentManager;
 
-import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class BuckModule implements ProjectComponent {
 
     private Project mProject;
-    private BuckClient mClient = new BuckClient();
     private BuckEventsHandler mEventHandler;
     private BuckEventsConsumer mBuckEventsConsumer;
-    private static final Logger LOG = Logger.getInstance(BuckModule.class);
+    private AtomicBoolean projectClosed;
 
     public BuckModule(final Project project) {
         mProject = project;
         mEventHandler = new BuckEventsHandler(
             new BuckEventsConsumerFactory(mProject),
-            new Runnable() {
-                @Override
-                public void run() {
-                    ApplicationManager.getApplication().invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            // If we connected to Buck and then closed the project, before getting
-                            // the success message
-                            if (!project.isDisposed()) {
-                                BuckToolWindowFactory.outputConsoleMessage(
-                                    project,
-                                    "Connected to buck!\n",
-                                    ConsoleViewContentType.SYSTEM_OUTPUT
-                                );
-                            }
-                        }
-                    });
-                }
-            },
-            new Runnable() {
-                @Override
-                public void run() {
-                    ApplicationManager.getApplication().invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            // If we haven't closed the project, then we show the message
-                            if (!project.isDisposed()) {
-                                BuckToolWindowFactory.outputConsoleMessage(
-                                    project,
-                                    "Disconnected from buck!\n",
-                                    ConsoleViewContentType.SYSTEM_OUTPUT
-                                );
-                            }
-                        }
-                    });
-                    BuckModule mod = project.getComponent(BuckModule.class);
-                    mod.disconnect();
-                }
-            }
+            new ExecuteOnBuckPluginConnect(),
+            new ExecuteOnBuckPluginDisconnect()
         );
-
-        if (!UISettings.getInstance().SHOW_MAIN_TOOLBAR) {
-            BuckPluginNotifications.notifyActionToolbar(mProject);
-        }
-
-        mBuckEventsConsumer = new BuckEventsConsumer(project);
     }
 
     @Override
     public String getComponentName() {
-        return "buck.connector";
+        return "ideabuck - " + mProject.getName();
     }
 
     @Override
@@ -111,14 +64,25 @@ public final class BuckModule implements ProjectComponent {
 
     @Override
     public void projectOpened() {
+        projectClosed = new AtomicBoolean(false);
+        BuckFileUtil.setBuckFileType();
+        // connect to the Buck client
+        BuckClient.getOrInstantiate(mProject, mEventHandler).connect();
+
+        if (!UISettings.getInstance().SHOW_MAIN_TOOLBAR) {
+            BuckPluginNotifications.notifyActionToolbar(mProject);
+        }
+
+        mBuckEventsConsumer = new BuckEventsConsumer(mProject);
+
         PsiDocumentManager manager = PsiDocumentManager.getInstance(mProject);
         manager.addListener(new BuckAutoDepsContributor(mProject));
-        connect();
     }
 
     @Override
     public void projectClosed() {
-        disconnect();
+        projectClosed.set(true);
+        BuckClient.getOrInstantiate(mProject, mEventHandler).disconnectWithoutRetry();
         AndroidDebugger.disconnect();
         if (mBuckEventsConsumer != null) {
             mBuckEventsConsumer.detach();
@@ -126,40 +90,7 @@ public final class BuckModule implements ProjectComponent {
     }
 
     public boolean isConnected() {
-        return mClient.isConnected();
-    }
-
-    public void disconnect() {
-        if (mClient.isConnected()) {
-            mClient.disconnect();
-        }
-    }
-
-    public void connect() {
-        ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
-            @Override
-            public void run() {
-                if (!mClient.isConnected()) {
-                    BuckWSServerPortUtils wsPortUtils = new BuckWSServerPortUtils();
-                    try {
-                        int port = wsPortUtils.getPort(BuckModule.this.mProject.getBasePath());
-                        mClient = new BuckClient(port, mEventHandler);
-                        // Initiate connecting
-                        BuckModule.this.mClient.connect();
-                    } catch (NumberFormatException e) {
-                        LOG.error(e);
-                    } catch (ExecutionException e) {
-                        LOG.error(e);
-                    } catch (IOException e) {
-                        LOG.error(e);
-                    } catch (HumanReadableException e) {
-                        attachIfDetached();
-                        mBuckEventsConsumer.consumeConsoleEvent(e.toString());
-                    }
-                }
-            }
-        });
-        BuckFileUtil.setBuckFileType();
+        return BuckClient.getOrInstantiate(mProject, mEventHandler).isConnected();
     }
 
     public void attachIfDetached() {
@@ -174,10 +105,54 @@ public final class BuckModule implements ProjectComponent {
 
     public void attach(String target) {
         mBuckEventsConsumer.detach();
+
         mBuckEventsConsumer.attach(target, BuckUIManager.getInstance(mProject).getTreeModel());
     }
 
     public BuckEventsConsumer getBuckEventsConsumer() {
         return mBuckEventsConsumer;
+    }
+
+    private class ExecuteOnBuckPluginDisconnect implements Runnable {
+        @Override
+        public void run() {
+            ApplicationManager.getApplication().invokeLater(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        // If we haven't closed the project, then we show the message
+                        if (!mProject.isDisposed()) {
+                            BuckToolWindowFactory.outputConsoleMessage(
+                                mProject,
+                                "Disconnected from buck!\n",
+                                ConsoleViewContentType.SYSTEM_OUTPUT);
+                        }
+                    }
+                });
+            if (!projectClosed.get()) {
+                // Tell the client that we got disconnected, but we can retry
+                BuckClient.getOrInstantiate(mProject, mEventHandler).disconnectWithRetry();
+            }
+        }
+    }
+
+    private class ExecuteOnBuckPluginConnect implements Runnable {
+        @Override
+        public void run() {
+            ApplicationManager.getApplication().invokeLater(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        // If we connected to Buck and then closed the project, before getting
+                        // the success message
+                        if (!mProject.isDisposed()) {
+                            BuckToolWindowFactory.outputConsoleMessage(
+                                mProject,
+                                "Connected to buck!\n",
+                                ConsoleViewContentType.SYSTEM_OUTPUT);
+                        }
+                    }
+                });
+        }
     }
 }

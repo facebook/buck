@@ -14,17 +14,24 @@
  * under the License.
  */
 
-package unit;
-
-import com.facebook.buck.intellij.plugin.ws.BuckClient;
-import com.facebook.buck.intellij.plugin.ws.BuckSocket;
-import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventsHandlerInterface;
-
-import org.junit.Test;
+package com.facebook.buck.intellij.plugin.ws;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import com.facebook.buck.intellij.plugin.ws.buckevents.BuckEventsHandlerInterface;
+import com.intellij.mock.MockApplication;
+import com.intellij.mock.MockApplicationEx;
+import com.intellij.mock.MockProjectEx;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.extensions.Extensions;
+import com.intellij.openapi.project.Project;
+
+import org.junit.Test;
+
+import unit.util.MockDisposable;
+import unit.util.MockSession;
 
 public class BuckClientTest {
 
@@ -51,29 +58,67 @@ public class BuckClientTest {
 
     @Test
     public void testConnectDisconnect() {
+        Extensions.registerAreaClass("IDEA_PROJECT", null);
+        MockDisposable mockDisposable = new MockDisposable();
+
+        MockApplication application = new MockApplicationEx(mockDisposable);
+        ApplicationManager.setApplication(application, mockDisposable);
+
+        Project project = new MockProjectEx(new MockDisposable());
+
         TestBuckEventHandler handler = new TestBuckEventHandler();
-        BuckClient client = new BuckClient(1234, handler);
+        BuckSocket buckSocket = new BuckSocket(handler);
+        BuckClient.getOrInstantiate(project, handler).setBuckSocket(buckSocket);
 
-        // Set the socket we control
-        BuckSocket socket = new BuckSocket(handler);
+        BuckClient.getOrInstantiate(project, handler).connect();
+        buckSocket.onConnect(new MockSession());
 
-        client.setSocket(socket);
-        client.connect();
+        BuckClient.getOrInstantiate(project, handler).disconnectWithoutRetry();
+        buckSocket.onClose(0, "FOO");
 
-        assertTrue(client.isConnected());
-        client.disconnect();
-        assertFalse(client.isConnected());
+        assertFalse(BuckClient.getOrInstantiate(project, handler).isConnected());
+    }
+
+    @Test
+    public void hasBuckDisconnectedThenWeReconnectIfSoSpecified() {
+        Extensions.registerAreaClass("IDEA_PROJECT", null);
+        MockDisposable mockDisposable = new MockDisposable();
+
+        MockApplication application = new MockApplicationEx(mockDisposable);
+        ApplicationManager.setApplication(application, mockDisposable);
+
+        Project project = new MockProjectEx(new MockDisposable());
+
+        TestBuckEventHandler handler = new TestBuckEventHandler();
+        BuckSocket buckSocket = new BuckSocket(handler);
+        BuckClient.getOrInstantiate(project, handler).setBuckSocket(buckSocket);
+
+        BuckClient.getOrInstantiate(project, handler).connect();
+        buckSocket.onConnect(new MockSession());
+
+        BuckClient.getOrInstantiate(project, handler).disconnectWithRetry();
+        buckSocket.onClose(0, "FOO");
+        buckSocket.onConnect(new MockSession());
+
+        assertTrue(BuckClient.getOrInstantiate(project, handler).isConnected());
     }
 
     @Test
     public void testMessages() {
+        Extensions.registerAreaClass("IDEA_PROJECT", null);
+        MockDisposable mockDisposable = new MockDisposable();
+
+        MockApplication application = new MockApplicationEx(mockDisposable);
+        ApplicationManager.setApplication(application, mockDisposable);
+        Project project = new MockProjectEx(new MockDisposable());
+
         TestBuckEventHandler handler = new TestBuckEventHandler();
-        BuckClient client = new BuckClient(1234, handler);
+        BuckClient client = BuckClient.getOrInstantiate(project, handler);
 
         // Set the socket we control
         BuckSocket socket = new BuckSocket(handler);
 
-        client.setSocket(socket);
+        client.setBuckSocket(socket);
 
         client.connect();
 
