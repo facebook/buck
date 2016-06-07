@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
-  <version>2.5</version>
+  <version>2.6</version>
   <category>Build</category>
 
   <description><![CDATA[
@@ -21,6 +21,12 @@
   <change-notes><![CDATA[
 
   <ul>
+      <li>
+        <b>2.6</b>
+          Improved server connect/disconnect.
+          Moved actions from the UI thread.
+          Fixed some compatibility issues.
+      </li>
       <li>
         <b>2.5</b>
           Updated buck icons.
