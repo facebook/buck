@@ -38,7 +38,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
@@ -282,6 +282,7 @@ public class InstallCommand extends BuildCommand {
       ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildTargetException, BuildFileParseException{
 
+    ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
     ImmutableSet.Builder<String> installHelperTargets = ImmutableSet.builder();
     for (int index = 0; index < getArguments().size(); index++) {
 
@@ -299,7 +300,7 @@ public class InstallCommand extends BuildCommand {
                     executor,
                     ImmutableList.of(spec),
                     SpeculativeParsing.of(false),
-                    Parser.ApplyDefaultFlavorsMode.DISABLED))
+                    parserConfig.getDefaultFlavorsMode()))
             .first().get();
 
         TargetNode<?> node = params.getParser().getTargetNode(

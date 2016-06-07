@@ -81,14 +81,6 @@ public class Parser {
 
   private static final Logger LOG = Logger.get(Parser.class);
 
-  /**
-   * Controls whether default flavors should be applied to unflavored targets.
-   */
-  public enum ApplyDefaultFlavorsMode {
-      ENABLED,
-      DISABLED
-  };
-
   private final DaemonicParserState permState;
   private final ConstructorArgMarshaller marshaller;
 
@@ -363,7 +355,7 @@ public class Parser {
         executor,
         targetNodeSpecs,
         ignoreBuckAutodepsFiles,
-        ApplyDefaultFlavorsMode.DISABLED);
+        ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
   }
 
   /**
@@ -380,7 +372,7 @@ public class Parser {
       ListeningExecutorService executor,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       boolean ignoreBuckAutodepsFiles,
-      ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
+      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
 
     try (PerBuildState state =
@@ -421,7 +413,7 @@ public class Parser {
       ListeningExecutorService executor,
       Iterable<? extends TargetNodeSpec> specs,
       SpeculativeParsing speculativeParsing,
-      ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
+      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
 
     try (PerBuildState state =
@@ -448,7 +440,7 @@ public class Parser {
       BuckEventBus eventBus,
       Cell rootCell,
       Iterable<? extends TargetNodeSpec> specs,
-      final ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
+      final ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
 
     ParserConfig parserConfig = new ParserConfig(rootCell.getBuckConfig());
@@ -521,7 +513,7 @@ public class Parser {
   private static ImmutableSet<BuildTarget> applySpecFilter(
       TargetNodeSpec spec,
       ImmutableSet<TargetNode<?>> targetNodes,
-      ApplyDefaultFlavorsMode applyDefaultFlavorsMode) {
+      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode) {
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
     ImmutableMap<BuildTarget, Optional<TargetNode<?>>> partialTargets =
         spec.filter(targetNodes);
@@ -541,11 +533,11 @@ public class Parser {
       BuildTarget target,
       Optional<TargetNode<?>> targetNode,
       TargetNodeSpec.TargetType targetType,
-      ApplyDefaultFlavorsMode applyDefaultFlavorsMode) {
+      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode) {
     if (target.isFlavored() ||
         !targetNode.isPresent() ||
         targetType == TargetNodeSpec.TargetType.MULTIPLE_TARGETS ||
-        applyDefaultFlavorsMode == ApplyDefaultFlavorsMode.DISABLED) {
+        applyDefaultFlavorsMode == ParserConfig.ApplyDefaultFlavorsMode.DISABLED) {
       return target;
     }
 

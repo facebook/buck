@@ -37,7 +37,7 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildEngine;
@@ -452,6 +452,7 @@ public class BuildCommand extends AbstractCommand {
     }
 
     // Parse the build files to create a ActionGraph.
+    ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
     ActionGraphAndResolver actionGraphAndResolver;
     try {
       TargetGraphAndBuildTargets result = params.getParser()
@@ -464,7 +465,7 @@ public class BuildCommand extends AbstractCommand {
                   params.getBuckConfig(),
                   getArguments()),
               /* ignoreBuckAutodepsFiles */ false,
-              Parser.ApplyDefaultFlavorsMode.ENABLED);
+              parserConfig.getDefaultFlavorsMode());
       buildTargets = result.getBuildTargets();
       buildTargetsHaveBeenCalculated = true;
       actionGraphAndResolver = Preconditions.checkNotNull(

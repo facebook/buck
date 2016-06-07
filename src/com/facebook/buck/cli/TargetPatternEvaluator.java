@@ -21,7 +21,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
-import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryFileTarget;
@@ -115,7 +115,7 @@ public class TargetPatternEvaluator {
             SpeculativeParsing.of(false),
             // We disable mapping //path/to:lib to //path/to:lib#default,static
             // because the query engine doesn't handle flavors very well.
-            Parser.ApplyDefaultFlavorsMode.DISABLED);
+            ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
     LOG.debug("Build target pattern %s -> targets %s", pattern, buildTargets);
     // Sorting to have predictable results across different java libraries implementations.
     ImmutableSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();

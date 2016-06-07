@@ -59,6 +59,14 @@ public class ParserConfig {
     ;
   }
 
+  /**
+   * Controls whether default flavors should be applied to unflavored targets.
+   */
+  public enum ApplyDefaultFlavorsMode {
+    ENABLED,
+    DISABLED
+  }
+
   private final BuckConfig delegate;
 
   public ParserConfig(BuckConfig delegate) {
@@ -161,4 +169,10 @@ public class ParserConfig {
 
     return Math.min(value, delegate.getNumThreads());
   }
+
+  public ApplyDefaultFlavorsMode getDefaultFlavorsMode() {
+    return delegate.getEnum("project", "default_flavors_mode", ApplyDefaultFlavorsMode.class)
+        .or(ApplyDefaultFlavorsMode.ENABLED);
+  }
+
 }

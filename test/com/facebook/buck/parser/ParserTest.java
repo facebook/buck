@@ -2148,7 +2148,7 @@ public class ParserTest {
                     Paths.get("foo"),
                     cell.getRoot()))),
         SpeculativeParsing.of(true),
-        Parser.ApplyDefaultFlavorsMode.ENABLED);
+        ParserConfig.ApplyDefaultFlavorsMode.ENABLED);
   }
 
   @Test
@@ -2176,7 +2176,7 @@ public class ParserTest {
                 AbstractBuildTargetSpec.from(
                     BuildTarget.builder(cellRoot, "//lib", "lib").build())),
             /* ignoreBuckAutodepsFiles */ false,
-            Parser.ApplyDefaultFlavorsMode.ENABLED).getBuildTargets();
+            ParserConfig.ApplyDefaultFlavorsMode.ENABLED).getBuildTargets();
 
     assertThat(
         result,
@@ -2226,7 +2226,7 @@ public class ParserTest {
                 AbstractBuildTargetSpec.from(
                     BuildTarget.builder(cellRoot, "//lib", "lib").build())),
             /* ignoreBuckAutodepsFiles */ false,
-            Parser.ApplyDefaultFlavorsMode.ENABLED).getBuildTargets();
+            ParserConfig.ApplyDefaultFlavorsMode.ENABLED).getBuildTargets();
 
     assertThat(
         result,
@@ -2277,7 +2277,7 @@ public class ParserTest {
                 AbstractBuildTargetSpec.from(
                     BuildTarget.builder(cellRoot, "//lib", "lib").build())),
             /* ignoreBuckAutodepsFiles */ false,
-            Parser.ApplyDefaultFlavorsMode.ENABLED).getBuildTargets();
+            ParserConfig.ApplyDefaultFlavorsMode.ENABLED).getBuildTargets();
 
     assertThat(
         result,

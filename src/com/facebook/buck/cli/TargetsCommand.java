@@ -34,7 +34,6 @@ import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.BuildFileSpec;
-import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
@@ -324,6 +323,7 @@ public class TargetsCommand extends AbstractCommand {
       Optional<ImmutableSet<BuildRuleType>> buildRuleTypes)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
     if (getArguments().isEmpty()) {
+      ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
       TargetGraphAndBuildTargets completeTargetGraphAndBuildTargets = params.getParser()
           .buildTargetGraphForTargetNodeSpecs(
               params.getBuckEventBus(),
@@ -337,7 +337,7 @@ public class TargetsCommand extends AbstractCommand {
                           Paths.get(""),
                           params.getCell().getRoot()))),
               false,
-              Parser.ApplyDefaultFlavorsMode.ENABLED);
+              parserConfig.getDefaultFlavorsMode());
       SortedMap<String, TargetNode<?>> matchingNodes = getMatchingNodes(
           params,
           completeTargetGraphAndBuildTargets,
@@ -425,6 +425,7 @@ public class TargetsCommand extends AbstractCommand {
       CommandRunnerParams params,
       ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
+    ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
     boolean ignoreBuckAutodepsFiles = false;
     if (getArguments().isEmpty() || isDetectTestChanges()) {
       return TargetGraphAndBuildTargets.builder()
@@ -442,7 +443,7 @@ public class TargetsCommand extends AbstractCommand {
                               Paths.get(""),
                               params.getCell().getRoot()))),
                   ignoreBuckAutodepsFiles,
-                  Parser.ApplyDefaultFlavorsMode.ENABLED).getTargetGraph()).build();
+                  parserConfig.getDefaultFlavorsMode()).getTargetGraph()).build();
     } else {
       return params.getParser()
           .buildTargetGraphForTargetNodeSpecs(
@@ -454,7 +455,7 @@ public class TargetsCommand extends AbstractCommand {
                   params.getBuckConfig(),
                   getArguments()),
               ignoreBuckAutodepsFiles,
-              Parser.ApplyDefaultFlavorsMode.ENABLED);
+              parserConfig.getDefaultFlavorsMode());
     }
   }
 

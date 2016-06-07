@@ -23,7 +23,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildFileSpec;
-import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildEngine;
@@ -384,6 +384,7 @@ public class TestCommand extends BuildCommand {
       // all of the test rules.
       TargetGraph targetGraph;
       ImmutableSet<BuildTarget> explicitBuildTargets;
+      ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
 
       try {
 
@@ -406,7 +407,7 @@ public class TestCommand extends BuildCommand {
                       },
                       BuildFileSpec.fromRecursivePath(Paths.get(""), params.getCell().getRoot()))),
               ignoreBuckAutodepsFiles,
-              Parser.ApplyDefaultFlavorsMode.ENABLED).getTargetGraph();
+              parserConfig.getDefaultFlavorsMode()).getTargetGraph();
           explicitBuildTargets = ImmutableSet.of();
 
           // Otherwise, the user specified specific test targets to build and run, so build a graph
@@ -423,7 +424,7 @@ public class TestCommand extends BuildCommand {
                       params.getBuckConfig(),
                       getArguments()),
                   ignoreBuckAutodepsFiles,
-                  Parser.ApplyDefaultFlavorsMode.ENABLED);
+                  parserConfig.getDefaultFlavorsMode());
           targetGraph = result.getTargetGraph();
           explicitBuildTargets = result.getBuildTargets();
 
