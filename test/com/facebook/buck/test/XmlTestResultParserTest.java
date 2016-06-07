@@ -16,19 +16,18 @@
 
 package com.facebook.buck.test;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+
+import com.facebook.buck.testutil.integration.TemporaryPaths;
+import org.junit.Rule;
+import org.junit.Test;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
-import com.facebook.buck.testutil.integration.TemporaryPaths;
-
-import org.junit.Rule;
-import org.junit.Test;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 public class XmlTestResultParserTest {
 
@@ -58,5 +57,29 @@ public class XmlTestResultParserTest {
               "File contents:\n" + xml,
           e.getMessage());
     }
+  }
+
+  @Test
+  public void testParsingAndroidSeparatesClassesInResults() throws Throwable {
+    String xml =
+        "<?xml version='1.1' encoding='UTF-8' standalone='no'?>\n" +
+        "<testsuite name='com.facebook.foo.bar'>\n" +
+        "  <testcase name='a' classname='Bar' time='0.0'/>\n" +
+        "  <testcase name='b' classname='Bar' time='1.2'/>\n" +
+        "  <testcase name='c' classname='Foo' time='3.2'/>\n" +
+        "</testsuite>\n";
+
+    Path xmlFile = tmp.newFile("result.xml");
+    Files.write(xmlFile, xml.getBytes(UTF_8));
+
+    List<TestCaseSummary> summary = XmlTestResultParser.parseAndroid(xmlFile, "android-5554");
+
+    assertEquals(2, summary.size());
+
+    assertEquals("Bar (android-5554)", summary.get(0).getTestCaseName());
+    assertEquals("Foo (android-5554)", summary.get(1).getTestCaseName());
+
+    assertEquals(2, summary.get(0).getTestResults().size());
+    assertEquals(1, summary.get(1).getTestResults().size());
   }
 }
