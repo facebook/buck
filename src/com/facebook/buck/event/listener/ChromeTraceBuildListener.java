@@ -58,6 +58,9 @@ import com.google.common.base.CaseFormat;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
@@ -70,6 +73,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -77,6 +81,23 @@ import java.util.concurrent.TimeUnit;
  * Logs events to a json file formatted to be viewed in Chrome Trace View (chrome://tracing).
  */
 public class ChromeTraceBuildListener implements BuckEventListener {
+
+  private static final LoadingCache<String, String> CONVERTED_EVENT_ID_CACHE = CacheBuilder
+          .newBuilder()
+          .weakValues()
+          .build(new CacheLoader<String, String>() {
+            @Override
+            public String load(String key) throws Exception {
+              return CaseFormat
+                      .UPPER_CAMEL
+                      .converterTo(CaseFormat.LOWER_UNDERSCORE)
+                      .convert(key)
+                      .intern();
+            }
+          });
+
+
+
   private static final Logger LOG = Logger.get(ChromeTraceBuildListener.class);
   private static final int TIMEOUT_SECONDS = 30;
 
@@ -398,14 +419,17 @@ public class ChromeTraceBuildListener implements BuckEventListener {
           "Unsupported perf event type: " + perfEvent.getEventType());
     }
 
-    writeChromeTraceEvent(
-        "buck",
-        CaseFormat.UPPER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE).convert(
-            perfEvent.getEventId().getValue()),
-        phase,
-        ImmutableMap.copyOf(
-            Maps.transformValues(perfEvent.getEventInfo(), Functions.toStringFunction())),
-        perfEvent);
+    try {
+      writeChromeTraceEvent(
+          "buck",
+          CONVERTED_EVENT_ID_CACHE.get(perfEvent.getEventId().getValue().intern()),
+          phase,
+          ImmutableMap.copyOf(
+              Maps.transformValues(perfEvent.getEventInfo(), Functions.toStringFunction())),
+          perfEvent);
+    } catch (ExecutionException e) {
+      LOG.warn("Unable to log perf event " + perfEvent, e);
+    }
   }
 
   @Subscribe
