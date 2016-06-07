@@ -30,7 +30,6 @@
 !com.facebook.buck.python.PythonBinaryIntegrationTest
 !com.facebook.buck.python.PythonSrcZipIntegrationTest
 !com.facebook.buck.python.PythonTestIntegrationTest
-!com.facebook.buck.rules.KnownBuildRuleTypesTest#whenJavacIsSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithDifferentRuleKey
 !com.facebook.buck.step.fs.SymCopyStepTest#testSymCopyStep
 !com.facebook.buck.thrift.ThriftLibraryIntegrationTest#shouldBeAbleToConstructACxxLibraryFromThrift
 !com.facebook.buck.util.ListeningProcessExecutorTest#clearsEnvWhenExplicitlySet

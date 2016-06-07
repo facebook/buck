@@ -45,6 +45,7 @@ import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -171,8 +172,13 @@ public class KnownBuildRuleTypesTest {
   @Test
   public void whenJavacIsSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithDifferentRuleKey()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
-    final File javac = temporaryFolder.newFile();
-    assertTrue(javac.setExecutable(true));
+    final File javac;
+    if (Platform.detect() == Platform.WINDOWS) {
+      javac = new File("C:/Windows/system32/rundll32.exe");
+    } else {
+      javac = temporaryFolder.newFile();
+      assertTrue(javac.setExecutable(true));
+    }
 
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
         "tools", ImmutableMap.of("javac", javac.toString()));
