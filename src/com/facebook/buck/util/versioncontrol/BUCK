@@ -1,9 +1,9 @@
 PUBLIC_SRCS = [
+  'AbstractVersionControlStats.java',
   'VersionControlBuckConfig.java',
   'VersionControlCmdLineInterface.java',
   'VersionControlCmdLineInterfaceFactory.java',
   'VersionControlCommandFailedException.java',
-  'VersionControlStats.java',
   'VersionControlStatsEvent.java',
   'VersionControlStatsGenerator.java',
   'NoOpCmdLineInterface.java',
@@ -13,7 +13,7 @@ java_immutables_library(
   name = 'versioncontrol',
   srcs = PUBLIC_SRCS,
   immutable_types = [
-    'ImmutableVersionControlStats',
+    'VersionControlStats',
   ],
   tests = [
     '//test/com/facebook/buck/util/versioncontrol:versioncontrol',

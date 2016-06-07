@@ -92,13 +92,15 @@ public class VersionControlStatsGeneratorTest {
 
     vcStatsGenerator.generateStatsAsync();
 
-    VersionControlStats vcStats = eventCapture.getValue().getVersionControlStats();
-    assertThat(HAS_WORKING_DIRECTORY_CHANGES, is(equalTo(vcStats.workingDirectoryChanges())));
-    assertThat(CURRENT_REVISION_ID, is(equalTo(vcStats.currentRevisionId())));
+    AbstractVersionControlStats vcStats = eventCapture.getValue().getVersionControlStats();
+    assertThat(HAS_WORKING_DIRECTORY_CHANGES, is(equalTo(vcStats.getWorkingDirectoryChanges())));
+    assertThat(CURRENT_REVISION_ID, is(equalTo(vcStats.getCurrentRevisionId())));
     assertThat(
         BRANCHED_FROM_MASTER_REVISION_ID,
-        is(equalTo(vcStats.branchedFromMasterRevisionId())));
-    assertThat(BRANCHED_FROM_MASTER_TS_MILLIS, is(equalTo(vcStats.branchedFromMasterTsMillis())));
+        is(equalTo(vcStats.getBranchedFromMasterRevisionId())));
+    assertThat(
+        BRANCHED_FROM_MASTER_TS_MILLIS,
+        is(equalTo(vcStats.getBranchedFromMasterTsMillis())));
   }
 
   @Test

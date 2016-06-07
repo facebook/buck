@@ -16,12 +16,15 @@
 
 package com.facebook.buck.util.versioncontrol;
 
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+
 import org.immutables.value.Value;
 
 @Value.Immutable
-public abstract class VersionControlStats {
-  public abstract boolean workingDirectoryChanges();
-  public abstract String currentRevisionId();
-  public abstract String branchedFromMasterRevisionId();
-  public abstract long branchedFromMasterTsMillis();
+@BuckStyleImmutable
+interface AbstractVersionControlStats {
+  boolean getWorkingDirectoryChanges();
+  String getCurrentRevisionId();
+  String getBranchedFromMasterRevisionId();
+  long getBranchedFromMasterTsMillis();
 }

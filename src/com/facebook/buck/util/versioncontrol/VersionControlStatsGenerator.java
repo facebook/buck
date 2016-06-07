@@ -78,11 +78,11 @@ public class VersionControlStatsGenerator {
     long branchedFromMasterTsMillis = vcCmdLineInterface.timestampSeconds(
         branchedFromMasterRevisionId) * 1000;
 
-    VersionControlStats versionControlStats = ImmutableVersionControlStats.builder()
-        .workingDirectoryChanges(workingDirectoryChanges)
-        .currentRevisionId(currentRevisionId)
-        .branchedFromMasterRevisionId(branchedFromMasterRevisionId)
-        .branchedFromMasterTsMillis(branchedFromMasterTsMillis)
+    VersionControlStats versionControlStats = VersionControlStats.builder()
+        .setWorkingDirectoryChanges(workingDirectoryChanges)
+        .setCurrentRevisionId(currentRevisionId)
+        .setBranchedFromMasterRevisionId(branchedFromMasterRevisionId)
+        .setBranchedFromMasterTsMillis(branchedFromMasterTsMillis)
         .build();
 
     LOG.info("Version control stats generated successfully. \n%s", versionControlStats);
