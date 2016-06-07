@@ -37,10 +37,5 @@
 !com.facebook.buck.util.ListeningProcessExecutorTest#clearsEnvWhenExplicitlySet
 !com.facebook.buck.util.PropertyFinderTest#testSdkPathFromEnvironmentRaisesExceptionWhenDirectoryIsNotPresent
 !com.facebook.buck.util.PropertyFinderTest#testSdkPathFromPropertiesRaisesExceptionWhenDirectoryIsNotPresent
-!com.facebook.buck.util.WatchmanWatcherTest#watchmanQueryRelativizesExcludePaths
-!com.facebook.buck.util.WatchmanWatcherTest#watchmanQueryWithExcludePathsAddsExpressionToQuery
-!com.facebook.buck.util.WatchmanWatcherTest#watchmanQueryWithExcludePathsAddsMatchExpressionToQueryIfDirnameNotAvailable
-!com.facebook.buck.util.WatchmanWatcherTest#whenMultipleFilesThenMultipleEventsGenerated
-!com.facebook.buck.util.WatchmanWatcherTest#whenNameThenModifyEventIsGenerated
 !src.com.facebook.buck.json.buck_test.TestBuckPosix
 !src.com.facebook.buck.json.buck_test.TestBuckWindows

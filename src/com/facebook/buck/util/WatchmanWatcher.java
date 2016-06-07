@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -152,7 +153,7 @@ public class WatchmanWatcher {
         excludeAnyOf.add(
             Lists.newArrayList(
                 "match",
-                ignorePath.toString() + "/*",
+                ignorePath.toString() + File.separator + "*",
                 "wholename"));
       }
     }
