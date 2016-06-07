@@ -64,14 +64,17 @@ public class PropertyFinderTest {
 
   @Test
   public void testSdkPathFromPropertiesRaisesExceptionWhenDirectoryIsNotPresent() {
+    String path = Paths.get("/path/to/sdk").toAbsolutePath().toString();
     Properties properties = new Properties();
-    properties.setProperty("sdk.dir", "/path/to/sdk");
+    properties.setProperty("sdk.dir", path);
     ImmutableMap<String, String> systemEnvironment = ImmutableMap.of();
     HostFilesystem hostFilesystem = FakeHostFilesystem.empty();
 
     thrown.expect(RuntimeException.class);
     thrown.expectMessage(
-        "Properties file local.properties contains invalid path [/path/to/sdk] for key sdk.dir.");
+        String.format(
+            "Properties file local.properties contains invalid path [%s] for key sdk.dir.",
+            path));
 
     DefaultPropertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
         Optional.of(properties),
@@ -97,12 +100,14 @@ public class PropertyFinderTest {
 
   @Test
   public void testSdkPathFromEnvironmentRaisesExceptionWhenDirectoryIsNotPresent() {
+    String path = Paths.get("/path/to/sdk").toAbsolutePath().toString();
     Optional<Properties> properties = Optional.absent();
-    ImmutableMap<String, String> systemEnvironment = ImmutableMap.of("ANDROID_SDK", "/path/to/sdk");
+    ImmutableMap<String, String> systemEnvironment = ImmutableMap.of("ANDROID_SDK", path);
     HostFilesystem hostFilesystem = FakeHostFilesystem.empty();
 
     thrown.expect(RuntimeException.class);
-    thrown.expectMessage("Environment variable ANDROID_SDK points to invalid path [/path/to/sdk].");
+    thrown.expectMessage(
+        String.format("Environment variable ANDROID_SDK points to invalid path [%s].", path));
 
     DefaultPropertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
         properties,
