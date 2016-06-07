@@ -35,21 +35,27 @@ public class FakeFileHashCache implements FileHashCache {
 
   private final Map<Path, HashCode> pathsToHashes;
   private final Map<ArchiveMemberPath, HashCode> archiveMemberPathsToHashes;
+  private final Map<Path, Long> pathsToSizes;
 
   public static FakeFileHashCache withArchiveMemberPathHashes(
       Map<ArchiveMemberPath, HashCode> archiveMemberPathsToHashes) {
-    return new FakeFileHashCache(new HashMap<Path, HashCode>(), archiveMemberPathsToHashes);
+    return new FakeFileHashCache(
+        new HashMap<Path, HashCode>(),
+        archiveMemberPathsToHashes,
+        new HashMap<Path, Long>());
   }
 
   public FakeFileHashCache(Map<Path, HashCode> pathsToHashes) {
-    this(pathsToHashes, new HashMap<ArchiveMemberPath, HashCode>());
+    this(pathsToHashes, new HashMap<ArchiveMemberPath, HashCode>(), new HashMap<Path, Long>());
   }
 
   private FakeFileHashCache(
       Map<Path, HashCode> pathsToHashes,
-      Map<ArchiveMemberPath, HashCode> archiveMemberPathsToHashes) {
+      Map<ArchiveMemberPath, HashCode> archiveMemberPathsToHashes,
+      Map<Path, Long> pathsToSizes) {
     this.archiveMemberPathsToHashes = archiveMemberPathsToHashes;
     this.pathsToHashes = pathsToHashes;
+    this.pathsToSizes = pathsToSizes;
   }
 
   public static FakeFileHashCache createFromStrings(Map<String, String> pathsToHashes) {
@@ -95,6 +101,15 @@ public class FakeFileHashCache implements FileHashCache {
   @Override
   public HashCode get(Path path) throws IOException {
     HashCode hashCode = pathsToHashes.get(path);
+    if (hashCode == null) {
+      throw new NoSuchFileException(path.toString());
+    }
+    return hashCode;
+  }
+
+  @Override
+  public long getSize(Path path) throws IOException {
+    Long hashCode = pathsToSizes.get(path);
     if (hashCode == null) {
       throw new NoSuchFileException(path.toString());
     }

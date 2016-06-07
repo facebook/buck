@@ -206,6 +206,11 @@ public class DefaultRuleKeyLoggerTest {
         }
 
         @Override
+        public long getSize(Path path) {
+          return 0;
+        }
+
+        @Override
         public HashCode get(ArchiveMemberPath archiveMemberPath) {
           return HashCode.fromString("f1134a34c0de");
         }

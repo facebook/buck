@@ -882,6 +882,11 @@ public class RuleKeyTest {
           }
 
           @Override
+          public long getSize(Path path) {
+            return 0;
+          }
+
+          @Override
           public void set(Path path, HashCode hashCode) {
           }
         };

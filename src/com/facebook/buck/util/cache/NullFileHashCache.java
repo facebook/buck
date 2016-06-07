@@ -51,6 +51,11 @@ public class NullFileHashCache implements FileHashCache {
   }
 
   @Override
+  public long getSize(Path path) throws IOException {
+    throw new NoSuchFileException(path.toString());
+  }
+
+  @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
     throw new NoSuchFileException(archiveMemberPath.toString());
   }

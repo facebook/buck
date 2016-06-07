@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY a4dbd3fb50326144db4bec17bb601c1ce013011e #@#
+#@# GENERATED FILE: DO NOT MODIFY 3a5eae8163e3ee03ca6b53660e60b9349130c79c #@#
 {
   "cache" : {
     "deps" : [
@@ -10,6 +10,7 @@
       "//test/com/facebook/buck/testutil/integration:integration",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:hamcrest-junit",
+      "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]

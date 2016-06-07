@@ -88,6 +88,11 @@ public class FilePathHashLoader implements FileHashLoader {
   }
 
   @Override
+  public long getSize(Path path) throws IOException {
+    return Files.size(path);
+  }
+
+  @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
     throw new UnsupportedOperationException("Not implemented");
   }

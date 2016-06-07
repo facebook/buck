@@ -19,6 +19,7 @@ package com.facebook.buck.util.cache;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ArchiveMemberPath;
@@ -30,11 +31,13 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 
+import org.hamcrest.Matchers;
 import org.hamcrest.junit.ExpectedException;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.NoSuchFileException;
@@ -234,4 +237,49 @@ public class DefaultFileHashCacheTest {
 
     cache.get(ArchiveMemberPath.of(filesystem.resolve(abiJarPath), memberPath));
   }
+
+  @Test
+  public void getSizeOfMissingPathThrows() throws IOException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path input = filesystem.getRootPath().getFileSystem().getPath("input");
+    DefaultFileHashCache cache = new DefaultFileHashCache(filesystem);
+    expectedException.expect(FileNotFoundException.class);
+    cache.getSize(filesystem.resolve(input));
+  }
+
+  @Test
+  public void getSizeOfFile() throws IOException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path input = filesystem.getRootPath().getFileSystem().getPath("input");
+    filesystem.writeBytesToPath(new byte[123], input);
+    DefaultFileHashCache cache = new DefaultFileHashCache(filesystem);
+    assertThat(
+        cache.getSize(filesystem.resolve(input)),
+        Matchers.equalTo(123L));
+  }
+
+  @Test
+  public void getSizeOfDirectory() throws IOException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path input = filesystem.getRootPath().getFileSystem().getPath("input");
+    filesystem.mkdirs(input);
+    filesystem.writeBytesToPath(new byte[123], input.resolve("file1"));
+    filesystem.writeBytesToPath(new byte[123], input.resolve("file2"));
+    DefaultFileHashCache cache = new DefaultFileHashCache(filesystem);
+    assertThat(
+        cache.getSize(filesystem.resolve(input)),
+        Matchers.equalTo(246L));
+  }
+
+  @Test
+  public void getFileSizeInvalidation() throws IOException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path input = filesystem.getRootPath().getFileSystem().getPath("input");
+    filesystem.writeBytesToPath(new byte[123], input);
+    DefaultFileHashCache cache = new DefaultFileHashCache(filesystem);
+    cache.getSize(filesystem.resolve(input));
+    cache.invalidate(filesystem.resolve(input));
+    assertNull(cache.sizeCache.getIfPresent(filesystem.resolve(input)));
+  }
+
 }

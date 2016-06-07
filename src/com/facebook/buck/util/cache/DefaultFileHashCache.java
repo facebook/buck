@@ -50,16 +50,29 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   @VisibleForTesting
   final LoadingCache<Path, HashCodeAndFileType> loadingCache;
 
+  @VisibleForTesting
+  final LoadingCache<Path, Long> sizeCache;
+
   public DefaultFileHashCache(ProjectFilesystem projectFilesystem) {
     this.projectFilesystem = projectFilesystem;
 
-    this.loadingCache = CacheBuilder.newBuilder()
-        .build(new CacheLoader<Path, HashCodeAndFileType>() {
-          @Override
-          public HashCodeAndFileType load(@Nonnull Path path) throws Exception {
-            return getHashCodeAndFileType(path);
-          }
-        });
+    this.loadingCache =
+        CacheBuilder.newBuilder().build(
+            new CacheLoader<Path, HashCodeAndFileType>() {
+              @Override
+              public HashCodeAndFileType load(@Nonnull Path path) throws Exception {
+                return getHashCodeAndFileType(path);
+              }
+            });
+
+    this.sizeCache =
+        CacheBuilder.newBuilder().build(
+            new CacheLoader<Path, Long>() {
+              @Override
+              public Long load(@Nonnull Path path) throws Exception {
+                return getPathSize(path);
+              }
+            });
   }
 
   private HashCodeAndFileType getHashCodeAndFileType(Path path) throws IOException {
@@ -88,6 +101,14 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
           }
         };
     return source.hash(Hashing.sha1());
+  }
+
+  private long getPathSize(Path path) throws IOException {
+    long size = 0;
+    for (Path child : projectFilesystem.getFilesUnderPath(path)) {
+      size += projectFilesystem.getFileSize(child);
+    }
+    return size;
   }
 
   private HashCodeAndFileType getDirHashCode(Path path) throws IOException {
@@ -130,11 +151,13 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
       }
       loadingCache.invalidate(path);
     }
+    sizeCache.invalidate(path);
   }
 
   @Override
   public void invalidateAll() {
     loadingCache.invalidateAll();
+    sizeCache.invalidateAll();
   }
 
   /**
@@ -151,6 +174,17 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
       throw Throwables.propagate(e.getCause());
     }
     return Preconditions.checkNotNull(sha1, "Failed to find a HashCode for %s.", path);
+  }
+
+  @Override
+  public long getSize(Path rawPath) throws IOException {
+    Path path = resolvePath(rawPath);
+    try {
+      return sizeCache.get(path.normalize());
+    } catch (ExecutionException e) {
+      Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
+      throw Throwables.propagate(e.getCause());
+    }
   }
 
   @Override

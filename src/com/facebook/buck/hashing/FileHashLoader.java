@@ -26,5 +26,8 @@ public interface FileHashLoader {
 
   HashCode get(Path path) throws IOException;
 
+  long getSize(Path path) throws IOException;
+
   HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException;
+
 }

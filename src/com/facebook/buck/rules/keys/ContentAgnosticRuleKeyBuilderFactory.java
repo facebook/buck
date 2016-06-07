@@ -68,6 +68,11 @@ public class ContentAgnosticRuleKeyBuilderFactory
       }
 
       @Override
+      public long getSize(Path path) throws IOException {
+        return 0;
+      }
+
+      @Override
       public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
         throw new AssertionError();
       }

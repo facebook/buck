@@ -94,6 +94,15 @@ public class StackedFileHashCache implements FileHashCache {
   }
 
   @Override
+  public long getSize(Path path) throws IOException {
+    Optional<Pair<FileHashCache, Path>> found = lookup(path);
+    if (!found.isPresent()) {
+      throw new NoSuchFileException(path.toString());
+    }
+    return found.get().getFirst().getSize(found.get().getSecond());
+  }
+
+  @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
     Optional<Pair<FileHashCache, ArchiveMemberPath>> found = lookup(archiveMemberPath);
     if (!found.isPresent()) {
