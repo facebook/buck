@@ -54,7 +54,7 @@ public class BuckPluginNotifications {
                 }
               }),
           project);
-      PropertiesComponent.getInstance().setValue(GROUP_DISPLAY_ID, true);
+      PropertiesComponent.getInstance().setValue(GROUP_DISPLAY_ID, "true");
     }
   }
 

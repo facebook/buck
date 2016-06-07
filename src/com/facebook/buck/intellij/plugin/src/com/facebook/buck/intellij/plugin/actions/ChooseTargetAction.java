@@ -22,7 +22,6 @@ import com.facebook.buck.intellij.plugin.config.BuckSettingsProvider;
 import com.facebook.buck.intellij.plugin.ui.BuckToolWindowFactory;
 import com.intellij.ide.actions.GotoActionBase;
 import com.intellij.ide.util.gotoByName.ChooseByNamePopup;
-import com.intellij.ide.util.gotoByName.DefaultChooseByNameItemProvider;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.Presentation;
@@ -32,8 +31,9 @@ import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.sun.glass.events.KeyEvent;
 
-import javax.swing.KeyStroke;
 import java.awt.event.KeyAdapter;
+
+import javax.swing.KeyStroke;
 
 import icons.BuckIcons;
 
@@ -89,10 +89,7 @@ public class ChooseTargetAction extends GotoActionBase implements DumbAware {
         BuckToolWindowFactory.updateBuckToolWindowTitle(project);
       }
     };
-
-    DefaultChooseByNameItemProvider provider =
-        new DefaultChooseByNameItemProvider(getPsiContext(e));
-    showNavigationPopup(e, model, callback, "Choose Build Target", true, false, provider);
+    showNavigationPopup(e, model, callback, "Choose Build Target", true, false);
 
     // Add navigation listener for auto complete
     final ChooseByNamePopup chooseByNamePopup = project.getUserData(

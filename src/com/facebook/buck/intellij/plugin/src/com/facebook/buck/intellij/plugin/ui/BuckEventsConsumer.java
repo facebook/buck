@@ -46,7 +46,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.intellij.execution.ui.ConsoleViewContentType;
-import com.intellij.ide.SaveAndSyncHandler;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
@@ -444,7 +443,6 @@ public class BuckEventsConsumer implements
                 BuckEventsConsumer.this.mTreeModel.reload();
                 // IntelliJ's synchronize action
                 FileDocumentManager.getInstance().saveAllDocuments();
-                SaveAndSyncHandler.getInstance().refreshOpenFiles();
                 VirtualFileManager.getInstance().refreshWithoutFileWatcher(true);
             }
         });
