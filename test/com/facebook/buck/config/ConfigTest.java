@@ -206,7 +206,7 @@ public class ConfigTest {
   @Test
   public void configReference() {
     Config config =
-        Configs.createConfig(
+        new Config(
             RawConfig.builder()
                 .put("section", "field1", "hello $(config section.field2) world")
                 .put("section", "field2", "goodbye")
@@ -219,7 +219,7 @@ public class ConfigTest {
   @Test
   public void configReferenceAtStart() {
     Config config =
-        Configs.createConfig(
+        new Config(
             RawConfig.builder()
                 .put("section", "field1", "$(config section.field2) world")
                 .put("section", "field2", "goodbye")
@@ -232,7 +232,7 @@ public class ConfigTest {
   @Test
   public void escapedReference() {
     Config config =
-        Configs.createConfig(
+        new Config(
             RawConfig.builder()
                 .put("section", "field1", "hello \\$(config section.field2) world")
                 .put("section", "field2", "goodbye")
@@ -245,7 +245,7 @@ public class ConfigTest {
   @Test
   public void recursiveConfigReference() {
     Config config =
-        Configs.createConfig(
+        new Config(
             RawConfig.builder()
                 .put("section", "field1", "hello $(config section.field2) world")
                 .put("section", "field2", "hello $(config section.field3) world")
@@ -259,7 +259,7 @@ public class ConfigTest {
   @Test
   public void cyclicalConfigReference() {
     Config config =
-        Configs.createConfig(
+        new Config(
             RawConfig.builder()
                 .put("section", "field1", "$(config section.field2)")
                 .put("section", "field2", "$(config section.field3)")
@@ -274,7 +274,7 @@ public class ConfigTest {
   @Test
   public void locationMacroIsPreserved() {
     Config config =
-        Configs.createConfig(
+        new Config(
             RawConfig.builder()
                 .put("section", "field", "hello $(location input) world")
                 .build());

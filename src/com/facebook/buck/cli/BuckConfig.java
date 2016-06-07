@@ -164,10 +164,6 @@ public class BuckConfig {
         Maps.filterKeys(environment, EnvironmentFilter.NOT_IGNORED_ENV_PREDICATE));
   }
 
-  public Config getConfig() {
-    return config;
-  }
-
   /**
    * @return whether {@code aliasName} conforms to the pattern for a valid alias name. This does not
    *     indicate whether it is an alias that maps to a build target in a BuckConfig.

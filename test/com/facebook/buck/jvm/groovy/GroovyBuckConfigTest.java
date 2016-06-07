@@ -20,7 +20,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.config.Configs;
+import com.facebook.buck.config.Config;
 import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -110,7 +110,7 @@ public class GroovyBuckConfigTest {
       ImmutableMap<String, ImmutableMap<String, String>> rawConfig) {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
     BuckConfig config = new BuckConfig(
-        Configs.createConfig(RawConfig.of(rawConfig)),
+        new Config(RawConfig.of(rawConfig)),
         projectFilesystem,
         Architecture.detect(),
         Platform.detect(),

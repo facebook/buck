@@ -20,6 +20,7 @@ import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.config.Configs;
+import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -133,12 +134,13 @@ public class Cell {
               Joiner.on(",\n  ").join(knownRoots));
         }
 
-        BuckConfig parentConfig = Cell.this.getBuckConfig();
-        Config config = Configs.createConfig(
-            parentConfig.getConfig().getConfigConfig().withProjectRoot(cellPath));
+        // TODO(shs96c): Get the overrides from the parent config
+        Config config = Configs.createDefaultConfig(cellPath, RawConfig.of());
 
         ProjectFilesystem cellFilesystem = new ProjectFilesystem(cellPath, config);
 
+        Cell parent = Cell.this;
+        BuckConfig parentConfig = parent.getBuckConfig();
 
         BuckConfig buckConfig = new BuckConfig(
             config,

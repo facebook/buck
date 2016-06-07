@@ -16,7 +16,6 @@
 package com.facebook.buck.config;
 
 import com.facebook.buck.log.Logger;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -45,13 +44,6 @@ public final class Configs {
   private Configs() {}
 
   /**
-   * Create a Config from a set of values.
-   */
-  public static Config createConfig(RawConfig values) {
-    return new Config(values, ConfigConfig.of().withOverrides(values));
-  }
-
-  /**
    * Generates a Buck config by merging configs from specified locations on disk.
    *
    * In order:
@@ -66,38 +58,35 @@ public final class Configs {
    *   <li>Any overrides (usually from the command line)</li>
    * </ol>
    *
-   * @param configConfig configuration of what to lookup to construct this config.
+   * @param root Project root.
+   * @param configOverrides Config overrides to merge in after the other sources.
    * @return the resulting {@code Config}.
    * @throws IOException on any exceptions during the underlying filesystem operations.
    */
-  public static Config createConfig(ConfigConfig configConfig) throws IOException {
+  public static Config createDefaultConfig(Path root, RawConfig configOverrides)
+      throws IOException {
     ImmutableList.Builder<Path> configFileBuilder = ImmutableList.builder();
 
-    if (configConfig.isUsingGlobalConfig()) {
-      configFileBuilder.addAll(listFiles(GLOBAL_BUCK_CONFIG_DIRECTORY_PATH));
-      if (Files.isRegularFile(GLOBAL_BUCK_CONFIG_FILE_PATH)) {
-        configFileBuilder.add(GLOBAL_BUCK_CONFIG_FILE_PATH);
-      }
-
-      Path homeDirectory = Paths.get(System.getProperty("user.home"));
-      Path userConfigDir = homeDirectory.resolve(DEFAULT_BUCK_CONFIG_DIRECTORY_NAME);
-      configFileBuilder.addAll(listFiles(userConfigDir));
-      Path userConfigFile = homeDirectory.resolve(DEFAULT_BUCK_CONFIG_FILE_NAME);
-      if (Files.isRegularFile(userConfigFile)) {
-        configFileBuilder.add(userConfigFile);
-      }
+    configFileBuilder.addAll(listFiles(GLOBAL_BUCK_CONFIG_DIRECTORY_PATH));
+    if (Files.isRegularFile(GLOBAL_BUCK_CONFIG_FILE_PATH)) {
+      configFileBuilder.add(GLOBAL_BUCK_CONFIG_FILE_PATH);
     }
 
-    Optional<Path> root = configConfig.getProjectRoot();
-    if (root.isPresent()) {
-      Path configFile = root.get().resolve(DEFAULT_BUCK_CONFIG_FILE_NAME);
-      if (Files.isRegularFile(configFile)) {
-        configFileBuilder.add(configFile);
-      }
-      Path overrideConfigFile = root.get().resolve(DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME);
-      if (Files.isRegularFile(overrideConfigFile)) {
-        configFileBuilder.add(overrideConfigFile);
-      }
+    Path homeDirectory = Paths.get(System.getProperty("user.home"));
+    Path userConfigDir = homeDirectory.resolve(DEFAULT_BUCK_CONFIG_DIRECTORY_NAME);
+    configFileBuilder.addAll(listFiles(userConfigDir));
+    Path userConfigFile = homeDirectory.resolve(DEFAULT_BUCK_CONFIG_FILE_NAME);
+    if (Files.isRegularFile(userConfigFile)) {
+      configFileBuilder.add(userConfigFile);
+    }
+
+    Path configFile = root.resolve(DEFAULT_BUCK_CONFIG_FILE_NAME);
+    if (Files.isRegularFile(configFile)) {
+      configFileBuilder.add(configFile);
+    }
+    Path overrideConfigFile = root.resolve(DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME);
+    if (Files.isRegularFile(overrideConfigFile)) {
+      configFileBuilder.add(overrideConfigFile);
     }
 
     ImmutableList<Path> configFiles = configFileBuilder.build();
@@ -110,9 +99,9 @@ public final class Configs {
         builder.putAll(parsedConfiguration);
       }
     }
-    LOG.debug("Adding configuration overrides: %s", configConfig.getOverrides());
-    builder.putAll(configConfig.getOverrides());
-    return new Config(builder.build(), configConfig);
+    LOG.debug("Adding configuration overrides: %s", configOverrides);
+    builder.putAll(configOverrides);
+    return new Config(builder.build());
   }
 
   private static ImmutableSortedSet<Path> listFiles(Path root) throws IOException {

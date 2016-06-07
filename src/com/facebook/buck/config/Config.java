@@ -52,7 +52,6 @@ public class Config {
   private static final MacroFinder MACRO_FINDER = new MacroFinder();
 
   private final RawConfig rawConfig;
-  private final ConfigConfig configConfig;
 
   private final Supplier<Integer> hashCodeSupplier = Suppliers.memoize(
     new Supplier<Integer>() {
@@ -62,13 +61,15 @@ public class Config {
       }
     });
 
-  Config(RawConfig rawConfig, ConfigConfig configConfig) {
-    this.rawConfig = rawConfig;
-    this.configConfig = configConfig;
+  /**
+   * Convenience constructor to create an empty config.
+   */
+  public Config() {
+    this(RawConfig.of());
   }
 
-  public ConfigConfig getConfigConfig() {
-    return configConfig;
+  public Config(RawConfig rawConfig) {
+    this.rawConfig = rawConfig;
   }
 
   // Some `.buckconfig`s embed genrule macros which break with recent changes to support the config

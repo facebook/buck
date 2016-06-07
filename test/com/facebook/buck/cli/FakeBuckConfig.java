@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.config.Config;
 import com.facebook.buck.config.ConfigBuilder;
-import com.facebook.buck.config.Configs;
 import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -85,7 +85,7 @@ public class FakeBuckConfig {
 
     public BuckConfig build() {
       return new BuckConfig(
-          Configs.createConfig(sections),
+          new Config(sections),
           filesystem,
           architecture,
           platform,

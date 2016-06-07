@@ -21,10 +21,11 @@ import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.config.Config;
-import com.facebook.buck.config.ConfigConfig;
 import com.facebook.buck.config.Configs;
+import com.facebook.buck.config.RawConfig;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.config.Config;
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
@@ -32,7 +33,6 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.ParameterizedTests;
@@ -247,7 +247,7 @@ public class LuaBinaryIntegrationTest {
   }
 
   private LuaBuckConfig getLuaBuckConfig() throws IOException {
-    Config rawConfig = Configs.createConfig(ConfigConfig.of().withProjectRoot(tmp.getRootPath()));
+    Config rawConfig = Configs.createDefaultConfig(tmp.getRootPath(), RawConfig.of());
     BuckConfig buckConfig =
         new BuckConfig(
             rawConfig,

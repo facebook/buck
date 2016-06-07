@@ -22,8 +22,6 @@ import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.config.Config;
 import com.facebook.buck.config.ConfigBuilder;
-import com.facebook.buck.config.ConfigConfig;
-import com.facebook.buck.config.Configs;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.BuckConstant;
@@ -169,8 +167,7 @@ public class FilesystemBackedBuildFileTreeTest {
   @Test
   public void shouldIgnoreBuckOutputDirectoriesByDefault() throws IOException {
     Path root = tmp.getRoot();
-    ProjectFilesystem filesystem =
-        new ProjectFilesystem(root, Configs.createConfig(ConfigConfig.of()));
+    ProjectFilesystem filesystem = new ProjectFilesystem(root, new Config());
 
     Path buckOut = root.resolve(filesystem.getBuckPaths().getBuckOut());
     Files.createDirectories(buckOut);
@@ -197,8 +194,7 @@ public class FilesystemBackedBuildFileTreeTest {
     touch(sibling);
 
     // Config doesn't set any "ignore" entries.
-    ProjectFilesystem filesystem =
-        new ProjectFilesystem(root, Configs.createConfig(ConfigConfig.of()));
+    ProjectFilesystem filesystem = new ProjectFilesystem(root, new Config());
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
 
     Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(

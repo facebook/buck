@@ -29,7 +29,6 @@ import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.config.Config;
-import com.facebook.buck.config.ConfigConfig;
 import com.facebook.buck.config.Configs;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
@@ -638,7 +637,6 @@ public final class Main {
       Optional<NGContext> context,
       ImmutableMap<String, String> clientEnvironment,
       boolean setupLogging,
-      boolean readGlobalConfigs,
       String... args)
       throws IOException, InterruptedException {
 
@@ -686,12 +684,7 @@ public final class Main {
 
     // Setup filesystem and buck config.
     Path canonicalRootPath = projectRoot.toRealPath().normalize();
-    Config config =
-        Configs.createConfig(
-            ConfigConfig.of(
-                readGlobalConfigs,
-                Optional.of(canonicalRootPath),
-                command.getConfigOverrides()));
+    Config config = Configs.createDefaultConfig(canonicalRootPath, command.getConfigOverrides());
     ProjectFilesystem filesystem = new ProjectFilesystem(canonicalRootPath, config);
     BuckConfig buckConfig = new BuckConfig(
         config,
@@ -1504,7 +1497,6 @@ public final class Main {
           context,
           clientEnvironment,
           /* setupLogging */ true,
-          /* readGlobalConfigs */ true,
           args);
     } catch (HumanReadableException e) {
       Console console = new Console(Verbosity.STANDARD_INFORMATION,

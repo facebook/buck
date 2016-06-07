@@ -27,7 +27,7 @@ public class ConfigBuilder {
   private ConfigBuilder() { }
 
   public static Config createFromText(String... lines) {
-    return Configs.createConfig(rawFromLines(lines));
+    return new Config(rawFromLines(lines));
   }
 
   public static RawConfig rawFromLines(String... lines) {

@@ -19,8 +19,8 @@ package com.facebook.buck.distributed;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.Config;
 import com.facebook.buck.config.ConfigBuilder;
-import com.facebook.buck.config.Configs;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -41,7 +41,7 @@ public class DistributedBuildStateTest {
   public void canReconstructConfig() {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     BuckConfig buckConfig = new BuckConfig(
-        Configs.createConfig(ConfigBuilder.rawFromLines()),
+        new Config(ConfigBuilder.rawFromLines()),
         filesystem,
         Architecture.detect(),
         Platform.detect(),
@@ -59,7 +59,7 @@ public class DistributedBuildStateTest {
   public void throwsOnPlatformMismatch() {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     BuckConfig buckConfig = new BuckConfig(
-        Configs.createConfig(ConfigBuilder.rawFromLines()),
+        new Config(ConfigBuilder.rawFromLines()),
         filesystem,
         Architecture.MIPSEL,
         Platform.UNKNOWN,

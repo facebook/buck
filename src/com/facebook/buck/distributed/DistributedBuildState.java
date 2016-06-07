@@ -17,7 +17,7 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.config.Configs;
+import com.facebook.buck.config.Config;
 import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
@@ -118,7 +118,7 @@ public class DistributedBuildState {
         localPlatform);
 
     return new BuckConfig(
-        Configs.createConfig(RawConfig.of(rawConfig)),
+        new Config(RawConfig.of(rawConfig)),
         projectFilesystem,
         remoteArchitecture,
         remotePlatform,
