@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
@@ -514,7 +515,7 @@ public class PythonBinaryDescriptionTest {
         Iterables.transform(
             binary.getComponents().getModules().keySet(),
             Functions.toStringFunction()),
-        Matchers.containsInAnyOrder("hello/extension.so"));
+        Matchers.containsInAnyOrder(MorePaths.pathWithPlatformSeparators("hello/extension.so")));
   }
 
   @Test

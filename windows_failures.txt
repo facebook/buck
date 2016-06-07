@@ -27,7 +27,6 @@
 !com.facebook.buck.dotnet.CSharpLibraryIntegrationTest#shouldCompileLibraryWithAPrebuiltDependency
 !com.facebook.buck.dotnet.CSharpLibraryIntegrationTest#shouldCompileLibraryWithSystemProvidedDeps
 !com.facebook.buck.python.PrebuiltPythonLibraryIntegrationTest
-!com.facebook.buck.python.PythonBinaryDescriptionTest#extensionDepUsingMergedNativeLinkStrategy
 !com.facebook.buck.python.PythonBinaryIntegrationTest
 !com.facebook.buck.python.PythonSrcZipIntegrationTest
 !com.facebook.buck.python.PythonTestIntegrationTest
