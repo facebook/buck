@@ -42,7 +42,5 @@
 !com.facebook.buck.util.WatchmanWatcherTest#watchmanQueryWithExcludePathsAddsMatchExpressionToQueryIfDirnameNotAvailable
 !com.facebook.buck.util.WatchmanWatcherTest#whenMultipleFilesThenMultipleEventsGenerated
 !com.facebook.buck.util.WatchmanWatcherTest#whenNameThenModifyEventIsGenerated
-!test.com.facebook.buck.cli.bootstrapper.class_loader_test.ClassLoaderTest
-!test.com.facebook.buck.log.test_log_rotation.LogRotationTest
 !src.com.facebook.buck.json.buck_test.TestBuckPosix
 !src.com.facebook.buck.json.buck_test.TestBuckWindows

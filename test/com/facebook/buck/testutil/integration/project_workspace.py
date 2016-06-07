@@ -44,17 +44,20 @@ class ProjectWorkspace(object):
         """ Tests that the default java.util.logging setup can maintain at least 'a couple'
             of log files. """
         root_directory = os.getcwd()
-        if platform.system() == 'Windows':
+        is_windows = platform.system() == 'Windows'
+        if is_windows:
             buck_path = os.path.join(root_directory, 'bin', 'buck.bat')
+            args = ['cmd.exe', '/C', buck_path] + list(command)
         else:
             buck_path = os.path.join(root_directory, 'bin', 'buck')
+            args = [buck_path] + list(command)
         # Pass thru our environment, except disabling buckd so that we can be sure the right buck
         # is run.
         child_environment = dict(os.environ)
         child_environment["NO_BUCKD"] = "1"
 
         proc = subprocess.Popen(
-            [buck_path] + list(command),
+            args,
             cwd=self.test_data_directory,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
