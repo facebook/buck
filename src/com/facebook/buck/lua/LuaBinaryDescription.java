@@ -34,6 +34,7 @@ import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -43,6 +44,7 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.python.CxxPythonExtension;
+import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonPackagable;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.python.PythonPlatform;
@@ -580,7 +582,9 @@ public class LuaBinaryDescription implements
         SymlinkTree.from(
             params.copyWithChanges(
                 linkTreeTarget,
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.copyOf(
+                        pathResolver.filterBuildRuleInputs(components.values()))),
                 Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
             pathResolver,
             linkTreeRoot,
@@ -647,6 +651,18 @@ public class LuaBinaryDescription implements
     Optional<Path> relativePythonModulesLinkTreeRoot = Optional.absent();
     final List<SymlinkTree> pythonModulesLinktree = new ArrayList<>();
     if (!components.getPythonModules().isEmpty()) {
+      // Add in any missing init modules into the python components.
+      SourcePath emptyInit =
+          PythonBinaryDescription.createEmptyInitModule(params, resolver, pathResolver);
+      ImmutableMap<String, SourcePath> pythonModules =
+          MoreMaps.transformKeys(
+              PythonBinaryDescription.addMissingInitModules(
+                  MoreMaps.transformKeys(
+                      components.getPythonModules(),
+                      MorePaths.toPathFn(
+                          params.getProjectFilesystem().getRootPath().getFileSystem())),
+                  emptyInit),
+              Functions.toStringFunction());
       final SymlinkTree symlinkTree =
           resolver.addToIndex(
               createSymlinkTree(
@@ -655,7 +671,7 @@ public class LuaBinaryDescription implements
                   params,
                   resolver,
                   pathResolver,
-                  components.getPythonModules()));
+                  pythonModules));
       pythonModulesLinktree.add(symlinkTree);
       relativePythonModulesLinkTreeRoot =
           Optional.of(

@@ -95,30 +95,53 @@ public class PythonBinaryDescription implements
     return new Arg();
   }
 
-  private PythonPackageComponents addMissingInitModules(
-      PythonPackageComponents components,
+  public static SourcePath createEmptyInitModule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      SourcePathResolver pathResolver) {
+    BuildTarget emptyInitTarget =
+        params.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("__init__"));
+    Path emptyInitPath =
+        BuildTargets.getGenPath(
+            params.getProjectFilesystem(),
+            params.getBuildTarget(),
+            "%s/__init__.py");
+    resolver.addToIndex(
+        new WriteFile(
+            params.copyWithChanges(
+                emptyInitTarget,
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            pathResolver,
+            "",
+            emptyInitPath,
+            /* executable */ false));
+    return new BuildTargetSourcePath(emptyInitTarget);
+  }
+
+  public static ImmutableMap<Path, SourcePath> addMissingInitModules(
+      ImmutableMap<Path, SourcePath> modules,
       SourcePath emptyInit) {
 
     Map<Path, SourcePath> initModules = Maps.newLinkedHashMap();
 
     // Insert missing `__init__.py` modules.
     Set<Path> packages = Sets.newHashSet();
-    for (Path module : components.getModules().keySet()) {
+    for (Path module : modules.keySet()) {
       Path pkg = module;
       while ((pkg = pkg.getParent()) != null && !packages.contains(pkg)) {
         Path init = pkg.resolve("__init__.py");
-        if (!components.getModules().containsKey(init)) {
+        if (!modules.containsKey(init)) {
           initModules.put(init, emptyInit);
         }
         packages.add(pkg);
       }
     }
 
-    return components.withModules(
-        ImmutableMap.<Path, SourcePath>builder()
-            .putAll(components.getModules())
-            .putAll(initModules)
-            .build());
+    return ImmutableMap.<Path, SourcePath>builder()
+        .putAll(modules)
+        .putAll(initModules)
+        .build();
   }
 
   private PythonInPlaceBinary createInPlaceBinaryRule(
@@ -139,27 +162,9 @@ public class PythonBinaryDescription implements
           cxxPlatform.getFlavor());
     }
 
-    // Generate an empty __init__.py module to fill in for any missing ones in the link tree.
-    BuildTarget emptyInitTarget =
-        params.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("__init__"));
-    Path emptyInitPath =
-        BuildTargets.getGenPath(
-            params.getProjectFilesystem(),
-            params.getBuildTarget(),
-            "%s/__init__.py");
-    resolver.addToIndex(
-        new WriteFile(
-            params.copyWithChanges(
-                emptyInitTarget,
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
-            pathResolver,
-            "",
-            emptyInitPath,
-            /* executable */ false));
-
     // Add in any missing init modules into the python components.
-    components = addMissingInitModules(components, new BuildTargetSourcePath(emptyInitTarget));
+    SourcePath emptyInit = createEmptyInitModule(params, resolver, pathResolver);
+    components = components.withModules(addMissingInitModules(components.getModules(), emptyInit));
 
     BuildTarget linkTreeTarget =
         params.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("link-tree"));
