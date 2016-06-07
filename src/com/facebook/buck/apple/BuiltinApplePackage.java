@@ -43,12 +43,12 @@ public class BuiltinApplePackage extends AbstractBuildRule {
 
   private final Path pathToOutputFile;
   private final Path temp;
-  private final AppleBundle bundle;
+  private final BuildRule bundle;
 
   public BuiltinApplePackage(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      AppleBundle bundle) {
+      BuildRule bundle) {
     super(params, resolver);
     BuildTarget buildTarget = params.getBuildTarget();
     // TODO(ryu2): This will be different for Mac apps.

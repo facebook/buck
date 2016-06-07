@@ -78,13 +78,6 @@ public class ApplePackageDescription implements
       A args) throws NoSuchBuildTargetException {
     final BuildRule bundle = resolver.getRule(
         propagateFlavorsToTarget(params.getBuildTarget(), args.bundle));
-    if (!(bundle instanceof AppleBundle)) {
-      throw new HumanReadableException(
-          "In %s, bundle='%s' must be an apple_bundle() but was %s().",
-          params.getBuildTarget(),
-          bundle.getFullyQualifiedName(),
-          bundle.getType());
-    }
     final SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
 
     final Optional<ApplePackageConfigAndPlatformInfo> applePackageConfigAndPlatformInfo =
@@ -115,7 +108,7 @@ public class ApplePackageDescription implements
       return new BuiltinApplePackage(
           params,
           sourcePathResolver,
-          (AppleBundle) bundle);
+          bundle);
     }
   }
   @Override
