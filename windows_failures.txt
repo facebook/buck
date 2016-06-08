@@ -33,5 +33,3 @@
 !com.facebook.buck.step.fs.SymCopyStepTest#testSymCopyStep
 !com.facebook.buck.thrift.ThriftLibraryIntegrationTest#shouldBeAbleToConstructACxxLibraryFromThrift
 !com.facebook.buck.util.ListeningProcessExecutorTest#clearsEnvWhenExplicitlySet
-!src.com.facebook.buck.json.buck_test.TestBuckPosix
-!src.com.facebook.buck.json.buck_test.TestBuckWindows

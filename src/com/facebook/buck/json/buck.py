@@ -303,11 +303,11 @@ def single_subdir_glob(dirpath, glob_pattern, excludes=[], prefix=None, build_en
             key = f
         if prefix:
             # `f` is a string, but we need to create correct platform-specific Path.
-            # Using Path straight away won't work because it will use host's class, which is Posix
-            # on OS X. For the same reason we can't use os.path.join.
-            # Here we try to understand if we're running Windows test, then use WindowsPath
-            # to build up the key with prefix, allowing test to pass.
-            cls = PureWindowsPath if "\\" in f else PurePath
+            # This method is called by tests for both posix style paths and
+            # windows style paths.
+            # When running tests, search_base is always set
+            # and happens to have the correct platform-specific Path type.
+            cls = PurePath if not search_base else type(search_base)
             key = str(cls(prefix) / cls(key))
         results[key] = f
 

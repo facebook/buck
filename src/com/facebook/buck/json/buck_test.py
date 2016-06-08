@@ -9,7 +9,9 @@ import unittest
 
 class FakePathMixin(object):
     def glob(self, pattern):
-        return self.glob_results.get(pattern)
+        # Python glob supports unix paths on windows out of the box
+        norm_pattern = pattern.replace('\\', '/')
+        return self.glob_results.get(norm_pattern)
 
     def is_file(self):
         return True
