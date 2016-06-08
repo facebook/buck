@@ -28,7 +28,6 @@
 !com.facebook.buck.dotnet.CSharpLibraryIntegrationTest#shouldCompileLibraryWithSystemProvidedDeps
 !com.facebook.buck.python.PrebuiltPythonLibraryIntegrationTest
 !com.facebook.buck.python.PythonBinaryIntegrationTest
-!com.facebook.buck.python.PythonSrcZipIntegrationTest
 !com.facebook.buck.python.PythonTestIntegrationTest
 !com.facebook.buck.step.fs.SymCopyStepTest#testSymCopyStep
 !com.facebook.buck.thrift.ThriftLibraryIntegrationTest#shouldBeAbleToConstructACxxLibraryFromThrift
