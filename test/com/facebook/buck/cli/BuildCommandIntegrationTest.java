@@ -28,6 +28,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class BuildCommandIntegrationTest {
 
@@ -55,5 +57,44 @@ public class BuildCommandIntegrationTest {
         "//:bar");
     runBuckResult.assertSuccess();
     assertThat(runBuckResult.getStdout(), Matchers.containsString("//:bar buck-out"));
+  }
+
+  @Test
+  public void showRuleKey() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "just_build", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult runBuckResult = workspace.runBuckBuild(
+        "--show-rulekey",
+        "//:bar");
+    runBuckResult.assertSuccess();
+
+    Pattern pattern = Pattern.compile("\\b[0-9a-f]{5,40}\\b"); // sha
+    Matcher shaMatcher = pattern.matcher(runBuckResult.getStdout());
+    assertThat(shaMatcher.find(), Matchers.equalTo(true));
+    String shaValue = shaMatcher.group();
+    assertThat(shaValue.length(), Matchers.equalTo(40));
+    assertThat(runBuckResult.getStdout(), Matchers.containsString("//:bar " + shaValue));
+  }
+
+  @Test
+  public void showRuleKeyAndOutput() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "just_build", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult runBuckResult = workspace.runBuckBuild(
+        "--show-output",
+        "--show-rulekey",
+        "//:bar");
+    runBuckResult.assertSuccess();
+
+    Pattern pattern = Pattern.compile("\\b[0-9a-f]{5,40}\\b"); // sha
+    Matcher shaMatcher = pattern.matcher(runBuckResult.getStdout());
+    assertThat(shaMatcher.find(), Matchers.equalTo(true));
+    String shaValue = shaMatcher.group();
+    assertThat(shaValue.length(), Matchers.equalTo(40));
+    assertThat(
+        runBuckResult.getStdout(),
+        Matchers.containsString("//:bar " + shaValue + " buck-out"));
   }
 }

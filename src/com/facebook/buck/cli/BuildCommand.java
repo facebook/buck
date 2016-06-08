@@ -45,7 +45,9 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.LoadBalancedService;
@@ -106,6 +108,7 @@ public class BuildCommand extends AbstractCommand {
   private static final String SHALLOW_LONG_ARG = "--shallow";
   private static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
   private static final String SHOW_OUTPUT_LONG_ARG = "--show-output";
+  private static final String SHOW_RULEKEY_LONG_ARG = "--show-rulekey";
   private static final String DISTRIBUTED_LONG_ARG = "--distributed";
   private static final String DISTRIBUTED_STATE_DUMP_LONG_ARG = "--distributed-state-dump";
 
@@ -162,6 +165,11 @@ public class BuildCommand extends AbstractCommand {
       name = SHOW_OUTPUT_LONG_ARG,
       usage = "Print the absolute path to the output for each of the built rules.")
   private boolean showOutput;
+
+  @Option(
+      name = SHOW_RULEKEY_LONG_ARG,
+      usage = "Print the rulekey for each of the built rules.")
+  private boolean showRuleKey;
 
   @Option(
       name = DISTRIBUTED_LONG_ARG,
@@ -354,7 +362,7 @@ public class BuildCommand extends AbstractCommand {
         return 1;
       }
       exitCode = executeLocalBuild(params, actionGraphAndResolver, executorService);
-      if (exitCode == 0 && showOutput) {
+      if (exitCode == 0 && (showOutput || showRuleKey)) {
         showOutputs(params, actionGraphAndResolver);
       }
     }
@@ -417,15 +425,25 @@ public class BuildCommand extends AbstractCommand {
   private void showOutputs(
       CommandRunnerParams params,
       ActionGraphAndResolver actionGraphAndResolver) {
+    Optional<DefaultRuleKeyBuilderFactory> ruleKeyBuilderFactory =
+        Optional.absent();
+    if (showRuleKey) {
+      ruleKeyBuilderFactory = Optional.of(
+          new DefaultRuleKeyBuilderFactory(
+              params.getBuckConfig().getKeySeed(),
+              params.getFileHashCache(),
+              new SourcePathResolver(actionGraphAndResolver.getResolver())));
+    }
     params.getConsole().getStdOut().println("The outputs are:");
     for (BuildTarget buildTarget : buildTargets) {
       try {
         BuildRule rule = actionGraphAndResolver.getResolver().requireRule(buildTarget);
         Optional<Path> outputPath = TargetsCommand.getUserFacingOutputPath(rule);
         params.getConsole().getStdOut().printf(
-            "%s %s\n",
+            "%s%s%s\n",
             rule.getFullyQualifiedName(),
-            outputPath.transform(Functions.toStringFunction()).or(""));
+            showRuleKey ? " " + ruleKeyBuilderFactory.get().build(rule).toString() : "",
+            showOutput ? " " + outputPath.transform(Functions.toStringFunction()).or("") : "");
       } catch (NoSuchBuildTargetException e) {
         throw new HumanReadableException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
       }
