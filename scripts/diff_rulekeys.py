@@ -46,9 +46,50 @@ the top-level target you've built."""
     return parser.parse_args()
 
 
+class KeyValueDiff(object):
+    ORDER_ONLY = "Only order of entries differs: [{left}] vs [{right}]."
+    ORDER_AND_CASE_ONLY = ("Only order and letter casing (Upper Case vs " +
+                           "lower case) of entries differs:")
+
+    def __init__(self):
+        self._left = []
+        self._right = []
+
+    def append(self, left, right):
+        self._left.append(left)
+        self._right.append(right)
+
+    def diff(self):
+        if self._left == self._right:
+            return ['No changes']
+
+        if sorted(self._left) == sorted(self._right):
+            return [KeyValueDiff.ORDER_ONLY.format(
+                    left=', '.join(self._left),
+                    right=', '.join(self._right))]
+
+        left_lower_index = {v.lower(): v for v in self._left}
+        right_lower_index = {v.lower(): v for v in self._right}
+        if set(left_lower_index.keys()) == set(right_lower_index.keys()):
+            differences = []
+            for k in sorted(left_lower_index.keys()):
+                if left_lower_index[k] != right_lower_index[k]:
+                    differences.append('-[%s]' % left_lower_index[k])
+                    differences.append('+[%s]' % right_lower_index[k])
+            return ([KeyValueDiff.ORDER_AND_CASE_ONLY] + differences)
+
+        result = []
+        for l, r in map(None, self._left, self._right):
+            result.append('-[%s]' % l)
+            result.append('+[%s]' % r)
+        return result
+
+
 class RuleKeyStructureInfo(object):
-    def __init__(self, buck_out):
-        if isinstance(buck_out, basestring):
+    def __init__(self, buck_out, entries_for_test=None):
+        if entries_for_test is not None:
+            self._entries = entries_for_test
+        elif isinstance(buck_out, basestring):
             self._entries = RuleKeyStructureInfo._parseBuckOut(buck_out)
         else:
             self._entries = RuleKeyStructureInfo._parseLogFile(buck_out)
@@ -181,7 +222,7 @@ def diffInternal(
         verbose):
     keys = set(left_s.keys()).union(set(right_s.keys()))
     changed_key_pairs_with_labels = set()
-    changed_key_pairs_with_values = []
+    changed_key_pairs_with_values = collections.defaultdict(KeyValueDiff)
     changed_key_pairs_with_labels_for_key = set()
     report = []
     for key in keys:
@@ -213,12 +254,12 @@ def diffInternal(
                         (q_label, (left_key, right_key)))
                     continue
 
-            changed_key_pairs_with_values.append([key, left_v, right_v])
+            changed_key_pairs_with_values[key].append(left_v, right_v)
 
-    for key, left_v, right_v in sorted(changed_key_pairs_with_values):
-        report.append('  (' + key + '):\n' +
-                      '    -[' + left_v + ']\n' +
-                      '    +[' + right_v + ']')
+    for key in sorted(changed_key_pairs_with_values.keys()):
+        value_pairs = changed_key_pairs_with_values[key]
+        report.append('  (' + key + '):')
+        report.extend(['    ' + l for l in value_pairs.diff()])
 
     changed_key_pairs_with_labels.update(
         changed_key_pairs_with_labels_for_key)
