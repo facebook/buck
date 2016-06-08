@@ -103,6 +103,7 @@ import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.concurrent.TimeSpan;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
+import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
@@ -636,10 +637,9 @@ public final class Main {
       Path projectRoot,
       Optional<NGContext> context,
       ImmutableMap<String, String> clientEnvironment,
-      boolean setupLogging,
+      CommandMode commandMode,
       String... args)
       throws IOException, InterruptedException {
-
     // Parse the command line args.
     BuckCommand command = new BuckCommand();
     AdditionalOptionsCmdLineParser cmdLineParser = new AdditionalOptionsCmdLineParser(command);
@@ -655,7 +655,7 @@ public final class Main {
     }
 
     // Setup logging.
-    if (setupLogging) {
+    if (commandMode.isLoggingEnabled()) {
 
       // Reset logging each time we run a command while daemonized.
       // This will cause us to write a new log per command.
@@ -1496,7 +1496,7 @@ public final class Main {
           projectRoot,
           context,
           clientEnvironment,
-          /* setupLogging */ true,
+          CommandMode.RELEASE,
           args);
     } catch (HumanReadableException e) {
       Console console = new Console(Verbosity.STANDARD_INFORMATION,
