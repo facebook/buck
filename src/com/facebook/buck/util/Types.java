@@ -17,6 +17,9 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Optional;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.primitives.Primitives;
 
 import java.lang.reflect.Field;
@@ -24,10 +27,33 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.util.Collection;
+import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
 
 public class Types {
+
+  private static final LoadingCache<Field, Type> FIRST_NON_OPTIONAL_TYPE_CACHE =
+      CacheBuilder.newBuilder()
+                  .weakValues()
+                  .build(new CacheLoader<Field, Type>() {
+                    @Override
+                    public Type load(Field field) throws Exception {
+                      boolean isOptional = Optional.class.isAssignableFrom(field.getType());
+                      if (isOptional) {
+                        Type type = field.getGenericType();
+
+                        if (type instanceof ParameterizedType) {
+                          return ((ParameterizedType) type).getActualTypeArguments()[0];
+                        } else {
+                          throw new RuntimeException(
+                              "Unexpected type parameter for Optional: " + type);
+                        }
+                      } else {
+                        return field.getGenericType();
+                      }
+                    }
+                  });
 
   private Types() {
     // Utility class.
@@ -95,17 +121,10 @@ public class Types {
    * </ul>
    */
   public static Type getFirstNonOptionalType(Field field) {
-    boolean isOptional = Optional.class.isAssignableFrom(field.getType());
-    if (isOptional) {
-      Type type = field.getGenericType();
-
-      if (type instanceof ParameterizedType) {
-        return ((ParameterizedType) type).getActualTypeArguments()[0];
-      } else {
-        throw new RuntimeException("Unexpected type parameter for Optional: " + type);
-      }
-    } else {
-      return field.getGenericType();
+    try {
+      return FIRST_NON_OPTIONAL_TYPE_CACHE.get(field);
+    } catch (ExecutionException e) {
+      throw new RuntimeException(e);
     }
   }
 }
