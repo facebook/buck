@@ -21,7 +21,9 @@ class ClassLoaderTest(unittest.TestCase):
                                  'testdata', 'old_guava')
 
         with ProjectWorkspace(test_data) as workspace:
-            returncode = workspace.run_buck('build', '//:example')
+            returncode = workspace.run_buck('build',
+                                            '//:example',
+                                            )
             self.assertEquals(0, returncode)
 
 

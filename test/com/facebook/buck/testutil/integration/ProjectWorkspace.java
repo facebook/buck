@@ -387,7 +387,6 @@ public class ProjectWorkspace {
     InputStream stdin = new ByteArrayInputStream("".getBytes());
 
     // Construct a limited view of the parent environment for the child.
-    //
     // TODO(#5754812): we should eventually get tests working without requiring these be set.
     ImmutableList<String> inheritedEnvVars = ImmutableList.of(
         "ANDROID_HOME",

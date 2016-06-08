@@ -1488,6 +1488,7 @@ public final class Main {
       Path projectRoot,
       Optional<NGContext> context,
       ImmutableMap<String, String> clientEnvironment,
+      CommandMode commandMode,
       String... args)
       throws IOException, InterruptedException {
     try {
@@ -1496,7 +1497,7 @@ public final class Main {
           projectRoot,
           context,
           clientEnvironment,
-          CommandMode.RELEASE,
+          commandMode,
           args);
     } catch (HumanReadableException e) {
       Console console = new Console(Verbosity.STANDARD_INFORMATION,
@@ -1582,7 +1583,13 @@ public final class Main {
           buildId.toString(),
           stdErr,
           Optional.<OutputStream>absent() /* originalOutputStream */);
-      exitCode = tryRunMainWithExitCode(buildId, projectRoot, context, clientEnvironment, args);
+      exitCode = tryRunMainWithExitCode(
+          buildId,
+          projectRoot,
+          context,
+          clientEnvironment,
+          CommandMode.RELEASE,
+          args);
     } catch (Throwable t) {
       LOG.error(t, "Uncaught exception at top level");
     } finally {

@@ -43,6 +43,7 @@ import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
@@ -244,6 +245,7 @@ public class DaemonIntegrationTest {
               tmp.getRootPath(),
               Optional.<NGContext>of(new TestContext()),
               ImmutableMap.copyOf(System.getenv()),
+              CommandMode.TEST,
               args);
           assertEquals("Unexpected exit code.", expectedExitCode, exitCode);
         } catch (IOException e) {
