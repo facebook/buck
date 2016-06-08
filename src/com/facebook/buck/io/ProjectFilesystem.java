@@ -102,22 +102,22 @@ public class ProjectFilesystem {
    * Controls the behavior of how the source should be treated when copying.
    */
   public enum CopySourceMode {
-      /**
-       * Copy the single source file into the destination path.
-       */
-      FILE,
+    /**
+     * Copy the single source file into the destination path.
+     */
+    FILE,
 
-      /**
-       * Treat the source as a directory and copy each file inside it
-       * to the destination path, which must be a directory.
-       */
-      DIRECTORY_CONTENTS_ONLY,
+    /**
+     * Treat the source as a directory and copy each file inside it
+     * to the destination path, which must be a directory.
+     */
+    DIRECTORY_CONTENTS_ONLY,
 
-      /**
-       * Treat the source as a directory. Copy the directory and its
-       * contents to the destination path, which must be a directory.
-       */
-      DIRECTORY_AND_CONTENTS,
+    /**
+     * Treat the source as a directory. Copy the directory and its
+     * contents to the destination path, which must be a directory.
+     */
+    DIRECTORY_AND_CONTENTS,
   }
 
   // A non-exhaustive list of characters that might indicate that we're about to deal with a glob.
@@ -208,10 +208,10 @@ public class ProjectFilesystem {
 
     this.blackListedDirectories = FluentIterable.from(this.blackListedPaths)
         .filter(new Predicate<PathOrGlobMatcher>() {
-            @Override
-            public boolean apply(PathOrGlobMatcher matcher) {
-              return matcher.getType() == PathOrGlobMatcher.Type.PATH;
-            }
+          @Override
+          public boolean apply(PathOrGlobMatcher matcher) {
+            return matcher.getType() == PathOrGlobMatcher.Type.PATH;
+          }
         })
         .transform(new Function<PathOrGlobMatcher, Path>() {
           @Override
@@ -243,19 +243,19 @@ public class ProjectFilesystem {
   }
 
   private static Path getCacheDir(Path root, Optional<String> value, BuckPaths buckPaths) {
-      String cacheDir = value.or(root.resolve(buckPaths.getCacheDir()).toString());
-      Path toReturn = root.getFileSystem().getPath(cacheDir);
-      toReturn = MorePaths.expandHomeDir(toReturn);
-      if (toReturn.isAbsolute()) {
-         return toReturn;
-       }
-      ImmutableSet<Path> filtered = MorePaths.filterForSubpaths(ImmutableSet.of(toReturn), root);
-      if (filtered.isEmpty()) {
-         // OK. For some reason the relative path managed to be out of our directory.
-             return toReturn;
-       }
-      return Iterables.getOnlyElement(filtered);
+    String cacheDir = value.or(root.resolve(buckPaths.getCacheDir()).toString());
+    Path toReturn = root.getFileSystem().getPath(cacheDir);
+    toReturn = MorePaths.expandHomeDir(toReturn);
+    if (toReturn.isAbsolute()) {
+      return toReturn;
     }
+    ImmutableSet<Path> filtered = MorePaths.filterForSubpaths(ImmutableSet.of(toReturn), root);
+    if (filtered.isEmpty()) {
+      // OK. For some reason the relative path managed to be out of our directory.
+      return toReturn;
+    }
+    return Iterables.getOnlyElement(filtered);
+  }
 
 
   private static ImmutableSet<PathOrGlobMatcher> extractIgnorePaths(
@@ -635,10 +635,10 @@ public class ProjectFilesystem {
   @VisibleForTesting
   protected PathListing.PathModifiedTimeFetcher getLastModifiedTimeFetcher() {
     return new PathListing.PathModifiedTimeFetcher() {
-        @Override
-        public FileTime getLastModifiedTime(Path path) throws IOException {
-          return FileTime.fromMillis(ProjectFilesystem.this.getLastModifiedTime(path));
-        }
+      @Override
+      public FileTime getLastModifiedTime(Path path) throws IOException {
+        return FileTime.fromMillis(ProjectFilesystem.this.getLastModifiedTime(path));
+      }
     };
   }
 
@@ -650,7 +650,7 @@ public class ProjectFilesystem {
   public ImmutableSortedSet<Path> getSortedMatchingDirectoryContents(
       Path pathRelativeToProjectRoot,
       String globPattern)
-    throws IOException {
+      throws IOException {
     Path path = getPathForRelativePath(pathRelativeToProjectRoot);
     return PathListing.listMatchingPaths(
         path,
@@ -734,10 +734,10 @@ public class ProjectFilesystem {
       FileAttribute<?>... attrs)
       throws IOException {
     try (Writer writer =
-         new BufferedWriter(
-             new OutputStreamWriter(
-                 newFileOutputStream(pathRelativeToProjectRoot, attrs),
-                 Charsets.UTF_8))) {
+             new BufferedWriter(
+                 new OutputStreamWriter(
+                     newFileOutputStream(pathRelativeToProjectRoot, attrs),
+                     Charsets.UTF_8))) {
       for (String line : lines) {
         writer.write(line);
         writer.write('\n');
@@ -765,7 +765,7 @@ public class ProjectFilesystem {
   public OutputStream newFileOutputStream(
       Path pathRelativeToProjectRoot,
       FileAttribute<?>... attrs)
-    throws IOException {
+      throws IOException {
     return new BufferedOutputStream(
         Channels.newOutputStream(
             Files.newByteChannel(
@@ -781,13 +781,13 @@ public class ProjectFilesystem {
       Path pathRelativeToProjectRoot,
       Class<A> type,
       LinkOption... options)
-    throws IOException {
+      throws IOException {
     return Files.readAttributes(
         getPathForRelativePath(pathRelativeToProjectRoot), type, options);
   }
 
   public InputStream newFileInputStream(Path pathRelativeToProjectRoot)
-    throws IOException {
+      throws IOException {
     return new BufferedInputStream(
         Files.newInputStream(getPathForRelativePath(pathRelativeToProjectRoot)));
   }
@@ -1211,8 +1211,8 @@ public class ProjectFilesystem {
 
   public static class PathOrGlobMatcher {
     public enum Type {
-        PATH,
-        GLOB
+      PATH,
+      GLOB
     }
     private final Type type;
     private final Optional<Path> basePath;
@@ -1253,8 +1253,7 @@ public class ProjectFilesystem {
 
       PathOrGlobMatcher that = (PathOrGlobMatcher) other;
 
-      return
-          Objects.equals(type, that.type) &&
+      return Objects.equals(type, that.type) &&
           Objects.equals(basePath, that.basePath) &&
           // We don't compare globMatcher here, since sun.nio.fs.UnixFileSystem.getPathMatcher()
           // returns an anonymous class which doesn't implement equals().
