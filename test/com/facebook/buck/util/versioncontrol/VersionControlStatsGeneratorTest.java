@@ -29,6 +29,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
+import com.google.common.collect.ImmutableSet;
 
 import org.easymock.Capture;
 import org.easymock.IAnswer;
@@ -39,7 +40,7 @@ import java.util.concurrent.ExecutorService;
 
 public class VersionControlStatsGeneratorTest {
 
-  private static final boolean HAS_WORKING_DIRECTORY_CHANGES = true;
+  private static final ImmutableSet<String> WORKING_DIRECTORY_CHANGES = ImmutableSet.of("dog");
   private static final String CURRENT_REVISION_ID = "current_revision_id";
   private static final String MASTER_REVISION_ID = "master_revision_id";
   private static final String BRANCHED_FROM_MASTER_REVISION_ID = "branched_from_master_revision_id";
@@ -60,8 +61,7 @@ public class VersionControlStatsGeneratorTest {
     expect(cmdLineInterfaceMock.isSupportedVersionControlSystem()).andReturn(
         SUPPORTED_VCS);
 
-    expect(cmdLineInterfaceMock.hasWorkingDirectoryChanges()).andReturn(
-        HAS_WORKING_DIRECTORY_CHANGES);
+    expect(cmdLineInterfaceMock.changedFiles(".")).andReturn(WORKING_DIRECTORY_CHANGES);
 
     expect(cmdLineInterfaceMock.currentRevisionId()).andReturn(
         CURRENT_REVISION_ID);
@@ -93,7 +93,9 @@ public class VersionControlStatsGeneratorTest {
     vcStatsGenerator.generateStatsAsync();
 
     AbstractVersionControlStats vcStats = eventCapture.getValue().getVersionControlStats();
-    assertThat(HAS_WORKING_DIRECTORY_CHANGES, is(equalTo(vcStats.getWorkingDirectoryChanges())));
+    assertThat(
+        WORKING_DIRECTORY_CHANGES.size(),
+        is(equalTo(vcStats.getNumberOfWorkingDirectoryChanges())));
     assertThat(CURRENT_REVISION_ID, is(equalTo(vcStats.getCurrentRevisionId())));
     assertThat(
         BRANCHED_FROM_MASTER_REVISION_ID,

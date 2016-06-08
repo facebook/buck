@@ -67,15 +67,6 @@ public interface VersionControlCmdLineInterface {
 
   /***
    *
-   * @return True if working directory has changes after last commit
-   * @throws VersionControlCommandFailedException
-   * @throws InterruptedException
-   */
-  boolean hasWorkingDirectoryChanges()
-      throws VersionControlCommandFailedException, InterruptedException;
-
-  /***
-   *
    * @param revisionId
    * @return Unix timestamp of given revisionId (in seconds)
    * @throws VersionControlCommandFailedException

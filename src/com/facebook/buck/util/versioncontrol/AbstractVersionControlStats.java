@@ -23,7 +23,7 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 interface AbstractVersionControlStats {
-  boolean getWorkingDirectoryChanges();
+  int getNumberOfWorkingDirectoryChanges();
   String getCurrentRevisionId();
   String getBranchedFromMasterRevisionId();
   long getBranchedFromMasterTsMillis();

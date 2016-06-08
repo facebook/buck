@@ -48,12 +48,6 @@ public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   @Override
-  public boolean hasWorkingDirectoryChanges()
-      throws VersionControlCommandFailedException, InterruptedException {
-    return false;
-  }
-
-  @Override
   public long timestampSeconds(String revisionId)
       throws VersionControlCommandFailedException, InterruptedException {
     return 0;

@@ -24,6 +24,8 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -49,7 +51,6 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   private static final int HG_UNIX_TS_GROUP_INDEX = 1;
 
   private static final String HG_CMD_TEMPLATE = "{hg}";
-  private static final String NO_CHANGES_STATUS = "";
   private static final String NAME_TEMPLATE = "{name}";
   private static final String REVISION_ID_TEMPLATE = "{revision}";
   private static final String REVISION_IDS_TEMPLATE = "{revisions}";
@@ -59,9 +60,6 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
 
   private static final ImmutableList<String> REVISION_ID_FOR_NAME_COMMAND_TEMPLATE =
       ImmutableList.of(HG_CMD_TEMPLATE, "log", "-r", NAME_TEMPLATE, "--template", "{node|short}");
-
-  private static final ImmutableList<String> STATUS_COMMAND =
-      ImmutableList.of(HG_CMD_TEMPLATE, "status");
 
   private static final ImmutableList<String> CHANGED_FILES_COMMAND =
       ImmutableList.of(HG_CMD_TEMPLATE, "status", "-0", "--rev", REVISION_ID_TEMPLATE);
@@ -105,12 +103,6 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   @Override
   public boolean isSupportedVersionControlSystem() {
     return true; // Mercurial is supported
-  }
-
-  @Override
-  public boolean hasWorkingDirectoryChanges()
-      throws VersionControlCommandFailedException, InterruptedException {
-    return !executeCommand(STATUS_COMMAND).equals(NO_CHANGES_STATUS);
   }
 
   @Override
@@ -162,7 +154,14 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
         CHANGED_FILES_COMMAND,
         REVISION_ID_TEMPLATE,
         fromRevisionId));
-    return ImmutableSet.copyOf(hgChangedFilesString.split("\0"));
+    return FluentIterable.of(hgChangedFilesString.split("\0"))
+        .filter(new Predicate<String>() {
+          @Override
+          public boolean apply(String input) {
+            return !Strings.isNullOrEmpty(input);
+          }
+        })
+        .toSet();
   }
 
   private String executeCommand(Iterable<String> command)

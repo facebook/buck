@@ -18,6 +18,7 @@ package com.facebook.buck.util.versioncontrol;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -130,13 +131,13 @@ public class HgCmdLineInterfaceIntegrationTest {
   @Test
   public void whenWorkingDirectoryUnchangedThenHasWorkingDirectoryChangesReturnsFalse()
       throws VersionControlCommandFailedException, InterruptedException {
-    assertThat(repoTwoCmdLine.hasWorkingDirectoryChanges(), is(false));
+    assertThat(repoTwoCmdLine.changedFiles("."), hasSize(0));
   }
 
   @Test
   public void whenWorkingDirectoryChangedThenHasWorkingDirectoryChangesReturnsTrue()
       throws VersionControlCommandFailedException, InterruptedException {
-    assertThat(repoThreeCmdLine.hasWorkingDirectoryChanges(), is(true));
+    assertThat(repoThreeCmdLine.changedFiles("."), hasSize(Matchers.greaterThan(0)));
   }
 
   @Test
