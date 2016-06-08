@@ -59,4 +59,9 @@ public class LuaBinaryBuilder extends AbstractNodeBuilder<LuaBinaryDescription.A
     return this;
   }
 
+  public LuaBinaryBuilder setPackageStyle(LuaConfig.PackageStyle packageStyle) {
+    arg.packageStyle = Optional.of(packageStyle);
+    return this;
+  }
+
 }

@@ -95,12 +95,15 @@ public class PythonBinaryDescription implements
     return new Arg();
   }
 
+  public static BuildTarget getEmptyInitTarget(BuildTarget baseTarget) {
+    return baseTarget.withAppendedFlavors(ImmutableFlavor.of("__init__"));
+  }
+
   public static SourcePath createEmptyInitModule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver) {
-    BuildTarget emptyInitTarget =
-        params.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("__init__"));
+    BuildTarget emptyInitTarget = getEmptyInitTarget(params.getBuildTarget());
     Path emptyInitPath =
         BuildTargets.getGenPath(
             params.getProjectFilesystem(),

@@ -25,8 +25,10 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxTestBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.python.CxxPythonExtensionBuilder;
+import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonEnvironment;
 import com.facebook.buck.python.PythonLibrary;
 import com.facebook.buck.python.PythonLibraryBuilder;
@@ -47,6 +49,7 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -212,7 +215,6 @@ public class LuaBinaryDescriptionTest {
         Matchers.hasItem("foo.py"));
   }
 
-
   @Test
   public void platformDeps() throws Exception {
     FlavorDomain<PythonPlatform> pythonPlatforms = FlavorDomain.of("Python Platform", PY2, PY3);
@@ -280,6 +282,29 @@ public class LuaBinaryDescriptionTest {
     assertThat(
         components.getNativeLibraries().keySet(),
         Matchers.not(Matchers.hasItem("libpy3.so")));
+  }
+
+  @Test
+  public void pythonInitIsRuntimeDepForInPlaceBinary() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    PythonLibrary pythonLibrary =
+        (PythonLibrary) new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setSrcs(
+                SourceList.ofUnnamedSources(
+                    ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("foo.py"))))
+            .build(resolver);
+    LuaBinary luaBinary =
+        (LuaBinary) new LuaBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setMainModule("hello.world")
+            .setPackageStyle(LuaConfig.PackageStyle.INPLACE)
+            .setDeps(ImmutableSortedSet.of(pythonLibrary.getBuildTarget()))
+            .build(resolver);
+    assertThat(
+        FluentIterable.from(luaBinary.getRuntimeDeps())
+            .transform(HasBuildTarget.TO_TARGET)
+            .toSet(),
+        Matchers.hasItem(PythonBinaryDescription.getEmptyInitTarget(luaBinary.getBuildTarget())));
   }
 
 }

@@ -634,6 +634,7 @@ public class LuaBinaryDescription implements
       final LuaPackageComponents components)
       throws NoSuchBuildTargetException {
     Path output = getOutputPath(params.getBuildTarget(), params.getProjectFilesystem());
+    final List<SourcePath> extraInputs = new ArrayList<>();
 
     final SymlinkTree modulesLinkTree =
         resolver.addToIndex(
@@ -654,6 +655,7 @@ public class LuaBinaryDescription implements
       // Add in any missing init modules into the python components.
       SourcePath emptyInit =
           PythonBinaryDescription.createEmptyInitModule(params, resolver, pathResolver);
+      extraInputs.add(emptyInit);
       ImmutableMap<String, SourcePath> pythonModules =
           MoreMaps.transformKeys(
               PythonBinaryDescription.addMissingInitModules(
@@ -722,6 +724,7 @@ public class LuaBinaryDescription implements
             .add(modulesLinkTree)
             .addAll(nativeLibsLinktree)
             .addAll(pythonModulesLinktree)
+            .addAll(pathResolver.filterBuildRuleInputs(extraInputs))
             .build();
       }
 
@@ -730,6 +733,7 @@ public class LuaBinaryDescription implements
         return ImmutableSortedSet.<SourcePath>naturalOrder()
             .add(starter)
             .addAll(components.getInputs())
+            .addAll(extraInputs)
             .build();
       }
 
