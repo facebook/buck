@@ -169,7 +169,8 @@ public class FileContentsScrubberOverflowTest {
 
   @Test
   public void thatFileSizesOver32BitsIsOkay() throws IOException, FileScrubber.ScrubException {
-    FileContentsScrubber scrubber = ObjectFileScrubbers.createDateUidGidScrubber();
+    FileContentsScrubber scrubber = ObjectFileScrubbers.createDateUidGidScrubber(
+        ObjectFileScrubbers.PaddingStyle.LEFT);
     scrubber.scrubFile(new FakeFileChannel());
   }
 

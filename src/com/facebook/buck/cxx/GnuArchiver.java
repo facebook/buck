@@ -36,7 +36,9 @@ public class GnuArchiver implements Archiver {
 
   @Override
   public ImmutableList<FileScrubber> getScrubbers() {
-    return ImmutableList.<FileScrubber>of(ObjectFileScrubbers.createDateUidGidScrubber());
+    return ImmutableList.<FileScrubber>of(
+        ObjectFileScrubbers.createDateUidGidScrubber(
+            ObjectFileScrubbers.PaddingStyle.LEFT));
   }
 
   @Override

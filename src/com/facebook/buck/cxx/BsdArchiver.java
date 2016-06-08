@@ -128,7 +128,7 @@ public class BsdArchiver implements Archiver {
   @Override
   public ImmutableList<FileScrubber> getScrubbers() {
     return ImmutableList.<FileScrubber>of(
-        ObjectFileScrubbers.createDateUidGidScrubber(),
+        ObjectFileScrubbers.createDateUidGidScrubber(ObjectFileScrubbers.PaddingStyle.RIGHT),
         SYMBOL_NAME_TABLE_PADDING_SCRUBBER);
   }
 
