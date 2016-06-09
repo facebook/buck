@@ -68,7 +68,6 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
@@ -1207,88 +1206,6 @@ public class ProjectFilesystem {
         return path;
       }
     };
-  }
-
-  public static class PathOrGlobMatcher {
-    public enum Type {
-      PATH,
-      GLOB
-    }
-    private final Type type;
-    private final Optional<Path> basePath;
-    private final Optional<PathMatcher> globMatcher;
-    private final Optional<String> globPattern;
-
-    public PathOrGlobMatcher(Path basePath) {
-      this.type = Type.PATH;
-      this.basePath = Optional.of(basePath);
-      this.globPattern = Optional.absent();
-      this.globMatcher = Optional.absent();
-    }
-
-    public PathOrGlobMatcher(Path root, String basePath) {
-      this(root.getFileSystem().getPath(basePath));
-    }
-
-    public PathOrGlobMatcher(PathMatcher globMatcher, String globPattern) {
-      this.type = Type.GLOB;
-      this.basePath = Optional.absent();
-      this.globMatcher = Optional.of(globMatcher);
-      this.globPattern = Optional.of(globPattern);
-    }
-
-    public Type getType() {
-      return type;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-      if (this == other) {
-        return true;
-      }
-
-      if (!(other instanceof PathOrGlobMatcher)) {
-        return false;
-      }
-
-      PathOrGlobMatcher that = (PathOrGlobMatcher) other;
-
-      return Objects.equals(type, that.type) &&
-          Objects.equals(basePath, that.basePath) &&
-          // We don't compare globMatcher here, since sun.nio.fs.UnixFileSystem.getPathMatcher()
-          // returns an anonymous class which doesn't implement equals().
-          Objects.equals(globPattern, that.globPattern);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(type, basePath, globPattern);
-    }
-
-    @Override
-    public String toString() {
-      return String.format(
-          "%s type=%s basePath=%s globPattern=%s",
-          super.toString(),
-          type,
-          basePath,
-          globPattern);
-    }
-
-    public boolean matches(Path path) {
-      switch (type) {
-        case PATH:
-          return path.startsWith(basePath.get());
-        case GLOB:
-          return globMatcher.get().matches(path);
-      }
-      throw new RuntimeException("Unsupported type " + type);
-    }
-
-    public Path getPath() {
-      Preconditions.checkState(type == Type.PATH);
-      return basePath.get();
-    }
   }
 
 }

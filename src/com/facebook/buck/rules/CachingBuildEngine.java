@@ -27,6 +27,7 @@ import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -239,7 +240,7 @@ public class CachingBuildEngine implements BuildEngine {
                 new ProjectFilesystem(
                     filesystem.getRootPath(),
                     Optional.of(ImmutableSet.of(filesystem.getBuckPaths().getBuckOut())),
-                    ImmutableSet.<ProjectFilesystem.PathOrGlobMatcher>of()));
+                    ImmutableSet.<PathOrGlobMatcher>of()));
             return new StackedFileHashCache(
                 ImmutableList.of(defaultCache, cellCache, buckOutCache));
           }

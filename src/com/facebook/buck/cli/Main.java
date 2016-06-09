@@ -49,6 +49,7 @@ import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.AsynchronousDirectoryContentsCleaner;
 import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.TempDirectoryCreator;
 import com.facebook.buck.io.Watchman;
@@ -272,7 +273,7 @@ public final class Main {
               new ProjectFilesystem(
                   cell.getFilesystem().getRootPath(),
                   Optional.of(ImmutableSet.of(cell.getFilesystem().getBuckPaths().getBuckOut())),
-                  ImmutableSet.<ProjectFilesystem.PathOrGlobMatcher>of()));
+                  ImmutableSet.<PathOrGlobMatcher>of()));
       this.fileEventBus = new EventBus("file-change-events");
 
       actionGraphCache = new ActionGraphCache();
@@ -828,7 +829,7 @@ public final class Main {
                       rootCell.getFilesystem().getRootPath(),
                       Optional.of(
                           ImmutableSet.of(rootCell.getFilesystem().getBuckPaths().getBuckOut())),
-                      ImmutableSet.<ProjectFilesystem.PathOrGlobMatcher>of()));
+                      ImmutableSet.<PathOrGlobMatcher>of()));
         }
 
         // Build up the hash cache, which is a collection of the stateful cell cache and some
