@@ -1,0 +1,43 @@
+What's New
+==========
+
+argparse 1.4.0
+--------------
+
+- make argparse behave for default args aka
+  issue #12776, #11839: call argparse type function only once.
+- move to github:ThomasWaldmann/argparse
+- add TW as maintainer / give TW's email
+- add some usecase to README, clarify issue tracking
+- add a note to tox.ini about testing on dead snakes
+
+argparse 1.3.0
+--------------
+
+- added aliases support (thanks to Roland Kammerer!) + tests for it
+- use tox for testing python >= 2.6
+- tests successfully on 3.4 also (without random hash seed)
+- added argparse.__external_lib__ = True so one can test one is really using /
+  testing the external library (and not the builtin one in stdlib of recent
+  Pythons)
+
+argparse 1.2.2
+--------------
+
+- added universal wheel support, built, signed and uploaded with:
+  python setup.py sdist bdist_wheel upload --identity="Thomas Waldmann" --sign
+- host the files on pypi
+
+argparse 1.2.1
+--------------
+
+- fixed Issue #82: argparse 1.2 incompatible with Python 3.1
+- hacked the tests so they don't have the minor failures that were caused
+  by the compatibility stuff for python 2.3 and 3.1
+
+argparse 1.2
+------------
+
+- fixed Issue #79: re-licensed argparse package under same license as py 2.7 stdlib argparse code
+- fixed Issue #80: argparse 1.2 is now same archive on pypi / on google code
+

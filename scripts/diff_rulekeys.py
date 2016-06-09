@@ -68,8 +68,8 @@ class KeyValueDiff(object):
                     left=', '.join(self._left),
                     right=', '.join(self._right))]
 
-        left_lower_index = {v.lower(): v for v in self._left}
-        right_lower_index = {v.lower(): v for v in self._right}
+        left_lower_index = dict([(v.lower(), v) for v in self._left])
+        right_lower_index = dict([(v.lower(), v) for v in self._right])
         if set(left_lower_index.keys()) == set(right_lower_index.keys()):
             differences = []
             for k in sorted(left_lower_index.keys()):

@@ -3,6 +3,10 @@ python_library(
   srcs = [
     'subprocutils.py',
   ],
+  visibility = [
+    '//programs/...',
+    '//scripts/...',
+  ],
 )
 
 python_library(
