@@ -23,6 +23,7 @@ import com.facebook.buck.command.Build;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistributedBuild;
+import com.facebook.buck.distributed.DistributedBuildFileHashes;
 import com.facebook.buck.distributed.DistributedBuildState;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
@@ -78,7 +79,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import okhttp3.OkHttpClient;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TProtocol;
@@ -97,6 +97,8 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
+
+import okhttp3.OkHttpClient;
 
 public class BuildCommand extends AbstractCommand {
 
@@ -353,7 +355,7 @@ public class BuildCommand extends AbstractCommand {
 
     int exitCode;
     if (useDistributedBuild) {
-      exitCode = executeDistributedBuild(params);
+      exitCode = executeDistributedBuild(params, executorService);
     } else {
       // Parse the build files to create a ActionGraph.
       ActionGraphAndResolver actionGraphAndResolver =
@@ -371,7 +373,9 @@ public class BuildCommand extends AbstractCommand {
     return exitCode;
   }
 
-  private int executeDistributedBuild(CommandRunnerParams params) throws IOException {
+  private int executeDistributedBuild(
+      CommandRunnerParams params,
+      WeightedListeningExecutorService executorService) throws IOException, InterruptedException {
     ProjectFilesystem filesystem = params.getCell().getFilesystem();
 
     if (distributedBuildStateFile != null) {
@@ -395,8 +399,20 @@ public class BuildCommand extends AbstractCommand {
                   "Done loading state. Aliases: %s",
                   buckConfig.getAliases()));
         } else {
+          ActionGraphAndResolver actionGraphAndResolver =
+              createActionGraphAndResolver(params, executorService);
+          if (actionGraphAndResolver == null) {
+            return 1;
+          }
           BuckConfig buckConfig = params.getBuckConfig();
-          BuildJobState jobState = DistributedBuildState.dump(buckConfig);
+          BuildJobState jobState = DistributedBuildState.dump(
+              buckConfig,
+              new DistributedBuildFileHashes(
+                  actionGraphAndResolver.getActionGraph(),
+                  new SourcePathResolver(actionGraphAndResolver.getResolver()),
+                  params.getFileHashCache(),
+                  executorService,
+                  params.getBuckConfig().getKeySeed()));
           jobState.write(protocol);
           transport.flush();
         }

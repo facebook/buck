@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 8e0ca911a59ecf63503fa8f0ca36573a4a08e9e0 #@#
+#@# GENERATED FILE: DO NOT MODIFY 49c19c7f4b58eb1d328531abd6442d897830a3a8 #@#
 {
   "distributed" : {
     "deps" : [
@@ -11,8 +11,13 @@
       "//src-gen:thrift",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/hashing:hashing",
       "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:rule_key",
+      "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/slb:slb",
+      "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
       "//third-party/java/okhttp:okhttp",

@@ -23,22 +23,33 @@ import com.facebook.buck.config.Config;
 import com.facebook.buck.config.ConfigBuilder;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.io.IOException;
+
 public class DistributedBuildStateTest {
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
   @Test
-  public void canReconstructConfig() {
+  public void canReconstructConfig() throws IOException, InterruptedException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     BuckConfig buckConfig = new BuckConfig(
         new Config(ConfigBuilder.rawFromLines()),
@@ -47,7 +58,8 @@ public class DistributedBuildStateTest {
         Platform.detect(),
         ImmutableMap.of("envKey", "envValue"));
 
-    BuildJobState dump = DistributedBuildState.dump(buckConfig);
+
+    BuildJobState dump = DistributedBuildState.dump(buckConfig, emptyActionGraph());
     DistributedBuildState distributedBuildState = new DistributedBuildState(dump);
 
     assertThat(
@@ -56,7 +68,7 @@ public class DistributedBuildStateTest {
   }
 
   @Test
-  public void throwsOnPlatformMismatch() {
+  public void throwsOnPlatformMismatch() throws IOException, InterruptedException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     BuckConfig buckConfig = new BuckConfig(
         new Config(ConfigBuilder.rawFromLines()),
@@ -65,10 +77,24 @@ public class DistributedBuildStateTest {
         Platform.UNKNOWN,
         ImmutableMap.of("envKey", "envValue"));
 
-    BuildJobState dump = DistributedBuildState.dump(buckConfig);
+    BuildJobState dump = DistributedBuildState.dump(buckConfig, emptyActionGraph());
     DistributedBuildState distributedBuildState = new DistributedBuildState(dump);
 
     expectedException.expect(IllegalStateException.class);
     distributedBuildState.createBuckConfig(filesystem);
+  }
+
+  private DistributedBuildFileHashes emptyActionGraph() {
+    ActionGraph actionGraph = new ActionGraph(ImmutableList.<BuildRule>of());
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleResolver);
+    ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    return new DistributedBuildFileHashes(
+        actionGraph,
+        sourcePathResolver,
+        new DefaultFileHashCache(projectFilesystem),
+        MoreExecutors.newDirectExecutorService(),
+        /* keySeed */ 0);
   }
 }

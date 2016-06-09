@@ -33,12 +33,13 @@ import com.google.common.collect.Maps;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TProtocol;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
- *
+ * Saves and restores the state of a build to/from a thrift data structure.
  */
 public class DistributedBuildState {
 
@@ -48,11 +49,16 @@ public class DistributedBuildState {
     this.remoteState = state;
   }
 
-  public static BuildJobState dump(BuckConfig buckConfig) {
+  public static BuildJobState dump(
+      BuckConfig buckConfig,
+      DistributedBuildFileHashes fileHashes
+  ) throws IOException, InterruptedException {
     BuildJobState jobState = new BuildJobState();
     jobState.setBuckConfig(dumpConfig(buckConfig));
+    jobState.setFileHashes(fileHashes.getFileHashes());
     return jobState;
   }
+
 
   private static BuildJobStateBuckConfig dumpConfig(BuckConfig buckConfig) {
     BuildJobStateBuckConfig jobState = new BuildJobStateBuckConfig();
@@ -124,4 +130,5 @@ public class DistributedBuildState {
         remotePlatform,
         ImmutableMap.copyOf(remoteBuckConfig.getUserEnvironment()));
   }
+
 }
