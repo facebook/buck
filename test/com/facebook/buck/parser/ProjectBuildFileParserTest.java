@@ -367,7 +367,6 @@ public class ProjectBuildFileParserTest {
             new ConstructorArgMarshaller(new DefaultTypeCoercerFactory(
                 ObjectMappers.newDefaultInstance())),
             ImmutableMap.<String, String>of(),
-            ImmutableMap.<String, ImmutableMap<String, String>>of(),
             buckEventBus,
             processExecutor,
             /* ignoreBuckAutodepsFiles */ false);

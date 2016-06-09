@@ -40,7 +40,6 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
         options,
         marshaller,
         environment,
-        options.getRawConfig(),
         buckEventBus,
         new ProcessExecutor(console),
         ignoreBuckAutodepsFiles);
