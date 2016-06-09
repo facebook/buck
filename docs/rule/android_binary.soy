@@ -135,6 +135,18 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
 {/call}
 
 {call buck.arg}
+  {param name : 'banned_duplicate_resource_types' /}
+  {param default : '[]' /}
+  {param desc}
+  If <code>['string']</code> is used, the build will break if multiple string resources with the same name are added in an app's Android Resources.
+
+  Resource names are name-spaced by resource type, this does not enforce unique names between multiple resource types.
+
+  AAPT does not enforce this, but you can prevent easy-to-introduce resource bugs by enabling this.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name : 'manifest_entries' /}
   {{param default : '{}' /}}
   {param desc}

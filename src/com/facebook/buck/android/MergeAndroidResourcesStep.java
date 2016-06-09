@@ -19,8 +19,10 @@ package com.facebook.buck.android;
 import static com.google.common.collect.Ordering.natural;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry;
+import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -47,12 +49,12 @@ import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class MergeAndroidResourcesStep implements Step {
-
   private static final Logger LOG = Logger.get(MergeAndroidResourcesStep.class);
 
   private final ProjectFilesystem filesystem;
@@ -61,6 +63,7 @@ public class MergeAndroidResourcesStep implements Step {
   private final Optional<Path> uberRDotTxt;
   private final Path outputDir;
   private final boolean forceFinalResourceIds;
+  private final EnumSet<RType> bannedDuplicateResourceTypes;
   private final Optional<String> unionPackage;
 
   /**
@@ -77,6 +80,7 @@ public class MergeAndroidResourcesStep implements Step {
       Optional<Path> uberRDotTxt,
       Path outputDir,
       boolean forceFinalResourceIds,
+      EnumSet<RType> bannedDuplicateResourceTypes,
       Optional<String> unionPackage) {
     this.filesystem = filesystem;
     this.pathResolver = pathResolver;
@@ -84,6 +88,7 @@ public class MergeAndroidResourcesStep implements Step {
     this.uberRDotTxt = uberRDotTxt;
     this.outputDir = outputDir;
     this.forceFinalResourceIds = forceFinalResourceIds;
+    this.bannedDuplicateResourceTypes = bannedDuplicateResourceTypes;
     this.unionPackage = unionPackage;
   }
 
@@ -101,6 +106,7 @@ public class MergeAndroidResourcesStep implements Step {
         Optional.<Path>absent(),
         outputDir,
         forceFinalResourceIds,
+        /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
         unionPackage);
   }
 
@@ -110,6 +116,7 @@ public class MergeAndroidResourcesStep implements Step {
       List<HasAndroidResourceDeps> androidResourceDeps,
       Path uberRDotTxt,
       Path outputDir,
+      EnumSet<RType> bannedDuplicateResourceTypes,
       Optional<String> unionPackage) {
     return new MergeAndroidResourcesStep(
         filesystem,
@@ -118,6 +125,7 @@ public class MergeAndroidResourcesStep implements Step {
         Optional.of(uberRDotTxt),
         outputDir,
         /* forceFinalResourceIds */ true,
+        bannedDuplicateResourceTypes,
         unionPackage);
   }
 
@@ -142,10 +150,12 @@ public class MergeAndroidResourcesStep implements Step {
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
       return StepExecutionResult.ERROR;
+    } catch (DuplicateResourceException e) {
+      return StepExecutionResult.of(1, Optional.of(e.getMessage()));
     }
   }
 
-  private void doExecute() throws IOException {
+  private void doExecute() throws IOException, DuplicateResourceException {
     // In order to convert a symbols file to R.java, all resources of the same type are grouped
     // into a static class of that name. The static class contains static values that correspond to
     // the resource (type, name, value) tuples. See RDotTxtEntry.
@@ -160,13 +170,17 @@ public class MergeAndroidResourcesStep implements Step {
     // though Robolectric doesn't read resources.arsc, it does assert that all the R.java resource
     // ids are unique.  This forces us to re-enumerate new unique ids.
     ImmutableMap.Builder<Path, String> rDotTxtToPackage = ImmutableMap.builder();
+    ImmutableMap.Builder<Path, HasAndroidResourceDeps> symbolsFileToResourceDeps =
+        ImmutableMap.builder();
     for (HasAndroidResourceDeps res : androidResourceDeps) {
       // TODO(shs96c): These have to be absolute for this all to work with multi-repo.
       // This is because each `androidResourceDeps` might be from a different repo, so we can't
       // assume that they exist in the calling rule's projectfilesystem.
+      Path rDotTxtPath = pathResolver.getRelativePath(res.getPathToTextSymbolsFile());
       rDotTxtToPackage.put(
-          pathResolver.getRelativePath(res.getPathToTextSymbolsFile()),
+          rDotTxtPath,
           res.getRDotJavaPackage());
+      symbolsFileToResourceDeps.put(rDotTxtPath, res);
     }
     Optional<ImmutableMap<RDotTxtEntry, String>> uberRDotTxtIds;
     if (uberRDotTxt.isPresent()) {
@@ -189,6 +203,8 @@ public class MergeAndroidResourcesStep implements Step {
     SortedSetMultimap<String, RDotTxtEntry> rDotJavaPackageToResources = sortSymbols(
         symbolsFileToRDotJavaPackage,
         uberRDotTxtIds,
+        symbolsFileToResourceDeps.build(),
+        bannedDuplicateResourceTypes,
         filesystem);
 
     // If a resource_union_package was specified, copy all resource into that package,
@@ -294,7 +310,9 @@ public class MergeAndroidResourcesStep implements Step {
   static SortedSetMultimap<String, RDotTxtEntry> sortSymbols(
       Map<Path, String> symbolsFileToRDotJavaPackage,
       Optional<ImmutableMap<RDotTxtEntry, String>> uberRDotTxtIds,
-      ProjectFilesystem filesystem) {
+      ImmutableMap<Path, HasAndroidResourceDeps> symbolsFileToResourceDeps,
+      EnumSet<RType> bannedDuplicateResourceTypes,
+      ProjectFilesystem filesystem) throws DuplicateResourceException {
     // If we're reenumerating, start at 0x7f01001 so that the resulting file is human readable.
     // This value range (0x7f010001 - ...) is easier to spot as an actual resource id instead of
     // other values in styleable which can be enumerated integers starting at 0.
@@ -307,9 +325,10 @@ public class MergeAndroidResourcesStep implements Step {
     }
 
     SortedSetMultimap<String, RDotTxtEntry> rDotJavaPackageToSymbolsFiles = TreeMultimap.create();
+    SortedSetMultimap<RDotTxtEntry, Path> bannedDuplicateResourceToSymbolsFiles =
+        TreeMultimap.create();
     for (Map.Entry<Path, String> entry : symbolsFileToRDotJavaPackage.entrySet()) {
       Path symbolsFile = entry.getKey();
-
       // Read the symbols file and parse each line as a Resource.
       List<String> linesInSymbolsFile;
       try {
@@ -342,10 +361,36 @@ public class MergeAndroidResourcesStep implements Step {
           Preconditions.checkNotNull(enumerator);
           resource = resource.copyWithNewIdValue(String.format("0x%08x", enumerator.next()));
         }
-
+        if (bannedDuplicateResourceTypes.contains(resource.type)) {
+          bannedDuplicateResourceToSymbolsFiles.put(resource, symbolsFile);
+        }
         rDotJavaPackageToSymbolsFiles.put(packageName, resource);
       }
     }
+
+    StringBuilder duplicateResourcesMessage = new StringBuilder();
+    for (Map.Entry<RDotTxtEntry, Collection<Path>> resourceAndSymbolsFiles :
+        bannedDuplicateResourceToSymbolsFiles.asMap().entrySet()) {
+      Collection<Path> paths = resourceAndSymbolsFiles.getValue();
+      if (paths.size() > 1) {
+        RDotTxtEntry resource = resourceAndSymbolsFiles.getKey();
+        duplicateResourcesMessage.append(String.format(
+            "Resource '%s' (%s) is duplicated across: ",
+            resource.name,
+            resource.type));
+        List<SourcePath> resourceDirs = new ArrayList<>(paths.size());
+        for (Path path : paths) {
+          resourceDirs.add(symbolsFileToResourceDeps.get(path).getRes());
+        }
+        duplicateResourcesMessage.append(Joiner.on(", ").join(resourceDirs));
+        duplicateResourcesMessage.append("\n");
+      }
+    }
+
+    if (duplicateResourcesMessage.length() > 0) {
+      throw new DuplicateResourceException(duplicateResourcesMessage.toString());
+    }
+
     return rDotJavaPackageToSymbolsFiles;
   }
 
@@ -380,4 +425,10 @@ public class MergeAndroidResourcesStep implements Step {
     }
   }
 
+  @VisibleForTesting
+  public static class DuplicateResourceException extends Exception {
+    DuplicateResourceException(String messageFormat, Object... args) {
+      super(String.format(messageFormat, args));
+    }
+  }
 }

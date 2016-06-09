@@ -21,6 +21,7 @@ import static com.facebook.buck.model.HasBuildTarget.TO_TARGET;
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
+import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.jvm.java.Classpaths;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -126,6 +127,7 @@ public class AndroidInstrumentationApkDescription
         resolver,
         ResourceCompressionMode.DISABLED,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+        /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
         /* resourceUnionPackage */ Optional.<String>absent(),
         /* locales */ ImmutableSet.<String>of(),
         args.manifest,

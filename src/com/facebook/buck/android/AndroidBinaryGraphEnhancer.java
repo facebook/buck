@@ -22,6 +22,7 @@ import com.facebook.buck.android.AndroidBinary.RelinkerMode;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
+import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -87,6 +88,7 @@ public class AndroidBinaryGraphEnhancer {
   private final SourcePathResolver pathResolver;
   private final ResourceCompressionMode resourceCompressionMode;
   private final ResourceFilter resourceFilter;
+  private final EnumSet<RType> bannedDuplicateResourceTypes;
   private final Optional<String> resourceUnionPackage;
   private final ImmutableSet<String> locales;
   private final SourcePath manifest;
@@ -113,6 +115,7 @@ public class AndroidBinaryGraphEnhancer {
       BuildRuleResolver ruleResolver,
       ResourceCompressionMode resourceCompressionMode,
       ResourceFilter resourcesFilter,
+      EnumSet<RType> bannedDuplicateResourceTypes,
       Optional<String> resourceUnionPackage,
       ImmutableSet<String> locales,
       SourcePath manifest,
@@ -145,6 +148,7 @@ public class AndroidBinaryGraphEnhancer {
     this.pathResolver = new SourcePathResolver(ruleResolver);
     this.resourceCompressionMode = resourceCompressionMode;
     this.resourceFilter = resourcesFilter;
+    this.bannedDuplicateResourceTypes = bannedDuplicateResourceTypes;
     this.resourceUnionPackage = resourceUnionPackage;
     this.locales = locales;
     this.manifest = manifest;
@@ -254,6 +258,7 @@ public class AndroidBinaryGraphEnhancer {
         packageType,
         shouldBuildStringSourceMap,
         skipCrunchPngs,
+        bannedDuplicateResourceTypes,
         manifestEntries);
     ruleResolver.addToIndex(aaptPackageResources);
     enhancedDeps.add(aaptPackageResources);

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -43,6 +44,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.EnumSet;
 
 public class TrimUberRDotJavaTest {
   @Rule
@@ -68,6 +70,7 @@ public class TrimUberRDotJavaTest {
         null,
         false,
         false,
+        EnumSet.noneOf(RType.class),
         null);
 
     String rDotJavaContents =

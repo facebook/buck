@@ -30,6 +30,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
+import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxPlatformUtils;
@@ -119,6 +120,7 @@ public class AndroidBinaryGraphEnhancerTest {
         ruleResolver,
         ResourcesFilter.ResourceCompressionMode.DISABLED,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+        /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
         Optional.<String>absent(),
         /* locales */ ImmutableSet.<String>of(),
         createStrictMock(PathSourcePath.class),
@@ -162,6 +164,7 @@ public class AndroidBinaryGraphEnhancerTest {
         AndroidBinary.PackageType.DEBUG,
         false,
         /* skipCrunchPngs */ false,
+        /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
         /* manifestEntries */ ManifestEntries.empty());
     ruleResolver.addToIndex(aaptPackageResources);
 
@@ -259,6 +262,7 @@ public class AndroidBinaryGraphEnhancerTest {
         ruleResolver,
         ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+        /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
         Optional.<String>absent(),
         /* locales */ ImmutableSet.<String>of(),
         new FakeSourcePath("AndroidManifest.xml"),
@@ -394,6 +398,7 @@ public class AndroidBinaryGraphEnhancerTest {
         ruleResolver,
         ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+        /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
         Optional.<String>absent(),
         /* locales */ ImmutableSet.<String>of(),
         new FakeSourcePath("AndroidManifest.xml"),
@@ -445,6 +450,7 @@ public class AndroidBinaryGraphEnhancerTest {
         ruleResolver,
         ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+        /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
         Optional.<String>absent(),
         /* locales */ ImmutableSet.<String>of(),
         new FakeSourcePath("AndroidManifest.xml"),
@@ -523,6 +529,7 @@ public class AndroidBinaryGraphEnhancerTest {
         ruleResolver,
         ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+        /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
         Optional.<String>absent(),
         /* locales */ ImmutableSet.<String>of(),
         new FakeSourcePath("AndroidManifest.xml"),

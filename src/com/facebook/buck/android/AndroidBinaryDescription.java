@@ -24,6 +24,7 @@ import com.facebook.buck.android.AndroidBinary.RelinkerMode;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
+import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -187,11 +188,20 @@ public class AndroidBinaryDescription
     ResourceFilter resourceFilter =
         new ResourceFilter(args.resourceFilter.or(ImmutableList.<String>of()));
 
+    Optional<Set<RType>> bannedDuplicateTypesArgs = args.bannedDuplicateResourceTypes;
+    EnumSet<RType> bannedDuplicateResourceTypes;
+    if (bannedDuplicateTypesArgs.isPresent() && !bannedDuplicateTypesArgs.get().isEmpty()) {
+      bannedDuplicateResourceTypes = EnumSet.copyOf(bannedDuplicateTypesArgs.get());
+    } else {
+      bannedDuplicateResourceTypes = EnumSet.noneOf(RType.class);
+    }
+
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
         params,
         resolver,
         compressionMode,
         resourceFilter,
+        bannedDuplicateResourceTypes,
         args.resourceUnionPackage,
         addFallbackLocales(args.locales.or(ImmutableSet.<String>of())),
         args.manifest,
@@ -369,6 +379,7 @@ public class AndroidBinaryDescription
     public Optional<SourcePath> secondaryDexTailClassesFile;
     public Optional<Long> linearAllocHardLimit;
     public Optional<List<String>> resourceFilter;
+    public Optional<Set<RType>> bannedDuplicateResourceTypes;
     public Optional<Boolean> trimResourceIds;
     public Optional<String> resourceUnionPackage;
     public Optional<ImmutableSet<String>> locales;

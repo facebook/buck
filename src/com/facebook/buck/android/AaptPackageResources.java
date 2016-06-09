@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.AaptPackageResources.BuildOutput;
 import com.facebook.buck.android.AndroidBinary.PackageType;
+import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -50,6 +51,7 @@ import com.google.common.collect.Ordering;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.EnumSet;
 
 /**
  * Packages the resources using {@code aapt}.
@@ -74,6 +76,8 @@ public class AaptPackageResources extends AbstractBuildRule
   @AddToRuleKey
   private final boolean skipCrunchPngs;
   @AddToRuleKey
+  private final EnumSet<RType> bannedDuplicateResourceTypes;
+  @AddToRuleKey
   private final ManifestEntries manifestEntries;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
@@ -88,6 +92,7 @@ public class AaptPackageResources extends AbstractBuildRule
       PackageType packageType,
       boolean shouldBuildStringSourceMap,
       boolean skipCrunchPngs,
+      EnumSet<RType> bannedDuplicateResourceTypes,
       ManifestEntries manifestEntries) {
     super(params, resolver);
     this.manifest = manifest;
@@ -98,6 +103,7 @@ public class AaptPackageResources extends AbstractBuildRule
     this.packageType = packageType;
     this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
     this.skipCrunchPngs = skipCrunchPngs;
+    this.bannedDuplicateResourceTypes = bannedDuplicateResourceTypes;
     this.manifestEntries = manifestEntries;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
@@ -220,6 +226,7 @@ public class AaptPackageResources extends AbstractBuildRule
         resourceDeps,
         getPathToRDotTxtFile(),
         rDotJavaSrc,
+        bannedDuplicateResourceTypes,
         resourceUnionPackage);
     steps.add(mergeStep);
 

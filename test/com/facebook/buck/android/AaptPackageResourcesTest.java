@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidBinary.PackageType;
+import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -36,6 +37,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.EnumSet;
 
 public class AaptPackageResourcesTest {
 
@@ -72,6 +74,7 @@ public class AaptPackageResourcesTest {
             PackageType.DEBUG,
             /* shouldBuildStringSourceMap */ false,
             /* skipCrunchPngs */ false,
+            /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             /* manifestEntries */ ManifestEntries.empty());
 
     FakeOnDiskBuildInfo onDiskBuildInfo =
