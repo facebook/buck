@@ -47,6 +47,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.eventbus.Subscribe;
 
 import java.io.IOException;
+import java.nio.channels.ClosedByInterruptException;
 import java.util.Collection;
 import java.util.Set;
 
@@ -154,6 +155,12 @@ public class MissingSymbolsHandler {
               missingSymbolEvents.get(event.getBuildId()));
         } catch (InterruptedException e) {
           LOG.error(e, "Missing symbols handler did not complete in time.");
+        } catch (RuntimeException e) {
+          if (e.getCause() instanceof ClosedByInterruptException) {
+            LOG.error(e.getCause(), "Missing symbols handler did not complete in time.");
+          } else {
+            throw e;
+          }
         }
         missingSymbolEvents.removeAll(event.getBuildId());
       }
