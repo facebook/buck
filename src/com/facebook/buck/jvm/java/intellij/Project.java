@@ -34,6 +34,7 @@ import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaBinary;
@@ -686,7 +687,9 @@ public class Project {
       ProjectFilesystem projectFilesystem) {
     // If in the root of the project, specify ignored paths.
     if (buildRule != null && buildRule.getBuildTarget().getBasePathWithSlash().isEmpty()) {
-      for (Path path : projectFilesystem.getIgnorePaths()) {
+      for (Path path : FluentIterable.from(projectFilesystem.getIgnorePaths())
+          .filter(PathOrGlobMatcher.isPath())
+          .transform(PathOrGlobMatcher.toPath())) {
         // It turns out that ignoring all of buck-out causes problems in IntelliJ: it forces an
         // extra "modules" folder to appear at the top of the navigation pane that competes with the
         // ordinary file tree, making navigation a real pain. The hypothesis is that this is because

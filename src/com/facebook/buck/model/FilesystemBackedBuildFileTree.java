@@ -16,12 +16,14 @@
 
 package com.facebook.buck.model;
 
+import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
@@ -71,7 +73,10 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
     // When we find one, we can stop crawling anything under the directory it's in.
     final ImmutableSet.Builder<Path> childPaths = ImmutableSet.builder();
     final Path basePath = target.getBasePath();
-    final Set<Path> ignoredPaths = projectFilesystem.getIgnorePaths();
+    final Set<Path> ignoredPaths = FluentIterable.from(projectFilesystem.getIgnorePaths())
+        .filter(PathOrGlobMatcher.isPath())
+        .transform(PathOrGlobMatcher.toPath())
+        .toSet();
     try {
       projectFilesystem.walkRelativeFileTree(basePath, new SimpleFileVisitor<Path>() {
             @Override

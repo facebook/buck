@@ -39,7 +39,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Ordering;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 
@@ -133,7 +132,7 @@ public class ProjectFilesystem {
 
   private final Optional<ImmutableSet<Path>> whiteListedPaths;
   private final ImmutableSet<PathOrGlobMatcher> blackListedPaths;
-  private final ImmutableSortedSet<Path> blackListedDirectories;
+  private final ImmutableSet<PathOrGlobMatcher> blackListedDirectories;
 
   // Defaults to false, and so paths should be valid.
   @VisibleForTesting
@@ -234,7 +233,13 @@ public class ProjectFilesystem {
             ImmutableSet.of(
                 getCacheDir(root, Optional.of(buckPaths.getCacheDir().toString()), buckPaths)))
         .append(ImmutableSet.of(buckPaths.getTrashDir()))
-        .toSortedSet(Ordering.<Path>natural());
+        .transform(new Function<Path, PathOrGlobMatcher>() {
+          @Override
+          public PathOrGlobMatcher apply(Path input) {
+            return new PathOrGlobMatcher(input);
+          }
+        })
+        .toSet();
   }
 
   private static BuckPaths getDefaultBuckPaths(Path rootPath) {
@@ -341,9 +346,9 @@ public class ProjectFilesystem {
   }
 
   /**
-   * @return A {@link ImmutableSet} of {@link Path} objects to have buck ignore.
+   * @return A {@link ImmutableSet} of {@link PathOrGlobMatcher} objects to have buck ignore.
    */
-  public ImmutableSet<Path> getIgnorePaths() {
+  public ImmutableSet<PathOrGlobMatcher> getIgnorePaths() {
     return blackListedDirectories;
   }
 

@@ -16,14 +16,33 @@
 
 package com.facebook.buck.io;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.util.Objects;
 
 public class PathOrGlobMatcher {
+
+  private static final Predicate<PathOrGlobMatcher> IS_PATH =
+      new Predicate<PathOrGlobMatcher>() {
+        @Override
+        public boolean apply(PathOrGlobMatcher input) {
+          return input.getType() == Type.PATH;
+        }
+      };
+
+  private static final Function<PathOrGlobMatcher, Path> TO_PATH =
+      new Function<PathOrGlobMatcher, Path>() {
+        @Override
+        public Path apply(PathOrGlobMatcher input) {
+          return input.getPath();
+        }
+      };
+
   public enum Type {
     PATH,
     GLOB
@@ -104,4 +123,13 @@ public class PathOrGlobMatcher {
     Preconditions.checkState(type == Type.PATH);
     return basePath.get();
   }
+
+  public static Predicate<PathOrGlobMatcher> isPath() {
+    return IS_PATH;
+  }
+
+  public static Function<PathOrGlobMatcher, Path> toPath() {
+    return TO_PATH;
+  }
+
 }

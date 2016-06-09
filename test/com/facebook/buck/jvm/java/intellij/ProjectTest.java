@@ -29,6 +29,7 @@ import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.android.NdkLibraryBuilder;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
@@ -58,6 +59,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -923,7 +925,9 @@ public class ProjectTest {
         new SourceFolder("file://$MODULE_DIR$/buck-out/log", /* isTestSource */ false));
     expectedExcludeFolders.add(
         new SourceFolder("file://$MODULE_DIR$/buck-out/tmp", /* isTestSource */ false));
-    for (Path ignorePath : projectFilesystem.getIgnorePaths()) {
+    for (Path ignorePath : FluentIterable.from(projectFilesystem.getIgnorePaths())
+        .filter(PathOrGlobMatcher.isPath())
+        .transform(PathOrGlobMatcher.toPath())) {
       if (!ignorePath.equals(projectFilesystem.getBuckPaths().getBuckOut()) &&
           !ignorePath.equals(projectFilesystem.getBuckPaths().getGenDir())) {
         expectedExcludeFolders.add(

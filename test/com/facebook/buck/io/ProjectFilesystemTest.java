@@ -605,7 +605,10 @@ public class ProjectFilesystemTest {
         "ignore = .git, foo, bar/, baz//, a/b/c");
     Path rootPath = tmp.getRoot();
     ProjectFilesystem filesystem = new ProjectFilesystem(rootPath, config);
-    ImmutableSet<Path> ignorePaths = filesystem.getIgnorePaths();
+    ImmutableSet<Path> ignorePaths = FluentIterable.from(filesystem.getIgnorePaths())
+        .filter(PathOrGlobMatcher.isPath())
+        .transform(PathOrGlobMatcher.toPath())
+        .toSet();
     assertThat(
         FluentIterable.from(ignorePaths).toSortedSet(Ordering.<Path>natural()),
         equalTo(
@@ -628,7 +631,11 @@ public class ProjectFilesystemTest {
         "[cache]",
         "dir = cache_dir");
     Path rootPath = tmp.getRoot();
-    ImmutableSet<Path> ignorePaths = new ProjectFilesystem(rootPath, config).getIgnorePaths();
+    ImmutableSet<Path> ignorePaths =
+        FluentIterable.from(new ProjectFilesystem(rootPath, config).getIgnorePaths())
+            .filter(PathOrGlobMatcher.isPath())
+            .transform(PathOrGlobMatcher.toPath())
+            .toSet();
     assertThat(
         "Cache directory should be in set of ignored paths",
         ignorePaths,

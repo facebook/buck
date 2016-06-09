@@ -118,6 +118,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -989,7 +990,9 @@ public final class Main {
               WatchmanWatcher watchmanWatcher = new WatchmanWatcher(
                   watchman.getWatchRoot().or(canonicalRootPath.toString()),
                   daemon.getFileEventBus(),
-                  filesystem.getIgnorePaths(),
+                  FluentIterable.from(filesystem.getIgnorePaths())
+                      .filter(PathOrGlobMatcher.isPath())
+                      .transform(PathOrGlobMatcher.toPath()),
                   DEFAULT_IGNORE_GLOBS,
                   watchman,
                   daemon.getWatchmanQueryUUID());
