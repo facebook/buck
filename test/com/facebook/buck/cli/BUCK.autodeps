@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 586d45c5e83e6583a9db4593463c77fa6caefdef #@#
+#@# GENERATED FILE: DO NOT MODIFY d310b0ff29610f3a6575bdff1ca1871ddae8d78b #@#
 {
   "FakeBuckConfig" : {
     "deps" : [
@@ -55,6 +55,7 @@
       "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/concurrent:concurrent",
+      "//src/com/facebook/buck/util/environment:environment",
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/android:testutil",
       "//test/com/facebook/buck/android:utils",
