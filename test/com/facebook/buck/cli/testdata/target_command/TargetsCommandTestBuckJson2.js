@@ -7,6 +7,7 @@
   "cmd" : "$(classpath :test-library)",
   "cmdExe" : null,
   "executable" : null,
+  "fully_qualified_name": "//:B",
   "licenses" : [ ],
   "name" : "B",
   "out" : "B.txt",

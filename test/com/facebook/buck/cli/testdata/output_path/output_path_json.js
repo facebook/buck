@@ -8,6 +8,7 @@
   "cmd":null,
   "cmdExe":null,
   "executable":null,
+  "fully_qualified_name":"//:test",
   "licenses":[],
   "name":"test",
   "out":"test-output",

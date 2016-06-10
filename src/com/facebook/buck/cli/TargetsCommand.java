@@ -675,6 +675,9 @@ public class TargetsCommand extends AbstractCommand {
             showOptions.getTargetHash(),
             sortedTargetRule);
       }
+      sortedTargetRule.put(
+          "fully_qualified_name",
+          targetNode.getBuildTarget().getFullyQualifiedName());
 
       // Print the build rule information as JSON.
       StringWriter stringWriter = new StringWriter();

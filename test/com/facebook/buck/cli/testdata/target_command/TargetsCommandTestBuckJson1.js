@@ -12,6 +12,7 @@
   "deps" : [ ],
   "exportedDeps": [],
   "extraArguments": [],
+  "fully_qualified_name": "//:test-library",
   "generatedSymbols": [],
   "licenses": [],
   "javac": null,
