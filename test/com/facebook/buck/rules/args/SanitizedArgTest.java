@@ -38,13 +38,14 @@ public class SanitizedArgTest {
 
   private RuleKeyBuilder<RuleKey> createRuleKeyBuilder() {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    FileHashCache fileHashCache = new DefaultFileHashCache(projectFilesystem);
+    FileHashCache fileHashCache =
+        DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem);
     SourcePathResolver resolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
      );
     return new UncachedRuleKeyBuilder(
         resolver,
-        new DefaultFileHashCache(projectFilesystem),
+        DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem),
         new DefaultRuleKeyBuilderFactory(0, fileHashCache, resolver));
   }
 

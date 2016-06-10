@@ -18,12 +18,12 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -32,6 +32,7 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
+import com.facebook.buck.util.cache.FileHashCache;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -67,7 +68,7 @@ public class CalculateAbiTest {
             builder.createBuildRuleParams(resolver, filesystem),
             new BuildTargetSourcePath(javaLibraryTarget));
 
-    DefaultFileHashCache initialHashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache initialHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     DefaultRuleKeyBuilderFactory initialRuleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
         0,
         initialHashCache,
@@ -90,7 +91,7 @@ public class CalculateAbiTest {
     pathResolver = new SourcePathResolver(resolver);
     builder.build(resolver, filesystem);
 
-    DefaultFileHashCache alteredHashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache alteredHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     DefaultRuleKeyBuilderFactory alteredRuleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
         0,
         alteredHashCache,
@@ -133,7 +134,7 @@ public class CalculateAbiTest {
             builder.createBuildRuleParams(resolver, filesystem),
             new BuildTargetSourcePath(javaLibraryTarget));
 
-    DefaultFileHashCache initialHashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache initialHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     DefaultRuleKeyBuilderFactory initialRuleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
         0,
         initialHashCache,
@@ -155,7 +156,7 @@ public class CalculateAbiTest {
     pathResolver = new SourcePathResolver(resolver);
     builder.build(resolver, filesystem);
 
-    DefaultFileHashCache alteredHashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache alteredHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     DefaultRuleKeyBuilderFactory alteredRuleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
         0,
         alteredHashCache,

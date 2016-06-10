@@ -130,7 +130,6 @@ public class ProjectFilesystem {
   private final Function<Path, Path> pathAbsolutifier;
   private final Function<Path, Path> pathRelativizer;
 
-  private final Optional<ImmutableSet<Path>> whiteListedPaths;
   private final ImmutableSet<PathOrGlobMatcher> blackListedPaths;
   private final ImmutableSet<PathOrGlobMatcher> blackListedDirectories;
 
@@ -142,7 +141,6 @@ public class ProjectFilesystem {
     this(
         root.getFileSystem(),
         root,
-        Optional.<ImmutableSet<Path>>absent(),
         ImmutableSet.<PathOrGlobMatcher>of(),
         getDefaultBuckPaths(root));
   }
@@ -152,12 +150,10 @@ public class ProjectFilesystem {
    */
   public ProjectFilesystem(
       Path projectRoot,
-      Optional<ImmutableSet<Path>> whiteListedPaths,
       ImmutableSet<PathOrGlobMatcher> blackListedPaths) {
     this(
         projectRoot.getFileSystem(),
         projectRoot,
-        whiteListedPaths,
         blackListedPaths,
         getDefaultBuckPaths(projectRoot));
   }
@@ -166,7 +162,6 @@ public class ProjectFilesystem {
     this(
         root.getFileSystem(),
         root,
-        Optional.<ImmutableSet<Path>>absent(),
         extractIgnorePaths(root, config, getDefaultBuckPaths(root)),
         getDefaultBuckPaths(root));
   }
@@ -174,7 +169,6 @@ public class ProjectFilesystem {
   private ProjectFilesystem(
       FileSystem vfs,
       final Path root,
-      Optional<ImmutableSet<Path>> whiteListedPaths,
       ImmutableSet<PathOrGlobMatcher> blackListedPaths,
       BuckPaths buckPaths) {
     Preconditions.checkArgument(Files.isDirectory(root));
@@ -193,13 +187,6 @@ public class ProjectFilesystem {
         return projectRoot.relativize(input);
       }
     };
-    this.whiteListedPaths = whiteListedPaths.transform(
-        new Function<ImmutableSet<Path>, ImmutableSet<Path>>() {
-          @Override
-          public ImmutableSet<Path> apply(ImmutableSet<Path> input) {
-            return MorePaths.filterForSubpaths(input, ProjectFilesystem.this.projectRoot);
-          }
-        });
     this.ignoreValidityOfPaths = false;
     this.blackListedPaths = blackListedPaths;
     this.buckPaths = buckPaths;
@@ -1093,10 +1080,6 @@ public class ProjectFilesystem {
       return false;
     }
 
-    if (!Objects.equals(whiteListedPaths, that.whiteListedPaths)) {
-      return false;
-    }
-
     if (!Objects.equals(blackListedPaths, that.blackListedPaths)) {
       return false;
     }
@@ -1107,32 +1090,19 @@ public class ProjectFilesystem {
   @Override
   public String toString() {
     return String.format(
-        "%s (projectRoot=%s, whiteListedPaths=%s, blackListedPaths=%s",
+        "%s (projectRoot=%s, blackListedPaths=%s",
         super.toString(),
         projectRoot,
-        whiteListedPaths,
         blackListedPaths);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(projectRoot, whiteListedPaths, blackListedPaths);
+    return Objects.hash(projectRoot, blackListedPaths);
   }
 
   public BuckPaths getBuckPaths() {
     return buckPaths;
-  }
-
-  private boolean isWhiteListed(Path path) {
-    if (!whiteListedPaths.isPresent()) {
-      return true;
-    }
-    for (Path whiteListedPath : whiteListedPaths.get()) {
-      if (path.startsWith(whiteListedPath)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   private boolean isBlackListed(Path path) {
@@ -1150,7 +1120,7 @@ public class ProjectFilesystem {
    */
   public boolean isIgnored(Path path) {
     Preconditions.checkArgument(!path.isAbsolute());
-    return !isWhiteListed(path) || isBlackListed(path);
+    return isBlackListed(path);
   }
 
   public Path createTempFile(

@@ -235,12 +235,12 @@ public class CachingBuildEngine implements BuildEngine {
         .build(new CacheLoader<ProjectFilesystem, FileHashCache>() {
           @Override
           public FileHashCache load(@Nonnull  ProjectFilesystem filesystem) {
-            FileHashCache cellCache = new DefaultFileHashCache(filesystem);
-            FileHashCache buckOutCache = new DefaultFileHashCache(
+            FileHashCache cellCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+            FileHashCache buckOutCache = DefaultFileHashCache.createBuckOutFileHashCache(
                 new ProjectFilesystem(
                     filesystem.getRootPath(),
-                    Optional.of(ImmutableSet.of(filesystem.getBuckPaths().getBuckOut())),
-                    ImmutableSet.<PathOrGlobMatcher>of()));
+                    ImmutableSet.<PathOrGlobMatcher>of()),
+                filesystem.getBuckPaths().getBuckOut());
             return new StackedFileHashCache(
                 ImmutableList.of(defaultCache, cellCache, buckOutCache));
           }

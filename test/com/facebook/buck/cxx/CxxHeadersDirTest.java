@@ -43,7 +43,7 @@ public class CxxHeadersDirTest {
     SourcePathResolver pathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
-    FileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache fileHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     DefaultRuleKeyBuilderFactory factory =
         new DefaultRuleKeyBuilderFactory(0, fileHashCache, pathResolver);
     UncachedRuleKeyBuilder builder =

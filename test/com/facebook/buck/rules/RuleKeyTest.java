@@ -71,7 +71,7 @@ public class RuleKeyTest {
   @Test
   public void testRuleKeyDependsOnDeps() throws Exception {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FileHashCache hashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     BuildRuleResolver ruleResolver1 =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRuleResolver ruleResolver2 =
@@ -665,7 +665,8 @@ public class RuleKeyTest {
     SourcePathResolver pathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
-    DefaultFileHashCache hashCache = new DefaultFileHashCache(new FakeProjectFilesystem());
+    FileHashCache hashCache =
+        DefaultFileHashCache.createDefaultFileHashCache(new FakeProjectFilesystem());
 
     BuildRule buildRule1 = new TestRuleKeyAppendableBuildRule(
         params,
@@ -693,7 +694,8 @@ public class RuleKeyTest {
     SourcePathResolver pathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
-    DefaultFileHashCache hashCache = new DefaultFileHashCache(new FakeProjectFilesystem());
+    FileHashCache hashCache =
+        DefaultFileHashCache.createDefaultFileHashCache(new FakeProjectFilesystem());
 
     BuildRule buildRule1 = new TestRuleKeyAppendableBuildRule(
         params,

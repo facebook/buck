@@ -30,6 +30,7 @@ import com.facebook.buck.rules.UncachedRuleKeyBuilder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -42,7 +43,8 @@ public class HeaderVerificationTest {
             new BuildRuleResolver(
                 TargetGraph.EMPTY,
                 new DefaultTargetNodeToBuildRuleTransformer()));
-    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(new FakeProjectFilesystem());
+    FileHashCache fileHashCache =
+        DefaultFileHashCache.createDefaultFileHashCache(new FakeProjectFilesystem());
     DefaultRuleKeyBuilderFactory factory =
         new DefaultRuleKeyBuilderFactory(0, fileHashCache, resolver);
     RuleKeyBuilder<RuleKey> builder = new UncachedRuleKeyBuilder(resolver, fileHashCache, factory);

@@ -242,7 +242,7 @@ public class BuildInfoRecorderTest {
   @Test
   public void testGetOutputHash() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache fileHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
 
     byte[] contents = "contents".getBytes();

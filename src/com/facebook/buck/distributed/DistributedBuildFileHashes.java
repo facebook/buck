@@ -92,7 +92,8 @@ public class DistributedBuildFileHashes {
           public FileHashLoader load(ProjectFilesystem key) throws Exception {
             return new RecordingFileHashLoader(
                 new StackedFileHashCache(
-                    ImmutableList.of(rootCellFileHashCache, new DefaultFileHashCache(key))),
+                    ImmutableList.of(rootCellFileHashCache,
+                        DefaultFileHashCache.createDefaultFileHashCache(key))),
                 key,
                 remoteFileHashes.get(key));
           }

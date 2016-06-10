@@ -31,6 +31,7 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
+import com.facebook.buck.util.cache.FileHashCache;
 
 import org.junit.Test;
 
@@ -65,7 +66,7 @@ public class PrebuiltCxxLibraryTest {
         platform,
         Linker.LinkableDepType.STATIC);
 
-    DefaultFileHashCache originalHashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache originalHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     DefaultRuleKeyBuilderFactory factory =
         new DefaultRuleKeyBuilderFactory(0, originalHashCache, pathResolver);
 

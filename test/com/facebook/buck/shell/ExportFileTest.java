@@ -212,7 +212,7 @@ public class ExportFileTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem(root.toFile());
     Path temp = Paths.get("example_file");
 
-    FileHashCache hashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     SourcePathResolver resolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
      );
@@ -239,7 +239,7 @@ public class ExportFileTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
         filesystem);
 
-    hashCache = new DefaultFileHashCache(filesystem);
+    hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     resolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );

@@ -241,10 +241,10 @@ public class DistributedBuildFileHashesTest {
     private FileHashCache createFileHashCache() {
       ImmutableList.Builder<FileHashCache> cacheList = ImmutableList.builder();
       for (Path path : javaFs.getRootDirectories()) {
-        cacheList.add(new DefaultFileHashCache(new ProjectFilesystem(path)));
+        cacheList.add(DefaultFileHashCache.createDefaultFileHashCache(new ProjectFilesystem(path)));
       }
-      cacheList.add(new DefaultFileHashCache(projectFilesystem));
-      cacheList.add(new DefaultFileHashCache(secondProjectFilesystem));
+      cacheList.add(DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem));
+      cacheList.add(DefaultFileHashCache.createDefaultFileHashCache(secondProjectFilesystem));
       return new StackedFileHashCache(cacheList.build());
     }
 

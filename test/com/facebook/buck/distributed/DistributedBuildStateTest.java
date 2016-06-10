@@ -93,7 +93,7 @@ public class DistributedBuildStateTest {
     return new DistributedBuildFileHashes(
         actionGraph,
         sourcePathResolver,
-        new DefaultFileHashCache(projectFilesystem),
+        DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem),
         MoreExecutors.newDirectExecutorService(),
         /* keySeed */ 0);
   }

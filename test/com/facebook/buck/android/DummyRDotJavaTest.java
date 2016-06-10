@@ -67,7 +67,7 @@ public class DummyRDotJavaTest {
   @Test
   public void testBuildSteps() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FileHashCache hashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);

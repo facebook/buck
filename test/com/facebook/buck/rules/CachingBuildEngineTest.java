@@ -78,6 +78,7 @@ import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.concurrent.ListeningSemaphore;
 import com.facebook.buck.util.concurrent.MoreFutures;
@@ -175,7 +176,7 @@ public class CachingBuildEngineTest {
 
     protected InMemoryArtifactCache cache = new InMemoryArtifactCache();
     protected FakeProjectFilesystem filesystem;
-    protected DefaultFileHashCache fileHashCache;
+    protected FileHashCache fileHashCache;
     protected ImmutableBuildContext buildContext;
     protected BuildRuleResolver resolver;
     protected SourcePathResolver pathResolver;
@@ -185,7 +186,7 @@ public class CachingBuildEngineTest {
     @Before
     public void setUp() {
       filesystem = new FakeProjectFilesystem(tmp.getRoot());
-      fileHashCache = new DefaultFileHashCache(filesystem);
+      fileHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
       buildContext = FakeBuildContext.newBuilder()
           .setArtifactCache(cache)
           .setJavaPackageFinder(new FakeJavaPackageFinder())
@@ -414,7 +415,7 @@ public class CachingBuildEngineTest {
           .andDelegateTo(
               new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
 
-      DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+      FileHashCache fileHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
       BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
       BuildContext buildContext = ImmutableBuildContext.builder()
           .setActionGraph(new ActionGraph(ImmutableList.of(buildRule)))
@@ -500,7 +501,7 @@ public class CachingBuildEngineTest {
           .andDelegateTo(
               new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
 
-      DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+      FileHashCache fileHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
       BuildContext buildContext = ImmutableBuildContext.builder()
           .setActionGraph(new ActionGraph(ImmutableList.of(buildRule)))
           .setStepRunner(stepRunner)

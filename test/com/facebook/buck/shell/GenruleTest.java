@@ -676,12 +676,12 @@ public class GenruleTest {
     DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
             0,
-            new DefaultFileHashCache(filesystem),
+            DefaultFileHashCache.createDefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     InputBasedRuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             0,
-            new DefaultFileHashCache(filesystem),
+            DefaultFileHashCache.createDefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.build(rule);
     RuleKey originalInputRuleKey = inputBasedRuleKeyBuilderFactory.build(rule).get();
@@ -700,12 +700,12 @@ public class GenruleTest {
     defaultRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
             0,
-            new DefaultFileHashCache(filesystem),
+            DefaultFileHashCache.createDefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             0,
-            new DefaultFileHashCache(filesystem),
+            DefaultFileHashCache.createDefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.build(rule);
     RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule).get();
@@ -725,7 +725,7 @@ public class GenruleTest {
     inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             0,
-            new DefaultFileHashCache(filesystem),
+            DefaultFileHashCache.createDefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule).get();
     assertThat(changedInputBasedRuleKey, Matchers.not(Matchers.equalTo(originalInputRuleKey)));
@@ -752,12 +752,12 @@ public class GenruleTest {
     DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
             0,
-            new DefaultFileHashCache(filesystem),
+            DefaultFileHashCache.createDefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     InputBasedRuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             0,
-            new DefaultFileHashCache(filesystem),
+            DefaultFileHashCache.createDefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.build(rule);
     RuleKey originalInputRuleKey = inputBasedRuleKeyBuilderFactory.build(rule).get();
@@ -780,12 +780,12 @@ public class GenruleTest {
     defaultRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
             0,
-            new DefaultFileHashCache(filesystem),
+            DefaultFileHashCache.createDefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             0,
-            new DefaultFileHashCache(filesystem),
+            DefaultFileHashCache.createDefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.build(rule);
     RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule).get();
@@ -804,7 +804,7 @@ public class GenruleTest {
     inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             0,
-            new DefaultFileHashCache(filesystem),
+            DefaultFileHashCache.createDefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule).get();
     assertThat(changedInputBasedRuleKey, Matchers.not(Matchers.equalTo(originalInputRuleKey)));
@@ -831,12 +831,12 @@ public class GenruleTest {
     DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
             0,
-            new DefaultFileHashCache(filesystem),
+            DefaultFileHashCache.createDefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     InputBasedRuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             0,
-            new DefaultFileHashCache(filesystem),
+            DefaultFileHashCache.createDefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.build(rule);
     RuleKey originalInputRuleKey = inputBasedRuleKeyBuilderFactory.build(rule).get();
@@ -855,12 +855,12 @@ public class GenruleTest {
     defaultRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
             0,
-            new DefaultFileHashCache(filesystem),
+            DefaultFileHashCache.createDefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             0,
-            new DefaultFileHashCache(filesystem),
+            DefaultFileHashCache.createDefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.build(rule);
     RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule).get();
@@ -879,7 +879,7 @@ public class GenruleTest {
     inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             0,
-            new DefaultFileHashCache(filesystem),
+            DefaultFileHashCache.createDefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
     RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule).get();
     assertThat(changedInputBasedRuleKey, Matchers.not(Matchers.equalTo(originalInputRuleKey)));

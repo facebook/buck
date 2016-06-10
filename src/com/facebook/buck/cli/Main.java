@@ -97,7 +97,6 @@ import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.WatchmanWatcherException;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.cache.WatchedFileHashCache;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -258,7 +257,7 @@ public final class Main {
     private final Cell cell;
     private final Parser parser;
     private final DefaultFileHashCache hashCache;
-    private final DefaultFileHashCache buckOutHashCache;
+    private final FileHashCache buckOutHashCache;
     private final EventBus fileEventBus;
     private final Optional<WebServer> webServer;
     private final UUID watchmanQueryUUID;
@@ -272,11 +271,11 @@ public final class Main {
       this.cell = cell;
       this.hashCache = new WatchedFileHashCache(cell.getFilesystem());
       this.buckOutHashCache =
-          new DefaultFileHashCache(
+          DefaultFileHashCache.createBuckOutFileHashCache(
               new ProjectFilesystem(
                   cell.getFilesystem().getRootPath(),
-                  Optional.of(ImmutableSet.of(cell.getFilesystem().getBuckPaths().getBuckOut())),
-                  ImmutableSet.<PathOrGlobMatcher>of()));
+                  ImmutableSet.<PathOrGlobMatcher>of()),
+              cell.getFilesystem().getBuckPaths().getBuckOut());
       this.fileEventBus = new EventBus("file-change-events");
 
       actionGraphCache = new ActionGraphCache();
@@ -361,11 +360,11 @@ public final class Main {
       return actionGraphCache;
     }
 
-    private DefaultFileHashCache getFileHashCache() {
+    private FileHashCache getFileHashCache() {
       return hashCache;
     }
 
-    private DefaultFileHashCache getBuckOutHashCache() {
+    private FileHashCache getBuckOutHashCache() {
       return buckOutHashCache;
     }
 
@@ -819,20 +818,19 @@ public final class Main {
             // TODO(bhamiltoncx): Thread through properties from client environment.
             System.getProperties());
 
-        ProjectFileHashCache cellHashCache;
-        ProjectFileHashCache buckOutHashCache;
+        FileHashCache cellHashCache;
+        FileHashCache buckOutHashCache;
         if (isDaemon) {
           cellHashCache = getFileHashCacheFromDaemon(rootCell);
           buckOutHashCache = getBuckOutFileHashCacheFromDaemon(rootCell);
         } else {
-          cellHashCache = new DefaultFileHashCache(rootCell.getFilesystem());
+          cellHashCache = DefaultFileHashCache.createDefaultFileHashCache(rootCell.getFilesystem());
           buckOutHashCache =
-              new DefaultFileHashCache(
+              DefaultFileHashCache.createBuckOutFileHashCache(
                   new ProjectFilesystem(
                       rootCell.getFilesystem().getRootPath(),
-                      Optional.of(
-                          ImmutableSet.of(rootCell.getFilesystem().getBuckPaths().getBuckOut())),
-                      ImmutableSet.<PathOrGlobMatcher>of()));
+                      ImmutableSet.<PathOrGlobMatcher>of()),
+                  rootCell.getFilesystem().getBuckPaths().getBuckOut());
         }
 
         // Build up the hash cache, which is a collection of the stateful cell cache and some
@@ -844,7 +842,7 @@ public final class Main {
         // A cache which caches hashes of cell-relative paths which may have been ignore by
         // the main cell cache, and only serves to prevent rehashing the same file multiple
         // times in a single run.
-        allCaches.add(new DefaultFileHashCache(
+        allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(
                 new ProjectFilesystem(rootCell.getFilesystem().getRootPath())));
 
         for (Path root : FileSystems.getDefault().getRootDirectories()) {
@@ -859,7 +857,8 @@ public final class Main {
           // A cache which caches hashes of absolute paths which my be accessed by certain
           // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
           // multiple times in a single run.
-          allCaches.add(new DefaultFileHashCache(new ProjectFilesystem(root)));
+          allCaches.add(
+              DefaultFileHashCache.createDefaultFileHashCache(new ProjectFilesystem(root)));
         }
 
         FileHashCache fileHashCache = new StackedFileHashCache(allCaches.build());
@@ -1280,13 +1279,13 @@ public final class Main {
     return daemon.getParser();
   }
 
-  private DefaultFileHashCache getFileHashCacheFromDaemon(Cell cell)
+  private FileHashCache getFileHashCacheFromDaemon(Cell cell)
       throws IOException, InterruptedException {
     Daemon daemon = getDaemon(cell, objectMapper);
     return daemon.getFileHashCache();
   }
 
-  private DefaultFileHashCache getBuckOutFileHashCacheFromDaemon(Cell cell)
+  private FileHashCache getBuckOutFileHashCacheFromDaemon(Cell cell)
       throws IOException, InterruptedException {
     Daemon daemon = getDaemon(cell, objectMapper);
     return daemon.getBuckOutHashCache();

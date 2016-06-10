@@ -76,6 +76,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -741,7 +742,7 @@ public class DefaultJavaLibraryTest {
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addSrc(new BuildTargetSourcePath(genSrc.getBuildTarget()))
             .build(resolver, filesystem);
-    DefaultFileHashCache originalHashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache originalHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     InputBasedRuleKeyBuilderFactory factory =
         new InputBasedRuleKeyBuilderFactory(
             0,
@@ -763,7 +764,7 @@ public class DefaultJavaLibraryTest {
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addSrc(new BuildTargetSourcePath(genSrc.getBuildTarget()))
             .build(resolver, filesystem);
-    DefaultFileHashCache unaffectedHashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache unaffectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     factory =
         new InputBasedRuleKeyBuilderFactory(
             0,
@@ -785,7 +786,7 @@ public class DefaultJavaLibraryTest {
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addSrc(new BuildTargetSourcePath(genSrc.getBuildTarget()))
             .build(resolver, filesystem);
-    DefaultFileHashCache affectedHashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache affectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     factory =
         new InputBasedRuleKeyBuilderFactory(
             0,
@@ -820,7 +821,7 @@ public class DefaultJavaLibraryTest {
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addDep(dep.getBuildTarget())
             .build(resolver, filesystem);
-    DefaultFileHashCache originalHashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache originalHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     InputBasedRuleKeyBuilderFactory factory =
         new InputBasedRuleKeyBuilderFactory(
             0,
@@ -843,7 +844,7 @@ public class DefaultJavaLibraryTest {
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addDep(dep.getBuildTarget())
             .build(resolver, filesystem);
-    DefaultFileHashCache unaffectedHashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache unaffectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     factory =
         new InputBasedRuleKeyBuilderFactory(
             0,
@@ -869,7 +870,7 @@ public class DefaultJavaLibraryTest {
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addDep(dep.getBuildTarget())
             .build(resolver, filesystem);
-    DefaultFileHashCache affectedHashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache affectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     factory =
         new InputBasedRuleKeyBuilderFactory(
             0,
@@ -910,7 +911,7 @@ public class DefaultJavaLibraryTest {
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addDep(dep.getBuildTarget())
             .build(resolver, filesystem);
-    DefaultFileHashCache originalHashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache originalHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     InputBasedRuleKeyBuilderFactory factory =
         new InputBasedRuleKeyBuilderFactory(
             0,
@@ -938,7 +939,7 @@ public class DefaultJavaLibraryTest {
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addDep(dep.getBuildTarget())
             .build(resolver, filesystem);
-    DefaultFileHashCache unaffectedHashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache unaffectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     factory =
         new InputBasedRuleKeyBuilderFactory(
             0,
@@ -968,7 +969,7 @@ public class DefaultJavaLibraryTest {
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addDep(dep.getBuildTarget())
             .build(resolver, filesystem);
-    DefaultFileHashCache affectedHashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache affectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     factory =
         new InputBasedRuleKeyBuilderFactory(
             0,
@@ -1013,7 +1014,7 @@ public class DefaultJavaLibraryTest {
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addDep(dep1.getBuildTarget())
             .build(resolver, filesystem);
-    DefaultFileHashCache originalHashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache originalHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     InputBasedRuleKeyBuilderFactory factory =
         new InputBasedRuleKeyBuilderFactory(
             0,
@@ -1045,7 +1046,7 @@ public class DefaultJavaLibraryTest {
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addDep(dep1.getBuildTarget())
             .build(resolver, filesystem);
-    DefaultFileHashCache unaffectedHashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache unaffectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     factory =
         new InputBasedRuleKeyBuilderFactory(
             0,
@@ -1079,7 +1080,7 @@ public class DefaultJavaLibraryTest {
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addDep(dep1.getBuildTarget())
             .build(resolver, filesystem);
-    DefaultFileHashCache affectedHashCache = new DefaultFileHashCache(filesystem);
+    FileHashCache affectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     factory =
         new InputBasedRuleKeyBuilderFactory(
             0,
