@@ -291,8 +291,8 @@ class BuckRepo(BuckTool):
                     fake_buck_version = fake_buck_version_file.read().strip()
 
                 print(textwrap.dedent("""\
-::: Faking buck version %s, despite your buck directory not being that version!
-::: We hope you know what you are doing...""" % fake_buck_version),
+                ::: Faking buck version %s, despite your buck directory not being that version."""
+                                      % fake_buck_version),
                       file=sys.stderr)
                 return fake_buck_version
 
