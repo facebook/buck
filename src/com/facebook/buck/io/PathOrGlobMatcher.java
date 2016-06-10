@@ -44,6 +44,14 @@ public class PathOrGlobMatcher {
         }
       };
 
+  private static final Function<Path, PathOrGlobMatcher> TO_PATH_MATCHER =
+      new Function<Path, PathOrGlobMatcher>() {
+        @Override
+        public PathOrGlobMatcher apply(Path input) {
+          return new PathOrGlobMatcher(input);
+        }
+      };
+
   public enum Type {
     PATH,
     GLOB
@@ -140,6 +148,10 @@ public class PathOrGlobMatcher {
 
   public static Function<PathOrGlobMatcher, Path> toPath() {
     return TO_PATH;
+  }
+
+  public static Function<Path, PathOrGlobMatcher> toPathMatcher() {
+    return TO_PATH_MATCHER;
   }
 
 }

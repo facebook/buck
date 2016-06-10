@@ -188,7 +188,16 @@ public class ProjectFilesystem {
       }
     };
     this.ignoreValidityOfPaths = false;
-    this.blackListedPaths = blackListedPaths;
+    this.blackListedPaths = FluentIterable.from(blackListedPaths)
+        .append(
+            FluentIterable.from(
+                // "Path" is Iterable, so avoid adding each segment.
+                // We use the default value here because that's what we've always done.
+                ImmutableSet.of(
+                    getCacheDir(root, Optional.of(buckPaths.getCacheDir().toString()), buckPaths)))
+                .append(ImmutableSet.of(buckPaths.getTrashDir()))
+                .transform(PathOrGlobMatcher.toPathMatcher()))
+        .toSet();
     this.buckPaths = buckPaths;
 
     this.blackListedDirectories = FluentIterable.from(this.blackListedPaths)
@@ -214,18 +223,7 @@ public class ProjectFilesystem {
         // TODO(#10068334) So we claim to ignore this path to preserve existing behaviour, but we
         // really don't end up ignoring it in reality (see extractIgnorePaths).
         .append(ImmutableSet.of(buckPaths.getBuckOut()))
-        // "Path" is Iterable, so avoid adding each segment.
-        // We use the default value here because that's what we've always done.
-        .append(
-            ImmutableSet.of(
-                getCacheDir(root, Optional.of(buckPaths.getCacheDir().toString()), buckPaths)))
-        .append(ImmutableSet.of(buckPaths.getTrashDir()))
-        .transform(new Function<Path, PathOrGlobMatcher>() {
-          @Override
-          public PathOrGlobMatcher apply(Path input) {
-            return new PathOrGlobMatcher(input);
-          }
-        })
+        .transform(PathOrGlobMatcher.toPathMatcher())
         .toSet();
   }
 
