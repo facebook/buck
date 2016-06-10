@@ -44,6 +44,7 @@ import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
@@ -342,7 +343,6 @@ class DaemonicParserState implements ParsePipeline.Cache {
     }
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
   public static TargetNode<?> createTargetNode(
       BuckEventBus eventBus,
       Cell cell,
@@ -428,11 +428,11 @@ class DaemonicParserState implements ParsePipeline.Cache {
         Hasher hasher = Hashing.sha1().newHasher();
         hasher.putString(BuckVersion.getVersion(), UTF_8);
         JsonObjectHashing.hashJsonObject(hasher, rawNode);
-        TargetNode<?> node = new TargetNode(
+        TargetNodeFactory targetNodeFactory = new TargetNodeFactory(typeCoercerFactory);
+        TargetNode<?> node = targetNodeFactory.createFromObject(
             hasher.hash(),
             description,
             constructorArg,
-            typeCoercerFactory,
             factoryParams,
             declaredDeps.build(),
             visibilityPatterns.build(),
@@ -442,7 +442,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
       }
     } catch (
         NoSuchBuildTargetException |
-            TargetNode.InvalidSourcePathInputException e) {
+            TargetNodeFactory.InvalidSourcePathInputException e) {
       throw new HumanReadableException(e);
     } catch (ConstructorArgMarshalException e) {
       throw new HumanReadableException("%s: %s", target, e.getMessage());

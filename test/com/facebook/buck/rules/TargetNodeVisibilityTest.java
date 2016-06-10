@@ -68,7 +68,7 @@ public class TargetNodeVisibilityTest {
 
   @Test
   public void testVisibilityPublic()
-      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
     TargetNode<?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
     TargetNode<?> orcaRule = createTargetNode(orcaTarget);
 
@@ -78,7 +78,7 @@ public class TargetNodeVisibilityTest {
 
   @Test
   public void testVisibilityNonPublic()
-      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
     TargetNode<?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, VISIBLETO_ORCA);
     TargetNode<?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, VISIBLETO_ORCA);
     TargetNode<?> orcaRule = createTargetNode(orcaTarget);
@@ -97,7 +97,7 @@ public class TargetNodeVisibilityTest {
 
   @Test
   public void testVisibilityNonPublicFailure()
-      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
     TargetNode<?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, VISIBLETO_ORCA);
     TargetNode<?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
 
@@ -115,7 +115,7 @@ public class TargetNodeVisibilityTest {
 
   @Test
   public void testVisibilityMix()
-      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
     TargetNode<?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, VISIBLETO_ORCA);
     TargetNode<?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, VISIBLETO_ORCA);
     TargetNode<?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
@@ -133,7 +133,7 @@ public class TargetNodeVisibilityTest {
 
   @Test
   public void testVisibilityMixFailure()
-      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
     TargetNode<?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, VISIBLETO_ORCA);
     TargetNode<?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, VISIBLETO_SOME_OTHER);
     TargetNode<?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
@@ -157,7 +157,7 @@ public class TargetNodeVisibilityTest {
 
   @Test
   public void testVisibilityForDirectory()
-      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
     BuildTarget libTarget = BuildTarget.builder(filesystem.getRootPath(), "//lib", "lib").build();
     TargetNode<?> targetInSpecifiedDirectory = createTargetNode(
         BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook", "test").build());
@@ -219,7 +219,7 @@ public class TargetNodeVisibilityTest {
   private static TargetNode<?> createTargetNode(
       BuildTarget buildTarget,
       String... visibilities)
-      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
     VisibilityPatternParser parser = new VisibilityPatternParser();
     ImmutableSet.Builder<VisibilityPattern> builder = ImmutableSet.builder();
     CellPathResolver cellNames = new CellPathResolver() {
@@ -237,14 +237,14 @@ public class TargetNodeVisibilityTest {
         NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
             buildTarget,
             new FakeProjectFilesystem());
-    return new TargetNode<>(
-        Hashing.sha1().hashString(params.target.getFullyQualifiedName(), UTF_8),
-        description,
-        arg,
-        new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()),
-        params,
-        ImmutableSet.<BuildTarget>of(),
-        builder.build(),
-        createCellRoots(filesystem));
+    return new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
+        .create(
+            Hashing.sha1().hashString(params.target.getFullyQualifiedName(), UTF_8),
+            description,
+            arg,
+            params,
+            ImmutableSet.<BuildTarget>of(),
+            builder.build(),
+            createCellRoots(filesystem));
   }
 }

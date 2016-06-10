@@ -43,6 +43,9 @@ import javax.annotation.Nullable;
  * behavior seen when running the actual parser as closely as possible.
  */
 public abstract class AbstractNodeBuilder<A> {
+  private static final DefaultTypeCoercerFactory TYPE_COERCER_FACTORY =
+      new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance());
+
   protected final Description<A> description;
   protected final BuildRuleFactoryParams factoryParams;
   protected final BuildTarget target;
@@ -118,17 +121,16 @@ public abstract class AbstractNodeBuilder<A> {
           Hashing.sha1().hashString(factoryParams.target.getFullyQualifiedName(), UTF_8) :
           rawHashCode;
 
-      return new TargetNode<>(
+      return new TargetNodeFactory(TYPE_COERCER_FACTORY).create(
           // This hash will do in a pinch.
           hash,
           description,
           arg,
-          new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()),
           factoryParams,
           getDepsFromArg(),
           ImmutableSet.<VisibilityPattern>of(),
           cellRoots);
-    } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
+    } catch (NoSuchBuildTargetException | TargetNodeFactory.InvalidSourcePathInputException e) {
       throw Throwables.propagate(e);
     }
   }
@@ -192,7 +194,7 @@ public abstract class AbstractNodeBuilder<A> {
   private void populateWithDefaultValues(A arg) {
     try {
       new ConstructorArgMarshaller(
-          new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance())).populateDefaults(
+          TYPE_COERCER_FACTORY).populateDefaults(
           cellRoots,
           factoryParams.getProjectFilesystem(),
           factoryParams,

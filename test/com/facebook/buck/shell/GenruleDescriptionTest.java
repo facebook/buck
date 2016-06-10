@@ -38,6 +38,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
@@ -60,7 +61,7 @@ public class GenruleDescriptionTest {
 
   @Test
   public void testImplicitDepsAreAddedCorrectly()
-      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
     Description<GenruleDescription.Arg> genruleDescription = new GenruleDescription();
     Map<String, Object> instance = ImmutableMap.<String, Object>of(
         "srcs", ImmutableList.of(":baz", "//biz:baz"),
@@ -90,15 +91,16 @@ public class GenruleDescriptionTest {
     }  catch (ConstructorArgMarshalException e) {
       fail("Expected constructorArg to be correctly populated.");
     }
-    TargetNode<GenruleDescription.Arg> targetNode = new TargetNode<>(
-        Hashing.sha1().hashString(params.target.getFullyQualifiedName(), UTF_8),
-        genruleDescription,
-        constructorArg,
-        new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()),
-        params,
-        declaredDeps.build(),
-        visibilityPatterns.build(),
-        createCellRoots(projectFilesystem));
+    TargetNode<GenruleDescription.Arg> targetNode =
+        new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
+            .create(
+                Hashing.sha1().hashString(params.target.getFullyQualifiedName(), UTF_8),
+                genruleDescription,
+                constructorArg,
+                params,
+                declaredDeps.build(),
+                visibilityPatterns.build(),
+                createCellRoots(projectFilesystem));
     assertEquals(
         "SourcePaths and targets from cmd string should be extracted as extra deps.",
         ImmutableSet.of(

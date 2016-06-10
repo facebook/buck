@@ -52,7 +52,7 @@ public class TargetNodeTest {
 
   @Test
   public void testIgnoreNonBuildTargetOrPathOrSourcePathArgument()
-      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
 
     TargetNode<Arg> targetNode = createTargetNode(TARGET_THREE);
 
@@ -62,7 +62,7 @@ public class TargetNodeTest {
 
   @Test
   public void testDepsAndPathsAreCollected()
-      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
     ImmutableList<String> depsStrings = ImmutableList.of(
         "//example/path:one",
         "//example/path:two");
@@ -154,7 +154,7 @@ public class TargetNodeTest {
 
   private static TargetNode<Arg> createTargetNode(
       BuildTarget buildTarget)
-      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
     ImmutableMap<String, Object> rawNode = ImmutableMap.<String, Object>of(
         "deps", ImmutableList.of(),
         "string", "//example/path:one",
@@ -168,7 +168,7 @@ public class TargetNodeTest {
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableMap<String, Object> rawNode)
-      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
     BuildRuleFactoryParams buildRuleFactoryParams =
         NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
             buildTarget,
@@ -176,18 +176,18 @@ public class TargetNodeTest {
 
     Description<Arg> description = new TestDescription();
 
-    return new TargetNode<>(
-        Hashing.sha1().hashString(buildRuleFactoryParams.target.getFullyQualifiedName(), UTF_8),
-        description,
-        createPopulatedConstructorArg(
+    return new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
+        .create(
+            Hashing.sha1().hashString(buildRuleFactoryParams.target.getFullyQualifiedName(), UTF_8),
             description,
+            createPopulatedConstructorArg(
+                description,
+                buildRuleFactoryParams,
+                rawNode),
             buildRuleFactoryParams,
-            rawNode),
-        new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()),
-        buildRuleFactoryParams,
-        declaredDeps,
-        ImmutableSet.<VisibilityPattern>of(),
-        createCellRoots(buildRuleFactoryParams.getProjectFilesystem()));
+            declaredDeps,
+            ImmutableSet.<VisibilityPattern>of(),
+            createCellRoots(buildRuleFactoryParams.getProjectFilesystem()));
   }
 
 
