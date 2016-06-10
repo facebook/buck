@@ -34,7 +34,7 @@ public class WorkerMacroExpander extends ExecutableMacroExpander {
               "%s used in worker macro does not correspond to a worker_tool rule",
               rule.getBuildTarget()));
     }
-    return ((WorkerTool) rule).getBinaryBuildRule().getExecutableCommand();
+    return ((WorkerTool) rule).getTool();
   }
 
   @Override

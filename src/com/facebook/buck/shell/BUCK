@@ -43,6 +43,7 @@ java_immutables_library(
   name = 'worker',
   srcs = [
     'AbstractWorkerJobParams.java',
+    'DefaultWorkerTool.java',
     'WorkerShellStep.java',
     'WorkerToolDescription.java',
   ],

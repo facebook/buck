@@ -28,6 +28,7 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableMap;
 
@@ -105,7 +106,7 @@ public class MacroHandlerTest {
   public void testContainsWorkerMacroReturnsTrue() throws MacroException {
     MacroHandler handler = new MacroHandler(
         ImmutableMap.<String, MacroExpander>of("worker", new WorkerMacroExpander()));
-    assertTrue(handler.containsWorkerMacro("$(worker :rule)"));
+    assertTrue(MacroArg.containsWorkerMacro(handler, "$(worker :rule)"));
   }
 
   @Test
@@ -114,6 +115,7 @@ public class MacroHandlerTest {
         new MacroHandler(ImmutableMap.<String, MacroExpander>of(
             "worker", new WorkerMacroExpander(),
             "exe", new ExecutableMacroExpander()));
-    assertFalse(handler.containsWorkerMacro("$(exe :rule) not a worker macro in sight"));
+    assertFalse(
+        MacroArg.containsWorkerMacro(handler, "$(exe :rule) not a worker macro in sight"));
   }
 }

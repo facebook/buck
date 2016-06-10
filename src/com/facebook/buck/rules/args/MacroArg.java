@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.args;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.MacroMatchResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -26,6 +27,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
@@ -127,7 +129,7 @@ public class MacroArg extends Arg {
   }
 
   public static Function<String, Arg> toMacroArgFunction(
-      final MacroHandler expander,
+      final MacroHandler handler,
       final BuildTarget target,
       final CellPathResolver cellNames,
       final BuildRuleResolver resolver) {
@@ -135,15 +137,25 @@ public class MacroArg extends Arg {
       @Override
       public MacroArg apply(String unexpanded) {
         try {
-          if (expander.containsWorkerMacro(unexpanded)) {
-            return new WorkerMacroArg(expander, target, cellNames, resolver, unexpanded);
+          if (containsWorkerMacro(handler, unexpanded)) {
+            return new WorkerMacroArg(handler, target, cellNames, resolver, unexpanded);
           }
         } catch (MacroException e) {
           throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
         }
-        return new MacroArg(expander, target, cellNames, resolver, unexpanded);
+        return new MacroArg(handler, target, cellNames, resolver, unexpanded);
       }
     };
   }
 
+  public static boolean containsWorkerMacro(MacroHandler handler, String blob)
+      throws MacroException {
+    boolean result = false;
+    for (MacroMatchResult matchResult : handler.getMacroMatchResults(blob)) {
+      if (handler.getExpander(matchResult.getMacroType()) instanceof WorkerMacroExpander) {
+        result = true;
+      }
+    }
+    return result;
+  }
 }

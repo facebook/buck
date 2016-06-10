@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY e9b6fc47d29860ee35aa0e04dcbe55e1bc6fefa9 #@#
+#@# GENERATED FILE: DO NOT MODIFY 171de9a2a027df35166b3cc317fa61ef7ce57d8b #@#
 {
   "rules" : {
     "deps" : [
@@ -54,6 +54,7 @@
     "deps" : [
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/model:macros",
+      "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/shell:worker_process",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
@@ -66,6 +67,7 @@
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:interfaces",
+      "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules/macros:macros",
       "//src/com/facebook/buck/shell:worker_tool",
       "//src/com/facebook/buck/step:step",
@@ -93,9 +95,7 @@
   "worker_tool" : {
     "deps" : [ ],
     "exported_deps" : [
-      "//src/com/facebook/buck/rules:build_rule",
-      "//src/com/facebook/buck/rules:rules",
-      "//third-party/java/guava:guava"
+      "//src/com/facebook/buck/rules:build_rule"
     ]
   }
 }

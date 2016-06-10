@@ -186,16 +186,6 @@ public class MacroHandler {
     return targets.build();
   }
 
-  public boolean containsWorkerMacro(String blob) throws MacroException {
-    boolean result = false;
-    for (MacroMatchResult matchResult : getMacroMatchResults(blob)) {
-      if (getExpander(matchResult.getMacroType()) instanceof WorkerMacroExpander) {
-        result = true;
-      }
-    }
-    return result;
-  }
-
   public ImmutableList<MacroMatchResult> getMacroMatchResults(String blob) throws MacroException {
     return MACRO_FINDER.findAll(expanders.keySet(), blob);
   }

@@ -16,46 +16,9 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.rules.BinaryBuildRule;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.collect.ImmutableSortedSet;
+import com.facebook.buck.rules.Tool;
 
-public class WorkerTool extends NoopBuildRule implements HasRuntimeDeps {
-
-  private final BinaryBuildRule exe;
-  private final Iterable<BuildRule> depsFromStartupArgs;
-  private final String args;
-
-  protected WorkerTool(
-      BuildRuleParams ruleParams,
-      SourcePathResolver resolver,
-      BinaryBuildRule exe,
-      Iterable<BuildRule> depsFromStartupArgs,
-      String args) {
-    super(ruleParams, resolver);
-    this.exe = exe;
-    this.depsFromStartupArgs = depsFromStartupArgs;
-    this.args = args;
-  }
-
-  public BinaryBuildRule getBinaryBuildRule() {
-    return this.exe;
-  }
-
-  public String getArgs() {
-    return this.args;
-  }
-
-  @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .add(exe)
-        .addAll(exe.getExecutableCommand().getDeps(getResolver()))
-        .addAll(depsFromStartupArgs)
-        .build();
-  }
+public interface WorkerTool {
+  Tool getTool();
+  String getArgs();
 }

@@ -53,11 +53,6 @@ public class WorkerToolTest {
         .build(resolver);
 
     assertThat(
-        "getBinaryBuildRule should return the build rule supplied in the definition.",
-        shBinaryRule,
-        Matchers.equalToObject(((WorkerTool) workerRule).getBinaryBuildRule()));
-
-    assertThat(
         "getArgs should return the args string supplied in the definition.",
         "arg1 arg2",
         Matchers.is(((WorkerTool) workerRule).getArgs()));
@@ -106,7 +101,7 @@ public class WorkerToolTest {
         .newWorkerToolBuilder(BuildTargetFactory.newInstance("//:worker_rule"))
         .setExe(shBinaryRule.getBuildTarget())
         .setArgs("--input $(location //:file)");
-    WorkerTool workerTool = (WorkerTool) workerToolBuilder.build(resolver);
+    DefaultWorkerTool workerTool = (DefaultWorkerTool) workerToolBuilder.build(resolver);
 
     assertThat(
         workerToolBuilder.findImplicitDeps(),
@@ -117,5 +112,31 @@ public class WorkerToolTest {
         workerTool.getArgs(), Matchers.containsString(
             pathResolver.getAbsolutePath(
                 new BuildTargetSourcePath(exportFileRule.getBuildTarget())).toString()));
+  }
+
+  @Test
+  public void testUnderlyingToolIncludesDependenciesAsInputs() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+
+    BuildRule shBinaryRule = new ShBinaryBuilder(
+        BuildTargetFactory.newInstance("//:my_exe"))
+        .setMain(new FakeSourcePath("bin/exe"))
+        .build(resolver);
+
+    BuildRule exportFileRule =
+        ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:file"))
+            .setSrc(new FakeSourcePath("file.txt"))
+            .build(resolver);
+
+    WorkerToolBuilder workerToolBuilder = WorkerToolBuilder
+        .newWorkerToolBuilder(BuildTargetFactory.newInstance("//:worker_rule"))
+        .setExe(shBinaryRule.getBuildTarget())
+        .setArgs("--input $(location //:file)");
+    WorkerTool workerTool = (WorkerTool) workerToolBuilder.build(resolver);
+
+    assertThat(
+        workerTool.getTool().getInputs(),
+        Matchers.hasItem(new BuildTargetSourcePath(exportFileRule.getBuildTarget())));
   }
 }

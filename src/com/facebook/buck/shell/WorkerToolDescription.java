@@ -64,7 +64,7 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
   }
 
   @Override
-  public <A extends Arg> WorkerTool createBuildRule(
+  public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -95,7 +95,7 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
             params.getCellRoots(),
             args.args));
 
-    return new WorkerTool(
+    return new DefaultWorkerTool(
         params,
         new SourcePathResolver(resolver),
         (BinaryBuildRule) rule,

@@ -17,12 +17,12 @@
 package com.facebook.buck.rules.args;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.MacroException;
 import com.facebook.buck.model.MacroMatchResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.shell.WorkerTool;
@@ -72,8 +72,7 @@ public class WorkerMacroArg extends MacroArg {
     }
     this.workerTool = (WorkerTool) workerTool;
     startupCommand = this.workerTool
-        .getBinaryBuildRule()
-        .getExecutableCommand()
+        .getTool()
         .getCommandPrefix(new SourcePathResolver(resolver));
     jobArgs = macroHandler.expand(target, cellNames, resolver, unexpanded).trim();
   }
