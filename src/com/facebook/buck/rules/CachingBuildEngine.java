@@ -157,6 +157,7 @@ public class CachingBuildEngine implements BuildEngine {
       DepFiles depFiles,
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
+      final long inputRuleKeyFileSizeLimit,
       ObjectMapper objectMapper,
       final BuildRuleResolver resolver,
       final int keySeed) {
@@ -177,7 +178,11 @@ public class CachingBuildEngine implements BuildEngine {
         .build(new CacheLoader<ProjectFilesystem, RuleKeyFactories>() {
           @Override
           public RuleKeyFactories load(@Nonnull  ProjectFilesystem filesystem) throws Exception {
-            return RuleKeyFactories.build(keySeed, fileHashCaches.get(filesystem), resolver);
+            return RuleKeyFactories.build(
+                keySeed,
+                fileHashCaches.get(filesystem),
+                resolver,
+                inputRuleKeyFileSizeLimit);
           }
         });
   }
@@ -1728,7 +1733,8 @@ public class CachingBuildEngine implements BuildEngine {
     public static RuleKeyFactories build(
         int seed,
         FileHashCache fileHashCache,
-        BuildRuleResolver ruleResolver) {
+        BuildRuleResolver ruleResolver,
+        long inputRuleKeyFileSizeLimit) {
       SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
       DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
           seed,
@@ -1740,7 +1746,8 @@ public class CachingBuildEngine implements BuildEngine {
           new InputBasedRuleKeyBuilderFactory(
               seed,
               fileHashCache,
-              pathResolver),
+              pathResolver,
+              inputRuleKeyFileSizeLimit),
           new AbiRuleKeyBuilderFactory(
               seed,
               fileHashCache,

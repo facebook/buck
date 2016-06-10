@@ -733,6 +733,13 @@ public class BuckConfig {
   }
 
   /**
+   * @return the maximum size of files input based rule keys will be willing to hash.
+   */
+  public long getBuildInputRuleKeyFileSizeLimit() {
+    return getLong("build", "input_rule_key_file_size_limit").or(Long.MAX_VALUE);
+  }
+
+  /**
    * @return the local cache directory
    */
   public String getLocalCacheDirectory() {

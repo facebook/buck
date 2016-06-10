@@ -40,6 +40,9 @@ import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
+import com.facebook.buck.util.cache.FileHashCache;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -133,7 +136,6 @@ public class InputBasedRuleKeyBuilderFactoryTest {
         inputKey1,
         Matchers.not(Matchers.equalTo(inputKey2)));
   }
-
 
   @Test
   public void ruleKeyChangesIfInputContentsFromBuildTargetSourcePathChanges() throws Exception {
@@ -269,6 +271,91 @@ public class InputBasedRuleKeyBuilderFactoryTest {
     assertThat(
         inputKey1,
         Matchers.not(Matchers.equalTo(inputKey2)));
+  }
+
+  @Test
+  public void ruleKeyNotCalculatedIfSizeLimitHit() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+
+    // Create input that passes size limit.
+    Path input = filesystem.getRootPath().getFileSystem().getPath("input");
+    filesystem.writeBytesToPath(new byte[1024], input);
+
+    // Construct rule which uses input.
+    BuildRule rule =
+        ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setOut("out")
+            .setSrc(new PathSourcePath(filesystem, input))
+            .build(resolver, filesystem);
+
+    // Verify rule key isn't calculated.
+    Optional<RuleKey> inputKey =
+        new InputBasedRuleKeyBuilderFactory(0, hashCache, pathResolver, 200)
+            .build(rule);
+    assertThat(inputKey, Matchers.equalTo(Optional.<RuleKey>absent()));
+  }
+
+  @Test
+  public void ruleKeyNotCalculatedIfSizeLimitHitWithMultipleInputs() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+
+    // Create inputs that combine to pass size limit.
+    Path input1 = filesystem.getRootPath().getFileSystem().getPath("input1");
+    filesystem.writeBytesToPath(new byte[150], input1);
+    Path input2 = filesystem.getRootPath().getFileSystem().getPath("input2");
+    filesystem.writeBytesToPath(new byte[150], input2);
+
+    // Construct rule which uses inputs.
+    BuildRule rule =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setOut("out")
+            .setSrcs(
+                ImmutableList.<SourcePath>of(
+                    new PathSourcePath(filesystem, input1),
+                    new PathSourcePath(filesystem, input2)))
+            .build(resolver, filesystem);
+
+    // Verify rule key isn't calculated.
+    Optional<RuleKey> inputKey =
+        new InputBasedRuleKeyBuilderFactory(0, hashCache, pathResolver, 200)
+            .build(rule);
+    assertThat(inputKey, Matchers.equalTo(Optional.<RuleKey>absent()));
+  }
+
+  @Test
+  public void ruleKeyNotCalculatedIfSizeLimitHitWithDirectory() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+
+    // Create a directory of files which combine to pass size limit.
+    Path input = filesystem.getRootPath().getFileSystem().getPath("input");
+    filesystem.mkdirs(input);
+    filesystem.writeBytesToPath(new byte[150], input.resolve("file1"));
+    filesystem.writeBytesToPath(new byte[150], input.resolve("file2"));
+
+    // Construct rule which uses inputs.
+    BuildRule rule =
+        ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setOut("out")
+            .setSrc(new PathSourcePath(filesystem, input))
+            .build(resolver, filesystem);
+
+    // Verify rule key isn't calculated.
+    Optional<RuleKey> inputKey =
+        new InputBasedRuleKeyBuilderFactory(0, hashCache, pathResolver, 200)
+            .build(rule);
+    assertThat(inputKey, Matchers.equalTo(Optional.<RuleKey>absent()));
   }
 
   private static class RuleKeyAppendableWithInput implements RuleKeyAppendable {

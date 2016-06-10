@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collections;
 
 import javax.annotation.Nonnull;
@@ -55,18 +56,24 @@ public class InputBasedRuleKeyBuilderFactory
   private final ArchiveHandling archiveHandling;
   private final InputHandling inputHandling;
   private final LoadingCache<RuleKeyAppendable, Result> cache;
+  private final long inputSizeLimit;
+
+  private long inputSize = 0;
+  private boolean inputSizeLimitExceeded = false;
 
   protected InputBasedRuleKeyBuilderFactory(
       int seed,
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
       InputHandling inputHandling,
-      ArchiveHandling archiveHandling) {
+      ArchiveHandling archiveHandling,
+      long inputSizeLimit) {
     super(seed);
     this.fileHashLoader = hashLoader;
     this.pathResolver = pathResolver;
     this.inputHandling = inputHandling;
     this.archiveHandling = archiveHandling;
+    this.inputSizeLimit = inputSizeLimit;
 
     // Build the cache around the sub-rule-keys and their dep lists.
     cache = CacheBuilder.newBuilder().weakKeys().build(
@@ -84,8 +91,22 @@ public class InputBasedRuleKeyBuilderFactory
   public InputBasedRuleKeyBuilderFactory(
       int seed,
       FileHashLoader hashLoader,
+      SourcePathResolver pathResolver,
+      long inputSizeLimit) {
+    this(
+        seed,
+        hashLoader,
+        pathResolver,
+        InputHandling.HASH,
+        ArchiveHandling.ARCHIVES,
+        inputSizeLimit);
+  }
+
+  public InputBasedRuleKeyBuilderFactory(
+      int seed,
+      FileHashLoader hashLoader,
       SourcePathResolver pathResolver) {
-    this(seed, hashLoader, pathResolver, InputHandling.HASH, ArchiveHandling.ARCHIVES);
+    this(seed, hashLoader, pathResolver, Long.MAX_VALUE);
   }
 
   @Override
@@ -115,7 +136,7 @@ public class InputBasedRuleKeyBuilderFactory
               usedDep.getBuildTarget(),
               rule.getDeps());
         }
-        return Optional.of(result.getRuleKey());
+        return result.getRuleKey();
       }
 
     };
@@ -132,15 +153,27 @@ public class InputBasedRuleKeyBuilderFactory
 
     @Override
     public Builder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
+      if (inputSizeLimitExceeded) {
+        return this;
+      }
+
       Result result = cache.getUnchecked(appendable);
+      Optional<RuleKey> ruleKey = result.getRuleKey();
+      if (!ruleKey.isPresent()) {
+        inputSizeLimitExceeded = true;
+        return this;
+      }
       deps.add(result.getDeps());
       inputs.add(result.getInputs());
-      setAppendableRuleKey(key, result.getRuleKey());
+      setAppendableRuleKey(key, ruleKey.get());
       return this;
     }
 
     @Override
     public Builder setReflectively(String key, @Nullable Object val) {
+      if (inputSizeLimitExceeded) {
+        return this;
+      }
       if (val instanceof ArchiveDependencySupplier &&
           archiveHandling == ArchiveHandling.MEMBERS) {
         super.setReflectively(
@@ -150,6 +183,30 @@ public class InputBasedRuleKeyBuilderFactory
         super.setReflectively(key, val);
       }
 
+      return this;
+    }
+
+    @Override
+    public Builder setPath(Path absolutePath, Path ideallyRelative) throws IOException {
+
+      // Input size limit handling.
+      if (inputSizeLimit != Long.MAX_VALUE) {
+
+        // Initially, check if we've already exceeded the size limit, and return early if so.
+        if (inputSizeLimitExceeded) {
+          return this;
+        }
+
+        // Otherwise, update the size limit with the size of current path, and bail out if this
+        // pushed us over the limit.
+        inputSize += fileHashLoader.getSize(absolutePath);
+        if (inputSize > inputSizeLimit) {
+          inputSizeLimitExceeded = true;
+          return this;
+        }
+      }
+
+      super.setPath(absolutePath, ideallyRelative);
       return this;
     }
 
@@ -197,14 +254,25 @@ public class InputBasedRuleKeyBuilderFactory
 
     // Build the rule key and the list of deps found from this builder.
     protected Result buildResult() {
-      return new Result(
-          buildRuleKey(),
-          Iterables.concat(deps.build()),
-          Iterables.concat(inputs.build()));
+      if (inputSizeLimitExceeded) {
+        return new Result(
+            Optional.<RuleKey>absent(),
+            Collections.<BuildRule>emptyList(),
+            Collections.<SourcePath>emptyList());
+      } else {
+        return new Result(
+            Optional.of(buildRuleKey()),
+            Iterables.concat(deps.build()),
+            Iterables.concat(inputs.build()));
+      }
     }
 
     @Override
     public Optional<RuleKey> build() {
+      if (inputSizeLimitExceeded) {
+        return Optional.absent();
+      }
+
       return Optional.of(buildRuleKey());
     }
 
@@ -247,12 +315,12 @@ public class InputBasedRuleKeyBuilderFactory
 
   protected static class Result {
 
-    private final RuleKey ruleKey;
+    private final Optional<RuleKey> ruleKey;
     private final Iterable<BuildRule> deps;
     private final Iterable<SourcePath> inputs;
 
     public Result(
-        RuleKey ruleKey,
+        Optional<RuleKey> ruleKey,
         Iterable<BuildRule> deps,
         Iterable<SourcePath> inputs) {
       this.ruleKey = ruleKey;
@@ -260,7 +328,7 @@ public class InputBasedRuleKeyBuilderFactory
       this.inputs = inputs;
     }
 
-    public RuleKey getRuleKey() {
+    public Optional<RuleKey> getRuleKey() {
       return ruleKey;
     }
 

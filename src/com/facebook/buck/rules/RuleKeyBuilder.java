@@ -245,6 +245,23 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
     }
   }
 
+  protected RuleKeyBuilder<T> setPath(Path ideallyRelative, HashCode sha1) {
+    Path addToKey;
+    if (ideallyRelative.isAbsolute()) {
+      logger.warn(
+          "Attempting to add absolute path to rule key. Only using file name: %s", ideallyRelative);
+      addToKey = ideallyRelative.getFileName();
+    } else {
+      addToKey = ideallyRelative;
+    }
+
+    ruleKeyLogger.addPath(addToKey, sha1);
+
+    feed(addToKey.toString().getBytes(StandardCharsets.UTF_8));
+    feed(sha1.toString().getBytes(StandardCharsets.UTF_8));
+    return this;
+  }
+
   // Paths get added as a combination of the file name and file hash. If the path is absolute
   // then we only include the file name (assuming that it represents a tool of some kind
   // that's being used for compilation or some such). This does mean that if a user renames a
@@ -259,19 +276,7 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
       throw new RuntimeException("No SHA for " + absolutePath);
     }
 
-    Path addToKey;
-    if (ideallyRelative.isAbsolute()) {
-      logger.warn(
-          "Attempting to add absolute path to rule key. Only using file name: %s", ideallyRelative);
-      addToKey = ideallyRelative.getFileName();
-    } else {
-      addToKey = ideallyRelative;
-    }
-
-    ruleKeyLogger.addPath(addToKey, sha1);
-
-    feed(addToKey.toString().getBytes(StandardCharsets.UTF_8));
-    feed(sha1.toString().getBytes(StandardCharsets.UTF_8));
+    setPath(ideallyRelative, sha1);
     return this;
   }
 

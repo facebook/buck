@@ -153,6 +153,7 @@ public class CachingBuildEngineTest {
   private static final SourcePathResolver DEFAULT_SOURCE_PATH_RESOLVER =
       new SourcePathResolver(
           new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+  private static final long NO_INPUT_FILE_SIZE_LIMIT = Long.MAX_VALUE;
   private static final DefaultRuleKeyBuilderFactory NOOP_RULE_KEY_FACTORY =
       new DefaultRuleKeyBuilderFactory(
           0,
@@ -162,7 +163,8 @@ public class CachingBuildEngineTest {
       new InputBasedRuleKeyBuilderFactory(
           0,
           new NullFileHashCache(),
-          DEFAULT_SOURCE_PATH_RESOLVER);
+          DEFAULT_SOURCE_PATH_RESOLVER,
+          NO_INPUT_FILE_SIZE_LIMIT);
   private static final DependencyFileRuleKeyBuilderFactory NOOP_DEP_FILE_RULE_KEY_FACTORY =
       new DefaultDependencyFileRuleKeyBuilderFactory(
           0,
@@ -196,8 +198,11 @@ public class CachingBuildEngineTest {
           new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       pathResolver = new SourcePathResolver(resolver);
       ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(0, fileHashCache, pathResolver);
-      inputBasedRuleKeyBuilderFactory =
-          new InputBasedRuleKeyBuilderFactory(0, fileHashCache, pathResolver);
+      inputBasedRuleKeyBuilderFactory = new InputBasedRuleKeyBuilderFactory(
+          0,
+          fileHashCache,
+          pathResolver,
+          NO_INPUT_FILE_SIZE_LIMIT);
     }
   }
 
@@ -263,6 +268,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              NO_INPUT_FILE_SIZE_LIMIT,
               ObjectMappers.newDefaultInstance(),
               resolver,
               0);
@@ -360,6 +366,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              NO_INPUT_FILE_SIZE_LIMIT,
               ObjectMappers.newDefaultInstance(),
               resolver,
               0);
@@ -444,6 +451,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              NO_INPUT_FILE_SIZE_LIMIT,
               ObjectMappers.newDefaultInstance(),
               resolver,
               0);
@@ -529,6 +537,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              NO_INPUT_FILE_SIZE_LIMIT,
               ObjectMappers.newDefaultInstance(),
               resolver,
               0);
@@ -587,6 +596,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              NO_INPUT_FILE_SIZE_LIMIT,
               ObjectMappers.newDefaultInstance(),
               resolver,
               0);
@@ -666,6 +676,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              NO_INPUT_FILE_SIZE_LIMIT,
               ObjectMappers.newDefaultInstance(),
               resolver,
               0);
@@ -777,6 +788,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              NO_INPUT_FILE_SIZE_LIMIT,
               ObjectMappers.newDefaultInstance(),
               resolver,
               0);
@@ -875,6 +887,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              NO_INPUT_FILE_SIZE_LIMIT,
               ObjectMappers.newDefaultInstance(),
               resolver,
               0);
@@ -918,6 +931,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              NO_INPUT_FILE_SIZE_LIMIT,
               ObjectMappers.newDefaultInstance(),
               resolver,
               0);
@@ -955,6 +969,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              NO_INPUT_FILE_SIZE_LIMIT,
               ObjectMappers.newDefaultInstance(),
               resolver,
               0);
@@ -1033,6 +1048,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              NO_INPUT_FILE_SIZE_LIMIT,
               ObjectMappers.newDefaultInstance(),
               resolver,
               0);
@@ -1129,6 +1145,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              NO_INPUT_FILE_SIZE_LIMIT,
               ObjectMappers.newDefaultInstance(),
               resolver,
               0);
@@ -1189,6 +1206,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              NO_INPUT_FILE_SIZE_LIMIT,
               ObjectMappers.newDefaultInstance(),
               resolver,
               0);
@@ -1222,6 +1240,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.of(2L),
+              NO_INPUT_FILE_SIZE_LIMIT,
               ObjectMappers.newDefaultInstance(),
               resolver,
               0);
@@ -1256,6 +1275,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              NO_INPUT_FILE_SIZE_LIMIT,
               ObjectMappers.newDefaultInstance(),
               resolver,
               0);
@@ -1280,6 +1300,7 @@ public class CachingBuildEngineTest {
               CachingBuildEngine.DepFiles.ENABLED,
               256L,
               Optional.<Long>absent(),
+              NO_INPUT_FILE_SIZE_LIMIT,
               ObjectMappers.newDefaultInstance(),
               resolver,
               0);

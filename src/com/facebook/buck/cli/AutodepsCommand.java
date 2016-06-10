@@ -115,6 +115,7 @@ public class AutodepsCommand extends AbstractCommand {
           params.getBuckConfig().getBuildDepFiles(),
           params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
           params.getBuckConfig().getBuildArtifactCacheSizeLimit(),
+          params.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
           params.getObjectMapper(),
           buildRuleResolver,
           params.getBuckConfig().getKeySeed());
