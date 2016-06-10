@@ -866,11 +866,14 @@ public class TargetsCommand extends AbstractCommand {
 
     // Hash each target's rule description and contents of any files.
     ImmutableMap<BuildTarget, HashCode> buildTargetHashes =
-        TargetGraphHashing.hashTargetGraph(
+        new TargetGraphHashing(
+            params.getBuckEventBus(),
             params.getCell(),
             targetGraphWithTests,
             fileHashLoader,
-            targetGraphAndNodesWithTests.getTargetNodes());
+            targetGraphAndNodesWithTests.getTargetNodes())
+        .setNumThreads(params.getBuckConfig().getNumThreads())
+        .hashTargetGraph();
 
     ImmutableMap<BuildTarget, HashCode> finalHashes = rehashWithTestsIfNeeded(
         targetGraphWithTests,
