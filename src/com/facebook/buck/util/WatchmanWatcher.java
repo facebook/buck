@@ -20,9 +20,10 @@ package com.facebook.buck.util;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.Watchman;
-import com.facebook.buck.io.WatchmanClient;
 import com.facebook.buck.io.Watchman.Capability;
+import com.facebook.buck.io.WatchmanClient;
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -75,11 +76,11 @@ public class WatchmanWatcher {
   public WatchmanWatcher(
       String watchRoot,
       EventBus fileChangeEventBus,
-      Iterable<Path> ignorePaths,
-      Iterable<String> ignoreGlobs,
+      ImmutableSet<PathOrGlobMatcher> ignorePaths,
       Watchman watchman,
       UUID queryUUID) {
-    this(fileChangeEventBus,
+    this(
+        fileChangeEventBus,
         watchman.getWatchmanClient().get(),
         DEFAULT_OVERFLOW_THRESHOLD,
         DEFAULT_TIMEOUT_MILLIS,
@@ -88,7 +89,6 @@ public class WatchmanWatcher {
             watchman.getProjectPrefix(),
             queryUUID.toString(),
             ignorePaths,
-            ignoreGlobs,
             watchman.getCapabilities()));
   }
 
@@ -110,8 +110,7 @@ public class WatchmanWatcher {
       String watchRoot,
       Optional<String> watchPrefix,
       String uuid,
-      Iterable<Path> ignorePaths,
-      Iterable<String> ignoreGlobs,
+      ImmutableSet<PathOrGlobMatcher> ignorePaths,
       Set<Capability> watchmanCapabilities) {
     List<Object> queryParams = new ArrayList<>();
     queryParams.add("query");
@@ -140,31 +139,37 @@ public class WatchmanWatcher {
     // not currently OK to exclude .git in .watchmanconfig). This id
     // because watchman's .git cookie magic is done before the query
     // is applied.
-    for (Path ignorePath : ignorePaths) {
-      if (ignorePath.isAbsolute()) {
-        ignorePath = MorePaths.relativize(projectRoot, ignorePath);
+    for (PathOrGlobMatcher ignorePathOrGlob : ignorePaths) {
+      switch (ignorePathOrGlob.getType()) {
+        case PATH:
+          Path ignorePath = ignorePathOrGlob.getPath();
+          if (ignorePath.isAbsolute()) {
+            ignorePath = MorePaths.relativize(projectRoot, ignorePath);
+          }
+          if (watchmanCapabilities.contains(Capability.DIRNAME)) {
+            excludeAnyOf.add(
+                Lists.newArrayList(
+                    "dirname",
+                    ignorePath.toString()));
+          } else {
+            excludeAnyOf.add(
+                Lists.newArrayList(
+                    "match",
+                    ignorePath.toString() + File.separator + "*",
+                    "wholename"));
+          }
+          break;
+        case GLOB:
+          String ignoreGlob = ignorePathOrGlob.getGlob();
+          excludeAnyOf.add(
+              Lists.newArrayList(
+                  "match",
+                  ignoreGlob));
+          break;
+        default:
+          throw new RuntimeException(
+              String.format("Unsupported type: '%s'", ignorePathOrGlob.getType()));
       }
-      if (watchmanCapabilities.contains(Capability.DIRNAME)) {
-        excludeAnyOf.add(
-            Lists.newArrayList(
-                "dirname",
-                ignorePath.toString()));
-      } else {
-        excludeAnyOf.add(
-            Lists.newArrayList(
-                "match",
-                ignorePath.toString() + File.separator + "*",
-                "wholename"));
-      }
-    }
-
-    // Exclude all filenames matching globs. We explicitly don't match
-    // against the full path ("wholename"), just the filename.
-    for (String ignoreGlob : ignoreGlobs) {
-      excludeAnyOf.add(
-          Lists.newArrayList(
-              "match",
-              ignoreGlob));
     }
 
     sinceParams.put(

@@ -21,6 +21,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 
+import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.util.Objects;
@@ -69,6 +70,10 @@ public class PathOrGlobMatcher {
     this.basePath = Optional.absent();
     this.globMatcher = Optional.of(globMatcher);
     this.globPattern = Optional.of(globPattern);
+  }
+
+  public PathOrGlobMatcher(String globPattern) {
+    this(FileSystems.getDefault().getPathMatcher("glob:" + globPattern), globPattern);
   }
 
   public Type getType() {
@@ -122,6 +127,11 @@ public class PathOrGlobMatcher {
   public Path getPath() {
     Preconditions.checkState(type == Type.PATH);
     return basePath.get();
+  }
+
+  public String getGlob() {
+    Preconditions.checkState(type == Type.GLOB);
+    return globPattern.get();
   }
 
   public static Predicate<PathOrGlobMatcher> isPath() {

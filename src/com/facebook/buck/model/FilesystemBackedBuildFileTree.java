@@ -23,7 +23,6 @@ import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
@@ -33,7 +32,6 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
-import java.util.Set;
 
 /**
  * Class to allow looking up parents and children of build files.
@@ -73,16 +71,15 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
     // When we find one, we can stop crawling anything under the directory it's in.
     final ImmutableSet.Builder<Path> childPaths = ImmutableSet.builder();
     final Path basePath = target.getBasePath();
-    final Set<Path> ignoredPaths = FluentIterable.from(projectFilesystem.getIgnorePaths())
-        .filter(PathOrGlobMatcher.isPath())
-        .transform(PathOrGlobMatcher.toPath())
-        .toSet();
+    final ImmutableSet<PathOrGlobMatcher> ignoredPaths = projectFilesystem.getIgnorePaths();
     try {
       projectFilesystem.walkRelativeFileTree(basePath, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-              if (ignoredPaths.contains(dir)) {
-                return FileVisitResult.SKIP_SUBTREE;
+              for (PathOrGlobMatcher ignoredPath : ignoredPaths) {
+                if (ignoredPath.matches(dir)) {
+                  return FileVisitResult.SKIP_SUBTREE;
+                }
               }
               if (dir.equals(basePath)) {
                 return FileVisitResult.CONTINUE;

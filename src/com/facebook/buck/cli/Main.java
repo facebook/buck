@@ -118,7 +118,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -225,8 +224,11 @@ public final class Main {
 
   // This is a hack to work around a perf issue where generated Xcode IDE files
   // trip WatchmanWatcher, causing buck project to take a long time to run.
-  private static final ImmutableSet<String> DEFAULT_IGNORE_GLOBS =
-      ImmutableSet.of("*.pbxproj", "*.xcscheme", "*.xcworkspacedata");
+  private static final ImmutableSet<PathOrGlobMatcher> DEFAULT_IGNORE_GLOBS =
+      ImmutableSet.of(
+          new PathOrGlobMatcher("*.pbxproj"),
+          new PathOrGlobMatcher("*.xcscheme"),
+          new PathOrGlobMatcher("*.xcworkspacedata"));
 
   private static final Logger LOG = Logger.get(Main.class);
 
@@ -990,10 +992,10 @@ public final class Main {
               WatchmanWatcher watchmanWatcher = new WatchmanWatcher(
                   watchman.getWatchRoot().or(canonicalRootPath.toString()),
                   daemon.getFileEventBus(),
-                  FluentIterable.from(filesystem.getIgnorePaths())
-                      .filter(PathOrGlobMatcher.isPath())
-                      .transform(PathOrGlobMatcher.toPath()),
-                  DEFAULT_IGNORE_GLOBS,
+                  ImmutableSet.<PathOrGlobMatcher>builder()
+                      .addAll(filesystem.getIgnorePaths())
+                      .addAll(DEFAULT_IGNORE_GLOBS)
+                      .build(),
                   watchman,
                   daemon.getWatchmanQueryUUID());
               parser = getParserFromDaemon(
