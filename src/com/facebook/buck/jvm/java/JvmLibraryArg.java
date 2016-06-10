@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 @SuppressFieldNotInitialized
 public class JvmLibraryArg extends AbstractDescriptionArg {
@@ -39,6 +40,7 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
   public Optional<SourcePath> javacJar;
   public Optional<Either<BuiltInJavac, SourcePath>> compiler;
   public Optional<ImmutableList<String>> extraArguments;
+  public Optional<ImmutableList<Pattern>> removeClasses;
   public Optional<ImmutableSortedSet<BuildTarget>> annotationProcessorDeps;
   public Optional<ImmutableList<String>> annotationProcessorParams;
   public Optional<ImmutableSet<String>> annotationProcessors;

@@ -198,6 +198,17 @@ java_library(
 {/call}
 
 {call buck.arg}
+  {param name: 'remove_classes' /}
+  {param default : '[]' /}
+  {param desc}
+  Specifies a list of <code>Patterns</code> that are used to exclude
+  <code>classes</code> from the <code>JAR</code>. The pattern matching is
+  based on the name of the class. This can be used to exclude a member
+  class or delete a local view of a class that will be replaced during
+  a later stage of the build.
+{/call}
+
+{call buck.arg}
   {param name: 'exported_deps' /}
   {param default : '[]' /}
   {param desc}

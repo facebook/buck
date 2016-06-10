@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.CustomZipOutputStream;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -26,6 +27,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 
 import javax.tools.FileObject;
@@ -45,15 +47,18 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
   private Semaphore jarFileSemaphore = new Semaphore(1);
   private Set<String> directoryPaths;
   private Set<String> javaFileForOutputPaths;
+  private ImmutableList<Pattern> classesToRemoveFromJar;
 
   public JavaInMemoryFileManager(
       StandardJavaFileManager standardManager,
-      CustomZipOutputStream jarOutputStream) {
+      CustomZipOutputStream jarOutputStream,
+      ImmutableList<Pattern> classesToRemoveFromJar) {
     super(standardManager);
     this.delegate = standardManager;
     this.jarOutputStream = jarOutputStream;
     this.directoryPaths = new HashSet<>();
     this.javaFileForOutputPaths = new HashSet<>();
+    this.classesToRemoveFromJar = classesToRemoveFromJar;
   }
 
   /**
@@ -95,12 +100,21 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
       }
     }
 
+    // Use the normal FileObject that writes to the disk for source files.
     if (kind.equals(JavaFileObject.Kind.SOURCE)) {
       return delegate.getJavaFileForOutput(location, className, kind, sibling);
     }
-    JavaFileObject fileObject = createJavaMemoryFileObject(getPath(className, kind), kind);
-    javaFileForOutputPaths.add(fileObject.getName());
-    return fileObject;
+
+    // If the class is to be removed from the jar create a NoOp FileObject that will not output
+    // anything.
+    for (Pattern pattern : classesToRemoveFromJar) {
+      if (pattern.matcher(className.toString()).find()) {
+        return createJavaNoOpFileObject(getPath(className, kind), kind);
+      }
+    }
+
+    // Return a FileObject that it will be written in the jar.
+    return createJavaMemoryFileObject(getPath(className, kind), kind);
   }
 
   @Override
@@ -162,6 +176,14 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
   }
 
   private JavaFileObject createJavaMemoryFileObject(String path, JavaFileObject.Kind kind) {
-    return new JavaInMemoryFileObject(path, kind, jarOutputStream, jarFileSemaphore);
+    JavaFileObject obj = new JavaInMemoryFileObject(path, kind, jarOutputStream, jarFileSemaphore);
+    javaFileForOutputPaths.add(obj.getName());
+    return obj;
+  }
+
+  private JavaFileObject createJavaNoOpFileObject(String path, JavaFileObject.Kind kind) {
+    JavaFileObject obj = new JavaNoOpFileObject(path, kind);
+    javaFileForOutputPaths.add(obj.getName());
+    return obj;
   }
 }

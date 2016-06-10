@@ -1,0 +1,11 @@
+java_library(
+  name = 'a',
+  srcs = ['A.java', 'B.java', 'C.java', 'RemovableZ.java'],
+  remove_classes = ['test.pkg.RemovableZ', '^*removable*', '^*deletable*']
+)
+
+java_binary(
+    name = 'binary',
+    deps = [':a'],
+    main_class = 'A',
+)

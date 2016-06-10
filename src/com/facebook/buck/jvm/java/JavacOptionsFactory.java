@@ -56,6 +56,10 @@ public final class JavacOptionsFactory {
       builder.addAllExtraArguments(jvmLibraryArg.extraArguments.get());
     }
 
+    if (jvmLibraryArg.removeClasses.isPresent()) {
+      builder.addAllClassesToRemoveFromJar(jvmLibraryArg.removeClasses.get());
+    }
+
     if (jvmLibraryArg.compiler.isPresent()) {
       Either<BuiltInJavac, SourcePath> either = jvmLibraryArg.compiler.get();
 

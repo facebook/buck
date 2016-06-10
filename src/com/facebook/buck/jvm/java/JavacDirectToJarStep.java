@@ -44,7 +44,6 @@ import javax.tools.StandardJavaFileManager;
  * .class files in memory.
  */
 public class JavacDirectToJarStep implements Step {
-
   private final ImmutableSortedSet<Path> sourceFilePaths;
   private final BuildTarget invokingRule;
   private final SourcePathResolver resolver;
@@ -201,7 +200,8 @@ public class JavacDirectToJarStep implements Step {
       public StandardJavaFileManager create(JavaCompiler compiler) {
         inMemoryFileManager = new JavaInMemoryFileManager(
             compiler.getStandardFileManager(null, null, null),
-            jarOutputStream);
+            jarOutputStream,
+            buildTimeOptions.getClassesToRemoveFromJar());
         return inMemoryFileManager;
       }
     };

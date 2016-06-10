@@ -41,6 +41,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Represents the command line options that should be passed to javac. Note that the options do not
@@ -108,6 +109,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   public abstract Set<String> getSafeAnnotationProcessors();
 
   public abstract List<String> getExtraArguments();
+  public abstract List<Pattern> getClassesToRemoveFromJar();
   protected abstract Optional<String> getBootclasspath();
   protected abstract Map<String, String> getSourceToBootclasspath();
 

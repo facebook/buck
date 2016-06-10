@@ -144,6 +144,7 @@ public class KnownBuildRuleTypesTest {
     arg.javacJar = Optional.absent();
     arg.compiler = Optional.absent();
     arg.extraArguments = Optional.absent();
+    arg.removeClasses = Optional.absent();
     arg.proguardConfig = Optional.absent();
     arg.annotationProcessorDeps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.annotationProcessorParams = Optional.of(ImmutableList.<String>of());

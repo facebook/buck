@@ -21,19 +21,19 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.TestCustomZipOutputStream;
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.OutputStream;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 
 import javax.tools.DiagnosticCollector;
-import javax.tools.JavaCompiler;
 import javax.tools.JavaFileManager.Location;
 import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
 /**
@@ -47,10 +47,11 @@ public class JavaInMemoryFileManagerTest {
   @Before
   public void setUp() {
     outputStream = new TestCustomZipOutputStream();
-    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-    StandardJavaFileManager fm = compiler.getStandardFileManager(diagnostics, null, null);
-    inMemoryFileManager = new JavaInMemoryFileManager(fm, outputStream);
+    inMemoryFileManager = new JavaInMemoryFileManager(
+        ToolProvider.getSystemJavaCompiler().getStandardFileManager(diagnostics, null, null),
+        outputStream,
+        /*classesToBeRemoved */ ImmutableList.<Pattern>of());
   }
 
   @Test

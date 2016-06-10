@@ -23,6 +23,7 @@
   "postprocessClassesCommands" : [ ],
   "proguardConfig" : null,
   "providedDeps": [],
+  "removeClasses": [],
   "resources" : [ ],
   "resourcesRoot" : null,
   "source" : "6",

@@ -718,6 +718,41 @@ public class DefaultJavaLibraryIntegrationTest {
   }
 
   @Test
+  public void testSpoolClassFilesDirectlyToJarWithRemoveClasses() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "spool_class_files_directly_to_jar_with_remove_classes",
+        tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:a");
+    ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path classesDir =
+        workspace.getPath(BuildTargets.getScratchPath(filesystem, target, "lib__%s__classes"));
+
+    assertThat("Classes directory should exist.", Files.exists(classesDir), is(Boolean.TRUE));
+    assertThat(
+        "No class files should be stored on disk.",
+        ImmutableList.copyOf(classesDir.toFile().listFiles()),
+        hasSize(0));
+
+    Path jarPath =
+        workspace.getPath(BuildTargets.getGenPath(filesystem, target, "lib__%s__output/a.jar"));
+    assertTrue(Files.exists(jarPath));
+
+    // Check that normal and member classes were removed as expected.
+    ZipInspector zipInspector = new ZipInspector(jarPath);
+    zipInspector.assertFileExists("test/pkg/A.class");
+    zipInspector.assertFileExists("test/pkg/B.class");
+    zipInspector.assertFileExists("test/pkg/C.class");
+    zipInspector.assertFileDoesNotExist("test/pkg/RemovableZ.class");
+    zipInspector.assertFileDoesNotExist("B$removableB.class");
+    zipInspector.assertFileDoesNotExist("C$deletableD.class");
+  }
+
+  @Test
   public void testSpoolClassFilesDirectlyToJarWithAnnotationProcessor() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
