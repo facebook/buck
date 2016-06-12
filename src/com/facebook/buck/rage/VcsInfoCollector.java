@@ -57,17 +57,19 @@ public class VcsInfoCollector {
       LOG.info(e, "Couldn't get files changed");
     }
 
+    String currentRevisionId = vcCmdLineInterface.currentRevisionId();
     return SourceControlInfo.builder()
-        .setRevisionId(vcCmdLineInterface.currentRevisionId())
+        .setCurrentRevisionId(currentRevisionId)
         .setDirtyFiles(vcCmdLineInterface.changedFiles("."))
         .setFilesChangedFromMasterBranchPoint(filesChangedFromMasterBranchPoint)
         .build();
   }
 
+
   @Value.Immutable
   @BuckStyleImmutable
   interface AbstractSourceControlInfo {
-    String getRevisionId();
+    String getCurrentRevisionId();
     ImmutableSet<String> getDirtyFiles();
     Optional<ImmutableSet<String>> getFilesChangedFromMasterBranchPoint();
   }
