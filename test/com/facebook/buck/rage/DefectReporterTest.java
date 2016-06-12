@@ -26,6 +26,7 @@ import com.facebook.buck.util.TriState;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -51,6 +52,9 @@ public class DefectReporterTest {
           .setJsonProtocolVersion(1)
           .build();
 
+  private static final UserLocalConfiguration TEST_USER_LOCAL_CONFIGURATION =
+      UserLocalConfiguration.of(true, ImmutableSet.of(Paths.get(".buckconfig.local")));
+
   @Rule
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
@@ -72,6 +76,7 @@ public class DefectReporterTest {
         DefectReport.builder()
             .setBuildEnvironmentDescription(TEST_ENV_DESCRIPTION)
             .setIncludedPaths(fileToBeIncluded)
+            .setUserLocalConfiguration(TEST_USER_LOCAL_CONFIGURATION)
             .build());
 
     Path reportPath = filesystem.resolve(defectSubmitResult.getReportLocalLocation().get());
@@ -92,6 +97,7 @@ public class DefectReporterTest {
     DefectSubmitResult defectSubmitResult = reporter.submitReport(
         DefectReport.builder()
             .setBuildEnvironmentDescription(TEST_ENV_DESCRIPTION)
+            .setUserLocalConfiguration(TEST_USER_LOCAL_CONFIGURATION)
             .build());
 
     Path reportPath = filesystem.resolve(defectSubmitResult.getReportLocalLocation().get());
@@ -101,6 +107,9 @@ public class DefectReporterTest {
       assertThat(
           reportNode.get("buildEnvironmentDescription").get("user").asText(),
           Matchers.equalTo("test_user"));
+      assertThat(
+          reportNode.get("userLocalConfiguration").get("noBuckCheckPresent").asBoolean(),
+          Matchers.equalTo(true));
     }
   }
 

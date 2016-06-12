@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 5456a1f7298c9369245aebe8417c37a59098cdef #@#
+#@# GENERATED FILE: DO NOT MODIFY ccab0a2e238040a5d8c069561840d4e6c9cfb9da #@#
 {
   "rules" : {
     "deps" : [
@@ -11,6 +11,7 @@
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/file:rules",
+      "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/core:packagefinder",
       "//src/com/facebook/buck/jvm/java:rules",

@@ -1024,7 +1024,7 @@ public class ProjectCommand extends BuildCommand {
               "  ide_prompt = false\n\n",
           params.getCell().getFilesystem()
               .getRootPath()
-              .resolve(BuckConfig.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME)
+              .resolve(BuckConfig.BUCK_CONFIG_OVERRIDE_FILE_NAME)
               .toAbsolutePath());
     } else {
       LOG.debug(

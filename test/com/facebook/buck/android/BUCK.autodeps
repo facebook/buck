@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 5eaa472eb49f7007bb2aed5002b504cd7fd42a59 #@#
+#@# GENERATED FILE: DO NOT MODIFY 822e1f919a043596fbd24c026a18dd549d7db37d #@#
 {
   "aar-integration" : {
     "deps" : [
@@ -150,6 +150,7 @@
       "//src/com/facebook/buck/android:split_dex",
       "//src/com/facebook/buck/android:steps",
       "//src/com/facebook/buck/android:utils",
+      "//src/com/facebook/buck/android/aapt:aapt",
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:platform",

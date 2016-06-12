@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 22a1afa3256e6bdf0c3fc5275874255b3bd2ef5c #@#
+#@# GENERATED FILE: DO NOT MODIFY 2486625ff79b17bff22e88321630eaa4b326c335 #@#
 {
   "config" : {
     "deps" : [
@@ -12,7 +12,9 @@
   },
   "rage" : {
     "deps" : [
+      "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/log:log",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",

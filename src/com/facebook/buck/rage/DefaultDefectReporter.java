@@ -38,6 +38,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Takes care of actually writing out the report.
@@ -65,7 +66,15 @@ public class DefaultDefectReporter implements DefectReporter {
       ImmutableSet<Path> paths) throws IOException {
     for (Path logFile : paths) {
       Preconditions.checkArgument(!logFile.isAbsolute(), "Should be a relative Path.", logFile);
-      out.putNextEntry(new CustomZipEntry(logFile));
+
+      // If the file is hidden(UNIX terms) save it as normal file.
+      if (logFile.getFileName().toString().startsWith(".")) {
+        out.putNextEntry(new CustomZipEntry(
+            Paths.get(logFile.getFileName().toString().substring(1))));
+      } else {
+        out.putNextEntry(new CustomZipEntry(logFile));
+      }
+
       try (InputStream input = filesystem.newFileInputStream(logFile)) {
         ByteStreams.copy(input, out);
       }

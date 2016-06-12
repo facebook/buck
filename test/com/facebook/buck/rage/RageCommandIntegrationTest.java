@@ -111,7 +111,6 @@ public class RageCommandIntegrationTest {
           });
       httpd.start();
 
-
       RageConfig config = RageConfig.builder()
           .setReportUploadUri(httpd.getUri("/rage"))
           .build();
@@ -146,6 +145,8 @@ public class RageCommandIntegrationTest {
       filesystem.writeBytesToPath(requestBody.get(), report);
       ZipInspector zipInspector = new ZipInspector(filesystem.resolve(report));
       zipInspector.assertFileExists("report.json");
+      zipInspector.assertFileExists("buckconfig.local");
+      zipInspector.assertFileExists("bucklogging.local.properties");
       zipInspector.assertFileExists("buck-out/log/buck-0.log");
       zipInspector.assertFileExists("buck-out/log/buck-1.log");
     }

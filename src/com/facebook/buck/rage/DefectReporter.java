@@ -50,5 +50,6 @@ public interface DefectReporter {
     BuildEnvironmentDescription getBuildEnvironmentDescription();
     Optional<SourceControlInfo> getSourceControlInfo();
     Optional<String> getExtraInfo();
+    UserLocalConfiguration getUserLocalConfiguration();
   }
 }

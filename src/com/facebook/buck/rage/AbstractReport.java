@@ -16,6 +16,9 @@
 
 package com.facebook.buck.rage;
 
+import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.LogConfigPaths;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -28,23 +31,30 @@ import org.immutables.value.Value;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Base class for gathering logs and other interesting information from buck.
  */
 public abstract class AbstractReport {
 
+  private final ProjectFilesystem filesystem;
   private final DefectReporter defectReporter;
   private final BuildEnvironmentDescription buildEnvironmentDescription;
   private final PrintStream output;
   private final ExtraInfoCollector extraInfoCollector;
 
   public AbstractReport(
+      ProjectFilesystem filesystem,
       DefectReporter defectReporter,
       BuildEnvironmentDescription buildEnvironmentDescription,
       PrintStream output,
       ExtraInfoCollector extraInfoCollector) {
+    this.filesystem = filesystem;
     this.defectReporter = defectReporter;
     this.buildEnvironmentDescription = buildEnvironmentDescription;
     this.output = output;
@@ -76,6 +86,9 @@ public abstract class AbstractReport {
           "The results will not be attached to the report.", e.getMessage());
     }
 
+    UserLocalConfiguration userLocalConfiguration =
+        UserLocalConfiguration.of(isNoBuckCheckPresent(), getLocalConfigs());
+
     ImmutableSet<Path> includedPaths = FluentIterable.from(highlightedBuilds)
         .transform(
             new Function<BuildLogEntry, Path>() {
@@ -85,6 +98,7 @@ public abstract class AbstractReport {
               }
             })
         .append(extraInfoPaths)
+        .append(userLocalConfiguration.getLocalConfigs())
         .toSet();
 
     DefectReport defectReport = DefectReport.builder()
@@ -102,6 +116,7 @@ public abstract class AbstractReport {
         .setSourceControlInfo(sourceControlInfo)
         .setIncludedPaths(includedPaths)
         .setExtraInfo(extraInfo)
+        .setUserLocalConfiguration(userLocalConfiguration)
         .build();
 
     output.println("Writing report, please wait..");
@@ -114,4 +129,24 @@ public abstract class AbstractReport {
     String getUserIssueDescription();
   }
 
+  private ImmutableSet<Path> getLocalConfigs() {
+    Path rootPath = filesystem.getRootPath();
+    ImmutableSet<Path> knownUserLocalConfigs = ImmutableSet.of(
+        Paths.get(BuckConfig.BUCK_CONFIG_OVERRIDE_FILE_NAME),
+        LogConfigPaths.LOCAL_PATH,
+        Paths.get(".watchman.local"));
+    Set<Path> foundUserlocalConfigs = new HashSet<>();
+
+    for (Path localConfig : knownUserLocalConfigs) {
+      if (Files.exists(rootPath.resolve(localConfig))) {
+        foundUserlocalConfigs.add(localConfig);
+      }
+    }
+
+    return ImmutableSet.copyOf(foundUserlocalConfigs);
+  }
+
+  private boolean isNoBuckCheckPresent() {
+    return Files.exists(filesystem.getRootPath().resolve(".nobuckcheck"));
+  }
 }
