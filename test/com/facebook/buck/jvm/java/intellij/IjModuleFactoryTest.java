@@ -480,7 +480,8 @@ public class IjModuleFactoryTest {
               TargetNode<? extends JvmLibraryArg> targetNode) {
             return Optional.absent();
           }
-        });
+        },
+        false);
   }
 
   @Test

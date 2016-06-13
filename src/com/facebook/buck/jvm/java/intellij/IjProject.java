@@ -83,7 +83,10 @@ public class IjProject {
    *   correctly.
    * @throws IOException
    */
-  public ImmutableSet<BuildTarget> write(boolean runPostGenerationCleaner) throws IOException {
+  public ImmutableSet<BuildTarget> write(
+      boolean runPostGenerationCleaner,
+      boolean excludeArtifacts)
+      throws IOException {
     final ImmutableSet.Builder<BuildTarget> requiredBuildTargets = ImmutableSet.builder();
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(
         new DefaultIjLibraryFactory.IjLibraryFactoryResolver() {
@@ -195,7 +198,7 @@ public class IjProject {
     IjModuleGraph moduleGraph = IjModuleGraph.from(
         targetGraphAndTargets.getTargetGraph(),
         libraryFactory,
-        new IjModuleFactory(moduleFactoryResolver),
+        new IjModuleFactory(moduleFactoryResolver, excludeArtifacts),
         aggregationMode);
     JavaPackageFinder parsingJavaPackageFinder = ParsingJavaPackageFinder.preparse(
         javaFileParser,

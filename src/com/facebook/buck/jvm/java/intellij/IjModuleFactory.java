@@ -292,11 +292,16 @@ public class IjModuleFactory {
 
   private final Map<BuildRuleType, IjModuleRule<?>> moduleRuleIndex = new HashMap<>();
   private final IjModuleFactoryResolver moduleFactoryResolver;
+  private final boolean excludeShadows;
 
   /**
    * @param moduleFactoryResolver see {@link IjModuleFactoryResolver}.
    */
-  public IjModuleFactory(IjModuleFactoryResolver moduleFactoryResolver) {
+  public IjModuleFactory(
+      IjModuleFactoryResolver moduleFactoryResolver,
+      boolean excludeShadows) {
+    this.excludeShadows = excludeShadows;
+
     addToIndex(new AndroidBinaryModuleRule());
     addToIndex(new AndroidLibraryModuleRule());
     addToIndex(new AndroidResourceModuleRule());
@@ -486,9 +491,13 @@ public class IjModuleFactory {
         dependencyType);
   }
 
-  private static <T extends JavaLibraryDescription.Arg> void addCompiledShadowIfNeeded(
+  private <T extends JavaLibraryDescription.Arg> void addCompiledShadowIfNeeded(
       TargetNode<T> targetNode,
       ModuleBuildContext context) {
+    if (excludeShadows) {
+      return;
+    }
+
     T arg = targetNode.getConstructorArg();
     // TODO(marcinkosiba): investigate supporting annotation processors without resorting to this.
     boolean hasAnnotationProcessors = !arg.annotationProcessors.get().isEmpty();

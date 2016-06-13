@@ -771,7 +771,8 @@ public class IjModuleGraphTest {
               TargetNode<? extends JvmLibraryArg> targetNode) {
             return Optional.absent();
           }
-        });
+        },
+        false);
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(sourceOnlyResolver);
     return IjModuleGraph.from(
         TargetGraphFactory.newInstance(targets),

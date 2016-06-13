@@ -226,6 +226,12 @@ public class ProjectCommand extends BuildCommand {
   private boolean runIjCleaner = false;
 
   @Option(
+      name = "--exclude-artifacts",
+      usage = "Don't include references to the artifacts created by compiling a target in" +
+          "the module representing that target.")
+  private boolean excludeArtifacts = false;
+
+  @Option(
       name = "--focus",
       depends = "--build-with-buck",
       usage = "Space separated list of build target full qualified names that should be part of " +
@@ -566,7 +572,7 @@ public class ProjectCommand extends BuildCommand {
         getIntellijAggregationMode(params.getBuckConfig()),
         params.getBuckConfig());
 
-    ImmutableSet<BuildTarget> requiredBuildTargets = project.write(runIjCleaner);
+    ImmutableSet<BuildTarget> requiredBuildTargets = project.write(runIjCleaner, excludeArtifacts);
 
     if (requiredBuildTargets.isEmpty()) {
       return 0;
