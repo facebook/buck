@@ -1383,16 +1383,21 @@ public final class Main {
             .add(new JavaUtilsLoggingBuildListener())
             .add(consoleEventBusListener)
             .add(new LoggingBuildListener());
-    try {
-      eventListenersBuilder.add(new ChromeTraceBuildListener(
-          projectFilesystem,
-          buildId,
-          clock,
-          objectMapper,
-          config.getMaxTraces(),
-          config.getCompressTraces()));
-    } catch (IOException e) {
-      LOG.error("Unable to create ChromeTrace listener!");
+
+    if (config.isChromeTraceCreationEnabled()) {
+      try {
+        eventListenersBuilder.add(new ChromeTraceBuildListener(
+            projectFilesystem,
+            buildId,
+            clock,
+            objectMapper,
+            config.getMaxTraces(),
+            config.getCompressTraces()));
+      } catch (IOException e) {
+        LOG.error("Unable to create ChromeTrace listener!");
+      }
+    } else {
+      LOG.warn("::: ChromeTrace listener disabled");
     }
     if (webServer.isPresent()) {
       eventListenersBuilder.add(webServer.get().createListener());

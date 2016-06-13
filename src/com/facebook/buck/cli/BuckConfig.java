@@ -466,6 +466,10 @@ public class BuckConfig {
     return parseInt(getValue("log", "max_traces").or(DEFAULT_MAX_TRACES));
   }
 
+  public boolean isChromeTraceCreationEnabled() {
+    return getBooleanValue("log", "chrome_trace_generation", true);
+  }
+
   public boolean getCompressTraces() {
     return getBooleanValue("log", "compress_traces", false);
   }
