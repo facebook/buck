@@ -50,5 +50,5 @@ public class FakeWorkerProcess extends WorkerProcess {
   }
 
   @Override
-  public void close() throws IOException {}
+  public void close() {}
 }

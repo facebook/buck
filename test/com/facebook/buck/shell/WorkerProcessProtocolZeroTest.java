@@ -349,8 +349,8 @@ public class WorkerProcessProtocolZeroTest {
 
     try {
       protocol.close();
-    } catch (HumanReadableException e) {
-      assertThat(e.getMessage(), Matchers.containsString("Error while trying to close"));
+    } catch (IOException e) {
+      assertThat(e.getMessage(), Matchers.containsString("malformed JSON"));
       // assert that process was still destroyed despite the exception
       assertTrue(fakeProcess.isDestroyed());
     }

@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
@@ -130,11 +131,18 @@ public class WorkerProcess {
     return WorkerJobResult.of(exitCode, stdout, stderr);
   }
 
-  public void close() throws IOException {
+  public void close() {
     assert protocol != null :
         "Tried to close the worker process before the handshake was performed.";
     LOG.debug("Closing process %d", this.hashCode());
-    protocol.close();
+    try {
+      protocol.close();
+    } catch (IOException e) {
+      LOG.debug(e, "Error closing worker process %s.", this.hashCode());
+      throw new HumanReadableException(e,
+          "Error while trying to close the process %s at the end of the build.",
+          Joiner.on(' ').join(processParams.getCommand()));
+    }
   }
 
   @VisibleForTesting

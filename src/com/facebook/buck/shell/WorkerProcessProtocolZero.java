@@ -234,9 +234,6 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
       processStdinWriter.close();
       processStdoutReader.endArray();
       processStdoutReader.close();
-    } catch (IOException e) {
-      throw new HumanReadableException(e,
-          "Error while trying to close the process at the end of the build");
     } finally {
       executor.destroyLaunchedProcess(launchedProcess);
     }
