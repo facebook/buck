@@ -56,6 +56,8 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
+import javax.annotation.concurrent.GuardedBy;
+
 /**
  * Responsible for extracting file hash and {@link RuleKey} information from the {@link ActionGraph}
  * and presenting it as a Thrift data structure.
@@ -186,8 +188,12 @@ public class DistributedBuildFileHashes {
   private static class RecordingFileHashLoader implements FileHashLoader {
     private final FileHashLoader delegate;
     private final ProjectFilesystem projectFilesystem;
+    @GuardedBy("this")
     private final BuildJobStateFileHashes remoteFileHashes;
+    @GuardedBy("this")
     private final Set<Path> seenPaths;
+    @GuardedBy("this")
+    private final Set<ArchiveMemberPath> seenArchives;
 
     public RecordingFileHashLoader(
         FileHashLoader delegate,
@@ -197,12 +203,18 @@ public class DistributedBuildFileHashes {
       this.projectFilesystem = projectFilesystem;
       this.remoteFileHashes = remoteFileHashes;
       this.seenPaths = new HashSet<>();
+      this.seenArchives = new HashSet<>();
     }
 
     @Override
     public HashCode get(Path path) throws IOException {
       HashCode hashCode = delegate.get(path);
-      record(path, hashCode);
+      synchronized (this) {
+        if (!seenPaths.contains(path)) {
+          seenPaths.add(path);
+          record(path, Optional.<String>absent(), hashCode);
+        }
+      }
       return hashCode;
     }
 
@@ -211,12 +223,7 @@ public class DistributedBuildFileHashes {
       return delegate.getSize(path);
     }
 
-    private void record(Path path, HashCode hashCode) {
-      if (seenPaths.contains(path)) {
-        return;
-      }
-      seenPaths.add(path);
-
+    private synchronized void record(Path path, Optional<String> memberPath, HashCode hashCode) {
       Optional<Path> pathRelativeToProjectRoot =
           projectFilesystem.getPathRelativeToProjectRoot(path);
       BuildJobStateFileHashEntry fileHashEntry = new BuildJobStateFileHashEntry();
@@ -232,17 +239,25 @@ public class DistributedBuildFileHashes {
       fileHashEntry.setHashCode(hashCode.toString());
       fileHashEntry.setPath(
           new PathWithUnixSeparators(MorePaths.pathWithUnixSeparators(entryKey)));
+      if (memberPath.isPresent()) {
+        fileHashEntry.setArchiveMemberPath(memberPath.get().toString());
+      }
       remoteFileHashes.addToEntries(fileHashEntry);
     }
 
     @Override
     public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-      // Ensure the content hash for the entire archive is present. When materializing state the
-      // archive file will be pulled first and the hashes for the entries can be calculated the
-      // usual way.
-      get(archiveMemberPath.getArchivePath());
-
-      return delegate.get(archiveMemberPath);
+      HashCode hashCode = delegate.get(archiveMemberPath);
+      synchronized (this) {
+        if (!seenArchives.contains(archiveMemberPath)) {
+          seenArchives.add(archiveMemberPath);
+          record(
+              archiveMemberPath.getArchivePath(),
+              Optional.of(archiveMemberPath.getMemberPath().toString()),
+              hashCode);
+        }
+      }
+      return hashCode;
     }
   }
 }
