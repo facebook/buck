@@ -373,13 +373,11 @@ function _buck_completion_add_target_alias_or_relative_path() {
 }
 
 function _buck_completion_add_target_alias() {
-  local prog='/^\[/ { p=0 } /^\[alias]/ { p=1 } /^ *[a-zA-Z_-]* *= *\/\// { if (p) print $1 }'
+  local prog='/^\[/ { p=0 } /^\[alias]/ { p=1 } { if (p && $2 == "=" && $1 ~ /^'$word'/) print $1 }'
   local -a aliases; aliases=($(awk "$prog" < "$root/.buckconfig"))
 
   for a in "${aliases[@]}"; do
-    if [[ "$a" == "$word"* ]]; then
-      _buck_completion_add_reply "$a"
-    fi
+    _buck_completion_add_reply "$a"
   done
 }
 
