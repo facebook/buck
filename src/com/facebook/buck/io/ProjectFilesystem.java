@@ -145,9 +145,6 @@ public class ProjectFilesystem {
         getDefaultBuckPaths(root));
   }
 
-  /**
-   * There should only be one {@link ProjectFilesystem} created per process.
-   */
   public ProjectFilesystem(
       Path projectRoot,
       ImmutableSet<PathOrGlobMatcher> blackListedPaths) {
