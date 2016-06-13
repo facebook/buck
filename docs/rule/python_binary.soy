@@ -69,7 +69,7 @@ from all transitive {call buck.python_library /} dependencies.
 {literal}<pre class="prettyprint lang-py">
 python_binary(
   name = 'tailer',
-  main = 'tailer.py',
+  main_module = 'tailer',
   deps = [
     ':tailerutils',
   ],
@@ -77,7 +77,8 @@ python_binary(
 
 python_library(
   name = 'tailerutils',
-  srcs = glob(['*.py'], excludes = ['tailer.py']),
+  # tailer.py, the main module, should be specified here.
+  srcs = glob(['*.py']),
 )
 </pre>{/literal}
 <p>
@@ -95,6 +96,7 @@ Python platform as defined in `.buckconfig`:
 python_binary(
   name = 'bin',
   platform = 'py2',
+  main_module = 'main',
   deps = [
     ':bar',
   ],
