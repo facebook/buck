@@ -19,7 +19,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -30,6 +29,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -52,7 +52,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
-
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -121,7 +120,7 @@ public class CxxCompilationDatabaseTest {
                 testSourcePathResolver,
                 new PreprocessorDelegate(
                     testSourcePathResolver,
-                    CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
+                    CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER,
                     CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
                     filesystem.getRootPath(),
                     new DefaultPreprocessor(new HashedFileTool(Paths.get("compiler"))),
@@ -140,13 +139,13 @@ public class CxxCompilationDatabaseTest {
                     ImmutableList.<CxxHeaders>of()),
                 new CompilerDelegate(
                     testSourcePathResolver,
-                    CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
+                    CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER,
                     new GccCompiler(new HashedFileTool(Paths.get("compiler"))),
                     CxxToolFlags.of()),
                 Paths.get("test.ii"),
                 new FakeSourcePath(filesystem, "test.cpp"),
                 CxxSource.Type.CXX,
-                CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
+                CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER);
         rules.add(preprocessRule);
         compileBuildRuleParams = new FakeBuildRuleParamsBuilder(compileTarget)
             .setProjectFilesystem(filesystem)
@@ -158,13 +157,13 @@ public class CxxCompilationDatabaseTest {
                 testSourcePathResolver,
                 new CompilerDelegate(
                     testSourcePathResolver,
-                    CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
+                    CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER,
                     new GccCompiler(new HashedFileTool(Paths.get("compiler"))),
                     CxxToolFlags.of()),
                 Paths.get("test.o"),
                 new FakeSourcePath(filesystem, "test.ii"),
                 CxxSource.Type.CXX_CPP_OUTPUT,
-                CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER));
+                CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER));
         break;
       case COMBINED:
       case PIPED:
@@ -177,7 +176,7 @@ public class CxxCompilationDatabaseTest {
                 testSourcePathResolver,
                 new PreprocessorDelegate(
                     testSourcePathResolver,
-                    CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
+                    CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER,
                     CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
                     filesystem.getRootPath(),
                     new DefaultPreprocessor(new HashedFileTool(Paths.get("preprocessor"))),
@@ -196,14 +195,14 @@ public class CxxCompilationDatabaseTest {
                     ImmutableList.<CxxHeaders>of()),
                 new CompilerDelegate(
                     testSourcePathResolver,
-                    CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
+                    CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER,
                     new GccCompiler(new HashedFileTool(Paths.get("compiler"))),
                     CxxToolFlags.of()),
                 Paths.get("test.o"),
                 new FakeSourcePath(filesystem, "test.cpp"),
                 CxxSource.Type.CXX,
                 Optional.<PrecompiledHeaderReference>absent(),
-                CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
+                CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER,
                 strategy));
         break;
       default:

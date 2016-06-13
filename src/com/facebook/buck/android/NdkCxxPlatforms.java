@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.cxx.CompilerProvider;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxToolProvider;
 import com.facebook.buck.cxx.DebugPathSanitizer;
@@ -90,6 +91,7 @@ public class NdkCxxPlatforms {
   private NdkCxxPlatforms() { }
 
   public static ImmutableMap<TargetCpuType, NdkCxxPlatform> getPlatforms(
+      CxxBuckConfig config,
       ProjectFilesystem ndkRoot,
       NdkCxxPlatformCompiler compiler,
       CxxRuntime cxxRuntime,
@@ -97,6 +99,7 @@ public class NdkCxxPlatforms {
       Set<String> cpuAbis,
       Platform platform) {
     return getPlatforms(
+        config,
         ndkRoot,
         compiler,
         cxxRuntime,
@@ -110,6 +113,7 @@ public class NdkCxxPlatforms {
    * @return the map holding the available {@link NdkCxxPlatform}s.
    */
   public static ImmutableMap<TargetCpuType, NdkCxxPlatform> getPlatforms(
+      CxxBuckConfig config,
       ProjectFilesystem ndkRoot,
       NdkCxxPlatformCompiler compiler,
       CxxRuntime cxxRuntime,
@@ -131,6 +135,7 @@ public class NdkCxxPlatforms {
               "-mthumb");
       NdkCxxPlatform armeabi =
           build(
+              config,
               ImmutableFlavor.of("android-arm"),
               platform,
               ndkRoot,
@@ -187,6 +192,7 @@ public class NdkCxxPlatforms {
               "-mthumb");
       NdkCxxPlatform armeabiv7 =
           build(
+              config,
               ImmutableFlavor.of("android-armv7"),
               platform,
               ndkRoot,
@@ -232,6 +238,7 @@ public class NdkCxxPlatforms {
     if (cpuAbis.contains("x86")) {
       NdkCxxPlatform x86 =
           build(
+              config,
               ImmutableFlavor.of("android-x86"),
               platform,
               ndkRoot,
@@ -278,6 +285,7 @@ public class NdkCxxPlatforms {
       NdkCxxPlatform x86_64 =
       // CHECKSTYLE.ON
           build(
+              config,
               ImmutableFlavor.of("android-x86_64"),
               platform,
               ndkRoot,
@@ -319,6 +327,7 @@ public class NdkCxxPlatforms {
 
   @VisibleForTesting
   static NdkCxxPlatform build(
+      CxxBuckConfig config,
       Flavor flavor,
       Platform platform,
       ProjectFilesystem ndk,
@@ -444,7 +453,7 @@ public class NdkCxxPlatforms {
         // NDK builds are cross compiled, so the header is the same regardless of the host platform.
         .setDebugPathSanitizer(
             new DebugPathSanitizer(
-                250,
+                config.getDebugPathSanitizerLimit(),
                 File.separatorChar,
                 Paths.get("."),
                 sanitizePaths.build()))

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 8b33305f0d18773a2b66849b99a2784ecdba8027 #@#
+#@# GENERATED FILE: DO NOT MODIFY 61589a8054d60311c330af72828a01da7ce21267 #@#
 {
   "exceptions" : {
     "deps" : [
@@ -121,7 +121,6 @@
   "steps" : {
     "deps" : [
       "//src/com/facebook/buck/android:utils",
-      "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/dalvik:dalvik",
       "//src/com/facebook/buck/dalvik/firstorder:firstorder",
       "//src/com/facebook/buck/log:api",
@@ -141,6 +140,7 @@
     "exported_deps" : [
       "//src/com/facebook/buck/android:split_dex",
       "//src/com/facebook/buck/cxx:platform",
+      "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",

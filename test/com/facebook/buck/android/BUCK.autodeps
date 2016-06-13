@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 822e1f919a043596fbd24c026a18dd549d7db37d #@#
+#@# GENERATED FILE: DO NOT MODIFY a798ceb13b2c58e14554f1ffcbe7dc15c69c0974 #@#
 {
   "aar-integration" : {
     "deps" : [
@@ -28,6 +28,7 @@
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/zip:stream",
       "//test/com/facebook/buck/android:testutil",
+      "//test/com/facebook/buck/cxx:testutil",
       "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",

@@ -94,7 +94,13 @@ public class DebugPathSanitizer {
    *     {@code pathSize}.
    */
   public String getExpandedPath(Path path) {
-    Preconditions.checkArgument(path.toString().length() <= pathSize);
+    Preconditions.checkArgument(
+        path.toString().length() <= pathSize,
+        String.format(
+            "Path is too long to sanitize:\n'%s' is %d characters long, limit is %d.",
+            path,
+            path.toString().length(),
+            pathSize));
     return Strings.padEnd(path.toString(), pathSize, separator);
   }
 

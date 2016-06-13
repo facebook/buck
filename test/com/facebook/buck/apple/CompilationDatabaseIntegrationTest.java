@@ -302,7 +302,7 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add("-Xclang");
     commandArgs.add("-fdebug-compilation-dir");
     commandArgs.add("-Xclang");
-    commandArgs.add("." + Strings.repeat("/", 249));
+    commandArgs.add("." + Strings.repeat("/", 399));
     commandArgs.add("-x");
     commandArgs.add(language);
     commandArgs.add("-c");

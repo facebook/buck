@@ -79,7 +79,7 @@ public class CxxPlatformsTest {
           .setRanlib(new HashedFileTool(Paths.get("borland")))
           .setSharedLibraryExtension(".so")
           .setSharedLibraryVersionedExtensionFormat(".so.%s")
-          .setDebugPathSanitizer(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER)
+          .setDebugPathSanitizer(CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER)
           .build();
 
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();

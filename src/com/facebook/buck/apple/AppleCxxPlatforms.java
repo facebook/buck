@@ -248,7 +248,7 @@ public class AppleCxxPlatforms {
     }
 
     DebugPathSanitizer debugPathSanitizer = new DebugPathSanitizer(
-        250,
+        config.getDebugPathSanitizerLimit(),
         File.separatorChar,
         Paths.get("."),
         sanitizerPaths.build());

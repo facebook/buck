@@ -19,11 +19,11 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -60,7 +60,7 @@ public class CxxPrecompiledHeaderTest {
         Paths.get("foo.pch"),
         new PreprocessorDelegate(
             sourcePathResolver,
-            CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
+            CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER,
             CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
             Paths.get("./"),
             preprocessorSupportingPch,
@@ -72,7 +72,7 @@ public class CxxPrecompiledHeaderTest {
         CxxToolFlags.of(),
         new FakeSourcePath("foo.h"),
         CxxSource.Type.C,
-        CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
+        CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER);
     ImmutableList<Step> postBuildSteps = precompiledHeader.getBuildSteps(
         FakeBuildContext.NOOP_CONTEXT,
         new FakeBuildableContext());

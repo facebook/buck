@@ -216,6 +216,7 @@ public class NdkCxxPlatformTest {
           MoreFiles.writeLinesToFile(ImmutableList.of("r9c"), root.resolve("RELEASE.TXT"));
           ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> platforms =
               NdkCxxPlatforms.getPlatforms(
+                  CxxPlatformUtils.DEFAULT_CONFIG,
                   filesystem,
                   NdkCxxPlatformCompiler.builder()
                       .setType(config.getFirst())

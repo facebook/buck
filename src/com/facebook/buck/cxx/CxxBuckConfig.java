@@ -327,6 +327,10 @@ public class CxxBuckConfig {
             Flavor.TO_FLAVOR));
   }
 
+  public int getDebugPathSanitizerLimit() {
+    return delegate.getInteger(cxxSection, "debug_path_sanitizer_limit").or(250);
+  }
+
   @Value.Immutable
   @BuckStyleImmutable
   abstract static class AbstractCxxToolProviderParams {

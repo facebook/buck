@@ -27,6 +27,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.relinker.Symbols;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -363,6 +364,7 @@ public class AndroidBinaryIntegrationTest {
     assertTrue(ndkPath.isPresent());
 
     ImmutableCollection<NdkCxxPlatform> platforms = NdkCxxPlatforms.getPlatforms(
+        CxxPlatformUtils.DEFAULT_CONFIG,
         new ProjectFilesystem(ndkPath.get()),
         NdkCxxPlatformCompiler.builder()
             .setType(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE)

@@ -22,7 +22,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -47,14 +46,6 @@ public class CxxPlatforms {
   private static final ImmutableList<String> DEFAULT_ARFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_RANLIBFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_COMPILER_ONLY_FLAGS = ImmutableList.of();
-
-  @VisibleForTesting
-  static final DebugPathSanitizer DEFAULT_DEBUG_PATH_SANITIZER =
-      new DebugPathSanitizer(
-          250,
-          File.separatorChar,
-          Paths.get("."),
-          ImmutableBiMap.<Path, Path>of());
 
   // Utility class, do not instantiate.
   private CxxPlatforms() { }
@@ -105,7 +96,13 @@ public class CxxPlatforms {
         .setSymbolNameTool(new PosixNmSymbolNameTool(getTool(flavor, "nm", config).or(nm)))
         .setSharedLibraryExtension(sharedLibraryExtension)
         .setSharedLibraryVersionedExtensionFormat(sharedLibraryVersionedExtensionFormat)
-        .setDebugPathSanitizer(debugPathSanitizer.or(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER))
+        .setDebugPathSanitizer(
+            debugPathSanitizer.or(
+                new DebugPathSanitizer(
+                    config.getDebugPathSanitizerLimit(),
+                    File.separatorChar,
+                    Paths.get("."),
+                    ImmutableBiMap.<Path, Path>of())))
         .setFlagMacros(flagMacros);
     builder.addAllCflags(cflags);
     builder.addAllCxxflags(cflags);
