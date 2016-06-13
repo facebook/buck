@@ -4,6 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import argparse
+import codecs
 import collections
 import os
 import re
@@ -191,7 +192,7 @@ class RuleKeyStructureInfo(object):
 
     @staticmethod
     def _parseBuckOut(file_path):
-        with open(file_path, 'r') as buck_out:
+        with codecs.open(file_path, 'r', 'utf-8') as buck_out:
             return RuleKeyStructureInfo._parseLogFile(buck_out)
 
 RULE_KEY_REF_START = 'ruleKey(sha1='
