@@ -55,11 +55,11 @@ public class CxxPlatformsTest {
     CompilerProvider compiler =
         new CompilerProvider(
             Paths.get("borland"),
-            Optional.of(CxxToolProvider.Type.DEFAULT));
+            Optional.of(CxxToolProvider.Type.GCC));
     PreprocessorProvider preprocessor =
         new PreprocessorProvider(
             Paths.get("borland"),
-            Optional.of(CxxToolProvider.Type.DEFAULT));
+            Optional.of(CxxToolProvider.Type.GCC));
     CxxPlatform borlandCxx452Platform =
       CxxPlatform.builder()
           .setFlavor(ImmutableFlavor.of("borland_cxx_452"))

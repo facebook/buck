@@ -16,22 +16,14 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
-public class ClangCompiler implements Compiler {
-
-  private final Tool tool;
+public class ClangCompiler extends DefaultCompiler {
 
   public ClangCompiler(Tool tool) {
-    this.tool = tool;
+    super(tool);
   }
 
   @Override
@@ -43,33 +35,6 @@ public class ClangCompiler implements Compiler {
   @Override
   public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
     return Optional.of(ImmutableList.of("-fcolor-diagnostics"));
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-    return tool.getDeps(resolver);
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return tool.getInputs();
-  }
-
-  @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-    return tool.getCommandPrefix(resolver);
-  }
-
-  @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
-    return tool.getEnvironment(resolver);
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("tool", tool)
-        .setReflectively("type", getClass().getSimpleName());
   }
 
 }

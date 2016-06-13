@@ -92,17 +92,14 @@ public class DefaultCxxPlatforms {
         throw new RuntimeException(String.format("Unsupported platform: %s", platform));
     }
 
-    // Always use `DEFAULT` for the assemblers (unless an explicit override is set in the
-    // .buckconfig), as we pass special flags when we detect clang which causes unused flag
-    // warnings with assembling.
     PreprocessorProvider aspp =
         new PreprocessorProvider(
             defaultCFrontend,
-            Optional.of(CxxToolProvider.Type.DEFAULT));
+            Optional.<CxxToolProvider.Type>absent());
     CompilerProvider as =
         new CompilerProvider(
             defaultCFrontend,
-            Optional.of(CxxToolProvider.Type.DEFAULT));
+            Optional.<CxxToolProvider.Type>absent());
 
     PreprocessorProvider cpp =
         new PreprocessorProvider(

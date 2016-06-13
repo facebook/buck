@@ -141,7 +141,7 @@ public class CxxCompilationDatabaseTest {
                 new CompilerDelegate(
                     testSourcePathResolver,
                     CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
-                    new DefaultCompiler(new HashedFileTool(Paths.get("compiler"))),
+                    new GccCompiler(new HashedFileTool(Paths.get("compiler"))),
                     CxxToolFlags.of()),
                 Paths.get("test.ii"),
                 new FakeSourcePath(filesystem, "test.cpp"),
@@ -159,7 +159,7 @@ public class CxxCompilationDatabaseTest {
                 new CompilerDelegate(
                     testSourcePathResolver,
                     CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
-                    new DefaultCompiler(new HashedFileTool(Paths.get("compiler"))),
+                    new GccCompiler(new HashedFileTool(Paths.get("compiler"))),
                     CxxToolFlags.of()),
                 Paths.get("test.o"),
                 new FakeSourcePath(filesystem, "test.ii"),
@@ -197,7 +197,7 @@ public class CxxCompilationDatabaseTest {
                 new CompilerDelegate(
                     testSourcePathResolver,
                     CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
-                    new DefaultCompiler(new HashedFileTool(Paths.get("compiler"))),
+                    new GccCompiler(new HashedFileTool(Paths.get("compiler"))),
                     CxxToolFlags.of()),
                 Paths.get("test.o"),
                 new FakeSourcePath(filesystem, "test.cpp"),

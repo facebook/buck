@@ -15,6 +15,7 @@ PLATFORM_SRCS = [
   'DebugSectionProperty.java',
   'DefaultCompiler.java',
   'DefaultPreprocessor.java',
+  'GccCompiler.java',
   'GnuArchiver.java',
   'GnuLinker.java',
   'Linker.java',

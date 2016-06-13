@@ -87,12 +87,8 @@ public class CxxPlatforms {
 
     builder
         .setFlavor(flavor)
-        // Always use `DEFAULT` for the assemblers (unless an explicit override is set in the
-        // .buckconfig), as we pass special flags when we detect clang which causes unused flag
-        // warnings with assembling.
-        .setAs(config.getCompilerProvider(flavor, "as", CxxToolProvider.Type.DEFAULT).or(as))
-        .setAspp(
-            config.getPreprocessorProvider(flavor, "aspp", CxxToolProvider.Type.DEFAULT).or(aspp))
+        .setAs(config.getCompilerProvider(flavor, "as").or(as))
+        .setAspp(config.getPreprocessorProvider(flavor, "aspp").or(aspp))
         .setCc(config.getCompilerProvider(flavor, "cc").or(cc))
         .setCxx(config.getCompilerProvider(flavor, "cxx").or(cxx))
         .setCpp(config.getPreprocessorProvider(flavor, "cpp").or(cpp))
@@ -134,10 +130,10 @@ public class CxxPlatforms {
     builder
         .setFlavor(flavor)
         .setAs(
-            config.getCompilerProvider(flavor, "as", CxxToolProvider.Type.DEFAULT)
+            config.getCompilerProvider(flavor, "as", CxxToolProvider.Type.GCC)
                 .or(defaultPlatform.getAs()))
         .setAspp(
-            config.getPreprocessorProvider(flavor, "aspp", CxxToolProvider.Type.DEFAULT)
+            config.getPreprocessorProvider(flavor, "aspp", CxxToolProvider.Type.GCC)
                 .or(defaultPlatform.getAspp()))
         .setCc(config.getCompilerProvider(flavor, "cc").or(defaultPlatform.getCc()))
         .setCxx(config.getCompilerProvider(flavor, "cxx").or(defaultPlatform.getCxx()))

@@ -13,37 +13,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.ToolProvider;
-import com.google.common.base.Optional;
 
-import java.nio.file.Path;
+public class GccCompiler extends DefaultCompiler {
 
-public class CompilerProvider extends CxxToolProvider<Compiler> {
-
-  public CompilerProvider(ToolProvider toolProvider, Type type) {
-    super(toolProvider, type);
-  }
-
-  public CompilerProvider(
-      Path path,
-      Optional<Type> type) {
-    super(path, type);
-  }
-
-  @Override
-  protected Compiler build(CxxToolProvider.Type type, Tool tool) {
-    switch (type) {
-      case CLANG:
-        return new ClangCompiler(tool);
-      case DEFAULT:
-      case GCC:
-        return new GccCompiler(tool);
-    }
-    throw new IllegalStateException();
+  public GccCompiler(Tool tool) {
+    super(tool);
   }
 
 }

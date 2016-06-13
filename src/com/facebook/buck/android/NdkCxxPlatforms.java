@@ -363,7 +363,7 @@ public class NdkCxxPlatforms {
     CxxToolProvider.Type type =
         compilerType == NdkCxxPlatformCompiler.Type.CLANG ?
             CxxToolProvider.Type.CLANG :
-            CxxToolProvider.Type.DEFAULT;
+            CxxToolProvider.Type.GCC;
     ToolProvider ccTool =
         new ConstantToolProvider(
             getCTool(

@@ -640,13 +640,13 @@ public class CxxPreprocessAndCompileIntegrationTest {
   public void binaryBuildRuleTools() throws IOException {
     workspace.runBuckBuild(
         "-c", "cxx.cc=//:cc",
-        "-c", "cxx.cc_type=default",
+        "-c", "cxx.cc_type=gcc",
         "-c", "cxx.cpp=//:cc",
-        "-c", "cxx.cpp_type=default",
+        "-c", "cxx.cpp_type=gcc",
         "-c", "cxx.cxx=//:cxx",
-        "-c", "cxx.cxx_type=default",
+        "-c", "cxx.cxx_type=gcc",
         "-c", "cxx.cxxpp=//:cxx",
-        "-c", "cxx.cxxpp_type=default",
+        "-c", "cxx.cxxpp_type=gcc",
         "//:simple#default,static")
         .assertSuccess();
   }

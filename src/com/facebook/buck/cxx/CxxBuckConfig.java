@@ -207,12 +207,15 @@ public class CxxBuckConfig {
     Optional<CxxToolProvider.Type> type =
         delegate.getEnum(cxxSection, field + "_type", CxxToolProvider.Type.class)
             .or(defaultType);
+    if (type.isPresent() && type.get() == CxxToolProvider.Type.DEFAULT) {
+      type = Optional.of(CxxToolProvider.Type.GCC);
+    }
     if (target.isPresent()) {
       return Optional.of(
           CxxToolProviderParams.builder()
               .setSource(source)
               .setBuildTarget(target.get())
-              .setType(type.or(CxxToolProvider.Type.DEFAULT))
+              .setType(type.or(CxxToolProvider.Type.GCC))
               .build());
     } else {
       return Optional.of(

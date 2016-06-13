@@ -162,7 +162,7 @@ public abstract class CxxToolProvider<T> {
         return Type.CLANG;
       }
     }
-    return Type.DEFAULT;
+    return Type.GCC;
   }
 
   protected abstract T build(Type type, Tool tool);
@@ -178,6 +178,7 @@ public abstract class CxxToolProvider<T> {
   public enum Type {
     CLANG,
     DEFAULT,
+    GCC,
   }
 
 }

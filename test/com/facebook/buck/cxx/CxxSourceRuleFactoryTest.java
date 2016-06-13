@@ -431,11 +431,11 @@ public class CxxSourceRuleFactoryTest {
               .withCxxpp(
                   new PreprocessorProvider(
                       new BinaryBuildRuleToolProvider(cxxpp.getBuildTarget(), ""),
-                      CxxToolProvider.Type.DEFAULT))
+                      CxxToolProvider.Type.GCC))
               .withCxx(
                   new CompilerProvider(
                       new BinaryBuildRuleToolProvider(cxx.getBuildTarget(), ""),
-                      CxxToolProvider.Type.DEFAULT));
+                      CxxToolProvider.Type.GCC));
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.builder()

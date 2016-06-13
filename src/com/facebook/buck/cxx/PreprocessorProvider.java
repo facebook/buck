@@ -42,6 +42,7 @@ public class PreprocessorProvider extends CxxToolProvider<Preprocessor> {
       case CLANG:
         return new ClangPreprocessor(tool);
       case DEFAULT:
+      case GCC:
         return new DefaultPreprocessor(tool);
     }
     throw new IllegalStateException();

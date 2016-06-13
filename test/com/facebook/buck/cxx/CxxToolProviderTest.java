@@ -48,14 +48,14 @@ public class CxxToolProviderTest {
                 "Copyright (C) 2010 Free Software Foundation, Inc.",
                 "This is free software; see the source for copying conditions.  There is NO",
                 "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.")),
-        Matchers.is(CxxToolProvider.Type.DEFAULT));
+        Matchers.is(CxxToolProvider.Type.GCC));
     assertThat(
         CxxToolProvider.getTypeFromVersionOutput(
             ImmutableList.of(
                 "Blah blah blah.",
                 "I am a compiler.",
                 "I am not clang though.")),
-        Matchers.is(CxxToolProvider.Type.DEFAULT));
+        Matchers.is(CxxToolProvider.Type.GCC));
   }
 
 }

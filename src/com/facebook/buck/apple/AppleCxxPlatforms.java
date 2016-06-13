@@ -290,18 +290,14 @@ public class AppleCxxPlatforms {
       buildVersion = Optional.absent();
     }
 
-    // Always use `DEFAULT` for the assemblers (unless an explicit override is set in the
-    // .buckconfig), as we pass special flags when we detect clang which causes unused flag
-    // warnings with assembling.
     PreprocessorProvider aspp =
         new PreprocessorProvider(
             new ConstantToolProvider(clangPath),
-            CxxToolProvider.Type.DEFAULT);
+            CxxToolProvider.Type.CLANG);
     CompilerProvider as =
         new CompilerProvider(
             new ConstantToolProvider(clangPath),
-            CxxToolProvider.Type.DEFAULT);
-
+            CxxToolProvider.Type.CLANG);
     PreprocessorProvider cpp =
         new PreprocessorProvider(
             new ConstantToolProvider(clangPath),

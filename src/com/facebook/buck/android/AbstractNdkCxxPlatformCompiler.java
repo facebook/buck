@@ -18,8 +18,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.cxx.ClangCompiler;
 import com.facebook.buck.cxx.ClangPreprocessor;
-import com.facebook.buck.cxx.DefaultCompiler;
 import com.facebook.buck.cxx.DefaultPreprocessor;
+import com.facebook.buck.cxx.GccCompiler;
 import com.facebook.buck.cxx.Preprocessor;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -75,7 +75,7 @@ interface AbstractNdkCxxPlatformCompiler {
     public com.facebook.buck.cxx.Compiler compilerFromTool(Tool tool) {
       switch (this) {
         case GCC:
-          return new DefaultCompiler(tool);
+          return new GccCompiler(tool);
         case CLANG:
           return new ClangCompiler(tool);
       }

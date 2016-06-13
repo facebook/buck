@@ -107,7 +107,7 @@ public class PrecompiledHeaderFeatureTest {
           DEFAULT_PLATFORM.withCpp(
               new PreprocessorProvider(
                   Paths.get("foopp"),
-                  Optional.of(CxxToolProvider.Type.DEFAULT)));
+                  Optional.of(CxxToolProvider.Type.GCC)));
       CxxPlatform platformSupportingPch = PLATFORM_SUPPORTING_PCH;
       return Arrays.asList(new Object[][] {
           {platformNotSupportingPch, false},

@@ -35,12 +35,12 @@ public class CxxPlatformUtils {
   private static final PreprocessorProvider DEFAULT_PREPROCESSOR_PROVIDER =
       new PreprocessorProvider(
           new ConstantToolProvider(DEFAULT_TOOL),
-          CxxToolProvider.Type.DEFAULT);
+          CxxToolProvider.Type.GCC);
 
   private static final CompilerProvider DEFAULT_COMPILER_PROVIDER =
       new CompilerProvider(
           new ConstantToolProvider(DEFAULT_TOOL),
-          CxxToolProvider.Type.DEFAULT);
+          CxxToolProvider.Type.GCC);
 
   public static final CxxPlatform DEFAULT_PLATFORM =
       CxxPlatform.builder()

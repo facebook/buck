@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class DefaultCompiler implements Compiler {
+public abstract class DefaultCompiler implements Compiler {
 
   private final Tool tool;
 
