@@ -31,7 +31,7 @@ of the compiled class files and resources.
 
 {call buck.arg}
   {param name: 'srcs' /}
-  {param default : '[]' /}
+  {param default: '[]' /}
   {param desc}
   The set of <code>.java</code> files to compile for this rule.
   If any of the files in this list end in <code>.src.zip</code>,
@@ -44,7 +44,7 @@ of the compiled class files and resources.
 
 {call buck.arg}
   {param name: 'resources' /}
-  {param default : '[]' /}
+  {param default: '[]' /}
   {param desc}
   Static files to include among the compiled <code>.class</code>
   {sp}files. These files can be loaded via <a
@@ -61,7 +61,7 @@ of the compiled class files and resources.
 
 {call buck.arg}
   {param name: 'resources_root' /}
-  {param default : 'None' /}
+  {param default: 'None' /}
   {param desc}
   The path that resources are resolved against. For example, if{sp}
   <code>resources_root</code> is <code>"res"</code> and
@@ -75,7 +75,7 @@ of the compiled class files and resources.
 
 {call buck.arg}
   {param name: 'deps' /}
-  {param default : '[]' /}
+  {param default: '[]' /}
   {param desc}
   Rules (usually other <code>java_library</code> rules) that are used to
   generate the classpath required to compile this <code>java_library</code>.
@@ -84,7 +84,7 @@ of the compiled class files and resources.
 
 {call buck.arg}
   {param name: 'autodeps' /}
-  {param default : 'False' /}
+  {param default: 'False' /}
   {param desc}
   Should be set to <code>True</code> when using {call buck.cmd_autodeps /} to
   generate the <code>deps</code> for this rule.
@@ -93,7 +93,7 @@ of the compiled class files and resources.
 
 {call buck.arg}
   {param name: 'generated_symbols' /}
-  {param default : '[]' /}
+  {param default: '[]' /}
   {param desc}
   When using {call buck.cmd_autodeps /}, it may be necessary to declare types
   or symbols that are provided by this rule that cannot be statically inferred
@@ -129,7 +129,7 @@ java_library(
 
 {call buck.arg}
   {param name: 'source' /}
-  {param default : '<global value>' /}
+  {param default: '<global value>' /}
   {param desc}
   Specifies the version of Java (as a string) to interpret source
   files as.
@@ -141,7 +141,7 @@ java_library(
 
 {call buck.arg}
   {param name: 'target' /}
-  {param default : '<global value>' /}
+  {param default: '<global value>' /}
   {param desc}
   Specifies the version of Java (as a string) for which to
   generate code.
@@ -163,7 +163,7 @@ java_library(
 
 {call buck.arg}
   {param name: 'javac' /}
-  {param default : '<global value>' /}
+  {param default: '<global value>' /}
   {param desc}
   Specifies the Java compiler program to use for this rule.
   The value is a source path (e.g., //foo/bar:bar).
@@ -176,7 +176,7 @@ java_library(
 
 {call buck.arg}
   {param name: 'javac_jar' /}
-  {param default : '<global value>' /}
+  {param default: '<global value>' /}
   {param desc}
   Specifies the Java compiler program to use for this rule.
   The value is a source path (e.g., //foo/bar:bar).
@@ -189,7 +189,7 @@ java_library(
 
 {call buck.arg}
   {param name: 'extra_arguments' /}
-  {param default : '[]' /}
+  {param default: '[]' /}
   {param desc}
   List of additional arguments to pass into the Java compiler.  These
   arguments follow the ones specified in <a
@@ -199,18 +199,19 @@ java_library(
 
 {call buck.arg}
   {param name: 'remove_classes' /}
-  {param default : '[]' /}
+  {param default: '[]' /}
   {param desc}
   Specifies a list of <code>Patterns</code> that are used to exclude
   <code>classes</code> from the <code>JAR</code>. The pattern matching is
   based on the name of the class. This can be used to exclude a member
   class or delete a local view of a class that will be replaced during
   a later stage of the build.
+  {/param}
 {/call}
 
 {call buck.arg}
   {param name: 'exported_deps' /}
-  {param default : '[]' /}
+  {param default: '[]' /}
   {param desc}
   Other <code>java_library</code> rules that depend on this rule will also
   include its <code>exported_deps</code> in their classpaths. This is useful
@@ -225,7 +226,7 @@ java_library(
 
 {call buck.arg}
   {param name: 'provided_deps' /}
-  {param default : '[]' /}
+  {param default: '[]' /}
   {param desc}
   These represent dependencies that are known to be provided at run
   time, but are required in order for the code to compile. Examples of

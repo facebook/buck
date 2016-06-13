@@ -166,11 +166,9 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
             'android_prebuilt_aar',
             'android_resource',
             'apk_genrule',
-            'cxx_library',
             'gen_aidl',
             'keystore',
             'ndk_library',
-            'prebuilt_cxx_library',
             'prebuilt_jar',
             'prebuilt_native_library',
             'project_config',
@@ -220,10 +218,8 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
             'apple_package',
             'apple_resource',
             'apple_test',
-            'prebuilt_cxx_library',
         ],
         'java': [
-            'cxx_library',
             'java_binary',
             'java_library',
             'java_test',
@@ -313,26 +309,6 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
         {param rules: $platformRulesMap['haskell'] /}
     {/call}
     {call .platformBuildRuleLink}
-        {param platform: 'Halide' /}
-        {param rules: $platformRulesMap['halide'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'iOS' /}
-        {param rules: $platformRulesMap['ios'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'Java' /}
-        {param rules: $platformRulesMap['java'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'Lua' /}
-        {param rules: $platformRulesMap['lua'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'Python' /}
-        {param rules: $platformRulesMap['python'] /}
-    {/call}
-    {call .platformBuildRuleLink}
         {param platform: 'iOS' /}
         {param rules: $platformRulesMap['ios'] /}
     {/call}
@@ -361,11 +337,11 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   <ul>
     {foreach $function in [
         'add_build_file_dep',
+        'flatten_dicts',
         'glob',
         'include_defs',
         'read_config',
         'subdir_glob',
-        'flatten_dicts',
         ]}
       <li><a href="{ROOT}function/{$function}.html">{$function}()</a>
     {/foreach}
