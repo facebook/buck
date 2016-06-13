@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.plugin.format;
 
+import com.facebook.buck.intellij.plugin.external.IntellijBuckAction;
 import com.facebook.buck.intellij.plugin.lang.BuckFile;
 import com.intellij.lang.ImportOptimizer;
 import com.intellij.psi.PsiFile;
@@ -32,6 +33,8 @@ public class BuckImportOptimizer implements ImportOptimizer {
 
   @Override
   public Runnable processFile(final PsiFile psiFile) {
+    psiFile.getProject().getMessageBus().syncPublisher(IntellijBuckAction.EVENT)
+        .consume(this.getClass().toString());
     return new Runnable() {
       @Override
       public void run() {

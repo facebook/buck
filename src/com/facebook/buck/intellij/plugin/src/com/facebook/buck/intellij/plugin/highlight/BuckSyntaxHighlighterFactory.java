@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.plugin.highlight;
 
+import com.facebook.buck.intellij.plugin.external.IntellijBuckAction;
 import com.intellij.openapi.fileTypes.SyntaxHighlighter;
 import com.intellij.openapi.fileTypes.SyntaxHighlighterFactory;
 import com.intellij.openapi.project.Project;
@@ -25,6 +26,8 @@ public class BuckSyntaxHighlighterFactory extends SyntaxHighlighterFactory {
 
   @Override
   public SyntaxHighlighter getSyntaxHighlighter(Project project, VirtualFile virtualFile) {
+    project.getMessageBus().syncPublisher(IntellijBuckAction.EVENT)
+        .consume(this.getClass().toString());
     return new BuckSyntaxHighlighter();
   }
 }

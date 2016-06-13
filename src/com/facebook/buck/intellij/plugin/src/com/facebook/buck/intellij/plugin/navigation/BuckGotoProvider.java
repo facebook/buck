@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.plugin.navigation;
 
+import com.facebook.buck.intellij.plugin.external.IntellijBuckAction;
 import com.facebook.buck.intellij.plugin.build.BuckBuildUtil;
 import com.facebook.buck.intellij.plugin.lang.BuckLanguage;
 import com.facebook.buck.intellij.plugin.lang.psi.BuckValue;
@@ -60,6 +61,8 @@ public class BuckGotoProvider extends GotoDeclarationHandlerBase {
       if (targetFile == null) {
         return null;
       }
+      project.getMessageBus().syncPublisher(IntellijBuckAction.EVENT)
+          .consume(this.getClass().toString());
       return PsiManager.getInstance(project).findFile(targetFile);
     }
     return null;

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.plugin.annotator;
 
+import com.facebook.buck.intellij.plugin.external.IntellijBuckAction;
 import com.facebook.buck.intellij.plugin.build.BuckBuildUtil;
 import com.facebook.buck.intellij.plugin.highlight.BuckSyntaxHighlighter;
 import com.facebook.buck.intellij.plugin.lang.psi.BuckPsiUtils;
@@ -73,6 +74,8 @@ public class BuckAnnotator implements Annotator {
       TextRange range = new TextRange(psiElement.getTextRange().getStartOffset(),
           psiElement.getTextRange().getEndOffset());
       annotationHolder.createErrorAnnotation(range, ANNOTATOR_ERROR_CANNOT_LOCATE_TARGET);
+      project.getMessageBus().syncPublisher(IntellijBuckAction.EVENT)
+          .consume(this.getClass().toString());
     }
   }
 
