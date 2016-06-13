@@ -73,7 +73,7 @@ JAVA_CLASSPATHS = [
     "third-party/java/slf4j/slf4j-jdk14-1.7.5.jar",
     "third-party/java/stringtemplate/ST-4.0.8.jar",
     "third-party/java/thrift/libthrift-0.9.3.jar",
-    "third-party/java/xz-java-1.3/xz-1.3.jar",
+    "third-party/java/xz-java-1.5/xz-1.5.jar",
     # maven/aether libs
     "third-party/java/aether/aether-api-1.0.2.v20150114.jar",
     "third-party/java/aether/aether-connector-basic-1.0.2.v20150114.jar",

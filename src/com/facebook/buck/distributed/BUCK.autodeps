@@ -1,11 +1,12 @@
-#@# GENERATED FILE: DO NOT MODIFY 49c19c7f4b58eb1d328531abd6442d897830a3a8 #@#
+#@# GENERATED FILE: DO NOT MODIFY 75e1c89b1d79badfcfebe93accb9a0e571cc0478 #@#
 {
   "distributed" : {
     "deps" : [
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util/environment:platform",
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:processor",
+      "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [
       "//src-gen:thrift",

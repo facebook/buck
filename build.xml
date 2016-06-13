@@ -126,7 +126,7 @@
     <include name="slf4j/slf4j-jdk14-1.7.5.jar" /><!-- redirect slf4j to java.util.logging -->
     <include name="stringtemplate/ST-4.0.8.jar" />
     <include name="thrift/libthrift-0.9.3.jar" />
-    <include name="xz-java-1.3/xz-1.3.jar" />
+    <include name="xz-java-1.5/xz-1.5.jar" />
 
     <!-- maven interop -->
     <include name="aether/aether-api-1.0.2.v20150114.jar" />
