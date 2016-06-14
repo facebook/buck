@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
-  <version>2.6</version>
+  <version>2.7</version>
   <category>Build</category>
 
   <description><![CDATA[
@@ -21,6 +21,11 @@
   <change-notes><![CDATA[
 
   <ul>
+      <li>
+        <b>2.7</b>
+          Sending events for Buck plugin IntelliJ actions.
+          Added adb select path to Tools.
+      </li>
       <li>
         <b>2.6</b>
           Improved server connect/disconnect.
