@@ -221,6 +221,15 @@ public class ProjectFilesystem {
         // really don't end up ignoring it in reality (see extractIgnorePaths).
         .append(ImmutableSet.of(buckPaths.getBuckOut()))
         .transform(PathOrGlobMatcher.toPathMatcher())
+        .append(
+            Iterables.filter(
+                this.blackListedPaths,
+                new Predicate<PathOrGlobMatcher>() {
+                  @Override
+                  public boolean apply(PathOrGlobMatcher input) {
+                    return input.getType() == PathOrGlobMatcher.Type.GLOB;
+                  }
+                }))
         .toSet();
   }
 
