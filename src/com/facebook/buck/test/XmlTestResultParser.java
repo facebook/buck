@@ -95,7 +95,7 @@ public class XmlTestResultParser {
 
     NodeList failure = node.getElementsByTagName("failure");
     if (failure.getLength() == 1) {
-      stdOut = failure.item(0).getTextContent();
+      stacktrace = failure.item(0).getTextContent();
       type = ResultType.FAILURE;
     }
     return new TestResultSummary(
