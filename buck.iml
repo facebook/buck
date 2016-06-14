@@ -57,7 +57,6 @@
     <orderEntry type="library" name="jetty" level="project" />
     <orderEntry type="library" name="slf4j-api-1.7.2" level="project" />
     <orderEntry type="library" name="soy-no-guava" level="project" />
-    <orderEntry type="library" name="xz-java-1.3" level="project" />
     <orderEntry type="library" name="eclipse" level="project" />
     <orderEntry type="library" name="commons-compress-1.8.1" level="project" />
     <orderEntry type="library" name="infer-annotations" level="project" />
@@ -70,5 +69,6 @@
     <orderEntry type="library" name="testng" level="project" />
     <orderEntry type="library" name="eden" level="project" />
     <orderEntry type="library" name="java-thrift-dependencies" level="project" />
+    <orderEntry type="library" name="xz-java-1.5" level="project" />
   </component>
 </module>
