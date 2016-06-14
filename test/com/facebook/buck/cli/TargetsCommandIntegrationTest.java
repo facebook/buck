@@ -630,4 +630,31 @@ public class TargetsCommandIntegrationTest {
         observed,
         expected);
   }
+
+  @Test
+  public void testSpecificAttributesWithJson() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "output_path", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "targets", "--json", "--show-output", "--output-attributes", "buck.outputPath", "name");
+    result.assertSuccess();
+    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
+
+    // Parse the observed JSON.
+    JsonNode observed = objectMapper.readTree(
+        objectMapper.getFactory().createParser(result.getStdout())
+    );
+
+    String expectedJson = workspace.getFileContents("output_path_json_all_filtered.js");
+    JsonNode expected = objectMapper.readTree(
+        objectMapper.getFactory().createParser(normalizeNewlines(expectedJson))
+    );
+
+    assertEquals(
+        "Output from targets command should match expected JSON.",
+        observed,
+        expected);
+  }
 }

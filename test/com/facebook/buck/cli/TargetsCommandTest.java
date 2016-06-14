@@ -164,7 +164,8 @@ public class TargetsCommandTest {
         params,
         executor,
         nodes,
-        ImmutableMap.<BuildTarget, ShowOptions>of());
+        ImmutableMap.<BuildTarget, ShowOptions>of(),
+        ImmutableSet.<String>of());
     String observedOutput = console.getTextWrittenToStdOut();
     JsonNode observed = objectMapper.readTree(
         objectMapper.getFactory().createParser(observedOutput));
@@ -213,6 +214,39 @@ public class TargetsCommandTest {
   }
 
   @Test
+  public void testJsonOutputWithOutputAttributes() throws IOException {
+    ProcessResult result = workspace.runBuckCommand(
+        "targets",
+        "--json",
+        "//:B",
+        "--output-attributes",
+        "buck.direct_dependencies",
+        "fully_qualified_name");
+
+    // Parse the observed JSON.
+    JsonNode observed = objectMapper.readTree(
+        objectMapper.getFactory().createParser(result.getStdout())
+            .enable(Feature.ALLOW_COMMENTS)
+    );
+
+    // Parse the expected JSON.
+    String expectedJson = workspace.getFileContents("TargetsCommandTestBuckJson2Filtered.js");
+    JsonNode expected = objectMapper.readTree(
+        objectMapper.getFactory().createParser(expectedJson)
+            .enable(Feature.ALLOW_COMMENTS)
+    );
+
+    assertThat(
+        "Output from targets command should match expected JSON.",
+        observed,
+        is(equalTo(expected)));
+    assertThat(
+        "Nothing should be printed to stderr.",
+        console.getTextWrittenToStdErr(),
+        is(equalTo("")));
+  }
+
+  @Test
   public void testJsonOutputForMissingBuildTarget()
       throws BuildFileParseException, IOException, InterruptedException {
     // nonexistent target should not exist.
@@ -221,7 +255,8 @@ public class TargetsCommandTest {
         params,
         executor,
         buildRules,
-        ImmutableMap.<BuildTarget, ShowOptions>of());
+        ImmutableMap.<BuildTarget, ShowOptions>of(),
+        ImmutableSet.<String>of());
 
     String output = console.getTextWrittenToStdOut();
     assertEquals("[\n]\n", output);

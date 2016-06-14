@@ -94,6 +94,18 @@ buck targets --type java_test \
 {/call}
 
 {call buck.param}
+  {param name: 'output-attributes' /}
+  {param desc}
+  Specify attributes used in JSON representation.
+
+  <p>
+
+  Omitting this option results in showing all attributes.
+
+  {/param}
+{/call}
+
+{call buck.param}
   {param name: 'print0' /}
   {param desc}
   Delimit targets using the ASCII NUL character (when <code>--json</code> is not specified).

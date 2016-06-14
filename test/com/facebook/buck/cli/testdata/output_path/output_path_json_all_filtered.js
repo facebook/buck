@@ -1,0 +1,10 @@
+[
+{
+  "buck.outputPath":"buck-out/gen/another-test/test-output",
+  "name":"another-test"
+},
+{
+  "buck.outputPath":"buck-out/gen/test/test-output",
+  "name":"test"
+}
+]
