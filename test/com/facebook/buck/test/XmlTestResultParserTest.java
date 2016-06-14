@@ -82,4 +82,58 @@ public class XmlTestResultParserTest {
     assertEquals(2, summary.get(0).getTestResults().size());
     assertEquals(1, summary.get(1).getTestResults().size());
   }
+
+  @Test
+  public void testParsesMessageFromFailure() throws Throwable {
+    String xml =
+        "<?xml version='1.1' encoding='UTF-8' standalone='no'?>\n" +
+        "<testsuite name='com.facebook.foo.bar'>\n" +
+        "  <testcase name='a' classname='Bar' time='0.0'>\n" +
+        "    <failure>com.foo: Error Message\nblehbleh\n</failure>\n" +
+        "  </testcase>\n" +
+        "</testsuite>\n";
+
+    Path xmlFile = tmp.newFile("result.xml");
+    Files.write(xmlFile, xml.getBytes(UTF_8));
+
+    List<TestCaseSummary> summary = XmlTestResultParser.parseAndroid(xmlFile, "android-5554");
+
+    assertEquals("Error Message", summary.get(0).getTestResults().get(0).getMessage());
+  }
+
+  @Test
+  public void testParsesEmptyMessageFromFailure() throws Throwable {
+    String xml =
+        "<?xml version='1.1' encoding='UTF-8' standalone='no'?>\n" +
+        "<testsuite name='com.facebook.foo.bar'>\n" +
+        "  <testcase name='a' classname='Bar' time='0.0'>\n" +
+        "    <failure>com.foo\nblehbleh\n</failure>\n" +
+        "  </testcase>\n" +
+        "</testsuite>\n";
+
+    Path xmlFile = tmp.newFile("result.xml");
+    Files.write(xmlFile, xml.getBytes(UTF_8));
+
+    List<TestCaseSummary> summary = XmlTestResultParser.parseAndroid(xmlFile, "android-5554");
+
+    assertEquals("", summary.get(0).getTestResults().get(0).getMessage());
+  }
+
+  @Test
+  public void testColonInMEssage() throws Throwable {
+    String xml =
+        "<?xml version='1.1' encoding='UTF-8' standalone='no'?>\n" +
+        "<testsuite name='com.facebook.foo.bar'>\n" +
+        "  <testcase name='a' classname='Bar' time='0.0'>\n" +
+        "    <failure>com.foo: Error: Message\nblehbleh\n</failure>\n" +
+        "  </testcase>\n" +
+        "</testsuite>\n";
+
+    Path xmlFile = tmp.newFile("result.xml");
+    Files.write(xmlFile, xml.getBytes(UTF_8));
+
+    List<TestCaseSummary> summary = XmlTestResultParser.parseAndroid(xmlFile, "android-5554");
+
+    assertEquals("Error: Message", summary.get(0).getTestResults().get(0).getMessage());
+  }
 }

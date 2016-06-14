@@ -97,6 +97,9 @@ public class XmlTestResultParser {
     if (failure.getLength() == 1) {
       stacktrace = failure.item(0).getTextContent();
       type = ResultType.FAILURE;
+
+      String[] firstLineParts = stacktrace.split("\n")[0].split(":", 2);
+      message = firstLineParts.length > 1 ? firstLineParts[1].trim() : "";
     }
     return new TestResultSummary(
         testCaseName,
