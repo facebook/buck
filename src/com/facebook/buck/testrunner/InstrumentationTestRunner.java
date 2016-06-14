@@ -16,13 +16,17 @@
 
 package com.facebook.buck.testrunner;
 
-import com.android.ddmlib.AndroidDebugBridge;
-import com.android.ddmlib.IDevice;
-import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
-
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.android.ddmlib.AndroidDebugBridge;
+import com.android.ddmlib.IDevice;
+import com.android.ddmlib.MultiLineReceiver;
+import com.android.ddmlib.testrunner.ITestRunListener;
+import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
+import com.android.ddmlib.testrunner.TestIdentifier;
 
 public class InstrumentationTestRunner {
   private static final long ADB_CONNECT_TIMEOUT_MS = 5000;
@@ -162,17 +166,49 @@ public class InstrumentationTestRunner {
     }
 
     try {
-      RemoteAndroidTestRunner runner = new RemoteAndroidTestRunner(
+      final RemoteAndroidTestRunner runner = new RemoteAndroidTestRunner(
           this.packageName,
           this.testRunner,
           getDevice(deviceSerial)
       );
+
       for (Map.Entry<String, String> entry : this.extraInstrumentationArguments.entrySet()) {
         runner.addInstrumentationArg(entry.getKey(), entry.getValue());
       }
       BuckXmlTestRunListener listener = new BuckXmlTestRunListener();
+      ITestRunListener trimLineListener = new ITestRunListener() {
+          /**
+           * Before the actual run starts (and after the
+           * InstrumentationResultsParser is created), we need to do
+           * some reflection magic to make RemoteAndroidTestRunner not
+           * trim indentation from lines.
+           */
+          @Override
+          public void testRunStarted(String runName, int testCount) {
+            setTrimLine(runner, false);
+          }
+
+          @Override
+          public void testRunEnded(long elapsedTime, Map<String, String> runMetrics) {}
+
+          @Override
+          public void testRunFailed(String errorMessage){}
+
+          @Override
+          public void testStarted(TestIdentifier test) {}
+
+          @Override
+          public void testFailed(TestFailure status, TestIdentifier test, String trace) {}
+
+          @Override
+          public void testEnded(TestIdentifier test, Map<String, String> testMetrics) {}
+
+          @Override
+          public void testRunStopped(long elapsedTime) {}
+        };
+
       listener.setReportDir(this.outputDirectory);
-      runner.run(listener);
+      runner.run(trimLineListener, listener);
     } finally {
       if (this.attemptUninstall) {
         // Best effort uninstall from the emulator/device.
@@ -227,6 +263,18 @@ public class InstrumentationTestRunner {
       Thread.sleep(ADB_CONNECT_TIME_STEP_MS);
     }
     return isAdbInitialized(adb) ? adb : null;
+  }
+
+  // VisibleForTesting
+  static void setTrimLine(RemoteAndroidTestRunner runner, boolean value) {
+    try {
+      Field mParserField = RemoteAndroidTestRunner.class.getDeclaredField("mParser");
+      mParserField.setAccessible(true);
+      MultiLineReceiver multiLineReceiver = (MultiLineReceiver) mParserField.get(runner);
+      multiLineReceiver.setTrimLine(value);
+    } catch (NoSuchFieldException | IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /**
