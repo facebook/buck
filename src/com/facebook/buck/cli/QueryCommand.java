@@ -25,6 +25,7 @@ import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
@@ -45,7 +46,6 @@ import java.io.StringWriter;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.regex.Pattern;
 
 public class QueryCommand extends AbstractCommand {
 
@@ -209,6 +209,7 @@ public class QueryCommand extends AbstractCommand {
       BuckQueryEnvironment env,
       Set<QueryTarget> queryResult)
       throws InterruptedException, IOException, QueryException {
+    PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes.get());
     SortedMap<String, SortedMap<String, Object>> result = Maps.newTreeMap();
     for (QueryTarget target : queryResult) {
       if (!(target instanceof QueryBuildTarget)) {
@@ -228,16 +229,15 @@ public class QueryCommand extends AbstractCommand {
           continue;
         }
         SortedMap<String, Object> attributes = Maps.newTreeMap();
-
-        for (String attribute : outputAttributes.get()) {
-          Pattern attrRegex = Pattern.compile(attribute);
+        if (patternsMatcher.hasPatterns()) {
           for (String key : sortedTargetRule.keySet()) {
             String snakeCaseKey = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, key);
-            if (attrRegex.matcher(snakeCaseKey).matches()) {
+            if (patternsMatcher.matches(snakeCaseKey)) {
               attributes.put(snakeCaseKey, sortedTargetRule.get(key));
             }
           }
         }
+
         result.put(
             node.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName(),
             attributes);
