@@ -43,6 +43,7 @@ public class BuckSettingsUI extends JPanel {
       "input your additional install flags here: eg. --no-cache";
 
   private TextFieldWithBrowseButton buckPathField;
+  private TextFieldWithBrowseButton adbPathField;
   private JBTextField customizedInstallSettingField;
   private JCheckBox showDebug;
   private JCheckBox enableAutoDeps;
@@ -62,13 +63,25 @@ public class BuckSettingsUI extends JPanel {
     JPanel container = this;
 
     buckPathField = new TextFieldWithBrowseButton();
-    FileChooserDescriptor fileChooserDescriptor =
+    FileChooserDescriptor buckFileChooserDescriptor =
         new FileChooserDescriptor(true, false, false, false, false, false);
     buckPathField.addBrowseFolderListener(
         "",
         "Buck Executable Path",
         null,
-        fileChooserDescriptor,
+        buckFileChooserDescriptor,
+        TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT,
+        false
+    );
+
+    adbPathField = new TextFieldWithBrowseButton();
+    FileChooserDescriptor adbFileChooserDescriptor =
+        new FileChooserDescriptor(true, false, false, false, false, false);
+    adbPathField.addBrowseFolderListener(
+        "",
+        "Adb Executable Path",
+        null,
+        adbFileChooserDescriptor,
         TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT,
         false
     );
@@ -98,9 +111,18 @@ public class BuckSettingsUI extends JPanel {
     buckSettings.add(buckPathField, constraints);
     constraints.gridx = 0;
     constraints.gridy = 1;
-    buckSettings.add(showDebug, constraints);
+    constraints.weightx = 1;
+    buckSettings.add(new JLabel("Adb Executable Path:"), constraints);
+    constraints.gridx = 1;
+    constraints.gridy = 1;
+    constraints.weightx = 1;
+    constraints.fill = GridBagConstraints.HORIZONTAL;
+    buckSettings.add(adbPathField, constraints);
     constraints.gridx = 0;
     constraints.gridy = 2;
+    buckSettings.add(showDebug, constraints);
+    constraints.gridx = 0;
+    constraints.gridy = 3;
     buckSettings.add(enableAutoDeps, constraints);
 
     JPanel installSettings = new JPanel(new BorderLayout());
@@ -131,6 +153,8 @@ public class BuckSettingsUI extends JPanel {
   public boolean isModified() {
     return !Comparing.equal(buckPathField.getText(),
         optionsProvider.getState().buckExecutable) ||
+        !Comparing.equal(adbPathField.getText(),
+            optionsProvider.getState().adbExecutable) ||
         optionsProvider.getState().runAfterInstall != runAfterInstall.isSelected() ||
         optionsProvider.getState().showDebug != showDebug.isSelected() ||
         optionsProvider.getState().enableAutoDeps != enableAutoDeps.isSelected() ||
@@ -145,6 +169,7 @@ public class BuckSettingsUI extends JPanel {
 
   public void apply() {
     optionsProvider.getState().buckExecutable = buckPathField.getText();
+    optionsProvider.getState().adbExecutable = adbPathField.getText();
     optionsProvider.getState().showDebug = showDebug.isSelected();
     optionsProvider.getState().enableAutoDeps = enableAutoDeps.isSelected();
     optionsProvider.getState().runAfterInstall = runAfterInstall.isSelected();
@@ -157,6 +182,7 @@ public class BuckSettingsUI extends JPanel {
 
   public void reset() {
     buckPathField.setText(optionsProvider.getState().buckExecutable);
+    adbPathField.setText(optionsProvider.getState().adbExecutable);
     showDebug.setSelected(optionsProvider.getState().showDebug);
     enableAutoDeps.setSelected(optionsProvider.getState().enableAutoDeps);
     runAfterInstall.setSelected(optionsProvider.getState().runAfterInstall);

@@ -19,7 +19,7 @@ package com.facebook.buck.intellij.plugin.debugger;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.IDevice;
-import com.facebook.buck.intellij.plugin.config.BuckExecutableDetector;
+import com.facebook.buck.intellij.plugin.config.BuckSettingsProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.intellij.execution.ProgramRunnerUtil;
 import com.intellij.execution.RunManager;
@@ -48,7 +48,9 @@ public class AndroidDebugger {
     if (AndroidDebugBridge.getBridge() == null ||
         !isAdbInitialized(AndroidDebugBridge.getBridge())) {
       AndroidDebugBridge.initIfNeeded(/* clientSupport */ true);
-      AndroidDebugBridge.createBridge(BuckExecutableDetector.getAdbExecutable(), false);
+      AndroidDebugBridge.createBridge(
+          BuckSettingsProvider.getInstance().getState().adbExecutable,
+          false);
     }
 
     long start = System.currentTimeMillis();

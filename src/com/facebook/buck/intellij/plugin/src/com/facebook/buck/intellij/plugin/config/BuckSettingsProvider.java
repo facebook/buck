@@ -59,9 +59,21 @@ public class BuckSettingsProvider implements PersistentStateComponent<BuckSettin
         // let the user insert the path to the executable
         state.buckExecutable = "";
         LOG.error(e.getHumanReadableErrorMessage() + ". You can specify the buck path from " +
-            "Tools > Buck > Buck Executable Path");
+            "Tools > Buck > Buck Executable Path", e);
       }
     }
+
+    if (state.adbExecutable == null || state.adbExecutable.isEmpty()) {
+      try {
+        state.adbExecutable = BuckExecutableDetector.getAdbExecutable();
+      } catch (HumanReadableException e) {
+        // let the user insert the path to the executable
+        state.adbExecutable = "";
+        LOG.error(e.getHumanReadableErrorMessage() + ". You can specify the adb path from " +
+            "Tools > Buck > Adb Executable Path", e);
+      }
+    }
+
     return state;
   }
 
@@ -108,6 +120,12 @@ public class BuckSettingsProvider implements PersistentStateComponent<BuckSettin
      *
      */
     public String buckExecutable;
+
+    /**
+     * Path to adb executable.
+     *
+     */
+    public String adbExecutable;
 
     /**
      * Enable the debug window for the plugin.
