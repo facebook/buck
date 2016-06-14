@@ -152,6 +152,7 @@ public class XzStep implements Step {
         OutputStream out = filesystem.newFileOutputStream(destinationFile);
         XZOutputStream xzOut = new XZOutputStream(out, new LZMA2Options(compressionLevel), check)
     ) {
+      XzMemorySemaphore.acquireMemory(compressionLevel);
       ByteStreams.copy(in, xzOut);
       xzOut.finish();
       if (!keep) {
@@ -160,6 +161,8 @@ public class XzStep implements Step {
     } catch (IOException e) {
       LOG.error(e);
       return StepExecutionResult.ERROR;
+    } finally {
+      XzMemorySemaphore.releaseMemory(compressionLevel);
     }
     return StepExecutionResult.SUCCESS;
   }

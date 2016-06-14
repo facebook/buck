@@ -59,7 +59,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Semaphore;
 
 import javax.annotation.Nullable;
 
@@ -76,22 +75,6 @@ public class SmartDexingStep implements Step {
 
   public static final String SHORT_NAME = "smart_dex";
   private static final String SECONDARY_SOLID_DEX_FILENAME = "secondary.dex.jar.xzs";
-
-  private static final int[] XZ_MEMORY_USAGE_MB = {
-      1,
-      1,
-      1,
-      5,
-      10,
-      20,
-      40,
-      85,
-      175,
-      600
-  };
-  private static final int MAX_MEMORY =
-      (int) (Runtime.getRuntime().maxMemory() / 2 / 1024 / 1024);
-  private static final Semaphore memorySemaphore = new Semaphore(MAX_MEMORY);
 
   public interface DexInputHashesProvider {
     ImmutableMap<Path, Sha1HashCode> getDexInputHashes();
@@ -155,18 +138,6 @@ public class SmartDexingStep implements Step {
     return Runtime.getRuntime().availableProcessors();
   }
 
-  private static void acquireMemory(int xzCompressionLevel) {
-    try {
-      memorySemaphore.acquire(XZ_MEMORY_USAGE_MB[xzCompressionLevel]);
-    } catch (InterruptedException exp) {
-      // ignore it
-    }
-  }
-
-  private static void releaseMemory(int xzCompressionLevel) {
-    memorySemaphore.release(XZ_MEMORY_USAGE_MB[xzCompressionLevel]);
-  }
-
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     try {
@@ -209,14 +180,7 @@ public class SmartDexingStep implements Step {
             xzStep = new XzStep(filesystem, secondaryBlobOutput, secondaryCompressedBlobOutput);
           }
           stepRunner.runStepForBuildTarget(concatStep, Optional.<BuildTarget>absent());
-
-          int compressionLevel = xzCompressionLevel.or(XzStep.DEFAULT_COMPRESSION_LEVEL);
-          try {
-            acquireMemory(compressionLevel);
-            stepRunner.runStepForBuildTarget(xzStep, Optional.<BuildTarget>absent());
-          } finally {
-            releaseMemory(compressionLevel);
-          }
+          stepRunner.runStepForBuildTarget(xzStep, Optional.<BuildTarget>absent());
         }
       }
     } catch (StepFailedException | IOException e) {
