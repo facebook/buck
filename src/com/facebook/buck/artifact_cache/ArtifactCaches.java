@@ -375,6 +375,7 @@ public class ArtifactCaches {
         NetworkCacheArgs.builder()
             .setThriftEndpointPath(config.getHybridThriftEndpoint())
             .setCacheName(cacheName)
+            .setRepository(config.getRepository())
             .setFetchClient(fetchService)
             .setStoreClient(storeService)
             .setDoStore(doStore)

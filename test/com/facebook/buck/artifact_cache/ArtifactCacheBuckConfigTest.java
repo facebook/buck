@@ -324,6 +324,19 @@ public class ArtifactCacheBuckConfigTest {
   }
 
   @Test
+  public void testRepository() throws IOException {
+    ArtifactCacheBuckConfig config = createFromText(
+        "[cache]",
+        "repository = some_repo");
+
+    assertThat(config.getRepository(), Matchers.equalTo("some_repo"));
+
+    ArtifactCacheBuckConfig defaultConfig = createFromText(
+        "[cache]");
+    assertThat(defaultConfig.getRepository(), Matchers.equalTo(""));
+  }
+
+  @Test
   public void errorMessageFormatter() throws IOException {
     final String testText = "this is a test";
     ArtifactCacheBuckConfig config = createFromText(

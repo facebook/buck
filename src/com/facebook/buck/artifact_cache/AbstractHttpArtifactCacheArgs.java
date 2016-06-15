@@ -29,6 +29,7 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 interface AbstractNetworkCacheArgs {
   String getCacheName();
+  String getRepository();
   HttpService getFetchClient();
   HttpService getStoreClient();
   boolean getDoStore();

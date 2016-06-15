@@ -81,6 +81,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         new com.facebook.buck.artifact_cache.thrift.RuleKey();
     thriftRuleKey.setHashString(ruleKey.getHashCode().toString());
     fetchRequest.setRuleKey(thriftRuleKey);
+    fetchRequest.setRepository(repository);
 
     BuckCacheRequest cacheRequest = new BuckCacheRequest();
     cacheRequest.setType(BuckCacheRequestType.FETCH);
@@ -161,7 +162,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     };
 
     BuckCacheStoreRequest storeRequest = new BuckCacheStoreRequest();
-    storeRequest.setMetadata(infoToMetadata(info, artifact));
+    storeRequest.setMetadata(infoToMetadata(info, artifact, repository));
     PayloadInfo payloadInfo = new PayloadInfo();
     payloadInfo.setSizeBytes(artifact.size());
     BuckCacheRequest cacheRequest = new BuckCacheRequest();
@@ -206,8 +207,8 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         ".tmp");
   }
 
-  private static ArtifactMetadata infoToMetadata(ArtifactInfo info, ByteSource file)
-      throws IOException {
+  private static ArtifactMetadata infoToMetadata(
+      ArtifactInfo info, ByteSource file, String repository) throws IOException {
     ArtifactMetadata metadata = new ArtifactMetadata();
     if (info.getBuildTarget().isPresent()) {
       metadata.setBuildTarget(info.getBuildTarget().get().toString());
@@ -233,6 +234,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
 
     metadata.setMetadata(info.getMetadata());
     metadata.setArtifactPayloadCrc32(ThriftArtifactCacheProtocol.computeCrc32(file));
+    metadata.setRepository(repository);
 
     return metadata;
   }

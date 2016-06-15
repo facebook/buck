@@ -117,6 +117,7 @@ public class HttpArtifactCacheTest {
     this.storeService = EasyMock.createMock(HttpService.class);
     this.argsBuilder = NetworkCacheArgs.builder()
         .setCacheName("http")
+        .setRepository("some_repository")
         .setFetchClient(fetchService)
         .setStoreClient(storeService)
         .setDoStore(true)

@@ -104,6 +104,8 @@ public class ArtifactCacheBuckConfig {
   private static final long TWO_LEVEL_CACHING_MIN_SIZE_DEFAULT = 20 * 1024L;
 
   private static final String HYBRID_THRIFT_ENDPOINT = "hybrid_thrift_endpoint";
+  private static final String REPOSITORY = "repository";
+  private static final String DEFAULT_REPOSITORY = "";
 
   public enum LoadBalancingType {
     SINGLE_SERVER,
@@ -116,6 +118,11 @@ public class ArtifactCacheBuckConfig {
   public ArtifactCacheBuckConfig(BuckConfig buckConfig) {
     this.buckConfig = buckConfig;
     this.slbConfig = new SlbBuckConfig(buckConfig, CACHE_SECTION_NAME);
+  }
+
+  public String getRepository() {
+    return buckConfig.getValue(CACHE_SECTION_NAME, REPOSITORY)
+        .or(DEFAULT_REPOSITORY);
   }
 
   public SlbBuckConfig getSlbConfig() {
