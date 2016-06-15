@@ -1,10 +1,11 @@
-#@# GENERATED FILE: DO NOT MODIFY 6c4284f64d8f23eb290056daa8844f50ba376f81 #@#
+#@# GENERATED FILE: DO NOT MODIFY 68749df6ed1e1acc1cc3040defaa45ca6bbc1a60 #@#
 {
   "autodeps" : {
     "deps" : [
       "//src/com/facebook/buck/android:rules",
       "//src/com/facebook/buck/jvm/java:packagefinder",
       "//src/com/facebook/buck/jvm/java:rules",
+      "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/parser:config",
       "//third-party/java/jsr:jsr305"
     ],

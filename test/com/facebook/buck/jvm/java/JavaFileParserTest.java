@@ -233,15 +233,21 @@ public class JavaFileParserTest {
 
   /**
    * Verifies that an import that completely violates the expectations around naming conventions
-   * will result in an exception being thrown.
+   * will still be added. Although we can police this in our own code, we have no control over what
+   * third-party libraries do.
    */
   @Test
   public void testExtractingRequiredSymbolsWithImportsThatHaveNoCapitalLetters() {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("No component with a capital letter in fully qualified name: " +
-        "com.facebook.buck.badactor");
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    parser.extractFeaturesFromJavaCode(JAVA_CODE_WITH_IMPORTS_THAT_HAVE_NO_CAPITAL_LETTERS);
+    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
+        JAVA_CODE_WITH_IMPORTS_THAT_HAVE_NO_CAPITAL_LETTERS);
+
+    assertEquals(
+        ImmutableSortedSet.of("com.facebook.buck.badactor"),
+        features.requiredSymbols);
+    assertEquals(
+        ImmutableSortedSet.of("com.example.AnExample"),
+        features.providedSymbols);
   }
 
   private static final String JAVA_CODE_WITH_FULLY_QUALIFIED_REFERENCES = Joiner.on('\n').join(

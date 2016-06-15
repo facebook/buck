@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.log.Logger;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -73,6 +74,8 @@ import javax.annotation.Nullable;
  * ASTParser from Eclipse.
  */
 public class JavaFileParser {
+
+  private static final Logger LOG = Logger.get(JavaFileParser.class);
 
   private final int jlsLevel;
   private final String javaVersion;
@@ -630,12 +633,21 @@ public class JavaFileParser {
         }
 
         // Only worry about the dependency on the enclosing type.
-        String simpleName = getSimpleNameFromFullyQualifiedName(fullyQualifiedName);
-        int index = fullyQualifiedName.indexOf("." + simpleName);
-        String enclosingType = fullyQualifiedName.substring(0, index + simpleName.length() + 1);
-        requiredSymbolsFromExplicitImports.add(enclosingType);
+        Optional<String> simpleName = getSimpleNameFromFullyQualifiedName(fullyQualifiedName);
+        if (simpleName.isPresent()) {
+          String name = simpleName.get();
+          int index = fullyQualifiedName.indexOf("." + name);
+          String enclosingType = fullyQualifiedName.substring(0, index + name.length() + 1);
+          requiredSymbolsFromExplicitImports.add(enclosingType);
 
-        simpleImportedTypes.put(simpleName, enclosingType);
+          simpleImportedTypes.put(name, enclosingType);
+        } else {
+          LOG.error("Suspicious import lacks obvious enclosing type: %s", fullyQualifiedName);
+          // The one example we have seen of this in the wild is
+          // "org.whispersystems.curve25519.java.curve_sigs". In practice, we still need to add it
+          // as a required symbol in this case.
+          requiredSymbols.add(fullyQualifiedName);
+        }
         return false;
       }
 
@@ -857,10 +869,15 @@ public class JavaFileParser {
     }
   }
 
-  private static String getSimpleNameFromFullyQualifiedName(String fullyQualifiedName) {
+  /**
+   * @return {@link Optional#absent()} if there are no uppercase components in the
+   *   {@code fullyQualifiedName}, such as
+   *   {@code import org.whispersystems.curve25519.java.curve_sigs;}.
+   */
+  private static Optional<String> getSimpleNameFromFullyQualifiedName(String fullyQualifiedName) {
     int dotIndex = fullyQualifiedName.indexOf('.');
     if (dotIndex < 0) {
-      return fullyQualifiedName;
+      return Optional.of(fullyQualifiedName);
     }
 
     int startIndex = 0;
@@ -869,7 +886,7 @@ public class JavaFileParser {
       // In practice, if there is an uppercase character in the component, it should be the first
       // character, but we have found some exceptions, in practice.
       if (CharMatcher.javaUpperCase().matchesAnyOf(component)) {
-        return component;
+        return Optional.of(component);
       } else {
         startIndex = dotIndex + 1;
         dotIndex = fullyQualifiedName.indexOf('.', startIndex);
@@ -884,8 +901,7 @@ public class JavaFileParser {
       }
     }
 
-    throw new IllegalStateException("No component with a capital letter in fully qualified name: " +
-        fullyQualifiedName);
+    return Optional.absent();
   }
 
   private static boolean startsWithUppercaseChar(String str) {
