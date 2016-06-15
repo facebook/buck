@@ -3,6 +3,7 @@
   <name>Buck for IDEA</name>
   <version>2.7</version>
   <category>Build</category>
+  <vendor email="fb-plugins@fb.com" url="www.facebook.com">Facebook, Inc.</vendor>
 
   <description><![CDATA[
       An IntelliJ plugin for Buck build system.<br>

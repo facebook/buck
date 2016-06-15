@@ -59,7 +59,7 @@ public class BuckSettingsProvider implements PersistentStateComponent<BuckSettin
         // let the user insert the path to the executable
         state.buckExecutable = "";
         LOG.error(e.getHumanReadableErrorMessage() + ". You can specify the buck path from " +
-            "Tools > Buck > Buck Executable Path", e);
+            "Preferences/Settings > Tools > Buck > Buck Executable Path", e);
       }
     }
 
@@ -70,7 +70,7 @@ public class BuckSettingsProvider implements PersistentStateComponent<BuckSettin
         // let the user insert the path to the executable
         state.adbExecutable = "";
         LOG.error(e.getHumanReadableErrorMessage() + ". You can specify the adb path from " +
-            "Tools > Buck > Adb Executable Path", e);
+            "Preferences/Settings > Tools > Buck > Adb Executable Path", e);
       }
     }
 

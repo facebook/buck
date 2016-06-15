@@ -53,11 +53,14 @@ public final class BuckWSServerPortUtils {
         mPort = Integer.parseInt(line.replace(BuckWSServerPortUtils.SEARCH_FOR, ""));
         if (mPort == CONNECTION_FAILED) {
           // if the buck server is off, and it gives us -1, throw this exception
-          error = "Your buck server may be turned off, since buck has the buck daemon on port " +
-              mPort + ".\nTry adding to your '.buckconfig.local' file:\n" +
-              "[httpserver]\n" +
-              "    port = 0\n" +
-              "After that, try running the restarting IntelliJ and run the action again.\n";
+          error =
+              "Your buck server may be turned off, since the Buck daemon is on port " +
+                  mPort +
+                  ".\nTry adding to your '.buckconfig.local' or '.buckconfig' file," +
+                  " if you don't have it already set:\n" +
+                  "[httpserver]\n" +
+                  "    port = 0\n" +
+                  "After that, restart IntelliJ or reopen your project.\n";
           break;
         }
       }
