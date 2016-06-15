@@ -528,7 +528,7 @@ public class KnownBuildRuleTypes {
     ListeningExecutorService dxExecutorService =
         MoreExecutors.listeningDecorator(
             Executors.newFixedThreadPool(
-                SmartDexingStep.determineOptimalThreadCount(),
+                javaConfig.getDxThreadCount().or(SmartDexingStep.determineOptimalThreadCount()),
                 new CommandThreadFactory("SmartDexing")));
 
 

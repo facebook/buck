@@ -1505,6 +1505,16 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'java' /}
+  {param name: 'dx_threads' /}
+  {param example_value: '8' /}
+  {param description}
+    The number of thread that will run the dexing steps. Since the dexing steps can use a lot of
+    memory, it might be useful to set this to a lower value to avoid out-of-memory errors.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'httpserver' /}
   {param description}
