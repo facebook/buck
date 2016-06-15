@@ -22,7 +22,7 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.EdenError;
 import com.facebook.eden.EdenService;
 import com.facebook.eden.MountInfo;

@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNotEquals;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildInfo;
-import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;

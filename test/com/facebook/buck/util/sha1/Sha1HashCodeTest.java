@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.util.sha1;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

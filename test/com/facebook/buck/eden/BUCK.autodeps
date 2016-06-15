@@ -1,9 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY e03e50c7e95b0b5539e4d9a1212d20eb747625ab #@#
+#@# GENERATED FILE: DO NOT MODIFY 7e5dda0762b6748889052edabcb8704c8d927ad7 #@#
 {
   "eden" : {
     "deps" : [
       "//src/com/facebook/buck/eden:eden",
-      "//src/com/facebook/buck/rules:Sha1HashCode",
+      "//src/com/facebook/buck/util/sha1:sha1",
       "//third-party/java/easymock:easymock",
       "//third-party/java/guava:guava",
       "//third-party/java/jimfs:jimfs",

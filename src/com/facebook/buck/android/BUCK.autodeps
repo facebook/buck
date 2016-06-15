@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 61589a8054d60311c330af72828a01da7ce21267 #@#
+#@# GENERATED FILE: DO NOT MODIFY 9134f9ef4ab9e64c02993099592a379710a31697 #@#
 {
   "exceptions" : {
     "deps" : [
@@ -89,7 +89,6 @@
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
-      "//src/com/facebook/buck/rules:Sha1HashCode",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules/args:args",
@@ -103,6 +102,7 @@
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/util/immutables:immutables",
+      "//src/com/facebook/buck/util/sha1:sha1",
       "//third-party/java/guava:guava",
       "//third-party/java/infer-annotations:infer-annotations",
       "//third-party/java/jsr:jsr305"
@@ -147,7 +147,6 @@
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/jvm/java/classes:classes",
       "//src/com/facebook/buck/model:model",
-      "//src/com/facebook/buck/rules:Sha1HashCode",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/shell:steps",
@@ -156,6 +155,7 @@
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/util/immutables:immutables",
+      "//src/com/facebook/buck/util/sha1:sha1",
       "//third-party/java/aosp:aosp",
       "//third-party/java/asm:asm",
       "//third-party/java/guava:guava",

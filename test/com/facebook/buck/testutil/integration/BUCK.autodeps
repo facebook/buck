@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY ba751e81befeda1d50f8183f9ab5725ea1a79e96 #@#
+#@# GENERATED FILE: DO NOT MODIFY 36e1738b11aad6f52521a2bf762c71c788f8e7fc #@#
 {
   "integration" : {
     "deps" : [
@@ -29,10 +29,10 @@
     "exported_deps" : [
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
       "//src/com/facebook/buck/model:model",
-      "//src/com/facebook/buck/rules:Sha1HashCode",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:types",
       "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util/sha1:sha1",
       "//third-party/java/guava:guava",
       "//third-party/java/jetty:jetty",
       "//third-party/java/jsr:jsr305",

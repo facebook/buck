@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 3e1c357a31dcea82dea6c6aa6c77ddba47e10ce6 #@#
+#@# GENERATED FILE: DO NOT MODIFY 33d5eba25682a0217e9862d4455ce3e5ef8948ba #@#
 {
   "js" : {
     "deps" : [
@@ -11,13 +11,13 @@
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
-      "//src/com/facebook/buck/rules:Sha1HashCode",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/shell:worker",
       "//src/com/facebook/buck/step:step",
+      "//src/com/facebook/buck/util/sha1:sha1",
       "//third-party/java/guava:guava",
       "//third-party/java/infer-annotations:infer-annotations",
       "//third-party/java/jsr:jsr305"

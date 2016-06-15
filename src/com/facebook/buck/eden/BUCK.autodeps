@@ -1,11 +1,11 @@
-#@# GENERATED FILE: DO NOT MODIFY ad6f8cf1e523d7cabd340e4148cb2b9bacb7ed52 #@#
+#@# GENERATED FILE: DO NOT MODIFY b07505ae9d88198190f732872532f4e16266a032 #@#
 {
   "eden" : {
     "deps" : [
       "//src/com/facebook/buck/io/unixsocket:unixsocket"
     ],
     "exported_deps" : [
-      "//src/com/facebook/buck/rules:Sha1HashCode",
+      "//src/com/facebook/buck/util/sha1:sha1",
       "//third-party/java/eden:eden-thrift-bindings",
       "//third-party/java/eden:java-thrift",
       "//third-party/java/guava:guava"

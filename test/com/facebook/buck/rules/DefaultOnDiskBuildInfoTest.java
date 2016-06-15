@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 

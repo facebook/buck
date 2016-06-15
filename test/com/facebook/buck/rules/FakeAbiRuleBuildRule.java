@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Strings;
 
 import javax.annotation.Nullable;

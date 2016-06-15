@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;

@@ -1,11 +1,5 @@
-#@# GENERATED FILE: DO NOT MODIFY ba28f84fd27fc9f04c391dd5da7b7be70a6393f4 #@#
+#@# GENERATED FILE: DO NOT MODIFY dc703820c744684eb08b15cffe026d5d76e53ce2 #@#
 {
-  "Sha1HashCode" : {
-    "deps" : [ ],
-    "exported_deps" : [
-      "//third-party/java/guava:guava"
-    ]
-  },
   "action_graph_cache" : {
     "deps" : [
       "//src/com/facebook/buck/graph:graph",
@@ -51,7 +45,6 @@
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
-      "//src/com/facebook/buck/rules:Sha1HashCode",
       "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules/coercer:types",
@@ -61,6 +54,7 @@
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/immutables:immutables",
+      "//src/com/facebook/buck/util/sha1:sha1",
       "//third-party/java/guava:guava",
       "//third-party/java/infer-annotations:infer-annotations",
       "//third-party/java/jackson:jackson-annotations",

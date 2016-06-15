@@ -16,7 +16,7 @@
 
 package com.facebook.buck.eden;
 
-import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.EdenError;
 import com.facebook.eden.EdenService;
 import com.facebook.thrift.TException;

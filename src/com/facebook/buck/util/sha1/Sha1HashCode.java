@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.util.sha1;
 
 import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
@@ -33,9 +33,9 @@ public final class Sha1HashCode {
   private static final Pattern SHA1_PATTERN = Pattern.compile(
       String.format("[a-f0-9]{%d}", NUM_BYTES_IN_HEX_REPRESENTATION));
 
-  final int firstFourBytes;
-  final long nextEightBytes;
-  final long lastEightBytes;
+  public final int firstFourBytes;
+  public final long nextEightBytes;
+  public final long lastEightBytes;
 
   private Sha1HashCode(int firstFourBytes, long nextEightBytes, long lastEightBytes) {
     this.firstFourBytes = firstFourBytes;

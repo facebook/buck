@@ -18,7 +18,7 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.OnDiskBuildInfo;
-import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 
 /**
  * {@link BuildRule} that can avoid rebuilding itself when the ABI of its deps has not changed and

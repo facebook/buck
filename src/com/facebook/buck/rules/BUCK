@@ -145,20 +145,6 @@ java_immutables_library(
 )
 
 java_library(
-  name = 'Sha1HashCode',
-  srcs = [
-    'Sha1HashCode.java',
-  ],
-  tests = [
-    '//test/com/facebook/buck/rules:rules',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
-)
-
-java_library(
   name = 'target_graph_hashing',
   srcs = [
     'TargetGraphHashing.java',
