@@ -346,13 +346,14 @@ public class CxxGenruleDescription
      * Return the {@link PreprocessorFlags} object formed by the transitive C/C++ preprocessor
      * input for the given rules.
      */
-    private PreprocessorFlags getPreprocessorFlags(ImmutableList<BuildRule> rules)
+    private PreprocessorFlags getPreprocessorFlags(
+        Iterable<CxxPreprocessorInput> transitivePreprocessorInput)
         throws MacroException {
       PreprocessorFlags.Builder ppFlagsBuilder = PreprocessorFlags.builder();
       ExplicitCxxToolFlags.Builder toolFlagsBuilder = CxxToolFlags.explicitBuilder();
       toolFlagsBuilder.setPlatformFlags(
           CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, sourceType));
-      for (CxxPreprocessorInput input : getCxxPreprocessorInput(rules)) {
+      for (CxxPreprocessorInput input : transitivePreprocessorInput) {
         ppFlagsBuilder.addAllIncludes(input.getIncludes());
         ppFlagsBuilder.addAllSystemIncludePaths(input.getSystemIncludeRoots());
         ppFlagsBuilder.addAllFrameworkPaths(input.getFrameworks());
@@ -372,7 +373,7 @@ public class CxxGenruleDescription
         ImmutableList<BuildRule> rules)
         throws MacroException {
       SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-      PreprocessorFlags ppFlags = getPreprocessorFlags(rules);
+      PreprocessorFlags ppFlags = getPreprocessorFlags(getCxxPreprocessorInput(rules));
       CxxToolFlags flags =
           ppFlags.toToolFlags(
               pathResolver,
@@ -400,12 +401,18 @@ public class CxxGenruleDescription
         final CellPathResolver cellNames,
         final BuildRuleResolver resolver,
         final String input) throws MacroException {
-      final PreprocessorFlags ppFlags =
-          getPreprocessorFlags(resolve(target, cellNames, resolver, input));
+      final Iterable<CxxPreprocessorInput> transitivePreprocessorInput =
+          getCxxPreprocessorInput(resolve(target, cellNames, resolver, input));
+      final PreprocessorFlags ppFlags = getPreprocessorFlags(transitivePreprocessorInput);
       return new RuleKeyAppendable() {
         @Override
         public void appendToRuleKey(RuleKeyObjectSink sink) {
           ppFlags.appendToRuleKey(sink, cxxPlatform.getDebugPathSanitizer());
+          sink.setReflectively(
+              "headers",
+              FluentIterable.from(transitivePreprocessorInput)
+                  .transformAndConcat(CxxPreprocessorInput.GET_INCLUDES)
+                  .toList());
         }
       };
     }

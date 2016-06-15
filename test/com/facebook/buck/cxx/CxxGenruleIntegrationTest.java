@@ -89,6 +89,23 @@ public class CxxGenruleIntegrationTest {
   }
 
   @Test
+  public void cppflagsNoopBuild() throws IOException {
+    workspace.replaceFileContents("BUCK", "@CMD@", "echo $(cppflags :header)");
+    workspace.runBuckBuild("//:rule#default").assertSuccess();
+    workspace.runBuckBuild("//:rule#default").assertSuccess();
+    workspace.getBuildLog().assertNotTargetBuiltLocally("//:rule#default");
+  }
+
+  @Test
+  public void cppflagsChangingHeaderCausesRebuild() throws IOException {
+    workspace.replaceFileContents("BUCK", "@CMD@", "echo $(cppflags :header)");
+    workspace.runBuckBuild("//:rule#default").assertSuccess();
+    workspace.writeContentsToPath("#define HELLO", "real_header.h");
+    workspace.runBuckBuild("//:rule#default").assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:rule#default");
+  }
+
+  @Test
   public void headers() throws IOException {
     workspace.replaceFileContents(
         "BUCK",
