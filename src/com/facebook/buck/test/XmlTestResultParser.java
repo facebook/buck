@@ -52,6 +52,8 @@ public class XmlTestResultParser {
 
     NodeList testElements = doc.getElementsByTagName("testcase");
 
+    throwIfProcessFailed(root);
+
     List<TestCaseSummary> results = new ArrayList<>();
 
     Map<String, List<TestResultSummary>> testResultsMap = new LinkedHashMap<>();
@@ -79,6 +81,19 @@ public class XmlTestResultParser {
     return results;
   }
 
+  private static void throwIfProcessFailed(Element root) {
+    NodeList children = root.getChildNodes();
+    for (int i = 0; i < children.getLength(); i++) {
+      if (!(children.item(i) instanceof Element)) {
+        continue;
+      }
+      Element child = (Element) children.item(i);
+      if (child.getTagName().equals("failure")) {
+        throw new TestProcessCrashed(child.getTextContent() + "\nSee logcat for more details.");
+      }
+    }
+  }
+
   private static String getTestCaseName(String className, String serialNumber) {
     return className + " (" + serialNumber + ")";
   }
@@ -95,7 +110,9 @@ public class XmlTestResultParser {
 
     NodeList failure = node.getElementsByTagName("failure");
     if (failure.getLength() == 1) {
+
       stacktrace = failure.item(0).getTextContent();
+
       type = ResultType.FAILURE;
 
       String[] firstLineParts = stacktrace.split("\n")[0].split(":", 2);

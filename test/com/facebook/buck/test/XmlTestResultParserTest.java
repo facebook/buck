@@ -25,7 +25,9 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import org.junit.Rule;
 import org.junit.Test;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -135,5 +137,27 @@ public class XmlTestResultParserTest {
     List<TestCaseSummary> summary = XmlTestResultParser.parseAndroid(xmlFile, "android-5554");
 
     assertEquals("Error: Message", summary.get(0).getTestResults().get(0).getMessage());
+  }
+
+  @Test
+  public void testThrowsIfTheresAFailureNodeOnTestSuite() throws Throwable {
+    String xml =
+        "<?xml version='1.1' encoding='UTF-8' standalone='no'?>\n" +
+        "<testsuite name='com.facebook.foo.bar'>\n" +
+        "  <testcase name='a' classname='Bar' time='0.0' />\n" +
+        "  <failure>Instrumentation failed with RuntimeException</failure>\n" +
+        "</testsuite>\n";
+
+    Path xmlFile = tmp.newFile("result.xml");
+    Files.write(xmlFile, xml.getBytes(UTF_8));
+
+    try {
+      XmlTestResultParser.parseAndroid(xmlFile, "android-5554");
+      fail("expected exception");
+    } catch (TestProcessCrashed e) {
+      assertThat(
+        e.getMessage(),
+        containsString("Instrumentation failed with RuntimeException"));
+    }
   }
 }
