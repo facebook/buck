@@ -156,27 +156,45 @@ public class JavaDepsFinder {
       JavaTestDescription.TYPE,
       PrebuiltJarDescription.TYPE);
 
-  public DepsForBuildFiles findDepsForBuildFiles(final TargetGraph graph, Console console) {
+  /**
+   * Java dependency information that is extracted from a {@link TargetGraph}.
+   */
+  public static class DependencyInfo {
     final Set<TargetNode<?>> rulesWithAutodeps = new HashSet<>();
 
-    // Keys are rules with autodeps = True. Values are symbols that are referenced by Java files in
-    // the rule. These need to satisfied by one of the following:
-    // * The hardcoded deps for the rule defined in the build file.
-    // * The provided_deps of the rule.
-    // * The auto-generated deps provided by this class.
-    // * The exported_deps of one of the above.
+    /**
+     * Keys are rules with autodeps = True. Values are symbols that are referenced by Java files in
+     * the rule. These need to satisfied by one of the following:
+     * <ul>
+     * <li>The hardcoded deps for the rule defined in the build file.
+     * <li>The provided_deps of the rule.
+     * <li>The auto-generated deps provided by this class.
+     * <li>The exported_deps of one of the above.
+     * </ul>
+     */
     final HashMultimap<TargetNode<?>, String> ruleToRequiredSymbols = HashMultimap.create();
     final HashMultimap<TargetNode<?>, String> ruleToExportedSymbols = HashMultimap.create();
 
-    final HashMultimap<String, TargetNode<?>> symbolToProviders = HashMultimap.create();
+    public final HashMultimap<String, TargetNode<?>> symbolToProviders = HashMultimap.create();
 
-    // Keys are rules with autodeps = True. Values are the provided_deps for the rule.
-    // Note that not every entry in rulesWithAutodeps will have an entry in this multimap.
+    /**
+     * Keys are rules with {@code autodeps = True}. Values are the provided_deps for the rule.
+     * Note that not every entry in rulesWithAutodeps will have an entry in this multimap.
+     */
     final HashMultimap<TargetNode<?>, BuildTarget> rulesWithAutodepsToProvidedDeps =
         HashMultimap.create();
 
     final HashMultimap<TargetNode<?>, TargetNode<?>> ruleToRulesThatExportIt =
         HashMultimap.create();
+  }
+
+  public DepsForBuildFiles findDepsForBuildFiles(final TargetGraph graph, Console console) {
+    DependencyInfo dependencyInfo = findDependencyInfoForGraph(graph);
+    return findDepsForBuildFiles(dependencyInfo, console);
+  }
+
+  public DependencyInfo findDependencyInfoForGraph(final TargetGraph graph) {
+    final DependencyInfo dependencyInfo = new DependencyInfo();
 
     // Walk the graph and for each Java rule we find, do the following:
     // 1. Make note if it has autodeps = True.
@@ -212,25 +230,29 @@ public class JavaDepsFinder {
         }
 
         if (autodeps) {
-          rulesWithAutodeps.add(node);
-          rulesWithAutodepsToProvidedDeps.putAll(node, providedDeps);
+          dependencyInfo.rulesWithAutodeps.add(node);
+          dependencyInfo.rulesWithAutodepsToProvidedDeps.putAll(node, providedDeps);
         }
 
         for (BuildTarget exportedDep : exportedDeps) {
-          ruleToRulesThatExportIt.put(graph.get(exportedDep), node);
+          dependencyInfo.ruleToRulesThatExportIt.put(graph.get(exportedDep), node);
         }
 
         Symbols symbols = getJavaFileFeatures(node, autodeps);
         if (autodeps) {
-          ruleToRequiredSymbols.putAll(node, symbols.required);
-          ruleToExportedSymbols.putAll(node, symbols.exported);
+          dependencyInfo.ruleToRequiredSymbols.putAll(node, symbols.required);
+          dependencyInfo.ruleToExportedSymbols.putAll(node, symbols.exported);
         }
         for (String providedEntity : symbols.provided) {
-          symbolToProviders.put(providedEntity, node);
+          dependencyInfo.symbolToProviders.put(providedEntity, node);
         }
       }
     }.traverse();
 
+    return dependencyInfo;
+  }
+
+  private DepsForBuildFiles findDepsForBuildFiles(DependencyInfo dependencyInfo, Console console) {
     // For the rules that expect to have their deps generated, look through all of their required
     // symbols and try to find the build rule that provides each symbols. Store these build rules in
     // the depsForBuildFiles data structure.
@@ -238,8 +260,9 @@ public class JavaDepsFinder {
     // Currently, we process each rule with autodeps=True on a single thread. See the class overview
     // for DepsForBuildFiles about what it would take to do this work in a multi-threaded way.
     DepsForBuildFiles depsForBuildFiles = new DepsForBuildFiles();
-    for (final TargetNode<?> rule : rulesWithAutodeps) {
-      final Set<BuildTarget> providedDeps = rulesWithAutodepsToProvidedDeps.get(rule);
+    for (final TargetNode<?> rule : dependencyInfo.rulesWithAutodeps) {
+      final Set<BuildTarget> providedDeps = dependencyInfo.rulesWithAutodepsToProvidedDeps.get(
+          rule);
       final Predicate<TargetNode<?>> isVisibleDepNotAlreadyInProvidedDeps =
           new Predicate<TargetNode<?>>() {
             @Override
@@ -254,10 +277,10 @@ public class JavaDepsFinder {
         HashMultimap<TargetNode<?>, String> ruleToSymbolsMap;
         switch (type) {
         case DEPS:
-          ruleToSymbolsMap = ruleToRequiredSymbols;
+          ruleToSymbolsMap = dependencyInfo.ruleToRequiredSymbols;
           break;
         case EXPORTED_DEPS:
-          ruleToSymbolsMap = ruleToExportedSymbols;
+          ruleToSymbolsMap = dependencyInfo.ruleToExportedSymbols;
           break;
         default:
           throw new IllegalStateException("Unrecognized type: " + type);
@@ -278,7 +301,7 @@ public class JavaDepsFinder {
             continue;
           }
 
-          Set<TargetNode<?>> providers = symbolToProviders.get(requiredSymbol);
+          Set<TargetNode<?>> providers = dependencyInfo.symbolToProviders.get(requiredSymbol);
           SortedSet<TargetNode<?>> candidateProviders = FluentIterable.from(providers)
               .filter(isVisibleDepNotAlreadyInProvidedDeps)
               .toSortedSet(Ordering.<TargetNode<?>>natural());
@@ -310,7 +333,8 @@ public class JavaDepsFinder {
             // rules that provides it via its exported_deps.
             SortedSet<TargetNode<?>> newCandidates = new TreeSet<>();
             for (TargetNode<?> candidate : providers) {
-              Set<TargetNode<?>> rulesThatExportCandidate = ruleToRulesThatExportIt.get(candidate);
+              Set<TargetNode<?>> rulesThatExportCandidate = dependencyInfo.ruleToRulesThatExportIt
+                  .get(candidate);
               for (TargetNode<?> ruleThatExportsCandidate : rulesThatExportCandidate) {
                 if (ruleThatExportsCandidate.isVisibleTo(rule)) {
                   newCandidates.add(ruleThatExportsCandidate);
