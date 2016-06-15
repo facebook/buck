@@ -97,7 +97,7 @@ public class ErrorExtractorTest {
                 "                                                 ^\n" +
                 "  symbol:   method something()\n" +
                 "  location: class com.buckorg.analytics.IfooAnalyticsBatchUploader.UploadTask\n";
-        int column = 47;
+        int column = 50;
         ErrorExtractor errorExtractor = new ErrorExtractor(err);
         ImmutableList<CompilerErrorItem> errors = errorExtractor.getErrors();
 

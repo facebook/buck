@@ -16,7 +16,11 @@
 
 package unit;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import com.facebook.buck.intellij.plugin.config.BuckModule;
+import com.facebook.buck.intellij.plugin.file.BuckFileType;
 import com.facebook.buck.intellij.plugin.ui.utils.BuckPluginNotifications;
 import com.intellij.ide.ui.UISettings;
 import com.intellij.ide.util.ProjectPropertiesComponentImpl;
@@ -29,17 +33,17 @@ import com.intellij.notification.Notifications;
 import com.intellij.notification.NotificationsAdapter;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.extensions.Extensions;
+import com.intellij.openapi.fileTypes.FileTypeManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiDocumentManager;
 
+import org.easymock.EasyMock;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
 
 import unit.util.MockDisposable;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class BuckModuleTest {
   class NotificationsAdapterTester extends NotificationsAdapter {
@@ -63,6 +67,15 @@ public class BuckModuleTest {
     ApplicationManager.setApplication(application, mockDisposable);
     application.registerService(UISettings.class, UISettings.getShadowInstance());
     application.registerService(PropertiesComponent.class, new ProjectPropertiesComponentImpl());
+    FileTypeManager fileTypeManager = EasyMock.createMock(FileTypeManager.class);
+    EasyMock.expect(
+        fileTypeManager.getFileTypeByFileName(BuckFileType.INSTANCE.getDefaultExtension()))
+        .andReturn(BuckFileType.INSTANCE).times(3);
+    EasyMock.replay(fileTypeManager);
+    application.registerService(FileTypeManager.class, fileTypeManager);
+    project.addComponent(
+        PsiDocumentManager.class,
+        EasyMock.createMock(PsiDocumentManager.class));
 
     return project;
   }
@@ -76,7 +89,7 @@ public class BuckModuleTest {
     NotificationsAdapterTester notificationsAdapterTester = new NotificationsAdapterTester();
     project.getMessageBus().connect().subscribe(Notifications.TOPIC, notificationsAdapterTester);
 
-    new BuckModule(project);
+    new BuckModule(project).projectOpened();
     try {
       String groupId = field.get(field.getType()).toString();
       assertTrue(PropertiesComponent.getInstance().isValueSet(groupId));
@@ -102,15 +115,15 @@ public class BuckModuleTest {
         Notifications.TOPIC,
         notificationsAdapterTester);
 
-    new BuckModule(project);
+    new BuckModule(project).projectOpened();
     try {
       String groupId = field.get(field.getType()).toString();
       assertTrue(PropertiesComponent.getInstance().isValueSet(groupId));
       PropertiesComponent.getInstance().unsetValue(groupId);
-      new BuckModule(project);
+      new BuckModule(project).projectOpened();
       assertTrue(PropertiesComponent.getInstance().isValueSet(groupId));
       PropertiesComponent.getInstance().unsetValue(groupId);
-      new BuckModule(project);
+      new BuckModule(project).projectOpened();
 
     } catch (IllegalAccessException e) {
       e.printStackTrace();
