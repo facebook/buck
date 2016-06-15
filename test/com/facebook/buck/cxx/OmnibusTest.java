@@ -125,7 +125,7 @@ public class OmnibusTest {
         Matchers.containsInAnyOrder(root.getBuildTarget()));
     assertThat(
         spec.getDeps().keySet(),
-        Matchers.<BuildTarget>empty());
+        Matchers.containsInAnyOrder(b.getBuildTarget()));
     assertThat(
         spec.getExcluded().keySet(),
         Matchers.containsInAnyOrder(b.getBuildTarget()));
@@ -191,7 +191,7 @@ public class OmnibusTest {
         Matchers.containsInAnyOrder(root.getBuildTarget()));
     assertThat(
         spec.getDeps().keySet(),
-        Matchers.<BuildTarget>empty());
+        Matchers.containsInAnyOrder(c.getBuildTarget()));
     assertThat(
         spec.getExcluded().keySet(),
         Matchers.containsInAnyOrder(b.getBuildTarget(), c.getBuildTarget()));
@@ -329,7 +329,7 @@ public class OmnibusTest {
         Matchers.containsInAnyOrder(root.getBuildTarget()));
     assertThat(
         spec.getDeps().keySet(),
-        Matchers.<BuildTarget>empty());
+        Matchers.containsInAnyOrder(a.getBuildTarget()));
     assertThat(
         spec.getExcluded().keySet(),
         Matchers.containsInAnyOrder(excludedRoot.getBuildTarget(), a.getBuildTarget()));

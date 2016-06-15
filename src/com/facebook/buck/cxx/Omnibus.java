@@ -204,6 +204,11 @@ public class Omnibus {
     DefaultDirectedAcyclicGraph<BuildTarget> graph =
         new DefaultDirectedAcyclicGraph<>(graphBuilder);
 
+    // Since we add all undefined root symbols into the omnibus library, we also need to include
+    // any excluded root deps as deps of omnibus, as they may fulfill these undefined symbols.
+    // Also add any excluded nodes that are also root dependencies.
+    deps.addAll(Sets.intersection(rootDeps.keySet(), excluded));
+
     return ImmutableOmnibusSpec.builder()
         .graph(graph)
         .roots(roots)
