@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
  * Implements a Scribe logger that pipes the data to a local process. This can be more efficient
  * than going over http.
  */
-public class LocalProcessScribeLogger implements ScribeLogger {
+public class LocalProcessScribeLogger extends ScribeLogger {
   private static final Logger LOG = Logger.get(LocalProcessScribeLogger.class);
 
   private final ScribeLogger fallback;

@@ -29,7 +29,7 @@ import javax.annotation.concurrent.GuardedBy;
 /**
  * Fake implementation of {@link ScribeLogger} which records logged lines to memory.
  */
-public final class FakeScribeLogger implements ScribeLogger {
+public final class FakeScribeLogger extends ScribeLogger {
   // Keep the lines in the order in which they were written.
   @GuardedBy("this")
   private final Multimap<String, String> loggedCategoryLines = LinkedListMultimap.create();

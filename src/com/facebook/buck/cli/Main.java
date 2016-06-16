@@ -179,7 +179,7 @@ public final class Main {
   public static final int BUSY_EXIT_CODE = 2;
 
   private static final Optional<String> BUCKD_LAUNCH_TIME_NANOS =
-    Optional.fromNullable(System.getProperty("buck.buckd_launch_time_nanos"));
+      Optional.fromNullable(System.getProperty("buck.buckd_launch_time_nanos"));
   private static final String BUCK_BUILD_ID_ENV_VAR = "BUCK_BUILD_ID";
 
   private static final String BUCKD_COLOR_DEFAULT_ENV_VAR = "BUCKD_COLOR_DEFAULT";
@@ -191,6 +191,7 @@ public final class Main {
 
   private static final TimeSpan HANG_DETECTOR_TIMEOUT =
       new TimeSpan(5, TimeUnit.MINUTES);
+
 
   /**
    * Path to a directory of static content that should be served by the {@link WebServer}.
@@ -414,7 +415,9 @@ public final class Main {
       }
     }
 
-    /** @return true if the web server was started successfully. */
+    /**
+     * @return true if the web server was started successfully.
+     */
     private boolean initWebServer() {
       if (webServer.isPresent()) {
         Optional<ArtifactCache> servedCache = ArtifactCaches.newServedCache(
@@ -454,7 +457,8 @@ public final class Main {
     }
   }
 
-  @Nullable private static volatile Daemon daemon;
+  @Nullable
+  private static volatile Daemon daemon;
 
   /**
    * Get or create Daemon.
@@ -463,7 +467,7 @@ public final class Main {
   static Daemon getDaemon(
       Cell cell,
       ObjectMapper objectMapper)
-      throws IOException, InterruptedException  {
+      throws IOException, InterruptedException {
     Path rootPath = cell.getFilesystem().getRootPath();
     Optional<WebServer> webServer = Optional.absent();
     if (daemon == null) {
@@ -628,7 +632,6 @@ public final class Main {
   }
 
   /**
-   *
    * @param buildId an identifier for this command execution.
    * @param context an optional NGContext that is present if running inside a Nailgun server.
    * @param args command line arguments
@@ -786,7 +789,13 @@ public final class Main {
 
       ParserConfig parserConfig = new ParserConfig(buckConfig);
       try (Watchman watchman =
-          buildWatchman(context, parserConfig, projectRoot, clientEnvironment, console, clock)) {
+               buildWatchman(
+                   context,
+                   parserConfig,
+                   projectRoot,
+                   clientEnvironment,
+                   console,
+                   clock)) {
         final boolean isDaemon = context.isPresent() && (watchman != Watchman.NULL_WATCHMAN);
 
         if (!isDaemon && shouldCleanUpTrash) {
@@ -844,7 +853,6 @@ public final class Main {
         // times in a single run.
         allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(
                 new ProjectFilesystem(rootCell.getFilesystem().getRootPath())));
-
         for (Path root : FileSystems.getDefault().getRootDirectories()) {
           if (!root.toFile().exists()) {
             // On Windows, it is possible that the system will have a
@@ -884,7 +892,7 @@ public final class Main {
         // Create a cached thread pool for cpu intensive tasks
         Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors = new HashMap<>();
         executors.put(ExecutionContext.ExecutorPool.CPU, listeningDecorator(
-                Executors.newCachedThreadPool()));
+            Executors.newCachedThreadPool()));
         // Create a thread pool for network I/O tasks
         executors.put(ExecutionContext.ExecutorPool.NETWORK, newDirectExecutorService());
 
@@ -1113,7 +1121,7 @@ public final class Main {
             TRASH_CLEANER.startCleaningDirectory();
           }
           // shut down the cached thread pools
-          for (ExecutionContext.ExecutorPool p: executors.keySet()) {
+          for (ExecutionContext.ExecutorPool p : executors.keySet()) {
             closeExecutorService(p.toString(), executors.get(p), EXECUTOR_SERVICES_TIMEOUT_SECONDS);
           }
         }
@@ -1356,7 +1364,8 @@ public final class Main {
           eventListeners.add(listener);
         }
       } catch (ReflectiveOperationException e) {
-        throw new HumanReadableException("Error loading event listener class '%s': %s: %s",
+        throw new HumanReadableException(
+            "Error loading event listener class '%s': %s: %s",
             className,
             e.getClass(),
             e.getMessage());
@@ -1424,13 +1433,13 @@ public final class Main {
     if (!javaBuckConfig.getSkipCheckingMissingDeps()) {
       JavacOptions javacOptions = javaBuckConfig.getDefaultJavacOptions();
       eventListenersBuilder.add(MissingSymbolsHandler.createListener(
-              projectFilesystem,
-              knownBuildRuleTypes.getAllDescriptions(),
-              config,
-              buckEvents,
-              console,
-              javacOptions,
-              environment));
+          projectFilesystem,
+          knownBuildRuleTypes.getAllDescriptions(),
+          config,
+          buckEvents,
+          console,
+          javacOptions,
+          environment));
     }
 
     eventListenersBuilder.add(new LoadBalancerEventsListener(counterRegistry));
@@ -1480,7 +1489,8 @@ public final class Main {
           locale,
           testLogPath,
           TimeZone.getDefault());
-      superConsole.startRenderScheduler(SUPER_CONSOLE_REFRESH_RATE.getDuration(),
+      superConsole.startRenderScheduler(
+          SUPER_CONSOLE_REFRESH_RATE.getDuration(),
           SUPER_CONSOLE_REFRESH_RATE.getUnit());
       return superConsole;
     }
@@ -1510,7 +1520,8 @@ public final class Main {
           commandMode,
           args);
     } catch (HumanReadableException e) {
-      Console console = new Console(Verbosity.STANDARD_INFORMATION,
+      Console console = new Console(
+          Verbosity.STANDARD_INFORMATION,
           stdOut,
           stdErr,
           new Ansi(
@@ -1553,17 +1564,17 @@ public final class Main {
     // which is not safe in a multithreaded environment if the thread held a lock or
     // resource which other threads need.)
     Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-        @Override
-        public void uncaughtException(Thread t, Throwable e) {
-          LOG.error(e, "Uncaught exception from thread %s", t);
-          if (context.isPresent()) {
-            // Shut down the Nailgun server and make sure it stops trapping System.exit().
-            //
-            // We pass false for exitVM because otherwise Nailgun exits with code 0.
-            context.get().getNGServer().shutdown(/* exitVM */ false);
-          }
-          System.exit(FAIL_EXIT_CODE);
+      @Override
+      public void uncaughtException(Thread t, Throwable e) {
+        LOG.error(e, "Uncaught exception from thread %s", t);
+        if (context.isPresent()) {
+          // Shut down the Nailgun server and make sure it stops trapping System.exit().
+          //
+          // We pass false for exitVM because otherwise Nailgun exits with code 0.
+          context.get().getNGServer().shutdown(/* exitVM */ false);
         }
+        System.exit(FAIL_EXIT_CODE);
+      }
     });
   }
 
@@ -1585,7 +1596,7 @@ public final class Main {
 
     try {
       commandThreadAssociation =
-        new CommandThreadAssociation(buildId.toString());
+          new CommandThreadAssociation(buildId.toString());
       // Redirect console logs to the (possibly remote) stderr stream.
       // We do this for both the daemon and non-daemon case so we can
       // unregister the stream when finished.
@@ -1712,7 +1723,7 @@ public final class Main {
    */
   public static void nailMain(final NGContext context) throws InterruptedException {
     try (DaemonSlayer.ExecuteCommandHandle handle =
-            DaemonSlayer.getSlayer(context).executeCommand()) {
+             DaemonSlayer.getSlayer(context).executeCommand()) {
       new Main(context.out, context.err, context.in)
           .runMainThenExit(context.getArgs(), Optional.of(context));
     }
@@ -1734,7 +1745,8 @@ public final class Main {
       }
     }
 
-    @Nullable private static volatile DaemonSlayerInstance daemonSlayerInstance;
+    @Nullable
+    private static volatile DaemonSlayerInstance daemonSlayerInstance;
 
     public static DaemonSlayer getSlayer(NGContext context) {
       if (daemonSlayerInstance == null) {
@@ -1795,5 +1807,4 @@ public final class Main {
           slayerTimeout.getUnit());
     }
   }
-
 }

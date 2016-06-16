@@ -18,6 +18,7 @@ package com.facebook.buck.util.network;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.event.LogviewFormatter;
 import com.facebook.buck.util.FakeListeningProcessExecutor;
 import com.facebook.buck.util.FakeListeningProcessState;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -56,6 +57,11 @@ public class LocalProcessScribeLoggerTest {
 
     final AtomicReference<String> fallbackContent = new AtomicReference<>();
     ScribeLogger fallback = new ScribeLogger() {
+      @Override
+      public ListenableFuture<Void> log(final String category, Throwable t) {
+        return log(category, LogviewFormatter.format(t));
+      }
+
       @Override
       public ListenableFuture<Void> log(String category, Iterable<String> lines) {
         fallbackContent.set(Joiner.on('\n').join(lines));
