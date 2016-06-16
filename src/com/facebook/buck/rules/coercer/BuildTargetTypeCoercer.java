@@ -42,7 +42,7 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof String)) {
-      throw new IllegalArgumentException("BuildTargetTypeCoercer called for non-string object");
+      throw CoerceFailedException.simple(object, getOutputClass());
     }
     String param = (String) object;
 
