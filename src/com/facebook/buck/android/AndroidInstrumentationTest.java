@@ -317,6 +317,13 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
 
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>of(apk);
+    ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
+    builder.add(apk);
+
+    if (apk instanceof ApkGenrule) {
+      builder.add(((ApkGenrule) apk).getInstallableApk());
+    }
+
+    return builder.build();
   }
 }
