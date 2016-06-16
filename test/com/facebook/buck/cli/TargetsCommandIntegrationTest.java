@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.MorePaths;
@@ -167,6 +168,44 @@ public class TargetsCommandIntegrationTest {
     assertEquals(
         "//:another-test 163589ad581be53e82f0a18e68ac3ae9111f1307\n" +
             "//:test 54bd34938b1827baea88dc5137c6385fdf280d60\n",
+        result.getStdout());
+  }
+
+  @Test
+  public void testCellPath() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "output_path", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "targets",
+        "--show-cell-path",
+        "//:test");
+    result.assertSuccess();
+    assertEquals(
+        "//:test " +
+        MorePaths.pathWithPlatformSeparators(tmp.getRootPath().toRealPath()) +
+        "\n",
+        result.getStdout());
+  }
+
+  @Test
+  public void testCellPathAndOutput() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "output_path", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "targets",
+        "--show-output",
+        "--show-cell-path",
+        "//:test");
+    result.assertSuccess();
+    assertEquals(
+        "//:test " +
+        MorePaths.pathWithPlatformSeparators(tmp.getRootPath().toRealPath()) + " " +
+        MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output") +
+        "\n",
         result.getStdout());
   }
 
@@ -583,6 +622,30 @@ public class TargetsCommandIntegrationTest {
         "Output from targets command should match expected JSON.",
         observed,
         equalTo(expected));
+  }
+
+  @Test
+  public void testJsonOutputWithShowCellPath() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "output_path", tmp);
+    workspace.setUp();
+    ProcessResult result = workspace.runBuckCommand(
+        "targets", "--json", "--show-cell-path", "//:test");
+    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
+
+    // Parse the observed JSON.
+    JsonNode observed = objectMapper.readTree(
+        objectMapper.getFactory().createParser(result.getStdout())
+    );
+
+    assertTrue(observed.isArray());
+    JsonNode targetNode = observed.get(0);
+    assertTrue(targetNode.isObject());
+    JsonNode cellPath = targetNode.get("buck.cell_path");
+    assertNotNull(cellPath);
+    assertEquals(
+      cellPath.asText(),
+      MorePaths.pathWithPlatformSeparators(tmp.getRootPath().toRealPath()));
   }
 
   @Test

@@ -138,9 +138,14 @@ public class TargetsCommand extends AbstractCommand {
       usage = "Print the fully-qualified build target for the specified alias[es]")
   private boolean isResolveAlias;
 
+  @Option(name = "--show-cell-path",
+      aliases = {"--show_cell_path"},
+      usage = "Print the absolute path of the cell for each rule after the rule name.")
+  private boolean isShowCellPath;
+
   @Option(name = "--show-output",
       aliases = {"--show_output"},
-      usage = "Print the absolute path to the output for each rule after the rule name.")
+      usage = "Print the path to the output for each rule after the rule name.")
   private boolean isShowOutput;
 
   @Option(name = "--show-rulekey",
@@ -213,6 +218,11 @@ public class TargetsCommand extends AbstractCommand {
   /** @return {@code true} if {@code --resolve-alias} was specified. */
   public boolean isResolveAlias() {
     return isResolveAlias;
+  }
+
+  /** @return {@code true} if {@code --show-cell-path} was specified. */
+  public boolean isShowCellPath() {
+    return isShowCellPath;
   }
 
   /** @return {@code true} if {@code --show-output} was specified. */
@@ -303,7 +313,7 @@ public class TargetsCommand extends AbstractCommand {
       return 1;
     }
 
-    if (isShowOutput() || isShowRuleKey() || isShowTargetHash()) {
+    if (isShowCellPath() || isShowOutput() || isShowRuleKey() || isShowTargetHash()) {
       ImmutableMap<BuildTarget, ShowOptions> showRulesResult;
       TargetGraphAndBuildTargets targetGraphAndBuildTargetsForShowRules =
           buildTargetGraphAndTargetsForShowRules(params, executor, buildRuleTypes);
@@ -518,6 +528,9 @@ public class TargetsCommand extends AbstractCommand {
       if (showOptions.getRuleKey().isPresent()) {
         builder.add(showOptions.getRuleKey().get());
       }
+      if (isShowCellPath()) {
+        builder.add(entry.getKey().getCellPath().toString());
+      }
       if (showOptions.getOutputPath().isPresent()) {
         builder.add(showOptions.getOutputPath().get());
       }
@@ -721,6 +734,12 @@ public class TargetsCommand extends AbstractCommand {
         sortedTargetRule.put(
             fullyQualifiedNameAttribute,
             targetNode.getBuildTarget().getFullyQualifiedName());
+      }
+      String cellPathAttribute = "buck.cell_path";
+      if (isShowCellPath() && attributesPatternsMatcher.matches(cellPathAttribute)) {
+        sortedTargetRule.put(
+            cellPathAttribute,
+            targetNode.getBuildTarget().getCellPath());
       }
 
       // Print the build rule information as JSON.
