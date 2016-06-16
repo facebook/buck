@@ -87,11 +87,9 @@ public class DeterministicJarManifestWriter {
     // Manifest files expect each line to be no longer than 72 characters (including line
     // endings), and continuation lines start with a single space.
     int start = 0;
-    int lineLength = builder.length();
-    while (lineLength > MAX_LINE_LENGTH) {
+    while (builder.length() - start > MAX_LINE_LENGTH) {
       builder.insert(start + MAX_LINE_LENGTH - NEW_LINE_LENGTH, NEW_LINE_AND_SPACE);
       start += MAX_LINE_LENGTH;
-      lineLength -= MAX_LINE_LENGTH;
     }
 
     out.write(builder.toString().getBytes(StandardCharsets.UTF_8));

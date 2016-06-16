@@ -107,6 +107,34 @@ public class DeterministicJarManifestWriterTest {
   }
 
   @Test
+  public void testReallyLongLineSplitExact() throws IOException {
+    assertEntryWrittenAs(
+        "\r\n" +
+            "Name: Entry\r\n" +
+            "12345678: 138-char value + 8 char key + 2 char padding = 148 chars.  |\r\n" +
+            " 69-character second line                                            |\r\n" +
+            "\r\n",
+        "12345678",
+        "138-char value + 8 char key + 2 char padding = 148 chars.  |" +
+            "69-character second line                                            |");
+  }
+
+  @Test
+  public void testReallyLongLineSplitOneExtra() throws IOException {
+    assertEntryWrittenAs(
+        "\r\n" +
+            "Name: Entry\r\n" +
+            "12345678: 138-char value + 8 char key + 2 char padding = 148 chars.  |\r\n" +
+            " 69-character second line                                            |\r\n" +
+            " X\r\n" +
+            "\r\n",
+        "12345678",
+        "138-char value + 8 char key + 2 char padding = 148 chars.  |" +
+            "69-character second line                                            |" +
+            "X");
+  }
+
+  @Test
   public void testLinesSplitLikeJavaImpl() throws IOException {
     final String entryName = "test";
     final String key = "12345678";
