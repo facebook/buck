@@ -37,10 +37,12 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.AbstractMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Stack;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 /**
@@ -60,6 +62,11 @@ public class Config {
         return Objects.hashCode(rawConfig);
       }
     });
+
+  /**
+   * Caches the expanded value lookups.
+   */
+  private final Map<Map.Entry<String, String>, Optional<String>> cache = new ConcurrentHashMap<>();
 
   /**
    * Convenience constructor to create an empty config.
@@ -114,6 +121,13 @@ public class Config {
 
   private Optional<String> get(String section, String field, Stack<String> expandStack) {
 
+    // First check if we've cached this expansion, and return it if so.
+    Map.Entry<String, String> cacheKey = new AbstractMap.SimpleEntry<>(section, field);
+    Optional<String> value = cache.get(cacheKey);
+    if (value != null) {
+      return value;
+    }
+
     // Check if we're caught in a config-reference cyclical dependency and error out if so.
     String expandStackKey = String.format("%s.%s", section, field);
     if (expandStack.search(expandStackKey) != -1) {
@@ -124,16 +138,18 @@ public class Config {
 
     Optional<String> val = rawConfig.getValue(section, field);
     if (!val.isPresent()) {
+      cache.put(cacheKey, Optional.<String>absent());
       return Optional.absent();
     }
 
     // Add the current section/field pair to the stack before expansion so we can provide a useful
     // error message for dependency cycles.
     expandStack.push(expandStackKey);
-    String expanded = expand(val.get(), expandStack);
+    value = Optional.of(expand(val.get(), expandStack));
     expandStack.pop();
 
-    return Optional.of(expanded);
+    cache.put(cacheKey, value);
+    return value;
   }
 
   public Optional<String> get(String section, String field) {
