@@ -110,14 +110,17 @@ public class AppleToolchainDiscovery {
         return;
       }
       NSObject identifierObject = parsedToolchainInfoPlist.objectForKey("Identifier");
-      NSObject versionObject = parsedToolchainInfoPlist.objectForKey("DTSDKBuild");
-      if (identifierObject == null || versionObject == null) {
-        LOG.error("Identifier, version not found for toolchain path %s, ignoring", toolchainDir);
+      if (identifierObject == null) {
+        LOG.error("Identifier not found for toolchain path %s, ignoring", toolchainDir);
         return;
       }
-
       String identifier = identifierObject.toString();
-      String version = versionObject.toString();
+
+      NSObject versionObject = parsedToolchainInfoPlist.objectForKey("DTSDKBuild");
+      Optional<String> version =
+          versionObject == null ?
+              Optional.<String>absent() :
+              Optional.of(versionObject.toString());
       LOG.debug("Mapped SDK identifier %s to path %s", identifier, toolchainDir);
 
       AppleToolchain.Builder toolchainBuilder = AppleToolchain.builder();

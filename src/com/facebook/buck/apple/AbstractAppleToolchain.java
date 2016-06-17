@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
 
@@ -36,7 +37,7 @@ interface AbstractAppleToolchain {
   /**
    * The version number of the toolchain. For example: {@code 0630}.
    */
-  String getVersion();
+  Optional<String> getVersion();
 
   /**
    * The path to the toolchain. For example, {@code .../XcodeDefault.xctoolchain}.
