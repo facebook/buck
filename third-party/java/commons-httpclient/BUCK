@@ -5,7 +5,7 @@ prebuilt_jar(
     'LICENSE',
   ],
   visibility = [
-    '//third-party/java/commons-httpclient:commons-httpclient',
+    'PUBLIC',
   ],
 )
 
