@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
@@ -230,7 +231,8 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   public String hashCommand(CxxToolFlags extraFlags) {
     Hasher hasher = Hashing.murmur3_128().newHasher();
     String workingDirString = workingDir.toString();
-    for (String part : sanitizer.sanitizeFlags(getCommand(extraFlags))) {
+    // Skips the executable argument (the first one) as that is not sanitized.
+    for (String part : sanitizer.sanitizeFlags(Iterables.skip(getCommand(extraFlags), 1))) {
       // TODO(#10251354): find a better way of dealing with getting a project dir normalized hash
       if (part.startsWith(workingDirString)) {
         part = "<WORKINGDIR>" + part.substring(workingDirString.length());
