@@ -90,6 +90,9 @@ public class Elf {
    */
   public static boolean isElf(ByteBuffer buffer) {
     byte[] magic = new byte[4];
+    if (buffer.remaining() < magic.length) {
+      return false;
+    }
     buffer.slice().get(magic);
     return (
         magic[ElfHeader.EI_MAG0] == ElfHeader.ELFMAG0 &&

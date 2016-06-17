@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx.elf;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -30,6 +31,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
@@ -138,6 +140,11 @@ public class ElfTest {
       assertThat(elf.getNumberOfSections(), Matchers.equalTo(43664));
     }
 
+  }
+
+  @Test
+  public void isElfEmptyBuffer() throws IOException {
+    assertFalse(Elf.isElf(ByteBuffer.allocate(0)));
   }
 
 }
