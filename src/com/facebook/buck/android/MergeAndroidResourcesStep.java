@@ -65,6 +65,7 @@ public class MergeAndroidResourcesStep implements Step {
   private final boolean forceFinalResourceIds;
   private final EnumSet<RType> bannedDuplicateResourceTypes;
   private final Optional<String> unionPackage;
+  private final String rName;
 
   /**
    * Merges text symbols files from {@code aapt} for each of the input {@code android_resource}
@@ -81,7 +82,8 @@ public class MergeAndroidResourcesStep implements Step {
       Path outputDir,
       boolean forceFinalResourceIds,
       EnumSet<RType> bannedDuplicateResourceTypes,
-      Optional<String> unionPackage) {
+      Optional<String> unionPackage,
+      Optional<String> rName) {
     this.filesystem = filesystem;
     this.pathResolver = pathResolver;
     this.androidResourceDeps = ImmutableList.copyOf(androidResourceDeps);
@@ -90,6 +92,7 @@ public class MergeAndroidResourcesStep implements Step {
     this.forceFinalResourceIds = forceFinalResourceIds;
     this.bannedDuplicateResourceTypes = bannedDuplicateResourceTypes;
     this.unionPackage = unionPackage;
+    this.rName = rName.or("R");
   }
 
   public static MergeAndroidResourcesStep createStepForDummyRDotJava(
@@ -98,16 +101,18 @@ public class MergeAndroidResourcesStep implements Step {
       List<HasAndroidResourceDeps> androidResourceDeps,
       Path outputDir,
       boolean forceFinalResourceIds,
-      Optional<String> unionPackage) {
+      Optional<String> unionPackage,
+      Optional<String> rName) {
     return new MergeAndroidResourcesStep(
         filesystem,
         pathResolver,
         androidResourceDeps,
-        Optional.<Path>absent(),
+        /* uberRDotTxt */ Optional.<Path>absent(),
         outputDir,
         forceFinalResourceIds,
         /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-        unionPackage);
+        unionPackage,
+        rName);
   }
 
   public static MergeAndroidResourcesStep createStepForUberRDotJava(
@@ -126,7 +131,8 @@ public class MergeAndroidResourcesStep implements Step {
         outputDir,
         /* forceFinalResourceIds */ true,
         bannedDuplicateResourceTypes,
-        unionPackage);
+        unionPackage,
+        /* rName */ Optional.<String>absent());
   }
 
   public ImmutableSortedSet<Path> getRDotJavaFiles() {
@@ -240,8 +246,7 @@ public class MergeAndroidResourcesStep implements Step {
       Path outputFile = getPathToRDotJava(rDotJavaPackage);
       filesystem.mkdirs(outputFile.getParent());
       filesystem.writeContentsToPath(
-          String.format("package %s;\n\npublic class R {}\n", rDotJavaPackage),
-          outputFile);
+          String.format("package %s;\n\npublic class %s {}\n", rDotJavaPackage, rName), outputFile);
     }
   }
 
@@ -254,7 +259,7 @@ public class MergeAndroidResourcesStep implements Step {
       filesystem.mkdirs(outputFile.getParent());
       try (PrintWriter writer = new PrintWriter(filesystem.newFileOutputStream(outputFile))) {
         writer.format("package %s;\n\n", rDotJavaPackage);
-        writer.println("public class R {\n");
+        writer.format("public class %s {\n", rName);
 
         ImmutableList.Builder<String> customDrawablesBuilder = ImmutableList.builder();
         RDotTxtEntry.RType lastType = null;
@@ -409,7 +414,8 @@ public class MergeAndroidResourcesStep implements Step {
   }
 
   private Path getPathToRDotJava(String rDotJavaPackage) {
-    return outputDir.resolve(rDotJavaPackage.replace(".", "/")).resolve("R.java");
+    return outputDir.resolve(rDotJavaPackage.replace(".", "/")).resolve(
+        String.format("%s.java", rName));
   }
 
   private static class IntEnumerator {

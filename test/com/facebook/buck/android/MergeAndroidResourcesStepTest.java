@@ -202,7 +202,8 @@ public class MergeAndroidResourcesStepTest {
         ImmutableList.of(res),
         Paths.get("output"),
         /* forceFinalResourceIds */ false,
-        /* unionPackage */ Optional.<String>absent());
+        /* unionPackage */ Optional.<String>absent(),
+        /* rName */ Optional.<String>absent());
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
@@ -263,7 +264,8 @@ public class MergeAndroidResourcesStepTest {
         Paths.get("output"),
         /* forceFinalResourceIds */ true,
         /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-        /* unionPackage */ Optional.<String>absent());
+        /* unionPackage */ Optional.<String>absent(),
+        /* rName */ Optional.<String>absent());
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
@@ -274,7 +276,6 @@ public class MergeAndroidResourcesStepTest {
         "package com.facebook;\n" +
         "\n" +
         "public class R {\n" +
-        "\n" +
         "  public static class id {\n" +
         "    public static final int placeholder=0x7f020000;\n" +
         "  }\n" +
@@ -339,7 +340,8 @@ public class MergeAndroidResourcesStepTest {
         Paths.get("output"),
         /* forceFinalResourceIds */ true,
         /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-        /* unionPackage */ Optional.<String>absent());
+        /* unionPackage */ Optional.<String>absent(),
+        /* rName */ Optional.<String>absent());
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
@@ -350,7 +352,6 @@ public class MergeAndroidResourcesStepTest {
         "package com.facebook;\n" +
             "\n" +
             "public class R {\n" +
-            "\n" +
             "  public static class drawable {\n" +
             "    public static final int android_drawable=0x7f010000;\n" +
             "    public static final int fb_drawable=0x7f010001;\n" +
@@ -411,7 +412,8 @@ public class MergeAndroidResourcesStepTest {
         ImmutableList.of(res1, res2),
         Paths.get("output"),
         /* forceFinalResourceIds */ false,
-        Optional.of("res1"));
+        Optional.of("res1"),
+        /* rName */ Optional.<String>absent());
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
@@ -423,6 +425,50 @@ public class MergeAndroidResourcesStepTest {
     assertThat(res1java, StringContains.containsString("id2"));
     assertThat(res2java, CoreMatchers.not(StringContains.containsString("id1")));
     assertThat(res2java, StringContains.containsString("id2"));
+  }
+
+  @Test
+  public void testGenerateRDotJavaWithRName() throws IOException {
+    BuildTarget res1Target = BuildTargetFactory.newInstance("//:res1");
+    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
+    entriesBuilder.add(
+        new RDotTxtFile(
+            "com.res1",
+            BuildTargets.getGenPath(
+                entriesBuilder.getProjectFilesystem(),
+                res1Target,
+                "__%s_text_symbols__/R.txt").toString(),
+            ImmutableList.of("int id id1 0x7f020000", "int id id2 0x7f020002")));
+
+    FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
+
+    SourcePathResolver resolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
+
+    HasAndroidResourceDeps res1 = AndroidResourceRuleBuilder.newBuilder()
+        .setResolver(resolver)
+        .setBuildTarget(res1Target)
+        .setRes(new FakeSourcePath("res1"))
+        .setRDotJavaPackage("res1")
+        .build();
+
+    MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForDummyRDotJava(
+        filesystem,
+        resolver,
+        ImmutableList.of(res1),
+        Paths.get("output"),
+        /* forceFinalResourceIds */ true,
+        Optional.of("res1"),
+        Optional.of("R2"));
+
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
+
+    assertEquals(0, mergeStep.execute(executionContext).getExitCode());
+
+    String resR2Java = filesystem.readFileIfItExists(Paths.get("output/res1/R2.java")).get();
+    assertThat(resR2Java, StringContains.containsString("static final int id1=0x07f01001;"));
+    assertThat(resR2Java, StringContains.containsString("static final int id2=0x07f01002;"));
   }
 
   // sortSymbols has a goofy API.  This will help.

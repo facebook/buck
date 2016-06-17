@@ -97,7 +97,8 @@ public class AndroidLibraryDescription
         javacOptions,
         DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
-        args.resourceUnionPackage);
+        args.resourceUnionPackage,
+        args.finalRName);
 
     boolean hasDummyRDotJavaFlavor =
         params.getBuildTarget().getFlavors().contains(DUMMY_R_DOT_JAVA_FLAVOR);
@@ -175,5 +176,6 @@ public class AndroidLibraryDescription
   public static class Arg extends JavaLibraryDescription.Arg {
     public Optional<SourcePath> manifest;
     public Optional<String> resourceUnionPackage;
+    public Optional<String> finalRName;
   }
 }

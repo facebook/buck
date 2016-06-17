@@ -58,7 +58,8 @@ public class AndroidLibraryGraphEnhancerTest {
         DEFAULT_JAVAC_OPTIONS,
         DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
-        Optional.<String>absent());
+        /* unionPackage */ Optional.<String>absent(),
+        /* rName */ Optional.<String>absent());
     Optional<DummyRDotJava> result = graphEnhancer.getBuildableForAndroidResources(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
         /* createdBuildableIfEmptyDeps */ false);
@@ -74,7 +75,8 @@ public class AndroidLibraryGraphEnhancerTest {
         DEFAULT_JAVAC_OPTIONS,
         DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
-        Optional.<String>absent());
+        /* unionPackage */ Optional.<String>absent(),
+        /* rName */ Optional.<String>absent());
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     Optional<DummyRDotJava> result = graphEnhancer.getBuildableForAndroidResources(
@@ -117,7 +119,8 @@ public class AndroidLibraryGraphEnhancerTest {
         DEFAULT_JAVAC_OPTIONS,
         DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
-        Optional.<String>absent());
+        /* unionPackage */ Optional.<String>absent(),
+        /* rName */ Optional.<String>absent());
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
         ruleResolver,
         /* createBuildableIfEmptyDeps */ false);
@@ -172,7 +175,8 @@ public class AndroidLibraryGraphEnhancerTest {
                     .build(),
                 DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
-        Optional.<String>absent());
+        /* unionPackage */ Optional.<String>absent(),
+        /* rName */ Optional.<String>absent());
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
         ruleResolver,
         /* createBuildableIfEmptyDeps */ false);
@@ -203,7 +207,8 @@ public class AndroidLibraryGraphEnhancerTest {
             options,
             DependencyMode.FIRST_ORDER,
             /* forceFinalResourceIds */ false,
-            Optional.<String>absent());
+            /* unionPackage */ Optional.<String>absent(),
+            /* rName */ Optional.<String>absent());
     Optional<DummyRDotJava> result =
         graphEnhancer.getBuildableForAndroidResources(
             resolver,
@@ -211,5 +216,4 @@ public class AndroidLibraryGraphEnhancerTest {
     assertTrue(result.isPresent());
     assertThat(result.get().getDeps(), Matchers.<BuildRule>hasItem(dep));
   }
-
 }
