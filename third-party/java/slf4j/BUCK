@@ -25,6 +25,7 @@ prebuilt_jar(
     'LICENSE.txt',
   ],
   visibility = [
+    '//src-gen:thrift',
     '//third-party/java/aether:aether-transport-http',
   ],
 )
