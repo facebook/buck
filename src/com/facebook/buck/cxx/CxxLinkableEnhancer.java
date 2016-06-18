@@ -176,6 +176,14 @@ public class CxxLinkableEnhancer {
     // the soname.
     if (linkType == Linker.LinkType.SHARED) {
       argsBuilder.add(new StringArg("-shared"));
+
+      argsBuilder.addAll(
+          StringArg.from(
+              Linkers.iXlinker(
+                  "-rpath",
+                  String.format(
+                      "%s/",
+                      cxxPlatform.getLd().resolve(ruleResolver).libOrigin()))));
     } else if (linkType == Linker.LinkType.MACH_O_BUNDLE) {
       argsBuilder.add(new StringArg("-bundle"));
       // It's possible to build a Mach-O bundle without a bundle loader (logic tests, for example).
@@ -333,6 +341,12 @@ public class CxxLinkableEnhancer {
       ImmutableList<? extends Arg> args) {
     ImmutableList.Builder<Arg> linkArgsBuilder = ImmutableList.builder();
     linkArgsBuilder.add(new StringArg("-shared"));
+    linkArgsBuilder.addAll(StringArg.from(
+        Linkers.iXlinker(
+            "-rpath",
+            String.format(
+                "%s/",
+                cxxPlatform.getLd().resolve(ruleResolver).libOrigin()))));
     if (soname.isPresent()) {
       linkArgsBuilder.addAll(
           StringArg.from(cxxPlatform.getLd().resolve(ruleResolver).soname(soname.get())));

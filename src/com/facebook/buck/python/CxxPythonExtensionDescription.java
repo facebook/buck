@@ -36,6 +36,7 @@ import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.SharedNativeLinkTarget;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -69,6 +70,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 public class CxxPythonExtensionDescription implements
@@ -208,12 +210,18 @@ public class CxxPythonExtensionDescription implements
                 args.platformLinkerFlags,
                 cxxPlatform)));
 
-    // Embed a origin-relative library path into the binary so it can find the shared libraries.
+    // Embed a extension-relative library path into the .so so it can find the shared libraries that
+    // it depends on.
+    Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
+    String rootPath = MorePaths.relativize(Paths.get(""), baseModule).toString();
     argsBuilder.addAll(
         StringArg.from(
             Linkers.iXlinker(
                 "-rpath",
-                String.format("%s/", cxxPlatform.getLd().resolve(ruleResolver).libOrigin()))));
+                String.format(
+                    "%s/%s",
+                    cxxPlatform.getLd().resolve(ruleResolver).libOrigin(),
+                    rootPath))));
 
     // Add object files into the args.
     argsBuilder.addAll(SourcePathArg.from(pathResolver, picObjects.values()));

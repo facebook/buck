@@ -18,13 +18,13 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkables;
+import com.facebook.buck.cxx.Omnibus;
 import com.facebook.buck.cxx.OmnibusLibraries;
 import com.facebook.buck.cxx.OmnibusLibrary;
 import com.facebook.buck.cxx.OmnibusRoot;
 import com.facebook.buck.cxx.SharedNativeLinkTarget;
-import com.facebook.buck.cxx.NativeLinkable;
-import com.facebook.buck.cxx.Omnibus;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.MorePaths;
@@ -307,6 +307,11 @@ public class PythonUtil {
       }
     }
 
+    // If we're linking to C/C++ without extensions (i.e. just including .so), mark the
+    // result as non-zip safe, since the loader can't load .sos from zips.
+    if (!nativeLinkableRoots.isEmpty() || !nativeLinkTargetRoots.isEmpty()) {
+      allComponents.addZipSafe(Optional.of(false));
+    }
 
     return allComponents.build();
   }

@@ -20,6 +20,9 @@ if native_libs_dir is not None:
 
 # Update the environment variable for the dynamic loader to find libraries
 # to preload.
+# TODO(mikekap): Remove this. It should not be needed, assuming callers properly
+# use pkg_resources to access .so files when using ctypes. Unfortunately, it's
+# still needed for Windows.
 old_native_libs_preload = os.environ.get(native_libs_preload_env_var)
 if native_libs_preload is not None:
     os.environ[native_libs_preload_env_var] = native_libs_preload
