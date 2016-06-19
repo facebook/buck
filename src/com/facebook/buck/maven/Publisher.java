@@ -75,8 +75,10 @@ public class Publisher {
   public Publisher(
       ProjectFilesystem repositoryFilesystem,
       Optional<URL> remoteRepoUrl,
+      Optional<String> username,
+      Optional<String> password,
       boolean dryRun) {
-    this(repositoryFilesystem.getRootPath(), remoteRepoUrl, dryRun);
+    this(repositoryFilesystem.getRootPath(), remoteRepoUrl, username, password, dryRun);
   }
 
   /**
@@ -89,9 +91,14 @@ public class Publisher {
   public Publisher(
       Path localRepoPath,
       Optional<URL> remoteRepoUrl,
+      Optional<String> username,
+      Optional<String> password,
       boolean dryRun) {
     this.localRepo = new LocalRepository(localRepoPath.toFile());
-    this.remoteRepo = AetherUtil.toRemoteRepository(remoteRepoUrl.orElse(MAVEN_CENTRAL));
+    this.remoteRepo = AetherUtil.toRemoteRepository(
+        remoteRepoUrl.orElse(MAVEN_CENTRAL),
+        username,
+        password);
     this.locator = AetherUtil.initServiceLocator();
     this.dryRun = dryRun;
   }
