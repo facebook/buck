@@ -14,11 +14,14 @@ any of its code to help implement your main module.
 from __future__ import print_function
 
 import contextlib
+import ctypes
 import fnmatch
+import imp
 import json
 import logging
 import optparse
 import os
+import platform
 import re
 import sys
 import time
@@ -33,6 +36,10 @@ try:
     import coverage
 except ImportError:
     coverage = None
+try:
+    from importlib.machinery import SourceFileLoader
+except ImportError:
+    SourceFileLoader = None
 
 
 class TestStatus(object):
@@ -45,38 +52,113 @@ class TestStatus(object):
     SKIPPED = 'ASSUMPTION_VIOLATION'
 
 
-class CoverageToggleImportFinder(object):
-    """
-    Some modules (especially auto-generated thrift modules) are extremely
-    expensive to trace on import. This hook turns coverage (and hence tracing)
-    off when importing a module we're not interested in. It's possible to miss
-    coverage if code from a module of interest is called when importing a
-    different module, but this should seldom happen.
+class PathMatcher(object):
+    def __init__(self, include_patterns, omit_patterns):
+        self.include_patterns = include_patterns
+        self.omit_patterns = omit_patterns
 
-    This is only used if --coverage-include is passed, hence it doesn't affect
-    needed_coverage targets
+    def omit(self, path):
+        """
+        Omit iff matches any of the omit_patterns or the include patterns are
+        not empty and none is matched
+        """
+        path = os.path.realpath(path)
+        return any(fnmatch.fnmatch(path, p) for p in self.omit_patterns) or (
+            self.include_patterns and
+            not any(fnmatch.fnmatch(path, p) for p in self.include_patterns))
+
+    def include(self, path):
+        return not self.omit(path)
+
+
+class DebugWipeFinder(object):
     """
-    def __init__(self, patterns, cov):
-        self.patterns = patterns
+    PEP 302 finder that uses a DebugWipeLoader for all files which do not need
+    coverage
+    """
+    def __init__(self, matcher):
+        self.matcher = matcher
+
+    def find_module(self, fullname, path=None):
+        _, _, basename = fullname.rpartition('.')
+        try:
+            fd, pypath, (_, _, kind) = imp.find_module(basename, path)
+        except Exception:
+            # Maybe it's a top level module
+            try:
+                fd, pypath, (_, _, kind) = imp.find_module(basename, None)
+            except Exception:
+                return None
+
+        if hasattr(fd, 'close'):
+            fd.close()
+        if kind != imp.PY_SOURCE:
+            return None
+        if self.matcher.include(pypath):
+            return None
+
+        """
+        This is defined to match CPython's PyVarObject struct
+        """
+        class PyVarObject(ctypes.Structure):
+            _fields_ = [("ob_refcnt", ctypes.c_long),
+                        ("ob_type", ctypes.c_void_p),
+                        ("ob_size", ctypes.c_ulong)]
+
+        class DebugWipeLoader(SourceFileLoader):
+            """
+            PEP302 loader that zeros out debug information before execution
+            """
+            def get_code(self, fullname):
+                code = super(DebugWipeLoader, self).get_code(fullname)
+                if code:
+                    # Ideally we'd do
+                    # code.co_lnotab = b''
+                    # But code objects are READONLY. Not to worry though; we'll
+                    # directly modify CPython's object
+                    code_impl = PyVarObject.from_address(id(code.co_lnotab))
+                    code_impl.ob_size = 0
+                return code
+        return DebugWipeLoader(fullname, pypath)
+
+
+class CoverageToggleFinder(object):
+    """
+    A crude way to avoid the overhead of imports not monitored for coverage.
+    May clobber global statement coverage
+    """
+    def __init__(self, matcher, cov):
+        self.matcher = matcher
         self.cov = cov
 
     def find_module(self, fullname, path=None):
         _, _, basename = fullname.rpartition('.')
         try:
-            fd, pypath, _ = imp.find_module(basename, path)
-        except:
+            fd, pypath, (_, _, kind) = imp.find_module(basename, path)
+        except Exception:
             return None
 
         if hasattr(fd, 'close'):
             fd.close()
-        parts = pypath.split('#binary,link-tree/')
-        if len(parts) == 2:
-            pypath = parts[1]
-        if any(fnmatch.fnmatch(pypath, p) for p in self.patterns):
+        if kind != imp.PY_SOURCE:
+            return None
+        if self.matcher.include(pypath):
             self.cov.start()
         else:
             self.cov.stop()
         return None
+
+
+def optimize_for_coverage(cov, include_patterns, omit_patterns):
+    """
+    We get better performance if we zero out debug information for files which
+    we're not interested in. Only available in CPython 3.3+
+    """
+    matcher = PathMatcher(include_patterns, omit_patterns)
+    if SourceFileLoader and platform.python_implementation() == 'CPython':
+        sys.meta_path.insert(0, DebugWipeFinder(matcher))
+    else:
+        sys.meta_path.append(CoverageToggleFinder(matcher, cov))
 
 
 class TeeStream(object):
@@ -475,6 +557,12 @@ class MainProgram(object):
 
         if self.options.collect_coverage and coverage is None:
             self.option_parser.error('coverage module is not available')
+        self.options.coverage_include = self.options.coverage_include.split(',')
+        if self.options.coverage_omit == '':
+            self.options.coverage_omit = []
+        else:
+            self.options.coverage_omit = self.options.coverage_omit.split(',')
+
 
     def setup_logging(self):
         # Configure the root logger to log at INFO level.
@@ -518,10 +606,11 @@ class MainProgram(object):
         loader = self.create_loader()
         if self.options.collect_coverage:
             self.start_coverage()
-            patterns = self.options.coverage_include.split(',')
-            if patterns and '*' not in patterns:
-                sys.meta_path.append(
-                    CoverageToggleImportFinder(patterns, self.cov))
+            include = self.options.coverage_include
+            omit = self.options.coverage_omit
+            if include and '*' not in include:
+                optimize_for_coverage(self.cov, include, omit)
+
         if self.test_args:
             suite = loader.load_args(self.test_args)
         else:
@@ -590,9 +679,9 @@ class MainProgram(object):
         if not self.options.collect_coverage:
             return
 
-        self.cov = coverage.coverage(
-            include=self.options.coverage_include.split(','),
-            omit=self.options.coverage_omit.split(','))
+        self.cov = coverage.Coverage(
+            include=self.options.coverage_include,
+            omit=self.options.coverage_omit)
         self.cov.erase()
         self.cov.start()
 
