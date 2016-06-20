@@ -27,6 +27,7 @@ import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -151,6 +152,11 @@ public class DefaultRuleKeyLogger implements RuleKeyLogger {
   @Override
   public void addValue(short value) {
     appendLogElement(String.format("number(%s):", value));
+  }
+
+  @Override
+  public void addValue(Pattern value) {
+    appendLogElement(String.format("pattern(%s):", value));
   }
 
   @Override

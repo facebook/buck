@@ -57,6 +57,7 @@ import java.util.jar.Attributes;
 import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -214,7 +215,7 @@ public class JarDirectoryStepTest {
         /* main class */ null,
         Paths.get("manifest"),
         /* merge manifest */ true,
-        /* blacklist */ ImmutableSet.<String>of());
+        /* blacklist */ ImmutableSet.<Pattern>of());
     ExecutionContext context = TestExecutionContext.newInstance();
     assertEquals(0, step.execute(context).getExitCode());
 
@@ -299,7 +300,7 @@ public class JarDirectoryStepTest {
         "com.example.Main",
         /* manifest file */ null,
         /* merge manifests */ true,
-        /* blacklist */ ImmutableSet.of(".*2.*"));
+        /* blacklist */ ImmutableSet.of(Pattern.compile(".*2.*")));
 
     ExecutionContext context = TestExecutionContext.newInstance();
 
@@ -381,7 +382,7 @@ public class JarDirectoryStepTest {
         /* main class */ null,
         manifestFile,
         mergeEntries,
-        /* blacklist */ ImmutableSet.<String>of());
+        /* blacklist */ ImmutableSet.<Pattern>of());
     ExecutionContext context = TestExecutionContext.newInstance();
     step.execute(context);
 

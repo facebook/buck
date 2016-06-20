@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 /**
  * Interface used to implement a logging for the RuleKey structure.
@@ -48,6 +49,7 @@ public interface RuleKeyLogger {
   void addValue(int value);
   void addValue(long value);
   void addValue(short value);
+  void addValue(Pattern value);
   void addValue(BuildRuleType value);
   void addValue(RuleKey value);
   void addValue(BuildTarget value);

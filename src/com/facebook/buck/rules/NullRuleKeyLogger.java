@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 /**
  * Null object pattern for RuleKeyLogger.
@@ -110,6 +111,11 @@ public class NullRuleKeyLogger implements RuleKeyLogger {
 
   @Override
   public void addValue(short value) {
+  }
+
+  @Override
+  public void addValue(Pattern value) {
+
   }
 
   @Override

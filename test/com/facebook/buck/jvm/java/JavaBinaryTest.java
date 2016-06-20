@@ -39,6 +39,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class JavaBinaryTest {
 
@@ -85,7 +86,7 @@ public class JavaBinaryTest {
                 null,
                 /* merge manifests */ true,
                 null,
-                /* blacklist */ ImmutableSet.<String>of(),
+                /* blacklist */ ImmutableSet.<Pattern>of(),
                 new DefaultDirectoryTraverser(),
                 ImmutableSetMultimap.<JavaLibrary, Path>of()));
 

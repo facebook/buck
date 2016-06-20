@@ -50,6 +50,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -74,7 +75,7 @@ public class JavaBinary extends AbstractBuildRule
   @Nullable
   private final Path metaInfDirectory;
   @AddToRuleKey
-  private final ImmutableSet<String> blacklist;
+  private final ImmutableSet<Pattern> blacklist;
 
   private final DirectoryTraverser directoryTraverser;
   private final ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries;
@@ -87,7 +88,7 @@ public class JavaBinary extends AbstractBuildRule
       @Nullable SourcePath manifestFile,
       boolean mergeManifests,
       @Nullable Path metaInfDirectory,
-      ImmutableSet<String> blacklist,
+      ImmutableSet<Pattern> blacklist,
       DirectoryTraverser directoryTraverser,
       ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries) {
     super(params, resolver);

@@ -42,10 +42,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 public class JavaBinaryDescription implements
     Description<JavaBinaryDescription.Args>,
@@ -110,7 +112,7 @@ public class JavaBinaryDescription implements
         args.manifestFile.orNull(),
         args.mergeManifests.or(true),
         args.metaInfDirectory.orNull(),
-        args.blacklist.or(ImmutableSortedSet.<String>of()),
+        args.blacklist.or(ImmutableSet.<Pattern>of()),
         new DefaultDirectoryTraverser(),
         transitiveClasspathEntries);
 
@@ -155,6 +157,6 @@ public class JavaBinaryDescription implements
     @Beta
     public Optional<Path> metaInfDirectory;
     @Beta
-    public Optional<ImmutableSortedSet<String>> blacklist;
+    public Optional<ImmutableSet<Pattern>> blacklist;
   }
 }

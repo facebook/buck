@@ -27,8 +27,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -55,7 +53,9 @@ public class JarDirectoryStep implements Step {
   private final Path manifestFile;
   /** Indicates that manifest merging should occur. Defaults to true. */
   private final boolean mergeManifests;
-  /** Set of regex blacklist of whiched matched files will not be included in generated JAR. */
+  /**
+   * A set of regex. If a file matches one of the regex it will not be included in the Jar.
+   */
   private final ImmutableSet<Pattern> blacklist;
 
   public JarDirectoryStep(
@@ -71,7 +71,7 @@ public class JarDirectoryStep implements Step {
         mainClass,
         manifestFile,
         true,
-        ImmutableSet.<String>of());
+        ImmutableSet.<Pattern>of());
   }
 
   /**
@@ -95,22 +95,14 @@ public class JarDirectoryStep implements Step {
       @Nullable String mainClass,
       @Nullable Path manifestFile,
       boolean mergeManifests,
-      Set<String> blacklist) {
+      ImmutableSet<Pattern> blacklist) {
     this.filesystem = filesystem;
     this.pathToOutputFile = pathToOutputFile;
     this.entriesToJar = entriesToJar;
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
     this.mergeManifests = mergeManifests;
-    this.blacklist = convertRegexesToPatterns(blacklist);
-  }
-
-  private ImmutableSet<Pattern> convertRegexesToPatterns(Set<String> regexes) {
-    Set<Pattern> patterns = new HashSet<>();
-    for (String regex : regexes) {
-      patterns.add(Pattern.compile(regex));
-    }
-    return ImmutableSet.copyOf(patterns);
+    this.blacklist = blacklist;
   }
 
   private String getJarArgs() {

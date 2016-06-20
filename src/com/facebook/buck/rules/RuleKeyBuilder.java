@@ -44,6 +44,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.Stack;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -337,6 +338,9 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
     } else if (val instanceof String) {
       ruleKeyLogger.addValue((String) val);
       feed(((String) val).getBytes(StandardCharsets.UTF_8));
+    } else if (val instanceof Pattern) {
+      ruleKeyLogger.addValue((Pattern) val);
+      feed(val.toString().getBytes(StandardCharsets.UTF_8));
     } else if (val instanceof BuildRule) {                       // Buck types
       return setBuildRule((BuildRule) val);
     } else if (val instanceof BuildRuleType) {
