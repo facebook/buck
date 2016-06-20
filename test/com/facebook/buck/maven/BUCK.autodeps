@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 58fb0b969b6153e8f513bd4893a35d8a76eb464c #@#
+#@# GENERATED FILE: DO NOT MODIFY 05222bfa1c6ed97678037ddb87d14fc933665c6a #@#
 {
   "maven" : {
     "deps" : [
@@ -11,6 +11,7 @@
       "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/maven:maven",
+      "//src/com/facebook/buck/maven:util",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:config",
       "//src/com/facebook/buck/parser:rule_pattern",
@@ -26,9 +27,11 @@
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
       "//third-party/java/aether:aether-api",
+      "//third-party/java/args4j:args4j",
       "//third-party/java/easymock:easymock",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/jackson:jackson-databind",
       "//third-party/java/junit:junit",
       "//third-party/java/maven:maven-model"
     ],

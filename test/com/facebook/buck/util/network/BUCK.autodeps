@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 055b6b63233f29e1c189d80c789ee33dc852fa3d #@#
+#@# GENERATED FILE: DO NOT MODIFY 056fb9a272f4be4213e3792ed11cd2698b5843a4 #@#
 {
   "network" : {
     "deps" : [
@@ -17,7 +17,6 @@
   },
   "testutil" : {
     "deps" : [
-      "//src/com/facebook/buck/event:event",
       "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [

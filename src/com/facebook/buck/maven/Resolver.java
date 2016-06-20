@@ -61,6 +61,7 @@ import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.Version;
 import org.eclipse.aether.version.VersionScheme;
+import org.kohsuke.args4j.CmdLineException;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroupString;
 
@@ -69,10 +70,11 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -95,19 +97,17 @@ public class Resolver {
   private final ImmutableList<RemoteRepository> repos;
   private final ServiceLocator locator;
   private final VersionScheme versionScheme = new GenericVersionScheme();
+  private final List<String> visibility;
 
-  public Resolver(
-      Path buckRepoRoot,
-      Path relativeThirdParty,
-      Path localRepoPath,
-      String... repoUrls) {
-    this.buckRepoRoot = buckRepoRoot;
-    this.buckThirdPartyRelativePath = relativeThirdParty;
-    this.localRepo = new LocalRepository(localRepoPath.toFile());
+  public Resolver(ArtifactConfig config) {
+    this.buckRepoRoot = Paths.get(config.buckRepoRoot);
+    this.buckThirdPartyRelativePath = Paths.get(config.thirdParty);
+    this.localRepo = new LocalRepository(Paths.get(config.mavenLocalRepo).toFile());
+    this.visibility = config.visibility;
 
     ImmutableList.Builder<RemoteRepository> builder = ImmutableList.builder();
-    for (int i = 0; i < repoUrls.length; i++) {
-      builder.add(AetherUtil.toRemoteRepository(repoUrls[i]));
+    for (ArtifactConfig.Repository repo : config.repositories) {
+      builder.add(AetherUtil.toRemoteRepository(repo));
     }
     this.repos = builder.build();
 
@@ -117,6 +117,11 @@ public class Resolver {
   public void resolve(String... mavenCoords) throws RepositoryException, IOException {
     RepositorySystem repoSys = locator.getService(RepositorySystem.class);
     RepositorySystemSession session = newSession(repoSys);
+
+    Set<String> specifiedArtifacts = new HashSet<>();
+    for (String coords : mavenCoords) {
+      specifiedArtifacts.add(coords);
+    }
 
     ImmutableMap<String, Artifact> knownDeps = getRunTimeTransitiveDeps(
         repoSys,
@@ -134,7 +139,9 @@ public class Resolver {
     Map<Path, SortedSet<Prebuilt>> buckFiles = new HashMap<>();
 
     for (Artifact artifact : graph.getNodes()) {
-      downloadArtifact(artifact, repoSys, session, buckFiles, graph);
+      List<String> extraVisibility = specifiedArtifacts.contains(artifact.toString()) ?
+        this.visibility : ImmutableList.<String>of();
+      downloadArtifact(artifact, repoSys, session, buckFiles, graph, extraVisibility);
     }
 
     createBuckFiles(buckFiles);
@@ -145,7 +152,8 @@ public class Resolver {
       RepositorySystem repoSys,
       RepositorySystemSession session,
       Map<Path, SortedSet<Prebuilt>> buckFiles,
-      MutableDirectedGraph<Artifact> graph)
+      MutableDirectedGraph<Artifact> graph,
+      List<String> extraVisibility)
       throws IOException, ArtifactResolutionException, InvalidVersionSpecificationException {
     String projectName = getProjectName(artifactToDownload);
     Path project = buckRepoRoot.resolve(buckThirdPartyRelativePath).resolve(projectName);
@@ -178,6 +186,10 @@ public class Resolver {
       if (!groupName.equals(projectName)) {
         library.addVisibility(buckThirdPartyRelativePath, artifact);
       }
+    }
+
+    for (String rule : extraVisibility) {
+      library.addVisibility(rule);
     }
   }
 
@@ -402,8 +414,8 @@ public class Resolver {
     collectRequest.setRequestContext(JavaScopes.RUNTIME);
     collectRequest.setRepositories(repos);
 
-    for (String coord : mavenCoords) {
-      DefaultArtifact artifact = new DefaultArtifact(coord);
+    for (String coords : mavenCoords) {
+      Artifact artifact = new DefaultArtifact(coords);
       collectRequest.addDependency(new Dependency(artifact, JavaScopes.RUNTIME));
     }
 
@@ -439,25 +451,9 @@ public class Resolver {
         ':' + artifact.getClassifier();
   }
 
-  public static void main(String[] args) throws RepositoryException, IOException {
-    if (args.length < 5) {
-      System.err.println("Usage: java -jar resolver.jar buck-repo third-party " +
-              "maven-local-repo maven-url junit:junit:jar:4.12...");
-      System.exit(1);
-    }
-
-    Path buckRepoRoot = Paths.get(args[0]);
-    Path thirdParty = Paths.get(args[1]);
-    Path m2 = Paths.get(args[2]);
-    String mavenCentral = args[3];
-    String[] coords = Arrays.copyOfRange(args, 4, args.length);
-
-    new Resolver(
-        buckRepoRoot,
-        thirdParty,
-        m2,
-        mavenCentral)
-        .resolve(coords);
+  public static void main(String[] args) throws CmdLineException, RepositoryException, IOException {
+    ArtifactConfig artifactConfig = ArtifactConfig.fromCommandLineArgs(args);
+    new Resolver(artifactConfig).resolve(artifactConfig.artifacts.toArray(new String[0]));
   }
 
   /**

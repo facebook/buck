@@ -11,6 +11,7 @@ prebuilt_jar(
   ],
   visibility = [
     '//src/com/facebook/buck/maven:maven',
+    '//src/com/facebook/buck/maven:util',
     '//third-party/java/maven:maven-aether-provider',
   ],
 )

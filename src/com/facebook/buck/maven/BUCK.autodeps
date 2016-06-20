@@ -1,10 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY da736b36e84217d8f487c62e78c8bfe1b9f228e6 #@#
+#@# GENERATED FILE: DO NOT MODIFY b36d89abf76e9efbd752ec71eff2d53c027f03ef #@#
 {
   "maven" : {
     "deps" : [
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/maven:util",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//third-party/java/aether:aether-spi",
@@ -16,7 +15,9 @@
     "exported_deps" : [
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/java:support",
+      "//src/com/facebook/buck/maven:util",
       "//third-party/java/aether:aether-api",
+      "//third-party/java/args4j:args4j",
       "//third-party/java/guava:guava",
       "//third-party/java/jsr:jsr305",
       "//third-party/java/maven:maven-model"
@@ -27,12 +28,17 @@
       "//third-party/java/aether:aether-connector-basic",
       "//third-party/java/aether:aether-impl",
       "//third-party/java/aether:aether-transport-http",
+      "//third-party/java/aether:aether-util",
+      "//third-party/java/jackson:jackson-databind",
       "//third-party/java/maven:maven-aether-provider",
       "//third-party/java/slf4j:slf4j-api"
     ],
     "exported_deps" : [
       "//third-party/java/aether:aether-api",
-      "//third-party/java/aether:aether-spi"
+      "//third-party/java/aether:aether-spi",
+      "//third-party/java/args4j:args4j",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jackson:jackson-annotations"
     ]
   }
 }
