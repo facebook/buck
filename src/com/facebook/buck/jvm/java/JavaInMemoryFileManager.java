@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.CustomZipOutputStream;
@@ -41,6 +42,7 @@ import javax.tools.StandardJavaFileManager;
  */
 public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJavaFileManager>
     implements StandardJavaFileManager {
+  private static final Logger LOG = Logger.get(JavaInMemoryFileManager.class);
 
   private CustomZipOutputStream jarOutputStream;
   private StandardJavaFileManager delegate;
@@ -108,6 +110,9 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     // If the class is to be removed from the Jar create a NoOp FileObject.
     if (classesToRemoveFromJar.hasPatterns() &&
         classesToRemoveFromJar.matches(className.toString())) {
+      LOG.info(
+          "%s was excluded from the Jar because it matched a remove_classes pattern.",
+          className.toString());
       return createJavaNoOpFileObject(getPath(className, kind), kind);
     }
 

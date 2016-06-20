@@ -16,8 +16,11 @@
 
 package com.facebook.buck.jvm.java;
 
+import static com.facebook.buck.jvm.java.AbstractJavacOptions.SpoolMode;
+
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.SuggestBuildRules;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
@@ -34,6 +37,7 @@ import java.nio.file.Path;
 import java.util.regex.Pattern;
 
 public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
+  private static final Logger LOG = Logger.get(JavacToJarStepFactory.class);
 
   private final JavacOptions javacOptions;
   private final JavacOptionsAmender amender;
@@ -104,12 +108,45 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
       BuildableContext buildableContext,
       ImmutableSet<Pattern> classesToRemoveFromJar) {
 
-    boolean spoolToJar =
+    String spoolMode = javacOptions.getSpoolMode().name();
+    // In order to use direct spooling to the Jar:
+    // (1) It must be enabled through a .buckconfig.
+    // (2) The target must have 0 postprocessing steps.
+    // (3) Tha compile API must be JSR 199.
+    boolean isSpoolingToJarEnabled =
         postprocessClassesCommands.isEmpty() &&
             javacOptions.getSpoolMode() == AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR &&
             javacOptions.getJavac() instanceof Jsr199Javac;
 
-    if (!spoolToJar) {
+    LOG.info("Target: %s SpoolMode: %s Expected SpoolMode: %s Postprocessing steps: %s",
+        invokingRule.getBaseNameWithSlash(),
+        (isSpoolingToJarEnabled) ? (SpoolMode.DIRECT_TO_JAR) : (SpoolMode.INTERMEDIATE_TO_DISK),
+        spoolMode,
+        postprocessClassesCommands.toString());
+
+    if (isSpoolingToJarEnabled) {
+      final JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
+      // Javac requires that the root directory for generated sources already exists.
+      addAnnotationGenFolderStep(buildTimeOptions, filesystem, steps, buildableContext);
+
+      steps.add(
+          new JavacDirectToJarStep(
+              sourceFilePaths,
+              invokingRule,
+              resolver,
+              filesystem,
+              declaredClasspathEntries,
+              buildTimeOptions,
+              outputDirectory,
+              workingDirectory,
+              pathToSrcsList,
+              suggestBuildRules,
+              entriesToJar,
+              mainClass,
+              manifestFile,
+              outputJar,
+              usedClassesFileWriter));
+    } else {
       super.createCompileToJarStep(
           context,
           sourceFilePaths,
@@ -130,31 +167,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
           steps,
           buildableContext,
           javacOptions.getClassesToRemoveFromJar());
-      return;
     }
-
-    final JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
-
-    // Javac requires that the root directory for generated sources already exist.
-    addAnnotationGenFolderStep(buildTimeOptions, filesystem, steps, buildableContext);
-
-    steps.add(
-        new JavacDirectToJarStep(
-            sourceFilePaths,
-            invokingRule,
-            resolver,
-            filesystem,
-            declaredClasspathEntries,
-            buildTimeOptions,
-            outputDirectory,
-            workingDirectory,
-            pathToSrcsList,
-            suggestBuildRules,
-            entriesToJar,
-            mainClass,
-            manifestFile,
-            outputJar,
-            usedClassesFileWriter));
   }
 
   private static void addAnnotationGenFolderStep(
