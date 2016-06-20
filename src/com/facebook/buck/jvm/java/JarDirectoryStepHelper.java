@@ -222,15 +222,15 @@ public class JarDirectoryStepHelper {
         ZipEntry entry = entries.nextElement();
         String entryName = entry.getName();
 
-        // Check if the entry belongs to the blacklist and it should be excluded from the Jar.
-        if (shouldEntryBeRemovedFromJar(eventBus, entryName, blacklist)) {
-          continue zipEntryLoop;
-        }
-
         if (entryName.equals(JarFile.MANIFEST_NAME)) {
           Manifest readManifest = readManifest(zip, entry);
           merge(manifest, readManifest);
           continue;
+        }
+
+        // Check if the entry belongs to the blacklist and it should be excluded from the Jar.
+        if (shouldEntryBeRemovedFromJar(eventBus, entryName, blacklist)) {
+          continue zipEntryLoop;
         }
 
         // We're in the process of merging a bunch of different jar files. These typically contain
@@ -370,7 +370,10 @@ public class JarDirectoryStepHelper {
       BuckEventBus eventBus,
       String relativePath,
       Iterable<Pattern> blacklist) {
-    String entry = relativePath.replace('/', '.').replace(".class", "");
+    String entry = relativePath;
+    if (relativePath.contains(".class")) {
+      entry = relativePath.replace('/', '.').replace(".class", "");
+    }
     for (Pattern pattern : blacklist) {
       if (pattern.matcher(entry).find()) {
         eventBus.post(ConsoleEvent.create(Level.FINE, "%s is excluded from the Jar.", entry));
