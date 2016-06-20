@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 0e9c22bbeaf660e19321246923b83afb45fbedef #@#
+#@# GENERATED FILE: DO NOT MODIFY e96cace2d83dbe05d5925f2e508a270e3981b534 #@#
 {
   "log" : {
     "deps" : [
@@ -13,6 +13,7 @@
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/model:build_id",
+      "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava"

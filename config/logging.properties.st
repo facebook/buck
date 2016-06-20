@@ -28,7 +28,7 @@
 # Enable the console logging handler and the file handler to
 # write rotating log files under buck-out/log/buck-*.log in the
 # project(s) being used.
-handlers=com.facebook.buck.cli.bootstrapper.ConsoleHandler,java.util.logging.FileHandler
+handlers=com.facebook.buck.cli.bootstrapper.ConsoleHandler,com.facebook.buck.cli.bootstrapper.LogFileHandler,java.util.logging.FileHandler
 
 # We handle console events via the event bus, so disable console logging by default.
 com.facebook.buck.log.ConsoleHandler.level=SEVERE

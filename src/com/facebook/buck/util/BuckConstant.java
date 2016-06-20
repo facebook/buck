@@ -28,6 +28,9 @@ public class BuckConstant {
   private static final String BUCK_OUTPUT_DIRECTORY = "buck-out";
   private static final Path BUCK_OUTPUT_PATH = Paths.get("buck-out");
   private static final Path CURRENT_VERSION_FILE = getBuckOutputPath().resolve(".currentversion");
+  private static final String NON_COMMAND_LOG_DIR = "non-command-logs";
+
+  public static final String NON_COMMAND_LOG_FILE_SUFFIX = "non-command.log";
 
   // TODO(bolinfest): The constants GEN_DIR, BIN_DIR, and ANNOTATION_DIR should be
   // package-private to the com.facebook.buck.rules directory. Currently, they are also used in the
@@ -84,6 +87,10 @@ public class BuckConstant {
 
   public static Path getLogPath() {
     return LOG_PATH;
+  }
+
+  public static Path getNonCommandLogPath() {
+    return LOG_PATH.resolve(NON_COMMAND_LOG_DIR);
   }
 
   public static Path getBuckTraceDir() {
