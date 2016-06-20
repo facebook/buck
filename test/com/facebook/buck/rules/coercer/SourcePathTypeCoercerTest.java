@@ -119,9 +119,9 @@ public class SourcePathTypeCoercerTest {
             BuildTarget.of(
                 UnflavoredBuildTarget.of(
                     projectFilesystem.getRootPath(),
-                      Optional.<String>absent(),
-                      "//",
-                      "hello"),
+                    Optional.<String>absent(),
+                    "//",
+                    "hello"),
                 ImmutableSortedSet.<Flavor>of())),
         sourcePath);
   }

@@ -462,12 +462,18 @@ public class BuckConfig {
     return Long.parseLong(getValue("test", "timeout").or("0"));
   }
 
+  private static final String LOG_SECTION = "log";
+
   public int getMaxTraces() {
-    return parseInt(getValue("log", "max_traces").or(DEFAULT_MAX_TRACES));
+    return parseInt(getValue(LOG_SECTION, "max_traces").or(DEFAULT_MAX_TRACES));
   }
 
   public boolean isChromeTraceCreationEnabled() {
-    return getBooleanValue("log", "chrome_trace_generation", true);
+    return getBooleanValue(LOG_SECTION, "chrome_trace_generation", true);
+  }
+
+  public boolean isRuleKeyLoggerEnabled() {
+    return getBooleanValue(LOG_SECTION, "rule_key_logger_enabled", false);
   }
 
   public boolean getCompressTraces() {

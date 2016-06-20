@@ -84,6 +84,10 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
     return cacheMode.toString().toLowerCase() + "_artifact_" + operation.toString().toLowerCase();
   }
 
+  public CacheMode getCacheMode() {
+    return cacheMode;
+  }
+
   public Operation getOperation() {
     return operation;
   }

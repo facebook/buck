@@ -13,6 +13,8 @@
    java-package-mappings = com.google.caliper => //third-party/java/caliper:caliper
 [buildfile]
     includes = //DEFS
+[log]
+    rule_key_logger_enabled = True
 [cache]
     ; Disable the default directory cache.
     mode =

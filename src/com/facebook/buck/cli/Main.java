@@ -43,6 +43,7 @@ import com.facebook.buck.event.listener.LoadBalancerEventsListener;
 import com.facebook.buck.event.listener.LoggingBuildListener;
 import com.facebook.buck.event.listener.ProgressEstimator;
 import com.facebook.buck.event.listener.RemoteLogUploaderEventListener;
+import com.facebook.buck.event.listener.RuleKeyLoggerListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleConfig;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
@@ -55,6 +56,7 @@ import com.facebook.buck.io.TempDirectoryCreator;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.LogConfig;
@@ -1415,6 +1417,13 @@ public final class Main {
 
     loadListenersFromBuckConfig(eventListenersBuilder, projectFilesystem, config);
 
+    if (config.isRuleKeyLoggerEnabled()) {
+      eventListenersBuilder.add(new RuleKeyLoggerListener(
+          projectFilesystem,
+          invocationInfo,
+          MostExecutors.newSingleThreadExecutor(
+              new CommandThreadFactory(getClass().getName()))));
+    }
 
     Optional<URI> remoteLogUrl = config.getRemoteLogUrl();
     boolean shouldSample = config.getRemoteLogSampleRate()
