@@ -158,6 +158,23 @@ public class ParserIntegrationTest {
   }
 
   @Test
+  public void ignoredFilesAreNotReturnedByGlob() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "glob_ignores",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:root_module");
+    result.assertFailure("glob should be empty because of ignores");
+    assertThat(
+        "error message for failure to return results from glob is incorrect",
+        result.getStderr(),
+        containsString("returned no results.  (allow_empty_globs is set to false in the Buck " +
+            "configuration)"));
+  }
+
+  @Test
   public void testBuildFileName() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,

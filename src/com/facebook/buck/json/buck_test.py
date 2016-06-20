@@ -47,8 +47,10 @@ class TestBuckPlatformBase(object):
             glob_internal(
                 includes=['*.java'],
                 excludes=[],
+                project_root_relative_excludes=[],
                 include_dotfiles=False,
-                search_base=search_base))
+                search_base=search_base,
+                project_root=self.fake_path('')))
 
     def test_glob_includes_sort(self):
         search_base = self.fake_path(
@@ -59,8 +61,10 @@ class TestBuckPlatformBase(object):
             glob_internal(
                 includes=['*.java'],
                 excludes=[],
+                project_root_relative_excludes=[],
                 include_dotfiles=False,
-                search_base=search_base))
+                search_base=search_base,
+                project_root=self.fake_path('')))
 
     def test_glob_includes_multi(self):
         search_base = self.fake_path(
@@ -74,8 +78,10 @@ class TestBuckPlatformBase(object):
             glob_internal(
                 includes=['bar/*.java', 'baz/*.java'],
                 excludes=[],
+                project_root_relative_excludes=[],
                 include_dotfiles=False,
-                search_base=search_base))
+                search_base=search_base,
+                project_root=self.fake_path('')))
 
     def test_glob_excludes_double_star(self):
         search_base = self.fake_path(
@@ -88,8 +94,10 @@ class TestBuckPlatformBase(object):
             glob_internal(
                 includes=['**/*.java'],
                 excludes=['**/*Test.java'],
+                project_root_relative_excludes=[],
                 include_dotfiles=False,
-                search_base=search_base))
+                search_base=search_base,
+                project_root=self.fake_path('')))
 
     def test_glob_excludes_multi(self):
         search_base = self.fake_path(
@@ -103,11 +111,13 @@ class TestBuckPlatformBase(object):
             glob_internal(
                 includes=['bar/*.java', 'baz/*.java'],
                 excludes=['*/[AC].java'],
+                project_root_relative_excludes=[],
                 include_dotfiles=False,
-                search_base=search_base))
+                search_base=search_base,
+                project_root=self.fake_path('')))
 
     def test_subdir_glob(self):
-        build_env = BuildFileContext(None, None, None, None, None, None, None, None, None)
+        build_env = BuildFileContext(self.fake_path(''), None, None, None, None, [], None, None, None, None, None)
         search_base = self.fake_path(
             'foo',
             glob_results={
@@ -128,7 +138,7 @@ class TestBuckPlatformBase(object):
                 search_base=search_base))
 
     def test_subdir_glob_with_prefix(self):
-        build_env = BuildFileContext(None, None, None, None, None, None, None, None, None)
+        build_env = BuildFileContext(self.fake_path(''), None, None, None, None, [], None, None, None, None, None)
         search_base = self.fake_path(
             'foo',
             glob_results={
@@ -155,8 +165,26 @@ class TestBuckPlatformBase(object):
             glob_internal(
                 includes=['**/*.java'],
                 excludes=['bar/*.java'],
+                project_root_relative_excludes=[],
                 include_dotfiles=False,
-                search_base=search_base))
+                search_base=search_base,
+                project_root=self.fake_path('')))
+
+    def test_glob_project_root_relative_excludes_relative(self):
+        search_base = self.fake_path(
+            'foo',
+            glob_results={
+                '**/*.java': ['foo/A.java', 'foo/bar/B.java', 'bar/C.java'],
+            })
+        self.assertGlobMatches(
+            ['bar/C.java'],
+            glob_internal(
+                includes=['**/*.java'],
+                excludes=[],
+                project_root_relative_excludes=['foo/foo/**'],
+                include_dotfiles=False,
+                search_base=search_base,
+                project_root=self.fake_path('')))
 
     def test_glob_includes_skips_dotfiles(self):
         search_base = self.fake_path(
@@ -167,8 +195,10 @@ class TestBuckPlatformBase(object):
             glob_internal(
                 includes=['*.java'],
                 excludes=[],
+                project_root_relative_excludes=[],
                 include_dotfiles=False,
-                search_base=search_base))
+                search_base=search_base,
+                project_root=self.fake_path('')))
 
     def test_glob_includes_does_not_skip_dotfiles_if_include_dotfiles(self):
         search_base = self.fake_path(
@@ -179,8 +209,10 @@ class TestBuckPlatformBase(object):
             glob_internal(
                 includes=['*.java'],
                 excludes=[],
+                project_root_relative_excludes=[],
                 include_dotfiles=True,
-                search_base=search_base))
+                search_base=search_base,
+                project_root=self.fake_path('')))
 
     def test_lazy_build_env_partial(self):
         def cobol_binary(
@@ -208,8 +240,10 @@ class TestBuckPlatformBase(object):
             glob_internal(
                 includes=['java/**/*.java'],
                 excludes=['java/Exclude.java'],
+                project_root_relative_excludes=[],
                 include_dotfiles=False,
-                search_base=search_base))
+                search_base=search_base,
+                project_root=self.fake_path('')))
 
 
 class TestBuckPosix(TestBuckPlatformBase, unittest.TestCase):
@@ -263,8 +297,10 @@ class TestBuck(unittest.TestCase):
                 glob_internal(
                     includes=['b/a/**/*.java'],
                     excludes=['**/*Test.java'],
+                    project_root_relative_excludes=[],
                     include_dotfiles=False,
-                    search_base=Path(d)))
+                    search_base=Path(d),
+                    project_root=Path(d)))
         finally:
             shutil.rmtree(d)
 
@@ -281,8 +317,10 @@ class TestBuck(unittest.TestCase):
                 glob_internal(
                     includes=['java/Main.java'],
                     excludes=[],
+                    project_root_relative_excludes=[],
                     include_dotfiles=False,
-                    search_base=Path(d)))
+                    search_base=Path(d),
+                    project_root=Path(d)))
         finally:
             shutil.rmtree(d)
 

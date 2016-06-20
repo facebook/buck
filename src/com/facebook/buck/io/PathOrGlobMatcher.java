@@ -52,6 +52,14 @@ public class PathOrGlobMatcher {
         }
       };
 
+  private static final Function<PathOrGlobMatcher, String> TO_PATH_OR_GLOB =
+      new Function<PathOrGlobMatcher, String>() {
+        @Override
+        public String apply(PathOrGlobMatcher input) {
+          return input.getPathOrGlob();
+        }
+      };
+
   public enum Type {
     PATH,
     GLOB
@@ -142,6 +150,16 @@ public class PathOrGlobMatcher {
     return globPattern.get();
   }
 
+  public String getPathOrGlob() {
+    switch (type) {
+      case PATH:
+        return getPath().toString();
+      case GLOB:
+        return getGlob();
+    }
+    throw new RuntimeException(String.format("Unsupported type: '%s'", type));
+  }
+
   public static Predicate<PathOrGlobMatcher> isPath() {
     return IS_PATH;
   }
@@ -152,6 +170,10 @@ public class PathOrGlobMatcher {
 
   public static Function<Path, PathOrGlobMatcher> toPathMatcher() {
     return TO_PATH_MATCHER;
+  }
+
+  public static Function<PathOrGlobMatcher, String> toPathOrGlob() {
+    return TO_PATH_OR_GLOB;
   }
 
 }

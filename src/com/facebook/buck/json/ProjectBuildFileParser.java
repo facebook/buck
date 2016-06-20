@@ -25,6 +25,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
@@ -43,6 +44,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -94,6 +96,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
   private Optional<Path> pathToBuckPy;
   private Supplier<Path> rawConfigJson;
+  private Supplier<Path> ignorePathsJson;
 
   @Nullable private ProcessExecutor.LaunchedProcess buckPyProcess;
   @Nullable private BufferedWriter buckPyStdinWriter;
@@ -146,6 +149,28 @@ public class ProjectBuildFileParser implements AutoCloseable {
                     bserSerializer.serializeToStream(options.getRawConfig(), output);
                   }
                   return rawConfigJson;
+                } catch (IOException e) {
+                  throw new RuntimeException(e);
+                }
+              }
+            });
+    this.ignorePathsJson =
+        Suppliers.memoize(
+            new Supplier<Path>() {
+              @Override
+              public Path get() {
+                try {
+                  Path ignorePathsJson = Files.createTempFile("ignore_paths", ".json");
+                  Files.createDirectories(ignorePathsJson.getParent());
+                  try (OutputStream output =
+                           new BufferedOutputStream(Files.newOutputStream(ignorePathsJson))) {
+                    bserSerializer.serializeToStream(
+                        FluentIterable.from(options.getIgnorePaths())
+                            .transform(PathOrGlobMatcher.toPathOrGlob())
+                            .toList(),
+                        output);
+                  }
+                  return ignorePathsJson;
                 } catch (IOException e) {
                   throw new RuntimeException(e);
                 }
@@ -292,6 +317,9 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
     // Add all config settings.
     argBuilder.add("--config", rawConfigJson.get().toString());
+
+    // Add ignore paths.
+    argBuilder.add("--ignore_paths", ignorePathsJson.get().toString());
 
     return argBuilder.build();
   }

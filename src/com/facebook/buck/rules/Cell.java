@@ -314,6 +314,7 @@ public class Cell {
             .setProjectRoot(getFilesystem().getRootPath())
             .setPythonInterpreter(pythonInterpreter)
             .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
+            .setIgnorePaths(filesystem.getIgnorePaths())
             .setBuildFileName(getBuildFileName())
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
             .setDescriptions(getAllDescriptions())

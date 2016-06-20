@@ -151,7 +151,7 @@ public class BserSerializer {
         buffer = appendString(buffer, (String) entry.getKey(), utf8Encoder);
         buffer = appendRecursive(buffer, entry.getValue(), utf8Encoder);
       }
-    } else if (value instanceof List<?>) {
+    } else if (value instanceof Iterable<?>) {
       List<Object> list = (List<Object>) value;
       int listLen = list.size();
       BserIntegralEncodedSize encodedSize = getEncodedSize(listLen);

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.json;
 
+import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -34,6 +35,7 @@ abstract class AbstractProjectBuildFileParserOptions {
   abstract Path getProjectRoot();
   abstract String getPythonInterpreter();
   abstract boolean getAllowEmptyGlobs();
+  abstract ImmutableSet<PathOrGlobMatcher> getIgnorePaths();
   abstract String getBuildFileName();
   abstract List<String> getDefaultIncludes();
   abstract ImmutableSet<Description<?>> getDescriptions();

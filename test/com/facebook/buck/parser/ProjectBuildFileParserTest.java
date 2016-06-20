@@ -27,6 +27,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
@@ -360,6 +361,7 @@ public class ProjectBuildFileParserTest {
                 .setProjectRoot(projectRoot)
                 .setPythonInterpreter(pythonInterpreter)
                 .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
+                .setIgnorePaths(ImmutableSet.<PathOrGlobMatcher>of())
                 .setBuildFileName(DEFAULT_BUILD_FILE_NAME)
                 .setDefaultIncludes(ImmutableSet.of("//java/com/facebook/defaultIncludeFile"))
                 .setDescriptions(buildRuleTypes.getAllDescriptions())

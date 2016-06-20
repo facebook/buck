@@ -113,6 +113,7 @@ public class AuditRulesCommand extends AbstractCommand {
             .setProjectRoot(projectFilesystem.getRootPath())
             .setPythonInterpreter(pythonBuckConfig.getPythonInterpreter())
             .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
+            .setIgnorePaths(projectFilesystem.getIgnorePaths())
             .setBuildFileName(parserConfig.getBuildFileName())
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
             .setDescriptions(

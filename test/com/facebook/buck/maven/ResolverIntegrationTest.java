@@ -117,6 +117,7 @@ public class ResolverIntegrationTest {
             .setProjectRoot(filesystem.getRootPath())
             .setPythonInterpreter(pythonBuckConfig.getPythonInterpreter())
             .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
+            .setIgnorePaths(filesystem.getIgnorePaths())
             .setBuildFileName(parserConfig.getBuildFileName())
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
             .setDescriptions(descriptions)

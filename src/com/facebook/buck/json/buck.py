@@ -70,16 +70,18 @@ class BuildFileContext(object):
 
     type = BuildContextType.BUILD_FILE
 
-    def __init__(self, base_path, dirname, autodeps, allow_empty_globs, watchman_client,
-                 watchman_watch_root, watchman_project_prefix, sync_cookie_state,
-                 watchman_error):
+    def __init__(self, project_root, base_path, dirname, autodeps, allow_empty_globs, ignore_paths,
+                 watchman_client, watchman_watch_root, watchman_project_prefix,
+                 sync_cookie_state, watchman_error):
         self.globals = {}
         self.includes = set()
         self.used_configs = {}
+        self.project_root = project_root
         self.base_path = base_path
         self.dirname = dirname
         self.autodeps = autodeps
         self.allow_empty_globs = allow_empty_globs
+        self.ignore_paths = ignore_paths
         self.watchman_client = watchman_client
         self.watchman_watch_root = watchman_watch_root
         self.watchman_project_prefix = watchman_project_prefix
@@ -262,8 +264,10 @@ def glob(includes, excludes=[], include_dotfiles=False, build_env=None, search_b
         results = glob_internal(
             includes,
             excludes,
+            build_env.ignore_paths,
             include_dotfiles,
-            search_base)
+            search_base,
+            build_env.project_root)
     assert build_env.allow_empty_globs or results, (
         "glob(includes={includes}, excludes={excludes}, include_dotfiles={include_dotfiles}) " +
         "returned no results.  (allow_empty_globs is set to false in the Buck " +
@@ -388,17 +392,14 @@ def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watc
     return sorted(result)
 
 
-def glob_internal(includes, excludes, include_dotfiles, search_base):
+def glob_internal(includes, excludes, project_root_relative_excludes, include_dotfiles, search_base, project_root):
 
     def includes_iterator():
         for pattern in includes:
             for path in search_base.glob(pattern):
                 # TODO(bhamiltoncx): Handle hidden files on Windows.
                 if path.is_file() and (include_dotfiles or not path.name.startswith('.')):
-                    yield path.relative_to(search_base)
-
-    def is_special(pat):
-        return "*" in pat or "?" in pat or "[" in pat
+                    yield path
 
     non_special_excludes = set()
     match_excludes = set()
@@ -409,15 +410,22 @@ def glob_internal(includes, excludes, include_dotfiles, search_base):
             non_special_excludes.add(pattern)
 
     def exclusion(path):
-        if path.as_posix() in non_special_excludes:
+        relative_to_search_base = path.relative_to(search_base)
+        if relative_to_search_base.as_posix() in non_special_excludes:
             return True
         for pattern in match_excludes:
-            result = path.match(pattern, match_entire=True)
+            result = relative_to_search_base.match(pattern, match_entire=True)
+            if result:
+                return True
+        relative_to_project_root = path.relative_to(project_root)
+        for pattern in project_root_relative_excludes:
+            result = relative_to_project_root.match(pattern, match_entire=True)
             if result:
                 return True
         return False
 
-    return sorted(set([str(p) for p in includes_iterator() if not exclusion(p)]))
+    return sorted(set([
+        str(p.relative_to(search_base)) for p in includes_iterator() if not exclusion(p)]))
 
 
 @provide_for_build
@@ -472,7 +480,7 @@ class BuildFileProcessor(object):
 
     def __init__(self, project_root, watchman_watch_root, watchman_project_prefix, build_file_name,
                  allow_empty_globs, ignore_buck_autodeps_files, watchman_client, watchman_error,
-                 implicit_includes=[], extra_funcs=[], configs={}):
+                 implicit_includes=[], extra_funcs=[], configs={}, ignore_paths=[]):
         self._cache = {}
         self._build_env_stack = []
         self._sync_cookie_state = SyncCookieState()
@@ -487,6 +495,7 @@ class BuildFileProcessor(object):
         self._watchman_client = watchman_client
         self._watchman_error = watchman_error
         self._configs = configs
+        self._ignore_paths = ignore_paths
 
         lazy_functions = {}
         for func in BUILD_FUNCTIONS + extra_funcs:
@@ -725,10 +734,12 @@ class BuildFileProcessor(object):
             invalid_signature_error_message = e.message
 
         build_env = BuildFileContext(
+            self._project_root,
             base_path,
             dirname,
             autodeps or {},
             self._allow_empty_globs,
+            self._ignore_paths,
             self._watchman_client,
             self._watchman_watch_root,
             self._watchman_project_prefix,
@@ -989,6 +1000,9 @@ def main():
         '--config',
         help='BuckConfig settings available at parse time.')
     parser.add_option(
+        '--ignore_paths',
+        help='Paths that should be ignored.')
+    parser.add_option(
         '--quiet',
         action='store_true',
         dest='quiet',
@@ -1035,6 +1049,11 @@ def main():
                 for field, value in contents.iteritems():
                     configs[(section, field)] = value
 
+    ignore_paths = None
+    if options.ignore_paths is not None:
+        with open(options.ignore_paths, 'rb') as f:
+            ignore_paths = [make_glob(i) for i in bser.loads(f.read())]
+
     buildFileProcessor = BuildFileProcessor(
         project_root,
         options.watchman_watch_root,
@@ -1045,7 +1064,8 @@ def main():
         watchman_client,
         watchman_error,
         implicit_includes=options.include or [],
-        configs=configs)
+        configs=configs,
+        ignore_paths=ignore_paths)
 
     buildFileProcessor.install_builtins(__builtin__.__dict__)
 
@@ -1077,3 +1097,13 @@ def main():
         to_parent.close()
     except IOError:
         pass
+
+
+def make_glob(pat):
+    if is_special(pat):
+        return pat
+    return pat + '/**'
+
+
+def is_special(pat):
+    return "*" in pat or "?" in pat or "[" in pat
