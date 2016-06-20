@@ -24,7 +24,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
-import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
@@ -36,22 +35,22 @@ public class LogFormatter extends java.util.logging.Formatter {
   private static final int INFO_LEVEL = Level.INFO.intValue();
   private static final int DEBUG_LEVEL = Level.FINE.intValue();
   private static final int VERBOSE_LEVEL = Level.FINER.intValue();
-  private final ConcurrentMap<Long, String> threadIdToCommandId;
+  private final ThreadIdToCommandIdMapper mapper;
   private final ThreadLocal<SimpleDateFormat> simpleDateFormat;
 
   public LogFormatter() {
     this(
-        GlobalState.THREAD_ID_TO_COMMAND_ID,
+        GlobalStateManager.singleton().getThreadIdToCommandIdMapper(),
         Locale.US,
         TimeZone.getDefault());
   }
 
   @VisibleForTesting
   LogFormatter(
-      ConcurrentMap<Long, String> threadIdToCommandId,
+      ThreadIdToCommandIdMapper mapper,
       final Locale locale,
       final TimeZone timeZone) {
-    this.threadIdToCommandId = threadIdToCommandId;
+    this.mapper = mapper;
     simpleDateFormat = new ThreadLocal<SimpleDateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
@@ -71,7 +70,7 @@ public class LogFormatter extends java.util.logging.Formatter {
     // We explicitly don't use String.format here because this code is very
     // performance-critical: http://stackoverflow.com/a/1281651
     long tid = record.getThreadID();
-    @Nullable String command = threadIdToCommandId.get(tid);
+    @Nullable String command = mapper.threadIdToCommandId(tid);
     StringBuilder sb = new StringBuilder(timestamp)
       .append(formatRecordLevel(record.getLevel()))
       .append("[command:")

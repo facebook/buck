@@ -18,6 +18,7 @@ package com.facebook.buck.log;
 
 import static org.junit.Assert.assertEquals;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Locale;
@@ -30,11 +31,24 @@ import java.util.logging.LogRecord;
  * Unit tests for {@link LogFormatter}.
  */
 public class LogFormatterTest {
+  private ConcurrentHashMap<Long, String> threadIdToCommandId;
+  private ThreadIdToCommandIdMapper mapper;
+
+  @Before
+  public void setUp() {
+    threadIdToCommandId = new ConcurrentHashMap<>();
+    mapper = new ThreadIdToCommandIdMapper() {
+      @Override
+      public String threadIdToCommandId(long threadId) {
+        return threadIdToCommandId.get(threadId);
+      }
+    };
+  }
+
   @Test
   public void logFormatIncludesMessageAndTimestamp() {
-    ConcurrentHashMap<Long, String> threadIdToCommandId = new ConcurrentHashMap<>();
     LogFormatter logFormatter = new LogFormatter(
-        threadIdToCommandId,
+        mapper,
         Locale.US,
         TimeZone.getTimeZone("America/Los_Angeles"));
     threadIdToCommandId.put(64738L, "testCommandId");

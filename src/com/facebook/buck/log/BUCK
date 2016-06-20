@@ -28,6 +28,7 @@ java_immutables_library(
   name = 'log',
   srcs = glob(['*.java'], excludes = LOGGER_FILES + APPENDABLE_LOG_RECORD_FILES),
   immutable_types = [
+    'InvocationInfo',
     'LogConfigSetup',
   ],
   tests = [

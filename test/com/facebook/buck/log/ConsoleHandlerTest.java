@@ -17,10 +17,12 @@
 package com.facebook.buck.log;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.FakeOutputStream;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -35,6 +37,42 @@ import java.util.logging.LogRecord;
  * Unit tests for {@link ConsoleHandler}.
  */
 public class ConsoleHandlerTest {
+  private FakeOutputStream outputStream;
+  private ConcurrentHashMap<Long, String> threadIdToCommandId;
+  private ConcurrentHashMap<String, OutputStreamWriter> commandIdToConsoleWriter;
+  private ConcurrentHashMap<String, Level> commandIdToLevel;
+  private ConsoleHandlerState state;
+
+  @Before
+  public void setUp() {
+    outputStream = new FakeOutputStream();
+    threadIdToCommandId = new ConcurrentHashMap<>();
+    commandIdToConsoleWriter = new ConcurrentHashMap<>();
+    commandIdToLevel = new ConcurrentHashMap<>();
+
+    state = new ConsoleHandlerState() {
+      @Override
+      public Level getLogLevel(String commandId) {
+        return commandIdToLevel.get(commandId);
+      }
+
+      @Override
+      public OutputStreamWriter getWriter(String commandId) {
+        return commandIdToConsoleWriter.get(commandId);
+      }
+
+      @Override
+      public Iterable<OutputStreamWriter> getAllAvailableWriters() {
+        return commandIdToConsoleWriter.values();
+      }
+
+      @Override
+      public String threadIdToCommandId(long threadId) {
+        return threadIdToCommandId.get(threadId);
+      }
+    };
+  }
+
   // We use a custom formatter so the test doesn't depend on locale, clock, or timezone.
   private static class MessageOnlyFormatter extends Formatter {
     @Override
@@ -45,72 +83,44 @@ public class ConsoleHandlerTest {
 
   @Test
   public void consoleHandlerDoesNotWriteBelowLevelToStream() {
-    FakeOutputStream outputStream = new FakeOutputStream();
-    ConcurrentHashMap<Long, String> threadIdToCommandId = new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, OutputStreamWriter> commandIdToConsoleWriter =
-      new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, Level> commandIdToLevel = new ConcurrentHashMap<>();
     ConsoleHandler handler = new ConsoleHandler(
         ConsoleHandler.utf8OutputStreamWriter(outputStream),
         new MessageOnlyFormatter(),
         Level.INFO,
-        threadIdToCommandId,
-        commandIdToConsoleWriter,
-        commandIdToLevel);
+        state);
     publishAndFlush(handler, new LogRecord(Level.FINE, "Shh.."));
     assertThat(outputStream.size(), equalTo(0));
   }
 
   @Test
   public void consoleHandlerWritesAtLevelToStream() throws IOException {
-    FakeOutputStream outputStream = new FakeOutputStream();
-    ConcurrentHashMap<Long, String> threadIdToCommandId = new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, OutputStreamWriter> commandIdToConsoleWriter =
-      new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, Level> commandIdToLevel = new ConcurrentHashMap<>();
     ConsoleHandler handler = new ConsoleHandler(
         ConsoleHandler.utf8OutputStreamWriter(outputStream),
         new MessageOnlyFormatter(),
         Level.INFO,
-        threadIdToCommandId,
-        commandIdToConsoleWriter,
-        commandIdToLevel);
+        state);
     publishAndFlush(handler, new LogRecord(Level.INFO, "Hello"));
     assertThat(outputStream.toString("UTF-8"), equalTo("Hello"));
   }
 
   @Test
   public void consoleHandlerDoesNotFlushBelowSevere() {
-    FakeOutputStream outputStream = new FakeOutputStream();
-    ConcurrentHashMap<Long, String> threadIdToCommandId = new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, OutputStreamWriter> commandIdToConsoleWriter =
-      new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, Level> commandIdToLevel = new ConcurrentHashMap<>();
     ConsoleHandler handler = new ConsoleHandler(
         ConsoleHandler.utf8OutputStreamWriter(outputStream),
         new MessageOnlyFormatter(),
         Level.INFO,
-        threadIdToCommandId,
-        commandIdToConsoleWriter,
-        commandIdToLevel);
+        state);
     handler.publish(new LogRecord(Level.INFO, "Info"));
     assertThat(outputStream.getLastFlushSize(), equalTo(0));
   }
 
   @Test
   public void consoleHandlerFlushesSevere() {
-    FakeOutputStream outputStream = new FakeOutputStream();
-    ConcurrentHashMap<Long, String> threadIdToCommandId = new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, OutputStreamWriter> commandIdToConsoleWriter =
-      new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, Level> commandIdToLevel = new ConcurrentHashMap<>();
     ConsoleHandler handler = new ConsoleHandler(
         ConsoleHandler.utf8OutputStreamWriter(outputStream),
         new MessageOnlyFormatter(),
         Level.INFO,
-        threadIdToCommandId,
-        commandIdToConsoleWriter,
-        commandIdToLevel);
+        state);
     handler.publish(new LogRecord(Level.SEVERE, "Severe"));
     assertThat(outputStream.getLastFlushSize(), equalTo(6));
   }
@@ -119,29 +129,23 @@ public class ConsoleHandlerTest {
   public void consoleHandlerCanChangeOutputStreamWithoutClosing() throws IOException {
     FakeOutputStream outputStream1 = new FakeOutputStream();
     FakeOutputStream outputStream2 = new FakeOutputStream();
-    ConcurrentHashMap<Long, String> threadIdToCommandId = new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, OutputStreamWriter> commandIdToConsoleWriter =
-      new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, Level> commandIdToLevel = new ConcurrentHashMap<>();
     ConsoleHandler handler = new ConsoleHandler(
         ConsoleHandler.utf8OutputStreamWriter(outputStream1),
         new MessageOnlyFormatter(),
         Level.INFO,
-        threadIdToCommandId,
-        commandIdToConsoleWriter,
-        commandIdToLevel);
+        state);
     publishAndFlush(handler, new LogRecord(Level.INFO, "Stream 1"));
     assertThat(outputStream1.toString("UTF-8"), equalTo("Stream 1"));
 
     threadIdToCommandId.put(49152L, "commandIdForOutputStream2");
-    handler.registerOutputStream("commandIdForOutputStream2", outputStream2);
+    registerOutputStream("commandIdForOutputStream2", outputStream2);
     assertThat(outputStream1.isClosed(), equalTo(false));
 
     publishAndFlush(handler, newLogRecordWithThreadId(Level.INFO, "Stream 2", 49152));
     assertThat(outputStream1.toString("UTF-8"), equalTo("Stream 1"));
     assertThat(outputStream2.toString("UTF-8"), equalTo("Stream 2"));
 
-    handler.unregisterOutputStream("commandIdForOutputStream2");
+    unregisterOutputStream("commandIdForOutputStream2");
     assertThat(outputStream2.isClosed(), equalTo(false));
 
     publishAndFlush(handler, new LogRecord(Level.INFO, " - DONE"));
@@ -149,27 +153,31 @@ public class ConsoleHandlerTest {
     assertThat(outputStream2.toString("UTF-8"), equalTo("Stream 2"));
   }
 
+  private void unregisterOutputStream(String commandId) {
+    assertNotNull(
+        String.format("Command id [%s] never had a registered writer.", commandId),
+        commandIdToConsoleWriter.remove(commandId));
+  }
+
+  private void registerOutputStream(String commandId, FakeOutputStream outputStream) {
+    commandIdToConsoleWriter.put(commandId, ConsoleHandler.utf8OutputStreamWriter(outputStream));
+  }
+
   @Test
   public void logRecordsOnlyGoToRegisteredOutputStream() throws IOException {
     FakeOutputStream outputStream1 = new FakeOutputStream();
     FakeOutputStream outputStream2 = new FakeOutputStream();
     FakeOutputStream outputStream3 = new FakeOutputStream();
-    ConcurrentHashMap<Long, String> threadIdToCommandId = new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, OutputStreamWriter> commandIdToConsoleWriter =
-      new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, Level> commandIdToLevel = new ConcurrentHashMap<>();
     ConsoleHandler handler = new ConsoleHandler(
         ConsoleHandler.utf8OutputStreamWriter(outputStream1),
         new MessageOnlyFormatter(),
         Level.INFO,
-        threadIdToCommandId,
-        commandIdToConsoleWriter,
-        commandIdToLevel);
+        state);
 
     threadIdToCommandId.put(49152L, "commandIdForOutputStream2");
     threadIdToCommandId.put(64738L, "commandIdForOutputStream3");
-    handler.registerOutputStream("commandIdForOutputStream2", outputStream2);
-    handler.registerOutputStream("commandIdForOutputStream3", outputStream3);
+    registerOutputStream("commandIdForOutputStream2", outputStream2);
+    registerOutputStream("commandIdForOutputStream3", outputStream3);
 
     publishAndFlush(handler, newLogRecordWithThreadId(Level.INFO, "Stream 2", 49152));
     assertThat(outputStream1.toString("UTF-8"), equalTo(""));
@@ -187,23 +195,17 @@ public class ConsoleHandlerTest {
     FakeOutputStream outputStream1 = new FakeOutputStream();
     FakeOutputStream outputStream2 = new FakeOutputStream();
     FakeOutputStream outputStream3 = new FakeOutputStream();
-    ConcurrentHashMap<Long, String> threadIdToCommandId = new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, OutputStreamWriter> commandIdToConsoleWriter =
-      new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, Level> commandIdToLevel = new ConcurrentHashMap<>();
     ConsoleHandler handler = new ConsoleHandler(
         ConsoleHandler.utf8OutputStreamWriter(outputStream1),
         new MessageOnlyFormatter(),
         Level.INFO,
-        threadIdToCommandId,
-        commandIdToConsoleWriter,
-        commandIdToLevel);
+        state);
 
     threadIdToCommandId.put(49152L, "commandIdForOutputStream2");
     threadIdToCommandId.put(49153L, "commandIdForOutputStream2");
     threadIdToCommandId.put(64738L, "commandIdForOutputStream3");
-    handler.registerOutputStream("commandIdForOutputStream2", outputStream2);
-    handler.registerOutputStream("commandIdForOutputStream3", outputStream3);
+    registerOutputStream("commandIdForOutputStream2", outputStream2);
+    registerOutputStream("commandIdForOutputStream3", outputStream3);
 
     publishAndFlush(handler, newLogRecordWithThreadId(Level.INFO, "Stream 2", 49152));
     assertThat(outputStream1.toString("UTF-8"), equalTo(""));
@@ -221,26 +223,20 @@ public class ConsoleHandlerTest {
     FakeOutputStream outputStream1 = new FakeOutputStream();
     FakeOutputStream outputStream2 = new FakeOutputStream();
     FakeOutputStream outputStream3 = new FakeOutputStream();
-    ConcurrentHashMap<Long, String> threadIdToCommandId = new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, OutputStreamWriter> commandIdToConsoleWriter =
-      new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, Level> commandIdToLevel = new ConcurrentHashMap<>();
     ConsoleHandler handler = new ConsoleHandler(
         ConsoleHandler.utf8OutputStreamWriter(outputStream1),
         new MessageOnlyFormatter(),
         Level.INFO,
-        threadIdToCommandId,
-        commandIdToConsoleWriter,
-        commandIdToLevel);
+        state);
 
     threadIdToCommandId.put(49152L, "commandIdForOutputStream2");
-    handler.registerOutputStream("commandIdForOutputStream2", outputStream2);
+    registerOutputStream("commandIdForOutputStream2", outputStream2);
 
     publishAndFlush(handler, newLogRecordWithThreadId(Level.INFO, "Stream 2", 49152));
     assertThat(outputStream1.toString("UTF-8"), equalTo(""));
     assertThat(outputStream2.toString("UTF-8"), equalTo("Stream 2"));
 
-    handler.registerOutputStream("commandIdForOutputStream2", outputStream3);
+    registerOutputStream("commandIdForOutputStream2", outputStream3);
 
     publishAndFlush(handler, newLogRecordWithThreadId(Level.INFO, "Stream 3", 49152));
     assertThat(outputStream1.toString("UTF-8"), equalTo(""));
@@ -253,22 +249,16 @@ public class ConsoleHandlerTest {
     FakeOutputStream outputStream1 = new FakeOutputStream();
     FakeOutputStream outputStream2 = new FakeOutputStream();
     FakeOutputStream outputStream3 = new FakeOutputStream();
-    ConcurrentHashMap<Long, String> threadIdToCommandId = new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, OutputStreamWriter> commandIdToConsoleWriter =
-      new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, Level> commandIdToLevel = new ConcurrentHashMap<>();
     ConsoleHandler handler = new ConsoleHandler(
         ConsoleHandler.utf8OutputStreamWriter(outputStream1),
         new MessageOnlyFormatter(),
         Level.INFO,
-        threadIdToCommandId,
-        commandIdToConsoleWriter,
-        commandIdToLevel);
+        state);
 
     threadIdToCommandId.put(49152L, "commandIdForOutputStream2");
     threadIdToCommandId.put(64738L, "commandIdForOutputStream3");
-    handler.registerOutputStream("commandIdForOutputStream2", outputStream2);
-    handler.registerOutputStream("commandIdForOutputStream3", outputStream3);
+    registerOutputStream("commandIdForOutputStream2", outputStream2);
+    registerOutputStream("commandIdForOutputStream3", outputStream3);
 
     publishAndFlush(handler, newLogRecordWithThreadId(Level.FINE, "Shh..", 49152));
     assertThat(outputStream1.toString("UTF-8"), equalTo(""));
@@ -293,22 +283,16 @@ public class ConsoleHandlerTest {
     FakeOutputStream outputStream1 = new FakeOutputStream();
     FakeOutputStream outputStream2 = new FakeOutputStream();
     FakeOutputStream outputStream3 = new FakeOutputStream();
-    ConcurrentHashMap<Long, String> threadIdToCommandId = new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, OutputStreamWriter> commandIdToConsoleWriter =
-      new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, Level> commandIdToLevel = new ConcurrentHashMap<>();
     ConsoleHandler handler = new ConsoleHandler(
         ConsoleHandler.utf8OutputStreamWriter(outputStream1),
         new MessageOnlyFormatter(),
         Level.INFO,
-        threadIdToCommandId,
-        commandIdToConsoleWriter,
-        commandIdToLevel);
+        state);
 
     threadIdToCommandId.put(49152L, "commandIdForOutputStream2");
     threadIdToCommandId.put(64738L, "commandIdForOutputStream3");
-    handler.registerOutputStream("commandIdForOutputStream2", outputStream2);
-    handler.registerOutputStream("commandIdForOutputStream3", outputStream3);
+    registerOutputStream("commandIdForOutputStream2", outputStream2);
+    registerOutputStream("commandIdForOutputStream3", outputStream3);
 
     commandIdToLevel.put("commandIdForOutputStream3", Level.FINE);
 
@@ -329,22 +313,16 @@ public class ConsoleHandlerTest {
     FakeOutputStream outputStream1 = new FakeOutputStream();
     FakeOutputStream outputStream2 = new FakeOutputStream();
     FakeOutputStream outputStream3 = new FakeOutputStream();
-    ConcurrentHashMap<Long, String> threadIdToCommandId = new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, OutputStreamWriter> commandIdToConsoleWriter =
-      new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, Level> commandIdToLevel = new ConcurrentHashMap<>();
     ConsoleHandler handler = new ConsoleHandler(
         ConsoleHandler.utf8OutputStreamWriter(outputStream1),
         new MessageOnlyFormatter(),
         Level.INFO,
-        threadIdToCommandId,
-        commandIdToConsoleWriter,
-        commandIdToLevel);
+        state);
 
     threadIdToCommandId.put(49152L, "commandIdForOutputStream2");
     threadIdToCommandId.put(64738L, "commandIdForOutputStream3");
-    handler.registerOutputStream("commandIdForOutputStream2", outputStream2);
-    handler.registerOutputStream("commandIdForOutputStream3", outputStream3);
+    registerOutputStream("commandIdForOutputStream2", outputStream2);
+    registerOutputStream("commandIdForOutputStream3", outputStream3);
 
     publishAndFlush(handler, newLogRecordWithThreadId(Level.INFO, "What thread is this?", 999999));
     assertThat(outputStream1.toString("UTF-8"), equalTo(""));

@@ -111,4 +111,14 @@ public class BuckCommand extends AbstractContainerCommand {
     return Optional.fromNullable(subcommand);
   }
 
+  /**
+   * @return String'fied version of the SubCommand or "no_sub_command" is the SubCommand is null.
+   */
+  public String getSubCommandNameForLogging() {
+    if (subcommand == null) {
+      return "no_sub_command";
+    } else {
+      return subcommand.getClass().getSimpleName().toLowerCase();
+    }
+  }
 }
