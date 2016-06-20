@@ -140,14 +140,13 @@ public class IjModuleGraph {
       TargetGraph targetGraph,
       IjModuleFactory moduleFactory,
       final int minimumPathDepth) {
-    ImmutableSet<TargetNode<?>> supportedTargets = FluentIterable.from(targetGraph.getNodes())
-        .filter(IjModuleFactory.SUPPORTED_MODULE_TYPES_PREDICATE)
-        .toSet();
-
     final BlockedPathNode blockedPathTree = createAggregationHaltPoints(targetGraph);
 
     ImmutableListMultimap<Path, TargetNode<?>> baseTargetPathMultimap =
-        FluentIterable.from(supportedTargets).index(
+        FluentIterable
+          .from(targetGraph.getNodes())
+          .filter(IjModuleFactory.SUPPORTED_MODULE_TYPES_PREDICATE)
+          .index(
             new Function<TargetNode<?>, Path>() {
               @Override
               public Path apply(TargetNode<?> input) {
