@@ -27,9 +27,11 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
 
@@ -99,7 +101,8 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
       ClassUsageFileWriter usedClassesFileWriter,
       /* output params */
       ImmutableList.Builder<Step> steps,
-      BuildableContext buildableContext) {
+      BuildableContext buildableContext,
+      ImmutableSet<Pattern> classesToRemoveFromJar) {
 
     boolean spoolToJar =
         postprocessClassesCommands.isEmpty() &&
@@ -125,7 +128,8 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
           outputJar,
           usedClassesFileWriter,
           steps,
-          buildableContext);
+          buildableContext,
+          javacOptions.getClassesToRemoveFromJar());
       return;
     }
 

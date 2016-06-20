@@ -74,6 +74,7 @@ public class JavaBinary extends AbstractBuildRule
 
   @Nullable
   private final Path metaInfDirectory;
+
   @AddToRuleKey
   private final ImmutableSet<Pattern> blacklist;
 

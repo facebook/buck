@@ -51,8 +51,10 @@ public class JarDirectoryStep implements Step {
   /** If specified, the Manifest file to use for the generated JAR file.  */
   @Nullable
   private final Path manifestFile;
+
   /** Indicates that manifest merging should occur. Defaults to true. */
   private final boolean mergeManifests;
+
   /**
    * A set of regex. If a file matches one of the regex it will not be included in the Jar.
    */

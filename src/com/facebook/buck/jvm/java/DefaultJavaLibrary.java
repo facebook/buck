@@ -547,9 +547,9 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           usedClassesFileWriter,
           /* output params */
           steps,
-          buildableContext);
+          buildableContext,
+          classesToRemoveFromJar);
     }
-
 
     Path abiJar = getOutputJarDirPath(target, getProjectFilesystem())
         .resolve(String.format("%s-abi.jar", target.getShortNameAndFlavorPostfix()));
@@ -564,13 +564,14 @@ public class DefaultJavaLibrary extends AbstractBuildRule
                 getProjectFilesystem(),
                 output,
                 ImmutableSortedSet.of(outputDirectory),
-          /* mainClass */ null,
-          /* manifestFile */ null));
+                /* mainClass */ null,
+                /* manifestFile */ null,
+                true,
+                classesToRemoveFromJar));
       }
       buildableContext.recordArtifact(output);
 
       // Calculate the ABI.
-
       steps.add(new CalculateAbiStep(buildableContext, getProjectFilesystem(), output, abiJar));
     } else {
       Path scratch = BuildTargets.getScratchPath(

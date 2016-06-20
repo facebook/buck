@@ -99,6 +99,7 @@ public class JarDirectoryStepHelper {
             file,
             outputFile,
             alreadyAddedEntries,
+            blacklist,
             context.getBuckEventBus());
       } else {
         throw new IllegalStateException("Must be a file or directory: " + file);
@@ -221,6 +222,11 @@ public class JarDirectoryStepHelper {
         ZipEntry entry = entries.nextElement();
         String entryName = entry.getName();
 
+        // Check if the entry belongs to the blacklist and it should be excluded from the Jar.
+        if (shouldEntryBeRemovedFromJar(eventBus, entryName, blacklist)) {
+          continue zipEntryLoop;
+        }
+
         if (entryName.equals(JarFile.MANIFEST_NAME)) {
           Manifest readManifest = readManifest(zip, entry);
           merge(manifest, readManifest);
@@ -243,14 +249,6 @@ public class JarDirectoryStepHelper {
                   inputFile.toAbsolutePath()
               ));
           continue;
-        }
-
-        for (Pattern p : blacklist) {
-          if (p.matcher(entryName).matches()) {
-            eventBus.post(ConsoleEvent.create(
-                    Level.FINE, "Skipping adding file to jar: %s", entryName));
-            continue zipEntryLoop;
-          }
         }
 
         ZipEntry newEntry = new ZipEntry(entry);
@@ -304,6 +302,7 @@ public class JarDirectoryStepHelper {
       Path directory,
       CustomZipOutputStream jar,
       final Set<String> alreadyAddedEntries,
+      final Iterable<Pattern> blacklist,
       final BuckEventBus eventBus) throws IOException {
 
     // Since filesystem traversals can be non-deterministic, sort the entries we find into
@@ -314,7 +313,14 @@ public class JarDirectoryStepHelper {
 
       @Override
       public void visit(Path file, String relativePath) {
-        JarEntry entry = new JarEntry(relativePath.replace('\\', '/'));
+        relativePath = relativePath.replace('\\', '/');
+
+        // Check if the entry belongs to the blacklist and it should be excluded from the Jar.
+        if (shouldEntryBeRemovedFromJar(eventBus, relativePath, blacklist)) {
+          return;
+        }
+
+        JarEntry entry = new JarEntry(relativePath);
         String entryName = entry.getName();
         // We want deterministic JARs, so avoid mtimes.
         entry.setTime(ZipConstants.getFakeTime());
@@ -358,6 +364,20 @@ public class JarDirectoryStepHelper {
       }
       jar.closeEntry();
     }
+  }
+
+  private static boolean shouldEntryBeRemovedFromJar(
+      BuckEventBus eventBus,
+      String relativePath,
+      Iterable<Pattern> blacklist) {
+    String entry = relativePath.replace('/', '.').replace(".class", "");
+    for (Pattern pattern : blacklist) {
+      if (pattern.matcher(entry).find()) {
+        eventBus.post(ConsoleEvent.create(Level.FINE, "%s is excluded from the Jar.", entry));
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

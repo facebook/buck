@@ -130,8 +130,8 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
             getProjectFilesystem(),
             temp.resolve("classes.jar"),
             ImmutableSortedSet.copyOf(getTransitiveClasspathEntries().values()),
-            null,
-            null));
+            /* mainClass */ null,
+            /* manifestFile */ null));
 
     // move native libs into tmp folder under jni/
     if (assembledNativeLibs.isPresent()) {

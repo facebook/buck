@@ -30,7 +30,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.AbiRule;
@@ -39,6 +38,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -157,8 +157,8 @@ public class DummyRDotJava extends AbstractBuildRule
             getProjectFilesystem(),
             outputJar,
             ImmutableSortedSet.of(rDotJavaClassesFolder),
-            null,
-            null));
+            /* mainClass */ null,
+            /* manifestFile */ null));
     buildableContext.recordArtifact(outputJar);
 
     steps.add(

@@ -192,7 +192,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
             getProjectFilesystem(),
             getOutputPath(),
             ImmutableSortedSet.of(zipped),
-            FatJarMain.class.getName(),
+            /* mainClass */ FatJarMain.class.getName(),
             /* manifestFile */ null));
 
 

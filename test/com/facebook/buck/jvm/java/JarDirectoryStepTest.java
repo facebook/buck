@@ -286,7 +286,6 @@ public class JarDirectoryStepTest {
   @Test
   public void shouldNotIncludeFilesInBlacklist() throws IOException {
     Path zipup = folder.newFolder();
-
     Path first = createZip(
         zipup.resolve("first.zip"),
         "dir/file1.txt",
@@ -302,18 +301,43 @@ public class JarDirectoryStepTest {
         /* merge manifests */ true,
         /* blacklist */ ImmutableSet.of(Pattern.compile(".*2.*")));
 
-    ExecutionContext context = TestExecutionContext.newInstance();
-
-    int returnCode = step.execute(context).getExitCode();
-
-    assertEquals(0, returnCode);
+    assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     Path zip = zipup.resolve("output.jar");
-
-    // file1.txt, Main.class, plus the manifest.
+    // 3 files in total: file1.txt, & com/example/Main.class & the manifest.
     assertZipFileCountIs(3, zip);
     assertZipContains(zip, "dir/file1.txt");
     assertZipDoesNotContain(zip, "dir/file2.txt");
+  }
+
+  @Test
+  public void shouldNotIncludeFilesInClassesToRemoveFromJar() throws IOException {
+    Path zipup = folder.newFolder();
+    Path first = createZip(
+        zipup.resolve("first.zip"),
+        "com/example/A.class",
+        "com/example/B.class",
+        "com/example/C.class");
+
+    JarDirectoryStep step = new JarDirectoryStep(
+        new ProjectFilesystem(zipup),
+        Paths.get("output.jar"),
+        ImmutableSortedSet.of(first.getFileName()),
+        "com.example.A",
+        /* manifest file */ null,
+        /* merge manifests */ true,
+        /* blacklist */ ImmutableSet.of(
+          Pattern.compile("com.example.B"),
+          Pattern.compile("com.example.C")));
+
+    assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
+
+    Path zip = zipup.resolve("output.jar");
+    // 2 files in total: com/example/A/class & the manifest.
+    assertZipFileCountIs(2, zip);
+    assertZipContains(zip, "com/example/A.class");
+    assertZipDoesNotContain(zip, "com/example/B.class");
+    assertZipDoesNotContain(zip, "com/example/C.class");
   }
 
   @Test

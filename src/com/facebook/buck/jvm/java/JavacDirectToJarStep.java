@@ -131,7 +131,7 @@ public class JavacDirectToJarStep implements Step {
           mainClass,
           manifestFile,
           /* mergeManifests */ true,
-          ImmutableSet.<Pattern>of(),
+          /* blacklist */ ImmutableSet.<Pattern>of(),
           context));
 
     } finally {

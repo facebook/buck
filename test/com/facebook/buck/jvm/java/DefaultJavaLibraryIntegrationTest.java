@@ -753,6 +753,35 @@ public class DefaultJavaLibraryIntegrationTest {
   }
 
   @Test
+  public void testSaveClassFilesToDiskWithRemoveClasses() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "spool_class_files_to_disk_remove_classes",
+        tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:a");
+    ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path classesDir =
+        workspace.getPath(BuildTargets.getScratchPath(filesystem, target, "lib__%s__classes"));
+
+    assertThat("Classes directory should exist.", Files.exists(classesDir), is(Boolean.TRUE));
+    Path jarPath =
+        workspace.getPath(BuildTargets.getGenPath(filesystem, target, "lib__%s__output/a.jar"));
+    assertTrue("Jar should exist.", Files.exists(jarPath));
+
+    // Check that normal and member classes were removed as expected.
+    ZipInspector zipInspector = new ZipInspector(jarPath);
+    zipInspector.assertFileExists("test/pkg/A.class");
+    zipInspector.assertFileExists("test/pkg/B.class");
+    zipInspector.assertFileDoesNotExist("test/pkg/RemovableC.class");
+    zipInspector.assertFileDoesNotExist("test/pkg/B$MemberD.class");
+    zipInspector.assertFileDoesNotExist("DeletableB.class");
+  }
+
+  @Test
   public void testSpoolClassFilesDirectlyToJarWithAnnotationProcessor() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -799,7 +828,7 @@ public class DefaultJavaLibraryIntegrationTest {
     return content;
   }
 
-  private ImmutableList<Path> getAllFilesInPath(Path path) throws IOException {
+  private ImmutableList<Path> getAllFilesInPath(Path path) throws  IOException {
     final List<Path> allFiles = new ArrayList<>();
     Files.walkFileTree(
         path,

@@ -27,11 +27,13 @@ import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Provides a base implementation for post compile steps.
@@ -58,7 +60,8 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
       ClassUsageFileWriter usedClassesFileWriter,
       /* output params */
       ImmutableList.Builder<Step> steps,
-      BuildableContext buildableContext) {
+      BuildableContext buildableContext,
+      ImmutableSet<Pattern> classesToRemoveFromJar) {
 
     createCompileStep(
         context,
@@ -86,7 +89,9 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
             outputJar,
             ImmutableSortedSet.of(outputDirectory),
             mainClass.orNull(),
-            manifestFile.orNull()));
+            manifestFile.orNull(),
+            true,
+            classesToRemoveFromJar));
   }
 
   /**

@@ -17,8 +17,8 @@
 package com.facebook.buck.gwt;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;

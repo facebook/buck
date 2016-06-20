@@ -30,7 +30,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RecordFileSha1Step;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -41,10 +40,12 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.UnzipStep;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
@@ -172,7 +173,7 @@ public class UnzipAar extends AbstractBuildRule
                 /* mainClass */ Optional.<String>absent(),
                 /* manifestFile */ Optional.<Path>absent(),
                 /* mergeManifests */ true,
-                /* blacklist */ ImmutableList.<Pattern>of(),
+                /* blacklist */ ImmutableSet.<Pattern>of(),
                 context);
           } catch (IOException e) {
             context.logError(e, "Failed to jar %s into %s", entriesToJar, uberClassesJar);
