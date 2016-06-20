@@ -286,7 +286,8 @@ public class PythonTestDescription implements
                         params.getCellRoots(),
                         resolver))
                 .toList(),
-            pythonBuckConfig.getNativeLinkStrategy());
+            pythonBuckConfig.getNativeLinkStrategy(),
+            args.preloadDeps.get());
 
     // Build the PEX using a python binary rule with the minimum dependencies.
     BuildRuleParams binaryParams = params.copyWithChanges(

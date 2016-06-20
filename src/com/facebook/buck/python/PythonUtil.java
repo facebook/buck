@@ -145,7 +145,8 @@ public class PythonUtil {
       CxxBuckConfig cxxBuckConfig,
       final CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
-      final NativeLinkStrategy nativeLinkStrategy)
+      final NativeLinkStrategy nativeLinkStrategy,
+      final ImmutableSet<BuildTarget> preloadDeps)
       throws NoSuchBuildTargetException {
 
     final PythonPackageComponents.Builder allComponents =
@@ -188,7 +189,7 @@ public class PythonUtil {
             }
           }
           deps = rule.getDeps();
-        } else if (linkTarget.isPresent()) {
+        } else if (linkTarget.isPresent() && !preloadDeps.contains(rule.getBuildTarget())) {
           nativeLinkTargetRoots.put(linkTarget.get().getBuildTarget(), linkTarget.get());
         } else if (rule instanceof NativeLinkable) {
           nativeLinkableRoots.put(rule.getBuildTarget(), (NativeLinkable) rule);
@@ -201,8 +202,8 @@ public class PythonUtil {
     // excluded native linkable roots.
     if (nativeLinkStrategy == NativeLinkStrategy.MERGED) {
 
-      // Recursively expand the excluded nodes, as we'll need this full list to know which roots
-      // to exclude from omnibus linking.
+      // Recursively expand the excluded nodes including any preloaded deps, as we'll need this full
+      // list to know which roots to exclude from omnibus linking.
       final Set<BuildTarget> transitivelyExcludedNativeLinkables = new HashSet<>();
       new AbstractBreadthFirstTraversal<NativeLinkable>(
           Iterables.transform(excludedNativeLinkableRoots, Functions.forMap(nativeLinkableRoots))) {

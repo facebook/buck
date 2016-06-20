@@ -62,6 +62,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
@@ -761,6 +762,70 @@ public class PythonBinaryDescriptionTest {
           binary.getComponents().getNativeLibraries().keySet(),
           Matchers.hasItems(Paths.get("libdep1.so"), Paths.get("libdep2.so")));
     }
+  }
+
+  @Test
+  public void transitiveDepsOfPreloadDepsAreExcludedFromMergedNativeLinkStrategy()
+      throws Exception {
+    CxxLibraryBuilder transitiveCxxDepBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_dep"))
+            .setSrcs(
+                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("transitive_dep.c"))));
+    CxxLibraryBuilder cxxDepBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("dep.c"))))
+            .setDeps(ImmutableSortedSet.of(transitiveCxxDepBuilder.getTarget()));
+    CxxLibraryBuilder cxxBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:cxx"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("cxx.c"))))
+            .setDeps(ImmutableSortedSet.of(cxxDepBuilder.getTarget()));
+    CxxLibraryBuilder preloadCxxBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:preload_cxx"))
+            .setSrcs(
+                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("preload_cxx.c"))))
+            .setDeps(ImmutableSortedSet.of(transitiveCxxDepBuilder.getTarget()));
+
+    PythonBuckConfig config =
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+          @Override
+          public NativeLinkStrategy getNativeLinkStrategy() {
+            return NativeLinkStrategy.MERGED;
+          }
+        };
+    PythonBinaryBuilder binaryBuilder =
+        new PythonBinaryBuilder(
+            BuildTargetFactory.newInstance("//:bin"),
+            config,
+            PythonTestUtils.PYTHON_PLATFORMS,
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            CxxPlatformUtils.DEFAULT_PLATFORMS);
+    binaryBuilder.setMainModule("main");
+    binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
+    binaryBuilder.setPreloadDeps(ImmutableSet.of(preloadCxxBuilder.getTarget()));
+
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(
+                transitiveCxxDepBuilder.build(),
+                cxxDepBuilder.build(),
+                cxxBuilder.build(),
+                preloadCxxBuilder.build(),
+                binaryBuilder.build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
+    transitiveCxxDepBuilder.build(resolver);
+    cxxDepBuilder.build(resolver);
+    cxxBuilder.build(resolver);
+    preloadCxxBuilder.build(resolver);
+    PythonBinary binary = (PythonBinary) binaryBuilder.build(resolver);
+    assertThat(
+        Iterables.transform(
+            binary.getComponents().getNativeLibraries().keySet(),
+            Functions.toStringFunction()),
+        Matchers.containsInAnyOrder(
+            "libomnibus.so",
+            "libcxx.so",
+            "libpreload_cxx.so",
+            "libtransitive_dep.so"));
   }
 
 }

@@ -326,7 +326,8 @@ public class PythonBinaryDescription implements
                         params.getCellRoots(),
                         resolver))
                 .toList(),
-            pythonBuckConfig.getNativeLinkStrategy());
+            pythonBuckConfig.getNativeLinkStrategy(),
+            args.preloadDeps.get());
     return createPackageRule(
         params,
         resolver,
