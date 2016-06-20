@@ -164,7 +164,8 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     BuckCacheStoreRequest storeRequest = new BuckCacheStoreRequest();
     storeRequest.setMetadata(infoToMetadata(info, artifact, repository));
     PayloadInfo payloadInfo = new PayloadInfo();
-    payloadInfo.setSizeBytes(artifact.size());
+    long artifactSizeBytes = artifact.size();
+    payloadInfo.setSizeBytes(artifactSizeBytes);
     BuckCacheRequest cacheRequest = new BuckCacheRequest();
     cacheRequest.addToPayloads(payloadInfo);
     cacheRequest.setType(BuckCacheRequestType.STORE);
@@ -181,7 +182,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
             httpResponse.code(),
             httpResponse.requestUrl(),
             info.getBuildTarget().orNull(),
-            artifact.size()));
+            artifactSizeBytes));
       }
 
       try (ThriftArtifactCacheProtocol.Response response =
@@ -192,8 +193,11 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
                   "url=[%s] artifactSizeBytes=[%d]",
               response.getThriftData().getErrorMessage(),
               httpResponse.requestUrl(),
-              artifact.size());
+              artifactSizeBytes);
         }
+
+        eventBuilder.setArtifactContentHash(storeRequest.getMetadata().artifactPayloadCrc32);
+        eventBuilder.setArtifactSizeBytes(artifactSizeBytes);
         eventBuilder.setWasUploadSuccessful(response.getThriftData().isWasSuccessful());
       }
     }
