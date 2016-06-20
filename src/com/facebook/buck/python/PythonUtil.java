@@ -253,9 +253,15 @@ public class PythonUtil {
         if (extension != null) {
           allComponents.addModule(extension.getModule(), root.getValue().getPath(), root.getKey());
         } else {
+          SharedNativeLinkTarget target =
+              Preconditions.checkNotNull(
+                  nativeLinkTargetRoots.get(root.getKey()),
+                  "%s: linked unexpected omnibus root: %s",
+                  params.getBuildTarget(),
+                  root.getKey());
           String soname =
               Preconditions.checkNotNull(
-                  root.getValue().getSoname().orNull(),
+                  target.getSharedNativeLinkTargetLibraryName(cxxPlatform).orNull(),
                   "%s: omnibus library for %s was built without soname",
                   params.getBuildTarget(),
                   root.getKey());

@@ -39,6 +39,8 @@ import com.google.common.collect.Iterables;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
+import java.util.Map;
+
 public class OmnibusTest {
 
   @Test
@@ -584,8 +586,8 @@ public class OmnibusTest {
 
   private ImmutableMap<String, SourcePath> toSonameMap(OmnibusLibraries libraries) {
     ImmutableMap.Builder<String, SourcePath> map = ImmutableMap.builder();
-    for (OmnibusRoot root : libraries.getRoots().values()) {
-      map.put(root.getSoname().get(), root.getPath());
+    for (Map.Entry<BuildTarget, OmnibusRoot> root : libraries.getRoots().entrySet()) {
+      map.put(root.getKey().toString(), root.getValue().getPath());
     }
     for (OmnibusLibrary library : libraries.getLibraries()) {
       map.put(library.getSoname(), library.getPath());

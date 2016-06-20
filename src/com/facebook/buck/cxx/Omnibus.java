@@ -354,7 +354,7 @@ public class Omnibus {
             rootSoname,
             argsBuilder.build()));
 
-    return OmnibusRoot.of(rootSoname, new BuildTargetSourcePath(rootTarget));
+    return OmnibusRoot.of(new BuildTargetSourcePath(rootTarget));
   }
 
   private static ImmutableList<Arg> createUndefinedSymbolsArgs(
@@ -611,9 +611,6 @@ public class Omnibus {
   @Value.Immutable
   @BuckStyleImmutable
   interface AbstractOmnibusRoot {
-
-    @Value.Parameter
-    Optional<String> getSoname();
 
     @Value.Parameter
     SourcePath getPath();
