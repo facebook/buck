@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BinaryBuildRule;
@@ -32,14 +33,18 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
+
+import java.util.Map;
 
 public class WorkerToolDescription implements Description<WorkerToolDescription.Arg>,
     ImplicitDepsInferringDescription<WorkerToolDescription.Arg> {
@@ -66,8 +71,8 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
   @Override
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
+      final BuildRuleParams params,
+      final BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
 
     BuildRule rule = resolver.requireRule(args.exe);
@@ -89,18 +94,32 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
       throw new HumanReadableException(e, "%s: %s", params.getBuildTarget(), e.getMessage());
     }
 
-    Iterable<BuildRule> rulesReferencedInStartupArgs = resolver.requireAllRules(
-        getTargetsFromStartupArgs(
-            params.getBuildTarget(),
-            params.getCellRoots(),
-            args.args));
+    ImmutableMap<String, String> expandedEnv = ImmutableMap.copyOf(
+        FluentIterable.from(args.env.get().entrySet())
+            .transform(new Function<Map.Entry<String, String>, Map.Entry<String, String>>() {
+              @Override
+              public Map.Entry<String, String> apply(Map.Entry<String, String> input) {
+                try {
+                  return Maps.immutableEntry(
+                      input.getKey(),
+                      MACRO_HANDLER.expand(
+                          params.getBuildTarget(),
+                          params.getCellRoots(),
+                          resolver,
+                          input.getValue()));
+                } catch (MacroException e) {
+                  throw new HumanReadableException(
+                      e, "%s: %s", params.getBuildTarget(), e.getMessage());
+                }
+              }
+            }));
 
     return new DefaultWorkerTool(
         params,
         new SourcePathResolver(resolver),
         (BinaryBuildRule) rule,
-        rulesReferencedInStartupArgs,
-        expandedStartupArgs);
+        expandedStartupArgs,
+        expandedEnv);
   }
 
   @Override
@@ -108,31 +127,28 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       WorkerToolDescription.Arg constructorArg) {
-    return getTargetsFromStartupArgs(
-        buildTarget,
-        cellRoots,
-        constructorArg.args);
-  }
-
-  private Iterable<BuildTarget> getTargetsFromStartupArgs(
-      BuildTarget buildTarget,
-      CellPathResolver cellRoots,
-      Optional<String> startupArgs) {
-    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-    if (startupArgs.isPresent()) {
-      try {
+    ImmutableSortedSet.Builder<BuildTarget> targets = ImmutableSortedSet.naturalOrder();
+    try {
+      if (constructorArg.args.isPresent()) {
         targets.addAll(
             MACRO_HANDLER.extractParseTimeDeps(
-                buildTarget, cellRoots, startupArgs.get()));
-      } catch (MacroException e) {
-        throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
+                buildTarget, cellRoots, constructorArg.args.get()));
       }
+      for (Map.Entry<String, String> env : constructorArg.env.get().entrySet()) {
+        targets.addAll(
+            MACRO_HANDLER.extractParseTimeDeps(
+                buildTarget, cellRoots, env.getValue()));
+      }
+    } catch (MacroException e) {
+      throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
     }
+
     return targets.build();
   }
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
+    public Optional<ImmutableMap<String, String>> env;
     public Optional<String> args;
     public BuildTarget exe;
   }

@@ -326,8 +326,6 @@ public class Genrule extends AbstractBuildRule
   public WorkerShellStep createWorkerShellStep() {
     return new WorkerShellStep(
         getProjectFilesystem(),
-        absolutePathToTmpDirectory,
-        absolutePathToSrcDirectory,
         convertToWorkerJobParams(cmd),
         convertToWorkerJobParams(bash),
         convertToWorkerJobParams(cmdExe)) {
@@ -348,8 +346,10 @@ public class Genrule extends AbstractBuildRule
               public WorkerJobParams apply(Arg arg) {
                 WorkerMacroArg workerMacroArg = (WorkerMacroArg) arg;
                 return WorkerJobParams.of(
+                    workerMacroArg.getTempDir(),
                     workerMacroArg.getStartupCommand(),
                     workerMacroArg.getStartupArgs(),
+                    workerMacroArg.getEnvironment(),
                     workerMacroArg.getJobArgs());
               }
             });

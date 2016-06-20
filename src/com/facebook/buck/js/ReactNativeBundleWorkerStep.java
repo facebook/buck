@@ -21,6 +21,7 @@ import com.facebook.buck.shell.WorkerJobParams;
 import com.facebook.buck.shell.WorkerShellStep;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 
@@ -40,15 +41,15 @@ public class ReactNativeBundleWorkerStep extends WorkerShellStep {
       Path sourceMapFile) {
     super(
         filesystem,
-        filesystem.resolve(tmpDir),
-        filesystem.getRootPath(),
         Optional.of(
             WorkerJobParams.of(
+                filesystem.resolve(tmpDir),
                 jsPackagerCommand,
                 String.format(
                     "--platform %s%s",
                     platform.toString(),
                     additionalPackagerFlags.isPresent() ? " " + additionalPackagerFlags.get() : ""),
+                ImmutableMap.<String, String>of(),
                 String.format(
                     "--command %s --entry-file %s --platform %s --dev %s --bundle-output %s " +
                         "--assets-dest %s --sourcemap-output %s",

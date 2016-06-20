@@ -29,7 +29,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -43,22 +42,16 @@ import java.util.concurrent.ConcurrentMap;
 public class WorkerShellStep implements Step {
 
   private ProjectFilesystem filesystem;
-  private Path tmpPath;
-  private Path workingDir;
   private Optional<WorkerJobParams> cmdParams;
   private Optional<WorkerJobParams> bashParams;
   private Optional<WorkerJobParams> cmdExeParams;
 
   public WorkerShellStep(
       ProjectFilesystem filesystem,
-      Path tmpPath,
-      Path workingDir,
       Optional<WorkerJobParams> cmdParams,
       Optional<WorkerJobParams> bashParams,
       Optional<WorkerJobParams> cmdExeParams) {
     this.filesystem = filesystem;
-    this.tmpPath = tmpPath;
-    this.workingDir = workingDir;
     this.cmdParams = cmdParams;
     this.bashParams = bashParams;
     this.cmdExeParams = cmdExeParams;
@@ -99,16 +92,19 @@ public class WorkerShellStep implements Step {
       return process;
     }
 
+    Path tmpDir = getWorkerJobParamsToUse(context.getPlatform()).getTempDir();
+    filesystem.mkdirs(tmpDir);
+
     ProcessExecutorParams processParams = ProcessExecutorParams.builder()
         .setCommand(getCommand(context.getPlatform()))
         .setEnvironment(getEnvironmentForProcess(context))
-        .setDirectory(workingDir.toFile())
+        .setDirectory(filesystem.getRootPath().toFile())
         .build();
     WorkerProcess newProcess = new WorkerProcess(
         context.getProcessExecutor(),
         processParams,
         filesystem,
-        tmpPath);
+        tmpDir);
 
     WorkerProcess previousValue = processMap.putIfAbsent(key, newProcess);
     // If putIfAbsent does not return null, then that means another thread beat this thread
@@ -133,7 +129,8 @@ public class WorkerShellStep implements Step {
         .build();
   }
 
-  private String getExpandedJobArgs(ExecutionContext context) {
+  @VisibleForTesting
+  String getExpandedJobArgs(ExecutionContext context) {
     return expandEnvironmentVariables(
         this.getWorkerJobParamsToUse(context.getPlatform()).getJobArgs(),
         getEnvironmentVariables(context));
@@ -175,8 +172,8 @@ public class WorkerShellStep implements Step {
   }
 
   /**
-   * Returns the environment variables to use when starting the process and when expanding the
-   * job arguments that get sent to the process.
+   * Returns the environment variables to use when expanding the job arguments that get
+   * sent to the process.
    * <p>
    * By default, this method returns an empty map.
    * @param context that may be useful when determining environment variables to include.
@@ -187,15 +184,12 @@ public class WorkerShellStep implements Step {
 
   @VisibleForTesting
   ImmutableMap<String, String> getEnvironmentForProcess(ExecutionContext context) {
-    Map<String, String> envVars = this.getEnvironmentVariables(context);
-    // Filter out duplicate keys
-    Map<String, String> contextEnv = Maps.filterKeys(
-        context.getEnvironment(),
-        Predicates.not(Predicates.in(envVars.keySet())));
-    return ImmutableMap.<String, String>builder()
-        .putAll(envVars)
-        .putAll(contextEnv)
-        .build();
+    Path tmpDir = getWorkerJobParamsToUse(context.getPlatform()).getTempDir();
+
+    Map<String, String> envVars = Maps.newHashMap(context.getEnvironment());
+    envVars.put("TMP", filesystem.resolve(tmpDir).toString());
+    envVars.putAll(getWorkerJobParamsToUse(context.getPlatform()).getStartupEnvironment());
+    return ImmutableMap.copyOf(envVars);
   }
 
   @Override

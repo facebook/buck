@@ -35,12 +35,14 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
@@ -54,8 +56,6 @@ public class WorkerShellStepTest {
       @Nullable WorkerJobParams cmdExeParams) {
     return new WorkerShellStep(
         new FakeProjectFilesystem(),
-        Paths.get("tmp").toAbsolutePath().normalize(),
-        Paths.get(".").toAbsolutePath().normalize(),
         Optional.fromNullable(cmdParams),
         Optional.fromNullable(bashParams),
         Optional.fromNullable(cmdExeParams));
@@ -65,14 +65,21 @@ public class WorkerShellStepTest {
     return createJobParams(
         ImmutableList.<String>of(),
         "",
+        ImmutableMap.<String, String>of(),
         "");
   }
 
   private WorkerJobParams createJobParams(
       ImmutableList<String> startupCommand,
       String startupArgs,
+      ImmutableMap<String, String> startupEnv,
       String jobArgs) {
-    return WorkerJobParams.of(startupCommand, startupArgs, jobArgs);
+    return WorkerJobParams.of(
+        Paths.get("tmp").toAbsolutePath().normalize(),
+        startupCommand,
+        startupArgs,
+        startupEnv,
+        jobArgs);
   }
 
   @Test
@@ -146,10 +153,12 @@ public class WorkerShellStepTest {
     WorkerJobParams cmdParams = createJobParams(
         ImmutableList.of("command"),
         "--platform unix-like",
+        ImmutableMap.<String, String>of(),
         "job params");
     WorkerJobParams cmdExeParams = createJobParams(
         ImmutableList.of("command"),
         "--platform windows",
+        ImmutableMap.<String, String>of(),
         "job params");
 
     WorkerShellStep step = createXargsShellStep(cmdParams, null, cmdExeParams);
@@ -187,6 +196,7 @@ public class WorkerShellStepTest {
         createJobParams(
             ImmutableList.of("startupCommand"),
             "startupArgs",
+            ImmutableMap.<String, String>of(),
             "myJobArgs"),
         null,
         null);
@@ -231,11 +241,13 @@ public class WorkerShellStepTest {
   public void testGetEnvironmentForProcess() {
     WorkerShellStep step = new WorkerShellStep(
         new FakeProjectFilesystem(),
-        Paths.get("tmp").toAbsolutePath().normalize(),
-        Paths.get(".").toAbsolutePath().normalize(),
-        Optional.of(createJobParams()),
-        Optional.of(createJobParams()),
-        Optional.of(createJobParams())) {
+        Optional.of(createJobParams(
+            ImmutableList.<String>of(),
+            "",
+            ImmutableMap.<String, String>of("BAK", "chicken"),
+            "$FOO $BAR $BAZ $BAK")),
+        Optional.<WorkerJobParams>absent(),
+        Optional.<WorkerJobParams>absent()) {
 
       @Override
       protected ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
@@ -249,16 +261,22 @@ public class WorkerShellStepTest {
         .newBuilder()
         .setEnvironment(
             ImmutableMap.of(
-                "BAR", "this should be ignored because the step overrides the same variable",
+                "BAR", "this should be ignored for substitution",
                 "BAZ", "baz_expanded"))
         .build();
 
+    Map<String, String> processEnv = Maps.newHashMap(step.getEnvironmentForProcess(context));
+    processEnv.remove("TMP");
     assertThat(
-        step.getEnvironmentForProcess(context),
-        Matchers.equalTo(
+        processEnv,
+        Matchers.<Map<String, String>>equalTo(
             ImmutableMap.of(
-                "FOO", "foo_expanded",
-                "BAR", "bar_expanded",
-                "BAZ", "baz_expanded")));
+                "BAR", "this should be ignored for substitution",
+                "BAZ", "baz_expanded",
+                "BAK", "chicken")));
+    assertThat(
+        step.getExpandedJobArgs(context),
+        Matchers.equalTo(
+            "foo_expanded bar_expanded $BAZ $BAK"));
   }
 }
