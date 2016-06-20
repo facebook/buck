@@ -90,17 +90,6 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
       String className,
       JavaFileObject.Kind kind,
       FileObject sibling) throws IOException {
-    // Create the directories that are part of the class name path.
-    for (int i = 0; i < className.length(); ++i) {
-      if (className.charAt(i) == '.') {
-        String directoryPath = getPath(className.substring(0, i + 1));
-        if (directoryPaths.contains(directoryPath)) {
-          continue;
-        }
-        createDirectory(directoryPath);
-        directoryPaths.add(directoryPath);
-      }
-    }
 
     // Use the normal FileObject that writes to the disk for source files.
     if (kind.equals(JavaFileObject.Kind.SOURCE)) {
@@ -114,6 +103,18 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
           "%s was excluded from the Jar because it matched a remove_classes pattern.",
           className.toString());
       return createJavaNoOpFileObject(getPath(className, kind), kind);
+    }
+
+    // Create the directories that are part of the class name path
+    for (int i = 0; i < className.length(); ++i) {
+      if (className.charAt(i) == '.') {
+        String directoryPath = getPath(className.substring(0, i + 1));
+        if (directoryPaths.contains(directoryPath)) {
+          continue;
+        }
+        createDirectory(directoryPath);
+        directoryPaths.add(directoryPath);
+      }
     }
 
     // Return a FileObject that it will be written in the jar.
