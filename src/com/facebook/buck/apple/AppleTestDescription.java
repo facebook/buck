@@ -160,7 +160,7 @@ public class AppleTestDescription implements
     }
 
     if (!AppleBundleExtensions.VALID_XCTOOL_BUNDLE_EXTENSIONS
-        .contains(args.extension.toFileExtension())) {
+        .contains(args.extension.or(AppleBundleExtension.XCTEST).toFileExtension())) {
       throw new HumanReadableException(
           "Invalid bundle extension for apple_test rule: %s (must be one of %s)",
           args.extension,
@@ -292,7 +292,7 @@ public class AppleTestDescription implements
         sourcePathResolver,
         bundle,
         testHostInfo.transform(TestHostInfo.GET_TEST_HOST_APP_FUNCTION),
-        args.extension,
+        args.extension.or(AppleBundleExtension.XCTEST),
         args.contacts.get(),
         args.labels.get(),
         args.getRunTestSeparately(),
@@ -490,7 +490,7 @@ public class AppleTestDescription implements
     public Optional<BuildTarget> testHostApp;
 
     // Bundle related fields.
-    public AppleBundleExtension extension;
+    public Optional<AppleBundleExtension> extension;
     public SourcePath infoPlist;
     public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
     public Optional<String> xcodeProductType;
@@ -500,7 +500,7 @@ public class AppleTestDescription implements
 
     @Override
     public Either<AppleBundleExtension, String> getExtension() {
-      return Either.ofLeft(extension);
+      return Either.ofLeft(extension.or(AppleBundleExtension.XCTEST));
     }
 
     @Override

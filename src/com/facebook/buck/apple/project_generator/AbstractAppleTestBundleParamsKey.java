@@ -45,7 +45,7 @@ abstract class AbstractAppleTestBundleParamsKey {
     return AppleTestBundleParamsKey.builder()
         .setInfoPlist(arg.infoPlist)
         .setConfigs(arg.configs)
-        .setExtension(arg.extension)
+        .setExtension(arg.extension.or(AppleBundleExtension.XCTEST))
         .setLinkerFlags(arg.linkerFlags.get())
         .setExportedLinkerFlags(arg.exportedLinkerFlags.get())
         .build();

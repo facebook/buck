@@ -66,7 +66,7 @@ public class AppleBuildRulesTest {
 
     AppleTestBuilder appleTestBuilder = new AppleTestBuilder(
         BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386"))
-        .setExtension(AppleBundleExtension.XCTEST)
+        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setContacts(Optional.of(ImmutableSortedSet.<String>of()))
         .setLabels(Optional.of(ImmutableSortedSet.<Label>of()))
         .setDeps(Optional.of(ImmutableSortedSet.<BuildTarget>of()));

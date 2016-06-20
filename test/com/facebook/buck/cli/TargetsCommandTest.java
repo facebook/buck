@@ -501,7 +501,7 @@ public class TargetsCommandTest {
     BuildTarget testTarget = BuildTargetFactory.newInstance("//foo:xctest");
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
-        .setExtension(AppleBundleExtension.XCTEST)
+        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setSrcs(
             Optional.of(
                 ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo.m")))))
@@ -629,7 +629,7 @@ public class TargetsCommandTest {
 
     TargetNode<?> libraryTestNode1 = AppleTestBuilder
         .createBuilder(libraryTestTarget1)
-        .setExtension(AppleBundleExtension.XCTEST)
+        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setSrcs(
             Optional.of(
                 ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo1.m")))))
@@ -638,7 +638,7 @@ public class TargetsCommandTest {
 
     TargetNode<?> libraryTestNode2 = AppleTestBuilder
         .createBuilder(libraryTestTarget2)
-        .setExtension(AppleBundleExtension.XCTEST)
+        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setSrcs(
             Optional.of(
                 ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo2.m")))))
@@ -655,7 +655,7 @@ public class TargetsCommandTest {
 
     TargetNode<?> testLibraryTestNode = AppleTestBuilder
         .createBuilder(testLibraryTestTarget)
-        .setExtension(AppleBundleExtension.XCTEST)
+        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setSrcs(
             Optional.of(
                 ImmutableSortedSet.of(

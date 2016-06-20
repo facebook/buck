@@ -48,7 +48,7 @@ public final class AppleTestBuilder
     return this;
   }
 
-  public AppleTestBuilder setExtension(AppleBundleExtension extension) {
+  public AppleTestBuilder setExtension(Optional<AppleBundleExtension> extension) {
     arg.extension = extension;
     return this;
   }

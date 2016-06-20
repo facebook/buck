@@ -801,7 +801,7 @@ public class ProjectGeneratorTest {
                     "Default",
                     ImmutableMap.<String, String>of())))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setExtension(AppleBundleExtension.XCTEST)
+        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
         .build();
 
@@ -867,7 +867,7 @@ public class ProjectGeneratorTest {
                     "Default",
                     ImmutableMap.<String, String>of())))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setExtension(AppleBundleExtension.XCTEST)
+        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setDeps(Optional.of(ImmutableSortedSet.of(bundleTarget)))
         .build();
 
@@ -932,7 +932,7 @@ public class ProjectGeneratorTest {
                 ImmutableSortedMap.of(
                     "Default",
                     ImmutableMap.<String, String>of())))
-        .setExtension(AppleBundleExtension.XCTEST)
+        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setDeps(Optional.of(ImmutableSortedSet.of(bundleTarget)))
         .build();
@@ -1824,7 +1824,7 @@ public class ProjectGeneratorTest {
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "xctest").build();
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
-        .setExtension(AppleBundleExtension.XCTEST)
+        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setConfigs(Optional.of(configs))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setSrcs(
@@ -1899,7 +1899,7 @@ public class ProjectGeneratorTest {
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "xctest").build();
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
-        .setExtension(AppleBundleExtension.XCTEST)
+        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setConfigs(Optional.of(configs))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setSrcs(
@@ -1986,7 +1986,7 @@ public class ProjectGeneratorTest {
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "xctest").build();
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
-        .setExtension(AppleBundleExtension.XCTEST)
+        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setConfigs(Optional.of(configs))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setSrcs(
@@ -2060,7 +2060,7 @@ public class ProjectGeneratorTest {
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "xctest").build();
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
-        .setExtension(AppleBundleExtension.XCTEST)
+        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setConfigs(Optional.of(configs))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setSrcs(
@@ -2130,7 +2130,7 @@ public class ProjectGeneratorTest {
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "xctest").build();
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
-        .setExtension(AppleBundleExtension.XCTEST)
+        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setConfigs(Optional.of(configs))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setSrcs(
@@ -2177,7 +2177,7 @@ public class ProjectGeneratorTest {
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "xctest").build();
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
-        .setExtension(AppleBundleExtension.XCTEST)
+        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 
@@ -3378,7 +3378,7 @@ public class ProjectGeneratorTest {
                 rootPath,
                 "//foo",
                 "libraryTestStatic").build())
-            .setExtension(AppleBundleExtension.XCTEST)
+            .setExtension(Optional.of(AppleBundleExtension.XCTEST))
             .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
     TargetNode<AppleTestDescription.Arg> libraryTestNotStatic =
@@ -3387,7 +3387,7 @@ public class ProjectGeneratorTest {
                 rootPath,
                 "//foo",
                 "libraryTestNotStatic").build())
-            .setExtension(AppleBundleExtension.XCTEST)
+            .setExtension(Optional.of(AppleBundleExtension.XCTEST))
             .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
 
@@ -3456,7 +3456,7 @@ public class ProjectGeneratorTest {
             .build();
     TargetNode<AppleTestDescription.Arg> xctest1 =
         AppleTestBuilder.createBuilder(BuildTarget.builder(rootPath, "//foo", "xctest1").build())
-            .setExtension(AppleBundleExtension.XCTEST)
+            .setExtension(Optional.of(AppleBundleExtension.XCTEST))
             .setInfoPlist(new FakeSourcePath("Info.plist"))
             .setDeps(Optional.of(ImmutableSortedSet.of(dep1.getBuildTarget())))
             .setFrameworks(
@@ -3470,7 +3470,7 @@ public class ProjectGeneratorTest {
             .build();
     TargetNode<AppleTestDescription.Arg> xctest2 =
         AppleTestBuilder.createBuilder(BuildTarget.builder(rootPath, "//foo", "xctest2").build())
-            .setExtension(AppleBundleExtension.XCTEST)
+            .setExtension(Optional.of(AppleBundleExtension.XCTEST))
             .setInfoPlist(new FakeSourcePath("Info.plist"))
             .setDeps(Optional.of(ImmutableSortedSet.of(dep2.getBuildTarget())))
             .build();
@@ -3647,7 +3647,7 @@ public class ProjectGeneratorTest {
                 ImmutableSortedMap.of(
                     "Debug",
                     ImmutableMap.<String, String>of())))
-        .setExtension(AppleBundleExtension.XCTEST)
+        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setTestHostApp(Optional.of(hostAppTarget))
         .build();
@@ -3691,7 +3691,7 @@ public class ProjectGeneratorTest {
                 ImmutableSortedMap.of(
                     "Debug",
                     ImmutableMap.<String, String>of())))
-        .setExtension(AppleBundleExtension.XCTEST)
+        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setTestHostApp(Optional.of(hostAppTarget))
         .build();
@@ -4074,7 +4074,7 @@ public class ProjectGeneratorTest {
         .build();
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
-        .setExtension(AppleBundleExtension.XCTEST)
+        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setConfigs(
             Optional.of(
                 ImmutableSortedMap.of(
@@ -4245,7 +4245,7 @@ public class ProjectGeneratorTest {
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "xctest").build();
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
-        .setExtension(AppleBundleExtension.XCTEST)
+        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setConfigs(Optional.of(configs))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setSrcs(
