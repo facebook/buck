@@ -21,7 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.TestCustomZipOutputStream;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +51,7 @@ public class JavaInMemoryFileManagerTest {
     inMemoryFileManager = new JavaInMemoryFileManager(
         ToolProvider.getSystemJavaCompiler().getStandardFileManager(diagnostics, null, null),
         outputStream,
-        /*classesToBeRemoved */ ImmutableList.<Pattern>of());
+        /*classesToBeRemovedFromJar */ ImmutableSet.<Pattern>of());
   }
 
   @Test

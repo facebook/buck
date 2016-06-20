@@ -40,7 +40,7 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
   public Optional<SourcePath> javacJar;
   public Optional<Either<BuiltInJavac, SourcePath>> compiler;
   public Optional<ImmutableList<String>> extraArguments;
-  public Optional<ImmutableList<Pattern>> removeClasses;
+  public Optional<ImmutableSet<Pattern>> removeClasses;
   public Optional<ImmutableSortedSet<BuildTarget>> annotationProcessorDeps;
   public Optional<ImmutableList<String>> annotationProcessorParams;
   public Optional<ImmutableSet<String>> annotationProcessors;

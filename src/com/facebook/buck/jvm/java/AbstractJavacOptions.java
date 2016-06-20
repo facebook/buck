@@ -109,7 +109,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   public abstract Set<String> getSafeAnnotationProcessors();
 
   public abstract List<String> getExtraArguments();
-  public abstract List<Pattern> getClassesToRemoveFromJar();
+  public abstract Set<Pattern> getClassesToRemoveFromJar();
   protected abstract Optional<String> getBootclasspath();
   protected abstract Map<String, String> getSourceToBootclasspath();
 

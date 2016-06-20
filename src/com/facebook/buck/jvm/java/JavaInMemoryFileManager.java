@@ -16,9 +16,9 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.CustomZipOutputStream;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -47,18 +47,18 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
   private Semaphore jarFileSemaphore = new Semaphore(1);
   private Set<String> directoryPaths;
   private Set<String> javaFileForOutputPaths;
-  private ImmutableList<Pattern> classesToRemoveFromJar;
+  private PatternsMatcher classesToRemoveFromJar;
 
   public JavaInMemoryFileManager(
       StandardJavaFileManager standardManager,
       CustomZipOutputStream jarOutputStream,
-      ImmutableList<Pattern> classesToRemoveFromJar) {
+      ImmutableSet<Pattern> classesToRemoveFromJar) {
     super(standardManager);
     this.delegate = standardManager;
     this.jarOutputStream = jarOutputStream;
     this.directoryPaths = new HashSet<>();
     this.javaFileForOutputPaths = new HashSet<>();
-    this.classesToRemoveFromJar = classesToRemoveFromJar;
+    this.classesToRemoveFromJar = new PatternsMatcher(classesToRemoveFromJar);
   }
 
   /**
@@ -105,12 +105,10 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
       return delegate.getJavaFileForOutput(location, className, kind, sibling);
     }
 
-    // If the class is to be removed from the jar create a NoOp FileObject that will not output
-    // anything.
-    for (Pattern pattern : classesToRemoveFromJar) {
-      if (pattern.matcher(className.toString()).find()) {
-        return createJavaNoOpFileObject(getPath(className, kind), kind);
-      }
+    // If the class is to be removed from the Jar create a NoOp FileObject.
+    if (classesToRemoveFromJar.hasPatterns() &&
+        classesToRemoveFromJar.matches(className.toString())) {
+      return createJavaNoOpFileObject(getPath(className, kind), kind);
     }
 
     // Return a FileObject that it will be written in the jar.
