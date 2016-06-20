@@ -1109,22 +1109,18 @@ public class ProjectFilesystem {
     return buckPaths;
   }
 
-  private boolean isBlackListed(Path path) {
-    for (PathOrGlobMatcher blackListedPath : blackListedPaths) {
-      if (blackListedPath.matches(path)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   /**
    * @param path the path to check.
    * @return whether ignoredPaths contains path or any of its ancestors.
    */
   public boolean isIgnored(Path path) {
     Preconditions.checkArgument(!path.isAbsolute());
-    return isBlackListed(path);
+    for (PathOrGlobMatcher blackListedPath : blackListedPaths) {
+      if (blackListedPath.matches(path)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public Path createTempFile(
