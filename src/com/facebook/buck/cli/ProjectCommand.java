@@ -232,6 +232,11 @@ public class ProjectCommand extends BuildCommand {
   private boolean excludeArtifacts = false;
 
   @Option(
+      name = "--skip-build",
+      usage = "Don't try to build any of the targets for the generated project.")
+  private boolean skipBuild = false;
+
+  @Option(
       name = "--focus",
       depends = "--build-with-buck",
       usage = "Space separated list of build target full qualified names that should be part of " +
@@ -552,10 +557,36 @@ public class ProjectCommand extends BuildCommand {
   int runIntellijProjectGenerator(
       CommandRunnerParams params,
       final TargetGraphAndTargets targetGraphAndTargets) throws IOException, InterruptedException {
+    ImmutableSet<BuildTarget> requiredBuildTargets =
+        writeProjectAndGetRequiredBuildTargets(params, targetGraphAndTargets);
+
+    if (requiredBuildTargets.isEmpty()) {
+      return 0;
+    }
+
+    if (skipBuild) {
+      ConsoleEvent.severe(
+          "Please remember to buck build --deep the targets you intent to work with.");
+      return 0;
+    }
+
+    return shouldProcessAnnotations() ?
+        buildRequiredTargetsWithoutUsingCacheForAnnotatedTargets(
+            params,
+            targetGraphAndTargets,
+            requiredBuildTargets) :
+        runBuild(params, requiredBuildTargets);
+  }
+
+  private ImmutableSet<BuildTarget> writeProjectAndGetRequiredBuildTargets(
+      CommandRunnerParams params,
+      final TargetGraphAndTargets targetGraphAndTargets
+  ) throws IOException {
     ActionGraphAndResolver result = Preconditions.checkNotNull(
         ActionGraphCache.getFreshActionGraph(
             params.getBuckEventBus(),
             targetGraphAndTargets.getTargetGraph()));
+
     BuildRuleResolver ruleResolver = result.getResolver();
     SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleResolver);
 
@@ -572,18 +603,7 @@ public class ProjectCommand extends BuildCommand {
         getIntellijAggregationMode(params.getBuckConfig()),
         params.getBuckConfig());
 
-    ImmutableSet<BuildTarget> requiredBuildTargets = project.write(runIjCleaner, excludeArtifacts);
-
-    if (requiredBuildTargets.isEmpty()) {
-      return 0;
-    }
-
-    return shouldProcessAnnotations() ?
-        buildRequiredTargetsWithoutUsingCacheForAnnotatedTargets(
-            params,
-            targetGraphAndTargets,
-            requiredBuildTargets) :
-        runBuild(params, requiredBuildTargets);
+    return project.write(runIjCleaner, excludeArtifacts);
   }
 
   private int buildRequiredTargetsWithoutUsingCacheForAnnotatedTargets(
