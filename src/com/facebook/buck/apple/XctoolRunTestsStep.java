@@ -33,11 +33,11 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 
@@ -175,19 +175,6 @@ class XctoolRunTestsStep implements Step {
         appTestBundleToHostAppPaths);
 
     this.filesystem = filesystem;
-
-    // Each test bundle must have one of these extensions. (xctool
-    // depends on them to choose which test runner to use.)
-    Preconditions.checkArgument(
-        AppleBundleExtensions.allPathsHaveValidTestExtensions(logicTestBundlePaths),
-        "Extension of all logic tests must be one of %s (got %s)",
-        AppleBundleExtensions.VALID_XCTOOL_BUNDLE_EXTENSIONS,
-        logicTestBundlePaths);
-    Preconditions.checkArgument(
-        AppleBundleExtensions.allPathsHaveValidTestExtensions(appTestBundleToHostAppPaths.keySet()),
-        "Extension of all app tests must be one of %s (got %s)",
-        AppleBundleExtensions.VALID_XCTOOL_BUNDLE_EXTENSIONS,
-        appTestBundleToHostAppPaths.keySet());
 
     this.command = createCommandArgs(
         xctoolPath,

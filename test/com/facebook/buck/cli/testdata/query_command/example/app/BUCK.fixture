@@ -10,7 +10,6 @@ apple_library(
 
 apple_test(
   name = 'seven-tests',
-  extension = 'xctest',
   info_plist = 'Test.plist',
   srcs = [ '7-test.txt' ],
   deps = [ ':seven' ],

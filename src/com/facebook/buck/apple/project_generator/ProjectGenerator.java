@@ -503,7 +503,7 @@ public class ProjectGenerator {
       int combinedTestIndex = 0;
       for (AppleTestBundleParamsKey key : additionalCombinedTestTargets.keySet()) {
         generateCombinedTestTarget(
-            deriveCombinedTestTargetNameFromKey(key, combinedTestIndex++),
+            deriveCombinedTestTargetNameFromKey(combinedTestIndex++),
             key,
             additionalCombinedTestTargets.get(key));
       }
@@ -1655,9 +1655,9 @@ public class ProjectGenerator {
         sourcePathResolver)
         .setTargetName(productName)
         .setProduct(
-            dylibProductTypeByBundleExtension(key.getExtension()).get(),
+            dylibProductTypeByBundleExtension(AppleBundleExtension.XCTEST).get(),
             productName,
-            Paths.get(productName + "." + key.getExtension().toFileExtension()))
+            Paths.get(productName + "." + AppleBundleExtension.XCTEST.toFileExtension()))
         .setSourcesWithFlags(
             ImmutableSet.of(
                 SourceWithFlags.of(
@@ -1706,7 +1706,7 @@ public class ProjectGenerator {
         overrideBuildSettingsBuilder.build(),
         ImmutableMap.of(
             PRODUCT_NAME, productName,
-            "WRAPPER_EXTENSION", key.getExtension().toFileExtension()),
+            "WRAPPER_EXTENSION", AppleBundleExtension.XCTEST.toFileExtension()),
         ImmutableMap.of(
             "FRAMEWORK_SEARCH_PATHS",
             Joiner.on(' ').join(collectRecursiveFrameworkSearchPaths(tests)),
@@ -1722,12 +1722,10 @@ public class ProjectGenerator {
     buildableCombinedTestTargets.add(result.target);
   }
 
-  private String deriveCombinedTestTargetNameFromKey(
-      AppleTestBundleParamsKey key,
-      int combinedTestIndex) {
+  private String deriveCombinedTestTargetNameFromKey(int combinedTestIndex) {
     return Joiner.on("-").join(
         "_BuckCombinedTest",
-        key.getExtension().toFileExtension(),
+        AppleBundleExtension.XCTEST.toFileExtension(),
         combinedTestIndex);
 
   }
@@ -2687,12 +2685,7 @@ public class ProjectGenerator {
             return ProductType.APPLICATION;
         }
       } else if (binaryNode.getType().equals(AppleTestDescription.TYPE)) {
-        switch (extension) {
-          case OCTEST:
-            return ProductType.BUNDLE;
-          case XCTEST:
-            return ProductType.UNIT_TEST;
-        }
+        return ProductType.UNIT_TEST;
       }
     }
 
@@ -2796,8 +2789,6 @@ public class ProjectGenerator {
       case APPEX:
         return Optional.of(ProductType.APP_EXTENSION);
       case BUNDLE:
-        return Optional.of(ProductType.BUNDLE);
-      case OCTEST:
         return Optional.of(ProductType.BUNDLE);
       case XCTEST:
         return Optional.of(ProductType.UNIT_TEST);

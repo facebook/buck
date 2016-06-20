@@ -30,7 +30,6 @@ apple_bundle(
 
 apple_test(
   name = 'AppTests',
-  extension = 'xctest',
   info_plist = 'Test.plist',
   test_host_app = ':App',
   srcs = [

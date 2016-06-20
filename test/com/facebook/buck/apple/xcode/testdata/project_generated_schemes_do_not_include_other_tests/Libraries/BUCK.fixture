@@ -55,7 +55,6 @@ apple_library(
 
 apple_test(
   name = 'Dep1Tests',
-  extension = 'octest',
   configs = EMPTY_CONFIGS,
   info_plist = 'Test.plist',
   srcs = [],
@@ -67,7 +66,6 @@ apple_test(
 
 apple_test(
   name = 'Dep2Tests',
-  extension = 'octest',
   configs = EMPTY_CONFIGS,
   info_plist = 'Test.plist',
   srcs = [],
@@ -79,7 +77,6 @@ apple_test(
 
 apple_test(
   name = 'Dep3Tests',
-  extension = 'octest',
   configs = EMPTY_CONFIGS,
   info_plist = 'Test.plist',
   srcs = [],

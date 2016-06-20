@@ -159,13 +159,6 @@ public class AppleTestDescription implements
       params = params.withoutFlavor(debugFormat.getFlavor());
     }
 
-    if (!AppleBundleExtensions.VALID_XCTOOL_BUNDLE_EXTENSIONS
-        .contains(args.extension.or(AppleBundleExtension.XCTEST).toFileExtension())) {
-      throw new HumanReadableException(
-          "Invalid bundle extension for apple_test rule: %s (must be one of %s)",
-          args.extension,
-          AppleBundleExtensions.VALID_XCTOOL_BUNDLE_EXTENSIONS);
-    }
     boolean createBundle = Sets.intersection(
         params.getBuildTarget().getFlavors(),
         AUXILIARY_LIBRARY_FLAVORS).isEmpty();
@@ -281,7 +274,6 @@ public class AppleTestDescription implements
         xctool,
         appleConfig.getXctoolStutterTimeoutMs(),
         appleCxxPlatform.getXctest(),
-        appleCxxPlatform.getOtest(),
         appleConfig.getXctestPlatformNames().contains(platformName),
         platformName,
         appleConfig.getXctoolDefaultDestinationSpecifier(),
@@ -292,7 +284,6 @@ public class AppleTestDescription implements
         sourcePathResolver,
         bundle,
         testHostInfo.transform(TestHostInfo.GET_TEST_HOST_APP_FUNCTION),
-        args.extension.or(AppleBundleExtension.XCTEST),
         args.contacts.get(),
         args.labels.get(),
         args.getRunTestSeparately(),
@@ -490,17 +481,15 @@ public class AppleTestDescription implements
     public Optional<BuildTarget> testHostApp;
 
     // Bundle related fields.
-    public Optional<AppleBundleExtension> extension;
     public SourcePath infoPlist;
     public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
     public Optional<String> xcodeProductType;
-    public Optional<String> productName;
 
     public Optional<ImmutableMap<String, String>> destinationSpecifier;
 
     @Override
     public Either<AppleBundleExtension, String> getExtension() {
-      return Either.ofLeft(extension.or(AppleBundleExtension.XCTEST));
+      return Either.ofLeft(AppleBundleExtension.XCTEST);
     }
 
     @Override

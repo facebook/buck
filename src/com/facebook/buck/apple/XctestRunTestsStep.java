@@ -57,7 +57,6 @@ class XctestRunTestsStep implements Step {
   private final ProjectFilesystem filesystem;
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> xctest;
-  private final String testArgument; // -XCTest or -SenTest
   private final Path logicTestBundlePath;
   private final Path outputPath;
   private final Optional<? extends OutputReadingCallback> outputReadingCallback;
@@ -67,7 +66,6 @@ class XctestRunTestsStep implements Step {
       ProjectFilesystem filesystem,
       ImmutableMap<String, String> environment,
       ImmutableList<String> xctest,
-      String testArgument,
       Path logicTestBundlePath,
       Path outputPath,
       Optional<? extends OutputReadingCallback> outputReadingCallback,
@@ -75,7 +73,6 @@ class XctestRunTestsStep implements Step {
     this.filesystem = filesystem;
     this.environment = environment;
     this.xctest = xctest;
-    this.testArgument = testArgument;
     this.logicTestBundlePath = logicTestBundlePath;
     this.outputPath = outputPath;
     this.outputReadingCallback = outputReadingCallback;
@@ -90,7 +87,7 @@ class XctestRunTestsStep implements Step {
   public ImmutableList<String> getCommand() {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(xctest);
-    args.add(testArgument);
+    args.add("-XCTest");
     args.add("All");
     args.add(logicTestBundlePath.toString());
     return args.build();

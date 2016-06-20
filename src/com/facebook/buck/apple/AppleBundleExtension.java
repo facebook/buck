@@ -25,7 +25,6 @@ public enum AppleBundleExtension {
   APPEX,
   PLUGIN,
   BUNDLE,
-  OCTEST,
   XCTEST,
   DSYM;
 
@@ -41,8 +40,6 @@ public enum AppleBundleExtension {
         return "plugin";
       case BUNDLE:
         return "bundle";
-      case OCTEST:
-        return "octest";
       case XCTEST:
         return "xctest";
       case DSYM:

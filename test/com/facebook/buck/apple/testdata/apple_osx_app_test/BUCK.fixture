@@ -18,7 +18,6 @@ apple_bundle(
 
 apple_test(
     name = 'AppTest',
-    extension = 'xctest',
     srcs = ['Test/AppTest.m'],
     test_host_app = ':App',
     info_plist = 'Test/AppTest.plist',

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple.project_generator;
 
-import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -36,7 +35,6 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractAppleTestBundleParamsKey {
   public abstract Optional<SourcePath> getInfoPlist();
-  public abstract AppleBundleExtension getExtension();
   public abstract Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> getConfigs();
   public abstract ImmutableList<String> getLinkerFlags();
   public abstract ImmutableList<String> getExportedLinkerFlags();
@@ -45,7 +43,6 @@ abstract class AbstractAppleTestBundleParamsKey {
     return AppleTestBundleParamsKey.builder()
         .setInfoPlist(arg.infoPlist)
         .setConfigs(arg.configs)
-        .setExtension(arg.extension.or(AppleBundleExtension.XCTEST))
         .setLinkerFlags(arg.linkerFlags.get())
         .setExportedLinkerFlags(arg.exportedLinkerFlags.get())
         .build();

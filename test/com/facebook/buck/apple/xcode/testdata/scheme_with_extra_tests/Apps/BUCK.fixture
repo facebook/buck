@@ -10,7 +10,6 @@ apple_binary(
 
 apple_test(
   name = 'TestAppTests',
-  extension = 'octest',
   configs = EMPTY_CONFIGS,
   info_plist = 'Test.plist',
 )

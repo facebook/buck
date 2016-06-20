@@ -21,7 +21,6 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -180,10 +179,6 @@ public class AppleCxxPlatformsTest {
     assertEquals(
         ImmutableList.of("usr/bin/xctest"),
         appleCxxPlatform.getXctest().getCommandPrefix(resolver));
-    assertThat(appleCxxPlatform.getOtest().isPresent(), is(true));
-    assertEquals(
-        ImmutableList.of("Tools/otest"),
-        appleCxxPlatform.getOtest().get().getCommandPrefix(resolver));
 
     assertEquals(
         ImmutableFlavor.of("iphoneos8.0-armv7"),
@@ -434,59 +429,6 @@ public class AppleCxxPlatformsTest {
         Paths.get("Platforms/AppleTVOS.platform/Developer/usr/bin/ar")
             .toString(),
         cxxPlatform.getAr().getCommandPrefix(resolver).get(0));
-  }
-
-  @Test
-  public void platformWithoutOtestIsValid() throws Exception {
-    AppleSdkPaths appleSdkPaths =
-        AppleSdkPaths.builder()
-            .setDeveloperPath(Paths.get("."))
-            .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(Paths.get("Platforms/iPhoneOS.platform"))
-            .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.0.sdk"))
-            .build();
-
-    AppleToolchain toolchain = AppleToolchain.builder()
-        .setIdentifier("com.apple.dt.XcodeDefault")
-        .setPath(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
-        .setVersion("1")
-        .build();
-
-    AppleSdk targetSdk = AppleSdk.builder()
-        .setApplePlatform(ApplePlatform.IPHONEOS)
-        .setName("iphoneos9.0")
-        .setVersion("9.0")
-        .setToolchains(ImmutableList.of(toolchain))
-        .build();
-
-    ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
-        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"))
-        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"))
-        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"))
-        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"))
-        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib"))
-        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"))
-        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/nm"))
-        .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
-        .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
-        .add(Paths.get("usr/bin/actool"))
-        .add(Paths.get("usr/bin/ibtool"))
-        .add(Paths.get("usr/bin/lldb"))
-        .add(Paths.get("usr/bin/xctest"))
-        .build();
-
-    AppleCxxPlatform appleCxxPlatform =
-        AppleCxxPlatforms.buildWithExecutableChecker(
-            targetSdk,
-            "7.0",
-            "armv7",
-            appleSdkPaths,
-            FakeBuckConfig.builder().build(),
-            new FakeAppleConfig(),
-            new FakeExecutableFinder(paths),
-            Optional.<ProcessExecutor>absent());
-
-    assertThat(appleCxxPlatform.getOtest().isPresent(), is(false));
   }
 
   @Test

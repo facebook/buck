@@ -66,7 +66,6 @@ public class AppleBuildRulesTest {
 
     AppleTestBuilder appleTestBuilder = new AppleTestBuilder(
         BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386"))
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setContacts(Optional.of(ImmutableSortedSet.<String>of()))
         .setLabels(Optional.of(ImmutableSortedSet.<Label>of()))
         .setDeps(Optional.of(ImmutableSortedSet.<BuildTarget>of()));
@@ -98,11 +97,6 @@ public class AppleBuildRulesTest {
   @Test
   public void testXctestIsTestBundleExtension() throws Exception {
     assertTrue(AppleBuildRules.isXcodeTargetTestBundleExtension(AppleBundleExtension.XCTEST));
-  }
-
-  @Test
-  public void testOctestIsTestBundleExtension() throws Exception {
-    assertTrue(AppleBuildRules.isXcodeTargetTestBundleExtension(AppleBundleExtension.OCTEST));
   }
 
   @Test

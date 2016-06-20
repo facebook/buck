@@ -195,13 +195,11 @@ public class WorkspaceAndProjectGeneratorTest {
     TargetNode<?> bazTestNode = AppleTestBuilder
         .createBuilder(bazTestTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 
     TargetNode<?> fooTestNode = AppleTestBuilder
         .createBuilder(fooTestTarget)
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
         .build();
@@ -209,7 +207,6 @@ public class WorkspaceAndProjectGeneratorTest {
     TargetNode<?> fooBinTestNode = AppleTestBuilder
         .createBuilder(fooBinTestTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(fooBinTarget)))
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 
@@ -750,26 +747,22 @@ public class WorkspaceAndProjectGeneratorTest {
   public void combinedTestBundle() throws IOException {
     TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
         .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//foo", "combinableTest1").build())
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setCanGroup(Optional.of(true))
         .build();
     TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
         .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//bar", "combinableTest2").build())
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setCanGroup(Optional.of(true))
         .build();
     TargetNode<AppleTestDescription.Arg> testMarkedUncombinable = AppleTestBuilder
         .createBuilder(
             BuildTarget.builder(rootCell.getRoot(), "//foo", "testMarkedUncombinable").build())
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setCanGroup(Optional.of(false))
         .build();
     TargetNode<AppleTestDescription.Arg> anotherTest = AppleTestBuilder
         .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//foo", "anotherTest").build())
-        .setExtension(Optional.of(AppleBundleExtension.OCTEST))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setCanGroup(Optional.of(true))
         .build();
@@ -876,10 +869,6 @@ public class WorkspaceAndProjectGeneratorTest {
         testAction.getTestables(),
         hasItem(testableWithName("_BuckCombinedTest-xctest-0")));
     assertThat(
-        "Uncombined but groupable test should be a testable",
-        testAction.getTestables(),
-        hasItem(testableWithName("_BuckCombinedTest-octest-1")));
-    assertThat(
         "Bundled test library is not a testable",
         testAction.getTestables(),
         not(hasItem(testableWithName("combinableTest1"))));
@@ -905,13 +894,11 @@ public class WorkspaceAndProjectGeneratorTest {
   public void groupTests() {
     TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
         .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//foo", "test1").build())
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setCanGroup(Optional.of(true))
         .build();
     TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
         .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//bar", "test2").build())
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setCanGroup(Optional.of(true))
         .build();
@@ -950,54 +937,6 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void doNotGroupTestsWithDifferentExtensions() {
-    TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
-        .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//foo", "test1").build())
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
-        .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setCanGroup(Optional.of(true))
-        .build();
-    TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
-        .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//bar", "test2").build())
-        .setExtension(Optional.of(AppleBundleExtension.OCTEST))
-        .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setCanGroup(Optional.of(true))
-        .build();
-
-    ImmutableMultimap.Builder<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
-        groupedTestsMapBuilder = ImmutableMultimap.builder();
-    ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg>>
-        ungroupedTestsMapBuilder = ImmutableSetMultimap.builder();
-
-    WorkspaceAndProjectGenerator.groupSchemeTests(
-        ImmutableSet.of(
-            combinableTest1,
-            combinableTest2),
-        ImmutableSetMultimap.of(
-            "workspace", combinableTest1,
-            "workspace", combinableTest2),
-        groupedTestsMapBuilder,
-        ungroupedTestsMapBuilder);
-
-    ImmutableMultimap<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
-        groupedTestsMap = groupedTestsMapBuilder.build();
-
-    assertThat(
-        ungroupedTestsMapBuilder.build().entries(),
-        empty());
-    assertEquals(
-        ImmutableSortedSet.of(
-            combinableTest1,
-            combinableTest2),
-        ImmutableSortedSet.copyOf(
-            groupedTestsMap.values()));
-    ImmutableList<Map.Entry<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>>
-        groupedTests = ImmutableList.copyOf(groupedTestsMap.entries());
-    assertEquals(2, groupedTests.size());
-    assertNotEquals(groupedTests.get(0).getKey(), groupedTests.get(1).getKey());
-  }
-
-  @Test
   public void doNotGroupTestsWithDifferentConfigs() {
     ImmutableSortedMap<String, ImmutableMap<String, String>> configs = ImmutableSortedMap.of(
         "Debug",
@@ -1005,13 +944,11 @@ public class WorkspaceAndProjectGeneratorTest {
 
     TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
         .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//foo", "test1").build())
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setCanGroup(Optional.of(true))
         .build();
     TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
         .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//bar", "test2").build())
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setConfigs(Optional.of(configs))
         .setCanGroup(Optional.of(true))
@@ -1054,13 +991,11 @@ public class WorkspaceAndProjectGeneratorTest {
   public void doNotGroupTestsWithDifferentLinkerFlags() {
     TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
         .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//foo", "test1").build())
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setCanGroup(Optional.of(true))
         .build();
     TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
         .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//bar", "test2").build())
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setLinkerFlags(Optional.of(ImmutableList.of("-flag")))
         .setExportedLinkerFlags(Optional.of(ImmutableList.of("-exported-flag")))
@@ -1162,13 +1097,11 @@ public class WorkspaceAndProjectGeneratorTest {
     TargetNode<?> bazTestNode = AppleTestBuilder
         .createBuilder(bazTestTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 
     TargetNode<?> fooTestNode = AppleTestBuilder
         .createBuilder(fooTestTarget)
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
         .build();
@@ -1176,7 +1109,6 @@ public class WorkspaceAndProjectGeneratorTest {
     TargetNode<?> fooBinTestNode = AppleTestBuilder
         .createBuilder(fooBinTestTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(fooBinTarget)))
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 

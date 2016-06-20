@@ -36,7 +36,6 @@ apple_package(
 
 apple_test(
   name = 'BuckDemoAppTest',
-  extension = 'xctest',
   test_host_app = ':BuckDemoApp',
   srcs = ['tests/BuckDemoAppTest.m'],
   info_plist = 'tests/Test.plist',

@@ -48,11 +48,6 @@ public final class AppleTestBuilder
     return this;
   }
 
-  public AppleTestBuilder setExtension(Optional<AppleBundleExtension> extension) {
-    arg.extension = extension;
-    return this;
-  }
-
   public AppleTestBuilder setXcodeProductType(Optional<String> xcodeProductType) {
     arg.xcodeProductType = xcodeProductType;
     return this;

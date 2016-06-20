@@ -249,12 +249,6 @@ public class AppleCxxPlatforms {
         "apple-xctest",
         version);
 
-    Optional<Tool> otest = getOptionalTool(
-        "otest",
-        toolSearchPaths,
-        executableFinder,
-        version);
-
     Tool dsymutil = new VersionedTool(
         getToolPath("dsymutil", toolSearchPaths, executableFinder),
         ImmutableList.<String>of(),
@@ -418,7 +412,6 @@ public class AppleCxxPlatforms {
         .setActool(actool)
         .setIbtool(ibtool)
         .setXctest(xctest)
-        .setOtest(otest)
         .setDsymutil(dsymutil)
         .setLipo(lipo)
         .setStubBinary(stubBinaryPath)

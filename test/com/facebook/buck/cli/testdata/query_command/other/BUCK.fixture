@@ -5,6 +5,5 @@ apple_test(
   visibility = [
       'PUBLIC',
   ],
-  extension = 'xctest',
   info_plist = 'Test.plist',
 )

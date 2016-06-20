@@ -3,7 +3,7 @@
 {"workspace":null,"project":"xctool\/xctool-tests\/TestData\/TestProject-Library\/TestProject-Library.xcodeproj\/","event":"begin-action","name":"run-tests","scheme":"TestProject-Library"}
 {"message":"Collecting info for testables...","timestamp":1378850764.814471,"level":"Info","event":"begin-status"}
 {"message":"Collecting info for testables...","timestamp":1378850765.643678,"level":"Info","event":"end-status"}
-{"gcEnabled":false,"sdkName":"iphonesimulator6.1","event":"begin-ocunit","testType":"logic-test","bundleName":"TestProject-LibraryTests.octest"}
+{"gcEnabled":false,"sdkName":"iphonesimulator6.1","event":"begin-ocunit","testType":"logic-test","bundleName":"TestProject-LibraryTests.xctest"}
 {"suite":"Toplevel Test Suite","event":"begin-test-suite"}
 {"className":"OtherTests","methodName":"testSomething","event":"begin-test","test":"-[OtherTests testSomething]"}
 {"exceptions":[],"methodName":"testSomething","output":"","result":"success","totalDuration":0.003887951374053955,"test":"-[OtherTests testSomething]","event":"end-test","className":"OtherTests","succeeded":true}
@@ -47,5 +47,5 @@
 {"className":"SomeTests","methodName":"testWillPass","event":"begin-test","test":"-[SomeTests testWillPass]"}
 {"exceptions":[],"methodName":"testWillPass","output":"","result":"success","totalDuration":8.499622344970703e-05,"test":"-[SomeTests testWillPass]","event":"end-test","className":"SomeTests","succeeded":true}
 {"totalFailureCount":1,"testCaseCount":7,"totalDuration":0.7613800168037415,"testDuration":0.7599970102310181,"event":"end-test-suite","suite":"Toplevel Test Suite","unexpectedExceptionCount":0}
-{"bundleName":"TestProject-LibraryTests.octest","gcEnabled":false,"succeeded":false,"failureReason":null,"event":"end-ocunit","testType":"logic-test","sdkName":"iphonesimulator6.1"}
+{"bundleName":"TestProject-LibraryTests.xctest","gcEnabled":false,"succeeded":false,"failureReason":null,"event":"end-ocunit","testType":"logic-test","sdkName":"iphonesimulator6.1"}
 {"scheme":"TestProject-Library","event":"end-action","succeeded":false,"workspace":null,"project":"xctool\/xctool-tests\/TestData\/TestProject-Library\/TestProject-Library.xcodeproj\/","duration":1.791453243000433,"name":"run-tests"}

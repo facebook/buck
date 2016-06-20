@@ -26,7 +26,6 @@ apple_binary(
 apple_test(
     name = 'AppTest',
     test_host_app = ':DemoApp',
-    extension = 'xctest',
     srcs = ['AppTest.m'],
     info_plist = 'AppTest.plist',
     frameworks = [

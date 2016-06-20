@@ -25,7 +25,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidResourceBuilder;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
-import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.artifact_cache.ArtifactCache;
@@ -501,7 +500,6 @@ public class TargetsCommandTest {
     BuildTarget testTarget = BuildTargetFactory.newInstance("//foo:xctest");
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setSrcs(
             Optional.of(
                 ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo.m")))))
@@ -629,7 +627,6 @@ public class TargetsCommandTest {
 
     TargetNode<?> libraryTestNode1 = AppleTestBuilder
         .createBuilder(libraryTestTarget1)
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setSrcs(
             Optional.of(
                 ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo1.m")))))
@@ -638,7 +635,6 @@ public class TargetsCommandTest {
 
     TargetNode<?> libraryTestNode2 = AppleTestBuilder
         .createBuilder(libraryTestTarget2)
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setSrcs(
             Optional.of(
                 ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo2.m")))))
@@ -655,7 +651,6 @@ public class TargetsCommandTest {
 
     TargetNode<?> testLibraryTestNode = AppleTestBuilder
         .createBuilder(testLibraryTestTarget)
-        .setExtension(Optional.of(AppleBundleExtension.XCTEST))
         .setSrcs(
             Optional.of(
                 ImmutableSortedSet.of(

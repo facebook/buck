@@ -65,7 +65,7 @@ public final class AppleBuildRules {
       ImmutableSet.of(AppleBundleDescription.TYPE, AppleResourceDescription.TYPE);
 
   private static final ImmutableSet<AppleBundleExtension> XCODE_TARGET_TEST_BUNDLE_EXTENSIONS =
-      ImmutableSet.of(AppleBundleExtension.OCTEST, AppleBundleExtension.XCTEST);
+      ImmutableSet.of(AppleBundleExtension.XCTEST);
 
   /**
    * Whether the build rule type is equivalent to some kind of Xcode target.

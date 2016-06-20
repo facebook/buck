@@ -1,6 +1,5 @@
 apple_test(
     name='foo',
-    extension='xctest',
     srcs = ['Foo.m'],
     info_plist = 'Test.plist',
     frameworks = [
