@@ -82,7 +82,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         new JavacToJarStepFactory(javacOptions, new BootClasspathAppender()),
         resourcesRoot,
         mavenCoords,
-        tests);
+        tests,
+        javacOptions.getClassesToRemoveFromJar());
     this.manifestFile = manifestFile;
   }
 

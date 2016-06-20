@@ -76,6 +76,7 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -140,6 +141,10 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   private final ImmutableSortedSet<BuildTarget> tests;
   private final Optional<Path> generatedSourceFolder;
 
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  @AddToRuleKey
+  private final ImmutableSet<Pattern> classesToRemoveFromJar;
+
   @AddToRuleKey
   private final CompileToJarStepFactory compileStepFactory;
 
@@ -190,7 +195,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       CompileToJarStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
-      ImmutableSortedSet<BuildTarget> tests) {
+      ImmutableSortedSet<BuildTarget> tests,
+      ImmutableSet<Pattern> classesToRemoveFromJar) {
     this(
         params,
         resolver,
@@ -216,7 +222,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         compileStepFactory,
         resourcesRoot,
         mavenCoords,
-        tests);
+        tests,
+        classesToRemoveFromJar);
   }
 
   private DefaultJavaLibrary(
@@ -236,7 +243,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       CompileToJarStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
-      ImmutableSortedSet<BuildTarget> tests) {
+      ImmutableSortedSet<BuildTarget> tests,
+      ImmutableSet<Pattern> classesToRemoveFromJar) {
     super(
         params.appendExtraDeps(
             new Supplier<Iterable<? extends BuildRule>>() {
@@ -327,6 +335,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
     this.generatedSourceFolder = generatedSourceFolder;
+    this.classesToRemoveFromJar = classesToRemoveFromJar;
   }
 
   private Path getPathToAbiOutputDir() {

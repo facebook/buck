@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 public class ScalaLibraryDescription implements Description<ScalaLibraryDescription.Arg>,
     ImplicitDepsInferringDescription<ScalaLibraryDescription.Arg> {
@@ -126,7 +127,8 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
                         .build()),
                 args.resourcesRoot,
                 args.mavenCoords,
-                args.tests.get()));
+                args.tests.get(),
+                /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()));
 
     resolver.addToIndex(
         CalculateAbi.of(

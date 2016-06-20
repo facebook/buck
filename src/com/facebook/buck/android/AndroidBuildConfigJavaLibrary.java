@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 
 /**
@@ -69,7 +70,8 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
         /* resourcesRoot */ Optional.<Path>absent(),
         /* mavenCoords */ Optional.<String>absent(),
-        /* tests */ ImmutableSortedSet.<BuildTarget>of());
+        /* tests */ ImmutableSortedSet.<BuildTarget>of(),
+        /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of());
     this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(
         params.getDeps().contains(androidBuildConfig),

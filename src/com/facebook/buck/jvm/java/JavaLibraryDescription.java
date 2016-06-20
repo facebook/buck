@@ -165,7 +165,8 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
                 new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
                 args.resourcesRoot,
                 args.mavenCoords,
-                args.tests.get()));
+                args.tests.get(),
+                javacOptions.getClassesToRemoveFromJar()));
 
     resolver.addToIndex(
         CalculateAbi.of(

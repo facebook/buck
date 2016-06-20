@@ -62,6 +62,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class AndroidBinaryGraphEnhancer {
 
@@ -367,7 +368,8 @@ public class AndroidBinaryGraphEnhancer {
         new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
         /* resourcesRoot */ Optional.<Path>absent(),
         /* mavenCoords */ Optional.<String>absent(),
-        ImmutableSortedSet.<BuildTarget>of());
+        ImmutableSortedSet.<BuildTarget>of(),
+        /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of());
     ruleResolver.addToIndex(compileUberRDotJava);
 
     // Create rule to dex uber R.java sources.

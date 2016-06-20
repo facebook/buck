@@ -78,6 +78,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -179,7 +180,8 @@ public class JavaTest
         compileStepFactory,
         resourcesRoot,
         mavenCoords,
-        /* tests */ ImmutableSortedSet.<BuildTarget>of());
+        /* tests */ ImmutableSortedSet.<BuildTarget>of(),
+        /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of());
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.vmArgs = ImmutableList.copyOf(vmArgs);
     this.nativeLibsEnvironment = ImmutableMap.copyOf(nativeLibsEnvironment);

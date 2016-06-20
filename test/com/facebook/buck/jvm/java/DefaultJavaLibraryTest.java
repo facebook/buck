@@ -110,6 +110,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.zip.ZipOutputStream;
 
 import javax.annotation.Nullable;
@@ -1130,7 +1131,8 @@ public class DefaultJavaLibraryTest {
         new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
         /* resourcesRoot */ Optional.<Path>absent(),
         /* mavenCoords */ Optional.<String>absent(),
-        /* tests */ ImmutableSortedSet.<BuildTarget>of()) {
+        /* tests */ ImmutableSortedSet.<BuildTarget>of(),
+        /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()) {
     };
 
     ruleResolver.addToIndex(defaultJavaLibrary);

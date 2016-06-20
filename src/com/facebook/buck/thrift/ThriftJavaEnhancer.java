@@ -48,6 +48,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
 
@@ -173,7 +174,8 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
                 new JavacToJarStepFactory(templateOptions, JavacOptionsAmender.IDENTITY),
                 /* resourcesRoot */ Optional.<Path>absent(),
                 /* mavenCoords */ Optional.<String>absent(),
-                /* tests */ ImmutableSortedSet.<BuildTarget>of()));
+                /* tests */ ImmutableSortedSet.<BuildTarget>of(),
+                /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()));
 
     resolver.addToIndex(
         CalculateAbi.of(

@@ -42,6 +42,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 public class GroovyLibraryDescription implements Description<GroovyLibraryDescription.Arg> {
 
@@ -113,7 +114,8 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
                         args)),
                 Optional.<Path>absent(),
                 Optional.<String>absent(),
-                ImmutableSortedSet.<BuildTarget>of()));
+                ImmutableSortedSet.<BuildTarget>of(),
+                /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()));
 
     resolver.addToIndex(
         CalculateAbi.of(
