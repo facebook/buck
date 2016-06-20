@@ -1398,7 +1398,7 @@ public final class Main {
       try {
         eventListenersBuilder.add(new ChromeTraceBuildListener(
             projectFilesystem,
-            invocationInfo.getBuildId(),
+            invocationInfo,
             clock,
             objectMapper,
             config.getMaxTraces(),

@@ -35,6 +35,7 @@ import com.facebook.buck.json.ParseBuckFileEvent;
 import com.facebook.buck.jvm.java.AnnotationProcessingEvent;
 import com.facebook.buck.jvm.java.tracing.JavacPhaseEvent;
 import com.facebook.buck.log.CommandThreadFactory;
+import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
@@ -110,20 +111,20 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   private final Path tracePath;
   private final OutputStream traceStream;
   private final JsonGenerator jsonGenerator;
+  private final InvocationInfo invocationInfo;
 
   private final ExecutorService outputExecutor;
 
-
   public ChromeTraceBuildListener(
       ProjectFilesystem projectFilesystem,
-      BuildId buildId,
+      InvocationInfo invocationInfo,
       Clock clock,
       ObjectMapper objectMapper,
       int tracesToKeep,
       boolean compressTraces) throws IOException {
     this(
         projectFilesystem,
-        buildId,
+        invocationInfo,
         clock,
         objectMapper,
         Locale.US,
@@ -135,13 +136,14 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   @VisibleForTesting
   ChromeTraceBuildListener(
       ProjectFilesystem projectFilesystem,
-      BuildId buildId,
+      InvocationInfo invocationInfo,
       Clock clock,
       ObjectMapper objectMapper,
       final Locale locale,
       final TimeZone timeZone,
       int tracesToKeep,
       boolean compressTraces) throws IOException {
+    this.invocationInfo = invocationInfo;
     this.projectFilesystem = projectFilesystem;
     this.clock = clock;
     this.mapper = objectMapper;
@@ -157,7 +159,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     this.compressTraces = compressTraces;
     this.outputExecutor = MostExecutors.newSingleThreadExecutor(
         new CommandThreadFactory(getClass().getName()));
-    TracePathAndStream tracePathAndStream = createPathAndStream(buildId);
+    TracePathAndStream tracePathAndStream = createPathAndStream(invocationInfo);
     this.tracePath = tracePathAndStream.getPath();
     this.traceStream = tracePathAndStream.getStream();
     this.jsonGenerator = objectMapper.getFactory().createGenerator(this.traceStream);
@@ -185,11 +187,12 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @VisibleForTesting
   void deleteOldTraces() {
-    if (!projectFilesystem.exists(BuckConstant.getBuckTraceDir())) {
+    if (!projectFilesystem.exists(invocationInfo.getLogDirectoryPath())) {
       return;
     }
 
-    Path traceDirectory = projectFilesystem.getPathForRelativePath(BuckConstant.getBuckTraceDir());
+    Path traceDirectory = projectFilesystem.getPathForRelativePath(
+        invocationInfo.getLogDirectoryPath());
 
     try {
       for (Path path : PathListing.listMatchingPathsWithFilters(
@@ -206,13 +209,14 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     }
   }
 
-  private TracePathAndStream createPathAndStream(BuildId buildId) {
+  private TracePathAndStream createPathAndStream(InvocationInfo invocationInfo) {
     String filenameTime = dateFormat.get().format(new Date(clock.currentTimeMillis()));
-    String traceName = String.format("build.%s.%s.trace", filenameTime, buildId);
+    String traceName =
+        String.format("build.%s.%s.trace", filenameTime, invocationInfo.getBuildId());
     if (compressTraces) {
       traceName = traceName + ".gz";
     }
-    Path tracePath = BuckConstant.getBuckTraceDir().resolve(traceName);
+    Path tracePath = invocationInfo.getLogDirectoryPath().resolve(traceName);
     try {
       projectFilesystem.createParentDirs(tracePath);
       OutputStream stream = projectFilesystem.newFileOutputStream(tracePath);
@@ -242,7 +246,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       jsonGenerator.close();
       traceStream.close();
       String symlinkName = compressTraces ? "build.trace.gz" : "build.trace";
-      Path symlinkPath = BuckConstant.getBuckTraceDir().resolve(symlinkName);
+      Path symlinkPath = BuckConstant.getLogPath().resolve(symlinkName);
       projectFilesystem.createSymLink(
           projectFilesystem.resolve(symlinkPath),
           projectFilesystem.resolve(tracePath),

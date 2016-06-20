@@ -37,6 +37,7 @@ import com.facebook.buck.event.TraceEventLogger;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingEvent;
 import com.facebook.buck.jvm.java.tracing.JavacPhaseEvent;
+import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -64,6 +65,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -73,6 +75,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
 import com.google.gson.Gson;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -92,17 +95,30 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
-
 public class ChromeTraceBuildListenerTest {
+  private static final long TIMESTAMP_NANOS = 1409702151000000000L;
+  private static final String EXPECTED_DIR =
+      "buck-out/log/2014-09-02_23h55m51s_no_sub_command_BUILD_ID/";
+
+  private InvocationInfo invocationInfo;
+
+  @Before
+  public void setUp() {
+    invocationInfo = InvocationInfo.builder()
+        .setTimestampMillis(TimeUnit.NANOSECONDS.toMillis(TIMESTAMP_NANOS))
+        .setBuildId(new BuildId("BUILD_ID"))
+        .setSubCommand("no_sub_command")
+        .build();
+  }
+
   @Rule
   public TemporaryFolder tmpDir = new TemporaryFolder();
 
   @Test
   public void testDeleteFiles() throws IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
-    BuildId buildId = new BuildId("BUILD_ID");
 
-    String tracePath = String.format("%s/build.trace", BuckConstant.getBuckTraceDir());
+    String tracePath = String.format("%s/build.trace", invocationInfo.getLogDirectoryPath());
 
     File traceFile = new File(tmpDir.getRoot(), tracePath);
     projectFilesystem.createParentDirs(tracePath);
@@ -111,36 +127,45 @@ public class ChromeTraceBuildListenerTest {
 
     for (int i = 0; i < 10; ++i) {
       File oldResult = new File(tmpDir.getRoot(),
-          String.format("%s/build.100%d.trace", BuckConstant.getBuckTraceDir(), i));
+          String.format("%s/build.100%d.trace", invocationInfo.getLogDirectoryPath(), i));
       oldResult.createNewFile();
       oldResult.setLastModified(TimeUnit.SECONDS.toMillis(i));
     }
 
     ChromeTraceBuildListener listener = new ChromeTraceBuildListener(
         projectFilesystem,
-        buildId,
-        new FakeClock(1409702151000000000L),
+        invocationInfo,
+        new FakeClock(TIMESTAMP_NANOS),
         ObjectMappers.newDefaultInstance(),
         Locale.US,
         TimeZone.getTimeZone("America/Los_Angeles"),
         /* tracesToKeep */ 3,
         false);
 
-    listener.outputTrace(buildId);
+    listener.outputTrace(invocationInfo.getBuildId());
 
     ImmutableList<String> files = FluentIterable.
-        from(Arrays.asList(projectFilesystem.listFiles(BuckConstant.getBuckTraceDir()))).
+        from(Arrays.asList(projectFilesystem.listFiles(invocationInfo.getLogDirectoryPath()))).
+        filter(new Predicate<File>() {
+          @Override
+          public boolean apply(File input) {
+            return input.toString().endsWith(".trace");
+          }
+        }).
         transform(new Function<File, String>() {
           @Override
           public String apply(File input) {
             return input.getName();
           }
-        }).toList();
+        }).
+        toList();
     assertEquals(4, files.size());
-    assertEquals(ImmutableSortedSet.of("build.trace",
-                                       "build.1009.trace",
-                                       "build.1008.trace",
-                                       "build.2014-09-02.16-55-51.BUILD_ID.trace"),
+    assertEquals(
+        ImmutableSortedSet.of(
+            "build.trace",
+            "build.1009.trace",
+            "build.1008.trace",
+            "build.2014-09-02.16-55-51.BUILD_ID.trace"),
         ImmutableSortedSet.copyOf(files));
   }
 
@@ -153,8 +178,8 @@ public class ChromeTraceBuildListenerTest {
     BuildId buildId = new BuildId("ChromeTraceBuildListenerTestBuildId");
     ChromeTraceBuildListener listener = new ChromeTraceBuildListener(
         projectFilesystem,
-        buildId,
-        new FakeClock(1409702151000000000L),
+        invocationInfo,
+        new FakeClock(TIMESTAMP_NANOS),
         mapper,
         Locale.US,
         TimeZone.getTimeZone("America/Los_Angeles"),
@@ -167,8 +192,8 @@ public class ChromeTraceBuildListenerTest {
         target,
         new SourcePathResolver(
             new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
+                TargetGraph.EMPTY,
+                new DefaultTargetNodeToBuildRuleTransformer())
         ),
         ImmutableSortedSet.<BuildRule>of());
     RuleKey ruleKey = new RuleKey("abc123");
@@ -196,12 +221,12 @@ public class ChromeTraceBuildListenerTest {
 
     HttpArtifactCacheEvent.Started artifactCacheEventStarted =
         HttpArtifactCacheEvent.newFetchStartedEvent(
-        ImmutableSet.of(ruleKey));
+            ImmutableSet.of(ruleKey));
     eventBus.post(artifactCacheEventStarted);
     eventBus.post(
         HttpArtifactCacheEvent.newFinishedEventBuilder(artifactCacheEventStarted)
-        .setFetchResult(CacheResult.hit("http"))
-        .build());
+            .setFetchResult(CacheResult.hit("http"))
+            .build());
 
     ArtifactCompressionEvent.Started artifactCompressionStartedEvent =
         ArtifactCompressionEvent.started(
@@ -225,11 +250,11 @@ public class ChromeTraceBuildListenerTest {
     boolean isLastRound = false;
     AnnotationProcessingEvent.Started annotationProcessingEventStarted =
         AnnotationProcessingEvent.started(
-        target,
-        annotationProcessorName,
-        operation,
-        annotationRound,
-        isLastRound);
+            target,
+            annotationProcessorName,
+            operation,
+            annotationRound,
+            isLastRound);
     eventBus.post(annotationProcessingEventStarted);
 
     HttpArtifactCacheEvent.Scheduled httpScheduled = HttpArtifactCacheEvent.newStoreScheduledEvent(
@@ -262,8 +287,8 @@ public class ChromeTraceBuildListenerTest {
         JavacPhaseEvent.finished(runProcessorsStartedEvent, ImmutableMap.<String, String>of()));
 
     eventBus.post(StepEvent.finished(
-            StepEvent.started(stepShortName, stepDescription, stepUuid),
-            0));
+        StepEvent.started(stepShortName, stepDescription, stepUuid),
+        0));
     eventBus.post(
         BuildRuleEvent.finished(
             rule,
@@ -286,7 +311,7 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(CommandEvent.finished(commandEventStarted, /* exitCode */ 0));
     listener.outputTrace(new BuildId("BUILD_ID"));
 
-    File resultFile = new File(tmpDir.getRoot(), BuckConstant.getBuckTraceDir() + "/build.trace");
+    File resultFile = new File(tmpDir.getRoot(), BuckConstant.getLogPath() + "/build.trace");
 
     List<ChromeTraceEvent> originalResultList = mapper.readValue(
         resultFile,
@@ -488,20 +513,19 @@ public class ChromeTraceBuildListenerTest {
   @Test
   public void testOutputFailed() throws IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
-    BuildId buildId = new BuildId("BUILD_ID");
     assumeTrue("Can make the root directory read-only", tmpDir.getRoot().setReadOnly());
 
     try {
       ChromeTraceBuildListener listener = new ChromeTraceBuildListener(
           projectFilesystem,
-          buildId,
-          new FakeClock(1409702151000000000L),
+          invocationInfo,
+          new FakeClock(TIMESTAMP_NANOS),
           ObjectMappers.newDefaultInstance(),
           Locale.US,
           TimeZone.getTimeZone("America/Los_Angeles"),
         /* tracesToKeep */ 3,
           false);
-      listener.outputTrace(buildId);
+      listener.outputTrace(invocationInfo.getBuildId());
       fail("Expected an exception.");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -516,40 +540,38 @@ public class ChromeTraceBuildListenerTest {
   @Test
   public void outputFileUsesCurrentTime() throws IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
-    BuildId buildId = new BuildId("BUILD_ID");
 
     ChromeTraceBuildListener listener = new ChromeTraceBuildListener(
         projectFilesystem,
-        buildId,
-        new FakeClock(1409702151000000000L),
+        invocationInfo,
+        new FakeClock(TIMESTAMP_NANOS),
         ObjectMappers.newDefaultInstance(),
         Locale.US,
         TimeZone.getTimeZone("America/Los_Angeles"),
         /* tracesToKeep */ 1,
         false);
-    listener.outputTrace(buildId);
+    listener.outputTrace(invocationInfo.getBuildId());
     assertTrue(
         projectFilesystem.exists(
-            Paths.get("buck-out/log/traces/build.2014-09-02.16-55-51.BUILD_ID.trace")));
+            Paths.get(EXPECTED_DIR + "build.2014-09-02.16-55-51.BUILD_ID.trace")));
   }
 
   @Test
   public void canCompressTraces() throws IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
-    BuildId buildId = new BuildId("BUILD_ID");
 
     ChromeTraceBuildListener listener = new ChromeTraceBuildListener(
         projectFilesystem,
-        buildId,
-        new FakeClock(1409702151000000000L),
+        invocationInfo,
+        new FakeClock(TIMESTAMP_NANOS),
         ObjectMappers.newDefaultInstance(),
         Locale.US,
         TimeZone.getTimeZone("America/Los_Angeles"),
         /* tracesToKeep */ 1,
         true);
-    listener.outputTrace(buildId);
+    listener.outputTrace(invocationInfo.getBuildId());
 
-    Path tracePath = Paths.get("buck-out/log/traces/build.2014-09-02.16-55-51.BUILD_ID.trace.gz");
+    Path tracePath = Paths.get(EXPECTED_DIR + "build.2014-09-02.16-55-51.BUILD_ID.trace.gz");
 
     assertTrue(projectFilesystem.exists(tracePath));
 

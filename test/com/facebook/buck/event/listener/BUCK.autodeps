@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 6eef897f05c288557a216553ff32a232f273f4a0 #@#
+#@# GENERATED FILE: DO NOT MODIFY 7309012c3a00326befd67965415b1049dbee0d44 #@#
 {
   "listener" : {
     "deps" : [
@@ -16,6 +16,7 @@
       "//src/com/facebook/buck/json:json",
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/jvm/java/tracing:tracing",
+      "//src/com/facebook/buck/log:log",
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:parser",
