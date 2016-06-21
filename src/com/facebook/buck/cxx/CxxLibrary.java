@@ -57,7 +57,7 @@ import java.util.regex.Pattern;
  */
 public class CxxLibrary
     extends NoopBuildRule
-    implements AbstractCxxLibrary, HasRuntimeDeps, NativeTestable, SharedNativeLinkTarget {
+    implements AbstractCxxLibrary, HasRuntimeDeps, NativeTestable, NativeLinkTarget {
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
@@ -327,15 +327,8 @@ public class CxxLibrary
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getSharedNativeLinkTargetDeps(CxxPlatform cxxPlatform) {
-    return Iterables.concat(
-        getNativeLinkableDeps(cxxPlatform),
-        getNativeLinkableExportedDeps(cxxPlatform));
-  }
-
-  @Override
-  public Optional<String> getSharedNativeLinkTargetLibraryName(CxxPlatform cxxPlatform) {
-    return Optional.of(
+  public NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform) {
+    return NativeLinkTargetMode.library(
         CxxDescriptionEnhancer.getSharedLibrarySoname(
             soname,
             getBuildTarget(),
@@ -343,7 +336,14 @@ public class CxxLibrary
   }
 
   @Override
-  public NativeLinkableInput getSharedNativeLinkTargetInput(CxxPlatform cxxPlatform) {
+  public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(CxxPlatform cxxPlatform) {
+    return Iterables.concat(
+        getNativeLinkableDeps(cxxPlatform),
+        getNativeLinkableExportedDeps(cxxPlatform));
+  }
+
+  @Override
+  public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform) {
     return linkTargetInput.apply(cxxPlatform);
   }
 

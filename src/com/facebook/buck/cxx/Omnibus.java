@@ -82,19 +82,19 @@ public class Omnibus {
   }
 
   // Returned the dependencies for the given node, which can either be a `NativeLinkable` or a
-  // `SharedNativeLinkTarget`.
+  // `NativeLinkTarget`.
   private static Iterable<? extends NativeLinkable> getDeps(
       BuildTarget target,
-      Map<BuildTarget, ? extends SharedNativeLinkTarget> nativeLinkTargets,
+      Map<BuildTarget, ? extends NativeLinkTarget> nativeLinkTargets,
       Map<BuildTarget, ? extends NativeLinkable> nativeLinkables,
       CxxPlatform cxxPlatform) {
     if (nativeLinkables.containsKey(target)) {
       NativeLinkable nativeLinkable = Preconditions.checkNotNull(nativeLinkables.get(target));
       return getDeps(nativeLinkable, cxxPlatform);
     } else {
-      SharedNativeLinkTarget nativeLinkTarget =
+      NativeLinkTarget nativeLinkTarget =
           Preconditions.checkNotNull(nativeLinkTargets.get(target));
-      return nativeLinkTarget.getSharedNativeLinkTargetDeps(cxxPlatform);
+      return nativeLinkTarget.getNativeLinkTargetDeps(cxxPlatform);
     }
   }
 
@@ -102,7 +102,7 @@ public class Omnibus {
   // given included and excluded roots.
   protected static OmnibusSpec buildSpec(
       final CxxPlatform cxxPlatform,
-      final Iterable<? extends SharedNativeLinkTarget> includedRoots,
+      final Iterable<? extends NativeLinkTarget> includedRoots,
       final Iterable<? extends NativeLinkable> excludedRoots) {
 
     // A map of targets to native linkable objects.  We maintain this, so that we index our
@@ -114,14 +114,14 @@ public class Omnibus {
     final Set<BuildTarget> excluded = new LinkedHashSet<>();
 
     // Process all the roots included in the omnibus link.
-    final Map<BuildTarget, SharedNativeLinkTarget> roots = new LinkedHashMap<>();
+    final Map<BuildTarget, NativeLinkTarget> roots = new LinkedHashMap<>();
     Map<BuildTarget, NativeLinkable> rootDeps = new LinkedHashMap<>();
-    for (SharedNativeLinkTarget root : includedRoots) {
+    for (NativeLinkTarget root : includedRoots) {
       roots.put(root.getBuildTarget(), root);
       for (NativeLinkable dep :
            NativeLinkables.getNativeLinkables(
                cxxPlatform,
-               root.getSharedNativeLinkTargetDeps(cxxPlatform),
+               root.getNativeLinkTargetDeps(cxxPlatform),
                Linker.LinkableDepType.SHARED).values()) {
         Linker.LinkableDepType linkStyle =
             NativeLinkables.getLinkStyle(
@@ -260,7 +260,7 @@ public class Omnibus {
       ImmutableList<? extends Arg> extraLdflags,
       OmnibusSpec spec,
       SourcePath omnibus,
-      SharedNativeLinkTarget root)
+      NativeLinkTarget root)
       throws NoSuchBuildTargetException {
 
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
@@ -278,14 +278,14 @@ public class Omnibus {
         StringArg.from(cxxPlatform.getLd().resolve(ruleResolver).getIgnoreUndefinedSymbolsFlags()));
 
     // Add the args for the root link target first.
-    NativeLinkableInput input = root.getSharedNativeLinkTargetInput(cxxPlatform);
+    NativeLinkableInput input = root.getNativeLinkTargetInput(cxxPlatform);
     argsBuilder.addAll(input.getArgs());
 
     // Grab a topologically sorted mapping of all the root's deps.
     ImmutableMap<BuildTarget, NativeLinkable> deps =
         NativeLinkables.getNativeLinkables(
             cxxPlatform,
-            root.getSharedNativeLinkTargetDeps(cxxPlatform),
+            root.getNativeLinkTargetDeps(cxxPlatform),
             Linker.LinkableDepType.SHARED);
 
     // Now process the dependencies in topological order, to assemble the link line.
@@ -335,25 +335,63 @@ public class Omnibus {
 
     // Create the root library rule using the arguments assembled above.
     BuildTarget rootTarget = getRootTarget(params.getBuildTarget(), root.getBuildTarget());
-    Optional<String> rootSoname = root.getSharedNativeLinkTargetLibraryName(cxxPlatform);
-    ruleResolver.addToIndex(
-        CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
-            cxxBuckConfig,
-            cxxPlatform,
-            params,
-            ruleResolver,
-            pathResolver,
-            rootTarget,
-            BuildTargets.getGenPath(params.getProjectFilesystem(), rootTarget, "%s")
-                .resolve(
-                    rootSoname.or(
-                        String.format(
-                            "%s.%s",
-                            rootTarget.getShortName(),
-                            cxxPlatform.getSharedLibraryExtension()))),
-            rootSoname,
-            argsBuilder.build()));
+    NativeLinkTargetMode rootTargetMode = root.getNativeLinkTargetMode(cxxPlatform);
+    CxxLink rootLinkRule;
+    switch (rootTargetMode.getType()) {
 
+      // Link the root as a shared library.
+      case SHARED: {
+        Optional<String> rootSoname = rootTargetMode.getLibraryName();
+        rootLinkRule =
+            CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
+                cxxBuckConfig,
+                cxxPlatform,
+                params,
+                ruleResolver,
+                pathResolver,
+                rootTarget,
+                BuildTargets.getGenPath(params.getProjectFilesystem(), rootTarget, "%s")
+                    .resolve(
+                        rootSoname.or(
+                            String.format(
+                                "%s.%s",
+                                rootTarget.getShortName(),
+                                cxxPlatform.getSharedLibraryExtension()))),
+                rootSoname,
+                argsBuilder.build());
+       break;
+      }
+
+      // Link the root as an executable.
+      case EXECUTABLE: {
+        rootLinkRule =
+            CxxLinkableEnhancer.createCxxLinkableBuildRule(
+                cxxBuckConfig,
+                cxxPlatform,
+                params,
+                ruleResolver,
+                pathResolver,
+                rootTarget,
+                BuildTargets.getGenPath(params.getProjectFilesystem(), rootTarget, "%s")
+                    .resolve(rootTarget.getShortName()),
+                argsBuilder.build(),
+                Linker.LinkableDepType.SHARED,
+                Optional.<Linker.CxxRuntimeType>absent());
+        break;
+      }
+
+      // $CASES-OMITTED$
+      default:
+        throw new IllegalStateException(
+            String.format(
+                "%s: unexpected omnibus root type: %s %s",
+                params.getBuildTarget(),
+                root.getBuildTarget(),
+                rootTargetMode.getType()));
+
+    }
+
+    ruleResolver.addToIndex(rootLinkRule);
     return OmnibusRoot.of(new BuildTargetSourcePath(rootTarget));
   }
 
@@ -425,7 +463,7 @@ public class Omnibus {
       // If this is a root, just place the shared library we've linked above onto the link line.
       // We need this so that the linker can grab any undefined symbols from it, and therefore
       // know which symbols to pull in from the body nodes.
-      SharedNativeLinkTarget root = spec.getRoots().get(target);
+      NativeLinkTarget root = spec.getRoots().get(target);
       if (root != null) {
         argsBuilder.add(
             new SourcePathArg(
@@ -502,7 +540,7 @@ public class Omnibus {
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
-      Iterable<? extends SharedNativeLinkTarget> nativeLinkTargetRoots,
+      Iterable<? extends NativeLinkTarget> nativeLinkTargetRoots,
       Iterable<? extends NativeLinkable> nativeLinkableRoots)
       throws NoSuchBuildTargetException {
 
@@ -523,7 +561,7 @@ public class Omnibus {
             extraLdflags);
 
     // Create rule for each of the root nodes, linking against the dummy omnibus library above.
-    for (SharedNativeLinkTarget target : spec.getRoots().values()) {
+    for (NativeLinkTarget target : spec.getRoots().values()) {
       OmnibusRoot root =
           createRoot(
               params,
@@ -573,7 +611,7 @@ public class Omnibus {
 
     // All native roots included in the omnibus.  These will get linked into separate shared
     // libraries which depend on the giant statically linked omnibus body.
-    public abstract ImmutableMap<BuildTarget, SharedNativeLinkTarget> getRoots();
+    public abstract ImmutableMap<BuildTarget, NativeLinkTarget> getRoots();
 
     // All native nodes which are to be statically linked into the giant combined shared library.
     public abstract ImmutableMap<BuildTarget, NativeLinkable> getBody();

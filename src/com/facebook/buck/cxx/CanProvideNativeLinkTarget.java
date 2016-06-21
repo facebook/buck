@@ -19,9 +19,9 @@ package com.facebook.buck.cxx;
 import com.google.common.base.Optional;
 
 /**
- * Helper interface for nodes which conditionally support the {@link SharedNativeLinkTarget}
+ * Helper interface for nodes which conditionally support the {@link NativeLinkTarget}
  * interface.
  */
-public interface CanProvideSharedNativeLinkTarget {
-  Optional<SharedNativeLinkTarget> getSharedNativeLinkTarget(CxxPlatform cxxPlatform);
+public interface CanProvideNativeLinkTarget {
+  Optional<NativeLinkTarget> getNativeLinkTarget(CxxPlatform cxxPlatform);
 }

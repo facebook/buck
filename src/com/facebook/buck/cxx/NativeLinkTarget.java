@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -18,27 +18,20 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.google.common.base.Optional;
 
-/**
- * Describes a target which can be linked into a shared library.
- */
-public interface SharedNativeLinkTarget extends HasBuildTarget {
+public interface NativeLinkTarget extends HasBuildTarget {
+
+  NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform);
 
   /**
    * @return the {@link NativeLinkable} dependencies used to link this target.
    */
-  Iterable<? extends NativeLinkable> getSharedNativeLinkTargetDeps(CxxPlatform cxxPlatform);
-
-  /**
-   * @return the shared library name used when linking this target.
-   */
-  Optional<String> getSharedNativeLinkTargetLibraryName(CxxPlatform cxxPlatform);
+  Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(CxxPlatform cxxPlatform);
 
   /**
    * @return the {@link NativeLinkableInput} used to link this target.
    */
-  NativeLinkableInput getSharedNativeLinkTargetInput(CxxPlatform cxxPlatform)
+  NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException;
 
 }

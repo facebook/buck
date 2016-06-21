@@ -1151,7 +1151,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void sharedNativeLinkTargetLibraryName() throws Exception {
+  public void nativeLinkTargetMode() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     CxxLibrary rule =
@@ -1159,12 +1159,12 @@ public class CxxLibraryDescriptionTest {
             .setSoname("libsoname.so")
             .build(resolver);
     assertThat(
-        rule.getSharedNativeLinkTargetLibraryName(CxxPlatformUtils.DEFAULT_PLATFORM),
-        Matchers.equalTo(Optional.of("libsoname.so")));
+        rule.getNativeLinkTargetMode(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.equalTo(NativeLinkTargetMode.library("libsoname.so")));
   }
 
   @Test
-  public void sharedNativeLinkTargetDeps() throws Exception {
+  public void nativeLinkTargetDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     CxxLibrary dep =
@@ -1180,12 +1180,12 @@ public class CxxLibraryDescriptionTest {
             .build(resolver);
     assertThat(
         ImmutableList.copyOf(
-            rule.getSharedNativeLinkTargetDeps(CxxLibraryBuilder.createDefaultPlatform())),
+            rule.getNativeLinkTargetDeps(CxxLibraryBuilder.createDefaultPlatform())),
         Matchers.<NativeLinkable>hasItems(dep, exportedDep));
   }
 
   @Test
-  public void sharedNativeLinkTargetInput() throws Exception {
+  public void nativeLinkTargetInput() throws Exception {
     CxxLibraryBuilder ruleBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setLinkerFlags(ImmutableList.of("--flag"))
@@ -1196,7 +1196,7 @@ public class CxxLibraryDescriptionTest {
             new DefaultTargetNodeToBuildRuleTransformer());
     CxxLibrary rule = (CxxLibrary) ruleBuilder.build(resolver);
     NativeLinkableInput input =
-        rule.getSharedNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM);
+        rule.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM);
     assertThat(
         Arg.stringify(input.getArgs()),
         hasItems("--flag", "--exported-flag"));
@@ -1275,7 +1275,7 @@ public class CxxLibraryDescriptionTest {
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     CxxLibrary library = (CxxLibrary) libraryBuilder.build(resolver, filesystem, targetGraph);
     assertThat(
-        library.getSharedNativeLinkTargetInput(platform).getLibraries(),
+        library.getNativeLinkTargetInput(platform).getLibraries(),
         Matchers.<ImmutableSet<FrameworkPath>>equalTo(libraries));
   }
 

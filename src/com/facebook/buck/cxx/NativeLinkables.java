@@ -257,16 +257,16 @@ public class NativeLinkables {
   }
 
   /**
-   * @return the {@link SharedNativeLinkTarget} that can be extracted from {@code object}, if any.
+   * @return the {@link NativeLinkTarget} that can be extracted from {@code object}, if any.
    */
-  public static Optional<SharedNativeLinkTarget> getSharedNativeLinkTarget(
+  public static Optional<NativeLinkTarget> getNativeLinkTarget(
       Object object,
       CxxPlatform cxxPlatform) {
-    if (object instanceof SharedNativeLinkTarget) {
-      return Optional.of((SharedNativeLinkTarget) object);
+    if (object instanceof NativeLinkTarget) {
+      return Optional.of((NativeLinkTarget) object);
     }
-    if (object instanceof CanProvideSharedNativeLinkTarget) {
-      return ((CanProvideSharedNativeLinkTarget) object).getSharedNativeLinkTarget(cxxPlatform);
+    if (object instanceof CanProvideNativeLinkTarget) {
+      return ((CanProvideNativeLinkTarget) object).getNativeLinkTarget(cxxPlatform);
     }
     return Optional.absent();
   }

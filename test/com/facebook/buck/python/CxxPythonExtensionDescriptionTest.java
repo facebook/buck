@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cxx.NativeLinkTargetMode;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
@@ -33,7 +34,7 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
-import com.facebook.buck.cxx.SharedNativeLinkTarget;
+import com.facebook.buck.cxx.NativeLinkTarget;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -364,7 +365,7 @@ public class CxxPythonExtensionDescriptionTest {
   }
 
   @Test
-  public void sharedNativeLinkTargetLibraryName() throws Exception {
+  public void nativeLinkTargetMode() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     new CxxLibraryBuilder(PYTHON2_DEP_TARGET).build(resolver);
@@ -377,15 +378,14 @@ public class CxxPythonExtensionDescriptionTest {
             CxxTestBuilder.createDefaultPlatforms());
     CxxPythonExtension rule =
         (CxxPythonExtension) builder.build(resolver);
-    SharedNativeLinkTarget sharedNativeLinkTarget = rule.getNativeLinkTarget(PY2);
+    NativeLinkTarget nativeLinkTarget = rule.getNativeLinkTarget(PY2);
     assertThat(
-        sharedNativeLinkTarget.getSharedNativeLinkTargetLibraryName(
-            CxxPlatformUtils.DEFAULT_PLATFORM),
-        Matchers.equalTo(Optional.<String>absent()));
+        nativeLinkTarget.getNativeLinkTargetMode(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.equalTo(NativeLinkTargetMode.library()));
   }
 
   @Test
-  public void sharedNativeLinkTargetDeps() throws Exception {
+  public void nativeLinkTargetDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     new CxxLibraryBuilder(PYTHON2_DEP_TARGET).build(resolver);
@@ -403,21 +403,21 @@ public class CxxPythonExtensionDescriptionTest {
         (CxxPythonExtension) builder
             .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
             .build(resolver);
-    SharedNativeLinkTarget sharedNativeLinkTarget = rule.getNativeLinkTarget(PY2);
+    NativeLinkTarget nativeLinkTarget = rule.getNativeLinkTarget(PY2);
     assertThat(
         ImmutableList.copyOf(
-            sharedNativeLinkTarget.getSharedNativeLinkTargetDeps(
+            nativeLinkTarget.getNativeLinkTargetDeps(
                 CxxPlatformUtils.DEFAULT_PLATFORM)),
         Matchers.<NativeLinkable>hasItem(dep));
     assertThat(
         ImmutableList.copyOf(
-            sharedNativeLinkTarget.getSharedNativeLinkTargetDeps(
+            nativeLinkTarget.getNativeLinkTargetDeps(
                 CxxPlatformUtils.DEFAULT_PLATFORM)),
         Matchers.hasItem((NativeLinkable) resolver.getRule(PY2.getCxxLibrary().get())));
   }
 
   @Test
-  public void sharedNativeLinkTargetInput() throws Exception {
+  public void nativeLinkTargetInput() throws Exception {
     CxxLibraryBuilder python2Builder = new CxxLibraryBuilder(PYTHON2_DEP_TARGET);
     CxxLibraryBuilder python3Builder = new CxxLibraryBuilder(PYTHON3_DEP_TARGET);
     CxxPythonExtensionBuilder builder =
@@ -437,9 +437,9 @@ public class CxxPythonExtensionDescriptionTest {
     python2Builder.build(resolver);
     python3Builder.build(resolver);
     CxxPythonExtension rule = (CxxPythonExtension) builder.build(resolver);
-    SharedNativeLinkTarget sharedNativeLinkTarget = rule.getNativeLinkTarget(PY2);
+    NativeLinkTarget nativeLinkTarget = rule.getNativeLinkTarget(PY2);
     NativeLinkableInput input =
-        sharedNativeLinkTarget.getSharedNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM);
+        nativeLinkTarget.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM);
     assertThat(
         Arg.stringify(input.getArgs()),
         Matchers.hasItems("--flag"));
@@ -469,16 +469,16 @@ public class CxxPythonExtensionDescriptionTest {
                         ImmutableSortedSet.of(dep.getBuildTarget()))
                     .build())
             .build(resolver);
-    SharedNativeLinkTarget py2SharedNativeLinkTarget = rule.getNativeLinkTarget(PY2);
+    NativeLinkTarget py2NativeLinkTarget = rule.getNativeLinkTarget(PY2);
     assertThat(
         ImmutableList.copyOf(
-            py2SharedNativeLinkTarget.getSharedNativeLinkTargetDeps(
+            py2NativeLinkTarget.getNativeLinkTargetDeps(
                 CxxPlatformUtils.DEFAULT_PLATFORM)),
         Matchers.<NativeLinkable>hasItem(dep));
-    SharedNativeLinkTarget py3SharedNativeLinkTarget = rule.getNativeLinkTarget(PY3);
+    NativeLinkTarget py3NativeLinkTarget = rule.getNativeLinkTarget(PY3);
     assertThat(
         ImmutableList.copyOf(
-            py3SharedNativeLinkTarget.getSharedNativeLinkTargetDeps(
+            py3NativeLinkTarget.getNativeLinkTargetDeps(
                 CxxPlatformUtils.DEFAULT_PLATFORM)),
         Matchers.not(Matchers.<NativeLinkable>hasItem(dep)));
   }

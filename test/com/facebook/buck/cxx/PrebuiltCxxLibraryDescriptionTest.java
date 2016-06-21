@@ -799,7 +799,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void missingStaticLibIsNotASharedNativeLinkTargetSoname() throws Exception {
+  public void missingStaticLibIsNotANativeLinkTargetSoname() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"));
@@ -809,11 +809,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
             new DefaultTargetNodeToBuildRuleTransformer());
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver, filesystem);
-    assertFalse(rule.getSharedNativeLinkTarget(CXX_PLATFORM).isPresent());
+    assertFalse(rule.getNativeLinkTarget(CXX_PLATFORM).isPresent());
   }
 
   @Test
-  public void providedLibIsNotASharedNativeLinkTargetSoname() throws Exception {
+  public void providedLibIsNotANativeLinkTargetSoname() throws Exception {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -824,11 +824,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
             new DefaultTargetNodeToBuildRuleTransformer());
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver, filesystem);
-    assertFalse(rule.getSharedNativeLinkTarget(CXX_PLATFORM).isPresent());
+    assertFalse(rule.getNativeLinkTarget(CXX_PLATFORM).isPresent());
   }
 
   @Test
-  public void existingStaticLibIsASharedNativeLinkTargetSoname() throws Exception {
+  public void existingStaticLibIsANativeLinkTargetSoname() throws Exception {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"));
@@ -838,11 +838,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
             new DefaultTargetNodeToBuildRuleTransformer());
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver, filesystem);
-    assertTrue(rule.getSharedNativeLinkTarget(CXX_PLATFORM).isPresent());
+    assertTrue(rule.getNativeLinkTarget(CXX_PLATFORM).isPresent());
   }
 
   @Test
-  public void sharedNativeLinkTargetSoname() throws Exception {
+  public void nativeLinkTargetMode() throws Exception {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -854,13 +854,13 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver, filesystem);
     assertThat(
-        rule.getSharedNativeLinkTarget(CXX_PLATFORM).get()
-            .getSharedNativeLinkTargetLibraryName(CXX_PLATFORM),
-        Matchers.equalTo(Optional.of("libsoname.so")));
+        rule.getNativeLinkTarget(CXX_PLATFORM).get()
+            .getNativeLinkTargetMode(CXX_PLATFORM),
+        Matchers.equalTo(NativeLinkTargetMode.library("libsoname.so")));
   }
 
   @Test
-  public void sharedNativeLinkTargetDeps() throws Exception {
+  public void nativeLinkTargetDeps() throws Exception {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
@@ -879,13 +879,13 @@ public class PrebuiltCxxLibraryDescriptionTest {
             .build(resolver, filesystem);
     assertThat(
         ImmutableList.copyOf(
-            rule.getSharedNativeLinkTarget(CXX_PLATFORM).get()
-                .getSharedNativeLinkTargetDeps(CXX_PLATFORM)),
+            rule.getNativeLinkTarget(CXX_PLATFORM).get()
+                .getNativeLinkTargetDeps(CXX_PLATFORM)),
         Matchers.<NativeLinkable>hasItems(dep, exportedDep));
   }
 
   @Test
-  public void sharedNativeLinkTargetInput() throws Exception {
+  public void nativeLinkTargetInput() throws Exception {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder ruleBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -896,8 +896,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
             new DefaultTargetNodeToBuildRuleTransformer());
     PrebuiltCxxLibrary rule = (PrebuiltCxxLibrary) ruleBuilder.build(resolver, filesystem);
     NativeLinkableInput input =
-        rule.getSharedNativeLinkTarget(CXX_PLATFORM).get()
-            .getSharedNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM);
+        rule.getNativeLinkTarget(CXX_PLATFORM).get()
+            .getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM);
     assertThat(
         Arg.stringify(input.getArgs()),
         Matchers.hasItems("--exported-flag"));

@@ -31,7 +31,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -47,7 +46,7 @@ public class OmnibusTest {
   public void includedDeps() throws NoSuchBuildTargetException {
     NativeLinkable a = new Node("//:a");
     NativeLinkable b = new Node("//:b");
-    SharedNativeLinkTarget root = new Root("//:root", ImmutableList.of(a, b));
+    NativeLinkTarget root = new Root("//:root", ImmutableList.of(a, b));
 
     // Verify the spec.
     Omnibus.OmnibusSpec spec =
@@ -93,7 +92,7 @@ public class OmnibusTest {
         Matchers.containsInAnyOrder(root.getBuildTarget().toString(), "libomnibus.so"));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(pathResolver, libs.get(root.getBuildTarget().toString())),
-        root.getSharedNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM));
+        root.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(pathResolver, libs.get("libomnibus.so")),
         a.getNativeLinkableInput(
@@ -108,7 +107,7 @@ public class OmnibusTest {
   public void excludedAndIncludedDeps() throws NoSuchBuildTargetException {
     NativeLinkable a = new Node("//:a");
     NativeLinkable b = new SharedOnlyNode("//:b");
-    SharedNativeLinkTarget root = new Root("//:root", ImmutableList.of(a, b));
+    NativeLinkTarget root = new Root("//:root", ImmutableList.of(a, b));
 
     // Verify the spec.
     Omnibus.OmnibusSpec spec =
@@ -157,7 +156,7 @@ public class OmnibusTest {
             "libomnibus.so"));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(pathResolver, libs.get(root.getBuildTarget().toString())),
-        root.getSharedNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM),
+        root.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM),
         b.getNativeLinkableInput(CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED));
     assertThat(
         libs.get(b.getBuildTarget().toString()),
@@ -174,7 +173,7 @@ public class OmnibusTest {
     NativeLinkable a = new Node("//:a");
     NativeLinkable b = new Node("//:b");
     NativeLinkable c = new SharedOnlyNode("//:c", ImmutableList.of(b));
-    SharedNativeLinkTarget root = new Root("//:root", ImmutableList.of(a, c));
+    NativeLinkTarget root = new Root("//:root", ImmutableList.of(a, c));
 
     // Verify the spec.
     Omnibus.OmnibusSpec spec =
@@ -224,7 +223,7 @@ public class OmnibusTest {
             "libomnibus.so"));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(pathResolver, libs.get(root.getBuildTarget().toString())),
-        root.getSharedNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM),
+        root.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM),
         c.getNativeLinkableInput(CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED));
     assertThat(
         libs.get(b.getBuildTarget().toString()),
@@ -242,7 +241,7 @@ public class OmnibusTest {
   @Test
   public void depOfExcludedRoot() throws NoSuchBuildTargetException {
     NativeLinkable a = new Node("//:a");
-    SharedNativeLinkTarget root = new Root("//:root", ImmutableList.of(a));
+    NativeLinkTarget root = new Root("//:root", ImmutableList.of(a));
     NativeLinkable b = new Node("//:b");
     NativeLinkable excludedRoot = new Node("//:excluded_root", ImmutableList.of(b));
 
@@ -294,7 +293,7 @@ public class OmnibusTest {
             "libomnibus.so"));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(pathResolver, libs.get(root.getBuildTarget().toString())),
-        root.getSharedNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM));
+        root.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM));
     assertThat(
         libs.get(excludedRoot.getBuildTarget().toString()),
         Matchers.not(Matchers.instanceOf(BuildTargetSourcePath.class)));
@@ -311,7 +310,7 @@ public class OmnibusTest {
   @Test
   public void commondDepOfIncludedAndExcludedRoots() throws NoSuchBuildTargetException {
     NativeLinkable a = new Node("//:a");
-    SharedNativeLinkTarget root = new Root("//:root", ImmutableList.of(a));
+    NativeLinkTarget root = new Root("//:root", ImmutableList.of(a));
     NativeLinkable excludedRoot = new Node("//:excluded_root", ImmutableList.of(a));
 
     // Verify the spec.
@@ -361,7 +360,7 @@ public class OmnibusTest {
             a.getBuildTarget().toString()));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(pathResolver, libs.get(root.getBuildTarget().toString())),
-        root.getSharedNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM));
+        root.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM));
     assertThat(
         libs.get(excludedRoot.getBuildTarget().toString()),
         Matchers.not(Matchers.instanceOf(BuildTargetSourcePath.class)));
@@ -379,7 +378,7 @@ public class OmnibusTest {
             ImmutableList.<NativeLinkable>of(),
             NativeLinkable.Linkage.STATIC);
     NativeLinkable b = new Node("//:b");
-    SharedNativeLinkTarget root = new Root("//:root", ImmutableList.of(a, b));
+    NativeLinkTarget root = new Root("//:root", ImmutableList.of(a, b));
 
     // Verify the spec.
     Omnibus.OmnibusSpec spec =
@@ -425,7 +424,7 @@ public class OmnibusTest {
         Matchers.containsInAnyOrder(root.getBuildTarget().toString(), "libomnibus.so"));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(pathResolver, libs.get(root.getBuildTarget().toString())),
-        root.getSharedNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM),
+        root.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM),
         a.getNativeLinkableInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.STATIC_PIC));
@@ -543,7 +542,7 @@ public class OmnibusTest {
 
   }
 
-  private static class Root extends Node implements SharedNativeLinkTarget {
+  private static class Root extends Node implements NativeLinkTarget {
 
     public Root(
         String target,
@@ -563,7 +562,12 @@ public class OmnibusTest {
     }
 
     @Override
-    public Iterable<? extends NativeLinkable> getSharedNativeLinkTargetDeps(
+    public NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform) {
+      return NativeLinkTargetMode.library(getBuildTarget().toString());
+    }
+
+    @Override
+    public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
         CxxPlatform cxxPlatform) {
       return Iterables.concat(
           getNativeLinkableDeps(cxxPlatform),
@@ -571,12 +575,7 @@ public class OmnibusTest {
     }
 
     @Override
-    public Optional<String> getSharedNativeLinkTargetLibraryName(CxxPlatform cxxPlatform) {
-      return Optional.of(getBuildTarget().toString());
-    }
-
-    @Override
-    public NativeLinkableInput getSharedNativeLinkTargetInput(CxxPlatform cxxPlatform) {
+    public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform) {
       return NativeLinkableInput.builder()
           .addArgs(new StringArg(getBuildTarget().toString()))
           .build();

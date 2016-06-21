@@ -32,9 +32,10 @@ import com.facebook.buck.cxx.HeaderSymlinkTree;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.Linkers;
+import com.facebook.buck.cxx.NativeLinkTarget;
+import com.facebook.buck.cxx.NativeLinkTargetMode;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
-import com.facebook.buck.cxx.SharedNativeLinkTarget;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -364,8 +365,8 @@ public class CxxPythonExtensionDescription implements
       }
 
       @Override
-      public SharedNativeLinkTarget getNativeLinkTarget(final PythonPlatform pythonPlatform) {
-        return new SharedNativeLinkTarget() {
+      public NativeLinkTarget getNativeLinkTarget(final PythonPlatform pythonPlatform) {
+        return new NativeLinkTarget() {
 
           @Override
           public BuildTarget getBuildTarget() {
@@ -373,19 +374,19 @@ public class CxxPythonExtensionDescription implements
           }
 
           @Override
-          public Iterable<? extends NativeLinkable> getSharedNativeLinkTargetDeps(
+          public NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform) {
+            return NativeLinkTargetMode.library();
+          }
+
+          @Override
+          public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
               CxxPlatform cxxPlatform) {
             return FluentIterable.from(getPlatformDeps(params, ruleResolver, pythonPlatform, args))
                 .filter(NativeLinkable.class);
           }
 
           @Override
-          public Optional<String> getSharedNativeLinkTargetLibraryName(CxxPlatform cxxPlatform) {
-            return Optional.absent();
-          }
-
-          @Override
-          public NativeLinkableInput getSharedNativeLinkTargetInput(CxxPlatform cxxPlatform)
+          public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform)
               throws NoSuchBuildTargetException {
             return NativeLinkableInput.builder()
                 .addAllArgs(

@@ -17,14 +17,14 @@
 package com.facebook.buck.lua;
 
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.SharedNativeLinkTarget;
+import com.facebook.buck.cxx.NativeLinkTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 
-public abstract class CxxLuaExtension extends NoopBuildRule implements SharedNativeLinkTarget {
+public abstract class CxxLuaExtension extends NoopBuildRule implements NativeLinkTarget {
 
   public CxxLuaExtension(
       BuildRuleParams params,

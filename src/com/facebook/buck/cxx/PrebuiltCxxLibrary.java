@@ -53,7 +53,7 @@ import java.util.regex.Pattern;
 
 public class PrebuiltCxxLibrary
     extends NoopBuildRule
-    implements AbstractCxxLibrary, CanProvideSharedNativeLinkTarget {
+    implements AbstractCxxLibrary, CanProvideNativeLinkTarget {
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
@@ -425,29 +425,29 @@ public class PrebuiltCxxLibrary
   }
 
   @Override
-  public Optional<SharedNativeLinkTarget> getSharedNativeLinkTarget(CxxPlatform cxxPlatform) {
+  public Optional<NativeLinkTarget> getNativeLinkTarget(CxxPlatform cxxPlatform) {
     if (getPreferredLinkage(cxxPlatform) == Linkage.SHARED) {
       return Optional.absent();
     }
-    return Optional.<SharedNativeLinkTarget>of(
-        new SharedNativeLinkTarget() {
+    return Optional.<NativeLinkTarget>of(
+        new NativeLinkTarget() {
           @Override
           public BuildTarget getBuildTarget() {
             return PrebuiltCxxLibrary.this.getBuildTarget();
           }
           @Override
-          public Iterable<? extends NativeLinkable> getSharedNativeLinkTargetDeps(
+          public NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform) {
+            return NativeLinkTargetMode.library(getSoname(cxxPlatform));
+          }
+          @Override
+          public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
               CxxPlatform cxxPlatform) {
             return Iterables.concat(
                 getNativeLinkableDeps(cxxPlatform),
                 getNativeLinkableExportedDeps(cxxPlatform));
           }
           @Override
-          public Optional<String> getSharedNativeLinkTargetLibraryName(CxxPlatform cxxPlatform) {
-            return Optional.of(getSoname(cxxPlatform));
-          }
-          @Override
-          public NativeLinkableInput getSharedNativeLinkTargetInput(CxxPlatform cxxPlatform)
+          public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform)
               throws NoSuchBuildTargetException {
             return NativeLinkableInput.builder()
                 .addAllArgs(StringArg.from(exportedLinkerFlags.apply(cxxPlatform)))

@@ -1,9 +1,10 @@
 PLATFORM_SRCS = [
   'AbstractCxxPlatform.java',
   'AbstractNativeLinkableInput.java',
+  'AbstractNativeLinkTargetMode.java',
   'Archiver.java',
   'BsdArchiver.java',
-  'CanProvideSharedNativeLinkTarget.java',
+  'CanProvideNativeLinkTarget.java',
   'ClangCompiler.java',
   'ClangPreprocessor.java',
   'Compiler.java',
@@ -23,12 +24,12 @@ PLATFORM_SRCS = [
   'Linkers.java',
   'NativeLinkable.java',
   'NativeLinkables.java',
+  'NativeLinkTarget.java',
   'ObjectFileCommonModificationDate.java',
   'ObjectFileScrubbers.java',
   'PosixNmSymbolNameTool.java',
   'Preprocessor.java',
   'PreprocessorProvider.java',
-  'SharedNativeLinkTarget.java',
   'SymbolNameTool.java',
   'WindowsLinker.java',
 ]
@@ -38,6 +39,7 @@ java_immutables_library(
   immutable_types = [
     'CxxPlatform',
     'NativeLinkableInput',
+    'NativeLinkTargetMode',
   ],
   autodeps = True,
   visibility = [

@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.HeaderSymlinkTree;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.NativeLinkTargetMode;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -277,19 +278,19 @@ public class CxxLuaExtensionDescription implements
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getSharedNativeLinkTargetDeps(
+      public NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform) {
+        return NativeLinkTargetMode.library();
+      }
+
+      @Override
+      public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
           CxxPlatform cxxPlatform) {
         return FluentIterable.from(params.getDeclaredDeps().get())
             .filter(NativeLinkable.class);
       }
 
       @Override
-      public Optional<String> getSharedNativeLinkTargetLibraryName(CxxPlatform cxxPlatform) {
-        return Optional.absent();
-      }
-
-      @Override
-      public NativeLinkableInput getSharedNativeLinkTargetInput(CxxPlatform cxxPlatform)
+      public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform)
           throws NoSuchBuildTargetException {
         return NativeLinkableInput.builder()
             .addAllArgs(getExtensionArgs(params, resolver, pathResolver, cxxPlatform, args))

@@ -502,7 +502,7 @@ public class LuaBinaryDescription implements
           builder.putModules(extension.getModule(cxxPlatform), extension.getExtension(cxxPlatform));
           nativeLinkables.putAll(
               Maps.uniqueIndex(
-                  extension.getSharedNativeLinkTargetDeps(cxxPlatform),
+                  extension.getNativeLinkTargetDeps(cxxPlatform),
                   HasBuildTarget.TO_TARGET));
         } else if (rule instanceof NativeLinkable) {
           NativeLinkable linkable = (NativeLinkable) rule;
@@ -528,7 +528,7 @@ public class LuaBinaryDescription implements
       nativeLinkables.putAll(
           Maps.uniqueIndex(
               entry.getValue().getNativeLinkTarget(pythonPlatform)
-                  .getSharedNativeLinkTargetDeps(cxxPlatform),
+                  .getNativeLinkTargetDeps(cxxPlatform),
               HasBuildTarget.TO_TARGET));
     }
 

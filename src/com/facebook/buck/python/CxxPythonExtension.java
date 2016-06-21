@@ -17,7 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.SharedNativeLinkTarget;
+import com.facebook.buck.cxx.NativeLinkTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -52,6 +52,6 @@ public abstract class CxxPythonExtension
       CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException;
 
-  public abstract SharedNativeLinkTarget getNativeLinkTarget(PythonPlatform pythonPlatform);
+  public abstract NativeLinkTarget getNativeLinkTarget(PythonPlatform pythonPlatform);
 
 }
