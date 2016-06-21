@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
 import com.facebook.buck.log.CommandThreadFactory;
+import com.facebook.buck.util.concurrent.LinkedBlockingStack;
 import com.facebook.buck.util.concurrent.ListeningSemaphore;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
@@ -60,7 +61,6 @@ public class CommandThreadManager implements AutoCloseable {
 
   public CommandThreadManager(
       String name,
-      WorkQueueExecutionOrder workQueueExecutionOrder,
       ConcurrencyLimit concurrencyLimit,
       long shutdownTimeout,
       TimeUnit shutdownTimeoutUnit) {
@@ -85,7 +85,7 @@ public class CommandThreadManager implements AutoCloseable {
                                   }
                                 }))
                         .build(),
-                    workQueueExecutionOrder.newWorkQueue(),
+                    new LinkedBlockingStack<Runnable>(),
                     concurrencyLimit)));
     this.shutdownTimeout = shutdownTimeout;
     this.shutdownTimeoutUnit = shutdownTimeoutUnit;
@@ -93,11 +93,9 @@ public class CommandThreadManager implements AutoCloseable {
 
   public CommandThreadManager(
       String name,
-      WorkQueueExecutionOrder workQueueExecutionOrder,
       ConcurrencyLimit concurrencyLimit) {
     this(
         name,
-        workQueueExecutionOrder,
         concurrencyLimit,
         DEFAULT_SHUTDOWN_TIMEOUT,
         DEFAULT_SHUTDOWN_TIMEOUT_UNIT);

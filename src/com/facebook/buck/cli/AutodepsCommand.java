@@ -73,7 +73,6 @@ public class AutodepsCommand extends AbstractCommand {
     ConcurrencyLimit concurrencyLimit = getConcurrencyLimit(params.getBuckConfig());
     try (CommandThreadManager pool = new CommandThreadManager(
         "Autodeps",
-        WorkQueueExecutionOrder.FIFO, // FIFO vs. LIFO probably does not matter here?
         concurrencyLimit)) {
       Cell cell = params.getCell();
       WeightedListeningExecutorService executorService = pool.getExecutor();
@@ -111,7 +110,6 @@ public class AutodepsCommand extends AbstractCommand {
           executorService,
           params.getFileHashCache(),
           CachingBuildEngine.BuildMode.SHALLOW,
-          params.getBuckConfig().getDependencySchedulingOrder(),
           params.getBuckConfig().getBuildDepFiles(),
           params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
           params.getBuckConfig().getBuildArtifactCacheSizeLimit(),

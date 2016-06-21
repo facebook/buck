@@ -70,7 +70,6 @@ public class AuditTestsCommand extends AbstractCommand {
     BuckQueryEnvironment env = new BuckQueryEnvironment(params, getEnableParserProfiling());
     try (CommandThreadManager pool = new CommandThreadManager(
         "Audit",
-        params.getBuckConfig().getWorkQueueExecutionOrder(),
         getConcurrencyLimit(params.getBuckConfig()))) {
       return QueryCommand.runMultipleQuery(
           params,

@@ -312,7 +312,6 @@ public class BuildCommand extends AbstractCommand {
 
     try (CommandThreadManager pool = new CommandThreadManager(
         "Build",
-        params.getBuckConfig().getWorkQueueExecutionOrder(),
         getConcurrencyLimit(params.getBuckConfig()))) {
       return run(params, pool.getExecutor(), ImmutableSet.<String>of());
     }
@@ -557,7 +556,6 @@ public class BuildCommand extends AbstractCommand {
             executor,
             params.getFileHashCache(),
             getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
-            params.getBuckConfig().getDependencySchedulingOrder(),
             params.getBuckConfig().getBuildDepFiles(),
             params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
             params.getBuckConfig().getBuildArtifactCacheSizeLimit(),

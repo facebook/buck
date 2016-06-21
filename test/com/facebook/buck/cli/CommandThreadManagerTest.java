@@ -42,7 +42,6 @@ public class CommandThreadManagerTest {
     try (CommandThreadManager pool =
              new CommandThreadManager(
                  "Test",
-                 WorkQueueExecutionOrder.LIFO,
                  concurrencyLimit,
                  250,
                  TimeUnit.MILLISECONDS)) {

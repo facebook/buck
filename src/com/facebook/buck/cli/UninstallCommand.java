@@ -104,7 +104,6 @@ public class UninstallCommand extends AbstractCommand {
     ImmutableSet<BuildTarget> buildTargets;
     try (CommandThreadManager pool = new CommandThreadManager(
         "Uninstall",
-        params.getBuckConfig().getWorkQueueExecutionOrder(),
         getConcurrencyLimit(params.getBuckConfig()))) {
       TargetGraphAndBuildTargets result = params.getParser()
           .buildTargetGraphForTargetNodeSpecs(

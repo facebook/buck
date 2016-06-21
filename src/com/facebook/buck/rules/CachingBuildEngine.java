@@ -138,7 +138,6 @@ public class CachingBuildEngine implements BuildEngine {
 
   private final WeightedListeningExecutorService service;
   private final BuildMode buildMode;
-  private final DependencySchedulingOrder dependencySchedulingOrder;
   private final DepFiles depFiles;
   private final long maxDepFileCacheEntries;
   private final ObjectMapper objectMapper;
@@ -151,7 +150,6 @@ public class CachingBuildEngine implements BuildEngine {
       WeightedListeningExecutorService service,
       final FileHashCache fileHashCache,
       BuildMode buildMode,
-      DependencySchedulingOrder dependencySchedulingOrder,
       DepFiles depFiles,
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
@@ -164,7 +162,6 @@ public class CachingBuildEngine implements BuildEngine {
 
     this.service = service;
     this.buildMode = buildMode;
-    this.dependencySchedulingOrder = dependencySchedulingOrder;
     this.depFiles = depFiles;
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
@@ -193,7 +190,6 @@ public class CachingBuildEngine implements BuildEngine {
       WeightedListeningExecutorService service,
       FileHashCache fileHashCache,
       BuildMode buildMode,
-      DependencySchedulingOrder dependencySchedulingOrder,
       DepFiles depFiles,
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
@@ -204,7 +200,6 @@ public class CachingBuildEngine implements BuildEngine {
 
     this.service = service;
     this.buildMode = buildMode;
-    this.dependencySchedulingOrder = dependencySchedulingOrder;
     this.depFiles = depFiles;
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
@@ -279,16 +274,7 @@ public class CachingBuildEngine implements BuildEngine {
       ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks) {
     List<ListenableFuture<BuildResult>> depResults =
         Lists.newArrayListWithExpectedSize(rule.getDeps().size());
-    Iterable<BuildRule> deps = rule.getDeps();
-    switch (dependencySchedulingOrder) {
-      case SORTED:
-        deps = ImmutableSortedSet.copyOf(deps);
-        break;
-      case RANDOM:
-        deps = shuffled(deps);
-        break;
-    }
-    for (BuildRule dep : deps) {
+    for (BuildRule dep : shuffled(rule.getDeps())) {
       depResults.add(getBuildRuleResultWithRuntimeDeps(dep, context, asyncCallbacks));
     }
     return Futures.allAsList(depResults);
@@ -1677,18 +1663,6 @@ public class CachingBuildEngine implements BuildEngine {
     // the top-level build targets from the remote cache, without building missing or changed
     // dependencies locally.
     POPULATE_FROM_REMOTE_CACHE,
-  }
-
-  /**
-   * The order in which to schedule dependency execution.
-   */
-  public enum DependencySchedulingOrder {
-
-    // Schedule dependencies based on their natural ordering.
-    SORTED,
-
-    // Schedule dependencies in random order.
-    RANDOM,
   }
 
   /**

@@ -69,7 +69,6 @@ public class FetchCommand extends BuildCommand {
     int exitCode;
     try (CommandThreadManager pool = new CommandThreadManager(
         "Fetch",
-        params.getBuckConfig().getWorkQueueExecutionOrder(),
         getConcurrencyLimit(params.getBuckConfig()))) {
       ActionGraphAndResolver actionGraphAndResolver;
       ImmutableSet<BuildTarget> buildTargets;
@@ -107,7 +106,6 @@ public class FetchCommand extends BuildCommand {
               pool.getExecutor(),
               params.getFileHashCache(),
               getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
-              params.getBuckConfig().getDependencySchedulingOrder(),
               params.getBuckConfig().getBuildDepFiles(),
               params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
               params.getBuckConfig().getBuildArtifactCacheSizeLimit(),

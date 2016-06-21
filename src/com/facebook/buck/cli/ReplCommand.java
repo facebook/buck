@@ -109,7 +109,6 @@ public class ReplCommand extends AbstractCommand {
     BuckQueryEnvironment queryEnv = new BuckQueryEnvironment(params, false);
     CommandThreadManager queryPool = new CommandThreadManager(
         "Query",
-        params.getBuckConfig().getWorkQueueExecutionOrder(),
         new ConcurrencyLimit(1, Float.POSITIVE_INFINITY));
 
     bindings.put("BUCK_params", params);

@@ -15,7 +15,6 @@ CONFIG_SRCS = [
   'BuckConfig.java',
   'DownloadConfig.java',
   'SlbBuckConfig.java',
-  'WorkQueueExecutionOrder.java',
 ]
 java_library(
   name = 'config',

@@ -73,7 +73,6 @@ public class SimulateCommand extends AbstractCommand {
     ActionGraphAndResolver actionGraphAndResolver;
     try (CommandThreadManager pool = new CommandThreadManager(
         "Simulate",
-        params.getBuckConfig().getWorkQueueExecutionOrder(),
         getConcurrencyLimit(params.getBuckConfig()))) {
       actionGraphAndResolver = buildCommand.createActionGraphAndResolver(
           params,

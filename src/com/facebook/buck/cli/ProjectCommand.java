@@ -372,7 +372,6 @@ public class ProjectCommand extends BuildCommand {
 
     try (CommandThreadManager pool = new CommandThreadManager(
         "Project",
-        params.getBuckConfig().getWorkQueueExecutionOrder(),
         getConcurrencyLimit(params.getBuckConfig()))) {
       ImmutableSet<BuildTarget> passedInTargetsSet;
       TargetGraph projectGraph;

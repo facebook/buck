@@ -189,7 +189,6 @@ public class InstallCommand extends BuildCommand {
 
     try (CommandThreadManager pool = new CommandThreadManager(
         "Install",
-        params.getBuckConfig().getWorkQueueExecutionOrder(),
         getConcurrencyLimit(params.getBuckConfig()))) {
       // Get the helper targets if present
       ImmutableSet<String> installHelperTargets;

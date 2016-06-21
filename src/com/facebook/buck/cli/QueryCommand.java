@@ -108,7 +108,6 @@ public class QueryCommand extends AbstractCommand {
     BuckQueryEnvironment env = new BuckQueryEnvironment(params, getEnableParserProfiling());
     try (CommandThreadManager pool = new CommandThreadManager(
         "Query",
-        params.getBuckConfig().getWorkQueueExecutionOrder(),
         getConcurrencyLimit(params.getBuckConfig()))) {
       String queryFormat = arguments.remove(0);
       if (queryFormat.contains("%s")) {

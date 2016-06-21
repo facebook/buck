@@ -579,51 +579,6 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call buckconfig.entry}
-  {param section: 'build' /}
-  {param name: 'work_queue_execution_order' /}
-  {param example_value: 'LIFO' /}
-  {param description}
-    Configures the order in which the build engine executes scheduled jobs.  The supported values
-    are:
-    <ul>
-      <li>
-        <code>LIFO</code> (default): Last in, first out.  This mode will prefer building all
-        dependencies of a target before build other targets.  Jobs at different depths in the
-        dependency graph are likely to be evenly spread throughout the build.
-      </li>
-      <li>
-        <code>FIFO</code>: First in, first out.  In this mode, all jobs will first check the cache
-        before building their dependencies.  Execution order of jobs is likely to be mostly ordered
-        by their depth in the dependency graph.
-      </li>
-    </ul>
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'build' /}
-  {param name: 'dependency_scheduling_order' /}
-  {param example_value: 'RANDOM' /}
-  {param description}
-    Determines whether dependencies will be scheduled in a deterministic or random order.  The
-    supported values are:
-    <ul>
-      <li>
-        <code>RANDOM</code> (default): Randomly shuffle dependencies before scheduling them.  This
-        mode should improve the cache hits if multiple machines that use the same cache start
-        building the same target at the same time.  It may also help surface issues with rules
-        depending on side effects of other rules that they do not depend on.
-      </li>
-      <li>
-        <code>SORTED</code>: First sort dependencies in a stable order before scheduling them.  Note
-        that this does not mean that jobs will always be executed in the same order because that
-        also depends on the number of running threads and races between them.
-      </li>
-    </ul>
-  {/param}
-{/call}
-
 {call buckconfig.section}
   {param name: 'buildfile' /}
   {param description}

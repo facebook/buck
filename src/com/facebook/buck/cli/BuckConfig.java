@@ -703,17 +703,6 @@ public class BuckConfig {
   }
 
   /**
-   * @return the dependency scheduling order
-   */
-  public CachingBuildEngine.DependencySchedulingOrder getDependencySchedulingOrder() {
-    return getEnum(
-        "build",
-        "dependency_scheduling_order",
-        CachingBuildEngine.DependencySchedulingOrder.class)
-        .or(CachingBuildEngine.DependencySchedulingOrder.RANDOM);
-  }
-
-  /**
    * @return the mode with which to run the build engine.
    */
   public CachingBuildEngine.DepFiles getBuildDepFiles() {
@@ -751,17 +740,6 @@ public class BuckConfig {
 
   public int getKeySeed() {
     return parseInt(getValue("cache", "key_seed").or("0"));
-  }
-
-  /**
-   * @return the selected execution order of the build work queue.
-   */
-  public WorkQueueExecutionOrder getWorkQueueExecutionOrder() {
-    return getEnum(
-        "build",
-        "work_queue_execution_order",
-        WorkQueueExecutionOrder.class)
-        .or(WorkQueueExecutionOrder.LIFO);
   }
 
   /**

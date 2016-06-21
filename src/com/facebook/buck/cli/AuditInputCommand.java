@@ -110,7 +110,6 @@ public class AuditInputCommand extends AbstractCommand {
     TargetGraph graph;
     try (CommandThreadManager pool = new CommandThreadManager(
         "Audit",
-        params.getBuckConfig().getWorkQueueExecutionOrder(),
         getConcurrencyLimit(params.getBuckConfig()))) {
       graph = params.getParser().buildTargetGraph(
           params.getBuckEventBus(),

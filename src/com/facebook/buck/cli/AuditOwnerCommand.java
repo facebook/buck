@@ -195,7 +195,6 @@ public class AuditOwnerCommand extends AbstractCommand {
       if (!targetNodes.containsKey(buckFile)) {
         try (CommandThreadManager pool = new CommandThreadManager(
             "AuditOwner",
-            params.getBuckConfig().getWorkQueueExecutionOrder(),
             getConcurrencyLimit(params.getBuckConfig()))){
           targetNodes.put(
               buckFile,

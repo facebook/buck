@@ -282,7 +282,6 @@ public class TargetsCommand extends AbstractCommand {
 
     try (CommandThreadManager pool = new CommandThreadManager(
         "Targets",
-        params.getBuckConfig().getWorkQueueExecutionOrder(),
         getConcurrencyLimit(params.getBuckConfig()))) {
       ListeningExecutorService executor = pool.getExecutor();
 
