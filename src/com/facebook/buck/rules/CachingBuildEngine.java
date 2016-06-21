@@ -117,8 +117,6 @@ public class CachingBuildEngine implements BuildEngine {
 
   // The default weight to use in the executor when building a rule locally.
   private static final int DEFAULT_BUILD_WEIGHT = 1;
-  @VisibleForTesting
-  static final int MAX_TEST_NETWORK_THREADS = 5;
 
   private static final Logger LOG = Logger.get(CachingBuildEngine.class);
 
