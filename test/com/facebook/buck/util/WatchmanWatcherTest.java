@@ -546,7 +546,11 @@ public class WatchmanWatcherTest {
                     ImmutableList.of(
                         "anyof",
                         ImmutableList.of("type", "d"),
-                        ImmutableList.of("match", "*.pbxproj"))),
+                        ImmutableList.of(
+                            "match",
+                            "*.pbxproj",
+                            "wholename",
+                            ImmutableMap.<String, Object>of("includedotfiles", true)))),
                 "empty_on_fresh_instance", true,
                 "fields", ImmutableList.of("name", "exists", "new"))),
         query);
