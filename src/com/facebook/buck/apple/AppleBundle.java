@@ -695,7 +695,7 @@ public class AppleBundle
       Path sourcePath,
       Path destinationPath,
       ImmutableList.Builder<Step> stepsBuilder) {
-    if (platformName.contains("watch")) {
+    if (platformName.contains("watch") || isLegacyWatchApp()) {
       LOG.debug("Compiling storyboard %s to storyboardc %s and linking",
           sourcePath,
           destinationPath);
