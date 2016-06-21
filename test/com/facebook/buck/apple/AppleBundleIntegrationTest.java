@@ -743,6 +743,7 @@ public class AppleBundleIntegrationTest {
     assertTrue(
         Files.exists(
             watchAppPath.resolve("PlugIns/DemoWatchAppExtension.appex/DemoWatchAppExtension")));
+    assertTrue(Files.exists(watchAppPath.resolve("Interface.plist")));
   }
 
   @Test
@@ -784,6 +785,7 @@ public class AppleBundleIntegrationTest {
     assertTrue(Files.exists(watchExtensionPath.resolve("DemoWatchAppExtension")));
     assertTrue(Files.exists(watchExtensionPath.resolve("DemoWatchApp.app/DemoWatchApp")));
     assertTrue(Files.exists(watchExtensionPath.resolve("DemoWatchApp.app/_WatchKitStub/WK")));
+    assertTrue(Files.exists(watchExtensionPath.resolve("DemoWatchApp.app/Interface.plist")));
   }
 
   @Test
