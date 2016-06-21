@@ -551,13 +551,6 @@ public class BuckConfig {
     }
   }
 
-  /**
-   * @return the depth of a local build chain which should trigger skipping the cache.
-   */
-  public Optional<Long> getSkipLocalBuildChainDepth() {
-    return getLong("cache", "skip_local_build_chain_depth");
-  }
-
   @Nullable
   public Path resolvePathThatMayBeOutsideTheProjectFilesystem(@Nullable Path path) {
     if (path == null) {
