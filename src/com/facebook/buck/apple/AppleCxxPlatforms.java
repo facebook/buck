@@ -49,6 +49,7 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import org.xml.sax.SAXException;
 
@@ -120,7 +121,6 @@ public class AppleCxxPlatforms {
       toolSearchPathsBuilder.add(sdkPaths.getDeveloperPath().get().resolve(USR_BIN));
       toolSearchPathsBuilder.add(sdkPaths.getDeveloperPath().get().resolve("Tools"));
     }
-    ImmutableList<Path> toolSearchPaths = toolSearchPathsBuilder.build();
 
     // TODO(bhamiltoncx): Add more and better cflags.
     ImmutableList.Builder<String> cflagsBuilder = ImmutableList.builder();
@@ -132,24 +132,16 @@ public class AppleCxxPlatforms {
       cflagsBuilder.add("-fembed-bitcode");
     }
 
-    // Some flags are common to both asm and C.
-    ImmutableList<String> asflags = cflagsBuilder.build();
-
     ImmutableList.Builder<String> ldflagsBuilder = ImmutableList.builder();
     ldflagsBuilder.addAll(Linkers.iXlinker("-sdk_version", targetSdk.getVersion(), "-ObjC"));
     if (targetSdk.getApplePlatform().equals(ApplePlatform.WATCHOS)) {
       ldflagsBuilder.addAll(
           Linkers.iXlinker("-bitcode_verify", "-bitcode_hide_symbols", "-bitcode_symbol_map"));
     }
-    ImmutableList<String> ldflags = ldflagsBuilder.build();
 
-    ImmutableList.Builder<String> versionsBuilder = ImmutableList.builder();
-    versionsBuilder.add(targetSdk.getVersion());
-    for (AppleToolchain toolchain : targetSdk.getToolchains()) {
-      versionsBuilder.add(toolchain.getVersion().toString());
-    }
 
     // Populate Xcode version keys from Xcode's own Info.plist if available.
+    Optional<String> xcodeBuildVersion = Optional.absent();
     Optional<Path> developerPath = sdkPaths.getDeveloperPath();
     if (developerPath.isPresent()) {
       Path xcodeBundlePath = developerPath.get().getParent();
@@ -161,9 +153,8 @@ public class AppleCxxPlatforms {
 
           NSObject xcodeVersionObject = parsedXcodeInfoPlist.objectForKey("DTXcode");
           if (xcodeVersionObject != null) {
-            String xcodeVersion = xcodeVersionObject.toString();
-            platformBuilder.setXcodeVersion(Optional.of(xcodeVersion));
-            versionsBuilder.add(xcodeVersion);
+            Optional<String> xcodeVersion = Optional.of(xcodeVersionObject.toString());
+            platformBuilder.setXcodeVersion(xcodeVersion);
           }
         } catch (IOException e) {
           LOG.debug(
@@ -182,18 +173,42 @@ public class AppleCxxPlatforms {
       // different than the build number in the Info.plist, sigh.
       if (processExecutor.isPresent()) {
         try {
-          Optional<String> xcodeBuildVersion =
-              appleConfig.getXcodeBuildVersionSupplier(
-                  developerPath.get(), processExecutor.get()).get();
+          xcodeBuildVersion = appleConfig
+              .getXcodeBuildVersionSupplier(developerPath.get(), processExecutor.get())
+              .get();
           platformBuilder.setXcodeBuildVersion(xcodeBuildVersion);
-          versionsBuilder.add(xcodeBuildVersion.toString());
           LOG.debug("Xcode build version is: " + xcodeBuildVersion.or("<absent>"));
         } catch (IOException e) {
           LOG.debug("Error in getting Xcode build version");
         }
       }
     }
-    String version = Joiner.on(':').join(versionsBuilder.build());
+
+    ImmutableList.Builder<String> versions = ImmutableList.builder();
+    versions.add(targetSdk.getVersion());
+
+    ImmutableList<String> toolchainVersions = ImmutableList.copyOf(
+        Optional.presentInstances(
+            Iterables.transform(
+                targetSdk.getToolchains(),
+                new Function<AppleToolchain, Optional<String>>() {
+                  @Override
+                  public Optional<String> apply(AppleToolchain input) {
+                    return input.getVersion();
+                  }
+                })));
+    if (toolchainVersions.isEmpty()) {
+      if (!xcodeBuildVersion.isPresent()) {
+        throw new HumanReadableException("Failed to read toolchain versions and Xcode version.");
+      }
+      versions.add(xcodeBuildVersion.get());
+    } else {
+      versions.addAll(toolchainVersions);
+    }
+
+    String version = Joiner.on(':').join(versions.build());
+
+    ImmutableList<Path> toolSearchPaths = toolSearchPathsBuilder.build();
 
     Tool clangPath = new VersionedTool(
         getToolPath("clang", toolSearchPaths, executableFinder),
@@ -371,13 +386,13 @@ public class AppleCxxPlatforms {
             new ConstantToolProvider(clangXxPath)),
         ImmutableList.<String>builder()
             .addAll(cflags)
-            .addAll(ldflags)
+            .addAll(ldflagsBuilder.build())
             .build(),
         strip,
         new BsdArchiver(ar),
         ranlib,
         nm,
-        asflags,
+        cflagsBuilder.build(),
         ImmutableList.<String>of(),
         cflags,
         ImmutableList.<String>of(),
