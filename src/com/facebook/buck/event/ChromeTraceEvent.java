@@ -68,14 +68,14 @@ public class ChromeTraceEvent {
                           @JsonProperty("pid") long processId,
                           @JsonProperty("tid") long threadId,
                           @JsonProperty("ts") long microTime,
-                          @JsonProperty("args") Map<String, String> args) {
+                          @JsonProperty("args") ImmutableMap<String, String> args) {
     this.category = category;
     this.name = name;
     this.phase = phase;
     this.processId = processId;
     this.threadId = threadId;
     this.microTime = microTime;
-    this.args = ImmutableMap.copyOf(args);
+    this.args = args;
   }
 
   @JsonProperty("name")
