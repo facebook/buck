@@ -66,9 +66,9 @@ class SetExpression extends QueryExpression {
   }
 
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, ListeningExecutorService executor)
+  public Set<QueryTarget> eval(QueryEnvironment env, ListeningExecutorService executor)
       throws QueryException, InterruptedException {
-    Set<T> result = new LinkedHashSet<>();
+    Set<QueryTarget> result = new LinkedHashSet<>();
     for (TargetLiteral expr : words) {
       result.addAll(expr.eval(env, executor));
     }

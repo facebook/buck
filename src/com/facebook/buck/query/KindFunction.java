@@ -74,10 +74,10 @@ public class KindFunction extends RegexFilterFunction {
   }
 
   @Override
-  protected <T> String getStringToFilter(
-      QueryEnvironment<T> env,
+  protected String getStringToFilter(
+      QueryEnvironment env,
       ImmutableList<Argument> args,
-      T target)
+      QueryTarget target)
       throws QueryException, InterruptedException {
     return env.getTargetKind(target);
   }

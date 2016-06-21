@@ -64,12 +64,12 @@ class BinaryOperatorExpression extends QueryExpression {
   }
 
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, ListeningExecutorService executor)
+  public Set<QueryTarget> eval(QueryEnvironment env, ListeningExecutorService executor)
       throws QueryException, InterruptedException {
-    Set<T> lhsValue = new LinkedHashSet<>(operands.get(0).eval(env, executor));
+    Set<QueryTarget> lhsValue = new LinkedHashSet<>(operands.get(0).eval(env, executor));
 
     for (int i = 1; i < operands.size(); i++) {
-      Set<T> rhsValue = operands.get(i).eval(env, executor);
+      Set<QueryTarget> rhsValue = operands.get(i).eval(env, executor);
       switch (operator) {
         case INTERSECT:
         case CARET:

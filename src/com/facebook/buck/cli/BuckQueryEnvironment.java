@@ -49,7 +49,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -61,7 +60,7 @@ import java.util.Set;
  *
  * The query language is documented at docs/command/query.soy
  */
-public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
+public class BuckQueryEnvironment implements QueryEnvironment {
 
   private static final Logger LOG = Logger.get(BuckQueryEnvironment.class);
 
@@ -192,7 +191,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   }
 
   @Override
-  public Collection<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets)
+  public Set<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets)
       throws QueryException, InterruptedException {
     Set<QueryTarget> result = new LinkedHashSet<>();
     for (QueryTarget target : targets) {
@@ -203,7 +202,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   }
 
   @Override
-  public Collection<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets)
+  public Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets)
       throws QueryException, InterruptedException {
     Set<QueryTarget> result = new LinkedHashSet<>();
     for (QueryTarget target : targets) {

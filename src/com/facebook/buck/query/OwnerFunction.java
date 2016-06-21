@@ -53,8 +53,8 @@ public class OwnerFunction implements QueryFunction {
   }
 
   @Override
-  public <T> Set<T> eval(
-      QueryEnvironment<T> env,
+  public Set<QueryTarget> eval(
+      QueryEnvironment env,
       ImmutableList<Argument> args,
       ListeningExecutorService executor) throws QueryException, InterruptedException {
     return Sets.newHashSet(env.getFileOwners(ImmutableList.of(args.get(0).getWord())));

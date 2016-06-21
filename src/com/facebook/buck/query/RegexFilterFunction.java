@@ -35,15 +35,15 @@ abstract class RegexFilterFunction implements QueryFunction {
 
   protected abstract String getPattern(ImmutableList<Argument> args);
 
-  protected abstract <T> String getStringToFilter(
-      QueryEnvironment<T> env,
+  protected abstract String getStringToFilter(
+      QueryEnvironment env,
       ImmutableList<Argument> args,
-      T target)
+      QueryTarget target)
       throws QueryException, InterruptedException;
 
   @Override
-  public <T> Set<T> eval(
-      QueryEnvironment<T> env,
+  public Set<QueryTarget> eval(
+      QueryEnvironment env,
       ImmutableList<Argument> args,
       ListeningExecutorService executor)
       throws QueryException, InterruptedException {
@@ -55,9 +55,9 @@ abstract class RegexFilterFunction implements QueryFunction {
           String.format("Illegal pattern regexp '%s': %s", getPattern(args), e.getMessage()));
     }
 
-    Set<T> targets = getExpressionToEval(args).eval(env, executor);
-    Set<T> result = new LinkedHashSet<>();
-    for (T target : targets) {
+    Set<QueryTarget> targets = getExpressionToEval(args).eval(env, executor);
+    Set<QueryTarget> result = new LinkedHashSet<>();
+    for (QueryTarget target : targets) {
       String attributeValue = getStringToFilter(env, args, target);
       if (compiledPattern.matcher(attributeValue).find()) {
         result.add(target);

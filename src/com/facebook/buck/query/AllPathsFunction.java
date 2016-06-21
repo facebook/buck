@@ -72,15 +72,15 @@ public class AllPathsFunction implements QueryFunction {
   }
 
   @Override
-  public <T> Set<T> eval(
-      QueryEnvironment<T> env,
+  public Set<QueryTarget> eval(
+      QueryEnvironment env,
       ImmutableList<Argument> args,
       ListeningExecutorService executor) throws QueryException, InterruptedException {
     QueryExpression from = args.get(0).getExpression();
     QueryExpression to = args.get(1).getExpression();
 
-    Set<T> fromSet = from.eval(env, executor);
-    Set<T> toSet = to.eval(env, executor);
+    Set<QueryTarget> fromSet = from.eval(env, executor);
+    Set<QueryTarget> toSet = to.eval(env, executor);
 
     // Algorithm:
     // 1) compute "reachableFromX", the forward transitive closure of the "from" set;
@@ -90,13 +90,13 @@ public class AllPathsFunction implements QueryFunction {
 
     env.buildTransitiveClosure(fromSet, Integer.MAX_VALUE, executor);
 
-    Set<T> reachableFromX = env.getTransitiveClosure(fromSet);
-    Set<T> result = MoreSets.intersection(reachableFromX, toSet);
-    Collection<T> worklist = result;
+    Set<QueryTarget> reachableFromX = env.getTransitiveClosure(fromSet);
+    Set<QueryTarget> result = MoreSets.intersection(reachableFromX, toSet);
+    Collection<QueryTarget> worklist = result;
     while (!worklist.isEmpty()) {
-      Collection<T> reverseDeps = env.getReverseDeps(worklist);
+      Collection<QueryTarget> reverseDeps = env.getReverseDeps(worklist);
       worklist = Lists.newArrayList();
-      for (T target : reverseDeps) {
+      for (QueryTarget target : reverseDeps) {
         if (reachableFromX.contains(target) && result.add(target)) {
           worklist.add(target);
         }

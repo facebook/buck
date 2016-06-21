@@ -55,9 +55,9 @@ public class FunctionExpression extends QueryExpression {
   }
 
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, ListeningExecutorService executor)
+  public Set<QueryTarget> eval(QueryEnvironment env, ListeningExecutorService executor)
       throws QueryException, InterruptedException {
-    return function.<T>eval(env, args, executor);
+    return function.eval(env, args, executor);
   }
 
   @Override

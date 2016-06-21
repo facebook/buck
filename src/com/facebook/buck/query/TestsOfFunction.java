@@ -55,13 +55,13 @@ public class TestsOfFunction implements QueryFunction {
   }
 
   @Override
-  public <T> Set<T> eval(
-      QueryEnvironment<T> env,
+  public Set<QueryTarget> eval(
+      QueryEnvironment env,
       ImmutableList<Argument> args,
       ListeningExecutorService executor) throws QueryException, InterruptedException {
-    Set<T> targets = args.get(0).getExpression().eval(env, executor);
-    Set<T> tests = new LinkedHashSet<>();
-    for (T target : targets) {
+    Set<QueryTarget> targets = args.get(0).getExpression().eval(env, executor);
+    Set<QueryTarget> tests = new LinkedHashSet<>();
+    for (QueryTarget target : targets) {
       tests.addAll(env.getTestsForTarget(target));
     }
     return tests;

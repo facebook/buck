@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -79,23 +78,23 @@ public class DepsFunction implements QueryFunction {
    * transitive closure or the maximum depth (if supplied) is reached.
    */
   @Override
-  public <T> Set<T> eval(
-      QueryEnvironment<T> env,
+  public Set<QueryTarget> eval(
+      QueryEnvironment env,
       ImmutableList<Argument> args,
       ListeningExecutorService executor) throws QueryException, InterruptedException {
-    Set<T> argumentSet = args.get(0).getExpression().eval(env, executor);
+    Set<QueryTarget> argumentSet = args.get(0).getExpression().eval(env, executor);
     int depthBound = args.size() > 1 ? args.get(1).getInteger() : Integer.MAX_VALUE;
     env.buildTransitiveClosure(argumentSet, depthBound, executor);
 
     // LinkedHashSet preserves the order of insertion when iterating over the values.
     // The order by which we traverse the result is meaningful because the dependencies are
     // traversed level-by-level.
-    Set<T> result = new LinkedHashSet<>();
-    Collection<T> current = argumentSet;
+    Set<QueryTarget> result = new LinkedHashSet<>();
+    Set<QueryTarget> current = argumentSet;
 
     // Iterating depthBound+1 times because the first one processes the given argument set.
     for (int i = 0; i <= depthBound; i++) {
-      Collection<T> next = env.getFwdDeps(
+      Set<QueryTarget> next = env.getFwdDeps(
           Iterables.filter(current, Predicates.not(Predicates.in(result))));
       result.addAll(current);
       if (next.isEmpty()) {

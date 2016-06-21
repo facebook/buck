@@ -58,8 +58,8 @@ public class AttrFilterFunction implements QueryFunction {
   }
 
   @Override
-  public <T> Set<T> eval(
-      QueryEnvironment<T> env,
+  public Set<QueryTarget> eval(
+      QueryEnvironment env,
       ImmutableList<Argument> args,
       ListeningExecutorService executor)
       throws QueryException, InterruptedException {
@@ -74,8 +74,8 @@ public class AttrFilterFunction implements QueryFunction {
       }
     };
 
-    Set<T> result = new LinkedHashSet<>();
-    for (T target : argument.eval(env, executor)) {
+    Set<QueryTarget> result = new LinkedHashSet<>();
+    for (QueryTarget target : argument.eval(env, executor)) {
       ImmutableSet<Object> matchingObjects = env.filterAttributeContents(target, attr, predicate);
       if (!matchingObjects.isEmpty()) {
         result.add(target);

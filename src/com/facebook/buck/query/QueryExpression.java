@@ -61,7 +61,7 @@ public abstract class QueryExpression {
   /**
    * Scan and parse the specified query expression.
    */
-  public static QueryExpression parse(String query, QueryEnvironment<?> env)
+  public static QueryExpression parse(String query, QueryEnvironment env)
       throws QueryException {
     return QueryParser.parse(query, env);
   }
@@ -74,7 +74,7 @@ public abstract class QueryExpression {
    *
    * Failures resulting from evaluation of an ill-formed query cause QueryException to be thrown.
    */
-  public abstract <T> Set<T> eval(QueryEnvironment<T> env, ListeningExecutorService executor)
+  public abstract Set<QueryTarget> eval(QueryEnvironment env, ListeningExecutorService executor)
       throws QueryException, InterruptedException;
 
   /**

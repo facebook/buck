@@ -81,29 +81,30 @@ public class RdepsFunction implements QueryFunction {
    * reverse transitive closure or the maximum depth (if supplied) is reached.
    */
   @Override
-  public <T> Set<T> eval(
-      QueryEnvironment<T> env,
+  public Set<QueryTarget> eval(
+      QueryEnvironment env,
       ImmutableList<Argument> args,
       ListeningExecutorService executor) throws QueryException, InterruptedException {
-    Set<T> universeSet = args.get(0).getExpression().eval(env, executor);
+    Set<QueryTarget> universeSet = args.get(0).getExpression().eval(env, executor);
     env.buildTransitiveClosure(universeSet, Integer.MAX_VALUE, executor);
-    final Predicate<T> inUniversePredicate = Predicates.in(env.getTransitiveClosure(universeSet));
+    final Predicate<QueryTarget> inUniversePredicate = Predicates.in(
+        env.getTransitiveClosure(universeSet));
 
     // LinkedHashSet preserves the order of insertion when iterating over the values.
     // The order by which we traverse the result is meaningful because the dependencies are
     // traversed level-by-level.
-    Set<T> visited = new LinkedHashSet<>();
-    Set<T> argumentSet = args.get(1).getExpression().eval(env, executor);
-    Collection<T> current = argumentSet;
+    Set<QueryTarget> visited = new LinkedHashSet<>();
+    Set<QueryTarget> argumentSet = args.get(1).getExpression().eval(env, executor);
+    Collection<QueryTarget> current = argumentSet;
 
     int depthBound = args.size() > 2 ? args.get(2).getInteger() : Integer.MAX_VALUE;
     // Iterating depthBound+1 times because the first one processes the given argument set.
     for (int i = 0; i <= depthBound; i++) {
       // Restrict the search to nodes in the transitive closure of the universe set.
-      Iterable<T> currentInUniverse = Iterables.filter(current, inUniversePredicate);
+      Iterable<QueryTarget> currentInUniverse = Iterables.filter(current, inUniversePredicate);
 
       // Filter nodes visited before.
-      Collection<T> next = env.getReverseDeps(
+      Collection<QueryTarget> next = env.getReverseDeps(
           Iterables.filter(currentInUniverse, Predicates.not(Predicates.in(visited))));
       Iterables.addAll(visited, currentInUniverse);
       if (next.isEmpty()) {

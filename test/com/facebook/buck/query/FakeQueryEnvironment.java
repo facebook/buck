@@ -21,11 +21,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import java.util.Collection;
 import java.util.Set;
 
 /** Utility class used to test the QueryParser */
-public class FakeQueryEnvironment implements QueryEnvironment<QueryTarget> {
+public class FakeQueryEnvironment implements QueryEnvironment {
 
   public FakeQueryEnvironment() {}
 
@@ -44,13 +43,13 @@ public class FakeQueryEnvironment implements QueryEnvironment<QueryTarget> {
   }
 
   @Override
-  public Collection<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets)
+  public Set<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets)
       throws QueryException, InterruptedException {
     throw new QueryException("Method not implemented in FakeQueryEnvironment");
   }
 
   @Override
-  public Collection<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets)
+  public Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets)
       throws QueryException, InterruptedException {
     throw new QueryException("Method not implemented in FakeQueryEnvironment");
   }

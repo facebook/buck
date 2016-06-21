@@ -50,7 +50,7 @@ public final class TargetLiteral extends QueryExpression {
   }
 
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, ListeningExecutorService executor)
+  public Set<QueryTarget> eval(QueryEnvironment env, ListeningExecutorService executor)
       throws QueryException, InterruptedException {
     return env.getTargetsMatchingPattern(pattern, executor);
   }

@@ -75,10 +75,10 @@ public class FilterFunction extends RegexFilterFunction {
   }
 
   @Override
-  protected <T> String getStringToFilter(
-      QueryEnvironment<T> env,
+  protected String getStringToFilter(
+      QueryEnvironment env,
       ImmutableList<Argument> args,
-      T target) {
+      QueryTarget target) {
     return target.toString();
   }
 }

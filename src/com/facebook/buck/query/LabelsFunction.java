@@ -71,14 +71,14 @@ public class LabelsFunction implements QueryFunction {
   }
 
   @Override
-  public <T> Set<T> eval(
-      QueryEnvironment<T> env,
+  public Set<QueryTarget> eval(
+      QueryEnvironment env,
       ImmutableList<Argument> args,
       ListeningExecutorService executor) throws QueryException, InterruptedException {
     String label = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
-    Set<T> inputs = args.get(1).getExpression().eval(env, executor);
-    Set<T> result = new LinkedHashSet<>();
-    for (T input : inputs) {
+    Set<QueryTarget> inputs = args.get(1).getExpression().eval(env, executor);
+    Set<QueryTarget> result = new LinkedHashSet<>();
+    for (QueryTarget input : inputs) {
       result.addAll(env.getTargetsInAttribute(input, label));
     }
     return result;

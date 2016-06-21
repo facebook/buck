@@ -77,7 +77,7 @@ final class QueryParser {
   /**
    * Scan and parse the specified query expression.
    */
-  static QueryExpression parse(String query, QueryEnvironment<?> env) throws QueryException {
+  static QueryExpression parse(String query, QueryEnvironment env) throws QueryException {
     QueryParser parser = new QueryParser(
         Lexer.scan(query.toCharArray()), env);
     QueryExpression expr = parser.parseExpression();
@@ -88,7 +88,7 @@ final class QueryParser {
     return expr;
   }
 
-  private QueryParser(List<Lexer.Token> tokens, QueryEnvironment<?> env) {
+  private QueryParser(List<Lexer.Token> tokens, QueryEnvironment env) {
     this.functions = new HashMap<>();
     for (QueryFunction queryFunction : env.getFunctions()) {
       this.functions.put(queryFunction.getName(), queryFunction);
