@@ -22,8 +22,10 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.ProjectBuildFileParser;
+import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TargetNode;
@@ -39,6 +41,8 @@ import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -409,8 +413,21 @@ public class ParsePipelineTest {
             public TargetNode<?> createTargetNode(
                 Cell cell, Path buildFile, BuildTarget target, Map<String, Object> rawNode) {
               return DaemonicParserState.createTargetNode(
-                  eventBus, cell, buildFile, target,
-                  rawNode, constructorArgMarshaller, coercerFactory, nodeListener);
+                  eventBus,
+                  cell,
+                  buildFile,
+                  target,
+                  rawNode,
+                  constructorArgMarshaller,
+                  coercerFactory,
+                  CacheBuilder.newBuilder().build(
+                      new CacheLoader<Cell, BuildFileTree>() {
+                        @Override
+                        public BuildFileTree load(Cell key) throws Exception {
+                          return new InMemoryBuildFileTree(ImmutableList.<Path>of());
+                        }
+                      }),
+                  nodeListener);
             }
           },
           this.executorService,

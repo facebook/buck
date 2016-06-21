@@ -86,14 +86,14 @@ class PerBuildState implements AutoCloseable {
   private ParsePipeline parsePipeline;
 
   public PerBuildState(
-      final DaemonicParserState permState,
-      final ConstructorArgMarshaller marshaller,
-      final BuckEventBus eventBus,
+      DaemonicParserState permState,
+      ConstructorArgMarshaller marshaller,
+      BuckEventBus eventBus,
       ListeningExecutorService executorService,
       Cell rootCell,
       boolean enableProfiling,
       SpeculativeParsing speculativeParsing,
-      final boolean ignoreBuckAutodepsFiles) {
+      boolean ignoreBuckAutodepsFiles) {
     this.permState = permState;
     this.marshaller = marshaller;
     this.eventBus = eventBus;
@@ -122,7 +122,7 @@ class PerBuildState implements AutoCloseable {
         new Function<Cell, ProjectBuildFileParser>() {
           @Override
           public ProjectBuildFileParser apply(Cell input) {
-            return createBuildFileParser(input, ignoreBuckAutodepsFiles);
+            return createBuildFileParser(input, PerBuildState.this.ignoreBuckAutodepsFiles);
           }
         });
     this.parsePipeline = new ParsePipeline(
@@ -135,13 +135,14 @@ class PerBuildState implements AutoCloseable {
               BuildTarget target,
               Map<String, Object> rawNode) {
             return DaemonicParserState.createTargetNode(
-                eventBus,
+                PerBuildState.this.eventBus,
                 cell,
                 buildFile,
                 target,
                 rawNode,
-                marshaller,
-                permState.getTypeCoercerFactory(),
+                PerBuildState.this.marshaller,
+                PerBuildState.this.permState.getTypeCoercerFactory(),
+                PerBuildState.this.permState.getBuildFileTrees(),
                 symlinkCheckers);
           }
         },

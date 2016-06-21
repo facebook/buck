@@ -209,8 +209,12 @@ class DaemonicParserState implements ParsePipeline.Cache {
     this.cellStateLock = new AutoCloseableReadWriteUpdateLock();
   }
 
-  public TypeCoercerFactory getTypeCoercerFactory() {
+  TypeCoercerFactory getTypeCoercerFactory() {
     return typeCoercerFactory;
+  }
+
+  LoadingCache<Cell, BuildFileTree> getBuildFileTrees() {
+    return buildFileTrees;
   }
 
   @Override
@@ -343,6 +347,8 @@ class DaemonicParserState implements ParsePipeline.Cache {
     }
   }
 
+  // This method is slated to be moved elsewhere, as it's not an accessor. Hence, it's static and
+  // takes an instance of this class as argument.
   public static TargetNode<?> createTargetNode(
       BuckEventBus eventBus,
       Cell cell,
@@ -351,6 +357,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
       Map<String, Object> rawNode,
       ConstructorArgMarshaller marshaller,
       TypeCoercerFactory typeCoercerFactory,
+      LoadingCache<Cell, BuildFileTree> buildFileTrees,
       TargetNodeListener nodeListener) {
     BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(cell, rawNode);
 
@@ -397,9 +404,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
     BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
         targetCell.getFilesystem(),
         target,
-        new FilesystemBackedBuildFileTree(
-            cell.getFilesystem(),
-            cell.getBuildFileName()),
+        buildFileTrees.getUnchecked(targetCell),
         targetCell.isEnforcingBuckPackageBoundaries());
     Object constructorArg = description.createUnpopulatedConstructorArg();
     try {
