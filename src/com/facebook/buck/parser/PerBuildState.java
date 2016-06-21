@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.ProjectBuildFileParser;
@@ -264,12 +265,21 @@ class PerBuildState implements AutoCloseable {
         }
       }
 
-      LOG.warn(
-          "Disabling caching for target %s, because one or more input files are under a " +
-              "symbolic link (%s). This will severely impact performance! To resolve this, use " +
-              "separate rules and declare dependencies instead of using symbolic links.",
-          node.getBuildTarget(),
-          newSymlinksEncountered);
+      // If we're not explicitly forbidding symlinks, either warn to the console or the log file
+      // depennding on the config setting.
+      String msg =
+          String.format(
+              "Disabling caching for target %s, because one or more input files are under a " +
+                  "symbolic link (%s). This will severely impact performance! To resolve this, " +
+                  "use separate rules and declare dependencies instead of using symbolic links.",
+              node.getBuildTarget(),
+              newSymlinksEncountered);
+      if (allowSymlinks == ParserConfig.AllowSymlinks.WARN) {
+        eventBus.post(ConsoleEvent.warning(msg));
+      } else {
+        LOG.warn(msg);
+      }
+
       buildInputPathsUnderSymlink.add(buildFile);
     }
   }

@@ -49,6 +49,7 @@ public class ParserConfig {
 
   public enum AllowSymlinks {
     ALLOW,
+    WARN,
     FORBID,
     ;
   }
@@ -138,7 +139,7 @@ public class ParserConfig {
 
   public AllowSymlinks getAllowSymlinks() {
     return delegate.getEnum("project", "allow_symlinks", AllowSymlinks.class)
-        .or(AllowSymlinks.ALLOW);
+        .or(AllowSymlinks.WARN);
   }
 
   public Optional<BuildFileSearchMethod> getBuildFileSearchMethod() {
