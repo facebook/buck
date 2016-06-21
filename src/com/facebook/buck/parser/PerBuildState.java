@@ -80,7 +80,7 @@ class PerBuildState implements AutoCloseable {
    * Cache of (symlink path: symlink target) pairs used to avoid repeatedly
    * checking for the existence of symlinks in the source tree.
    */
-  private final Map<Path, Path> symlinkExistenceCache;
+  private final Map<Path, Optional<Path>> symlinkExistenceCache;
 
   private ProjectBuildFileParserPool projectBuildFileParserPool;
   private ParsePipeline parsePipeline;
@@ -226,12 +226,12 @@ class PerBuildState implements AutoCloseable {
   private void registerInputsUnderSymlinks(
       Path buildFile,
       TargetNode<?> node) throws IOException {
-    Map<Path, Path> newSymlinksEncountered = Maps.newHashMap();
-    if (inputFilesUnderSymlink(
-        node.getInputs(),
-        node.getRuleFactoryParams().getProjectFilesystem(),
-        symlinkExistenceCache,
-        newSymlinksEncountered)) {
+    Map<Path, Path> newSymlinksEncountered =
+        inputFilesUnderSymlink(
+            node.getInputs(),
+            node.getRuleFactoryParams().getProjectFilesystem(),
+            symlinkExistenceCache);
+    if (!newSymlinksEncountered.isEmpty()) {
       ParserConfig.AllowSymlinks allowSymlinks = Preconditions.checkNotNull(
           cellSymlinkAllowability.get(node.getBuildTarget().getCellPath()));
       if (allowSymlinks == ParserConfig.AllowSymlinks.FORBID) {
@@ -273,34 +273,39 @@ class PerBuildState implements AutoCloseable {
     }
   }
 
-  private static boolean inputFilesUnderSymlink(
+  private static Map<Path, Path> inputFilesUnderSymlink(
       // We use Collection<Path> instead of Iterable<Path> to prevent
       // accidentally passing in Path, since Path itself is Iterable<Path>.
       Collection<Path> inputs,
       ProjectFilesystem projectFilesystem,
-      Map<Path, Path> symlinkExistenceCache,
-      Map<Path, Path> newSymlinksEncountered) throws IOException {
-    boolean result = false;
+      Map<Path, Optional<Path>> symlinkExistenceCache) throws IOException {
+    Map<Path, Path> newSymlinksEncountered = Maps.newHashMap();
     for (Path input : inputs) {
       for (int i = 1; i < input.getNameCount(); i++) {
         Path subpath = input.subpath(0, i);
-        Path resolvedSymlink = symlinkExistenceCache.get(subpath);
+        Optional<Path> resolvedSymlink = symlinkExistenceCache.get(subpath);
         if (resolvedSymlink != null) {
-          LOG.verbose("Detected cached symlink %s -> %s", subpath, resolvedSymlink);
-          newSymlinksEncountered.put(subpath, resolvedSymlink);
-          result = true;
-        } else if (projectFilesystem.isSymLink(subpath)) {
-          Path symlinkTarget = projectFilesystem.resolve(subpath).toRealPath();
-          Path relativeSymlinkTarget = projectFilesystem.getPathRelativeToProjectRoot(symlinkTarget)
-              .or(symlinkTarget);
-          LOG.verbose("Detected symbolic link %s -> %s", subpath, relativeSymlinkTarget);
-          newSymlinksEncountered.put(subpath, relativeSymlinkTarget);
-          symlinkExistenceCache.put(subpath, relativeSymlinkTarget);
-          result = true;
+          if (resolvedSymlink.isPresent()) {
+            LOG.verbose("Detected cached symlink %s -> %s", subpath, resolvedSymlink.get());
+            newSymlinksEncountered.put(subpath, resolvedSymlink.get());
+          }
+          // If absent, not a symlink.
+        } else {
+          // Not cached, look it up.
+          if (projectFilesystem.isSymLink(subpath)) {
+            Path symlinkTarget = projectFilesystem.resolve(subpath).toRealPath();
+            Path relativeSymlinkTarget =
+                projectFilesystem.getPathRelativeToProjectRoot(symlinkTarget).or(symlinkTarget);
+            LOG.verbose("Detected symbolic link %s -> %s", subpath, relativeSymlinkTarget);
+            newSymlinksEncountered.put(subpath, relativeSymlinkTarget);
+            symlinkExistenceCache.put(subpath, Optional.of(relativeSymlinkTarget));
+          } else {
+            symlinkExistenceCache.put(subpath, Optional.<Path>absent());
+          }
         }
       }
     }
-    return result;
+    return newSymlinksEncountered;
   }
 
   @Override
