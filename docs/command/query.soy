@@ -631,6 +631,48 @@ this <code>buck query</code> call is aggregated by input target, otherwise it
 returns the union of each query.
 </p>
 
+<h2>Referencing Args Files</h2>
+
+<p>
+When running queries, arguments can be stored in external files, one argument per line, and
+referenced with the <code>@</code> symbol. This is convenient when the number of arguments is long
+or when the query input should be persisted to source control.
+</p>
+
+<p><pre>
+buck query testsof(deps(%s)) @/path/to/args-file
+</pre></p>
+
+<p>
+If only one query that includes all targets in the file is desired, an alternative syntax can
+be used:
+</p>
+
+<p><pre>
+buck query testsof(deps(%Ss)) @/path/to/args-file
+</pre></p>
+
+<p>
+In the example above, the lines of the file will be converted to a set and
+subsituted for the <code>%Ss</code>. In addition, each line's contents will be singly quoted.
+In the example above, if the args file contained the following:
+</p>
+
+<p><pre>
+{literal}
+//foo:bar
+//foo:baz
+{/literal}
+</pre></p>
+
+<p>
+Then the query produced will be equivalent to:
+</p>
+
+<p><pre>
+buck query testsof(deps(set('//foo:bar' '//foo:baz')))
+</pre></p>
+
 {/param}
 
 {param params}

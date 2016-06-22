@@ -364,6 +364,23 @@ public class QueryCommandIntegrationTest {
   }
 
   @Test
+  public void testGetReverseDependenciesFormatSet() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "rdeps(set(//example:one //example/app:seven), %Ss)",
+        "//example/app:seven",
+        "//example:five");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-five-seven-rdeps"))));
+  }
+
+  @Test
   public void testMultipleGetTestsofDirectReverseDependenciesJSON() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "query_command", tmp);
@@ -530,6 +547,25 @@ public class QueryCommandIntegrationTest {
         result.getStdout(),
         is(equalToIgnoringPlatformNewlines(workspace.getFileContents(
                     "stdout-allpaths-deps-one-to-five-six.dot"))));
+  }
+
+  @Test
+  public void testAllPathsDepsOneToFiveSixFormatSet() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "--dot",
+        "allpaths(deps(//example:one, 1), %Ss)",
+        "//example:five",
+        "//example:six");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents(
+            "stdout-allpaths-deps-one-to-five-six.dot"))));
   }
 
   @Test

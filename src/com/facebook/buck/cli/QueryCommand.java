@@ -33,6 +33,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.TreeMultimap;
@@ -71,7 +72,8 @@ public class QueryCommand extends AbstractCommand {
               "Attributes can be regular expressions. ",
       handler = StringSetOptionHandler.class)
   @SuppressFieldNotInitialized
-  private Supplier<ImmutableSet<String>> outputAttributes;
+  @VisibleForTesting
+  Supplier<ImmutableSet<String>> outputAttributes;
 
   public boolean shouldGenerateJsonOutput() {
     return generateJsonOutput;
@@ -109,23 +111,63 @@ public class QueryCommand extends AbstractCommand {
     try (CommandThreadManager pool = new CommandThreadManager(
         "Query",
         getConcurrencyLimit(params.getBuckConfig()))) {
-      String queryFormat = arguments.remove(0);
-      if (queryFormat.contains("%s")) {
-        return runMultipleQuery(
-            params,
-            env,
-            pool.getExecutor(),
-            queryFormat,
-            arguments,
-            shouldGenerateJsonOutput());
-      } else {
-        return runSingleQuery(params, env, pool.getExecutor(), queryFormat);
-      }
+      ListeningExecutorService executor = pool.getExecutor();
+      return formatAndRunQuery(params, env, executor);
     } catch (QueryException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
     }
+  }
+
+  @VisibleForTesting
+  int formatAndRunQuery(
+      CommandRunnerParams params,
+      BuckQueryEnvironment env,
+      ListeningExecutorService executor)
+      throws IOException, InterruptedException, QueryException {
+    String queryFormat = arguments.get(0);
+    List<String> formatArgs = arguments.subList(1, arguments.size());
+    if (queryFormat.contains("%Ss")) {
+      return runSingleQueryWithSet(params, env, executor, queryFormat, formatArgs);
+    } else if (queryFormat.contains("%s")) {
+      return runMultipleQuery(
+          params,
+          env,
+          executor,
+          queryFormat,
+          formatArgs,
+          shouldGenerateJsonOutput());
+    } else {
+      return runSingleQuery(params, env, executor, queryFormat);
+    }
+  }
+
+  /**
+   * Format and evaluate the query using list substitution
+   */
+  int runSingleQueryWithSet(
+      CommandRunnerParams params,
+      BuckQueryEnvironment env,
+      ListeningExecutorService executor,
+      String queryFormat,
+      List<String> formatArgs
+  ) throws InterruptedException, QueryException, IOException {
+    String argsList = Joiner.on(' ').join(
+        Iterables.transform(formatArgs, new Function<String, String>() {
+          @Override
+          public String apply(String input) {
+            return "'" + input + "'";
+          }
+        })
+    );
+    String setRepresentation = "set(" + argsList + ")";
+    String formattedQuery = queryFormat.replace("%Ss", setRepresentation);
+    return runSingleQuery(
+        params,
+        env,
+        executor,
+        formattedQuery);
   }
 
   /**
