@@ -13,9 +13,19 @@
 {call buck.rule}
 {param status: 'UNFROZEN' /}
 {param overview}
+<p>
 An <code>apple_bundle()</code> rule takes an Apple binary and all of the resources and asset
 catalogs in the rule's transitive dependencies and generates a bundle containing all of those files.
 Optionally the generated bundle can also be signed using specified provisioning profiles.
+</p>
+<p>
+Code signing will embed entitlements pointed to by the <code>CODE_SIGN_ENTITLEMENTS</code> entry in
+<code>info_plist_substitutions</code>. If an entitlements file is omitted, it will be derived based
+on the entitlements of the selected provisioning profile. Provisioning profiles will be selected
+from profiles pointed to by <code>apple.provisioning_profile_search_path</code>, based on a
+non-expired profile that matches the bundle id and entitlements.
+</p>
+
 {/param}
 
 {param args}
