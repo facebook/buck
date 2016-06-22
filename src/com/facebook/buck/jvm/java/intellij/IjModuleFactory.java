@@ -673,7 +673,7 @@ public class IjModuleFactory {
     public void apply(TargetNode<GroovyLibraryDescription.Arg> target, ModuleBuildContext context) {
       addDepsAndSources(
           target,
-          true /* wantsPackagePrefix */,
+          false /* wantsPackagePrefix */,
           context);
     }
   }
@@ -689,7 +689,7 @@ public class IjModuleFactory {
     public void apply(TargetNode<GroovyTestDescription.Arg> target, ModuleBuildContext context) {
       addDepsAndTestSources(
           target,
-          true /* wantsPackagePrefix */,
+          false /* wantsPackagePrefix */,
           context);
     }
   }
