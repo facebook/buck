@@ -21,6 +21,8 @@ import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
+import com.facebook.buck.jvm.groovy.GroovyTestDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
@@ -64,7 +66,9 @@ public class IjModuleFactory {
       CxxLibraryDescription.TYPE,
       JavaLibraryDescription.TYPE,
       JavaTestDescription.TYPE,
-      RobolectricTestDescription.TYPE);
+      RobolectricTestDescription.TYPE,
+      GroovyLibraryDescription.TYPE,
+      GroovyTestDescription.TYPE);
 
   public static final Predicate<TargetNode<?>> SUPPORTED_MODULE_TYPES_PREDICATE =
       new Predicate<TargetNode<?>>() {
@@ -309,6 +313,8 @@ public class IjModuleFactory {
     addToIndex(new JavaLibraryModuleRule());
     addToIndex(new JavaTestModuleRule());
     addToIndex(new RobolectricTestModuleRule());
+    addToIndex(new GroovyLibraryModuleRule());
+    addToIndex(new GroovyTestModuleRule());
 
     this.moduleFactoryResolver = moduleFactoryResolver;
 
@@ -653,6 +659,38 @@ public class IjModuleFactory {
           true /* wantsPackagePrefix */,
           context);
       addCompiledShadowIfNeeded(target, context);
+    }
+  }
+
+  private class GroovyLibraryModuleRule implements IjModuleRule<GroovyLibraryDescription.Arg> {
+
+    @Override
+    public BuildRuleType getType() {
+      return GroovyLibraryDescription.TYPE;
+    }
+
+    @Override
+    public void apply(TargetNode<GroovyLibraryDescription.Arg> target, ModuleBuildContext context) {
+      addDepsAndSources(
+          target,
+          true /* wantsPackagePrefix */,
+          context);
+    }
+  }
+
+  private class GroovyTestModuleRule implements IjModuleRule<GroovyTestDescription.Arg> {
+
+    @Override
+    public BuildRuleType getType() {
+      return GroovyTestDescription.TYPE;
+    }
+
+    @Override
+    public void apply(TargetNode<GroovyTestDescription.Arg> target, ModuleBuildContext context) {
+      addDepsAndTestSources(
+          target,
+          true /* wantsPackagePrefix */,
+          context);
     }
   }
 
