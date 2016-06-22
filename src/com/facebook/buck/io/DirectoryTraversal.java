@@ -25,7 +25,6 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 
@@ -102,14 +101,4 @@ public abstract class DirectoryTraversal {
     // Do nothing by default.
   }
 
-  public static void main(String[] args) throws IOException {
-    Path directory = Paths.get(args[0]);
-    new DirectoryTraversal(directory) {
-
-      @Override
-      public void visit(Path file, String relativePath) {
-        System.out.println(relativePath);
-      }
-    }.traverse();
-  }
 }
