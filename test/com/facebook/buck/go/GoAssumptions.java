@@ -33,10 +33,13 @@ abstract class GoAssumptions {
     Throwable exception = null;
     try {
       ProcessExecutor executor = new ProcessExecutor(new TestConsole());
-      new GoBuckConfig(
+      GoBuckConfig goBuckConfig = new GoBuckConfig(
           FakeBuckConfig.builder().build(),
           executor,
-          FlavorDomain.from("Cxx", ImmutableSet.<CxxPlatform>of())).getCompiler();
+          FlavorDomain.from("Cxx", ImmutableSet.<CxxPlatform>of()));
+      goBuckConfig.getCompiler();
+      goBuckConfig.getAssembler();
+      goBuckConfig.getPacker();
     } catch (HumanReadableException e) {
       exception = e;
     }
