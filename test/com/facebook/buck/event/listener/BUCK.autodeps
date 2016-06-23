@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 7309012c3a00326befd67965415b1049dbee0d44 #@#
+#@# GENERATED FILE: DO NOT MODIFY ded66e8660fd5231740275145db6e0faa10c04b1 #@#
 {
   "listener" : {
     "deps" : [
@@ -34,6 +34,7 @@
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util:tristate",
+      "//src/com/facebook/buck/util/concurrent:concurrent",
       "//src/com/facebook/buck/util/environment:environment",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/util/network:network",

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY cda191fcd52a43939db933c2c55dedc74bcea857 #@#
+#@# GENERATED FILE: DO NOT MODIFY da9c287367c408c60fb10fc56a5feb64eb57ffc1 #@#
 {
   "testutil" : {
     "deps" : [
@@ -21,6 +21,7 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/io:watchman",
       "//src/com/facebook/buck/model:build_id",
+      "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",

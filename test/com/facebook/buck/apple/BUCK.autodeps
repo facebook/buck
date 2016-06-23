@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 475a7b30dc7db8fb418405dc9a6e31a7782a969f #@#
+#@# GENERATED FILE: DO NOT MODIFY 209c72add91f5041b9f92aaf34a3785bb747e211 #@#
 {
   "apple" : {
     "deps" : [
@@ -91,6 +91,7 @@
       "//src/com/facebook/buck/util:io",
       "//test/com/facebook/buck/rules:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/util:testutil",
       "//third-party/java/guava:guava"
     ]
   }
