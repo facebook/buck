@@ -64,6 +64,12 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   private static final ImmutableList<String> CHANGED_FILES_COMMAND =
       ImmutableList.of(HG_CMD_TEMPLATE, "status", "-0", "--rev", REVISION_ID_TEMPLATE);
 
+  private static final ImmutableList<String> UNTRACKED_FILES_COMMAND =
+      ImmutableList.of(HG_CMD_TEMPLATE, "status", "-0", "--unknown");
+
+  private static final ImmutableList<String> ALL_BOOKMARKS_COMMAND =
+      ImmutableList.of(HG_CMD_TEMPLATE, "bookmarks", "--all");
+
   private static final ImmutableList<String> COMMON_ANCESTOR_COMMAND_TEMPLATE =
       ImmutableList.of(
           HG_CMD_TEMPLATE,
@@ -134,6 +140,21 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   @Override
+  public String diffBetweenRevisions(String revisionIdOne, String revisionIdTwo)
+      throws VersionControlCommandFailedException, InterruptedException {
+    validateRevisionId(revisionIdOne);
+    validateRevisionId(revisionIdTwo);
+    return executeCommand(
+        ImmutableList.of(
+            HG_CMD_TEMPLATE,
+            "diff",
+            "--rev",
+            revisionIdOne,
+            "--rev",
+            revisionIdTwo));
+  }
+
+  @Override
   public long timestampSeconds(String revisionId)
       throws VersionControlCommandFailedException, InterruptedException {
     String hgTimeString = executeCommand(replaceTemplateValue(
@@ -162,6 +183,43 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
           }
         })
         .toSet();
+  }
+
+  @Override
+  public ImmutableSet<String> untrackedFiles()
+      throws VersionControlCommandFailedException, InterruptedException {
+    return FluentIterable.of(executeCommand(UNTRACKED_FILES_COMMAND).split("\0"))
+        .filter(new Predicate<String>() {
+          @Override
+          public boolean apply(String input) {
+            return !Strings.isNullOrEmpty(input);
+          }
+        })
+        .toSet();
+  }
+
+  @Override
+  public ImmutableMap<String, String> allBookmarks()
+      throws VersionControlCommandFailedException, InterruptedException {
+    // Remove the potential asterisk that shows the active bookmark.
+    FluentIterable<String> allBookmarks =
+        FluentIterable.of(executeCommand(ALL_BOOKMARKS_COMMAND).replaceAll("\\*", "").split(" "))
+            .filter(new Predicate<String>() {
+              @Override
+              public boolean apply(String input) {
+                return !Strings.isNullOrEmpty(input);
+              }
+            });
+
+    if (allBookmarks.size() % 2 != 0) {
+      throw new VersionControlCommandFailedException("Unable to retrieve map of bookmarks");
+    }
+
+    ImmutableMap.Builder<String, String> allBookmarksMap = ImmutableMap.builder();
+    for (int i = 0; i < allBookmarks.size(); i = i + 2) {
+      allBookmarksMap.put(allBookmarks.get(i), allBookmarks.get(i + 1));
+    }
+    return allBookmarksMap.build();
   }
 
   private String executeCommand(Iterable<String> command)

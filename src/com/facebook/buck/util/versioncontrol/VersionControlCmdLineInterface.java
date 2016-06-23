@@ -16,19 +16,20 @@
 
 package com.facebook.buck.util.versioncontrol;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 /***
  * Provides meta-data about the version control repository the project being built is using.
  */
 public interface VersionControlCmdLineInterface {
-  /***
+  /**
    *
    * @return true if project is using version control, and we support it (i.e. hg)
    */
   boolean isSupportedVersionControlSystem();
 
-  /***
+  /**
    * @param name Bookmark name, e.g. master
    * @return Global revision ID for given name
    * @throws VersionControlCommandFailedException
@@ -36,7 +37,7 @@ public interface VersionControlCmdLineInterface {
    */
   String revisionId(String name) throws VersionControlCommandFailedException, InterruptedException;
 
-  /***
+  /**
    *
    * @return Revision ID for current tip
    * @throws VersionControlCommandFailedException
@@ -44,7 +45,7 @@ public interface VersionControlCmdLineInterface {
    */
   String currentRevisionId() throws VersionControlCommandFailedException, InterruptedException;
 
-  /***
+  /**
    *
    * @param revisionIdOne
    * @param revisionIdTwo
@@ -57,6 +58,17 @@ public interface VersionControlCmdLineInterface {
 
   /**
    *
+   * @param revisionIdOne
+   * @param revisionIdTwo
+   * @return the produced diff between two revisions
+   * @throws VersionControlCommandFailedException
+   * @throws InterruptedException
+   */
+  String diffBetweenRevisions(String revisionIdOne, String revisionIdTwo)
+      throws VersionControlCommandFailedException, InterruptedException;
+
+  /**
+   *
    * @param fromRevisionId
    * @return files changed from the given revision.
    * @throws VersionControlCommandFailedException
@@ -65,7 +77,16 @@ public interface VersionControlCmdLineInterface {
   ImmutableSet<String> changedFiles(String fromRevisionId)
       throws VersionControlCommandFailedException, InterruptedException;
 
-  /***
+  /**
+   *
+   * @return a list of all the untracked of the current revision
+   * @throws VersionControlCommandFailedException
+   * @throws InterruptedException
+   */
+  ImmutableSet<String> untrackedFiles()
+      throws VersionControlCommandFailedException, InterruptedException;
+
+  /**
    *
    * @param revisionId
    * @return Unix timestamp of given revisionId (in seconds)
@@ -73,6 +94,16 @@ public interface VersionControlCmdLineInterface {
    * @throws InterruptedException
    */
   long timestampSeconds(String revisionId)
+      throws VersionControlCommandFailedException, InterruptedException;
+
+
+  /**
+   *
+   * @return a map of all the bookmarks with the bookmark name as key and the revision as value.
+   * @throws VersionControlCommandFailedException
+   * @throws InterruptedException
+   */
+  ImmutableMap<String, String> allBookmarks()
       throws VersionControlCommandFailedException, InterruptedException;
 
 }
