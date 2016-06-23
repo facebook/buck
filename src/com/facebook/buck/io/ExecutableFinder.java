@@ -169,6 +169,7 @@ public class ExecutableFinder {
 
     String pathEnv = env.get("PATH");
     if (pathEnv != null) {
+      pathEnv = pathEnv.trim();
       paths.addAll(
           FluentIterable.from(Splitter.on(pathSeparator).omitEmptyStrings().split(pathEnv))
               .transform(TO_PATH));
