@@ -61,6 +61,7 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.FileSystem;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.jar.JarOutputStream;
@@ -315,7 +316,10 @@ public class DistributedBuildFileHashesTest {
     private FileHashCache createFileHashCache() {
       ImmutableList.Builder<FileHashCache> cacheList = ImmutableList.builder();
       for (Path path : javaFs.getRootDirectories()) {
-        cacheList.add(DefaultFileHashCache.createDefaultFileHashCache(new ProjectFilesystem(path)));
+        if (Files.isDirectory(path)) {
+          cacheList.add(
+              DefaultFileHashCache.createDefaultFileHashCache(new ProjectFilesystem(path)));
+        }
       }
       cacheList.add(DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem));
       cacheList.add(DefaultFileHashCache.createDefaultFileHashCache(secondProjectFilesystem));
