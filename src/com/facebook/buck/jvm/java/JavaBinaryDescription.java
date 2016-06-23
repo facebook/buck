@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
-import com.facebook.buck.io.DefaultDirectoryTraverser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -113,7 +112,6 @@ public class JavaBinaryDescription implements
         args.mergeManifests.or(true),
         args.metaInfDirectory.orNull(),
         args.blacklist.or(ImmutableSet.<Pattern>of()),
-        new DefaultDirectoryTraverser(),
         transitiveClasspathEntries);
 
     // If we're packaging native libraries, construct the rule to build the fat JAR, which packages

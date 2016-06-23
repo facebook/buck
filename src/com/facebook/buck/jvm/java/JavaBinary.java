@@ -18,23 +18,19 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
-import com.facebook.buck.io.DirectoryTraverser;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.CommandTool;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
@@ -42,7 +38,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -56,7 +51,7 @@ import javax.annotation.Nullable;
 
 @BuildsAnnotationProcessor
 public class JavaBinary extends AbstractBuildRule
-    implements BinaryBuildRule, HasClasspathEntries, RuleKeyAppendable {
+    implements BinaryBuildRule, HasClasspathEntries {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 
@@ -73,12 +68,12 @@ public class JavaBinary extends AbstractBuildRule
   private final boolean mergeManifests;
 
   @Nullable
-  private final Path metaInfDirectory;
+  @AddToRuleKey
+  private final SourcePath metaInfDirectory;
 
   @AddToRuleKey
   private final ImmutableSet<Pattern> blacklist;
 
-  private final DirectoryTraverser directoryTraverser;
   private final ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries;
 
   public JavaBinary(
@@ -90,34 +85,22 @@ public class JavaBinary extends AbstractBuildRule
       boolean mergeManifests,
       @Nullable Path metaInfDirectory,
       ImmutableSet<Pattern> blacklist,
-      DirectoryTraverser directoryTraverser,
       ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries) {
     super(params, resolver);
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
     this.mergeManifests = mergeManifests;
-    this.metaInfDirectory = metaInfDirectory;
+    this.metaInfDirectory = metaInfDirectory != null ?
+        new PathSourcePath(getProjectFilesystem(), metaInfDirectory) :
+        null;
     this.blacklist = blacklist;
-    this.directoryTraverser = directoryTraverser;
     this.transitiveClasspathEntries = transitiveClasspathEntries;
   }
 
   @Override
   public BuildableProperties getProperties() {
     return OUTPUT_TYPE;
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    // Build a sorted set so that metaInfDirectory contents are listed in a canonical order.
-    ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
-    BuildRules.addInputsToSortedSet(metaInfDirectory, paths, directoryTraverser);
-
-    sink.setReflectively(
-        "metaInfDirectory",
-        FluentIterable.from(paths.build())
-            .transform(SourcePaths.toSourcePath(getProjectFilesystem())));
   }
 
   @Override
@@ -143,7 +126,7 @@ public class JavaBinary extends AbstractBuildRule
 
       MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(
           getProjectFilesystem(),
-          metaInfDirectory,
+          metaInfDirectory != null ? getResolver().getAbsolutePath(metaInfDirectory) : null,
           stagingTarget);
       commands.add(link);
 

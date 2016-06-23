@@ -17,8 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.io.DirectoryTraverser;
-import com.facebook.buck.io.DirectoryTraversers;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
@@ -27,12 +25,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Set;
-
-import javax.annotation.Nullable;
 
 public class BuildRules {
 
@@ -57,27 +49,6 @@ public class BuildRules {
     }
 
     return buildRules.build();
-  }
-
-  /**
-   * Helper function for {@link BuildRule}s to create their lists of files for caching.
-   */
-  public static void addInputsToSortedSet(
-      @Nullable Path pathToDirectory,
-      ImmutableSortedSet.Builder<Path> inputsToConsiderForCachingPurposes,
-      DirectoryTraverser traverser) {
-    if (pathToDirectory == null) {
-      return;
-    }
-
-    Set<Path> files;
-    try {
-      files = DirectoryTraversers.getInstance().findFiles(pathToDirectory.toString(), traverser);
-    } catch (IOException e) {
-      throw new RuntimeException("Exception while traversing " + pathToDirectory + ".", e);
-    }
-
-    inputsToConsiderForCachingPurposes.addAll(files);
   }
 
   public static Predicate<BuildRule> isBuildRuleWithTarget(final BuildTarget target) {
