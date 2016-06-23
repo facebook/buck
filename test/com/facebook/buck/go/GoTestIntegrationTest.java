@@ -25,6 +25,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -76,6 +77,7 @@ public class GoTestIntegrationTest {
     workspace.runBuckCommand("test", "//:test-success").assertSuccess();
   }
 
+  @Ignore
   @Test
   public void testGoInternalTest() throws IOException {
     ProjectWorkspace.ProcessResult result1 = workspace.runBuckCommand(
