@@ -680,7 +680,7 @@ public class AppleTestIntegrationTest {
             filesystem,
             libraryTarget.withAppendedFlavors(AppleDsym.RULE_FLAVOR),
             "%s.dSYM"))
-        .resolve("Contents/Resources/DWARF/" + libraryTarget.getShortNameAndFlavorPostfix());
+        .resolve("Contents/Resources/DWARF/" + libraryTarget.getShortName());
     ProcessExecutor.Result lipoVerifyResult = workspace.runCommand(
         "lipo", output.toString(), "-verify_arch", "i386", "x86_64");
     assertEquals(

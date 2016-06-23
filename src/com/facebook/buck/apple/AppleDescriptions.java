@@ -613,7 +613,6 @@ public class AppleDescriptions {
         infoPlist,
         infoPlistSubstitutions.get(),
         Optional.of(getBinaryFromBuildRuleWithBinary(flavoredBinaryRule)),
-        Optional.of(unstrippedBinaryRule),
         appleDsym,
         destinations,
         collectedResources,

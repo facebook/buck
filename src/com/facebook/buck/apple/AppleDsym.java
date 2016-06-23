@@ -35,6 +35,7 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
@@ -54,6 +55,7 @@ public class AppleDsym
     implements HasPostBuildSteps, SupportsInputBasedRuleKey {
 
   public static final Flavor RULE_FLAVOR = ImmutableFlavor.of("apple-dsym");
+  public static final String DSYM_DWARF_FILE_FOLDER = "Contents/Resources/DWARF/";
 
   @AddToRuleKey
   private final Tool lldb;
@@ -90,12 +92,9 @@ public class AppleDsym
         "%s." + AppleBundleExtension.DSYM.toFileExtension());
   }
 
-  public static String getDwarfFilenameForDsymTarget(
-      BuildTarget dsymTarget,
-      ProjectFilesystem filesystem) {
+  public static String getDwarfFilenameForDsymTarget(BuildTarget dsymTarget) {
     AppleDsym.checkFlavorCorrectness(dsymTarget);
-    BuildTarget target = dsymTarget.withoutFlavors(ImmutableSet.of(AppleDsym.RULE_FLAVOR));
-    return BuildTargets.getGenPath(filesystem, target, "%s").getFileName().toString();
+    return dsymTarget.getShortName();
   }
 
   private static void checkFlavorCorrectness(BuildTarget buildTarget) {
@@ -122,13 +121,19 @@ public class AppleDsym
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(dsymOutputPath);
 
+    Path unstrippedBinaryPath = getResolver().getAbsolutePath(unstrippedBinarySourcePath);
+    Path dwarfFileFolder = dsymOutputPath.resolve(DSYM_DWARF_FILE_FOLDER);
     return ImmutableList.<Step>of(
         new DsymStep(
             getProjectFilesystem(),
             dsymutil.getEnvironment(getResolver()),
             dsymutil.getCommandPrefix(getResolver()),
-            getResolver().getAbsolutePath(unstrippedBinarySourcePath),
-            dsymOutputPath));
+            unstrippedBinaryPath,
+            dsymOutputPath),
+        new MoveStep(
+            getProjectFilesystem(),
+            dwarfFileFolder.resolve(unstrippedBinaryPath.getFileName()),
+            dwarfFileFolder.resolve(getDwarfFilenameForDsymTarget(getBuildTarget()))));
   }
 
   @Override

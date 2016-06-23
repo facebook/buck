@@ -83,7 +83,6 @@ public class AppleBundle
 
   private static final Logger LOG = Logger.get(AppleBundle.class);
   private static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
-  public static final String DSYM_DWARF_FILE_FOLDER = "Contents/Resources/DWARF/";
 
   @AddToRuleKey
   private final String extension;
@@ -99,9 +98,6 @@ public class AppleBundle
 
   @AddToRuleKey
   private final Optional<BuildRule> binary;
-
-  @AddToRuleKey
-  private final Optional<BuildRule> unstrippedBinaryRule;
 
   @AddToRuleKey
   private final Optional<AppleDsym> appleDsym;
@@ -167,7 +163,6 @@ public class AppleBundle
       SourcePath infoPlist,
       Map<String, String> infoPlistSubstitutions,
       Optional<BuildRule> binary,
-      Optional<BuildRule> unstrippedBinaryRule,
       Optional<AppleDsym> appleDsym,
       AppleBundleDestinations destinations,
       AppleBundleResources resources,
@@ -186,7 +181,6 @@ public class AppleBundle
     this.infoPlist = infoPlist;
     this.infoPlistSubstitutions = ImmutableMap.copyOf(infoPlistSubstitutions);
     this.binary = binary;
-    this.unstrippedBinaryRule = unstrippedBinaryRule;
     this.appleDsym = appleDsym;
     this.destinations = destinations;
     this.resources = resources;
@@ -562,21 +556,10 @@ public class AppleBundle
     stepsBuilder.add(new MoveStep(getProjectFilesystem(), dsymSourcePath, dsymDestinationPath));
 
     String dwarfFilename =
-        AppleDsym.getDwarfFilenameForDsymTarget(
-            appleDsym.get().getBuildTarget(),
-            appleDsym.get().getProjectFilesystem());
-    if (unstrippedBinaryRule.isPresent()) {
-      Path unstrippedOutput = unstrippedBinaryRule.get().getPathToOutput();
-      Preconditions.checkNotNull(
-          unstrippedOutput,
-          "Unstripped binary %s of bundle %s has null output path. It shouldn't be null, as " +
-              "it used to determine the name of dwarf file inside dSYM bundle.",
-          unstrippedBinaryRule.get(), this);
-      dwarfFilename = unstrippedOutput.getFileName().toString();
-    }
+        AppleDsym.getDwarfFilenameForDsymTarget(appleDsym.get().getBuildTarget());
 
     // rename DWARF file inside dSYM bundle to match bundle name
-    Path dwarfFolder = dsymDestinationPath.resolve(DSYM_DWARF_FILE_FOLDER);
+    Path dwarfFolder = dsymDestinationPath.resolve(AppleDsym.DSYM_DWARF_FILE_FOLDER);
     Path dwarfSourcePath = dwarfFolder.resolve(dwarfFilename);
     Path dwarfDestinationPath = dwarfFolder.resolve(MorePaths.getNameWithoutExtension(bundleRoot));
     stepsBuilder.add(new MoveStep(getProjectFilesystem(), dwarfSourcePath, dwarfDestinationPath));
