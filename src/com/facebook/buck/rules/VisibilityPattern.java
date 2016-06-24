@@ -18,4 +18,9 @@ package com.facebook.buck.rules;
 import com.google.common.base.Predicate;
 
 public abstract class VisibilityPattern implements Predicate<TargetNode<?>> {
+
+  /**
+   * Value used in a build file to specify this pattern.
+   */
+  public abstract String getRepresentation();
 }

@@ -17,19 +17,14 @@ package com.facebook.buck.model;
 
 import com.google.common.base.Predicate;
 
-import javax.annotation.Nullable;
-
 /**
  * A pattern that matches one or more build targets.
  */
 public interface BuildTargetPattern extends Predicate<BuildTarget> {
 
-  public static final BuildTargetPattern MATCH_ALL = new BuildTargetPattern() {
-
-    @Override
-    public boolean apply(@Nullable BuildTarget target) {
-      return true;
-    }
-  };
-
+  /**
+   * Value used in a build file to specify this pattern, devoid of any
+   * {@link com.facebook.buck.rules.Cell} prefix.
+   */
+  String getCellFreeRepresentation();
 }

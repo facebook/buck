@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.model;
 
+import com.facebook.buck.io.MorePaths;
 import com.google.common.base.Objects;
 
 import java.nio.file.Path;
@@ -51,6 +52,11 @@ public class ImmediateDirectoryBuildTargetPattern implements BuildTargetPattern 
     return
         Objects.equal(this.cellPath, target.getCellPath()) &&
         Objects.equal(this.pathWithinCell, target.getBasePath());
+  }
+
+  @Override
+  public String getCellFreeRepresentation() {
+    return "//" + MorePaths.pathWithUnixSeparators(pathWithinCell) + ":";
   }
 
   @Override

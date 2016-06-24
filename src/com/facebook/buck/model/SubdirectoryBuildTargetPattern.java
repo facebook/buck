@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.model;
 
+import com.facebook.buck.io.MorePaths;
 import com.google.common.base.Objects;
 
 import java.nio.file.Path;
@@ -61,6 +62,11 @@ public class SubdirectoryBuildTargetPattern implements BuildTargetPattern {
     // If the pathWithinCell is empty, we match the top level directory in the cell. _Everything_ is
     // a subdirectory of that.
     return "".equals(pathWithinCell.toString());
+  }
+
+  @Override
+  public String getCellFreeRepresentation() {
+    return "//" + MorePaths.pathWithUnixSeparators(pathWithinCell) + "/...";
   }
 
   @Override

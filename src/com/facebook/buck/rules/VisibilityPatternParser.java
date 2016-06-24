@@ -49,6 +49,11 @@ public class VisibilityPatternParser {
     public boolean apply(TargetNode<?> input) {
       return buildTargetPattern.apply(input.getBuildTarget());
     }
+
+    @Override
+    public String getRepresentation() {
+      return buildTargetPattern.getCellFreeRepresentation();
+    }
   }
 
   private static class PublicVisibilityPattern extends VisibilityPattern {
@@ -57,6 +62,11 @@ public class VisibilityPatternParser {
     @Override
     public boolean apply(TargetNode<?> input) {
       return true;
+    }
+
+    @Override
+    public String getRepresentation() {
+      return VISIBILITY_PUBLIC;
     }
   }
 }

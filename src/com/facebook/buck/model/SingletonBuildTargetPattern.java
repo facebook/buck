@@ -60,6 +60,11 @@ public class SingletonBuildTargetPattern implements BuildTargetPattern {
   }
 
   @Override
+  public String getCellFreeRepresentation() {
+    return target.getBaseName() + ":" + target.getShortName();
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (!(o instanceof SingletonBuildTargetPattern)) {
       return false;
