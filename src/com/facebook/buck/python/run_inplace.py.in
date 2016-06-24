@@ -64,4 +64,4 @@ __run()
     native_libs_preload=old_native_libs_preload,
     main_module=main_module)
 
-os.execv(sys.executable, [sys.executable, '-E', '-c', STARTUP] + sys.argv[1:])
+os.execv(sys.executable, [sys.executable, '-Wd', '-E', '-c', STARTUP] + sys.argv[1:])
