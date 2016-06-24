@@ -101,12 +101,13 @@ public class DummyRDotJavaTest {
         new FakeSourcePath("abi.jar"),
         ANDROID_JAVAC_OPTIONS,
         /* forceFinalResourceIds */ false,
-        Optional.<String>absent());
+        Optional.<String>absent(),
+        Optional.of("R2"));
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     List<Step> steps = dummyRDotJava.getBuildSteps(EasyMock.createMock(BuildContext.class),
         buildableContext);
-    assertEquals("DummyRDotJava returns an incorrect number of Steps.", 9, steps.size());
+    assertEquals("DummyRDotJava returns an incorrect number of Steps.", 10, steps.size());
 
     String rDotJavaSrcFolder =
         BuildTargets
@@ -140,6 +141,7 @@ public class DummyRDotJavaTest {
         Paths.get(rDotJavaSrcFolder).resolve("com/facebook/R.java"));
     List<String> expectedStepDescriptions = Lists.newArrayList(
         makeCleanDirDescription(filesystem.resolve(rDotJavaSrcFolder)),
+        "android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles),
         "android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles),
         makeCleanDirDescription(filesystem.resolve(rDotJavaBinFolder)),
         makeCleanDirDescription(filesystem.resolve(rDotJavaAbiFolder)),
@@ -187,6 +189,7 @@ public class DummyRDotJavaTest {
         new FakeSourcePath("abi.jar"),
         ANDROID_JAVAC_OPTIONS,
         /* forceFinalResourceIds */ false,
+        Optional.<String>absent(),
         Optional.<String>absent());
     assertEquals(
         BuildTargets.getScratchPath(

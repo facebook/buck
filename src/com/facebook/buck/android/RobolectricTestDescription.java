@@ -105,7 +105,8 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         javacOptions,
         DependencyMode.TRANSITIVE,
         /* forceFinalResourceIds */ true,
-        Optional.<String>absent());
+        /* resourceUnionPackage */ Optional.<String>absent(),
+        /* rName */ Optional.<String>absent());
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
         resolver,
         /* createBuildableIfEmpty */ true);

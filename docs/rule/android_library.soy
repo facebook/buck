@@ -65,6 +65,16 @@ compiled class files and resources.
 {/call}
 
 {call buck.arg}
+  {param name: 'final_r_name' /}
+  {param default : 'None' /}
+  {param desc}
+  An optional name for a class like R.java with final values that is generated to be used
+  for annotation processors. The values will be wrong i.e they will not match the real values
+  in the final android binary, so they should only be used by carefully crafted annotation processors.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'deps' /}
   {param default : '[]' /}
   {param desc}
