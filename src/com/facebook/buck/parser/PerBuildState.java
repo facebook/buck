@@ -128,25 +128,12 @@ class PerBuildState implements AutoCloseable {
         });
     this.parsePipeline = new ParsePipeline(
         permState,
-        new ParsePipeline.Delegate() {
-          @Override
-          public TargetNode<?> createTargetNode(
-              Cell cell,
-              Path buildFile,
-              BuildTarget target,
-              Map<String, Object> rawNode) {
-            return DaemonicParserState.createTargetNode(
-                PerBuildState.this.eventBus,
-                cell,
-                buildFile,
-                target,
-                rawNode,
-                PerBuildState.this.marshaller,
-                PerBuildState.this.permState.getTypeCoercerFactory(),
-                PerBuildState.this.permState.getBuildFileTrees(),
-                symlinkCheckers);
-          }
-        },
+        new DefaultParserTargetNodeFactory(
+            eventBus,
+            marshaller,
+            permState.getTypeCoercerFactory(),
+            permState.getBuildFileTrees(),
+            symlinkCheckers),
         parserConfig.getEnableParallelParsing() ?
             executorService :
             MoreExecutors.newDirectExecutorService(),

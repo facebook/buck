@@ -16,42 +16,23 @@
 
 package com.facebook.buck.parser;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.counters.Counter;
 import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.counters.TagSetCounter;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.PerfEventId;
-import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.WatchEvents;
 import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.json.JsonObjectHashing;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
-import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.rules.BuckPyFunction;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.ConstructorArgMarshalException;
-import com.facebook.buck.rules.ConstructorArgMarshaller;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TargetNodeFactory;
-import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -66,11 +47,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
@@ -345,123 +323,6 @@ class DaemonicParserState implements ParsePipeline.Cache {
       }
       return state.lookupRawNodes(buildFile);
     }
-  }
-
-  // This method is slated to be moved elsewhere, as it's not an accessor. Hence, it's static and
-  // takes an instance of this class as argument.
-  public static TargetNode<?> createTargetNode(
-      BuckEventBus eventBus,
-      Cell cell,
-      Path buildFile,
-      BuildTarget target,
-      Map<String, Object> rawNode,
-      ConstructorArgMarshaller marshaller,
-      TypeCoercerFactory typeCoercerFactory,
-      LoadingCache<Cell, BuildFileTree> buildFileTrees,
-      TargetNodeListener nodeListener) {
-    BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(cell, rawNode);
-
-    // Because of the way that the parser works, we know this can never return null.
-    Description<?> description = cell.getDescription(buildRuleType);
-
-    UnflavoredBuildTarget unflavoredBuildTarget = target.withoutCell().getUnflavoredBuildTarget();
-    if (target.isFlavored()) {
-      if (description instanceof Flavored) {
-        if (!((Flavored) description).hasFlavors(
-            ImmutableSet.copyOf(target.getFlavors()))) {
-          throw UnexpectedFlavorException.createWithSuggestions(cell, target);
-        }
-      } else {
-        LOG.warn(
-            "Target %s (type %s) must implement the Flavored interface " +
-                "before we can check if it supports flavors: %s",
-            unflavoredBuildTarget,
-            buildRuleType,
-            target.getFlavors());
-        throw new HumanReadableException(
-            "Target %s (type %s) does not currently support flavors (tried %s)",
-            unflavoredBuildTarget,
-            buildRuleType,
-            target.getFlavors());
-      }
-    }
-
-    UnflavoredBuildTarget unflavoredBuildTargetFromRawData =
-        ParsePipeline.parseBuildTargetFromRawRule(
-            cell.getRoot(),
-            rawNode,
-            buildFile);
-    if (!unflavoredBuildTarget.equals(unflavoredBuildTargetFromRawData)) {
-      throw new IllegalStateException(
-          String.format(
-              "Inconsistent internal state, target from data: %s, expected: %s, raw data: %s",
-              unflavoredBuildTargetFromRawData,
-              unflavoredBuildTarget,
-              Joiner.on(',').withKeyValueSeparator("->").join(rawNode)));
-    }
-
-    Cell targetCell = cell.getCell(target);
-    BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
-        targetCell.getFilesystem(),
-        target,
-        buildFileTrees.getUnchecked(targetCell),
-        targetCell.isEnforcingBuckPackageBoundaries());
-    Object constructorArg = description.createUnpopulatedConstructorArg();
-    try {
-      ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
-      ImmutableSet.Builder<VisibilityPattern> visibilityPatterns =
-          ImmutableSet.builder();
-      try (SimplePerfEvent.Scope scope = SimplePerfEvent.scope(
-          eventBus,
-          PerfEventId.of("MarshalledConstructorArg"),
-          "target",
-          target)) {
-        marshaller.populate(
-            targetCell.getCellRoots(),
-            targetCell.getFilesystem(),
-            factoryParams,
-            constructorArg,
-            declaredDeps,
-            visibilityPatterns,
-            rawNode);
-      }
-      try (SimplePerfEvent.Scope scope = SimplePerfEvent.scope(
-          eventBus,
-          PerfEventId.of("CreatedTargetNode"),
-          "target",
-          target)) {
-        Hasher hasher = Hashing.sha1().newHasher();
-        hasher.putString(BuckVersion.getVersion(), UTF_8);
-        JsonObjectHashing.hashJsonObject(hasher, rawNode);
-        TargetNodeFactory targetNodeFactory = new TargetNodeFactory(typeCoercerFactory);
-        TargetNode<?> node = targetNodeFactory.createFromObject(
-            hasher.hash(),
-            description,
-            constructorArg,
-            factoryParams,
-            declaredDeps.build(),
-            visibilityPatterns.build(),
-            targetCell.getCellRoots());
-        nodeListener.onCreate(buildFile, node);
-        return node;
-      }
-    } catch (
-        NoSuchBuildTargetException |
-            TargetNodeFactory.InvalidSourcePathInputException e) {
-      throw new HumanReadableException(e);
-    } catch (ConstructorArgMarshalException e) {
-      throw new HumanReadableException("%s: %s", target, e.getMessage());
-    } catch (IOException e) {
-      throw new HumanReadableException(e.getMessage(), e);
-    }
-  }
-
-  private static BuildRuleType parseBuildRuleTypeFromRawRule(
-      Cell cell,
-      Map<String, Object> map) {
-    String type = (String) Preconditions.checkNotNull(
-        map.get(BuckPyFunction.TYPE_PROPERTY_NAME));
-    return cell.getBuildRuleType(type);
   }
 
   public void invalidateBasedOn(WatchEvent<?> event) throws InterruptedException {

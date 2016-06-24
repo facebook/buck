@@ -74,7 +74,7 @@ public class ParsePipeline implements AutoCloseable {
 
   private final Object lock = new Object();
   private final Cache cache;
-  private final Delegate delegate;
+  private final ParserTargetNodeFactory delegate;
   @GuardedBy("lock")
   private final Map<BuildTarget, ListenableFuture<TargetNode<?>>> targetNodeJobsCache;
   @GuardedBy("lock")
@@ -98,7 +98,7 @@ public class ParsePipeline implements AutoCloseable {
    */
   public ParsePipeline(
       Cache cache,
-      Delegate delegate,
+      ParserTargetNodeFactory delegate,
       ListeningExecutorService executorService,
       BuckEventBus buckEventBus,
       ProjectBuildFileParserPool projectBuildFileParserPool,
@@ -614,19 +614,6 @@ public class ParsePipeline implements AutoCloseable {
     // happen here are exceptions thrown by the ProjectBuildFileParser as its shutting down. These
     // aren't critical enough to warrant bringing down the entire process, as they don't affect the
     // state that has already been extracted from the parser.
-  }
-
-  /**
-   * Delegate interface to make testing simpler.
-   */
-  public interface Delegate {
-    // Do the actual work of creating the TargetNode.
-    TargetNode<?> createTargetNode(
-        Cell cell,
-        Path buildFile,
-        BuildTarget target,
-        Map<String, Object> rawNode);
-
   }
 
   /**

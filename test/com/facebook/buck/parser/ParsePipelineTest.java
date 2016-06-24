@@ -25,7 +25,7 @@ import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.InMemoryBuildFileTree;
+import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TargetNode;
@@ -43,6 +43,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -406,30 +407,23 @@ public class ParsePipelineTest {
         public void onCreate(Path buildFile, TargetNode<?> node) throws IOException {
         }
       };
+      LoadingCache<Cell, BuildFileTree> buildFileTrees = CacheBuilder.newBuilder().build(
+          new CacheLoader<Cell, BuildFileTree>() {
+            @Override
+            public BuildFileTree load(Cell cell) throws Exception {
+              return new FilesystemBackedBuildFileTree(
+                  cell.getFilesystem(),
+                  cell.getBuildFileName());
+            }
+          });
       this.parsePipeline = new ParsePipeline(
           this.cache,
-          new ParsePipeline.Delegate() {
-            @Override
-            public TargetNode<?> createTargetNode(
-                Cell cell, Path buildFile, BuildTarget target, Map<String, Object> rawNode) {
-              return DaemonicParserState.createTargetNode(
-                  eventBus,
-                  cell,
-                  buildFile,
-                  target,
-                  rawNode,
-                  constructorArgMarshaller,
-                  coercerFactory,
-                  CacheBuilder.newBuilder().build(
-                      new CacheLoader<Cell, BuildFileTree>() {
-                        @Override
-                        public BuildFileTree load(Cell key) throws Exception {
-                          return new InMemoryBuildFileTree(ImmutableList.<Path>of());
-                        }
-                      }),
-                  nodeListener);
-            }
-          },
+          new DefaultParserTargetNodeFactory(
+              eventBus,
+              constructorArgMarshaller,
+              coercerFactory,
+              buildFileTrees,
+              nodeListener),
           this.executorService,
           this.eventBus,
           this.projectBuildFileParserPool,
