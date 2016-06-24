@@ -1,17 +1,17 @@
 /*
  * Copyright 2015-present Facebook, Inc.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License. You may obtain
- *  a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- *  License for the specific language governing permissions and limitations
- *  under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
  */
 
 package com.facebook.buck.js;
@@ -34,7 +34,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class ReactNativeLibraryGraphEnhancer {
 
-  private static final Flavor REACT_NATIVE_DEPS_FLAVOR = ImmutableFlavor.of("rn_deps");
   private static final Flavor REACT_NATIVE_BUNDLE_FLAVOR = ImmutableFlavor.of("bundle");
   private static final Flavor REACT_NATIVE_ANDROID_RES_FLAVOR = ImmutableFlavor.of("android_res");
 
@@ -44,61 +43,52 @@ public class ReactNativeLibraryGraphEnhancer {
     this.buckConfig = buckConfig;
   }
 
-  private ReactNativeDeps createReactNativeDeps(
-      BuildRuleParams params,
+  private ReactNativeBundle createReactNativeBundle(
+      BuildRuleParams baseParams,
       BuildRuleResolver resolver,
+      SourcePathResolver pathResolver,
+      BuildTarget target,
       ReactNativeLibraryArgs args,
       ReactNativePlatform platform) {
-    BuildTarget originalBuildTarget = params.getBuildTarget();
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
-
-
-    BuildTarget depsFinderTarget = BuildTarget.builder(originalBuildTarget)
-        .addFlavors(REACT_NATIVE_DEPS_FLAVOR)
-        .build();
-    ReactNativeDeps depsFinder = new ReactNativeDeps(
-        params.copyWithBuildTarget(depsFinderTarget),
-        sourcePathResolver,
-        buckConfig.getPackager(resolver),
-        args.srcs.get(),
+    Tool jsPackager = buckConfig.getPackager(resolver);
+    return new ReactNativeBundle(
+        baseParams.copyWithChanges(
+            target,
+            Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(pathResolver.filterBuildRuleInputs(args.entryPath))
+                    .addAll(pathResolver.filterBuildRuleInputs(args.srcs.get()))
+                    .addAll(jsPackager.getDeps(pathResolver))
+                    .build()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+        pathResolver,
         args.entryPath,
-        platform,
-        args.packagerFlags);
-    return resolver.addToIndex(depsFinder);
+        args.srcs.get(),
+        ReactNativeFlavors.useUnbundling(baseParams.getBuildTarget()),
+        ReactNativeFlavors.isDevMode(baseParams.getBuildTarget()),
+        args.bundleName,
+        args.packagerFlags,
+        jsPackager,
+        platform);
   }
 
   public AndroidReactNativeLibrary enhanceForAndroid(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       AndroidReactNativeLibraryDescription.Args args) {
-    final ReactNativeDeps reactNativeDeps =
-        createReactNativeDeps(params, resolver, args, ReactNativePlatform.ANDROID);
 
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
-
-    Tool jsPackager = buckConfig.getPackager(resolver);
     BuildTarget originalBuildTarget = params.getBuildTarget();
-    BuildRuleParams paramsForBundle = params
-        .copyWithBuildTarget(
+    ReactNativeBundle bundle =
+        createReactNativeBundle(
+            params,
+            resolver,
+            sourcePathResolver,
             BuildTarget.builder(originalBuildTarget)
                 .addFlavors(REACT_NATIVE_BUNDLE_FLAVOR)
-                .build())
-        .appendExtraDeps(
-            ImmutableList.<BuildRule>builder()
-                .add(reactNativeDeps)
-                .addAll(jsPackager.getDeps(sourcePathResolver))
-                .build());
-    ReactNativeBundle bundle = new ReactNativeBundle(
-        paramsForBundle,
-        sourcePathResolver,
-        args.entryPath,
-        ReactNativeFlavors.useUnbundling(originalBuildTarget),
-        ReactNativeFlavors.isDevMode(originalBuildTarget),
-        args.bundleName,
-        args.packagerFlags,
-        jsPackager,
-        ReactNativePlatform.ANDROID,
-        reactNativeDeps);
+                .build(),
+            args,
+            ReactNativePlatform.ANDROID);
     resolver.addToIndex(bundle);
 
     ImmutableList.Builder<BuildRule> extraDeps = ImmutableList.builder();
@@ -110,7 +100,7 @@ public class ReactNativeLibraryGraphEnhancer {
                   .addFlavors(REACT_NATIVE_ANDROID_RES_FLAVOR)
                   .build())
               .copyWithExtraDeps(Suppliers.ofInstance(
-                      ImmutableSortedSet.<BuildRule>of(bundle, reactNativeDeps)));
+                      ImmutableSortedSet.<BuildRule>of(bundle)));
 
       SourcePath resources = new BuildTargetSourcePath(
           bundle.getBuildTarget(),
@@ -142,25 +132,12 @@ public class ReactNativeLibraryGraphEnhancer {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       ReactNativeLibraryArgs args) {
-    ReactNativeDeps reactNativeDeps =
-        createReactNativeDeps(params, resolver, args, ReactNativePlatform.IOS);
-
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
-    Tool jsPackager = buckConfig.getPackager(resolver);
-    return new ReactNativeBundle(
-        params.appendExtraDeps(
-            ImmutableList.<BuildRule>builder()
-                .add(reactNativeDeps)
-                .addAll(jsPackager.getDeps(sourcePathResolver))
-                .build()),
-        sourcePathResolver,
-        args.entryPath,
-        ReactNativeFlavors.useUnbundling(params.getBuildTarget()),
-        ReactNativeFlavors.isDevMode(params.getBuildTarget()),
-        args.bundleName,
-        args.packagerFlags,
-        jsPackager,
-        ReactNativePlatform.IOS,
-        reactNativeDeps);
+    return createReactNativeBundle(
+        params,
+        resolver,
+        new SourcePathResolver(resolver),
+        params.getBuildTarget(),
+        args,
+        ReactNativePlatform.IOS);
   }
 }

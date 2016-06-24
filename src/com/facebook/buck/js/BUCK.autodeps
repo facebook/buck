@@ -1,8 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 33d5eba25682a0217e9862d4455ce3e5ef8948ba #@#
+#@# GENERATED FILE: DO NOT MODIFY a68b2edfee92eae5f8a6729224d38fd516b7cc1d #@#
 {
   "js" : {
     "deps" : [
       "//src/com/facebook/buck/android:rules",
+      "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:exceptions"
     ],
@@ -13,11 +14,9 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:interfaces",
-      "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/shell:worker",
       "//src/com/facebook/buck/step:step",
-      "//src/com/facebook/buck/util/sha1:sha1",
       "//third-party/java/guava:guava",
       "//third-party/java/infer-annotations:infer-annotations",
       "//third-party/java/jsr:jsr305"

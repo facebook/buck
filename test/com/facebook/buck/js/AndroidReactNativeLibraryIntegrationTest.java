@@ -16,17 +16,22 @@
 
 package com.facebook.buck.js;
 
+import static org.junit.Assert.assertThat;
+
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.google.common.base.Optional;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -111,8 +116,21 @@ public class AndroidReactNativeLibraryIntegrationTest {
 
     workspace.runBuckBuild("//apps/sample:app").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally("//js:app#dev,rn_deps");
-    buildLog.assertTargetHadMatchingDepsAbi("//js:app#bundle,dev");
+    buildLog.assertTargetHadMatchingDepfileRuleKey("//js:app#bundle,dev");
+  }
+
+  @Test
+  public void testEditingUnusedJSFileHitsInCache() throws IOException {
+    workspace.enableDirCache();
+    workspace.runBuckBuild("-c", "build.depfiles=cache", "//apps/sample:app").assertSuccess();
+    workspace.runBuckCommand("clean");
+
+    workspace.replaceFileContents("js/app/unused.js", "anotherFunction", "someOtherFunction");
+    workspace.runBuckBuild("-c", "build.depfiles=cache", "//apps/sample:app").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    assertThat(
+        buildLog.getLogEntry("//js:app#bundle,dev").getSuccessType(),
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED)));
   }
 
   @Test
@@ -124,7 +142,6 @@ public class AndroidReactNativeLibraryIntegrationTest {
 
     workspace.runBuckBuild("//apps/sample:app").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally("//js:app#dev,rn_deps");
     buildLog.assertTargetBuiltLocally("//js:app#bundle,dev");
   }
 
@@ -137,7 +154,6 @@ public class AndroidReactNativeLibraryIntegrationTest {
 
     workspace.runBuckBuild("//apps/sample:app").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally("//js:app#dev,rn_deps");
     buildLog.assertTargetBuiltLocally("//js:app#dev,android_res");
   }
 }

@@ -60,7 +60,7 @@ public class BuckBuildLog {
   }
 
   public void assertNotTargetBuiltLocally(String buildTargetRaw) {
-    BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
+    BuildLogEntry logEntry = getLogEntry(buildTargetRaw);
     assertNotEquals(BuildRuleSuccessType.BUILT_LOCALLY, logEntry.successType.get());
   }
 
@@ -97,17 +97,17 @@ public class BuckBuildLog {
   }
 
   public void assertTargetFailed(String buildTargetRaw) {
-    BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
+    BuildLogEntry logEntry = getLogEntry(buildTargetRaw);
     assertEquals(BuildRuleStatus.FAIL, logEntry.status);
   }
 
   public void assertTargetCanceled(String buildTargetRaw) {
-    BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
+    BuildLogEntry logEntry = getLogEntry(buildTargetRaw);
     assertEquals(BuildRuleStatus.CANCELED, logEntry.status);
   }
 
   public Sha1HashCode getRuleKey(String buildTargetRaw) {
-    BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
+    BuildLogEntry logEntry = getLogEntry(buildTargetRaw);
     return logEntry.ruleKeyHashCode;
   }
 
@@ -154,17 +154,8 @@ public class BuckBuildLog {
     return new BuckBuildLog(root, builder.build());
   }
 
-  private BuildLogEntry getLogEntryOrFail(String buildTargetRaw) {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(root, buildTargetRaw);
-    if (!buildLogEntries.containsKey(buildTarget)) {
-      fail(String.format("There was no build log entry for target %s", buildTargetRaw));
-    }
-
-    return buildLogEntries.get(buildTarget);
-  }
-
   private void assertBuildSuccessType(String buildTargetRaw, BuildRuleSuccessType expectedType) {
-    BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
+    BuildLogEntry logEntry = getLogEntry(buildTargetRaw);
     assertThat(
         String.format("%s should have succeeded", buildTargetRaw),
         logEntry.getStatus(), is(BuildRuleStatus.SUCCESS));
@@ -176,8 +167,17 @@ public class BuckBuildLog {
         logEntry.successType.get(), is(expectedType));
   }
 
+  public BuildLogEntry getLogEntry(String buildTargetRaw) {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(root, buildTargetRaw);
+    if (!buildLogEntries.containsKey(buildTarget)) {
+      fail(String.format("There was no build log entry for target %s", buildTargetRaw));
+    }
+
+    return buildLogEntries.get(buildTarget);
+  }
+
   public BuildLogEntry getLogEntry(BuildTarget target) {
-    return getLogEntryOrFail(target.toString());
+    return getLogEntry(target.toString());
   }
 
   public static class BuildLogEntry {
