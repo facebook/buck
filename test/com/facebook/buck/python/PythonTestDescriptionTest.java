@@ -226,22 +226,29 @@ public class PythonTestDescriptionTest {
 
   @Test
   public void runtimeDepOnDeps() throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    BuildRule cxxBinary =
-        new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
-            .build(resolver);
-    BuildRule pythonLibrary =
-        new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
-            .setDeps(ImmutableSortedSet.of(cxxBinary.getBuildTarget()))
-            .build(resolver);
-    PythonTest pythonTest =
-        (PythonTest) PythonTestBuilder.create(BuildTargetFactory.newInstance("//:test"))
-            .setDeps(ImmutableSortedSet.of(pythonLibrary.getBuildTarget()))
-            .build(resolver);
-    assertThat(
-        BuildRules.getTransitiveRuntimeDeps(pythonTest),
-        Matchers.hasItem(cxxBinary));
+    for (PythonBuckConfig.PackageStyle packageStyle : PythonBuckConfig.PackageStyle.values()) {
+      BuildRuleResolver resolver =
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+      BuildRule cxxBinary =
+          new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
+              .build(resolver);
+      BuildRule pythonLibrary =
+          new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+              .setDeps(ImmutableSortedSet.of(cxxBinary.getBuildTarget()))
+              .build(resolver);
+      PythonTest pythonTest =
+          (PythonTest) PythonTestBuilder.create(BuildTargetFactory.newInstance("//:test"))
+              .setDeps(ImmutableSortedSet.of(pythonLibrary.getBuildTarget()))
+              .setPackageStyle(packageStyle)
+              .build(resolver);
+      assertThat(
+          String.format(
+              "Transitive runtime deps of %s [%s]",
+              pythonTest,
+              packageStyle.toString()),
+          BuildRules.getTransitiveRuntimeDeps(pythonTest),
+          Matchers.hasItem(cxxBinary));
+    }
   }
 
   @Test

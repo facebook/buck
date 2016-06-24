@@ -254,23 +254,30 @@ public class PythonBinaryDescriptionTest {
 
   @Test
   public void runtimeDepOnDeps() throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    BuildRule cxxBinary =
-        new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
-            .build(resolver);
-    BuildRule pythonLibrary =
-        new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
-            .setDeps(ImmutableSortedSet.of(cxxBinary.getBuildTarget()))
-            .build(resolver);
-    PythonBinary pythonBinary =
-        (PythonBinary) PythonBinaryBuilder.create(BuildTargetFactory.newInstance("//:bin"))
-            .setMainModule("main")
-            .setDeps(ImmutableSortedSet.of(pythonLibrary.getBuildTarget()))
-            .build(resolver);
-    assertThat(
-        BuildRules.getTransitiveRuntimeDeps(pythonBinary),
-        Matchers.hasItem(cxxBinary));
+    for (PythonBuckConfig.PackageStyle packageStyle : PythonBuckConfig.PackageStyle.values()) {
+      BuildRuleResolver resolver =
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+      BuildRule cxxBinary =
+          new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
+              .build(resolver);
+      BuildRule pythonLibrary =
+          new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+              .setDeps(ImmutableSortedSet.of(cxxBinary.getBuildTarget()))
+              .build(resolver);
+      PythonBinary pythonBinary =
+          (PythonBinary) PythonBinaryBuilder.create(BuildTargetFactory.newInstance("//:bin"))
+              .setMainModule("main")
+              .setDeps(ImmutableSortedSet.of(pythonLibrary.getBuildTarget()))
+              .setPackageStyle(packageStyle)
+              .build(resolver);
+      assertThat(
+          String.format(
+              "Transitive runtime deps of %s [%s]",
+              pythonBinary,
+              packageStyle.toString()),
+          BuildRules.getTransitiveRuntimeDeps(pythonBinary),
+          Matchers.hasItem(cxxBinary));
+    }
   }
 
   @Test

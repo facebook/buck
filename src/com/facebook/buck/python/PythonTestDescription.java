@@ -56,7 +56,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -371,7 +370,6 @@ public class PythonTestDescription implements
         pathResolver,
         testEnv,
         binary,
-        ImmutableSortedSet.copyOf(Sets.difference(params.getDeps(), binaryParams.getDeps())),
         resolver.getAllRules(args.sourceUnderTest.or(ImmutableSortedSet.<BuildTarget>of())),
         args.labels.or(ImmutableSet.<Label>of()),
         neededCoverageBuilder.build(),

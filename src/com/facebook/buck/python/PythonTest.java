@@ -62,7 +62,6 @@ public class PythonTest
   @AddToRuleKey
   private final Supplier<ImmutableMap<String, String>> env;
   private final PythonBinary binary;
-  private final ImmutableSortedSet<BuildRule> additionalDeps;
   private final ImmutableSet<Label> labels;
   private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
@@ -74,7 +73,6 @@ public class PythonTest
       SourcePathResolver resolver,
       final Supplier<ImmutableMap<String, String>> env,
       final PythonBinary binary,
-      ImmutableSortedSet<BuildRule> additionalDeps,
       ImmutableSet<BuildRule> sourceUnderTest,
       ImmutableSet<Label> labels,
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
@@ -94,7 +92,6 @@ public class PythonTest
           }
         });
     this.binary = binary;
-    this.additionalDeps = additionalDeps;
     this.sourceUnderTest = sourceUnderTest;
     this.labels = labels;
     this.neededCoverage = neededCoverage;
@@ -205,7 +202,7 @@ public class PythonTest
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(binary.getExecutableCommand().getDeps(getResolver()))
-        .addAll(additionalDeps)
+        .addAll(getDeclaredDeps())
         .build();
   }
 

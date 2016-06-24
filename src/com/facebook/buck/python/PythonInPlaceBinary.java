@@ -172,6 +172,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
         .addAll(getResolver().filterBuildRuleInputs(components.getModules().values()))
         .addAll(getResolver().filterBuildRuleInputs(components.getResources().values()))
         .addAll(getResolver().filterBuildRuleInputs(components.getNativeLibraries().values()))
+        .addAll(getDeclaredDeps())
         .build();
   }
 
