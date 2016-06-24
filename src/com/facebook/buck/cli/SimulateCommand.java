@@ -77,8 +77,8 @@ public class SimulateCommand extends AbstractCommand {
       actionGraphAndResolver = buildCommand.createActionGraphAndResolver(
           params,
           pool.getExecutor());
-    }
-    if (actionGraphAndResolver == null) {
+    } catch (BuildCommand.ActionGraphCreationException e) {
+      params.getConsole().printBuildFailure(e.getMessage());
       return 1;
     }
 
