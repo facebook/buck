@@ -373,7 +373,18 @@ function _buck_completion_add_target_alias_or_relative_path() {
 }
 
 function _buck_completion_add_target_alias() {
-  local prog='/^\[/ { p=0 } /^\[alias]/ { p=1 } { if (p && $2 == "=" && $1 ~ /^'$word'/) print $1 }'
+  local prog=$(cat <<EOF
+    /^\[/ {
+      p=0
+    }
+    /^\[alias]/ {
+      p=1
+    }
+    p && \$2 == "=" && substr(\$1, 0, length("$word")) == "$word" {
+      print \$1
+    }
+EOF
+)
   local -a aliases; aliases=($(awk "$prog" < "$root/.buckconfig"))
 
   for a in "${aliases[@]}"; do
