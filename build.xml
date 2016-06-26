@@ -141,6 +141,7 @@
     <include name="maven/maven-model-3.2.5.jar" />
     <include name="maven/maven-model-builder-3.2.5.jar" />
     <include name="maven/maven-repository-metadata-3.2.5.jar" />
+    <include name="plexus/plexus-component-annotations-1.5.5.jar" />
     <include name="plexus/plexus-utils-3.0.20.jar" />
     <include name="plexus/plexus-interpolation-1.21.jar" />
     <include name="slf4j/jcl-over-slf4j-1.6.2.jar" />
