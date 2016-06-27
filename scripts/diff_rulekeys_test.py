@@ -3,6 +3,14 @@ import unittest
 from diff_rulekeys import *
 
 
+class MockFile(object):
+    def __init__(self, lines):
+        self._lines = lines
+
+    def readlines(self):
+        return self._lines
+
+
 class TestRuleKeyDiff(unittest.TestCase):
     def test_key_value_diff(self):
         list_diff = KeyValueDiff()
@@ -45,6 +53,47 @@ class TestRuleKeyDiff(unittest.TestCase):
             list_diff.diff(),
             ["Only order and letter casing (Upper Case vs lower case) of " +
              "entries differs:", '-[B]', '+[b]'])
+
+    def test_structure_info(self):
+        line = ("[v] RuleKey 00aa=string(\"//:rule\"):key(name):" +
+                "number(1):key(version):string(\"Rule\"):key(buck.type):")
+        info = RuleKeyStructureInfo(MockFile([line]))
+        self.assertEqual(info.getNameForKey("00aa"), "//:rule")
+
+    def test_simple_diff(self):
+        line = ("[v] RuleKey {key}=string(\"//:lib\"):key(name):" +
+                "path(JavaLib1.java:{hash}):key(srcs):" +
+                "string(\"t\"):key(buck.type):")
+        left_line = line.format(key="aabb", hash="aabb")
+        right_line = line.format(key="cabb", hash="cabb")
+        result = diff("//:lib",
+                      RuleKeyStructureInfo(MockFile([left_line])),
+                      RuleKeyStructureInfo(MockFile([right_line])),
+                      False)
+        expected = [
+                'Change details for [//:lib]',
+                '  (srcs):',
+                '    -[path(JavaLib1.java:aabb)]',
+                '    +[path(JavaLib1.java:cabb)]']
+        self.assertEqual(result, expected)
+
+    def test_simple_diff_with_custom_names(self):
+        line = ("[v] RuleKey {key}=string(\"//:lib\"):key(name):" +
+                "path(JavaLib1.java:{hash}):key(srcs):" +
+                "string(\"t\"):key(buck.type):")
+        left_line = line.format(key="aabb", hash="ll")
+        right_line = line.format(key="aabb", hash="rr")
+        result = diff("//:lib",
+                      RuleKeyStructureInfo(MockFile([left_line])),
+                      RuleKeyStructureInfo(MockFile([right_line])),
+                      False,
+                      format_tuple=('l(%s)', 'r{%s}'))
+        expected = [
+                'Change details for [//:lib]',
+                '  (srcs):',
+                '    l(path(JavaLib1.java:ll))',
+                '    r{path(JavaLib1.java:rr)}']
+        self.assertEqual(result, expected)
 
 if __name__ == '__main__':
     unittest.main()
