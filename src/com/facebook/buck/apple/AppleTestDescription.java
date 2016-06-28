@@ -107,6 +107,7 @@ public class AppleTestDescription implements
   private final ProvisioningProfileStore provisioningProfileStore;
   private final Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier;
   private final AppleDebugFormat defaultDebugFormat;
+  private final Optional<Long> defaultTestRuleTimeoutMs;
 
   public AppleTestDescription(
       AppleConfig appleConfig,
@@ -117,7 +118,8 @@ public class AppleTestDescription implements
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
       Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier,
-      AppleDebugFormat defaultDebugFormat) {
+      AppleDebugFormat defaultDebugFormat,
+      Optional<Long> defaultTestRuleTimeoutMs) {
     this.appleConfig = appleConfig;
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
@@ -127,6 +129,7 @@ public class AppleTestDescription implements
     this.provisioningProfileStore = provisioningProfileStore;
     this.xcodeDeveloperDirectorySupplier = xcodeDeveloperDirectorySupplier;
     this.defaultDebugFormat = defaultDebugFormat;
+    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
 
   @Override
@@ -290,7 +293,8 @@ public class AppleTestDescription implements
         xcodeDeveloperDirectorySupplier,
         appleConfig.getTestLogDirectoryEnvironmentVariable(),
         appleConfig.getTestLogLevelEnvironmentVariable(),
-        appleConfig.getTestLogLevel());
+        appleConfig.getTestLogLevel(),
+        args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs));
   }
 
   private Optional<SourcePath> getXctool(
@@ -486,6 +490,8 @@ public class AppleTestDescription implements
     public Optional<String> xcodeProductType;
 
     public Optional<ImmutableMap<String, String>> destinationSpecifier;
+
+    public Optional<Long> testRuleTimeoutMs;
 
     @Override
     public Either<AppleBundleExtension, String> getExtension() {

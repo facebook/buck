@@ -50,6 +50,8 @@ public class FakeAppleRuleDescriptions {
   // Utility class, do not instantiate.
   private FakeAppleRuleDescriptions() { }
 
+  public static final Optional<Long> DEFAULT_TIMEOUT = Optional.of(300000L);
+
   public static final AppleSdkPaths DEFAULT_MACOSX_SDK_PATHS =
       AppleSdkPaths.builder()
           .setDeveloperPath(Paths.get("."))
@@ -227,5 +229,6 @@ public class FakeAppleRuleDescriptions {
           ProvisioningProfileStore.fromProvisioningProfiles(
               ImmutableList.<ProvisioningProfileMetadata>of()),
           Suppliers.ofInstance(Optional.<Path>absent()),
-          AppleDebugFormat.NONE);
+          AppleDebugFormat.NONE,
+          DEFAULT_TIMEOUT);
 }

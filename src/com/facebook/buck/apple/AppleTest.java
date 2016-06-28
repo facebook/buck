@@ -105,6 +105,8 @@ public class AppleTest
   private final Path testOutputPath;
   private final Path testLogsPath;
 
+  private Optional<Long> testRuleTimeoutMs;
+
   private Optional<AppleTestXctoolStdoutReader> xctoolStdoutReader;
   private Optional<AppleTestXctestOutputReader> xctestOutputReader;
 
@@ -186,7 +188,8 @@ public class AppleTest
       Supplier<Optional<Path>> xcodeDeveloperDirSupplier,
       String testLogDirectoryEnvironmentVariable,
       String testLogLevelEnvironmentVariable,
-      String testLogLevel) {
+      String testLogLevel,
+      Optional<Long> testRuleTimeoutMs) {
     super(params, resolver);
     this.xctool = xctool;
     this.xctoolStutterTimeout = xctoolStutterTimeout;
@@ -200,6 +203,7 @@ public class AppleTest
     this.contacts = contacts;
     this.labels = labels;
     this.runTestSeparately = runTestSeparately;
+    this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.testOutputPath = getPathToTestOutputDirectory().resolve("test-output.json");
     this.testLogsPath = getPathToTestOutputDirectory().resolve("logs");
     this.xctoolStdoutReader = Optional.absent();
@@ -316,7 +320,8 @@ public class AppleTest
               Optional.of(testLogDirectoryEnvironmentVariable),
               Optional.of(resolvedTestLogsPath),
               Optional.of(testLogLevelEnvironmentVariable),
-              Optional.of(testLogLevel));
+              Optional.of(testLogLevel),
+              testRuleTimeoutMs);
       steps.add(xctoolStep);
       externalSpec.setType("xctool-" + (testHostApp.isPresent() ? "application" : "logic"));
       externalSpec.setCommand(xctoolStep.getCommand());

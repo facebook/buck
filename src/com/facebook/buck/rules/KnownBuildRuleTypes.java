@@ -590,7 +590,8 @@ public class KnownBuildRuleTypes {
             codeSignIdentityStore,
             provisioningProfileStore,
             appleConfig.getAppleDeveloperDirectorySupplierForTests(processExecutor),
-            appleConfig.getDefaultDebugInfoFormatForTests()));
+            appleConfig.getDefaultDebugInfoFormatForTests(),
+            defaultTestRuleTimeoutMs));
     builder.register(new CoreDataModelDescription());
     builder.register(new CSharpLibraryDescription());
     builder.register(cxxBinaryDescription);

@@ -331,6 +331,26 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
+  public void slowTestShouldFailWithTimeout() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "slow_xc_tests_per_rule_timeout", tmp);
+    workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(this).resolve("xctool"),
+        Paths.get("xctool"));
+    workspace.writeContentsToPath(
+        "[apple]\n  xctool_path = xctool/bin/xctool\n",
+        ".buckconfig.local");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
+    result.assertSpecialExitCode("test should fail", 42);
+    assertThat(
+        result.getStderr(),
+        containsString("Timed out after 100 ms running test command"));
+  }
+
+
+  @Test
   public void exitCodeIsCorrectOnTestFailure() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
