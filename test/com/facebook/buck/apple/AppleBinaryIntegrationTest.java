@@ -624,8 +624,7 @@ public class AppleBinaryIntegrationTest {
                 filesystem,
                 binaryTarget.withFlavors(
                     platformFlavor,
-                    ImmutableFlavor.of("compile-" + sanitize("AppDelegate.m.o")),
-                    AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    ImmutableFlavor.of("compile-" + sanitize("AppDelegate.m.o"))),
                 "%s")
             .resolve("AppDelegate.m.o"));
 
@@ -635,8 +634,7 @@ public class AppleBinaryIntegrationTest {
                 filesystem,
                 binaryTarget.withFlavors(
                     platformFlavor,
-                    ImmutableFlavor.of("compile-" + sanitize("main.m.o")),
-                    AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    ImmutableFlavor.of("compile-" + sanitize("main.m.o"))),
                 "%s")
             .resolve("main.m.o"));
 

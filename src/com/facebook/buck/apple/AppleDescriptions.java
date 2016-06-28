@@ -84,6 +84,9 @@ public class AppleDescriptions {
           ImmutableMap.of(
               INCLUDE_FRAMEWORKS_FLAVOR, Boolean.TRUE,
               NO_INCLUDE_FRAMEWORKS_FLAVOR, Boolean.FALSE));
+  private static final ImmutableSet<Flavor> BUNDLE_SPECIFIC_FLAVORS = ImmutableSet.of(
+      INCLUDE_FRAMEWORKS_FLAVOR,
+      NO_INCLUDE_FRAMEWORKS_FLAVOR);
 
   private static final SourceList EMPTY_HEADERS = SourceList.ofUnnamedSources(
       ImmutableSortedSet.<SourcePath>of());
@@ -523,11 +526,12 @@ public class AppleDescriptions {
     ImmutableSet<SourcePath> frameworks = frameworksBuilder.build();
 
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    BuildRuleParams paramsWithoutBundleSpecificFlavors = stripBundleSpecificFlavors(params);
 
     Optional<AppleAssetCatalog> assetCatalog =
         createBuildRuleForTransitiveAssetCatalogDependencies(
             targetGraph,
-            params,
+            paramsWithoutBundleSpecificFlavors,
             sourcePathResolver,
             appleCxxPlatform.getAppleSdk().getApplePlatform(),
             appleCxxPlatform.getActool());
@@ -538,7 +542,7 @@ public class AppleDescriptions {
         cxxPlatformFlavorDomain,
         defaultCxxPlatform,
         targetGraph,
-        params.getBuildTarget().getFlavors(),
+        paramsWithoutBundleSpecificFlavors.getBuildTarget().getFlavors(),
         resolver,
         binary);
 
@@ -762,5 +766,14 @@ public class AppleDescriptions {
     }
 
     return extensionBundlePaths.build();
+  }
+
+  /**
+   * Strip flavors that only apply to a bundle from build targets that are passed to constituent
+   * rules of the bundle, such as its associated binary, asset catalog, etc.
+   */
+  private static BuildRuleParams stripBundleSpecificFlavors(BuildRuleParams params) {
+    return params.copyWithBuildTarget(
+        params.getBuildTarget().withoutFlavors(BUNDLE_SPECIFIC_FLAVORS));
   }
 }

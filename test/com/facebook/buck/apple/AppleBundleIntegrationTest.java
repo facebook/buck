@@ -17,7 +17,9 @@
 package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -29,7 +31,10 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.FakeAppleDeveloperEnvironment;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -37,6 +42,8 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -437,14 +444,14 @@ public class AppleBundleIntegrationTest {
   @Test
   public void bundleBinaryWithStripStyleAllDoesNotContainAnyDebugInfo() throws Exception {
     String nmOutput = runSimpleBuildWithDefinedStripStyle(StripStyle.ALL_SYMBOLS);
-    assertThat(nmOutput, Matchers.not(containsString("t -[AppDelegate window]")));
-    assertThat(nmOutput, Matchers.not(containsString("S _OBJC_METACLASS_$_AppDelegate")));
+    assertThat(nmOutput, not(containsString("t -[AppDelegate window]")));
+    assertThat(nmOutput, not(containsString("S _OBJC_METACLASS_$_AppDelegate")));
   }
 
   @Test
   public void bundleBinaryWithStripStyleNonGlobalContainsOnlyGlobals() throws Exception {
     String nmOutput = runSimpleBuildWithDefinedStripStyle(StripStyle.NON_GLOBAL_SYMBOLS);
-    assertThat(nmOutput, Matchers.not(containsString("t -[AppDelegate window]")));
+    assertThat(nmOutput, not(containsString("t -[AppDelegate window]")));
     assertThat(nmOutput, containsString("S _OBJC_METACLASS_$_AppDelegate"));
   }
 
@@ -598,6 +605,41 @@ public class AppleBundleIntegrationTest {
     BuildTarget target =
         BuildTargetFactory.newInstance("//:DemoAppWithMoreThanOneIconAndLaunchImage#no-debug");
     workspace.runBuckCommand("build", target.getFullyQualifiedName());
+  }
+
+  @Test
+  public void appleBundleDoesNotPropagateIncludeFrameworkFlavors() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "simple_app_with_extension",
+        tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:DemoAppWithExtension#no-debug");
+    ProjectWorkspace.ProcessResult result = workspace
+        .runBuckCommand("build", "--show-output", target.getFullyQualifiedName());
+    result.assertSuccess();
+    BuckBuildLog buckBuildLog = workspace.getBuildLog();
+
+    ImmutableSet<String> targetsThatShouldContainIncludeFrameworkFlavors =
+        ImmutableSet.of("//:DemoAppWithExtension", "//:DemoExtension");
+
+    ImmutableSet<Flavor> includeFrameworkFlavors = ImmutableSet.<Flavor>of(
+        ImmutableFlavor.of("no-include-frameworks"),
+        ImmutableFlavor.of("include-frameworks"));
+
+    for (BuildTarget builtTarget : buckBuildLog.getAllTargets()) {
+      if (Sets.intersection(builtTarget.getFlavors(), includeFrameworkFlavors).isEmpty()) {
+        assertThat(
+            builtTarget.getUnflavoredBuildTarget().getFullyQualifiedName(),
+            not(in(targetsThatShouldContainIncludeFrameworkFlavors)));
+      } else {
+        assertThat(
+            builtTarget.getUnflavoredBuildTarget().getFullyQualifiedName(),
+            in(targetsThatShouldContainIncludeFrameworkFlavors));
+      }
+    }
   }
 
   @Test
