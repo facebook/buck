@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.config.RawConfig;
+import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.log.LogConfigSetup;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -84,11 +84,11 @@ public abstract class AbstractContainerCommand implements Command {
   }
 
   @Override
-  public RawConfig getConfigOverrides() {
+  public CellConfig getConfigOverrides() {
     Optional<Command> cmd = getSubcommand();
     return cmd.isPresent()
         ? cmd.get().getConfigOverrides()
-        : RawConfig.of();
+        : CellConfig.of();
   }
 
   @Override

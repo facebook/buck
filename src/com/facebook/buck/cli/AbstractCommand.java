@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.config.RawConfig;
+import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.model.BuildTarget;
@@ -83,12 +83,19 @@ public abstract class AbstractCommand implements Command {
   private Map<String, String> configOverrides = Maps.newLinkedHashMap();
 
   @Override
-  public RawConfig getConfigOverrides() {
-    RawConfig.Builder builder = RawConfig.builder();
+  public CellConfig getConfigOverrides() {
+    CellConfig.Builder builder = CellConfig.builder();
 
     // Parse command-line config overrides.
     for (Map.Entry<String, String> entry : configOverrides.entrySet()) {
-      List<String> key = Splitter.on('.').limit(2).splitToList(entry.getKey());
+      List<String> key = Splitter.on("//").limit(2).splitToList(entry.getKey());
+      Optional<String> cellName = Optional.<String>absent();
+      String configKey = key.get(0);
+      if (key.size() == 2) {
+        cellName = Optional.of(key.get(0));
+        configKey = key.get(1);
+      }
+      key = Splitter.on('.').limit(2).splitToList(configKey);
       String value = entry.getValue();
       if (value == null) {
         value = "";
@@ -100,13 +107,13 @@ public abstract class AbstractCommand implements Command {
             value);
       }
 
-      builder.put(key.get(0), key.get(1), value);
+      builder.put(cellName, key.get(0), key.get(1), value);
     }
     if (numThreads != null) {
-      builder.put("build", "threads", String.valueOf(numThreads));
+      builder.put(Optional.of("*"), "build", "threads", String.valueOf(numThreads));
     }
     if (noCache) {
-      builder.put("cache", "mode", "");
+      builder.put(Optional.of("*"), "cache", "mode", "");
     }
 
     return builder.build();

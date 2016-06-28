@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import static java.lang.Integer.parseInt;
 
 import com.facebook.buck.config.Config;
+import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
@@ -637,6 +638,10 @@ public class BuckConfig {
 
   public Optional<URI> getUrl(String section, String field) {
     return config.getUrl(section, field);
+  }
+
+  public CellConfig getConfigOverrides() {
+    return config.getConfigOverrides();
   }
 
   private <T> T required(String section, String field, Optional<T> value) {

@@ -105,7 +105,7 @@ abstract class AbstractRawConfig {
       return RawConfig.of(builder.build());
     }
 
-    /**
+   /**
      * Get a section or create it if it doesn't exist.
      */
     private Map<String, String> requireSection(String sectionName) {

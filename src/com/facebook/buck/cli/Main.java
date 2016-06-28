@@ -693,7 +693,10 @@ public final class Main {
 
     // Setup filesystem and buck config.
     Path canonicalRootPath = projectRoot.toRealPath().normalize();
-    Config config = Configs.createDefaultConfig(canonicalRootPath, command.getConfigOverrides());
+    Config config = Configs.createDefaultConfig(
+        Optional.<String>absent(),
+        canonicalRootPath,
+        command.getConfigOverrides());
     ProjectFilesystem filesystem = new ProjectFilesystem(canonicalRootPath, config);
     BuckConfig buckConfig = new BuckConfig(
         config,

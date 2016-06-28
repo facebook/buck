@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.config.RawConfig;
+import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.log.LogConfigSetup;
 
 import java.io.IOException;
@@ -35,7 +35,7 @@ public interface Command {
 
   String getShortDescription();
 
-  RawConfig getConfigOverrides();
+  CellConfig getConfigOverrides();
 
   /**
    * @return how we want logging to be configured for the the command.

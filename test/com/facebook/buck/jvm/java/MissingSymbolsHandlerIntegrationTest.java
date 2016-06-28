@@ -24,8 +24,8 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.cli.MissingSymbolsHandler;
+import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.config.Configs;
-import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.MissingSymbolEvent;
@@ -65,7 +65,8 @@ public class MissingSymbolsHandlerIntegrationTest {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
     ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
 
-    Config rawConfig = Configs.createDefaultConfig(projectFilesystem.getRootPath(), RawConfig.of());
+    Config rawConfig =
+        Configs.createDefaultConfig(projectFilesystem.getRootPath(), CellConfig.of());
     BuckConfig config = new BuckConfig(
         rawConfig,
         projectFilesystem,

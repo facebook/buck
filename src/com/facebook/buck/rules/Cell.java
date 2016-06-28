@@ -20,7 +20,6 @@ import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.config.Configs;
-import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -65,6 +64,8 @@ public class Cell {
 
   private final Cache<Path, Cell> cells;
   private final ImmutableSet<Path> knownRoots;
+  // TODO(mzlee): The direct path to name mapping is a bad idea
+  private final ImmutableMap<Path, Optional<String>> rootToCellMapDeprecated;
   private final ProjectFilesystem filesystem;
   private final Watchman watchman;
   private final BuckConfig config;
@@ -107,13 +108,16 @@ public class Cell {
 
     ImmutableMap<String, String> allCells = getBuckConfig().getEntriesForSection("repositories");
     ImmutableSet.Builder<Path> roots = ImmutableSet.builder();
+    ImmutableMap.Builder<Path, Optional<String>> rootsMap = ImmutableMap.builder();
     roots.add(filesystem.getRootPath());
     for (String cellName : allCells.keySet()) {
       // Added the precondition check, though the resolve call can never return null.
       Path cellRoot = Preconditions.checkNotNull(getCellRoots().getCellPath(Optional.of(cellName)));
       roots.add(cellRoot);
+      rootsMap.put(cellRoot, Optional.of(cellName));
     }
     this.knownRoots = roots.build();
+    this.rootToCellMapDeprecated = rootsMap.build();
 
     PythonBuckConfig pythonConfig = new PythonBuckConfig(config, new ExecutableFinder());
     this.pythonInterpreter = pythonConfig.getPythonInterpreter();
@@ -134,13 +138,17 @@ public class Cell {
               Joiner.on(",\n  ").join(knownRoots));
         }
 
-        // TODO(shs96c): Get the overrides from the parent config
-        Config config = Configs.createDefaultConfig(cellPath, RawConfig.of());
+        Cell parent = Cell.this;
+        BuckConfig parentConfig = parent.getBuckConfig();
+        Config config = Configs.createDefaultConfig(
+            Optional
+                .fromNullable(rootToCellMapDeprecated.get(cellPath))
+                .or(Optional.<String>absent()),
+            cellPath,
+            parentConfig.getConfigOverrides());
 
         ProjectFilesystem cellFilesystem = new ProjectFilesystem(cellPath, config);
 
-        Cell parent = Cell.this;
-        BuckConfig parentConfig = parent.getBuckConfig();
 
         BuckConfig buckConfig = new BuckConfig(
             config,

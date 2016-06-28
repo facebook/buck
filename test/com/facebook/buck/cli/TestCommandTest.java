@@ -32,6 +32,7 @@ import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestRule;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -326,14 +327,16 @@ public class TestCommandTest {
 
     assertThat(
         command.getNumTestThreads(
-            FakeBuckConfig.builder().setSections(command.getConfigOverrides()).build()),
+            FakeBuckConfig.builder().setSections(
+                command.getConfigOverrides().getForCell(Optional.<String>absent())).build()),
         Matchers.equalTo(15));
 
     command = getCommand("-j", "15", "--debug");
 
     assertThat(
         command.getNumTestThreads(
-            FakeBuckConfig.builder().setSections(command.getConfigOverrides()).build()),
+            FakeBuckConfig.builder().setSections(
+                command.getConfigOverrides().getForCell(Optional.<String>absent())).build()),
         Matchers.equalTo(1));
   }
 }
