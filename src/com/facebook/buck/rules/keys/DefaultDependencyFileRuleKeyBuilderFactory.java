@@ -23,10 +23,10 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -128,94 +128,65 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
     public Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> build(
         Optional<ImmutableSet<SourcePath>> possibleDepFileSourcePaths,
         ImmutableList<DependencyFileEntry> depFileEntries) throws IOException {
+      // TODO(jkeljo): Make this use possibleDepFileSourcePaths all the time
+      Iterable<SourcePath> inputsSoFar = builder.getIterableInputsSoFar();
+      // Dep file paths come as a sorted set, which does binary search instead of hashing for
+      // lookups, so we re-create it as a hashset.
+      ImmutableSet<SourcePath> fastPossibleSourcePaths =
+          possibleDepFileSourcePaths.isPresent() ?
+              ImmutableSet.copyOf(possibleDepFileSourcePaths.get()) :
+              ImmutableSet.copyOf(inputsSoFar);
 
-      ImmutableList<SourcePath> nonDepFileSourcePaths =
-          getNonDepFileSourcePaths(possibleDepFileSourcePaths);
-      ImmutableList<SourcePath> depFileSourcePaths =
-          getDepFileSourcePaths(depFileEntries, possibleDepFileSourcePaths);
+      ImmutableSet<DependencyFileEntry> depFileEntriesSet = ImmutableSet.copyOf(depFileEntries);
 
-      builder.addToRuleKey(nonDepFileSourcePaths);
-      builder.addToRuleKey(depFileSourcePaths);
+      final ImmutableSet.Builder<SourcePath> depFileSourcePathsBuilder = ImmutableSet.builder();
+      final ImmutableSet.Builder<DependencyFileEntry> filesAccountedFor = ImmutableSet.builder();
+
+      // Each input path falls into one of three categories:
+      // 1) It's not covered by dep files, so we need to consider it part of the rule key
+      // 2) It's covered by dep files and present in the dep file, so we consider it
+      //    part of the rule key
+      // 3) It's covered by dep files but not present in the dep file, so we don't include it in
+      //    the rule key (the benefit of dep file support is that lots of things fall in this
+      //    category, so we can avoid rebuilds that would have happened with input-based rule keys)
+      for (SourcePath input : inputsSoFar) {
+        if (!fastPossibleSourcePaths.contains(input)) {
+          // If this path is not a dep file path, then add it to the builder directly
+          builder.addToRuleKey(input);
+        } else {
+          // If this input path is covered by the dep paths, check to see if it was declared
+          // as a real dependency by the dep file entries
+          DependencyFileEntry entry = DependencyFileEntry.fromSourcePath(input, pathResolver);
+          if (depFileEntriesSet.contains(entry)) {
+            builder.addToRuleKey(input);
+            depFileSourcePathsBuilder.add(input);
+            filesAccountedFor.add(entry);
+          }
+        }
+      }
+
+      Sets.SetView<DependencyFileEntry> filesUnaccountedFor = Sets.difference(
+          depFileEntriesSet, filesAccountedFor.build());
+      // If we don't find actual inputs in one of the rules that corresponded to the input, this
+      // likely means that the rule changed to no longer use the input. In this case we need to
+      // throw a `NoSuchFileException` so that the build engine handles this as a signal that the
+      // dep file rule key cannot be used.
+      if (!filesUnaccountedFor.isEmpty()) {
+        throw new NoSuchFileException(
+            String.format(
+                "%s: could not find any inputs matching the relative paths [%s]",
+                rule.getBuildTarget(),
+                Joiner.on(',').join(filesUnaccountedFor)));
+      }
 
       Optional<RuleKey> ruleKey = builder.build();
       if (ruleKey.isPresent()) {
-        return Optional.of(new Pair<>(ruleKey.get(), ImmutableSet.copyOf(depFileSourcePaths)));
+        return Optional.of(new Pair<>(ruleKey.get(), depFileSourcePathsBuilder.build()));
       } else {
         return Optional.absent();
       }
     }
 
-    private ImmutableList<SourcePath> getNonDepFileSourcePaths(
-        Optional<ImmutableSet<SourcePath>> possibleDepFileSourcePaths) {
-      ImmutableList.Builder<SourcePath> sourcePathsBuilder = ImmutableList.builder();
-      if (possibleDepFileSourcePaths.isPresent()) {
-        for (SourcePath input : builder.getInputsSoFar()) {
-          // Add any inputs that aren't subject to filtering by the dependency file, so that they
-          // get added to the rule key.
-          if (!possibleDepFileSourcePaths.get().contains(input)) {
-            sourcePathsBuilder.add(input);
-          }
-        }
-      }
-      return sourcePathsBuilder.build();
-    }
-
-    private ImmutableList<SourcePath> getDepFileSourcePaths(
-        ImmutableList<DependencyFileEntry> depFileEntries,
-        Optional<ImmutableSet<SourcePath>> possibleDepFileSourcePaths) throws NoSuchFileException {
-      final ImmutableMultimap<DependencyFileEntry, SourcePath> entryToSourcePaths =
-          getDepFileEntryToSourcePathMap(depFileEntries, possibleDepFileSourcePaths);
-
-      final ImmutableList.Builder<SourcePath> sourcePathsBuilder = ImmutableList.builder();
-      // Now add the actual given inputs to the rule key using all possible `SourcePath`s they map
-      // to.
-      for (DependencyFileEntry input : depFileEntries) {
-        ImmutableCollection<SourcePath> sourcePaths = entryToSourcePaths.get(input);
-
-        // If we don't find actual inputs in the rule that correspond to this input, this likely
-        // means that the rule changed to no longer use the input.  In this case, we need to throw a
-        // `NoSuchFileException` error so that the build engine handles this as a signal that the
-        // dep file rule key can't be used.
-        if (sourcePaths.isEmpty()) {
-          throw new NoSuchFileException(
-              String.format(
-                  "%s: could not find any inputs matching the relative path `%s`",
-                  rule.getBuildTarget(),
-                  input));
-        }
-
-        sourcePathsBuilder.addAll(sourcePaths);
-      }
-
-      return sourcePathsBuilder.build();
-    }
-
-    private ImmutableMultimap<DependencyFileEntry, SourcePath> getDepFileEntryToSourcePathMap(
-        ImmutableList<DependencyFileEntry> depFileEntries,
-        Optional<ImmutableSet<SourcePath>> possibleDepFileSourcePaths) {
-
-      // Use a multi-map to gather up all the `SourcePath`s that have relative URIs that are
-      // referenced in the input list, as it's possible for multiple `SourcePath`s to have the
-      // same relative URI (but come from different cells).
-
-      // TODO(jkeljo): Make this use possibleDepFileSourcePaths all the time
-      ImmutableSet<SourcePath> possibleSourcePaths =
-          possibleDepFileSourcePaths.isPresent() ?
-              possibleDepFileSourcePaths.get() :
-              builder.getInputsSoFar();
-
-      ImmutableSet<DependencyFileEntry> inputSet = ImmutableSet.copyOf(depFileEntries);
-
-      ImmutableMultimap.Builder<DependencyFileEntry, SourcePath> entryToSourcePathsBuilder =
-          ImmutableMultimap.builder();
-      for (SourcePath input : possibleSourcePaths) {
-        DependencyFileEntry entry = DependencyFileEntry.fromSourcePath(input, pathResolver);
-        if (inputSet.contains(entry)) {
-          entryToSourcePathsBuilder.put(entry, input);
-        }
-      }
-      return entryToSourcePathsBuilder.build();
-    }
   }
 
   private class BuilderWrapper {
@@ -231,6 +202,10 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
 
     public ImmutableSet<SourcePath> getInputsSoFar() {
       return builder.getInputsSoFar();
+    }
+
+    public Iterable<SourcePath> getIterableInputsSoFar() {
+      return builder.getIterableInputsSoFar();
     }
 
     public void addToRuleKey(ImmutableCollection<SourcePath> sourcePaths) throws IOException {
@@ -259,4 +234,5 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
       return this;
     }
   }
+
 }

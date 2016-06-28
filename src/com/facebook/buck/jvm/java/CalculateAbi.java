@@ -44,6 +44,7 @@ public class CalculateAbi extends AbstractBuildRule implements SupportsInputBase
 
   @AddToRuleKey
   private final SourcePath binaryJar;
+  private final Path outputPath;
 
   public CalculateAbi(
       BuildRuleParams buildRuleParams,
@@ -51,6 +52,7 @@ public class CalculateAbi extends AbstractBuildRule implements SupportsInputBase
       SourcePath binaryJar) {
     super(buildRuleParams, resolver);
     this.binaryJar = binaryJar;
+    this.outputPath = getAbiJarPath();
   }
 
   public static CalculateAbi of(
@@ -89,7 +91,7 @@ public class CalculateAbi extends AbstractBuildRule implements SupportsInputBase
 
   @Override
   public Path getPathToOutput() {
-    return getAbiJarPath();
+    return outputPath;
   }
 
 }

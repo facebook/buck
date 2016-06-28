@@ -1339,11 +1339,11 @@ public class CachingBuildEngine implements BuildEngine {
 
     // Build the dep-file rule key.  If any inputs are no longer on disk, this means something
     // changed and a dep-file based rule key can't be calculated.
-
     ImmutableList<DependencyFileEntry> inputs =
         FluentIterable.from(depFile.get()).transform(MoreFunctions.fromJsonFunction(
             objectMapper,
             DependencyFileEntry.class)).toList();
+
     try {
       return this.ruleKeyFactories.getUnchecked(rule.getProjectFilesystem())
           .depFileRuleKeyBuilderFactory.build(

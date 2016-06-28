@@ -19,6 +19,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.util.exportedfiles.Nullable;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Collections2;
@@ -28,6 +29,9 @@ import java.nio.file.Paths;
 import java.util.jar.JarFile;
 
 public class JarArchiveDependencySupplier extends ZipArchiveDependencySupplier {
+  @Nullable
+  private ImmutableSortedSet<SourcePath> archiveMembers;
+
   public JarArchiveDependencySupplier(
       Supplier<ImmutableSortedSet<SourcePath>> jarFiles,
       ProjectFilesystem filesystem) {
@@ -36,19 +40,22 @@ public class JarArchiveDependencySupplier extends ZipArchiveDependencySupplier {
 
   @Override
   public ImmutableSortedSet<SourcePath> getArchiveMembers(SourcePathResolver resolver) {
-    return ImmutableSortedSet.copyOf(
-        Collections2.filter(
-            super.getArchiveMembers(resolver),
-            new Predicate<SourcePath>() {
-              @Override
-              public boolean apply(SourcePath input) {
-                ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) input;
+    if (archiveMembers == null) {
+      archiveMembers = ImmutableSortedSet.copyOf(
+          Collections2.filter(
+              super.getArchiveMembers(resolver),
+              new Predicate<SourcePath>() {
+                @Override
+                public boolean apply(SourcePath input) {
+                  ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) input;
 
-                // Don't include the manifest file, because it contains all the hashes and thus
-                // won't have a hash for itself.
-                return !archiveMemberSourcePath.getMemberPath().equals(
-                    Paths.get(JarFile.MANIFEST_NAME));
-              }
-            }));
+                  // Don't include the manifest file, because it contains all the hashes and thus
+                  // won't have a hash for itself.
+                  return !archiveMemberSourcePath.getMemberPath().equals(
+                      Paths.get(JarFile.MANIFEST_NAME));
+                }
+              }));
+    }
+    return archiveMembers;
   }
 }

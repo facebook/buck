@@ -26,29 +26,24 @@ import java.nio.file.Path;
  * A {@link SourcePath} that can reference a member within an archive.
  */
 public final class ArchiveMemberSourcePath extends AbstractSourcePath<ArchiveMemberSourcePath> {
-  private final SourcePath archiveSourcePath;
-  private final Path memberPath;
+  private final Pair<SourcePath, Path> contents;
 
   public ArchiveMemberSourcePath(SourcePath archiveSourcePath, Path memberPath) {
     Preconditions.checkState(!memberPath.isAbsolute());
-
-    this.archiveSourcePath =  archiveSourcePath;
-    this.memberPath = memberPath;
+    this.contents = new Pair<>(archiveSourcePath, memberPath);
   }
 
   public SourcePath getArchiveSourcePath() {
-    return archiveSourcePath;
+    return contents.getFirst();
   }
 
   public Path getMemberPath() {
-    return memberPath;
+    return contents.getSecond();
   }
 
   @Override
   protected Object asReference() {
-    AbstractSourcePath<?> archiveSourcePath = (AbstractSourcePath<?>) this.archiveSourcePath;
-
-    return new Pair<>(archiveSourcePath.asReference(), memberPath);
+    return contents;
   }
 
   @Override
@@ -58,8 +53,8 @@ public final class ArchiveMemberSourcePath extends AbstractSourcePath<ArchiveMem
     }
 
     return ComparisonChain.start()
-        .compare(archiveSourcePath, o.archiveSourcePath)
-        .compare(memberPath, o.memberPath)
+        .compare(contents.getFirst(), o.contents.getFirst())
+        .compare(contents.getSecond(), o.contents.getSecond())
         .result();
   }
 }

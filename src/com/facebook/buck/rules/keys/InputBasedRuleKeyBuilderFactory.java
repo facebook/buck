@@ -252,6 +252,10 @@ public class InputBasedRuleKeyBuilderFactory
       return ImmutableSet.copyOf(Iterables.concat(inputs.build()));
     }
 
+    protected Iterable<SourcePath> getIterableInputsSoFar() {
+      return Iterables.concat(inputs.build());
+    }
+
     // Build the rule key and the list of deps found from this builder.
     protected Result buildResult() {
       if (inputSizeLimitExceeded) {

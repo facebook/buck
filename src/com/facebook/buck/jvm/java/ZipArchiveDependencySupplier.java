@@ -47,7 +47,6 @@ public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
   @Override
   public ImmutableSortedSet<SourcePath> getArchiveMembers(SourcePathResolver resolver) {
     ImmutableSortedSet.Builder<SourcePath> builder = ImmutableSortedSet.naturalOrder();
-
     for (SourcePath zipSourcePath : zipFiles.get()) {
       final Path zipRelativePath = resolver.getRelativePath(zipSourcePath);
       try {
@@ -58,7 +57,6 @@ public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
         throw new HumanReadableException(e, "Failed to read archive: " + zipRelativePath);
       }
     }
-
     return builder.build();
   }
 }
