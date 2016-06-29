@@ -232,7 +232,12 @@ abstract class GoDescriptors {
 
     return new GoBinary(
         params.copyWithDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(symlinkTree, library)),
+            Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(pathResolver.filterBuildRuleInputs(symlinkTree.getLinks().values()))
+                    .add(symlinkTree)
+                    .add(library)
+                    .build()),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
         platform.getCxxPlatform().transform(
