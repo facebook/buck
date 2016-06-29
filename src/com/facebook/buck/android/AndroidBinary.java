@@ -524,11 +524,13 @@ public class AndroidBinary
         Path libOutputBlob = libSubdirectory.resolve("libraries.blob");
         steps.add(
             new ConcatStep(getProjectFilesystem(), outputAssetLibrariesBuilder, libOutputBlob));
+        int compressionLevel = xzCompressionLevel.or(XzStep.DEFAULT_COMPRESSION_LEVEL).intValue();
         steps.add(
             new XzStep(
                 getProjectFilesystem(),
                 libOutputBlob,
-                libSubdirectory.resolve(SOLID_COMPRESSED_ASSET_LIBRARY_FILENAME)));
+                libSubdirectory.resolve(SOLID_COMPRESSED_ASSET_LIBRARY_FILENAME),
+                compressionLevel));
       }
 
       nativeLibraryAsAssetDirectories = ImmutableSet.of(pathForNativeLibsAsAssets);
