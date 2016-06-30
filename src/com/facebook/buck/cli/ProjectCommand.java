@@ -90,7 +90,13 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.OptionDef;
+import org.kohsuke.args4j.spi.OptionHandler;
+import org.kohsuke.args4j.spi.Parameters;
+import org.kohsuke.args4j.spi.Setter;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -213,9 +219,12 @@ public class ProjectCommand extends BuildCommand {
 
   @Option(
       name = "--intellij-aggregation-mode",
+      handler = AggregationModeOptionHandler.class,
       usage = "Changes how modules are aggregated. Valid options are 'none' (no aggregation), " +
-          "'shallow' (no more than 3 levels deep) and 'auto' (based on project size). Defaults " +
-          "to 'auto' if not specified in .buckconfig.")
+          "'shallow' (Minimum of 3 directory levels deep), 'auto' (based on project size), or an " +
+          "integer to specify the minimum directory depth modules should be aggregated to (e.g." +
+          "specifying 3 would aggrgate modules to a/b/c from lower levels where possible). " +
+          "Defaults to 'auto' if not specified in .buckconfig.")
   @Nullable
   private IjModuleGraph.AggregationMode intellijAggregationMode = null;
 
@@ -353,7 +362,7 @@ public class ProjectCommand extends BuildCommand {
     }
     Optional<IjModuleGraph.AggregationMode> aggregationMode =
         buckConfig.getValue("project", "intellij_aggregation_mode")
-        .transform(IjModuleGraph.AggregationMode.fromStringFunction());
+        .transform(IjModuleGraph.AggregationMode.FROM_STRING_FUNCTION);
     return aggregationMode.or(IjModuleGraph.AggregationMode.NONE);
   }
 
@@ -1235,6 +1244,31 @@ public class ProjectCommand extends BuildCommand {
   @Override
   public String getShortDescription() {
     return "generates project configuration files for an IDE";
+  }
+
+
+  public static class AggregationModeOptionHandler
+      extends OptionHandler<IjModuleGraph.AggregationMode> {
+
+    public AggregationModeOptionHandler(
+        CmdLineParser parser,
+        OptionDef option,
+        Setter<? super IjModuleGraph.AggregationMode> setter) {
+      super(parser, option, setter);
+    }
+
+    @Override
+    public int parseArguments(Parameters params) throws CmdLineException {
+      String param = params.getParameter(0);
+      setter.addValue(IjModuleGraph.AggregationMode.fromString(param));
+      return 1;
+    }
+
+    @Override
+    @Nullable
+    public String getDefaultMetaVariable() {
+      return null;
+    }
   }
 
 }

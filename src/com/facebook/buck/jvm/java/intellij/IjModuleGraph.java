@@ -87,44 +87,64 @@ public class IjModuleGraph {
   /**
    * Indicates how to aggregate {@link TargetNode}s into {@link IjModule}s.
    */
-  public enum AggregationMode {
-    AUTO,
-    NONE,
-    SHALLOW,
-    ;
+  public static class AggregationMode {
+    private static final int MIN_SHALLOW_GRAPH_SIZE = 500;
+    private static final int SHALLOW_MAX_PATH_LENGTH = 3;
 
-    public static final int MIN_SHALLOW_GRAPH_SIZE = 500;
-    public static final int SHALLOW_MAX_PATH_LENGTH = 3;
+    public static final AggregationMode AUTO = new AggregationMode();
+    public static final AggregationMode NONE = new AggregationMode(Integer.MAX_VALUE);
+    public static final AggregationMode SHALLOW = new AggregationMode(SHALLOW_MAX_PATH_LENGTH);
 
-    public int getGraphMinimumDepth(int graphSize) {
-      switch(this) {
-        case NONE:
-          return Integer.MAX_VALUE;
-        case SHALLOW:
-          return SHALLOW_MAX_PATH_LENGTH;
-        case AUTO:
-          return graphSize < MIN_SHALLOW_GRAPH_SIZE ? Integer.MAX_VALUE : SHALLOW_MAX_PATH_LENGTH;
-        default:
-          throw new HumanReadableException("Invalid aggregation mode value %s.", this);
-      }
+    public static final Function<String, AggregationMode> FROM_STRING_FUNCTION =
+        new Function<String, AggregationMode>() {
+          @Override
+          public AggregationMode apply(String input) {
+            return fromString(input);
+          }
+        };
+
+
+    private Optional<Integer> minimumDepth;
+
+    AggregationMode() {
+      minimumDepth = Optional.absent();
     }
 
-    public static Function<String, AggregationMode> fromStringFunction() {
-      return new Function<String, AggregationMode>() {
-        @Override
-        public AggregationMode apply(String input) {
-          switch (Ascii.toLowerCase(input)) {
-            case "shallow":
-              return SHALLOW;
-            case "none":
-              return NONE;
-            case "auto":
-              return AUTO;
-            default:
-              throw new HumanReadableException("Invalid aggregation mode value %s.", input);
+    AggregationMode(int minimumDepth) {
+      if (minimumDepth <= 0) {
+        throw new HumanReadableException(
+            "Aggregation level must be a positive integer (got " +
+            minimumDepth +
+            ")");
+      }
+
+      this.minimumDepth = Optional.of(minimumDepth);
+    }
+
+    public int getGraphMinimumDepth(int graphSize) {
+      return
+          minimumDepth
+              .or(graphSize < MIN_SHALLOW_GRAPH_SIZE ? Integer.MAX_VALUE : SHALLOW_MAX_PATH_LENGTH);
+    }
+
+    public static AggregationMode fromString(String aggregationModeString) {
+      switch (Ascii.toLowerCase(aggregationModeString)) {
+        case "shallow":
+          return SHALLOW;
+        case "none":
+          return NONE;
+        case "auto":
+          return AUTO;
+        default:
+          try {
+            // See if a number was passed.
+            return new AggregationMode(Integer.parseInt(aggregationModeString));
+          } catch (NumberFormatException e) {
+            throw new HumanReadableException(
+                "Invalid aggregation mode value %s.",
+                aggregationModeString);
           }
-        }
-      };
+      }
     }
   }
 

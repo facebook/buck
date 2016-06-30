@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryBuilder;
@@ -39,6 +40,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -526,6 +528,39 @@ public class IjModuleGraphTest {
         IjModuleGraph.AggregationMode.AUTO,
         10000,
         /* expectTrimmed */ true);
+  }
+
+  @Test
+  public void testCustomAggregationMode() {
+    IjModuleGraph.AggregationMode testAggregationMode =
+        new IjModuleGraph.AggregationMode(2);
+
+    ImmutableList<Path> originalPaths = ImmutableList.of(
+        Paths.get("a", "b", "c"),
+        Paths.get("a", "b"),
+        Paths.get("a"),
+        Paths.get(""));
+
+    ImmutableList<Path> expectedPaths = ImmutableList.of(
+        Paths.get("a", "b"),
+        Paths.get("a", "b"),
+        Paths.get("a"),
+        Paths.get(""));
+
+    IjModuleGraph.BlockedPathNode dummyAggregationStops = new IjModuleGraph.BlockedPathNode();
+    int minimumDepth = testAggregationMode.getGraphMinimumDepth(originalPaths.size());
+    ImmutableList.Builder<Path> transformedPaths = ImmutableList.builder();
+    for (Path path : originalPaths) {
+      transformedPaths.add(IjModuleGraph.simplifyPath(path, minimumDepth, dummyAggregationStops));
+    }
+
+    assertThat(transformedPaths.build(), Matchers.equalTo(expectedPaths));
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void testCustomAggregationModeAtZero() {
+    IjModuleGraph.AggregationMode.fromString("0");
+    fail("Should not be able to construct an aggregator with zero minimum depth.");
   }
 
   @Test
