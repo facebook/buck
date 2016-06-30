@@ -375,6 +375,40 @@ public class InterCellIntegrationTest {
     result.assertSuccess();
   }
 
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  @Test
+  public void shouldBeAbleToUseCommandLineConfigOverrides() throws IOException {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/export-file/primary",
+        "inter-cell/export-file/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
+    putConfigValue(
+        secondary,
+        "cxx",
+        "cc",
+        "/does/not/exist");
+
+    try {
+      primary.runBuckBuild("//:cxxbinary");
+      fail("Did not expect to finish building");
+    } catch (HumanReadableException expected) {
+      assertEquals(
+        expected.getMessage(),
+        "Couldn't get dependency 'secondary//:cxxlib' of target '//:cxxbinary':\n" +
+        "Overridden cxx:cc path not found: /does/not/exist");
+    }
+
+    ProjectWorkspace.ProcessResult result = primary.runBuckBuild(
+        "--config",
+        "secondary//cxx.cc=",
+        "//:cxxbinary");
+
+    result.assertSuccess();
+  }
+
   private Pair<ProjectWorkspace, ProjectWorkspace> prepare(
       String primaryPath,
       String secondaryPath) throws IOException {
@@ -407,9 +441,21 @@ public class InterCellIntegrationTest {
       ProjectWorkspace cellToModifyConfigOf,
       String cellName,
       ProjectWorkspace cellToRegisterAsCellName) throws IOException {
+    putConfigValue(
+        cellToModifyConfigOf,
+        "repositories",
+        cellName,
+        cellToRegisterAsCellName.getPath(".").normalize().toString());
+  }
+
+  private void putConfigValue(
+      ProjectWorkspace cellToModifyConfigOf,
+      String section,
+      String key,
+      String value) throws IOException {
     String config = cellToModifyConfigOf.getFileContents(".buckconfig");
     Ini ini = new Ini(new StringReader(config));
-    ini.put("repositories", cellName, cellToRegisterAsCellName.getPath(".").normalize());
+    ini.put(section, key, value);
     StringWriter writer = new StringWriter();
     ini.store(writer);
     Files.write(cellToModifyConfigOf.getPath(".buckconfig"), writer.toString().getBytes(UTF_8));
