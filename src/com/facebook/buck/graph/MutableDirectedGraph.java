@@ -152,7 +152,7 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
   }
 
   public ImmutableSet<ImmutableSet<T>> findCycles() {
-    Set<Set<T>> cycles = Sets.filter(tarjan(), new Predicate<Set<T>>() {
+    Set<Set<T>> cycles = Sets.filter(findStronglyConnectedComponents(), new Predicate<Set<T>>() {
       @Override
       public boolean apply(Set<T> stronglyConnectedComponent) {
         return stronglyConnectedComponent.size() > 1;
@@ -179,11 +179,12 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
   }
 
   /**
-   * Implementation of
-   * http://en.wikipedia.org/wiki/Tarjan%E2%80%99s_strongly_connected_components_algorithm
-   * used to find cycles in the graph.
+   * For this graph, returns the set of strongly connected components using Tarjan's
+   * algorithm. Note this is {@code O(|V| + |E|)}.
+   * @return an unmodifiable {@link Set} of sets, each of which is also an unmodifiable {@link Set}
+   *     and represents a strongly connected component.
    */
-  private Set<Set<T>> tarjan() {
+  public Set<Set<T>> findStronglyConnectedComponents() {
     Tarjan<T> tarjan = new Tarjan<T>(this);
     return tarjan.findStronglyConnectedComponents();
   }
@@ -210,6 +211,11 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
     return ImmutableSetMultimap.copyOf(incomingEdges);
   }
 
+  /**
+   * Implementation of
+   * http://en.wikipedia.org/wiki/Tarjan%E2%80%99s_strongly_connected_components_algorithm
+   * used to find cycles in the graph.
+   */
   private static class Tarjan<S> {
     private final MutableDirectedGraph<S> graph;
     private final Map<S, Integer> indexes;
@@ -233,7 +239,7 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
           doStrongConnect(node);
         }
       }
-      return stronglyConnectedComponents;
+      return Collections.unmodifiableSet(stronglyConnectedComponents);
     }
 
     private void doStrongConnect(final S node) {
@@ -268,7 +274,7 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
           componentElement = nodeStack.pop();
           stronglyConnectedComponent.add(componentElement);
         } while (componentElement != node);
-        stronglyConnectedComponents.add(stronglyConnectedComponent);
+        stronglyConnectedComponents.add(Collections.unmodifiableSet(stronglyConnectedComponent));
       }
     }
   }

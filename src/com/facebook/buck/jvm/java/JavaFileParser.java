@@ -954,6 +954,15 @@ public class JavaFileParser {
       this.requiredSymbols = requiredSymbols;
       this.exportedSymbols = exportedSymbols;
     }
+
+    @Override
+    public String toString() {
+      return String.format(
+          "providedSymbols=%s; requiredSymbols=%s; exportedSymbols=%s",
+          providedSymbols,
+          requiredSymbols,
+          exportedSymbols);
+    }
   }
 
   private CompilationUnit makeCompilationUnitFromSource(String code) {

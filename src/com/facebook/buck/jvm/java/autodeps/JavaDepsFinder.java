@@ -94,6 +94,10 @@ public class JavaDepsFinder {
     this.buildEngine = buildEngine;
   }
 
+  public JavaFileParser getJavaFileParser() {
+    return javaFileParser;
+  }
+
   public static JavaDepsFinder createJavaDepsFinder(
       BuckConfig buckConfig,
       final CellPathResolver cellNames,

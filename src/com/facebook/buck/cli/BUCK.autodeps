@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY bafc126acca0d790c1008e126eadc93708b415a8 #@#
+#@# GENERATED FILE: DO NOT MODIFY 17547acad743ac4773043bac51a388a3f34a7b83 #@#
 {
   "cli" : {
     "deps" : [
@@ -30,7 +30,6 @@
       "//src/com/facebook/buck/jvm/java:config",
       "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/jvm/java:steps",
-      "//src/com/facebook/buck/jvm/java/autodeps:autodeps",
       "//src/com/facebook/buck/jvm/java/intellij:intellij",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/macho:macho",
@@ -80,6 +79,7 @@
       "//src/com/facebook/buck/jvm/core:packagefinder",
       "//src/com/facebook/buck/jvm/java:packagefinder",
       "//src/com/facebook/buck/jvm/java:support",
+      "//src/com/facebook/buck/jvm/java/autodeps:autodeps",
       "//src/com/facebook/buck/log:log",
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/model:model",
