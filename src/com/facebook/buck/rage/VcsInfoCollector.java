@@ -20,6 +20,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.versioncontrol.VersionControlCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
@@ -31,6 +32,7 @@ import org.immutables.value.Value;
 public class VcsInfoCollector {
 
   private static final Logger LOG = Logger.get(InteractiveReport.class);
+
 
   private final VersionControlCmdLineInterface vcCmdLineInterface;
 
@@ -49,6 +51,10 @@ public class VcsInfoCollector {
   public SourceControlInfo gatherScmInformation()
       throws InterruptedException, VersionControlCommandFailedException {
     Optional<ImmutableSet<String>> filesChangedFromMasterBranchPoint = Optional.absent();
+    Optional<String> masterRevisionId = Optional.of(vcCmdLineInterface.revisionId("remote/master"));
+    String currentRevisionId = vcCmdLineInterface.currentRevisionId();
+    Optional<String> diffBase = masterRevisionId;
+
     try {
       filesChangedFromMasterBranchPoint =
           Optional.of(vcCmdLineInterface.changedFiles("ancestor(., remote/master)"));
@@ -57,9 +63,15 @@ public class VcsInfoCollector {
       LOG.info(e, "Couldn't get files changed");
     }
 
-    String currentRevisionId = vcCmdLineInterface.currentRevisionId();
+    Optional<String> producedDiff = Optional.absent();
+    if (diffBase.isPresent()) {
+      producedDiff = Optional.of(
+          vcCmdLineInterface.diffBetweenRevisions(currentRevisionId, diffBase.get()));
+    }
+
     return SourceControlInfo.builder()
         .setCurrentRevisionId(currentRevisionId)
+        .setDiff(producedDiff)
         .setDirtyFiles(vcCmdLineInterface.changedFiles("."))
         .setFilesChangedFromMasterBranchPoint(filesChangedFromMasterBranchPoint)
         .build();
@@ -70,6 +82,8 @@ public class VcsInfoCollector {
   @BuckStyleImmutable
   interface AbstractSourceControlInfo {
     String getCurrentRevisionId();
+    @JsonIgnore
+    Optional<String> getDiff();
     ImmutableSet<String> getDirtyFiles();
     Optional<ImmutableSet<String>> getFilesChangedFromMasterBranchPoint();
   }

@@ -26,6 +26,7 @@ import com.facebook.buck.zip.ZipOutputStreams;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
@@ -39,6 +40,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 /**
  * Takes care of actually writing out the report.
@@ -46,6 +48,7 @@ import java.nio.file.Paths;
 public class DefaultDefectReporter implements DefectReporter {
 
   private static final String REPORT_FILE_NAME = "report.json";
+  private static final String DIFF_FILE_NAME = "changes.diff";
   private static final int UPLOAD_TIMEOUT_MILLIS = 15 * 1000;
 
   private final ProjectFilesystem filesystem;
@@ -82,6 +85,17 @@ public class DefaultDefectReporter implements DefectReporter {
     }
   }
 
+  private void addStringsAsFilesToArchive(
+      CustomZipOutputStream out,
+      ImmutableMap<String, String> files) throws IOException {
+    for (Map.Entry<String, String> file : files.entrySet()) {
+      out.putNextEntry(new CustomZipEntry(file.getKey()));
+      out.write(file.getValue().getBytes(Charsets.UTF_8));
+      out.closeEntry();
+    }
+  }
+
+
   @Override
   public DefectSubmitResult submitReport(DefectReport defectReport) throws IOException {
     if (rageConfig.getReportUploadUri().isPresent()) {
@@ -113,7 +127,16 @@ public class DefaultDefectReporter implements DefectReporter {
     try (BufferedOutputStream baseOut = new BufferedOutputStream(outputStream);
          CustomZipOutputStream out =
              ZipOutputStreams.newOutputStream(baseOut, OVERWRITE_EXISTING)) {
+      if (defectReport.getSourceControlInfo().isPresent() &&
+          defectReport.getSourceControlInfo().get().getDiff().isPresent()) {
+        addStringsAsFilesToArchive(
+            out,
+            ImmutableMap.of(
+                DIFF_FILE_NAME,
+                defectReport.getSourceControlInfo().get().getDiff().get()));
+      }
       addFilesToArchive(out, defectReport.getIncludedPaths());
+
       out.putNextEntry(new CustomZipEntry(REPORT_FILE_NAME));
       objectMapper.writeValue(out, defectReport);
     }
@@ -143,6 +166,8 @@ public class DefaultDefectReporter implements DefectReporter {
           "Failed uploading report to %s because %s",
           uri,
           e.getMessage());
+    } finally {
+      connection.disconnect();
     }
   }
 }
