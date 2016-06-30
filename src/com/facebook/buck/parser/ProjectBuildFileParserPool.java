@@ -108,9 +108,6 @@ class ProjectBuildFileParserPool implements AutoCloseable {
           @Override
           public ListenableFuture<ImmutableList<Map<String, Object>>> apply(
               Void input) throws Exception {
-            if (closing.get()) {
-              return Futures.immediateCancelledFuture();
-            }
             Either<ProjectBuildFileParser, ListenableFuture<Void>> parserRequest =
                 requestParser(cell);
             if (parserRequest.isLeft()) {
@@ -172,7 +169,7 @@ class ProjectBuildFileParserPool implements AutoCloseable {
 
   private synchronized ListenableFuture<Void> scheduleNewParserRequest(Cell cell) {
     if (closing.get()) {
-      return Futures.immediateFuture(null);
+      return Futures.immediateCancelledFuture();
     }
     SettableFuture<Void> parserFuture = SettableFuture.create();
     Deque<SettableFuture<Void>> requestsQueue = parserRequests.get(cell);
@@ -194,6 +191,9 @@ class ProjectBuildFileParserPool implements AutoCloseable {
   }
 
   private synchronized Optional<ProjectBuildFileParser> obtainParser(Cell cell) {
+    if (closing.get()) {
+      return Optional.absent();
+    }
     Deque<ProjectBuildFileParser> parserQueue = getParkedParserQueue(cell);
     ProjectBuildFileParser parser = parserQueue.pollFirst();
     if (parser != null) {
@@ -261,6 +261,7 @@ class ProjectBuildFileParserPool implements AutoCloseable {
       for (SettableFuture<Void> request : requestQueue) {
         request.set(null);
       }
+      requestQueue.clear();
     }
 
     // Any parsing that is currently taking place will be allowed to complete (as it won't notice
@@ -286,24 +287,26 @@ class ProjectBuildFileParserPool implements AutoCloseable {
         new AsyncFunction<List<Object>, Void>() {
           @Override
           public ListenableFuture<Void> apply(List<Object> input) throws Exception {
-            int parkedParsersCount = 0;
-            for (Deque<ProjectBuildFileParser> projectBuildFileParsers : parkedParsers.values()) {
-              parkedParsersCount += projectBuildFileParsers.size();
-            }
-            if (parkedParsersCount != createdParsers.size()) {
-              LOG.error("Whoops! Some parser are still in use, even though we're shutting down..");
-            }
-            // Now that pending work is done we can close all parsers.
-            for (Map.Entry<Cell, ProjectBuildFileParser> createdParserEntry :
-                createdParsers.entries()) {
-              createdParserEntry.getValue().close();
-            }
-            for (Map.Entry<Cell, Deque<SettableFuture<Void>>> cellDequeEntry :
-                parserRequests.entrySet()) {
-              if (!cellDequeEntry.getValue().isEmpty()) {
-                LOG.error("Error shutting down ParserLeaseVendor: " +
-                        "there should be no enqueued parser requests.");
-                break;
+            synchronized (ProjectBuildFileParserPool.this) {
+              int parkedParsersCount = 0;
+              for (Deque<ProjectBuildFileParser> projectBuildFileParsers : parkedParsers.values()) {
+                parkedParsersCount += projectBuildFileParsers.size();
+              }
+              if (parkedParsersCount != createdParsers.size()) {
+                LOG.error("Whoops! Some parser are still in use, even though we're shutting down.");
+              }
+              // Now that pending work is done we can close all parsers.
+              for (Map.Entry<Cell, ProjectBuildFileParser> createdParserEntry :
+                  createdParsers.entries()) {
+                createdParserEntry.getValue().close();
+              }
+              for (Map.Entry<Cell, Deque<SettableFuture<Void>>> cellDequeEntry :
+                  parserRequests.entrySet()) {
+                if (!cellDequeEntry.getValue().isEmpty()) {
+                  LOG.error("Error shutting down ParserLeaseVendor: " +
+                      "there should be no enqueued parser requests.");
+                  break;
+                }
               }
             }
             executorService.shutdown();

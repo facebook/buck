@@ -25,9 +25,8 @@ java_test(
 
 java_test(
   name = 'benchmark_correctness',
-  deps = [
-    ':benchmarks',
-  ],
+  srcs = glob(['*Benchmark.java']),
+  autodeps = True,
 )
 
 java_library(
