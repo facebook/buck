@@ -19,6 +19,7 @@ package com.facebook.buck.thrift;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
@@ -75,6 +76,11 @@ public class ThriftCompilerStep extends ShellStep {
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
     return environment;
+  }
+
+  @Override
+  public boolean shouldPrintStderr(Verbosity verbosity) {
+    return verbosity.shouldPrintStandardInformation();
   }
 
   @Override
