@@ -107,5 +107,24 @@ class TestRuleKeyDiff(unittest.TestCase):
                 ' JavaLib1.java does not exist']
         self.assertEqual(result, expected)
 
+    def test_length_diff(self):
+        line = ("[v] RuleKey {key}=string(\"//:lib\"):key(name):" +
+                "{srcs}:" +
+                "string(\"t\"):key(buck.type):")
+        left_srcs = ["path(%s):key(srcs)" % p for p in ['a:1', 'b:2', 'c:3']]
+        left_line = line.format(key="aabb", srcs=":".join(left_srcs))
+        right_srcs = left_srcs[:-1]
+        right_line = line.format(key="axbb", srcs=":".join(right_srcs))
+        result = diff("//:lib",
+                      RuleKeyStructureInfo(MockFile([left_line])),
+                      RuleKeyStructureInfo(MockFile([right_line])),
+                      False)
+        expected = [
+                'Change details for [//:lib]',
+                '  (srcs):',
+                '    -[path(c:3)]',
+                '    +[<missing>]']
+        self.assertEqual(result, expected)
+
 if __name__ == '__main__':
     unittest.main()

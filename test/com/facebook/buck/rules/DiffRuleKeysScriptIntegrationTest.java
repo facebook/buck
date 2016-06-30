@@ -94,6 +94,29 @@ public class DiffRuleKeysScriptIntegrationTest {
   }
 
   @Test
+  public void pathAdded() throws Exception {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "diff_rulekeys_script", tmp);
+    workspace.setUp();
+
+    invokeBuckCommand(workspace, "buck-0.log");
+    workspace.writeContentsToPath(
+        "public class JavaLib3 { /* change */ }",
+        "JavaLib3.java");
+    invokeBuckCommand(workspace, "buck-1.log");
+
+    String expectedResult = Joiner.on('\n').join(
+        "Change details for [//:java_lib_2]",
+        "  (srcs):",
+        "    -[<missing>]",
+        "    +[path(JavaLib3.java:3396c5e71e9fad8e8f177af9d842f1b9b67bfb46)]",
+        "");
+    assertThat(
+        runRuleKeyDiffer(workspace).getStdout(),
+        Matchers.equalTo(Optional.of(expectedResult)));
+  }
+
+  @Test
   public void javacOptionsChanged() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "diff_rulekeys_script", tmp);
@@ -149,8 +172,14 @@ public class DiffRuleKeysScriptIntegrationTest {
         runRuleKeyDiffer(workspace).getStdout().get(),
         Matchers.stringContainsInOrder(
             "Change details for [//:java_lib_2->abiClasspath]",
+            "  (abiClasspath):",
+            "    -[<missing>]",
+            "    +[ruleKey(sha1=", /* some rulekey */ ")]",
             "  (buck.declaredDeps):",
-            "    -[ruleKey(sha1=", /* some rulekey */ ")]",
+            "    -[<missing>]",
+            "    +[ruleKey(sha1=", /* some rulekey */ ")]",
+            "  (buck.extraDeps):",
+            "    -[<missing>]",
             "    +[ruleKey(sha1=", /* some rulekey */ ")]",
             "Change details for [//:java_lib_2->buck.extraDeps]",
             "  (binaryJar):",

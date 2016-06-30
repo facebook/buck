@@ -300,8 +300,10 @@ def diffInternal(
         left_with_keys = extractRuleKeyRefs(left_values, left_info)
         right_with_keys = extractRuleKeyRefs(right_values, right_info)
 
-        both_with_keys = zip(left_with_keys, right_with_keys)
-        for (left_v, left_key), (right_v, right_key) in both_with_keys:
+        both_with_keys = map(None, left_with_keys, right_with_keys)
+        for l, r in both_with_keys:
+            (left_v, left_key) = l or ('<missing>', None)
+            (right_v, right_key) = r or ('<missing>', None)
             if left_v == right_v:
                 continue
             if left_key is not None and right_key is not None:

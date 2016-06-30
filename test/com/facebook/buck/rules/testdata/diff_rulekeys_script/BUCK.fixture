@@ -5,6 +5,6 @@ java_library(
 
 java_library(
   name = 'java_lib_2',
-  srcs = ['JavaLib2.java'],
+  srcs = ['JavaLib2.java'] + glob(['JavaLib3.java']),
   deps = [':java_lib_1']
 )
