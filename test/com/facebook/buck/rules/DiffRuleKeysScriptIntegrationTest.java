@@ -171,7 +171,7 @@ public class DiffRuleKeysScriptIntegrationTest {
     assertThat(
         runRuleKeyDiffer(workspace).getStdout().get(),
         Matchers.stringContainsInOrder(
-            "Change details for [//:java_lib_2->abiClasspath]",
+            "Change details for [//:java_lib_2]",
             "  (abiClasspath):",
             "    -[<missing>]",
             "    +[ruleKey(sha1=", /* some rulekey */ ")]",
@@ -181,7 +181,7 @@ public class DiffRuleKeysScriptIntegrationTest {
             "  (buck.extraDeps):",
             "    -[<missing>]",
             "    +[ruleKey(sha1=", /* some rulekey */ ")]",
-            "Change details for [//:java_lib_2->buck.extraDeps]",
+            "Change details for [//:java_lib_2->abiClasspath]",
             "  (binaryJar):",
             "    -[ruleKey(sha1=", /* some rulekey */ ")]",
             "    +[ruleKey(sha1=", /* some rulekey */ ")]",

@@ -333,7 +333,7 @@ def diffInternal(
     changed_key_pairs_with_labels.update(
         changed_key_pairs_with_labels_for_key)
     if len(changed_key_pairs_with_labels_for_key) > 0:
-        changed_labels = [label for (label, _) in
+        changed_labels = [l for (l, _) in
                           changed_key_pairs_with_labels_for_key]
         if verbose:
             report.append('  (' + key + ') : changed because of ' +
@@ -363,11 +363,11 @@ def diff(name,
     if right_key is None:
         raise Exception('Right log does not contain ' + name + '. Did you ' +
                         'forget to enable logging? (see help).')
-    queue = set([(name, (left_key, right_key))])
+    queue = collections.deque([(name, (left_key, right_key))])
     result = []
     seen_keys = set()
     while len(queue) > 0:
-        p = queue.pop()
+        p = queue.popleft()
         label, ref_pair = p
         (left_key, right_key) = ref_pair
         report, changed_key_pairs_with_labels = diffInternal(
@@ -379,12 +379,12 @@ def diff(name,
             verbose,
             format_tuple or (None, None),
             check_paths)
-        for e in changed_key_pairs_with_labels:
+        for e in sorted(changed_key_pairs_with_labels):
             label, ref_pair = e
             if ref_pair in seen_keys:
                 continue
             seen_keys.add(ref_pair)
-            queue.add(e)
+            queue.append(e)
 
         result += report
     return result
