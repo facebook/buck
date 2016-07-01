@@ -27,7 +27,9 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
@@ -36,6 +38,9 @@ public class BuildTargetPatternParserTest {
 
   private final ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
   private final FileSystem vfs = filesystem.getRootPath().getFileSystem();
+
+  @Rule
+  public ExpectedException exception = ExpectedException.none();
 
   @Test
   public void testParse() throws NoSuchBuildTargetException {
@@ -122,5 +127,17 @@ public class BuildTargetPatternParserTest {
             filesystem.getRootPath(),
             filesystem.getRootPath().getFileSystem().getPath("sub")),
         buildTargetPatternParser.parse(cellNames, "other//sub/..."));
+  }
+
+  @Test
+  public void testParseAbsolutePath() {
+    // Exception should be thrown by BuildTargetParser.checkBaseName()
+    BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
+        BuildTargetPatternParser.forVisibilityArgument();
+
+    exception.expect(BuildTargetParseException.class);
+    exception.expectMessage("Build target path cannot be absolute or contain . or .. " +
+        "(found ///facebookorca/...)");
+    buildTargetPatternParser.parse(createCellRoots(filesystem), "///facebookorca/...");
   }
 }

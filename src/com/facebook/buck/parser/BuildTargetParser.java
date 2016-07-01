@@ -121,7 +121,7 @@ public class BuildTargetParser {
     return builder.build();
   }
 
-  private static void checkBaseName(String baseName, String buildTargetName) {
+  protected static void checkBaseName(String baseName, String buildTargetName) {
     if (baseName.equals(BUILD_RULE_PREFIX)) {
       return;
     }

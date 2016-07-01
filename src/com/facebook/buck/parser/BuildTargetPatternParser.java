@@ -100,6 +100,14 @@ public abstract class BuildTargetPatternParser<T> {
             String.format(
                 "'%s' cannot contain colon", buildTargetPattern));
       }
+
+      if (!buildTargetPattern.equals(BUILD_RULE_PREFIX + WILDCARD_BUILD_RULE_SUFFIX)) {
+        String basePathWithPrefix = buildTargetPattern.substring(
+            0,
+            buildTargetPattern.length() - WILDCARD_BUILD_RULE_SUFFIX.length() - 1);
+        BuildTargetParser.checkBaseName(basePathWithPrefix, buildTargetPattern);
+      }
+
       String basePathWithSlash = buildTargetPattern.substring(
           BUILD_RULE_PREFIX.length(),
           buildTargetPattern.length() - WILDCARD_BUILD_RULE_SUFFIX.length());
