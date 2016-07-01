@@ -62,13 +62,21 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class WorkspaceAndProjectGenerator {
   private static final Logger LOG = Logger.get(WorkspaceAndProjectGenerator.class);
@@ -184,8 +192,9 @@ public class WorkspaceAndProjectGenerator {
   }
 
   public Path generateWorkspaceAndDependentProjects(
-      Map<Path, ProjectGenerator> projectGenerators)
-      throws IOException {
+      Map<Path, ProjectGenerator> projectGenerators,
+      ListeningExecutorService listeningExecutorService)
+      throws IOException, ExecutionException, InterruptedException {
     LOG.debug("Generating workspace for target %s", workspaceBuildTarget);
 
     String workspaceName = XcodeWorkspaceConfigDescription.getWorkspaceNameFromArg(
@@ -253,6 +262,7 @@ public class WorkspaceAndProjectGenerator {
     Optional<BuildTarget> targetToBuildWithBuck = getTargetToBuildWithBuck();
     Iterable<PBXTarget> synthesizedCombinedTestTargets = generateProjectsAndCombinedTestTargets(
         projectGenerators,
+        listeningExecutorService,
         workspaceName,
         outputDirectory,
         workspaceGenerator,
@@ -286,6 +296,7 @@ public class WorkspaceAndProjectGenerator {
 
   private Iterable<PBXTarget> generateProjectsAndCombinedTestTargets(
       Map<Path, ProjectGenerator> projectGenerators,
+      ListeningExecutorService listeningExecutorService,
       String workspaceName,
       Path outputDirectory,
       WorkspaceGenerator workspaceGenerator,
@@ -294,7 +305,8 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSet<BuildTarget> targetsInRequiredProjects,
       ImmutableMultimap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder,
       ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder,
-      Optional<BuildTarget> targetToBuildWithBuck) throws IOException {
+      Optional<BuildTarget> targetToBuildWithBuck)
+      throws IOException, ExecutionException, InterruptedException {
     if (combinedProject) {
       return generateCombinedProject(
           workspaceName,
@@ -308,6 +320,7 @@ public class WorkspaceAndProjectGenerator {
     } else {
       return generateProject(
           projectGenerators,
+          listeningExecutorService,
           workspaceGenerator,
           groupedTests,
           targetsInRequiredProjects,
@@ -351,14 +364,16 @@ public class WorkspaceAndProjectGenerator {
   }
 
   private Iterable<PBXTarget> generateProject(
-      Map<Path, ProjectGenerator> projectGenerators,
+      final Map<Path, ProjectGenerator> projectGenerators,
+      ListeningExecutorService listeningExecutorService,
       WorkspaceGenerator workspaceGenerator,
-      ImmutableMultimap<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
+      final ImmutableMultimap<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
           groupedTests,
       ImmutableSet<BuildTarget> targetsInRequiredProjects,
       ImmutableMultimap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder,
       ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder,
-      Optional<BuildTarget> targetToBuildWithBuck) throws IOException {
+      final Optional<BuildTarget> targetToBuildWithBuck)
+      throws IOException, ExecutionException, InterruptedException {
     ImmutableMultimap.Builder<Cell, BuildTarget> projectCellToBuildTargetsBuilder =
         ImmutableMultimap.builder();
     for (TargetNode<?> targetNode : projectGraph.getNodes()) {
@@ -367,7 +382,8 @@ public class WorkspaceAndProjectGenerator {
     }
     ImmutableMultimap<Cell, BuildTarget> projectCellToBuildTargets =
         projectCellToBuildTargetsBuilder.build();
-    for (Cell projectCell : projectCellToBuildTargets.keySet()) {
+    List<ListenableFuture<GenerationResult>> projectGeneratorFutures = new ArrayList<>();
+    for (final Cell projectCell : projectCellToBuildTargets.keySet()) {
       ImmutableMultimap.Builder<Path, BuildTarget> projectDirectoryToBuildTargetsBuilder =
           ImmutableMultimap.builder();
       final ImmutableSet<BuildTarget> cellRules =
@@ -377,8 +393,8 @@ public class WorkspaceAndProjectGenerator {
       }
       ImmutableMultimap<Path, BuildTarget> projectDirectoryToBuildTargets =
         projectDirectoryToBuildTargetsBuilder.build();
-      Path relativeTargetCell = rootCell.getRoot().relativize(projectCell.getRoot());
-      for (Path projectDirectory : projectDirectoryToBuildTargets.keySet()) {
+      final Path relativeTargetCell = rootCell.getRoot().relativize(projectCell.getRoot());
+      for (final Path projectDirectory : projectDirectoryToBuildTargets.keySet()) {
         final ImmutableSet<BuildTarget> rules = filterRulesForProjectDirectory(
             projectGraph,
             ImmutableSet.copyOf(projectDirectoryToBuildTargets.get(projectDirectory)));
@@ -386,30 +402,60 @@ public class WorkspaceAndProjectGenerator {
           continue;
         }
 
-        GenerationResult result = generateProjectForDirectory(
-            projectGenerators,
-            targetToBuildWithBuck,
-            projectCell,
-            projectDirectory,
-            rules);
-        workspaceGenerator.addFilePath(relativeTargetCell.resolve(result.getProjectPath()));
-        processGenerationResult(
-            buildTargetToPbxTargetMapBuilder,
-            targetToProjectPathMapBuilder,
-            result);
+        projectGeneratorFutures.add(
+            listeningExecutorService.submit(
+                new Callable<GenerationResult>() {
+                  @Override
+                  public GenerationResult call() throws Exception {
+                    GenerationResult result = generateProjectForDirectory(
+                          projectGenerators,
+                          targetToBuildWithBuck,
+                          projectCell,
+                          projectDirectory,
+                          rules);
+                    // convert the projectPath to relative to the target cell here
+                    result = GenerationResult.of(
+                        relativeTargetCell.resolve(result.getProjectPath()),
+                        result.getRequiredBuildTargets(),
+                        result.getBuildTargetToGeneratedTargetMap(),
+                        result.getBuildableCombinedTestTargets());
+                    return result;
+                  }
+                }));
       }
     }
 
+    final AtomicReference<Iterable<PBXTarget>> combinedTestTargets =
+        new AtomicReference<Iterable<PBXTarget>>(ImmutableList.<PBXTarget>of());
+
     if (!groupedTests.isEmpty()) {
-      GenerationResult result = generateCombinedProjectForTests(groupedTests);
+      projectGeneratorFutures.add(
+          listeningExecutorService.submit(
+              new Callable<GenerationResult>() {
+                @Override
+                public GenerationResult call() throws Exception {
+                  GenerationResult result = generateCombinedProjectForTests(groupedTests);
+                  combinedTestTargets.set(result.getBuildableCombinedTestTargets());
+                  return result;
+                }
+              }
+          )
+      );
+    }
+
+    List<GenerationResult> generationResults = Futures.allAsList(projectGeneratorFutures).get();
+    for (GenerationResult result : generationResults) {
       workspaceGenerator.addFilePath(result.getProjectPath());
       processGenerationResult(
           buildTargetToPbxTargetMapBuilder,
           targetToProjectPathMapBuilder,
           result);
-      return result.getBuildableCombinedTestTargets();
     }
-    return ImmutableList.of();
+
+    Preconditions.checkNotNull(
+        combinedTestTargets.get(),
+        "combinedTestTargets must be set to non-null list of targets");
+    return combinedTestTargets.get();
   }
 
   private void processGenerationResult(
@@ -470,59 +516,64 @@ public class WorkspaceAndProjectGenerator {
       Cell projectCell,
       Path projectDirectory,
       final ImmutableSet<BuildTarget> rules) throws IOException {
-    ProjectGenerator generator = projectGenerators.get(projectDirectory);
+    boolean shouldGenerateProjects = false;
+    ProjectGenerator generator;
+    synchronized (projectGenerators) {
+      generator = projectGenerators.get(projectDirectory);
+      if (generator != null) {
+        LOG.debug("Already generated project for target %s, skipping", projectDirectory);
+      } else {
+        LOG.debug(
+            "Generating project for directory %s with targets %s",
+            projectDirectory,
+            rules);
+        String projectName;
+        if (projectDirectory.getFileName().toString().equals("")) {
+          // If we're generating a project in the root directory, use a generic name.
+          projectName = "Project";
+        } else {
+          // Otherwise, name the project the same thing as the directory we're in.
+          projectName = projectDirectory.getFileName().toString();
+        }
+        generator = new ProjectGenerator(
+            projectGraph,
+            rules,
+            projectCell,
+            projectDirectory,
+            projectName,
+            buildFileName,
+            projectGeneratorOptions,
+            Optionals.bind(
+                targetToBuildWithBuck,
+                new Function<BuildTarget, Optional<BuildTarget>>() {
+                  @Override
+                  public Optional<BuildTarget> apply(BuildTarget input) {
+                    return rules.contains(input)
+                        ? Optional.of(input)
+                        : Optional.<BuildTarget>absent();
+                  }
+                }),
+            buildWithBuckFlags,
+            focusModules,
+            executableFinder,
+            environment,
+            cxxPlatforms,
+            defaultCxxPlatform,
+            sourcePathResolverForNode,
+            buckEventBus,
+            halideBuckConfig,
+            cxxBuckConfig,
+            appleConfig)
+            .setTestsToGenerateAsStaticLibraries(groupableTests);
+        projectGenerators.put(projectDirectory, generator);
+        shouldGenerateProjects = true;
+      }
+    }
 
     ImmutableSet<BuildTarget> requiredBuildTargets = ImmutableSet.of();
-
-    if (generator == null) {
-      LOG.debug(
-          "Generating project for directory %s with targets %s",
-          projectDirectory,
-          rules);
-      String projectName;
-      if (projectDirectory.getFileName().toString().equals("")) {
-        // If we're generating a project in the root directory, use a generic name.
-        projectName = "Project";
-      } else {
-        // Otherwise, name the project the same thing as the directory we're in.
-        projectName = projectDirectory.getFileName().toString();
-      }
-      generator = new ProjectGenerator(
-          projectGraph,
-          rules,
-          projectCell,
-          projectDirectory,
-          projectName,
-          buildFileName,
-          projectGeneratorOptions,
-          Optionals.bind(
-              targetToBuildWithBuck,
-              new Function<BuildTarget, Optional<BuildTarget>>() {
-                @Override
-                public Optional<BuildTarget> apply(BuildTarget input) {
-                  return rules.contains(input)
-                      ? Optional.of(input)
-                      : Optional.<BuildTarget>absent();
-                }
-              }),
-          buildWithBuckFlags,
-          focusModules,
-          executableFinder,
-          environment,
-          cxxPlatforms,
-          defaultCxxPlatform,
-          sourcePathResolverForNode,
-          buckEventBus,
-          halideBuckConfig,
-          cxxBuckConfig,
-          appleConfig)
-          .setTestsToGenerateAsStaticLibraries(groupableTests);
-
+    if (shouldGenerateProjects) {
       generator.createXcodeProjects();
       requiredBuildTargets = generator.getRequiredBuildTargets();
-      projectGenerators.put(projectDirectory, generator);
-    } else {
-      LOG.debug("Already generated project for target %s, skipping", projectDirectory);
     }
 
     return GenerationResult.of(

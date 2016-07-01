@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 public class ProjectCommandXcodeTest {
 
@@ -310,7 +311,7 @@ public class ProjectCommandXcodeTest {
   }
 
   @Test
-  public void testTargetWithTests() throws IOException, InterruptedException {
+  public void testTargetWithTests() throws IOException, InterruptedException, ExecutionException {
     Map<Path, ProjectGenerator> projectGenerators = generateProjectsForTests(
         ImmutableSet.of(fooBinNode.getBuildTarget()),
         /* withTests = */ true,
@@ -326,7 +327,7 @@ public class ProjectCommandXcodeTest {
       ImmutableSet<BuildTarget> passedInTargetsSet,
       boolean isWithTests,
       boolean isWithDependenciesTests)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, ExecutionException {
     return ProjectCommandTests.generateWorkspacesForTargets(
         targetGraph,
         passedInTargetsSet,
@@ -339,7 +340,8 @@ public class ProjectCommandXcodeTest {
   }
 
   @Test
-  public void testTargetWithoutDependenciesTests() throws IOException, InterruptedException {
+  public void testTargetWithoutDependenciesTests()
+      throws IOException, InterruptedException, ExecutionException {
     Map<Path, ProjectGenerator> projectGenerators = generateProjectsForTests(
         ImmutableSet.of(fooBinNode.getBuildTarget()),
         /* withTests = */ true,
@@ -352,7 +354,8 @@ public class ProjectCommandXcodeTest {
   }
 
   @Test
-  public void testTargetWithoutTests() throws IOException, InterruptedException {
+  public void testTargetWithoutTests()
+      throws IOException, InterruptedException, ExecutionException {
     Map<Path, ProjectGenerator> projectGenerators = generateProjectsForTests(
         ImmutableSet.of(fooBinNode.getBuildTarget()),
         /* withTests = */ false,
@@ -365,7 +368,8 @@ public class ProjectCommandXcodeTest {
   }
 
   @Test
-  public void testWorkspaceWithoutDependenciesTests() throws IOException, InterruptedException {
+  public void testWorkspaceWithoutDependenciesTests()
+      throws IOException, InterruptedException, ExecutionException {
     Map<Path, ProjectGenerator> projectGenerators = generateProjectsForTests(
         ImmutableSet.of(workspaceNode.getBuildTarget()),
         /* withTests = */ true,
@@ -381,7 +385,7 @@ public class ProjectCommandXcodeTest {
 
   @Test
   public void testWorkspaceWithoutExtraTestsWithoutDependenciesTests()
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, ExecutionException {
     Map<Path, ProjectGenerator> projectGenerators = generateProjectsForTests(
         ImmutableSet.of(smallWorkspaceNode.getBuildTarget()),
         /* withTests = */ true,

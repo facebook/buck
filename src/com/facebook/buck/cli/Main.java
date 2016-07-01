@@ -901,6 +901,12 @@ public final class Main {
             Executors.newCachedThreadPool()));
         // Create a thread pool for network I/O tasks
         executors.put(ExecutionContext.ExecutorPool.NETWORK, newDirectExecutorService());
+        executors.put(
+            ExecutionContext.ExecutorPool.PROJECT,
+            listeningDecorator(
+                MostExecutors.newMultiThreadExecutor(
+                    "Project",
+                    buckConfig.getNumThreads())));
 
         // The order of resources in the try-with-resources block is important: the BuckEventBus
         // must be the last resource, so that it is closed first and can deliver its queued events

@@ -108,6 +108,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
 
@@ -484,6 +485,8 @@ public class ProjectCommand extends BuildCommand {
             // unreachable
             throw new IllegalStateException("'ide' should always be of type 'INTELLIJ' or 'XCODE'");
         }
+      } catch (ExecutionException e) {
+        throw new HumanReadableException("Failed to generate project", e);
       } finally {
         params.getBuckEventBus().post(ProjectGenerationEvent.finished());
       }
@@ -838,7 +841,7 @@ public class ProjectCommand extends BuildCommand {
       final CommandRunnerParams params,
       final TargetGraphAndTargets targetGraphAndTargets,
       ImmutableSet<BuildTarget> passedInTargetsSet)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, ExecutionException {
     int exitCode = 0;
     AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
     ImmutableSet<ProjectGenerator.Option> options = buildWorkspaceGeneratorOptions(
@@ -891,7 +894,7 @@ public class ProjectCommand extends BuildCommand {
       boolean combinedProject,
       boolean buildWithBuck,
       boolean combineTestBundles)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, ExecutionException {
     ImmutableSet<BuildTarget> targets;
     if (passedInTargetsSet.isEmpty()) {
       targets = FluentIterable
@@ -960,7 +963,12 @@ public class ProjectCommand extends BuildCommand {
           cxxBuckConfig,
           appleConfig);
       generator.setGroupableTests(groupableTests);
-      generator.generateWorkspaceAndDependentProjects(projectGenerators);
+      ListeningExecutorService executorService = params.getExecutors().get(
+          ExecutionContext.ExecutorPool.PROJECT);
+      Preconditions.checkNotNull(
+          executorService,
+          "CommandRunnerParams does not have executor for PROJECT pool");
+      generator.generateWorkspaceAndDependentProjects(projectGenerators, executorService);
       ImmutableSet<BuildTarget> requiredBuildTargetsForWorkspace =
           generator.getRequiredBuildTargets();
       LOG.debug(

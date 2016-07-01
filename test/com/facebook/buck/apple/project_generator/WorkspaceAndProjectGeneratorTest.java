@@ -88,6 +88,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
@@ -104,6 +105,7 @@ import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class WorkspaceAndProjectGeneratorTest {
@@ -242,7 +244,8 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void workspaceAndProjectsShouldDiscoverDependenciesAndTests() throws IOException {
+  public void workspaceAndProjectsShouldDiscoverDependenciesAndTests()
+      throws IOException, ExecutionException, InterruptedException {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         rootCell,
         targetGraph,
@@ -266,7 +269,9 @@ public class WorkspaceAndProjectGeneratorTest {
         cxxBuckConfig,
         appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+    generator.generateWorkspaceAndDependentProjects(
+        projectGenerators,
+        MoreExecutors.newDirectExecutorService());
 
     ProjectGenerator fooProjectGenerator =
         projectGenerators.get(Paths.get("foo"));
@@ -314,7 +319,8 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void combinedProjectShouldDiscoverDependenciesAndTests() throws IOException {
+  public void combinedProjectShouldDiscoverDependenciesAndTests()
+      throws IOException, ExecutionException, InterruptedException {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         rootCell,
         targetGraph,
@@ -338,7 +344,9 @@ public class WorkspaceAndProjectGeneratorTest {
         cxxBuckConfig,
         appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+    generator.generateWorkspaceAndDependentProjects(
+        projectGenerators,
+        MoreExecutors.newDirectExecutorService());
 
     assertTrue(
         "Combined project generation should not populate the project generators map",
@@ -371,7 +379,8 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void workspaceAndProjectsWithoutTests() throws IOException {
+  public void workspaceAndProjectsWithoutTests()
+      throws IOException, ExecutionException, InterruptedException {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         rootCell,
         targetGraph,
@@ -394,7 +403,9 @@ public class WorkspaceAndProjectGeneratorTest {
         cxxBuckConfig,
         appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+    generator.generateWorkspaceAndDependentProjects(
+        projectGenerators,
+        MoreExecutors.newDirectExecutorService());
 
     ProjectGenerator fooProjectGenerator =
         projectGenerators.get(Paths.get("foo"));
@@ -433,7 +444,8 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void workspaceAndProjectsWithoutDependenciesTests() throws IOException {
+  public void workspaceAndProjectsWithoutDependenciesTests()
+      throws IOException, ExecutionException, InterruptedException {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         rootCell,
         targetGraph,
@@ -457,7 +469,9 @@ public class WorkspaceAndProjectGeneratorTest {
         appleConfig);
 
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+    generator.generateWorkspaceAndDependentProjects(
+        projectGenerators,
+        MoreExecutors.newDirectExecutorService());
 
     Optional<XCScheme> scheme = Iterables
         .getOnlyElement(generator.getSchemeGenerators().values())
@@ -483,7 +497,7 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void requiredBuildTargets() throws IOException {
+  public void requiredBuildTargets() throws IOException, ExecutionException, InterruptedException {
     BuildTarget genruleTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "gen").build();
     TargetNode<GenruleDescription.Arg> genrule  = GenruleBuilder
         .newGenruleBuilder(genruleTarget)
@@ -529,7 +543,9 @@ public class WorkspaceAndProjectGeneratorTest {
         cxxBuckConfig,
         appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+    generator.generateWorkspaceAndDependentProjects(
+        projectGenerators,
+        MoreExecutors.newDirectExecutorService());
 
     assertEquals(
         generator.getRequiredBuildTargets(),
@@ -537,7 +553,8 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void requiredBuildTargetsForCombinedProject() throws IOException {
+  public void requiredBuildTargetsForCombinedProject()
+      throws IOException, ExecutionException, InterruptedException {
     BuildTarget genruleTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "gen").build();
     TargetNode<GenruleDescription.Arg> genrule  = GenruleBuilder
         .newGenruleBuilder(genruleTarget)
@@ -583,7 +600,9 @@ public class WorkspaceAndProjectGeneratorTest {
         cxxBuckConfig,
         appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+    generator.generateWorkspaceAndDependentProjects(
+        projectGenerators,
+        MoreExecutors.newDirectExecutorService());
 
     assertEquals(
         generator.getRequiredBuildTargets(),
@@ -591,7 +610,7 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void buildWithBuck() throws IOException {
+  public void buildWithBuck() throws IOException, ExecutionException, InterruptedException {
     Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
         Paths.get("buck"),
         ImmutableMap.<String, String>of());
@@ -619,7 +638,9 @@ public class WorkspaceAndProjectGeneratorTest {
         cxxBuckConfig,
         appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+    generator.generateWorkspaceAndDependentProjects(
+        projectGenerators,
+        MoreExecutors.newDirectExecutorService());
 
     ProjectGenerator fooProjectGenerator = projectGenerators.get(Paths.get("foo"));
     assertThat(fooProjectGenerator, is(notNullValue()));
@@ -656,7 +677,7 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void buildWithBuckFocused() throws IOException {
+  public void buildWithBuckFocused() throws IOException, ExecutionException, InterruptedException {
     final String fooLib = "//foo:lib";
     Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
         Paths.get("buck"),
@@ -685,7 +706,9 @@ public class WorkspaceAndProjectGeneratorTest {
         cxxBuckConfig,
         appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+    generator.generateWorkspaceAndDependentProjects(
+        projectGenerators,
+        MoreExecutors.newDirectExecutorService());
 
     ProjectGenerator fooProjectGenerator = projectGenerators.get(Paths.get("foo"));
     assertThat(fooProjectGenerator, is(notNullValue()));
@@ -702,7 +725,8 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void buildWithBuckFocusedFailsIfTargetDoesNotExist() throws IOException {
+  public void buildWithBuckFocusedFailsIfTargetDoesNotExist()
+      throws IOException, ExecutionException, InterruptedException {
     final String fooLib = "//NOT:EXISTING_TARGET";
     Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
         Paths.get("buck"),
@@ -733,18 +757,25 @@ public class WorkspaceAndProjectGeneratorTest {
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
 
     try {
-      generator.generateWorkspaceAndDependentProjects(projectGenerators);
-    } catch (IllegalArgumentException e) {
-      assertThat(
-          e.getMessage(),
-          Matchers.equalTo("Cannot find build target " + fooLib + " in target graph"));
+      generator.generateWorkspaceAndDependentProjects(
+          projectGenerators,
+          MoreExecutors.newDirectExecutorService());
+    } catch (ExecutionException e) {
+      assertThat(e.getCause(), instanceOf(IllegalArgumentException.class));
+      checkExceptionSaysTargetNotFound(fooLib, (IllegalArgumentException) e.getCause());
       return;
     }
     fail("Project generation should fail because there is no " + fooLib + " target in the graph!");
   }
 
+  private void checkExceptionSaysTargetNotFound(String fooLib, IllegalArgumentException e) {
+    assertThat(
+        e.getMessage(),
+        Matchers.equalTo("Cannot find build target " + fooLib + " in target graph"));
+  }
+
   @Test
-  public void combinedTestBundle() throws IOException {
+  public void combinedTestBundle() throws IOException, ExecutionException, InterruptedException {
     TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
         .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//foo", "combinableTest1").build())
         .setInfoPlist(new FakeSourcePath("Info.plist"))
@@ -815,7 +846,9 @@ public class WorkspaceAndProjectGeneratorTest {
         appleConfig);
     generator.setGroupableTests(AppleBuildRules.filterGroupableTests(targetGraph.getNodes()));
     Map<Path, ProjectGenerator> projectGenerators = Maps.newHashMap();
-    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+    generator.generateWorkspaceAndDependentProjects(
+        projectGenerators,
+        MoreExecutors.newDirectExecutorService());
 
     // Tests should become libraries
     PBXTarget combinableTestTarget1 = ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
@@ -1150,7 +1183,8 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void targetsForWorkspaceWithExtraSchemes() throws IOException {
+  public void targetsForWorkspaceWithExtraSchemes()
+      throws IOException, ExecutionException, InterruptedException {
     setUpWorkspaceWithSchemeAndProjects();
 
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
@@ -1176,7 +1210,9 @@ public class WorkspaceAndProjectGeneratorTest {
         cxxBuckConfig,
         appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+    generator.generateWorkspaceAndDependentProjects(
+        projectGenerators,
+        MoreExecutors.newDirectExecutorService());
 
     ProjectGenerator fooProjectGenerator =
         projectGenerators.get(Paths.get("foo"));
@@ -1281,7 +1317,8 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void targetsForWorkspaceWithExtraTargets() throws IOException {
+  public void targetsForWorkspaceWithExtraTargets()
+      throws IOException, ExecutionException, InterruptedException {
     BuildTarget fooLibTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "FooLib").build();
     TargetNode<AppleLibraryDescription.Arg> fooLib = AppleLibraryBuilder
         .createBuilder(fooLibTarget)
@@ -1331,7 +1368,9 @@ public class WorkspaceAndProjectGeneratorTest {
         cxxBuckConfig,
         appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+    generator.generateWorkspaceAndDependentProjects(
+        projectGenerators,
+        MoreExecutors.newDirectExecutorService());
 
     ProjectGenerator fooProjectGenerator =
         projectGenerators.get(Paths.get("foo"));
@@ -1387,7 +1426,8 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void enablingParallelizeBuild() throws IOException {
+  public void enablingParallelizeBuild()
+      throws IOException, ExecutionException, InterruptedException {
     BuildTarget fooLibTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "FooLib").build();
     TargetNode<AppleLibraryDescription.Arg> fooLib = AppleLibraryBuilder
         .createBuilder(fooLibTarget)
@@ -1424,7 +1464,9 @@ public class WorkspaceAndProjectGeneratorTest {
         cxxBuckConfig,
         appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+    generator.generateWorkspaceAndDependentProjects(
+        projectGenerators,
+        MoreExecutors.newDirectExecutorService());
 
     XCScheme mainScheme = generator.getSchemeGenerators().get("workspace").getOutputScheme().get();
     XCScheme.BuildAction mainSchemeBuildAction = mainScheme.getBuildAction().get();
@@ -1444,7 +1486,8 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void customRunnableSettings() throws IOException {
+  public void customRunnableSettings()
+      throws IOException, ExecutionException, InterruptedException {
     BuildTarget fooLibTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "FooLib").build();
     TargetNode<AppleLibraryDescription.Arg> fooLib = AppleLibraryBuilder
         .createBuilder(fooLibTarget)
@@ -1483,7 +1526,9 @@ public class WorkspaceAndProjectGeneratorTest {
         cxxBuckConfig,
         appleConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+    generator.generateWorkspaceAndDependentProjects(
+        projectGenerators,
+        MoreExecutors.newDirectExecutorService());
 
     XCScheme mainScheme = generator.getSchemeGenerators().get("workspace").getOutputScheme().get();
     XCScheme.LaunchAction launchAction = mainScheme.getLaunchAction().get();
