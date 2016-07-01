@@ -71,7 +71,8 @@ public class LogFormatter extends java.util.logging.Formatter {
     // performance-critical: http://stackoverflow.com/a/1281651
     long tid = record.getThreadID();
     @Nullable String command = mapper.threadIdToCommandId(tid);
-    StringBuilder sb = new StringBuilder(timestamp)
+    StringBuilder sb = new StringBuilder(255)
+      .append(timestamp)
       .append(formatRecordLevel(record.getLevel()))
       .append("[command:")
       .append(command)

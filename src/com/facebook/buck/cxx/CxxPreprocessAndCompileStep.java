@@ -247,10 +247,12 @@ public class CxxPreprocessAndCompileStep implements Step {
         createErrorTransformerFactory(context);
 
     try {
-      LOG.debug(
-          "Running command (pwd=%s): %s",
-          preprocessBuilder.directory(),
-          getDescription(context));
+      if (LOG.isDebugEnabled()) {
+        LOG.debug(
+            "Running command (pwd=%s): %s",
+            preprocessBuilder.directory(),
+            getDescription(context));
+      }
 
       preprocess = BgProcessKiller.startProcess(preprocessBuilder);
       compile = BgProcessKiller.startProcess(compileBuilder);
@@ -549,7 +551,10 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return getDescriptionNoContext();
+    if (context.getVerbosity().shouldPrintCommand()) {
+      return getDescriptionNoContext();
+    }
+    return "(verbosity level disables command output)";
   }
 
   // We need to do binary rewriting if doing combined preprocessing and compiling or if we're
