@@ -25,12 +25,13 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.lang.ref.SoftReference;
 import java.nio.file.Paths;
 import java.util.jar.JarFile;
 
 public class JarArchiveDependencySupplier extends ZipArchiveDependencySupplier {
   @Nullable
-  private ImmutableSortedSet<SourcePath> archiveMembers;
+  private SoftReference<ImmutableSortedSet<SourcePath>> archiveMembers;
 
   public JarArchiveDependencySupplier(
       Supplier<ImmutableSortedSet<SourcePath>> jarFiles,
@@ -40,22 +41,33 @@ public class JarArchiveDependencySupplier extends ZipArchiveDependencySupplier {
 
   @Override
   public ImmutableSortedSet<SourcePath> getArchiveMembers(SourcePathResolver resolver) {
+    ImmutableSortedSet<SourcePath> members;
     if (archiveMembers == null) {
-      archiveMembers = ImmutableSortedSet.copyOf(
-          Collections2.filter(
-              super.getArchiveMembers(resolver),
-              new Predicate<SourcePath>() {
-                @Override
-                public boolean apply(SourcePath input) {
-                  ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) input;
-
-                  // Don't include the manifest file, because it contains all the hashes and thus
-                  // won't have a hash for itself.
-                  return !archiveMemberSourcePath.getMemberPath().equals(
-                      Paths.get(JarFile.MANIFEST_NAME));
-                }
-              }));
+      members = getSourcePaths(resolver);
+      archiveMembers = new SoftReference<>(members);
+    } else {
+      members = archiveMembers.get();
+      if (members == null) {
+        members = getSourcePaths(resolver);
+        archiveMembers = new SoftReference<>(members);
+      }
     }
-    return archiveMembers;
+    return members;
+  }
+
+  protected ImmutableSortedSet<SourcePath> getSourcePaths(SourcePathResolver resolver) {
+    return ImmutableSortedSet.copyOf(
+        Collections2.filter(
+            super.getArchiveMembers(resolver),
+            new Predicate<SourcePath>() {
+              @Override
+              public boolean apply(SourcePath input) {
+                ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) input;
+                // Don't include the manifest file, because it contains all the hashes and thus
+                // won't have a hash for itself.
+                return !archiveMemberSourcePath.getMemberPath().equals(
+                    Paths.get(JarFile.MANIFEST_NAME));
+              }
+            }));
   }
 }
