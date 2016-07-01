@@ -237,16 +237,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     lastNumLinesPrinted = lines.size();
 
     // Synchronize on the DirtyPrintStreamDecorator to prevent interlacing of output.
+    // We don't log immediately so we avoid locking the console handler to avoid deadlocks.
+    boolean stdoutDirty;
+    boolean stderrDirty;
     synchronized (console.getStdOut()) {
       synchronized (console.getStdErr()) {
         // If another source has written to stderr or stdout, stop rendering with the SuperConsole.
         // We need to do this to keep our updates consistent.
-        boolean stdoutDirty = console.getStdOut().isDirty();
-        boolean stderrDirty = console.getStdErr().isDirty();
+        stdoutDirty = console.getStdOut().isDirty();
+        stderrDirty = console.getStdErr().isDirty();
         if (stdoutDirty || stderrDirty) {
-          LOG.debug(
-              "Stopping console output (stdout dirty %s, stderr dirty %s).",
-              stdoutDirty, stderrDirty);
           stopRenderScheduler();
         } else if (!lastRenderClear.isEmpty() || !lines.isEmpty() || !logLines.isEmpty()) {
           Iterable<String> renderedLines = Iterables.concat(
@@ -264,6 +264,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           console.getStdErr().getRawStream().print(fullFrame);
         }
       }
+    }
+    if (stdoutDirty || stderrDirty) {
+      LOG.debug(
+          "Stopping console output (stdout dirty %s, stderr dirty %s).",
+          stdoutDirty, stderrDirty);
     }
   }
 
