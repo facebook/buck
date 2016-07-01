@@ -254,207 +254,31 @@ public class WorkspaceAndProjectGenerator {
     Optional<BuildTarget> targetToBuildWithBuck = getTargetToBuildWithBuck();
 
     if (combinedProject) {
-      LOG.debug("Generating a combined project");
-      ProjectGenerator generator = new ProjectGenerator(
-          projectGraph,
-          targetsInRequiredProjects,
-          rootCell,
-          outputDirectory.getParent(),
+      synthesizedCombinedTestTargets = generateCombinedProject(
           workspaceName,
-          buildFileName,
-          projectGeneratorOptions,
-          targetToBuildWithBuck,
-          buildWithBuckFlags,
-          focusModules,
-          executableFinder,
-          environment,
-          cxxPlatforms,
-          defaultCxxPlatform,
-          sourcePathResolverForNode,
-          buckEventBus,
-          halideBuckConfig,
-          cxxBuckConfig,
-          appleConfig)
-          .setAdditionalCombinedTestTargets(groupedTests)
-          .setTestsToGenerateAsStaticLibraries(groupableTests);
-      combinedProjectGenerator = Optional.of(generator);
-      generator.createXcodeProjects();
-
-      workspaceGenerator.addFilePath(generator.getProjectPath(), Optional.<Path>absent());
-      requiredBuildTargetsBuilder.addAll(generator.getRequiredBuildTargets());
-
-      buildTargetToPbxTargetMapBuilder.putAll(generator.getBuildTargetToGeneratedTargetMap());
-      for (PBXTarget target : generator.getBuildTargetToGeneratedTargetMap().values()) {
-        targetToProjectPathMapBuilder.put(target, generator.getProjectPath());
-      }
-      synthesizedCombinedTestTargets = generator.getBuildableCombinedTestTargets();
-      for (PBXTarget target : synthesizedCombinedTestTargets) {
-        targetToProjectPathMapBuilder.put(target, generator.getProjectPath());
-      }
+          outputDirectory,
+          workspaceGenerator,
+          groupedTests,
+          targetsInRequiredProjects,
+          buildTargetToPbxTargetMapBuilder,
+          targetToProjectPathMapBuilder,
+          targetToBuildWithBuck);
     } else {
-      ImmutableMultimap.Builder<Cell, BuildTarget> projectCellToBuildTargetsBuilder =
-          ImmutableMultimap.builder();
-      for (TargetNode<?> targetNode : projectGraph.getNodes()) {
-        BuildTarget buildTarget = targetNode.getBuildTarget();
-        projectCellToBuildTargetsBuilder.put(rootCell.getCell(buildTarget), buildTarget);
-      }
-      ImmutableMultimap<Cell, BuildTarget> projectCellToBuildTargets =
-          projectCellToBuildTargetsBuilder.build();
-      for (Cell projectCell : projectCellToBuildTargets.keySet()) {
-        ImmutableMultimap.Builder<Path, BuildTarget> projectDirectoryToBuildTargetsBuilder =
-            ImmutableMultimap.builder();
-        final ImmutableSet<BuildTarget> cellRules =
-            ImmutableSet.copyOf(projectCellToBuildTargets.get(projectCell));
-        for (BuildTarget buildTarget : cellRules) {
-          projectDirectoryToBuildTargetsBuilder.put(buildTarget.getBasePath(), buildTarget);
-        }
-        ImmutableMultimap<Path, BuildTarget> projectDirectoryToBuildTargets =
-          projectDirectoryToBuildTargetsBuilder.build();
-        Path relativeTargetCell = rootCell.getRoot().relativize(projectCell.getRoot());
-        for (Path projectDirectory : projectDirectoryToBuildTargets.keySet()) {
-          final ImmutableSet<BuildTarget> rules = filterRulesForProjectDirectory(
-              projectGraph,
-              ImmutableSet.copyOf(projectDirectoryToBuildTargets.get(projectDirectory)));
-          if (Sets.intersection(targetsInRequiredProjects, rules).isEmpty()) {
-            continue;
-          }
-
-          ProjectGenerator generator = projectGenerators.get(projectDirectory);
-          if (generator == null) {
-            LOG.debug(
-                "Generating project for directory %s with targets %s",
-                projectDirectory,
-                rules);
-            String projectName;
-            if (projectDirectory.getFileName().toString().equals("")) {
-              // If we're generating a project in the root directory, use a generic name.
-              projectName = "Project";
-            } else {
-              // Otherwise, name the project the same thing as the directory we're in.
-              projectName = projectDirectory.getFileName().toString();
-            }
-            generator = new ProjectGenerator(
-                projectGraph,
-                rules,
-                projectCell,
-                projectDirectory,
-                projectName,
-                buildFileName,
-                projectGeneratorOptions,
-                Optionals.bind(
-                    targetToBuildWithBuck,
-                    new Function<BuildTarget, Optional<BuildTarget>>() {
-                      @Override
-                      public Optional<BuildTarget> apply(BuildTarget input) {
-                        return rules.contains(input)
-                            ? Optional.of(input)
-                            : Optional.<BuildTarget>absent();
-                      }
-                    }),
-                buildWithBuckFlags,
-                focusModules,
-                executableFinder,
-                environment,
-                cxxPlatforms,
-                defaultCxxPlatform,
-                sourcePathResolverForNode,
-                buckEventBus,
-                halideBuckConfig,
-                cxxBuckConfig,
-                appleConfig)
-                .setTestsToGenerateAsStaticLibraries(groupableTests);
-
-            generator.createXcodeProjects();
-            requiredBuildTargetsBuilder.addAll(generator.getRequiredBuildTargets());
-            projectGenerators.put(projectDirectory, generator);
-          } else {
-            LOG.debug("Already generated project for target %s, skipping", projectDirectory);
-          }
-
-          workspaceGenerator.addFilePath(relativeTargetCell.resolve(generator.getProjectPath()));
-
-          buildTargetToPbxTargetMapBuilder.putAll(generator.getBuildTargetToGeneratedTargetMap());
-          for (PBXTarget target : generator.getBuildTargetToGeneratedTargetMap().values()) {
-            targetToProjectPathMapBuilder.put(target, generator.getProjectPath());
-          }
-        }
-      }
-
-      if (!groupedTests.isEmpty()) {
-        ProjectGenerator combinedTestsProjectGenerator = new ProjectGenerator(
-            projectGraph,
-            ImmutableSortedSet.<BuildTarget>of(),
-            rootCell,
-            BuildTargets.getGenPath(
-                rootCell.getFilesystem(),
-                workspaceBuildTarget,
-                "%s-CombinedTestBundles"),
-            "_CombinedTestBundles",
-            buildFileName,
-            projectGeneratorOptions,
-            Optional.<BuildTarget>absent(),
-            buildWithBuckFlags,
-            focusModules,
-            executableFinder,
-            environment,
-            cxxPlatforms,
-            defaultCxxPlatform,
-            sourcePathResolverForNode,
-            buckEventBus,
-            halideBuckConfig,
-            cxxBuckConfig,
-            appleConfig);
-        combinedTestsProjectGenerator
-            .setAdditionalCombinedTestTargets(groupedTests)
-            .createXcodeProjects();
-        workspaceGenerator.addFilePath(combinedTestsProjectGenerator.getProjectPath());
-        requiredBuildTargetsBuilder.addAll(combinedTestsProjectGenerator.getRequiredBuildTargets());
-        for (PBXTarget target :
-            combinedTestsProjectGenerator.getBuildTargetToGeneratedTargetMap().values()) {
-          targetToProjectPathMapBuilder.put(target, combinedTestsProjectGenerator.getProjectPath());
-        }
-        synthesizedCombinedTestTargets =
-            combinedTestsProjectGenerator.getBuildableCombinedTestTargets();
-        for (PBXTarget target : synthesizedCombinedTestTargets) {
-          targetToProjectPathMapBuilder.put(target, combinedTestsProjectGenerator.getProjectPath());
-        }
-        this.combinedTestsProjectGenerator = Optional.of(combinedTestsProjectGenerator);
-      }
+      synthesizedCombinedTestTargets = generateProject(
+          projectGenerators,
+          workspaceGenerator,
+          groupedTests,
+          synthesizedCombinedTestTargets,
+          targetsInRequiredProjects,
+          buildTargetToPbxTargetMapBuilder,
+          targetToProjectPathMapBuilder,
+          targetToBuildWithBuck);
     }
 
     Path workspacePath = workspaceGenerator.writeWorkspace();
 
     final Multimap<BuildTarget, PBXTarget> buildTargetToTarget =
         buildTargetToPbxTargetMapBuilder.build();
-    final Function<BuildTarget, PBXTarget> targetNodeToPBXTargetTransformer =
-        new Function<BuildTarget, PBXTarget>() {
-          @Override
-          public PBXTarget apply(BuildTarget input) {
-            ImmutableList<PBXTarget> targets = ImmutableList.copyOf(buildTargetToTarget.get(input));
-            if (targets.size() == 1) {
-              return targets.get(0);
-            }
-            // The only reason why a build target would map to more than one project target is if
-            // there are two project targets: one is the usual one, the other is a target that just
-            // shells out to Buck.
-            Preconditions.checkState(targets.size() == 2);
-            PBXTarget first = targets.get(0);
-            PBXTarget second = targets.get(1);
-            Preconditions.checkState(
-                first.getName().endsWith(ProjectGenerator.BUILD_WITH_BUCK_POSTFIX) ^
-                    second.getName().endsWith(ProjectGenerator.BUILD_WITH_BUCK_POSTFIX));
-            PBXTarget buildWithBuckTarget;
-            PBXTarget buildWithXcodeTarget;
-            if (first.getName().endsWith(ProjectGenerator.BUILD_WITH_BUCK_POSTFIX)) {
-              buildWithBuckTarget = first;
-              buildWithXcodeTarget = second;
-            } else {
-              buildWithXcodeTarget = first;
-              buildWithBuckTarget = second;
-            }
-            return buildWithBuck ? buildWithBuckTarget : buildWithXcodeTarget;
-          }
-        };
 
     writeWorkspaceSchemes(
         workspaceName,
@@ -471,9 +295,267 @@ public class WorkspaceAndProjectGenerator {
             return buildTargetToTarget.get(input.getBuildTarget());
           }
         },
-        targetNodeToPBXTargetTransformer);
+        getTargetNodeToPBXTargetTransformFunction(buildTargetToTarget, buildWithBuck));
 
     return workspacePath;
+  }
+
+  private static Function<BuildTarget, PBXTarget> getTargetNodeToPBXTargetTransformFunction(
+      final Multimap<BuildTarget, PBXTarget> buildTargetToTarget,
+      final boolean buildWithBuck) {
+    return new Function<BuildTarget, PBXTarget>() {
+      @Override
+      public PBXTarget apply(BuildTarget input) {
+        ImmutableList<PBXTarget> targets = ImmutableList.copyOf(buildTargetToTarget.get(input));
+        if (targets.size() == 1) {
+          return targets.get(0);
+        }
+        // The only reason why a build target would map to more than one project target is if
+        // there are two project targets: one is the usual one, the other is a target that just
+        // shells out to Buck.
+        Preconditions.checkState(targets.size() == 2);
+        PBXTarget first = targets.get(0);
+        PBXTarget second = targets.get(1);
+        Preconditions.checkState(
+            first.getName().endsWith(ProjectGenerator.BUILD_WITH_BUCK_POSTFIX) ^
+                second.getName().endsWith(ProjectGenerator.BUILD_WITH_BUCK_POSTFIX));
+        PBXTarget buildWithBuckTarget;
+        PBXTarget buildWithXcodeTarget;
+        if (first.getName().endsWith(ProjectGenerator.BUILD_WITH_BUCK_POSTFIX)) {
+          buildWithBuckTarget = first;
+          buildWithXcodeTarget = second;
+        } else {
+          buildWithXcodeTarget = first;
+          buildWithBuckTarget = second;
+        }
+        return buildWithBuck ? buildWithBuckTarget : buildWithXcodeTarget;
+      }
+    };
+  }
+
+  private Iterable<PBXTarget> generateProject(
+      Map<Path, ProjectGenerator> projectGenerators,
+      WorkspaceGenerator workspaceGenerator,
+      ImmutableMultimap<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
+          groupedTests,
+      Iterable<PBXTarget> synthesizedCombinedTestTargets,
+      ImmutableSet<BuildTarget> targetsInRequiredProjects,
+      ImmutableMultimap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder,
+      ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder,
+      Optional<BuildTarget> targetToBuildWithBuck) throws IOException {
+    ImmutableMultimap.Builder<Cell, BuildTarget> projectCellToBuildTargetsBuilder =
+        ImmutableMultimap.builder();
+    for (TargetNode<?> targetNode : projectGraph.getNodes()) {
+      BuildTarget buildTarget = targetNode.getBuildTarget();
+      projectCellToBuildTargetsBuilder.put(rootCell.getCell(buildTarget), buildTarget);
+    }
+    ImmutableMultimap<Cell, BuildTarget> projectCellToBuildTargets =
+        projectCellToBuildTargetsBuilder.build();
+    for (Cell projectCell : projectCellToBuildTargets.keySet()) {
+      ImmutableMultimap.Builder<Path, BuildTarget> projectDirectoryToBuildTargetsBuilder =
+          ImmutableMultimap.builder();
+      final ImmutableSet<BuildTarget> cellRules =
+          ImmutableSet.copyOf(projectCellToBuildTargets.get(projectCell));
+      for (BuildTarget buildTarget : cellRules) {
+        projectDirectoryToBuildTargetsBuilder.put(buildTarget.getBasePath(), buildTarget);
+      }
+      ImmutableMultimap<Path, BuildTarget> projectDirectoryToBuildTargets =
+        projectDirectoryToBuildTargetsBuilder.build();
+      Path relativeTargetCell = rootCell.getRoot().relativize(projectCell.getRoot());
+      for (Path projectDirectory : projectDirectoryToBuildTargets.keySet()) {
+        final ImmutableSet<BuildTarget> rules = filterRulesForProjectDirectory(
+            projectGraph,
+            ImmutableSet.copyOf(projectDirectoryToBuildTargets.get(projectDirectory)));
+        if (Sets.intersection(targetsInRequiredProjects, rules).isEmpty()) {
+          continue;
+        }
+
+        generateProjectForDirectory(
+            projectGenerators,
+            workspaceGenerator,
+            buildTargetToPbxTargetMapBuilder,
+            targetToProjectPathMapBuilder,
+            targetToBuildWithBuck,
+            projectCell,
+            relativeTargetCell,
+            projectDirectory,
+            rules);
+      }
+    }
+
+    if (!groupedTests.isEmpty()) {
+      synthesizedCombinedTestTargets = generateCombinedProjectForTests(
+          workspaceGenerator,
+          groupedTests,
+          targetToProjectPathMapBuilder);
+    }
+    return synthesizedCombinedTestTargets;
+  }
+
+  private Iterable<PBXTarget> generateCombinedProjectForTests(
+      WorkspaceGenerator workspaceGenerator,
+      ImmutableMultimap<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
+          groupedTests,
+      ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder) throws IOException {
+    ProjectGenerator combinedTestsProjectGenerator = new ProjectGenerator(
+        projectGraph,
+        ImmutableSortedSet.<BuildTarget>of(),
+        rootCell,
+        BuildTargets.getGenPath(
+            rootCell.getFilesystem(),
+            workspaceBuildTarget,
+            "%s-CombinedTestBundles"),
+        "_CombinedTestBundles",
+        buildFileName,
+        projectGeneratorOptions,
+        Optional.<BuildTarget>absent(),
+        buildWithBuckFlags,
+        focusModules,
+        executableFinder,
+        environment,
+        cxxPlatforms,
+        defaultCxxPlatform,
+        sourcePathResolverForNode,
+        buckEventBus,
+        halideBuckConfig,
+        cxxBuckConfig,
+        appleConfig);
+    combinedTestsProjectGenerator
+        .setAdditionalCombinedTestTargets(groupedTests)
+        .createXcodeProjects();
+    workspaceGenerator.addFilePath(combinedTestsProjectGenerator.getProjectPath());
+    requiredBuildTargetsBuilder.addAll(combinedTestsProjectGenerator.getRequiredBuildTargets());
+    for (PBXTarget target :
+        combinedTestsProjectGenerator.getBuildTargetToGeneratedTargetMap().values()) {
+      targetToProjectPathMapBuilder.put(target, combinedTestsProjectGenerator.getProjectPath());
+    }
+    Iterable<PBXTarget> synthesizedCombinedTestTargets =
+        combinedTestsProjectGenerator.getBuildableCombinedTestTargets();
+    for (PBXTarget target : synthesizedCombinedTestTargets) {
+      targetToProjectPathMapBuilder.put(target, combinedTestsProjectGenerator.getProjectPath());
+    }
+    this.combinedTestsProjectGenerator = Optional.of(combinedTestsProjectGenerator);
+    return synthesizedCombinedTestTargets;
+  }
+
+  private void generateProjectForDirectory(
+      Map<Path, ProjectGenerator> projectGenerators,
+      WorkspaceGenerator workspaceGenerator,
+      ImmutableMultimap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder,
+      ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder,
+      Optional<BuildTarget> targetToBuildWithBuck,
+      Cell projectCell,
+      Path relativeTargetCell,
+      Path projectDirectory, final ImmutableSet<BuildTarget> rules) throws IOException {
+    ProjectGenerator generator = projectGenerators.get(projectDirectory);
+    if (generator == null) {
+      LOG.debug(
+          "Generating project for directory %s with targets %s",
+          projectDirectory,
+          rules);
+      String projectName;
+      if (projectDirectory.getFileName().toString().equals("")) {
+        // If we're generating a project in the root directory, use a generic name.
+        projectName = "Project";
+      } else {
+        // Otherwise, name the project the same thing as the directory we're in.
+        projectName = projectDirectory.getFileName().toString();
+      }
+      generator = new ProjectGenerator(
+          projectGraph,
+          rules,
+          projectCell,
+          projectDirectory,
+          projectName,
+          buildFileName,
+          projectGeneratorOptions,
+          Optionals.bind(
+              targetToBuildWithBuck,
+              new Function<BuildTarget, Optional<BuildTarget>>() {
+                @Override
+                public Optional<BuildTarget> apply(BuildTarget input) {
+                  return rules.contains(input)
+                      ? Optional.of(input)
+                      : Optional.<BuildTarget>absent();
+                }
+              }),
+          buildWithBuckFlags,
+          focusModules,
+          executableFinder,
+          environment,
+          cxxPlatforms,
+          defaultCxxPlatform,
+          sourcePathResolverForNode,
+          buckEventBus,
+          halideBuckConfig,
+          cxxBuckConfig,
+          appleConfig)
+          .setTestsToGenerateAsStaticLibraries(groupableTests);
+
+      generator.createXcodeProjects();
+      requiredBuildTargetsBuilder.addAll(generator.getRequiredBuildTargets());
+      projectGenerators.put(projectDirectory, generator);
+    } else {
+      LOG.debug("Already generated project for target %s, skipping", projectDirectory);
+    }
+
+    workspaceGenerator.addFilePath(relativeTargetCell.resolve(generator.getProjectPath()));
+
+    buildTargetToPbxTargetMapBuilder.putAll(generator.getBuildTargetToGeneratedTargetMap());
+    for (PBXTarget target : generator.getBuildTargetToGeneratedTargetMap().values()) {
+      targetToProjectPathMapBuilder.put(target, generator.getProjectPath());
+    }
+  }
+
+  private Iterable<PBXTarget> generateCombinedProject(
+      String workspaceName,
+      Path outputDirectory,
+      WorkspaceGenerator workspaceGenerator,
+      ImmutableMultimap<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
+          groupedTests,
+      ImmutableSet<BuildTarget> targetsInRequiredProjects,
+      ImmutableMultimap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder,
+      ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder,
+      Optional<BuildTarget> targetToBuildWithBuck) throws IOException {
+    Iterable<PBXTarget> synthesizedCombinedTestTargets;
+    LOG.debug("Generating a combined project");
+    ProjectGenerator generator = new ProjectGenerator(
+        projectGraph,
+        targetsInRequiredProjects,
+        rootCell,
+        outputDirectory.getParent(),
+        workspaceName,
+        buildFileName,
+        projectGeneratorOptions,
+        targetToBuildWithBuck,
+        buildWithBuckFlags,
+        focusModules,
+        executableFinder,
+        environment,
+        cxxPlatforms,
+        defaultCxxPlatform,
+        sourcePathResolverForNode,
+        buckEventBus,
+        halideBuckConfig,
+        cxxBuckConfig,
+        appleConfig)
+        .setAdditionalCombinedTestTargets(groupedTests)
+        .setTestsToGenerateAsStaticLibraries(groupableTests);
+    combinedProjectGenerator = Optional.of(generator);
+    generator.createXcodeProjects();
+
+    workspaceGenerator.addFilePath(generator.getProjectPath(), Optional.<Path>absent());
+    requiredBuildTargetsBuilder.addAll(generator.getRequiredBuildTargets());
+
+    buildTargetToPbxTargetMapBuilder.putAll(generator.getBuildTargetToGeneratedTargetMap());
+    for (PBXTarget target : generator.getBuildTargetToGeneratedTargetMap().values()) {
+      targetToProjectPathMapBuilder.put(target, generator.getProjectPath());
+    }
+    synthesizedCombinedTestTargets = generator.getBuildableCombinedTestTargets();
+    for (PBXTarget target : synthesizedCombinedTestTargets) {
+      targetToProjectPathMapBuilder.put(target, generator.getProjectPath());
+    }
+    return synthesizedCombinedTestTargets;
   }
 
   private Optional<BuildTarget> getTargetToBuildWithBuck() {
