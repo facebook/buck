@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY b36d89abf76e9efbd752ec71eff2d53c027f03ef #@#
+#@# GENERATED FILE: DO NOT MODIFY be45b4d6cb19cedb8336ff9ffe598158f9667df2 #@#
 {
   "maven" : {
     "deps" : [
@@ -6,6 +6,7 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/util/concurrent:concurrent",
       "//third-party/java/aether:aether-spi",
       "//third-party/java/aether:aether-util",
       "//third-party/java/maven:maven-aether-provider",

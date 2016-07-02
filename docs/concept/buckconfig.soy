@@ -121,7 +121,6 @@ The following sections are recognized by Buck:
     'python',
     'rust',
     'test',
-    'thrift',
     'tools',
     'ui',
     'unknown_flavors_messages',
@@ -2125,34 +2124,6 @@ your <code>.buckjavaargs</code> file</a>:
         </li>
       </ul>
     </p>
-  {/param}
-{/call}
-
-{call buckconfig.section}
-  {param name: 'thrift' /}
-  {param description}
-    This section provides settings to locate required thrift components.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'thrift' /}
-  {param name: 'compiler' /}
-  {param example_value: '/usr/local/bin/thrift' /}
-  {param description}
-    The path or {call buck.build_target /} that builds the <a
-    href="https://thrift.apache.org">thrift</a> compiler that Buck should use.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'thrift' /}
-  {param name: 'compiler2' /}
-  {param example_value: '/usr/local/bin/thrift2' /}
-  {param description}
-    The path or {call buck.build_target /} that builds the <a
-    href="https://github.com/facebook/fbthrift">thrift2</a> compiler that Buck should use.  If this
-    is unset, it defaults to the value of {call buckconfig.thrift_compiler /}.
   {/param}
 {/call}
 

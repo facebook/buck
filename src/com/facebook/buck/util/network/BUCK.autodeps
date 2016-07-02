@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 8fc72b929c832c20cfa140841d80341935f33119 #@#
+#@# GENERATED FILE: DO NOT MODIFY 75f506b270ddd262cdcb9111419004d874e71628 #@#
 {
   "network" : {
     "deps" : [
@@ -7,6 +7,7 @@
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/concurrent:concurrent",
+      "//src/com/facebook/buck/util/environment:platform",
       "//third-party/java/jackson:jackson-core"
     ],
     "exported_deps" : [

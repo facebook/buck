@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 2486625ff79b17bff22e88321630eaa4b326c335 #@#
+#@# GENERATED FILE: DO NOT MODIFY fd73c78c725d1e3e7524f3302ea3b59b682c8e9e #@#
 {
   "config" : {
     "deps" : [
@@ -31,6 +31,7 @@
       "//src/com/facebook/buck/util/immutables:immutables",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
       "//third-party/java/guava:guava",
+      "//third-party/java/jackson:jackson-annotations",
       "//third-party/java/jackson:jackson-databind"
     ]
   }

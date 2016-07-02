@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 8e597cc1121058197ce2aaa9806c4f5519384210 #@#
+#@# GENERATED FILE: DO NOT MODIFY e30d2342c2a927b1759e4023f56ccafeda26ed8e #@#
 {
   "intellij" : {
     "deps" : [
@@ -14,6 +14,7 @@
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/step:step",
+      "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:object_mapper",
       "//test/com/facebook/buck/android:testutil",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
