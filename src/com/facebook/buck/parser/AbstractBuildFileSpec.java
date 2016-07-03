@@ -94,6 +94,8 @@ abstract class AbstractBuildFileSpec {
       return;
     }
 
+    LOG.debug("Finding build files for %s under %s...", getBasePath(), filesystem.getRootPath());
+
     long walkStartTimeNanos = System.nanoTime();
 
     // Otherwise, we need to do a recursive walk to find relevant build files.
@@ -274,8 +276,6 @@ abstract class AbstractBuildFileSpec {
       ParserConfig.BuildFileSearchMethod buildFileSearchMethod)
         throws IOException, InterruptedException {
     final ImmutableSet.Builder<Path> buildFiles = ImmutableSet.builder();
-
-    LOG.debug("Finding build files for %s under %s...", getBasePath(), cell.getRoot());
 
     forEachBuildFile(
         cell.getFilesystem(),

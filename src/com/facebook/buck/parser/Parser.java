@@ -52,6 +52,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.Futures;
@@ -61,6 +63,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -458,6 +461,7 @@ public class Parser {
 
     ImmutableList.Builder<ListenableFuture<ImmutableSet<BuildTarget>>>
         targetFutures = ImmutableList.builder();
+    Multimap<Path, TargetNodeSpec> perBuildFileSpecs = LinkedHashMultimap.create();
     for (final TargetNodeSpec spec : specs) {
       Cell cell = rootCell.getCell(spec.getBuildFileSpec().getCellPath());
       ImmutableSet<Path> buildFiles;
@@ -471,28 +475,40 @@ public class Parser {
             cell,
             buildFileSearchMethod);
       }
-
       for (Path buildFile : buildFiles) {
-        // Format a proper error message for non-existent build files.
-        if (!cell.getFilesystem().isFile(buildFile)) {
-          throw new MissingBuildFileException(
-              spec,
-              cell.getFilesystem().getRootPath().relativize(buildFile));
-        }
-        // Build up a list of all target nodes from the build file.
-        targetFutures.add(
-            Futures.transform(
-                state.getAllTargetNodesJob(cell, buildFile),
-                new Function<ImmutableSet<TargetNode<?>>,
-                             ImmutableSet<BuildTarget>>() {
-                  @Override
-                  public ImmutableSet<BuildTarget> apply(
-                      ImmutableSet<TargetNode<?>> nodes) {
-                    // Call back into the target node spec to filter the relevant build targets.
-                    return applySpecFilter(spec, nodes, applyDefaultFlavorsMode);
-                  }
-                }));
+        perBuildFileSpecs.put(buildFile, spec);
       }
+    }
+
+    for (Path buildFile : perBuildFileSpecs.keySet()) {
+      final Collection<TargetNodeSpec> buildFileSpecs = perBuildFileSpecs.get(buildFile);
+      TargetNodeSpec firstSpec = Iterables.get(buildFileSpecs, 0);
+      Cell cell = rootCell.getCell(firstSpec.getBuildFileSpec().getCellPath());
+
+      // Format a proper error message for non-existent build files.
+      if (!cell.getFilesystem().isFile(buildFile)) {
+        throw new MissingBuildFileException(
+            firstSpec,
+            cell.getFilesystem().getRootPath().relativize(buildFile));
+      }
+
+      // Build up a list of all target nodes from the build file.
+      targetFutures.add(
+          Futures.transform(
+              state.getAllTargetNodesJob(cell, buildFile),
+              new Function<ImmutableSet<TargetNode<?>>,
+                           ImmutableSet<BuildTarget>>() {
+                @Override
+                public ImmutableSet<BuildTarget> apply(
+                    ImmutableSet<TargetNode<?>> nodes) {
+                  ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
+                  for (TargetNodeSpec spec : buildFileSpecs) {
+                    // Call back into the target node spec to filter the relevant build targets.
+                    targets.addAll(applySpecFilter(spec, nodes, applyDefaultFlavorsMode));
+                  }
+                  return targets.build();
+                }
+              }));
     }
 
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
