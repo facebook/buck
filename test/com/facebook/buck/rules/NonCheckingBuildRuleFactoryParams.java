@@ -18,8 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.InMemoryBuildFileTree;
-import com.google.common.collect.ImmutableList;
 
 /**
  * Factory for creating a {@link BuildRuleFactoryParams} that does not check whether the file
@@ -34,8 +32,6 @@ public final class NonCheckingBuildRuleFactoryParams {
       ProjectFilesystem projectFilesystem) {
     return new BuildRuleFactoryParams(
         projectFilesystem,
-        target,
-        new InMemoryBuildFileTree(ImmutableList.<BuildTarget>of()),
-        /* enforceBuckPackageBoundary */ false);
+        target);
   }
 }

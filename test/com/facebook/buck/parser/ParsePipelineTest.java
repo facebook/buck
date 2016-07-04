@@ -418,7 +418,7 @@ public class ParsePipelineTest {
           });
       this.parsePipeline = new ParsePipeline(
           this.cache,
-          new DefaultParserTargetNodeFactory(
+          DefaultParserTargetNodeFactory.createForParser(
               eventBus,
               constructorArgMarshaller,
               coercerFactory,

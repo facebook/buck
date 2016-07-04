@@ -68,7 +68,7 @@ public class TargetNodeVisibilityTest {
 
   @Test
   public void testVisibilityPublic()
-      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException {
     TargetNode<?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
     TargetNode<?> orcaRule = createTargetNode(orcaTarget);
 
@@ -78,7 +78,7 @@ public class TargetNodeVisibilityTest {
 
   @Test
   public void testVisibilityNonPublic()
-      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException {
     TargetNode<?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, VISIBLETO_ORCA);
     TargetNode<?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, VISIBLETO_ORCA);
     TargetNode<?> orcaRule = createTargetNode(orcaTarget);
@@ -97,7 +97,7 @@ public class TargetNodeVisibilityTest {
 
   @Test
   public void testVisibilityNonPublicFailure()
-      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException {
     TargetNode<?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, VISIBLETO_ORCA);
     TargetNode<?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
 
@@ -115,7 +115,7 @@ public class TargetNodeVisibilityTest {
 
   @Test
   public void testVisibilityMix()
-      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException {
     TargetNode<?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, VISIBLETO_ORCA);
     TargetNode<?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, VISIBLETO_ORCA);
     TargetNode<?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
@@ -133,7 +133,7 @@ public class TargetNodeVisibilityTest {
 
   @Test
   public void testVisibilityMixFailure()
-      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException {
     TargetNode<?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, VISIBLETO_ORCA);
     TargetNode<?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, VISIBLETO_SOME_OTHER);
     TargetNode<?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
@@ -157,7 +157,7 @@ public class TargetNodeVisibilityTest {
 
   @Test
   public void testVisibilityForDirectory()
-      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException {
     BuildTarget libTarget = BuildTarget.builder(filesystem.getRootPath(), "//lib", "lib").build();
     TargetNode<?> targetInSpecifiedDirectory = createTargetNode(
         BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook", "test").build());
@@ -219,7 +219,7 @@ public class TargetNodeVisibilityTest {
   private static TargetNode<?> createTargetNode(
       BuildTarget buildTarget,
       String... visibilities)
-      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException {
     VisibilityPatternParser parser = new VisibilityPatternParser();
     ImmutableSet.Builder<VisibilityPattern> builder = ImmutableSet.builder();
     CellPathResolver cellNames = new CellPathResolver() {
@@ -233,10 +233,9 @@ public class TargetNodeVisibilityTest {
     }
     Description<FakeDescription.FakeArg> description = new FakeDescription();
     FakeDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
-    BuildRuleFactoryParams params =
-        NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
-            buildTarget,
-            new FakeProjectFilesystem());
+    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
+        new FakeProjectFilesystem(),
+        buildTarget);
     return new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
         .create(
             Hashing.sha1().hashString(params.target.getFullyQualifiedName(), UTF_8),

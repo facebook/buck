@@ -73,9 +73,7 @@ public abstract class AbstractNodeBuilder<A> {
       ProjectFilesystem projectFilesystem,
       HashCode hashCode) {
     this.description = description;
-    this.factoryParams = NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
-        target,
-        projectFilesystem);
+    this.factoryParams = new BuildRuleFactoryParams(projectFilesystem, target);
     this.target = target;
     this.rawHashCode = hashCode;
 
@@ -130,7 +128,7 @@ public abstract class AbstractNodeBuilder<A> {
           getDepsFromArg(),
           ImmutableSet.<VisibilityPattern>of(),
           cellRoots);
-    } catch (NoSuchBuildTargetException | TargetNodeFactory.InvalidSourcePathInputException e) {
+    } catch (NoSuchBuildTargetException e) {
       throw Throwables.propagate(e);
     }
   }

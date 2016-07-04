@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 
@@ -25,37 +24,26 @@ public final class BuildRuleFactoryParams {
 
   private final ProjectFilesystem filesystem;
   public final BuildTarget target;
-  private final BuildFileTree buildFileTree;
-  private final boolean enforceBuckPackageBoundary;
 
   public BuildRuleFactoryParams(
       ProjectFilesystem filesystem,
-      BuildTarget target,
-      BuildFileTree buildFileTree,
-      boolean enforceBuckPackageBoundary) {
+      BuildTarget target) {
     this.filesystem = filesystem;
     this.target = target;
-    this.buildFileTree = buildFileTree;
-    this.enforceBuckPackageBoundary = enforceBuckPackageBoundary;
   }
 
   public ProjectFilesystem getProjectFilesystem() {
     return filesystem;
   }
 
-  public BuildFileTree getBuildFileTree() {
-    return buildFileTree;
-  }
-
-  public boolean enforceBuckPackageBoundary() {
-    return enforceBuckPackageBoundary;
+  public boolean isSameTarget(BuildRuleFactoryParams other) {
+    return target.equals(other.target) &&
+        filesystem.equals(other.filesystem);
   }
 
   public BuildRuleFactoryParams withFlavors(Iterable<Flavor> flavors) {
     return new BuildRuleFactoryParams(
         filesystem,
-        target.withFlavors(flavors),
-        buildFileTree,
-        enforceBuckPackageBoundary);
+        target.withFlavors(flavors));
   }
 }

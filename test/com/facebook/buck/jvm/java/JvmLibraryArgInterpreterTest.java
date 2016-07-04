@@ -35,7 +35,6 @@ import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -236,10 +235,9 @@ public class JvmLibraryArgInterpreterTest {
   }
 
   private void populateWithDefaultValues(Object arg) {
-    BuildRuleFactoryParams factoryParams =
-        NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
-            BuildTargetFactory.newInstance("//example:target"),
-            new FakeProjectFilesystem());
+    BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
+        new FakeProjectFilesystem(),
+        BuildTargetFactory.newInstance("//example:target"));
 
     try {
       new ConstructorArgMarshaller(

@@ -44,7 +44,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -112,9 +111,7 @@ public class AuditOwnerCommandTest {
     FakeDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
     arg.inputs = inputs;
     BuildRuleFactoryParams params =
-        NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
-            buildTarget,
-            new FakeProjectFilesystem());
+        new BuildRuleFactoryParams(new FakeProjectFilesystem(), buildTarget);
     try {
       return
           new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
@@ -126,7 +123,7 @@ public class AuditOwnerCommandTest {
                   ImmutableSet.<BuildTarget>of(),
                   ImmutableSet.<VisibilityPattern>of(),
                   createCellRoots(params.getProjectFilesystem()));
-    } catch (NoSuchBuildTargetException | TargetNodeFactory.InvalidSourcePathInputException e) {
+    } catch (NoSuchBuildTargetException e) {
       throw new RuntimeException(e);
     }
   }

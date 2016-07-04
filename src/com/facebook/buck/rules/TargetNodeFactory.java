@@ -15,13 +15,11 @@
  */
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -54,7 +52,7 @@ public class TargetNodeFactory {
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       CellPathResolver cellRoots)
-      throws NoSuchBuildTargetException, InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException {
     return create(
         rawInputsHashCode,
         description,
@@ -74,7 +72,7 @@ public class TargetNodeFactory {
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       CellPathResolver cellRoots)
-      throws NoSuchBuildTargetException, InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException {
 
     ImmutableSortedSet.Builder<BuildTarget> extraDepsBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableSet.Builder<Path> pathsBuilder = ImmutableSet.builder();
@@ -109,11 +107,6 @@ public class TargetNodeFactory {
                       constructorArg));
     }
 
-    ImmutableSet<Path> paths = pathsBuilder.build();
-    if (params.enforceBuckPackageBoundary()) {
-      verifyPaths(params.target, params.getBuildFileTree(), paths);
-    }
-
     return new TargetNode<>(
         this,
         rawInputsHashCode,
@@ -123,7 +116,7 @@ public class TargetNodeFactory {
         declaredDeps,
         ImmutableSortedSet.copyOf(Sets.difference(extraDepsBuilder.build(), declaredDeps)),
         visibilityPatterns,
-        paths,
+        pathsBuilder.build(),
         cellRoots);
   }
 
@@ -171,7 +164,7 @@ public class TargetNodeFactory {
           originalNode.getDeclaredDeps(),
           originalNode.getVisibilityPatterns(),
           originalNode.getCellNames());
-    } catch (InvalidSourcePathInputException | NoSuchBuildTargetException e) {
+    } catch (NoSuchBuildTargetException e) {
       throw new IllegalStateException(
           String.format(
               "Caught exception when transforming TargetNode to use a different description: %s",
@@ -192,57 +185,13 @@ public class TargetNodeFactory {
           originalNode.getDeclaredDeps(),
           originalNode.getVisibilityPatterns(),
           originalNode.getCellNames());
-    } catch (InvalidSourcePathInputException | NoSuchBuildTargetException e) {
+    } catch (NoSuchBuildTargetException e) {
       throw new IllegalStateException(
           String.format(
               "Caught exception when transforming TargetNode to use different flavors: %s",
               originalNode.getBuildTarget()),
           e);
     }
-  }
-
-  private static ImmutableSet<Path> verifyPaths(
-      BuildTarget target,
-      BuildFileTree buildFileTree,
-      ImmutableSet<Path> paths)
-      throws InvalidSourcePathInputException {
-    Path basePath = target.getBasePath();
-
-    for (Path path : paths) {
-      if (!basePath.toString().isEmpty() && !path.startsWith(basePath)) {
-        throw new InvalidSourcePathInputException(
-            "'%s' in '%s' refers to a parent directory.",
-            basePath.relativize(path),
-            target);
-      }
-
-      Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(path);
-      // It should not be possible for us to ever get an Optional.absent() for this because that
-      // would require one of two conditions:
-      // 1) The source path references parent directories, which we check for above.
-      // 2) You don't have a build file above this file, which is impossible if it is referenced in
-      //    a build file *unless* you happen to be referencing something that is ignored.
-      if (!ancestor.isPresent()) {
-        throw new InvalidSourcePathInputException(
-            "'%s' in '%s' crosses a buck package boundary.  This is probably caused by " +
-                "specifying one of the folders in '%s' in your .buckconfig under `project.ignore`.",
-            path,
-            target,
-            path);
-      }
-      if (!ancestor.get().equals(basePath)) {
-        throw new InvalidSourcePathInputException(
-            "'%s' in '%s' crosses a buck package boundary.  This file is owned by '%s'.  Find " +
-                "the owning rule that references '%s', and use a reference to that rule instead " +
-                "of referencing the desired file directly.",
-            path,
-            target,
-            ancestor.get(),
-            path);
-      }
-    }
-
-    return paths;
   }
 
   @SuppressWarnings("serial")

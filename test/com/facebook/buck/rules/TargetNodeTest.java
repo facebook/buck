@@ -52,7 +52,7 @@ public class TargetNodeTest {
 
   @Test
   public void testIgnoreNonBuildTargetOrPathOrSourcePathArgument()
-      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException {
 
     TargetNode<Arg> targetNode = createTargetNode(TARGET_THREE);
 
@@ -61,8 +61,7 @@ public class TargetNodeTest {
   }
 
   @Test
-  public void testDepsAndPathsAreCollected()
-      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
+  public void testDepsAndPathsAreCollected() throws NoSuchBuildTargetException {
     ImmutableList<String> depsStrings = ImmutableList.of(
         "//example/path:one",
         "//example/path:two");
@@ -154,7 +153,7 @@ public class TargetNodeTest {
 
   private static TargetNode<Arg> createTargetNode(
       BuildTarget buildTarget)
-      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
+      throws NoSuchBuildTargetException {
     ImmutableMap<String, Object> rawNode = ImmutableMap.<String, Object>of(
         "deps", ImmutableList.of(),
         "string", "//example/path:one",
@@ -167,12 +166,10 @@ public class TargetNodeTest {
   private static TargetNode<Arg> createTargetNode(
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
-      ImmutableMap<String, Object> rawNode)
-      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
-    BuildRuleFactoryParams buildRuleFactoryParams =
-        NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
-            buildTarget,
-            new FakeProjectFilesystem());
+      ImmutableMap<String, Object> rawNode) throws NoSuchBuildTargetException {
+    BuildRuleFactoryParams buildRuleFactoryParams = new BuildRuleFactoryParams(
+        new FakeProjectFilesystem(),
+        buildTarget);
 
     Description<Arg> description = new TestDescription();
 

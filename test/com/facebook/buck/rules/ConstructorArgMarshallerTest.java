@@ -734,8 +734,6 @@ public class ConstructorArgMarshallerTest {
 
   public BuildRuleFactoryParams buildRuleFactoryParams() {
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:three");
-    return NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
-        target,
-        new FakeProjectFilesystem());
+    return new BuildRuleFactoryParams(new FakeProjectFilesystem(), target);
   }
 }

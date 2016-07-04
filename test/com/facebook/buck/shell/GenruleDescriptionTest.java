@@ -26,7 +26,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
@@ -60,8 +59,7 @@ import java.util.Map;
 public class GenruleDescriptionTest {
 
   @Test
-  public void testImplicitDepsAreAddedCorrectly()
-      throws NoSuchBuildTargetException, TargetNodeFactory.InvalidSourcePathInputException {
+  public void testImplicitDepsAreAddedCorrectly() throws NoSuchBuildTargetException {
     Description<GenruleDescription.Arg> genruleDescription = new GenruleDescription();
     Map<String, Object> instance = ImmutableMap.<String, Object>of(
         "srcs", ImmutableList.of(":baz", "//biz:baz"),
@@ -70,9 +68,7 @@ public class GenruleDescriptionTest {
     ProjectFilesystem projectFilesystem = new AllExistingProjectFilesystem();
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         projectFilesystem,
-        BuildTargetFactory.newInstance("//foo:bar"),
-        new InMemoryBuildFileTree(ImmutableList.<BuildTarget>of()),
-        /* enforeBuckBoundaryCheck */ true);
+        BuildTargetFactory.newInstance("//foo:bar"));
     ConstructorArgMarshaller marshaller =
         new ConstructorArgMarshaller(new DefaultTypeCoercerFactory(
             ObjectMappers.newDefaultInstance()));

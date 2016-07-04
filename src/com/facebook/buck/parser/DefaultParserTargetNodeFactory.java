@@ -41,6 +41,7 @@ import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
@@ -62,20 +63,34 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory {
   private final BuckEventBus eventBus;
   private final ConstructorArgMarshaller marshaller;
   private final TypeCoercerFactory typeCoercerFactory;
-  private final LoadingCache<Cell, BuildFileTree> buildFileTrees;
+  private final Optional<LoadingCache<Cell, BuildFileTree>> buildFileTrees;
   private final TargetNodeListener nodeListener;
 
-  public DefaultParserTargetNodeFactory(
+  private DefaultParserTargetNodeFactory(
       BuckEventBus eventBus,
       ConstructorArgMarshaller marshaller,
       TypeCoercerFactory typeCoercerFactory,
-      LoadingCache<Cell, BuildFileTree> buildFileTrees,
+      Optional<LoadingCache<Cell, BuildFileTree>> buildFileTrees,
       TargetNodeListener nodeListener) {
     this.eventBus = eventBus;
     this.marshaller = marshaller;
     this.typeCoercerFactory = typeCoercerFactory;
     this.buildFileTrees = buildFileTrees;
     this.nodeListener = nodeListener;
+  }
+
+  public static ParserTargetNodeFactory createForParser(
+      BuckEventBus eventBus,
+      ConstructorArgMarshaller marshaller,
+      TypeCoercerFactory typeCoercerFactory,
+      LoadingCache<Cell, BuildFileTree> buildFileTrees,
+      TargetNodeListener nodeListener) {
+    return new DefaultParserTargetNodeFactory(
+        eventBus,
+        marshaller,
+        typeCoercerFactory,
+        Optional.of(buildFileTrees),
+        nodeListener);
   }
 
   @Override
@@ -128,9 +143,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory {
     Cell targetCell = cell.getCell(target);
     BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
         targetCell.getFilesystem(),
-        target,
-        buildFileTrees.getUnchecked(targetCell),
-        targetCell.isEnforcingBuckPackageBoundaries());
+        target);
     Object constructorArg = description.createUnpopulatedConstructorArg();
     try {
       ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
@@ -167,17 +180,62 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory {
             declaredDeps.build(),
             visibilityPatterns.build(),
             targetCell.getCellRoots());
+        if (buildFileTrees.isPresent() && cell.isEnforcingBuckPackageBoundaries()) {
+          enforceBuckPackageBoundaries(
+              target,
+              buildFileTrees.get().getUnchecked(targetCell),
+              node.getInputs());
+        }
         nodeListener.onCreate(buildFile, node);
         return node;
       }
-    } catch (
-        NoSuchBuildTargetException |
-            TargetNodeFactory.InvalidSourcePathInputException e) {
+    } catch (NoSuchBuildTargetException e) {
       throw new HumanReadableException(e);
     } catch (ConstructorArgMarshalException e) {
       throw new HumanReadableException("%s: %s", target, e.getMessage());
     } catch (IOException e) {
       throw new HumanReadableException(e.getMessage(), e);
+    }
+  }
+
+  protected void enforceBuckPackageBoundaries(
+      BuildTarget target,
+      BuildFileTree buildFileTree,
+      ImmutableSet<Path> paths) {
+    Path basePath = target.getBasePath();
+
+    for (Path path : paths) {
+      if (!basePath.toString().isEmpty() && !path.startsWith(basePath)) {
+        throw new HumanReadableException(
+            "'%s' in '%s' refers to a parent directory.",
+            basePath.relativize(path),
+            target);
+      }
+
+      Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(path);
+      // It should not be possible for us to ever get an Optional.absent() for this because that
+      // would require one of two conditions:
+      // 1) The source path references parent directories, which we check for above.
+      // 2) You don't have a build file above this file, which is impossible if it is referenced in
+      //    a build file *unless* you happen to be referencing something that is ignored.
+      if (!ancestor.isPresent()) {
+        throw new HumanReadableException(
+            "'%s' in '%s' crosses a buck package boundary.  This is probably caused by " +
+                "specifying one of the folders in '%s' in your .buckconfig under `project.ignore`.",
+            path,
+            target,
+            path);
+      }
+      if (!ancestor.get().equals(basePath)) {
+        throw new HumanReadableException(
+            "'%s' in '%s' crosses a buck package boundary.  This file is owned by '%s'.  Find " +
+                "the owning rule that references '%s', and use a reference to that rule instead " +
+                "of referencing the desired file directly.",
+            path,
+            target,
+            ancestor.get(),
+            path);
+      }
     }
   }
 

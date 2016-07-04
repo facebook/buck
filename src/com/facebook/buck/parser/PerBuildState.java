@@ -128,7 +128,7 @@ class PerBuildState implements AutoCloseable {
         });
     this.parsePipeline = new ParsePipeline(
         permState,
-        new DefaultParserTargetNodeFactory(
+        DefaultParserTargetNodeFactory.createForParser(
             eventBus,
             marshaller,
             permState.getTypeCoercerFactory(),
