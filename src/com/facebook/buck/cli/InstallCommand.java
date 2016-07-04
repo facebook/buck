@@ -57,6 +57,7 @@ import com.facebook.infer.annotation.Assertions;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -291,16 +292,19 @@ public class InstallCommand extends BuildCommand {
             getArguments()).get(index);
 
         BuildTarget target =
-            FluentIterable.from(
-                params.getParser().resolveTargetSpecs(
-                    params.getBuckEventBus(),
-                    params.getCell(),
-                    getEnableParserProfiling(),
-                    executor,
-                    ImmutableList.of(spec),
-                    SpeculativeParsing.of(false),
-                    parserConfig.getDefaultFlavorsMode()))
-            .first().get();
+            FluentIterable
+                .from(
+                    params.getParser().resolveTargetSpecs(
+                        params.getBuckEventBus(),
+                        params.getCell(),
+                        getEnableParserProfiling(),
+                        executor,
+                        ImmutableList.of(spec),
+                        SpeculativeParsing.of(false),
+                        parserConfig.getDefaultFlavorsMode()))
+                .transformAndConcat(Functions.<ImmutableSet<BuildTarget>>identity())
+                .first()
+                .get();
 
         TargetNode<?> node = params.getParser().getTargetNode(
             params.getBuckEventBus(),

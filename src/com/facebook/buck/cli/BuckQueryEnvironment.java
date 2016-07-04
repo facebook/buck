@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
@@ -44,6 +43,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -96,6 +96,17 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     return graph;
   }
 
+  public void preloadTargetPatterns(Iterable<String> patterns, ListeningExecutorService executor)
+      throws QueryException, InterruptedException {
+    try {
+      targetPatternEvaluator.preloadTargetPatterns(patterns, executor);
+    } catch (IOException e) {
+      throw new QueryException("Error in preloading targets. %s: %s", e.getClass(), e.getMessage());
+    } catch (BuildTargetException | BuildFileParseException e) {
+      throw new QueryException("Error in preloading targets. %s", e.getMessage());
+    }
+  }
+
   /**
    * Evaluate the specified query expression in this environment.
    *
@@ -106,13 +117,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       throws QueryException, InterruptedException {
     Set<String> targetLiterals = new HashSet<>();
     expr.collectTargetPatterns(targetLiterals);
-    try {
-      targetPatternEvaluator.preloadTargetPatterns(targetLiterals, executor);
-    } catch (IOException e) {
-      throw new QueryException("Error in preloading targets. %s: %s", e.getClass(), e.getMessage());
-    } catch (BuildTargetException | BuildFileParseException e) {
-      throw new QueryException("Error in preloading targets. %s", e.getMessage());
-    }
+    preloadTargetPatterns(targetLiterals, executor);
     return expr.eval(this, executor);
   }
 
@@ -126,7 +131,10 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       String pattern,
       ListeningExecutorService executor) throws QueryException, InterruptedException {
     try {
-      return targetPatternEvaluator.resolveTargetPattern(pattern, executor);
+      return ImmutableSet.copyOf(
+          Iterables.concat(
+              targetPatternEvaluator.resolveTargetPatterns(ImmutableList.of(pattern), executor)
+                  .values()));
     } catch (BuildTargetException | BuildFileParseException | IOException e) {
       throw new QueryException("Error in resolving targets matching %s", pattern);
     }

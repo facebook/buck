@@ -84,6 +84,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
@@ -387,17 +388,19 @@ public class ProjectCommand extends BuildCommand {
       TargetGraph projectGraph;
       try {
         ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
-        passedInTargetsSet = params.getParser()
-            .resolveTargetSpecs(
-                params.getBuckEventBus(),
-                params.getCell(),
-                getEnableParserProfiling(),
-                pool.getExecutor(),
-                parseArgumentsAsTargetNodeSpecs(
-                    params.getBuckConfig(),
-                    getArguments()),
-                SpeculativeParsing.of(true),
-                parserConfig.getDefaultFlavorsMode());
+        passedInTargetsSet =
+            ImmutableSet.copyOf(
+                Iterables.concat(
+                    params.getParser().resolveTargetSpecs(
+                        params.getBuckEventBus(),
+                        params.getCell(),
+                        getEnableParserProfiling(),
+                        pool.getExecutor(),
+                        parseArgumentsAsTargetNodeSpecs(
+                            params.getBuckConfig(),
+                            getArguments()),
+                        SpeculativeParsing.of(true),
+                        parserConfig.getDefaultFlavorsMode())));
         needsFullRecursiveParse = needsFullRecursiveParse || passedInTargetsSet.isEmpty();
         projectGraph = getProjectGraphForIde(
             params,

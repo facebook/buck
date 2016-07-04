@@ -2152,6 +2152,69 @@ public class ParserTest {
   }
 
   @Test
+  public void resolveTargetSpecsPreservesOrder() throws Exception {
+    BuildTarget foo = BuildTargetFactory.newInstance(filesystem, "//foo:foo");
+    Path buckFile = cellRoot.resolve("foo/BUCK");
+    Files.createDirectories(buckFile.getParent());
+    Files.write(
+        buckFile,
+        "genrule(name='foo', out='foo', cmd='foo')".getBytes(UTF_8));
+
+    BuildTarget bar = BuildTargetFactory.newInstance(filesystem, "//bar:bar");
+    buckFile = cellRoot.resolve("bar/BUCK");
+    Files.createDirectories(buckFile.getParent());
+    Files.write(
+        buckFile,
+        "genrule(name='bar', out='bar', cmd='bar')".getBytes(UTF_8));
+
+    ImmutableList<ImmutableSet<BuildTarget>> targets =
+        parser.resolveTargetSpecs(
+            eventBus,
+            cell,
+            false,
+            executorService,
+            ImmutableList.of(
+                TargetNodePredicateSpec.of(
+                    Predicates.alwaysTrue(),
+                    BuildFileSpec.fromRecursivePath(
+                        Paths.get("bar"),
+                        cell.getRoot())),
+                TargetNodePredicateSpec.of(
+                    Predicates.alwaysTrue(),
+                    BuildFileSpec.fromRecursivePath(
+                        Paths.get("foo"),
+                        cell.getRoot()))),
+            SpeculativeParsing.of(true),
+            ParserConfig.ApplyDefaultFlavorsMode.ENABLED);
+    assertThat(
+        targets,
+        equalTo(ImmutableList.of(ImmutableSet.of(bar), ImmutableSet.of(foo))));
+
+    targets =
+        parser.resolveTargetSpecs(
+            eventBus,
+            cell,
+            false,
+            executorService,
+            ImmutableList.of(
+                TargetNodePredicateSpec.of(
+                    Predicates.alwaysTrue(),
+                    BuildFileSpec.fromRecursivePath(
+                        Paths.get("foo"),
+                        cell.getRoot())),
+                TargetNodePredicateSpec.of(
+                    Predicates.alwaysTrue(),
+                    BuildFileSpec.fromRecursivePath(
+                        Paths.get("bar"),
+                        cell.getRoot()))),
+            SpeculativeParsing.of(true),
+            ParserConfig.ApplyDefaultFlavorsMode.ENABLED);
+    assertThat(
+        targets,
+        equalTo(ImmutableList.of(ImmutableSet.of(foo), ImmutableSet.of(bar))));
+  }
+
+  @Test
   public void defaultFlavorsInRuleArgsAppliedToTarget() throws Exception {
     // We depend on Xcode platforms for this test.
     assumeTrue(Platform.detect() == Platform.MACOS);

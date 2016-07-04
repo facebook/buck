@@ -123,6 +123,10 @@ public class QueryCommandTest {
   @Test
   public void testRunMultiQuery() throws Exception {
     queryCommand.setArguments(ImmutableList.of("deps(%s)", "//foo:bar", "//foo:baz"));
+    EasyMock.expect(env.getFunctions())
+        .andReturn(BuckQueryEnvironment.DEFAULT_QUERY_FUNCTIONS)
+        .anyTimes();
+    env.preloadTargetPatterns(ImmutableSet.of("//foo:bar", "//foo:baz"), executor);
     EasyMock.expect(env.evaluateQuery("deps(//foo:bar)", executor))
         .andReturn(ImmutableSet.<QueryTarget>of());
     EasyMock.expect(env.evaluateQuery("deps(//foo:baz)", executor))

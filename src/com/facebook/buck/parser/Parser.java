@@ -63,6 +63,8 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -389,12 +391,15 @@ public class Parser {
                  SpeculativeParsing.of(true),
                  ignoreBuckAutodepsFiles)) {
 
-      ImmutableSet<BuildTarget> buildTargets = resolveTargetSpecs(
-          state,
-          eventBus,
-          rootCell,
-          targetNodeSpecs,
-          applyDefaultFlavorsMode);
+      ImmutableSet<BuildTarget> buildTargets =
+          ImmutableSet.copyOf(
+              Iterables.concat(
+                  resolveTargetSpecs(
+                      state,
+                      eventBus,
+                      rootCell,
+                      targetNodeSpecs,
+                      applyDefaultFlavorsMode)));
       TargetGraph graph = buildTargetGraph(state, eventBus, buildTargets, ignoreBuckAutodepsFiles);
 
       return TargetGraphAndBuildTargets.builder()
@@ -409,7 +414,7 @@ public class Parser {
     return permState.toString();
   }
 
-  public ImmutableSet<BuildTarget> resolveTargetSpecs(
+  public ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
       BuckEventBus eventBus,
       Cell rootCell,
       boolean enableProfiling,
@@ -438,7 +443,7 @@ public class Parser {
     }
   }
 
-  private ImmutableSet<BuildTarget> resolveTargetSpecs(
+  private ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
       PerBuildState state,
       BuckEventBus eventBus,
       Cell rootCell,
@@ -459,10 +464,15 @@ public class Parser {
       buildFileSearchMethod = ParserConfig.BuildFileSearchMethod.FILESYSTEM_CRAWL;
     }
 
-    ImmutableList.Builder<ListenableFuture<ImmutableSet<BuildTarget>>>
-        targetFutures = ImmutableList.builder();
-    Multimap<Path, TargetNodeSpec> perBuildFileSpecs = LinkedHashMultimap.create();
-    for (final TargetNodeSpec spec : specs) {
+    // Convert the input spec iterable into a list so we have a fixed ordering, which we'll rely on
+    // when returning results.
+    final ImmutableList<TargetNodeSpec> orderedSpecs = ImmutableList.copyOf(specs);
+
+    // Resolve all the build files from all the target specs.  We store these into a multi-map which
+    // maps the path to the build file to the index of it's spec file in the ordered spec list.
+    Multimap<Path, Integer> perBuildFileSpecs = LinkedHashMultimap.create();
+    for (int index = 0; index < orderedSpecs.size(); index++) {
+      TargetNodeSpec spec = orderedSpecs.get(index);
       Cell cell = rootCell.getCell(spec.getBuildFileSpec().getCellPath());
       ImmutableSet<Path> buildFiles;
       try (SimplePerfEvent.Scope perfEventScope = SimplePerfEvent.scope(
@@ -476,13 +486,16 @@ public class Parser {
             buildFileSearchMethod);
       }
       for (Path buildFile : buildFiles) {
-        perBuildFileSpecs.put(buildFile, spec);
+        perBuildFileSpecs.put(buildFile, index);
       }
     }
 
+    // Kick off parse futures for each build file.
+    ArrayList<ListenableFuture<ImmutableList<Map.Entry<Integer, ImmutableSet<BuildTarget>>>>>
+        targetFutures = new ArrayList<>();
     for (Path buildFile : perBuildFileSpecs.keySet()) {
-      final Collection<TargetNodeSpec> buildFileSpecs = perBuildFileSpecs.get(buildFile);
-      TargetNodeSpec firstSpec = Iterables.get(buildFileSpecs, 0);
+      final Collection<Integer> buildFileSpecs = perBuildFileSpecs.get(buildFile);
+      TargetNodeSpec firstSpec = orderedSpecs.get(Iterables.get(buildFileSpecs, 0));
       Cell cell = rootCell.getCell(firstSpec.getBuildFileSpec().getCellPath());
 
       // Format a proper error message for non-existent build files.
@@ -497,31 +510,52 @@ public class Parser {
           Futures.transform(
               state.getAllTargetNodesJob(cell, buildFile),
               new Function<ImmutableSet<TargetNode<?>>,
-                           ImmutableSet<BuildTarget>>() {
+                           ImmutableList<Map.Entry<Integer, ImmutableSet<BuildTarget>>>>() {
                 @Override
-                public ImmutableSet<BuildTarget> apply(
+                public ImmutableList<Map.Entry<Integer, ImmutableSet<BuildTarget>>> apply(
                     ImmutableSet<TargetNode<?>> nodes) {
-                  ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-                  for (TargetNodeSpec spec : buildFileSpecs) {
+                  ImmutableList.Builder<Map.Entry<Integer, ImmutableSet<BuildTarget>>> targets =
+                      ImmutableList.builder();
+                  for (int index : buildFileSpecs) {
                     // Call back into the target node spec to filter the relevant build targets.
-                    targets.addAll(applySpecFilter(spec, nodes, applyDefaultFlavorsMode));
+                    // We return a pair of spec index and build target set, so that we can build a
+                    // final result list that maintains the input spec ordering.
+                    targets.add(
+                        new AbstractMap.SimpleEntry<>(
+                            index,
+                            applySpecFilter(
+                                orderedSpecs.get(index),
+                                nodes,
+                                applyDefaultFlavorsMode)));
                   }
                   return targets.build();
                 }
               }));
     }
 
-    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
+    // Now walk through and resolve all the futures, and place their results in a multimap that
+    // is indexed by the integer representing the input target spec order.
+    LinkedHashMultimap<Integer, BuildTarget> targetsMap = LinkedHashMultimap.create();
     try {
-      for (ImmutableSet<BuildTarget> partialTargets :
-               Futures.allAsList(targetFutures.build()).get()) {
-        targets.addAll(partialTargets);
+      for (ListenableFuture<ImmutableList<Map.Entry<Integer, ImmutableSet<BuildTarget>>>>
+               targetFuture : targetFutures) {
+        ImmutableList<Map.Entry<Integer, ImmutableSet<BuildTarget>>> results = targetFuture.get();
+        for (Map.Entry<Integer, ImmutableSet<BuildTarget>> ent : results) {
+          targetsMap.putAll(ent.getKey(), ent.getValue());
+        }
       }
     } catch (ExecutionException e) {
       Throwables.propagateIfInstanceOf(e.getCause(), BuildFileParseException.class);
       Throwables.propagateIfInstanceOf(e.getCause(), BuildTargetException.class);
       Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
       throw ParsePipeline.propagateRuntimeException(e);
+    }
+
+    // Finally, pull out the final build target results in input target spec order, and place them
+    // into a list of sets that exactly matches the ihput order.
+    ImmutableList.Builder<ImmutableSet<BuildTarget>> targets = ImmutableList.builder();
+    for (int index = 0; index < orderedSpecs.size(); index++) {
+      targets.add(ImmutableSet.copyOf(targetsMap.get(index)));
     }
     return targets.build();
   }
