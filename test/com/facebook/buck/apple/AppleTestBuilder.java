@@ -63,6 +63,11 @@ public final class AppleTestBuilder
     return this;
   }
 
+  public AppleTestBuilder isUiTest(Optional<Boolean> value) {
+    arg.isUiTest = value;
+    return this;
+  }
+
   public AppleTestBuilder setTestHostApp(Optional<BuildTarget> testHostApp) {
     arg.testHostApp = testHostApp;
     return this;

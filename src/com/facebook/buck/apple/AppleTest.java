@@ -102,6 +102,9 @@ public class AppleTest
   @AddToRuleKey
   private final boolean runTestSeparately;
 
+  @AddToRuleKey
+  private final boolean isUiTest;
+
   private final Path testOutputPath;
   private final Path testLogsPath;
 
@@ -189,7 +192,8 @@ public class AppleTest
       String testLogDirectoryEnvironmentVariable,
       String testLogLevelEnvironmentVariable,
       String testLogLevel,
-      Optional<Long> testRuleTimeoutMs) {
+      Optional<Long> testRuleTimeoutMs,
+      boolean isUiTest) {
     super(params, resolver);
     this.xctool = xctool;
     this.xctoolStutterTimeout = xctoolStutterTimeout;
@@ -212,6 +216,7 @@ public class AppleTest
     this.testLogDirectoryEnvironmentVariable = testLogDirectoryEnvironmentVariable;
     this.testLogLevelEnvironmentVariable = testLogLevelEnvironmentVariable;
     this.testLogLevel = testLogLevel;
+    this.isUiTest = isUiTest;
   }
 
   @Override
@@ -474,4 +479,7 @@ public class AppleTest
     return testBundle.getPathToOutput();
   }
 
+  public boolean isUiTest() {
+    return isUiTest;
+  }
 }

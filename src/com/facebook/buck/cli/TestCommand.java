@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.apple.AppleTest;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.json.BuildFileParseException;
@@ -474,6 +475,7 @@ public class TestCommand extends BuildCommand {
       if (!isBuildFiltered(params.getBuckConfig())) {
         testRules = filterTestRules(params.getBuckConfig(), explicitBuildTargets, testRules);
       }
+      testRules = filterUntestableRules(testRules);
 
       if (isDryRun()) {
         printMatchingTestRules(params.getConsole(), testRules);
@@ -527,6 +529,8 @@ public class TestCommand extends BuildCommand {
           testRules =
               filterTestRules(params.getBuckConfig(), explicitBuildTargets, testRules);
         }
+
+        testRules = filterUntestableRules(testRules);
 
         // Once all of the rules are built, then run the tests.
         Optional<ImmutableList<String>> externalTestRunner =
@@ -598,6 +602,40 @@ public class TestCommand extends BuildCommand {
       // Normal behavior is to include all rules that match the given label as well as any that
       // were explicitly specified by the user.
       if (explicitArgument || matchesLabel) {
+        builder.add(rule);
+      }
+    }
+
+    return builder.build();
+  }
+
+  @VisibleForTesting
+  Iterable<TestRule> filterUntestableRules(
+      Iterable<TestRule> testRules) {
+
+    ImmutableSortedSet.Builder<TestRule> builder =
+        ImmutableSortedSet.orderedBy(
+            new Comparator<TestRule>() {
+              @Override
+              public int compare(TestRule o1, TestRule o2) {
+                return o1.getBuildTarget().getFullyQualifiedName().compareTo(
+                    o2.getBuildTarget().getFullyQualifiedName());
+              }
+            });
+
+    for (TestRule rule : testRules) {
+      // xctool doesn't run XCUITests yet, but project generation works
+      boolean isAppleUITest = false;
+      if (rule instanceof AppleTest) {
+        AppleTest appleTestRule = (AppleTest)rule;
+        isAppleUITest = appleTestRule.isUiTest();
+        if (isAppleUITest) {
+          LOG.warn("Not running rule '%s' as XCUITests aren't supported.",
+              rule.getFullyQualifiedName());
+        }
+      }
+
+      if (!isAppleUITest) {
         builder.add(rule);
       }
     }
