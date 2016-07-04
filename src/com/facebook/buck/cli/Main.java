@@ -917,7 +917,7 @@ public final class Main {
             invocationInfo,
             console.getStdErr(),
             Optional.<OutputStream>of(stdErr),
-            Optional.<Verbosity>of(verbosity));
+            Optional.of(verbosity));
              AbstractConsoleEventBusListener consoleListener =
                  createConsoleEventListener(
                      clock,
@@ -938,6 +938,8 @@ public final class Main {
                  buildEventBus,
                  buckConfig.getCountersFirstFlushIntervalMillis(),
                  buckConfig.getCountersFlushIntervalMillis())) {
+
+          LOG.debug(invocationInfo.toLogLine(args));
 
           buildEventBus.register(HANG_MONITOR.getHangMonitor());
 

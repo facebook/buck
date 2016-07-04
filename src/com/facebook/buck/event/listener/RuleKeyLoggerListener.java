@@ -28,6 +28,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 
@@ -42,7 +43,6 @@ import java.util.concurrent.ExecutorService;
 public class RuleKeyLoggerListener implements BuckEventListener {
   private static final Logger LOG = Logger.get(RuleKeyLoggerListener.class);
 
-  private static final String FILE_NAME = "rule_key_logger.tsv";
   private static final int DEFAULT_MIN_LINES_FOR_AUTO_FLUSH = 100;
 
   private final InvocationInfo info;
@@ -146,7 +146,7 @@ public class RuleKeyLoggerListener implements BuckEventListener {
 
   public Path getLogFilePath() {
     Path logDir = projectFilesystem.resolve(info.getLogDirectoryPath());
-    Path logFile = logDir.resolve(FILE_NAME);
+    Path logFile = logDir.resolve(BuckConstant.RULE_KEY_LOGGER_FILE_NAME);
     return logFile;
   }
 

@@ -20,6 +20,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigPaths;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
@@ -90,11 +91,14 @@ public abstract class AbstractReport {
         UserLocalConfiguration.of(isNoBuckCheckPresent(), getLocalConfigs());
 
     ImmutableSet<Path> includedPaths = FluentIterable.from(highlightedBuilds)
-        .transform(
-            new Function<BuildLogEntry, Path>() {
+        .transformAndConcat(
+            new Function<BuildLogEntry, Iterable<Path>>() {
               @Override
-              public Path apply(BuildLogEntry input) {
-                return input.getRelativePath();
+              public Iterable<Path> apply(BuildLogEntry input) {
+                ImmutableSet.Builder<Path> result = ImmutableSet.builder();
+                Optionals.addIfPresent(input.getRuleKeyLoggerLogFile(), result);
+                result.add(input.getRelativePath());
+                return result.build();
               }
             })
         .append(extraInfoPaths)

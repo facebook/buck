@@ -33,14 +33,14 @@ public class LogFileHandler extends FileHandler {
   }
 
   @VisibleForTesting
-  LogFileHandler(LogFileHandlerState state,
-      LogFormatter formatter) throws IOException, SecurityException {
+  LogFileHandler(LogFileHandlerState state, LogFormatter formatter)
+      throws IOException, SecurityException {
     this.state = state;
     setFormatter(formatter);
   }
 
   @Override
-  public synchronized void publish(LogRecord record) {
+  public void publish(LogRecord record) {
     String commandId = state.threadIdToCommandId(record.getThreadID());
     String formattedMsg = getFormatter().format(record);
     for (OutputStreamWriter writer : state.getWriters(commandId)) {

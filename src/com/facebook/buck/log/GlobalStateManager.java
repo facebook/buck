@@ -125,7 +125,7 @@ public class GlobalStateManager {
           logDirectory.toAbsolutePath());
     }
 
-    String logFilePath = logDirectory.resolve("buck.log").toString();
+    String logFilePath = logDirectory.resolve(BuckConstant.BUCK_LOG_FILE_NAME).toString();
     try {
       commandIdToLogFileHandlerWriter.put(
           commandId,

@@ -75,11 +75,11 @@ public class BuildLogHelperIntegrationTest {
         buildIdToCommandMap,
         Matchers.<Map<BuildId, String>>equalTo(
             ImmutableMap.of(
-                new BuildId("620713dc-9694-4645-9959-a152b8c2daa1"),
-                "test, test/com/facebook/buck/rage/...",
+                new BuildId("ac8bd626-6137-4747-84dd-5d4f215c876c"),
+                "build, buck",
 
-                new BuildId("6042ea28-b5d5-46e3-a2bf-c5ee314e14ed"),
-                "build")
+                new BuildId("d09893d5-b11e-4e3f-a5bf-70c60a06896e"),
+                "autodeps")
         ));
   }
 }

@@ -163,7 +163,7 @@ public class DefaultDefectReporter implements DefectReporter {
       }
     } catch (IOException e) {
       throw new HumanReadableException(
-          "Failed uploading report to %s because %s",
+          "Failed uploading report to [%s] because [%s].",
           uri,
           e.getMessage());
     } finally {

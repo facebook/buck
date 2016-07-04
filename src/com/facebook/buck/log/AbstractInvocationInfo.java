@@ -19,12 +19,16 @@ package com.facebook.buck.log;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -36,6 +40,11 @@ abstract class AbstractInvocationInfo {
     DIR_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH'h'mm'm'ss's'");
     DIR_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
   }
+
+  // TODO(#9727949): we should switch over to a machine-readable log format.
+  private static final String LOG_MSG_TEMPLATE = "InvocationInfo BuildId=[%s] Args=[%s]";
+  private static final Pattern LOG_MSG_PATTERN = Pattern.compile(
+      "InvocationInfo BuildId=\\[(?<buildid>.+)\\] Args=\\[(?<args>.+)\\]");
 
   @Value.Parameter
   public abstract BuildId getBuildId();
@@ -61,7 +70,48 @@ abstract class AbstractInvocationInfo {
         getBuildId());
   }
 
+  public String toLogLine(String[] args) {
+    return String.format(LOG_MSG_TEMPLATE, getBuildId().toString(), Joiner.on(", ").join(args));
+  }
+
+  public static Optional<ParsedLog> parseLogLine(String line) {
+    Matcher matcher = LOG_MSG_PATTERN.matcher(line);
+    if (matcher.find()) {
+      BuildId buildId = new BuildId(matcher.group("buildid"));
+      String args = matcher.group("args");
+      return Optional.of(new ParsedLog(buildId, args));
+    }
+
+    return Optional.absent();
+  }
+
   public Path getLogDirectoryPath() {
     return BuckConstant.getLogPath().resolve(getLogDirectoryName() + "/");
+  }
+
+  @Override
+  public String toString() {
+    return String.format("buildId=[%s] subCommand=[%s] utcMillis=[%d]",
+        getBuildId().toString(),
+        getSubCommand(),
+        getTimestampMillis());
+  }
+
+  public static class ParsedLog {
+    private final BuildId buildId;
+    private final String args;
+
+    public ParsedLog(BuildId buildId, String args) {
+      this.buildId = buildId;
+      this.args = args;
+    }
+
+    public BuildId getBuildId() {
+      return buildId;
+    }
+
+    public String getArgs() {
+      return args;
+    }
   }
 }
