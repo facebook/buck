@@ -59,7 +59,7 @@ public class RuleKeyLoggerListenerTest {
     projectFilesystem = new ProjectFilesystem(tempDirectory.getRoot().toPath());
     outputExecutor = MostExecutors.newSingleThreadExecutor(
         new CommandThreadFactory(getClass().getName()));
-    info = InvocationInfo.of(new BuildId(), "topspin");
+    info = InvocationInfo.of(new BuildId(), "topspin", tempDirectory.getRoot().toPath());
   }
 
   @Test

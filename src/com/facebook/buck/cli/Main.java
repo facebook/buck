@@ -911,8 +911,10 @@ public final class Main {
         // The order of resources in the try-with-resources block is important: the BuckEventBus
         // must be the last resource, so that it is closed first and can deliver its queued events
         // to the other resources before they are closed.
-        InvocationInfo invocationInfo =
-            InvocationInfo.of(buildId, command.getSubCommandNameForLogging());
+        InvocationInfo invocationInfo = InvocationInfo.of(
+            buildId,
+            command.getSubCommandNameForLogging(),
+            BuckConstant.getLogPath());
         try (Closeable loggersSetup = GlobalStateManager.singleton().setupLoggers(
             invocationInfo,
             console.getStdErr(),

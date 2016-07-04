@@ -100,33 +100,34 @@ public class ChromeTraceBuildListenerTest {
   private static final String EXPECTED_DIR =
       "buck-out/log/2014-09-02_23h55m51s_no_sub_command_BUILD_ID/";
 
+  @Rule
+  public TemporaryFolder tmpDir = new TemporaryFolder();
+
   private InvocationInfo invocationInfo;
 
   @Before
-  public void setUp() {
+  public void setUp() throws IOException {
     invocationInfo = InvocationInfo.builder()
         .setTimestampMillis(TimeUnit.NANOSECONDS.toMillis(TIMESTAMP_NANOS))
+        .setBuckLogDir(tmpDir.getRoot().toPath().resolve("buck-out/log"))
         .setBuildId(new BuildId("BUILD_ID"))
         .setSubCommand("no_sub_command")
         .build();
   }
 
-  @Rule
-  public TemporaryFolder tmpDir = new TemporaryFolder();
-
   @Test
   public void testDeleteFiles() throws IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
 
-    String tracePath = String.format("%s/build.trace", invocationInfo.getLogDirectoryPath());
+    String tracePath = invocationInfo.getLogDirectoryPath().resolve("build.trace").toString();
 
-    File traceFile = new File(tmpDir.getRoot(), tracePath);
+    File traceFile = new File(tracePath);
     projectFilesystem.createParentDirs(tracePath);
     traceFile.createNewFile();
     traceFile.setLastModified(0);
 
     for (int i = 0; i < 10; ++i) {
-      File oldResult = new File(tmpDir.getRoot(),
+      File oldResult = new File(
           String.format("%s/build.100%d.trace", invocationInfo.getLogDirectoryPath(), i));
       oldResult.createNewFile();
       oldResult.setLastModified(TimeUnit.SECONDS.toMillis(i));

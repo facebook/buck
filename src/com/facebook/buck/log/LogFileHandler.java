@@ -19,7 +19,7 @@ package com.facebook.buck.log;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -43,7 +43,7 @@ public class LogFileHandler extends FileHandler {
   public void publish(LogRecord record) {
     String commandId = state.threadIdToCommandId(record.getThreadID());
     String formattedMsg = getFormatter().format(record);
-    for (OutputStreamWriter writer : state.getWriters(commandId)) {
+    for (Writer writer : state.getWriters(commandId)) {
       try {
         writer.write(formattedMsg);
         if (record.getLevel().intValue() >= Level.SEVERE.intValue()) {

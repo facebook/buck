@@ -52,6 +52,9 @@ abstract class AbstractInvocationInfo {
   @Value.Parameter
   public abstract String getSubCommand();
 
+  @Value.Parameter
+  public abstract Path getBuckLogDir();
+
   @Value.Default
   public long getTimestampMillis() {
     return System.currentTimeMillis();
@@ -86,7 +89,11 @@ abstract class AbstractInvocationInfo {
   }
 
   public Path getLogDirectoryPath() {
-    return BuckConstant.getLogPath().resolve(getLogDirectoryName() + "/");
+    return getBuckLogDir().resolve(getLogDirectoryName() + "/");
+  }
+
+  public Path getLogFilePath() {
+    return getLogDirectoryPath().resolve(BuckConstant.BUCK_LOG_FILE_NAME);
   }
 
   @Override

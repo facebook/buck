@@ -1,9 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY a095f7e23861e56ca44924bfd4e311c6c92d930c #@#
+#@# GENERATED FILE: DO NOT MODIFY 8a848af3355caab84e0e9080109095ac1ebdf012 #@#
 {
   "log" : {
     "deps" : [
       "//src/com/facebook/buck/log:log",
       "//test/com/facebook/buck/testutil:testutil",
+      "//third-party/java/easymock:easymock",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/junit:junit"
     ],

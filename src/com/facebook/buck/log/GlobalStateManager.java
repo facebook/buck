@@ -16,8 +16,7 @@
 
 package com.facebook.buck.log;
 
-import com.facebook.buck.timing.Clock;
-import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
@@ -30,6 +29,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -43,7 +43,7 @@ import javax.annotation.Nullable;
 public class GlobalStateManager {
   private static final Logger LOG = Logger.get(GlobalStateManager.class);
 
-  private static final GlobalStateManager SINGLETON = new GlobalStateManager(new DefaultClock());
+  private static final GlobalStateManager SINGLETON = new GlobalStateManager();
   private static final String DEFAULT_LOG_FILE_WRITER_KEY = "DEFAULT";
 
   // Shared global state.
@@ -54,42 +54,20 @@ public class GlobalStateManager {
   private final ConcurrentMap<String, Level> commandIdToConsoleHandlerLevel;
 
   // Global state required by the LogFileHandler.
-  private final ConcurrentMap<String, OutputStreamWriter> commandIdToLogFileHandlerWriter;
+  private final ConcurrentMap<String, Writer> commandIdToLogFileHandlerWriter;
 
   public static GlobalStateManager singleton() {
     return SINGLETON;
   }
 
-  public GlobalStateManager(Clock clock) {
+  public GlobalStateManager() {
     this.threadIdToCommandId = new ConcurrentHashMap<>();
     this.commandIdToConsoleHandlerWriter = new ConcurrentHashMap<>();
     this.commandIdToConsoleHandlerLevel = new ConcurrentHashMap<>();
     this.commandIdToLogFileHandlerWriter = new ConcurrentHashMap<>();
-    setupNewDefaultLogFileWriter(clock.currentTimeMillis());
-  }
 
-  private void setupNewDefaultLogFileWriter(long timestampMillis) {
-    String logFile = BuckConstant.getNonCommandLogPath().resolve(
-        String.format("%s_%s",
-            AbstractInvocationInfo.DIR_DATE_FORMAT.format(timestampMillis),
-            BuckConstant.NON_COMMAND_LOG_FILE_SUFFIX)).toString();
-    try {
-      Files.createDirectories(BuckConstant.getNonCommandLogPath());
-      OutputStreamWriter newWriter = ConsoleHandler.utf8OutputStreamWriter(
-          new FileOutputStream(logFile));
-      OutputStreamWriter oldWriter = commandIdToLogFileHandlerWriter.get(
-          DEFAULT_LOG_FILE_WRITER_KEY);
-      commandIdToLogFileHandlerWriter.put(DEFAULT_LOG_FILE_WRITER_KEY, newWriter);
-
-      if (oldWriter != null) {
-        oldWriter.flush();
-        oldWriter.close();
-      }
-    } catch (FileNotFoundException e) {
-      LOG.error(e, "Could not create file [%s].", logFile);
-    } catch (IOException e) {
-      LOG.error(e, "Exception wrapping file [%s].", logFile);
-    }
+    rotateDefaultLogFileWriter(
+        InvocationInfo.of(new BuildId(), "launch", BuckConstant.getLogPath()).getLogFilePath());
   }
 
   public Closeable setupLoggers(
@@ -97,7 +75,7 @@ public class GlobalStateManager {
       OutputStream consoleHandlerStream,
       final Optional<OutputStream> consoleHandlerOriginalStream,
       final Optional<Verbosity> consoleHandlerVerbosity) {
-    setupNewDefaultLogFileWriter(info.getTimestampMillis());
+    ReferenceCountedWriter writer = rotateDefaultLogFileWriter(info.getLogFilePath());
 
     final long threadId = Thread.currentThread().getId();
     final String commandId = info.getCommandId();
@@ -125,21 +103,16 @@ public class GlobalStateManager {
           logDirectory.toAbsolutePath());
     }
 
-    String logFilePath = logDirectory.resolve(BuckConstant.BUCK_LOG_FILE_NAME).toString();
-    try {
-      commandIdToLogFileHandlerWriter.put(
-          commandId,
-          ConsoleHandler.utf8OutputStreamWriter(new FileOutputStream(logFilePath)));
-    } catch (FileNotFoundException e) {
-      LOG.error(e, "Failed to create log file [%s].", logFilePath);
-    }
+    commandIdToLogFileHandlerWriter.put(
+        commandId,
+        writer.newReference());
 
     return new Closeable() {
       @Override
       public void close() throws IOException {
 
         // Tear down the LogFileHandler state.
-        OutputStreamWriter writer = commandIdToLogFileHandlerWriter.remove(commandId);
+        Writer writer = commandIdToLogFileHandlerWriter.remove(commandId);
         if (writer != null) {
           writer.flush();
           writer.close();
@@ -165,6 +138,34 @@ public class GlobalStateManager {
         }
       }
     };
+  }
+
+  private ReferenceCountedWriter newReferenceCounterWriter(String filePath)
+      throws FileNotFoundException {
+    return new ReferenceCountedWriter(
+        ConsoleHandler.utf8OutputStreamWriter(
+            new FileOutputStream(filePath)));
+  }
+
+  private ReferenceCountedWriter rotateDefaultLogFileWriter(Path logFilePath) {
+    try {
+      Files.createDirectories(logFilePath.getParent());
+      ReferenceCountedWriter newWriter = newReferenceCounterWriter(logFilePath.toString());
+      Writer oldWriter = commandIdToLogFileHandlerWriter.get(
+          DEFAULT_LOG_FILE_WRITER_KEY);
+      commandIdToLogFileHandlerWriter.put(DEFAULT_LOG_FILE_WRITER_KEY, newWriter);
+
+      if (oldWriter != null) {
+        oldWriter.flush();
+        oldWriter.close();
+      }
+      return newWriter;
+
+    } catch (FileNotFoundException e) {
+      throw new RuntimeException(String.format("Could not create file [%s].", logFilePath), e);
+    } catch (IOException e) {
+      throw new RuntimeException(String.format("Exception wrapping file [%s].", logFilePath), e);
+    }
   }
 
   public CommonThreadFactoryState getThreadToCommandRegister() {
@@ -217,12 +218,12 @@ public class GlobalStateManager {
   public LogFileHandlerState getLogFileHandlerState() {
     return new LogFileHandlerState() {
       @Override
-      public Iterable<OutputStreamWriter> getWriters(@Nullable String commandId) {
+      public Iterable<Writer> getWriters(@Nullable String commandId) {
         if (commandId == null) {
           return commandIdToLogFileHandlerWriter.values();
         }
 
-        OutputStreamWriter writer = commandIdToLogFileHandlerWriter.get(commandId);
+        Writer writer = commandIdToLogFileHandlerWriter.get(commandId);
         if (writer != null) {
           return Collections.singleton(writer);
         } else {
@@ -245,8 +246,8 @@ public class GlobalStateManager {
   @Override
   protected void finalize() throws IOException {
     // Close off any writers that may still be hanging about.
-    for (OutputStreamWriter writer : Iterables.concat(
-        commandIdToLogFileHandlerWriter.values(),
+    for (Writer writer : Iterables.concat(
+        commandIdToConsoleHandlerWriter.values(),
         commandIdToLogFileHandlerWriter.values())) {
       try {
         writer.close();
