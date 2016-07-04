@@ -401,8 +401,11 @@ public class BuildCommand extends AbstractCommand {
                   "Done loading state. Aliases: %s",
                   buckConfig.getAliases()));
         } else {
-          ActionGraphAndResolver actionGraphAndResolver =
-              createActionGraphAndResolver(params, executorService);
+          TargetGraphAndBuildTargets targetGraphAndBuildTargets =
+              createTargetGraph(params, executorService);
+          ActionGraphAndResolver actionGraphAndResolver = createActionGraphAndResolver(
+              params,
+              targetGraphAndBuildTargets);
           BuckConfig buckConfig = params.getBuckConfig();
           DistributedBuildFileHashes distributedBuildFileHashes = new DistributedBuildFileHashes(
               actionGraphAndResolver.getActionGraph(),
@@ -466,7 +469,7 @@ public class BuildCommand extends AbstractCommand {
     }
   }
 
-  public ActionGraphAndResolver createActionGraphAndResolver(
+  private TargetGraphAndBuildTargets createTargetGraph(
       CommandRunnerParams params,
       ListeningExecutorService executor)
       throws IOException, InterruptedException, ActionGraphCreationException {
@@ -485,9 +488,8 @@ public class BuildCommand extends AbstractCommand {
 
     // Parse the build files to create a ActionGraph.
     ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
-    ActionGraphAndResolver actionGraphAndResolver;
     try {
-      TargetGraphAndBuildTargets result = params.getParser()
+      return params.getParser()
           .buildTargetGraphForTargetNodeSpecs(
               params.getBuckEventBus(),
               params.getCell(),
@@ -498,19 +500,25 @@ public class BuildCommand extends AbstractCommand {
                   getArguments()),
               /* ignoreBuckAutodepsFiles */ false,
               parserConfig.getDefaultFlavorsMode());
-      buildTargets = result.getBuildTargets();
-      buildTargetsHaveBeenCalculated = true;
-      actionGraphAndResolver = Preconditions.checkNotNull(
-          params.getActionGraphCache().getActionGraph(
-              params.getBuckEventBus(),
-              BuildIdSampler.apply(
-                  params.getBuckConfig().getActionGraphCacheCheckSampleRate(),
-                  params.getBuckEventBus().getBuildId()),
-              result.getTargetGraph(),
-              params.getBuckConfig().getKeySeed()));
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new ActionGraphCreationException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
     }
+  }
+
+  private ActionGraphAndResolver createActionGraphAndResolver(
+      CommandRunnerParams params,
+      TargetGraphAndBuildTargets targetGraphAndBuildTargets)
+      throws IOException, InterruptedException, ActionGraphCreationException {
+    buildTargets = targetGraphAndBuildTargets.getBuildTargets();
+    buildTargetsHaveBeenCalculated = true;
+    ActionGraphAndResolver actionGraphAndResolver = Preconditions.checkNotNull(
+        params.getActionGraphCache().getActionGraph(
+            params.getBuckEventBus(),
+            BuildIdSampler.apply(
+                params.getBuckConfig().getActionGraphCacheCheckSampleRate(),
+                params.getBuckEventBus().getBuildId()),
+            targetGraphAndBuildTargets.getTargetGraph(),
+            params.getBuckConfig().getKeySeed()));
 
     // If the user specified an explicit build target, use that.
     if (justBuildTarget != null) {
@@ -530,6 +538,13 @@ public class BuildCommand extends AbstractCommand {
     }
 
     return actionGraphAndResolver;
+  }
+
+  public ActionGraphAndResolver createActionGraphAndResolver(
+      CommandRunnerParams params,
+      ListeningExecutorService executor)
+      throws IOException, InterruptedException, ActionGraphCreationException {
+    return createActionGraphAndResolver(params, createTargetGraph(params, executor));
   }
 
   protected int executeLocalBuild(
