@@ -584,7 +584,7 @@ public class TargetsCommand extends AbstractCommand {
     } else {
       directOwners = graph.getNodes();
     }
-    ImmutableSet<TargetNode<?>> selectedReferrers = FluentIterable
+    Iterable<TargetNode<?>> selectedReferrers = FluentIterable
         .from(getDependentNodes(graph, directOwners, detectTestChanges))
         .filter(
             new Predicate<TargetNode<?>>() {
@@ -602,8 +602,7 @@ public class TargetsCommand extends AbstractCommand {
 
                 return true;
               }
-            })
-        .toSet();
+            });
     ImmutableSortedMap.Builder<String, TargetNode<?>> matchingNodesBuilder =
         ImmutableSortedMap.naturalOrder();
     for (TargetNode<?> targetNode : selectedReferrers) {
