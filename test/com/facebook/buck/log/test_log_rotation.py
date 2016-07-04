@@ -14,10 +14,6 @@
 
 import glob
 import os
-import shutil
-import subprocess
-import sys
-import tempfile
 import unittest
 
 from project_workspace import ProjectWorkspace
@@ -39,7 +35,6 @@ class LogRotationTest(unittest.TestCase):
 
             logs = glob.glob(
                 os.path.join(workspace.test_data_directory, 'buck-out', 'log', 'buck*.log'))
-
             self.assertEquals(iterations, len(logs))
 
 

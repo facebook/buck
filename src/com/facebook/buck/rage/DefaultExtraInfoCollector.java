@@ -17,7 +17,6 @@
 package com.facebook.buck.rage;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
@@ -56,7 +55,10 @@ public class DefaultExtraInfoCollector implements ExtraInfoCollector {
       return Optional.absent();
     }
 
-    Path rageExtraFilesDir = BuckConstant.getLogPath().resolve("rage-extra-info");
+    // TODO(ruibm): Potentially add the initial static launch dir here as well as any launch-*
+    // logs buck is currently generating.
+    Path rageExtraFilesDir =
+        projectFilesystem.getBuckPaths().getLogDir().resolve("rage-extra-info");
     projectFilesystem.deleteRecursivelyIfExists(rageExtraFilesDir);
     projectFilesystem.mkdirs(rageExtraFilesDir);
 

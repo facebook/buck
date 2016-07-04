@@ -12,14 +12,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import glob
 import os
 import platform
 import shutil
 import subprocess
 import sys
 import tempfile
-import unittest
 
 
 class ProjectWorkspace(object):
@@ -38,7 +36,8 @@ class ProjectWorkspace(object):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        shutil.rmtree(self._temp_dir)
+        # shutil.rmtree(self._temp_dir)
+        pass
 
     def run_buck(self, *command):
         """ Tests that the default java.util.logging setup can maintain at least 'a couple'

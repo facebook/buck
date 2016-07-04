@@ -24,21 +24,18 @@ import java.nio.file.Paths;
 import javax.annotation.Nullable;
 
 public class BuckConstant {
+  public static final String NON_COMMAND_LOG_FILE_SUFFIX = "non-command.log";
+  public static final String BUCK_LOG_FILE_NAME = "buck.log";
+  public static final String RULE_KEY_LOGGER_FILE_NAME = "rule_key_logger.tsv";
 
   private static final String BUCK_OUTPUT_DIRECTORY = "buck-out";
   private static final Path BUCK_OUTPUT_PATH = Paths.get("buck-out");
   private static final Path CURRENT_VERSION_FILE = getBuckOutputPath().resolve(".currentversion");
-  private static final String NON_COMMAND_LOG_DIR = "non-command-logs";
-  public static final String NON_COMMAND_LOG_FILE_SUFFIX = "non-command.log";
-  public static final String BUCK_LOG_FILE_NAME = "buck.log";
-  public static final String RULE_KEY_LOGGER_FILE_NAME = "rule_key_logger.tsv";
 
   // TODO(bolinfest): The constants GEN_DIR, BIN_DIR, and ANNOTATION_DIR should be
   // package-private to the com.facebook.buck.rules directory. Currently, they are also used in the
   // com.facebook.buck.shell package, but these values should be injected into shell commands rather
   // than hardcoded therein. This ensures that shell commands stay build-rule-agnostic.
-
-  private static final Path LOG_PATH = getBuckOutputPath().resolve("log");
 
   private static final Path BUCK_TRACE_DIR = getBuckOutputPath().resolve("log/traces");
   private static final String DEFAULT_CACHE_DIR = getBuckOutputDirectory() + "/cache";
@@ -84,14 +81,6 @@ public class BuckConstant {
    */
   public static Path getCurrentVersionFile() {
     return CURRENT_VERSION_FILE;
-  }
-
-  public static Path getLogPath() {
-    return LOG_PATH;
-  }
-
-  public static Path getNonCommandLogPath() {
-    return LOG_PATH.resolve(NON_COMMAND_LOG_DIR);
   }
 
   public static Path getBuckTraceDir() {

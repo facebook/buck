@@ -42,7 +42,7 @@ abstract class AbstractClientSideSlbConfig {
 
   public static final int LATENCY_CHECK_TIME_RANGE_MILLIS =
       ERROR_CHECK_TIME_RANGE_MILLIS;
-  public static final int MAX_ACCEPTABLE_LATENCY_MILLIS = (int) TimeUnit.SECONDS.toMillis(1);;
+  public static final int MAX_ACCEPTABLE_LATENCY_MILLIS = (int) TimeUnit.SECONDS.toMillis(1);
 
   public abstract Clock getClock();
   public abstract ScheduledExecutorService getSchedulerService();

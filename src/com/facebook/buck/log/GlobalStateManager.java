@@ -17,7 +17,6 @@
 package com.facebook.buck.log;
 
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
@@ -67,7 +66,9 @@ public class GlobalStateManager {
     this.commandIdToLogFileHandlerWriter = new ConcurrentHashMap<>();
 
     rotateDefaultLogFileWriter(
-        InvocationInfo.of(new BuildId(), "launch", BuckConstant.getLogPath()).getLogFilePath());
+        InvocationInfo.of(new BuildId(), "launch",
+            AbstractLogConfigSetup.DEFAULT_SETUP.getLogDir())
+            .getLogFilePath());
   }
 
   public Closeable setupLoggers(

@@ -22,7 +22,6 @@ import com.facebook.buck.log.LogFormatter;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
@@ -44,8 +43,6 @@ import java.util.logging.Logger;
 
 public class DiffRuleKeysScriptIntegrationTest {
 
-  private static final Path LOG_FILE_PATH = BuckConstant.getLogPath().resolve("buck.log");
-
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
   private Logger ruleKeyBuilderLogger;
@@ -58,7 +55,7 @@ public class DiffRuleKeysScriptIntegrationTest {
     ruleKeyBuilderLogger = Logger.getLogger(RuleKeyBuilder.class.getName());
     previousRuleKeyBuilderLevel = ruleKeyBuilderLogger.getLevel();
     ruleKeyBuilderLogger.setLevel(Level.FINER);
-    Path fullLogFilePath = tmp.getRootPath().resolve(LOG_FILE_PATH);
+    Path fullLogFilePath = tmp.getRootPath().resolve(getLogFilePath());
     Files.createDirectories(fullLogFilePath.getParent());
     FileHandler handler = new FileHandler(fullLogFilePath.toString());
     handler.setFormatter(new LogFormatter());
@@ -225,10 +222,13 @@ public class DiffRuleKeysScriptIntegrationTest {
         "--show-rulekey",
         "//:java_lib_2");
     buckCommandResult.assertSuccess();
-    String fullLogContents = workspace.getFileContents(LOG_FILE_PATH.toString());
+    String fullLogContents = workspace.getFileContents(getLogFilePath());
     String logContentsForThisInvocation = fullLogContents.substring(lastPositionInLog);
     lastPositionInLog += logContentsForThisInvocation.length();
     workspace.writeContentsToPath(logContentsForThisInvocation, logOut);
   }
 
+  private Path getLogFilePath() {
+    return tmp.getRootPath().resolve("buck.test.log");
+  }
 }

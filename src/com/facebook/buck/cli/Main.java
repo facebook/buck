@@ -914,7 +914,7 @@ public final class Main {
         InvocationInfo invocationInfo = InvocationInfo.of(
             buildId,
             command.getSubCommandNameForLogging(),
-            BuckConstant.getLogPath());
+            filesystem.getBuckPaths().getLogDir());
         try (Closeable loggersSetup = GlobalStateManager.singleton().setupLoggers(
             invocationInfo,
             console.getStdErr(),
@@ -929,7 +929,7 @@ public final class Main {
                      executionEnvironment,
                      webServer,
                      locale,
-                     BuckConstant.getLogPath().resolve("test.log"));
+                     filesystem.getBuckPaths().getLogDir().resolve("test.log"));
              TempDirectoryCreator tempDirectoryCreator =
                  new TempDirectoryCreator(testTempDirOverride);
              AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);

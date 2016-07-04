@@ -48,7 +48,6 @@ import com.facebook.buck.simulate.SimulateEvent;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.BestCompressionGZIPOutputStream;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -246,7 +245,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       jsonGenerator.close();
       traceStream.close();
       String symlinkName = compressTraces ? "build.trace.gz" : "build.trace";
-      Path symlinkPath = BuckConstant.getLogPath().resolve(symlinkName);
+      Path symlinkPath = projectFilesystem.getBuckPaths().getLogDir().resolve(symlinkName);
       projectFilesystem.createSymLink(
           projectFilesystem.resolve(symlinkPath),
           projectFilesystem.resolve(tracePath),

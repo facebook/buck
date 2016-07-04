@@ -106,7 +106,9 @@ public class BuildLogHelper {
 
   public Collection<Path> getAllBuckLogFiles() throws IOException {
     final List<Path> logfiles = Lists.newArrayList();
-    projectFilesystem.walkRelativeFileTree(BuckConstant.getLogPath(), new FileVisitor<Path>() {
+    projectFilesystem.walkRelativeFileTree(
+        projectFilesystem.getBuckPaths().getLogDir(),
+        new FileVisitor<Path>() {
       @Override
       public FileVisitResult preVisitDirectory(
           Path dir, BasicFileAttributes attrs) throws IOException {

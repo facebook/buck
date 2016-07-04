@@ -111,6 +111,7 @@ public class RageCommand extends AbstractCommand {
   @Override
   public LogConfigSetup getLogConfig() {
     return LogConfigSetup.builder()
+        .from(LogConfigSetup.DEFAULT_SETUP)
         .setLogFilePrefix("rage-")
         .build();
   }

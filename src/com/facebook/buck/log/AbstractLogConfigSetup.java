@@ -22,13 +22,22 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractLogConfigSetup {
   private static final String DEFAULT_LOG_FILE_PREFIX = "buck-";
 
-  public static final LogConfigSetup DEFAULT_SETUP = LogConfigSetup.builder().build();
+  // At this point we can't guarantee that CWD is writeable so our logs go into the system's
+  // temporary directory.
+  public static final LogConfigSetup DEFAULT_SETUP =
+      LogConfigSetup.builder()
+          .setLogDir(Paths.get(BuckConstant.getBuckOutputDirectory(), "log"))
+          .build();
+
+  @Value.Parameter
+  public abstract Path getLogDir();
 
   @Value.Default
   public boolean getRotateLog() {
@@ -46,6 +55,6 @@ abstract class AbstractLogConfigSetup {
   }
 
   public Path getLogFilePath() {
-    return BuckConstant.getLogPath().resolve(getLogFilePrefix() + "%g.log");
+    return getLogDir().resolve(getLogFilePrefix() + "%g.log");
   }
 }

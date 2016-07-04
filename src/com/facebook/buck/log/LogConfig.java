@@ -18,7 +18,6 @@ package com.facebook.buck.log;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.PathListing;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -63,6 +62,7 @@ public class LogConfig {
    */
   public LogConfig() throws IOException {
     setupLogging(LogConfigSetup.builder()
+        .from(AbstractLogConfigSetup.DEFAULT_SETUP)
         .setLogFilePrefix("launch-")
         .setCount(1)
         .build());
@@ -75,7 +75,7 @@ public class LogConfig {
   public static synchronized void setupLogging(LogConfigSetup logConfigSetup) throws IOException {
     // Bug JDK-6244047: The default FileHandler does not handle the directory not existing,
     // so we have to create it before any log statements actually run.
-    Files.createDirectories(BuckConstant.getLogPath());
+    Files.createDirectories(logConfigSetup.getLogDir());
 
     if (logConfigSetup.getRotateLog()) {
       try {
@@ -163,7 +163,7 @@ public class LogConfig {
 
   private static void deleteOldLogFiles(LogConfigSetup logConfigSetup) throws IOException {
     for (Path path : PathListing.listMatchingPathsWithFilters(
-        BuckConstant.getLogPath(),
+        logConfigSetup.getLogDir(),
              logConfigSetup.getLogFilePrefix() + "*.log*",
              PathListing.GET_PATH_MODIFIED_TIME,
              PathListing.FilterMode.EXCLUDE,

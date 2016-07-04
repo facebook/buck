@@ -57,7 +57,6 @@ import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.timing.IncrementingFakeClock;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -312,7 +311,7 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(CommandEvent.finished(commandEventStarted, /* exitCode */ 0));
     listener.outputTrace(new BuildId("BUILD_ID"));
 
-    File resultFile = new File(tmpDir.getRoot(), BuckConstant.getLogPath() + "/build.trace");
+    File resultFile = new File(tmpDir.getRoot(), "buck-out/log/build.trace");
 
     List<ChromeTraceEvent> originalResultList = mapper.readValue(
         resultFile,
