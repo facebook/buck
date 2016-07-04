@@ -24,7 +24,9 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,7 +35,11 @@ public class PathTypeCoercerTest {
 
   private ProjectFilesystem filesystem;
   private final Path pathRelativeToProjectRoot = Paths.get("");
-  private final PathTypeCoercer pathTypeCoercer = new PathTypeCoercer();
+  private final PathTypeCoercer pathTypeCoercer =
+      new PathTypeCoercer(PathTypeCoercer.PathExistenceVerificationMode.VERIFY);
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   @Before
   public void setUp() {
@@ -56,20 +62,26 @@ public class PathTypeCoercerTest {
   }
 
   @Test
-  public void coercingMissingFileThrowsException() {
+  public void coercingMissingFileThrowsExceptionWhenVerificationEnabled() throws Exception {
     String missingPath = "hello";
-    try {
-      pathTypeCoercer.coerce(
-          createCellRoots(filesystem),
-          filesystem,
-          pathRelativeToProjectRoot,
-          missingPath);
-      fail("expected to throw");
-    } catch (CoerceFailedException e) {
-      assertEquals(
-          String.format("no such file or directory '%s'", missingPath),
-          e.getMessage());
-    }
+    expectedException.expect(CoerceFailedException.class);
+    expectedException.expectMessage(String.format("no such file or directory '%s'", missingPath));
+
+    pathTypeCoercer.coerce(
+        createCellRoots(filesystem),
+        filesystem,
+        pathRelativeToProjectRoot,
+        missingPath);
+  }
+
+  @Test
+  public void coercingMissingFileDoesNotThrowWhenVerificationDisabled() throws Exception {
+    String missingPath = "hello";
+    new PathTypeCoercer(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY).coerce(
+        createCellRoots(filesystem),
+        filesystem,
+        pathRelativeToProjectRoot,
+        missingPath);
   }
 
 }

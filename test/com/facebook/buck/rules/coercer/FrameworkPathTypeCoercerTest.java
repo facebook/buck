@@ -32,7 +32,8 @@ import java.nio.file.Paths;
 public class FrameworkPathTypeCoercerTest {
 
   private final TypeCoercer<BuildTarget> buildTargetTypeCoercer = new BuildTargetTypeCoercer();
-  private final TypeCoercer<Path> pathTypeCoercer = new PathTypeCoercer();
+  private final TypeCoercer<Path> pathTypeCoercer = new PathTypeCoercer(
+      PathTypeCoercer.PathExistenceVerificationMode.VERIFY);
   private final TypeCoercer<SourcePath> sourcePathTypeCoercer = new SourcePathTypeCoercer(
       buildTargetTypeCoercer,
       pathTypeCoercer);

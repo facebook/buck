@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,15 +14,17 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.coercer;
+package com.facebook.buck.distributed;
 
+import com.facebook.buck.rules.coercer.AbstractTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.PathTypeCoercer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Default implementation for the type coercer factory. @see AbstractTypeCoercerFactory
+ * Type coercers that don't check whether the paths they're coercing actually exist.
  */
-public class DefaultTypeCoercerFactory extends AbstractTypeCoercerFactory {
-  public DefaultTypeCoercerFactory(ObjectMapper mapper) {
-    super(mapper, new PathTypeCoercer(PathTypeCoercer.PathExistenceVerificationMode.VERIFY));
+public class DistributedBuildTypeCoercerFactory extends AbstractTypeCoercerFactory {
+  public DistributedBuildTypeCoercerFactory(ObjectMapper mapper) {
+    super(mapper, new PathTypeCoercer(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY));
   }
 }

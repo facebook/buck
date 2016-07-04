@@ -23,6 +23,12 @@ import java.nio.file.Path;
 
 public class PathTypeCoercer extends LeafTypeCoercer<Path> {
 
+  private final PathExistenceVerificationMode pathExistenceVerificationMode;
+
+  public PathTypeCoercer(PathExistenceVerificationMode pathExistenceVerificationMode) {
+    this.pathExistenceVerificationMode = pathExistenceVerificationMode;
+  }
+
   @Override
   public Class<Path> getOutputClass() {
     return Path.class;
@@ -42,18 +48,25 @@ public class PathTypeCoercer extends LeafTypeCoercer<Path> {
       }
       final Path normalizedPath = pathRelativeToProjectRoot.resolve(path).normalize();
 
-      // Verify that the path exists
-      try {
-        filesystem.getPathForRelativeExistingPath(normalizedPath);
-      } catch (RuntimeException e) {
-        throw new CoerceFailedException(
-            String.format("no such file or directory '%s'", normalizedPath),
-            e);
+      if (pathExistenceVerificationMode.equals(PathExistenceVerificationMode.VERIFY)) {
+        // Verify that the path exists
+        try {
+          filesystem.getPathForRelativeExistingPath(normalizedPath);
+        } catch (RuntimeException e) {
+          throw new CoerceFailedException(
+              String.format("no such file or directory '%s'", normalizedPath),
+              e);
+        }
       }
 
       return normalizedPath;
     } else {
       throw CoerceFailedException.simple(object, getOutputClass());
     }
+  }
+
+  public enum PathExistenceVerificationMode {
+    VERIFY,
+    DO_NOT_VERIFY,
   }
 }
