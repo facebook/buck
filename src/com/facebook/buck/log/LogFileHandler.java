@@ -25,7 +25,6 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
 public class LogFileHandler extends FileHandler {
-  private static final Logger LOG = Logger.get(LogFileHandler.class);
 
   private final LogFileHandlerState state;
 
@@ -50,9 +49,8 @@ public class LogFileHandler extends FileHandler {
         if (record.getLevel().intValue() >= Level.SEVERE.intValue()) {
           writer.flush();
         }
-      } catch (IOException e) {
+      } catch (IOException e) { // NOPMD
         // There's a chance the writer may have been concurrently closed.
-        LOG.error(e, formattedMsg);
       }
     }
   }
