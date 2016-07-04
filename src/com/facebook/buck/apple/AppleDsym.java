@@ -36,6 +36,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MoveStep;
+import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
@@ -124,6 +125,7 @@ public class AppleDsym
     Path unstrippedBinaryPath = getResolver().getAbsolutePath(unstrippedBinarySourcePath);
     Path dwarfFileFolder = dsymOutputPath.resolve(DSYM_DWARF_FILE_FOLDER);
     return ImmutableList.<Step>of(
+        new RmStep(getProjectFilesystem(), dsymOutputPath, true, true),
         new DsymStep(
             getProjectFilesystem(),
             dsymutil.getEnvironment(getResolver()),
