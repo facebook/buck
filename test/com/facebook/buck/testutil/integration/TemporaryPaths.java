@@ -16,6 +16,8 @@
 
 package com.facebook.buck.testutil.integration;
 
+import com.facebook.buck.io.MoreFiles;
+
 import org.junit.rules.ExternalResource;
 
 import java.io.IOException;
@@ -107,6 +109,12 @@ public class TemporaryPaths extends ExternalResource implements TemporaryRoot {
 
   public Path newFile() throws IOException {
     return Files.createTempFile(root, "junit", "file");
+  }
+
+  public Path newExecutableFile() throws IOException {
+    Path newFile = newFile();
+    MoreFiles.makeExecutable(newFile);
+    return newFile;
   }
 
   public Path newFolder(String... name) throws IOException {

@@ -16,11 +16,8 @@
 
 package com.facebook.buck.testutil.integration;
 
-import org.junit.Assert;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 
 /**
@@ -41,9 +38,4 @@ public class DebuggableTemporaryFolder extends TemporaryFolder implements Tempor
     return getRoot().toPath();
   }
 
-  public File newExecutableFile() throws IOException {
-    File file = newFile();
-    Assert.assertTrue(file.setExecutable(true));
-    return file;
-  }
 }
