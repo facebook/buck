@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY ded66e8660fd5231740275145db6e0faa10c04b1 #@#
+#@# GENERATED FILE: DO NOT MODIFY 3bcf8078b85c38ef92d96599ed69513b1d722fd0 #@#
 {
   "listener" : {
     "deps" : [
@@ -29,7 +29,6 @@
       "//src/com/facebook/buck/test/result/type:type",
       "//src/com/facebook/buck/test/selectors:selectors",
       "//src/com/facebook/buck/timing:timing",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",

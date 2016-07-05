@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY fd73c78c725d1e3e7524f3302ea3b59b682c8e9e #@#
+#@# GENERATED FILE: DO NOT MODIFY 6f0a73b62ad946683cbce55e22a767458bb1ac49 #@#
 {
   "config" : {
     "deps" : [
@@ -18,6 +18,7 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/unit:unit",
       "//src/com/facebook/buck/zip:stream",
       "//third-party/java/immutables:processor"

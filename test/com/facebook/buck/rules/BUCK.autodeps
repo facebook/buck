@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 1bda8e1255de68d78fda2aa383089079fbf4c372 #@#
+#@# GENERATED FILE: DO NOT MODIFY f4e79dde57303345693d15e99dce1753115f5d1b #@#
 {
   "rules" : {
     "deps" : [
@@ -37,7 +37,6 @@
       "//src/com/facebook/buck/test:test",
       "//src/com/facebook/buck/test/selectors:selectors",
       "//src/com/facebook/buck/timing:timing",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",
