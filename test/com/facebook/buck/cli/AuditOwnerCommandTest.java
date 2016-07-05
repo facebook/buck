@@ -245,8 +245,7 @@ public class AuditOwnerCommandTest {
     AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.generateOwnersReport(
         params,
         targetNode,
-        inputs,
-        false);
+        inputs);
     assertTrue(report.owners.isEmpty());
     assertTrue(report.nonExistentInputs.isEmpty());
     assertTrue(report.inputsWithNoOwners.isEmpty());
@@ -277,8 +276,7 @@ public class AuditOwnerCommandTest {
     AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.generateOwnersReport(
         params,
         targetNode,
-        inputs,
-        false);
+        inputs);
     assertTrue(report.owners.isEmpty());
     assertTrue(report.nonFileInputs.isEmpty());
     assertTrue(report.inputsWithNoOwners.isEmpty());
@@ -309,8 +307,7 @@ public class AuditOwnerCommandTest {
     AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.generateOwnersReport(
         params,
         targetNode,
-        inputs,
-        false);
+        inputs);
     assertTrue(report.owners.isEmpty());
     assertTrue(report.nonFileInputs.isEmpty());
     assertTrue(report.nonExistentInputs.isEmpty());
@@ -342,8 +339,7 @@ public class AuditOwnerCommandTest {
     AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.generateOwnersReport(
         params,
         targetNode,
-        inputs,
-        false);
+        inputs);
     assertTrue(report.owners.containsKey(targetNode));
     assertEquals(inputPaths, report.owners.get(targetNode));
     assertTrue(report.nonFileInputs.isEmpty());
@@ -378,8 +374,7 @@ public class AuditOwnerCommandTest {
     AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.generateOwnersReport(
         params,
         targetNode,
-        inputs,
-        false);
+        inputs);
     assertTrue(report.nonFileInputs.isEmpty());
     assertTrue(report.nonExistentInputs.isEmpty());
     assertTrue(report.inputsWithNoOwners.isEmpty());
@@ -417,8 +412,7 @@ public class AuditOwnerCommandTest {
     AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.generateOwnersReport(
         params,
         targetNode,
-        inputs,
-        false);
+        inputs);
     command.printOwnersOnlyJsonReport(params, report);
 
     ObjectMapper mapper = ObjectMappers.newDefaultInstance();
@@ -465,9 +459,9 @@ public class AuditOwnerCommandTest {
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
     AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.OwnersReport.emptyReport();
     report = report.updatedWith(
-        AuditOwnerCommand.generateOwnersReport(params, targetNode1, inputs, false));
+        AuditOwnerCommand.generateOwnersReport(params, targetNode1, inputs));
     report = report.updatedWith(
-        AuditOwnerCommand.generateOwnersReport(params, targetNode2, inputs, false));
+        AuditOwnerCommand.generateOwnersReport(params, targetNode2, inputs));
 
     assertTrue(report.nonFileInputs.isEmpty());
     assertTrue(report.nonExistentInputs.isEmpty());

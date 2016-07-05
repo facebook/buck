@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -46,7 +45,6 @@ import org.kohsuke.args4j.Option;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -55,7 +53,6 @@ import java.util.Set;
 
 public class AuditOwnerCommand extends AbstractCommand {
 
-  private static final String FILE_INDENT = "    ";
   private static final int BUILD_TARGET_ERROR = 13;
 
   @VisibleForTesting
@@ -94,24 +91,6 @@ public class AuditOwnerCommand extends AbstractCommand {
           Sets.union(nonExistentInputs, other.nonExistentInputs),
           Sets.union(nonFileInputs, other.nonFileInputs));
     }
-  }
-
-  @Option(name = "--full",
-      aliases = { "-f" },
-      usage = "Full report with all details about what targets own what files.")
-  private boolean fullReport;
-
-  @Option(name = "--guess-for-missing",
-      aliases = { "-g" },
-      usage = "Guess targets for deleted files by including all rules from guessed BUCK files.")
-  private boolean guessForDeleted;
-
-  public boolean isFullReportEnabled() {
-    return fullReport;
-  }
-
-  public boolean isGuessForDeletedEnabled() {
-    return guessForDeleted;
   }
 
   @Option(name = "--json",
@@ -160,8 +139,7 @@ public class AuditOwnerCommand extends AbstractCommand {
       OwnersReport report = buildOwnersReport(
           params,
           buildFileTree,
-          getArguments(),
-          isGuessForDeletedEnabled());
+          getArguments());
       printReport(params, report);
     } catch (BuildFileParseException | BuildTargetException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
@@ -174,8 +152,7 @@ public class AuditOwnerCommand extends AbstractCommand {
   OwnersReport buildOwnersReport(
       CommandRunnerParams params,
       BuildFileTree buildFileTree,
-      Iterable<String> arguments,
-      boolean guessForDeletedEnabled)
+      Iterable<String> arguments)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
     ProjectFilesystem cellFilesystem = params.getCell().getFilesystem();
     final Path rootPath = cellFilesystem.getRootPath();
@@ -229,8 +206,7 @@ public class AuditOwnerCommand extends AbstractCommand {
             generateOwnersReport(
                 params,
                 targetNode,
-                ImmutableList.of(filePath.toString()),
-                guessForDeletedEnabled));
+                ImmutableList.of(filePath.toString())));
       }
     }
     return report;
@@ -245,8 +221,7 @@ public class AuditOwnerCommand extends AbstractCommand {
   static OwnersReport generateOwnersReport(
       CommandRunnerParams params,
       TargetNode<?> targetNode,
-      Iterable<String> filePaths,
-      boolean guessForDeletedEnabled) {
+      Iterable<String> filePaths) {
 
     // Process arguments assuming they are all relative file paths.
     Set<Path> inputs = Sets.newHashSet();
@@ -283,25 +258,14 @@ public class AuditOwnerCommand extends AbstractCommand {
       }
     }
 
-    // Try to guess owners for nonexistent files.
-    if (guessForDeletedEnabled) {
-      for (String nonExistentInput : nonExistentInputs) {
-        owners.put(targetNode, new File(nonExistentInput).toPath());
-      }
-    }
-
     return new OwnersReport(owners, inputsWithNoOwners, nonExistentInputs, nonFileInputs);
   }
 
   private void printReport(CommandRunnerParams params, OwnersReport report) throws IOException {
-    if (isFullReportEnabled()) {
-      printFullReport(params, report);
+    if (shouldGenerateJsonOutput()) {
+      printOwnersOnlyJsonReport(params, report);
     } else {
-      if (shouldGenerateJsonOutput()) {
-        printOwnersOnlyJsonReport(params, report);
-      } else {
-        printOwnersOnlyReport(params, report);
-      }
+      printOwnersOnlyReport(params, report);
     }
   }
 
@@ -332,50 +296,6 @@ public class AuditOwnerCommand extends AbstractCommand {
     }
 
     params.getObjectMapper().writeValue(params.getConsole().getStdOut(), output.asMap());
-  }
-
-  /**
-   * Print detailed report on all owners.
-   */
-  private void printFullReport(CommandRunnerParams params, OwnersReport report) {
-    PrintStream out = params.getConsole().getStdOut();
-    Ansi ansi = params.getConsole().getAnsi();
-    if (report.owners.isEmpty()) {
-      out.println(ansi.asErrorText("No owners found"));
-    } else {
-      out.println(ansi.asSuccessText("Owners:"));
-      for (TargetNode<?> targetNode : report.owners.keySet()) {
-        out.println(targetNode.getBuildTarget().getFullyQualifiedName());
-        Set<Path> files = report.owners.get(targetNode);
-        for (Path input : files) {
-          out.println(FILE_INDENT + input);
-        }
-      }
-    }
-
-    if (!report.inputsWithNoOwners.isEmpty()) {
-      out.println();
-      out.println(ansi.asErrorText("Files without owners:"));
-      for (Path input : report.inputsWithNoOwners) {
-        out.println(FILE_INDENT + input);
-      }
-    }
-
-    if (!report.nonExistentInputs.isEmpty()) {
-      out.println();
-      out.println(ansi.asErrorText("Non existent files:"));
-      for (String input : report.nonExistentInputs) {
-        out.println(FILE_INDENT + input);
-      }
-    }
-
-    if (!report.nonFileInputs.isEmpty()) {
-      out.println();
-      out.println(ansi.asErrorText("Non-file inputs:"));
-      for (String input : report.nonFileInputs) {
-        out.println(FILE_INDENT + input);
-      }
-    }
   }
 
   @Override

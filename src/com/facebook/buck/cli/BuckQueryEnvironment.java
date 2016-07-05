@@ -326,8 +326,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       AuditOwnerCommand.OwnersReport report = new AuditOwnerCommand().buildOwnersReport(
           params,
           buildFileTree,
-          files,
-          /* guessForDeletedEnabled */ false);
+          files);
       return getTargetsFromBuildTargetsContainer(report.owners.keySet());
     } catch (BuildFileParseException | BuildTargetException | IOException e) {
       throw new QueryException("Could not parse build targets.\n%s", e.getMessage());
