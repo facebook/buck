@@ -660,6 +660,7 @@ public final class Main {
       // required the console to print the message that parsing has failed. So just write to stderr
       // and be done with it.
       stdErr.println(e.getLocalizedMessage());
+      stdErr.println("For help see 'buck --help'.");
       return 1;
     }
 
