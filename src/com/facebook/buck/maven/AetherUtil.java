@@ -28,6 +28,7 @@ import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
+import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.helpers.NOPLoggerFactory;
@@ -82,6 +83,7 @@ public class AetherUtil {
         });
     locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
     locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
+    locator.addService(TransporterFactory.class, FileTransporterFactory.class);
     // Use a no-op logger. Leaving this out would introduce a runtime dependency on log4j
     locator.addService(ILoggerFactory.class, NOPLoggerFactory.class);
     // Also requires log4j
