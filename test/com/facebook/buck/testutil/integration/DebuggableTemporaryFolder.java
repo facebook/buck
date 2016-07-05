@@ -16,8 +16,6 @@
 
 package com.facebook.buck.testutil.integration;
 
-import com.google.common.base.Preconditions;
-
 import org.junit.Assert;
 import org.junit.rules.TemporaryFolder;
 
@@ -37,43 +35,6 @@ import java.nio.file.Path;
  * </pre>
  */
 public class DebuggableTemporaryFolder extends TemporaryFolder implements TemporaryRoot {
-
-  private String name;
-  private boolean doNotDeleteOnExit;
-
-  public DebuggableTemporaryFolder() {}
-  public DebuggableTemporaryFolder(File parentFolder) {
-    super(parentFolder);
-  }
-
-  /**
-   * If invoked, the directory created by this {@link TemporaryFolder} will not be deleted when the
-   * test finishes.
-   * @return {@code this}
-   */
-  public DebuggableTemporaryFolder doNotDeleteOnExit() {
-    this.doNotDeleteOnExit = true;
-    return this;
-  }
-
-  /**
-   * Name to use to identify this {@link TemporaryFolder} when writing log messages to stdout.
-   * @return {@code this}
-   */
-  public DebuggableTemporaryFolder setName(String name) {
-    this.name = Preconditions.checkNotNull(name);
-    return this;
-  }
-
-  @Override
-  public void after() {
-    if (doNotDeleteOnExit) {
-      String name = this.name == null ? "TemporaryFolder" : this.name;
-      System.out.printf("%s available at %s.\n", name, getRoot());
-    } else {
-      super.after();
-    }
-  }
 
   @Override
   public Path getRootPath() {
