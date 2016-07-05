@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 997d63449754ec0740b0fb2e93ec7f0e09792efd #@#
+#@# GENERATED FILE: DO NOT MODIFY 3c45aef363892e832d02bf468600ec6c27a86c05 #@#
 {
   "cxx" : {
     "deps" : [
@@ -44,6 +44,7 @@
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:hamcrest-junit",
       "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/ini4j:ini4j",
       "//third-party/java/jackson:jackson-core",
       "//third-party/java/jackson:jackson-databind",
       "//third-party/java/junit:junit",

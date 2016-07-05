@@ -109,8 +109,7 @@ public class CxxInferAnalyze extends AbstractBuildRule {
         .add(inferConfig.getInferTopLevel().toString())
         .add("--project_root", getProjectFilesystem().getRootPath().toString())
         .add("--out", resultsDir.toString())
-        .add("--specs-dir-list-file", specsPathList.toString());
-
+        .add("--specs-dir-list-file", getProjectFilesystem().resolve(specsPathList).toString());
     commandBuilder.add("--", "analyze");
 
     return commandBuilder.build();
@@ -169,6 +168,10 @@ public class CxxInferAnalyze extends AbstractBuildRule {
   @Override
   public Path getPathToOutput() {
     return this.reportFile;
+  }
+
+  public Path getAbsolutePathToOutput() {
+    return getProjectFilesystem().resolve(this.reportFile);
   }
 
 }

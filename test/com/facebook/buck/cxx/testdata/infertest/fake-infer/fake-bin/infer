@@ -39,6 +39,10 @@ PROJECT_ROOT=$(cd "$INPUT_PROJECT_ROOT" && pwd)
 
 case $LAST_ARG in
     analyze)
+        # --specs-dir-list-file must have absolute path
+        SPECS_DIR_LIST_FILE="$(get_infer_argument "--specs-dir-list-file" "$@")"
+        ([ -f "$SPECS_DIR_LIST_FILE" ] && [[ "$SPECS_DIR_LIST_FILE" = /* ]]) \
+            || { echo "path passed to --specs-dir-list-file must exist and be absolute"; exit 1; }
         # analyze case: create a specs file and a fake json report
         mkdir -p $OUT/specs
         touch $OUT/specs/mockedSpec.specs
@@ -54,8 +58,8 @@ case $LAST_ARG in
 
         FILENAME=`basename $LAST_ARG`
         mkdir -p $OUT/captured/${FILENAME}_captured
-        SOURCE_FILENAME=$(basename $LAST_ARG)
+        SOURCE_FILENAME=${LAST_ARG}
         touch $OUT/captured/${FILENAME}_captured/$FILENAME.cfg
-        cp "foo/mocked_depfiles/${SOURCE_FILENAME}.dep.mock" $DEPFILE
+        cp "${SOURCE_FILENAME}.dep.mock" $DEPFILE
         ;;
 esac

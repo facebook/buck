@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 36e1738b11aad6f52521a2bf762c71c788f8e7fc #@#
+#@# GENERATED FILE: DO NOT MODIFY 083d200647dc223a971b09b7962f53b7cb6e70b7 #@#
 {
   "integration" : {
     "deps" : [
@@ -8,6 +8,7 @@
       "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/config:config",
+      "//src/com/facebook/buck/eden:eden",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/io:watchman",

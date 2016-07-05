@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -28,10 +28,9 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 public final class CxxCollectAndLogInferDependenciesStep implements Step {
-
-  private static final String SPLIT_TOKEN = "\t";
 
   private Optional<CxxInferAnalyze> analysisRule;
   private Optional<CxxInferCaptureTransitive> captureOnlyRule;
@@ -71,18 +70,8 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
         outputFile);
   }
 
-  private String computeOutput(
-      BuildTarget target,
-      Path output) {
-    return target.toString() +
-        SPLIT_TOKEN +
-        target.getFlavors().toString() +
-        SPLIT_TOKEN +
-        output.toString();
-  }
-
   private String processCaptureRule(CxxInferCapture captureRule) {
-    return computeOutput(captureRule.getBuildTarget(), captureRule.getPathToOutput());
+    return new InferLogLine(captureRule.getBuildTarget(), captureRule.getPathToOutput()).toString();
   }
 
   private ImmutableList<String> processCaptureOnlyRule(CxxInferCaptureTransitive captureOnlyRule) {
@@ -96,7 +85,8 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
   private void processAnalysisRuleHelper(
       CxxInferAnalyze analysisRule,
       ImmutableList.Builder<String> accumulator) {
-    accumulator.add(computeOutput(analysisRule.getBuildTarget(), analysisRule.getResultsDir()));
+    accumulator.add(
+        new InferLogLine(analysisRule.getBuildTarget(), analysisRule.getResultsDir()).toString());
     accumulator.addAll(
         FluentIterable.from(analysisRule.getCaptureRules()).transform(
             new Function<CxxInferCapture, String>() {
@@ -140,5 +130,43 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     return "Log Infer's dependencies used for the analysis";
+  }
+
+  public static class CxxContextualizeLoggedInferDependenciesStep implements Step {
+    private ProjectFilesystem projectFilesystem;
+    private CellPathResolver cellPathResolver;
+    private Path inputFilename;
+
+    public CxxContextualizeLoggedInferDependenciesStep(
+        ProjectFilesystem projectFilesystem,
+        CellPathResolver cellPathResolver,
+        Path inputFilename) {
+      this.projectFilesystem = projectFilesystem;
+      this.cellPathResolver = cellPathResolver;
+      this.inputFilename = inputFilename;
+    }
+
+    @Override
+    public StepExecutionResult execute(ExecutionContext context)
+        throws IOException, InterruptedException {
+      List<String> content = projectFilesystem.readLines(inputFilename);
+      ImmutableList.Builder<String> contextualizedPaths = ImmutableList.builder();
+      for (String line : content) {
+        contextualizedPaths.add(
+            InferLogLine.fromLine(line).toContextualizedString(cellPathResolver));
+      }
+      projectFilesystem.writeLinesToPath(contextualizedPaths.build(), inputFilename);
+      return StepExecutionResult.SUCCESS;
+    }
+
+    @Override
+    public String getShortName() {
+      return "contextualize-infer-deps";
+    }
+
+    @Override
+    public String getDescription(ExecutionContext context) {
+      return "Contextualize infer-deps.txt file replacing cell tokens with their paths";
+    }
   }
 }

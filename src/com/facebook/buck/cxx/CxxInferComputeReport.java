@@ -23,6 +23,8 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -38,13 +40,14 @@ import java.nio.file.Path;
  * Merge all the json reports together into one and emit a list of results dirs of each
  * capture and analysis target involved for the analysis itself.
  */
-public class CxxInferComputeReport extends AbstractBuildRule {
+public class CxxInferComputeReport extends AbstractBuildRule implements HasPostBuildSteps {
 
   private CxxInferAnalyze analysisToReport;
   private ProjectFilesystem projectFilesystem;
   private Path outputDirectory;
   private Path depsOutput;
   private Path reportOutput;
+  private CellPathResolver cellPathResolver;
 
   public CxxInferComputeReport(
       BuildRuleParams buildRuleParams,
@@ -57,6 +60,7 @@ public class CxxInferComputeReport extends AbstractBuildRule {
     this.depsOutput = this.outputDirectory.resolve("infer-deps.txt");
     this.reportOutput = this.outputDirectory.resolve("report.json");
     this.projectFilesystem = getProjectFilesystem();
+    this.cellPathResolver = buildRuleParams.getCellRoots();
   }
 
   @Override
@@ -71,14 +75,14 @@ public class CxxInferComputeReport extends AbstractBuildRule {
                 new Function<CxxInferAnalyze, Path>() {
                   @Override
                   public Path apply(CxxInferAnalyze input) {
-                    return input.getPathToOutput();
+                    return input.getAbsolutePathToOutput();
                   }
                 })
             .toSortedSet(Ordering.natural());
 
     ImmutableSortedSet<Path> reportsToMerge = ImmutableSortedSet.<Path>naturalOrder()
         .addAll(reportsToMergeFromDeps)
-        .add(analysisToReport.getPathToOutput())
+        .add(analysisToReport.getAbsolutePathToOutput())
         .build();
 
     return ImmutableList.<Step>builder()
@@ -101,5 +105,17 @@ public class CxxInferComputeReport extends AbstractBuildRule {
   @Override
   public Path getPathToOutput() {
     return reportOutput;
+  }
+
+  @Override
+  public ImmutableList<Step> getPostBuildSteps(
+      BuildContext context, BuildableContext buildableContext) {
+    return ImmutableList.<Step>builder()
+        .add(
+            new CxxCollectAndLogInferDependenciesStep.CxxContextualizeLoggedInferDependenciesStep(
+                projectFilesystem,
+                cellPathResolver,
+                depsOutput))
+        .build();
   }
 }
