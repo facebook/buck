@@ -368,4 +368,14 @@ public class QueryCommand extends AbstractCommand {
     }
     return queryBuilder.toString();
   }
+
+  /** @return the equivalent 'buck query' call to 'buck audit owner'. */
+  static String buildAuditOwnerQueryExpression(List<String> arguments, boolean jsonOutput) {
+    StringBuilder queryBuilder = new StringBuilder("buck query \"owner('%s')\" ");
+    queryBuilder.append(getEscapedArgumentsListAsString(arguments));
+    if (jsonOutput) {
+      queryBuilder.append(" --json");
+    }
+    return queryBuilder.toString();
+  }
 }

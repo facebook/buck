@@ -148,6 +148,14 @@ public class AuditOwnerCommand extends AbstractCommand {
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(
         params.getCell().getFilesystem(),
         params.getCell().getBuildFileName());
+
+    if (params.getConsole().getAnsi().isAnsiTerminal()) {
+      params.getBuckEventBus().post(ConsoleEvent.info(
+          "'buck audit owner' is deprecated. Please use 'buck query' instead. e.g.\n\t%s\n\n" +
+              "The query language is documented at https://buckbuild.com/command/query.html",
+          QueryCommand.buildAuditOwnerQueryExpression(getArguments(), shouldGenerateJsonOutput())));
+    }
+
     try {
       OwnersReport report = buildOwnersReport(
           params,
