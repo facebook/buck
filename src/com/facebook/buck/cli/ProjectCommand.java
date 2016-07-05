@@ -386,6 +386,14 @@ public class ProjectCommand extends BuildCommand {
         getConcurrencyLimit(params.getBuckConfig()))) {
       ImmutableSet<BuildTarget> passedInTargetsSet;
       TargetGraph projectGraph;
+
+      List<String> targets = getArguments();
+      if (projectIde != Ide.XCODE &&
+          !deprecatedIntelliJProjectGenerationEnabled &&
+          targets.isEmpty()) {
+        targets = ImmutableList.of("//...");
+      }
+
       try {
         ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
         passedInTargetsSet =
@@ -396,9 +404,7 @@ public class ProjectCommand extends BuildCommand {
                         params.getCell(),
                         getEnableParserProfiling(),
                         pool.getExecutor(),
-                        parseArgumentsAsTargetNodeSpecs(
-                            params.getBuckConfig(),
-                            getArguments()),
+                        parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), targets),
                         SpeculativeParsing.of(true),
                         parserConfig.getDefaultFlavorsMode())));
         needsFullRecursiveParse = needsFullRecursiveParse || passedInTargetsSet.isEmpty();
@@ -424,19 +430,18 @@ public class ProjectCommand extends BuildCommand {
       ProjectPredicates projectPredicates = ProjectPredicates.forIde(projectIde);
 
       ImmutableSet<BuildTarget> graphRoots;
-      if (!passedInTargetsSet.isEmpty()) {
-        ImmutableSet<BuildTarget> supplementalGraphRoots = ImmutableSet.of();
-        if (projectIde == Ide.INTELLIJ && needsFullRecursiveParse) {
-          supplementalGraphRoots = getRootBuildTargetsForIntelliJ(
-              projectIde,
-              projectGraph,
-              projectPredicates);
-        }
-        graphRoots = Sets.union(passedInTargetsSet, supplementalGraphRoots).immutableCopy();
-      } else {
+      if (passedInTargetsSet.isEmpty()) {
         graphRoots = getRootsFromPredicate(
             projectGraph,
             projectPredicates.getProjectRootsPredicate());
+      } else if (projectIde == Ide.INTELLIJ && needsFullRecursiveParse) {
+        ImmutableSet<BuildTarget> supplementalGraphRoots = getRootBuildTargetsForIntelliJ(
+            projectIde,
+            projectGraph,
+            projectPredicates);
+        graphRoots = Sets.union(passedInTargetsSet, supplementalGraphRoots).immutableCopy();
+      } else {
+        graphRoots = passedInTargetsSet;
       }
 
       TargetGraphAndTargets targetGraphAndTargets;
