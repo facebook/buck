@@ -2,7 +2,7 @@
 # https://github.com/facebookexperimental/eden:
 #
 # buck build --config java.target_level=7 --config java.source_level=7 \
-#     //eden/fs/service:thrift#java
+#     //eden/fs/service:thrift-java
 #
 # This is the Java code for talking to Eden's Thrift API.
 prebuilt_jar(
