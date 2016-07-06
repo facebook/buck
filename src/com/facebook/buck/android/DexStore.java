@@ -31,14 +31,19 @@ enum DexStore {
   RAW {
     @Override
     public String fileNameForSecondary(int index) {
+      return fileNameForSecondary("classes", index);
+    }
+
+    @Override
+    public String fileNameForSecondary(String prefix, int index) {
       // Google expects secondary dex files to start at 2.
       // I guess classes.dex is number 1.
-      return String.format("classes%s.dex", index + 2);
+      return String.format("%s%d.dex", prefix, index + 2);
     }
 
     @Override
     public boolean matchesPath(Path path) {
-      return path.getFileName().toString().matches("classes\\d+\\.dex");
+      return path.getFileName().toString().matches(".*\\d+\\.dex");
     }
   },
 
@@ -48,8 +53,13 @@ enum DexStore {
   JAR {
     @Override
     public String fileNameForSecondary(int index) {
+      return fileNameForSecondary("secondary", index);
+    }
+
+    @Override
+    public String fileNameForSecondary(String prefix, int index) {
       // Start at one for easier comprehension by humans.
-      return String.format("secondary-%s.dex.jar", index + 1);
+      return String.format("%s-%s.dex.jar", prefix, index + 1);
     }
 
     @Override
@@ -64,8 +74,13 @@ enum DexStore {
   XZ {
     @Override
     public String fileNameForSecondary(int index) {
+      return fileNameForSecondary("secondary", index);
+    }
+
+    @Override
+    public String fileNameForSecondary(String prefix, int index) {
       // Start at one for easier comprehension by humans.
-      return String.format("secondary-%s.dex.jar.xz", index + 1);
+      return String.format("%s-%s.dex.jar.xz", prefix, index + 1);
     }
 
     @Override
@@ -78,17 +93,24 @@ enum DexStore {
    * Secondary dexes will be solid compressed into a single XZS file.
    */
   XZS {
+    // Since secondary dexes are created in parallel, we add a .tmp~
+    // extension to indicate that this process is not yet complete.
+    // A .dex.jar.xzs.tmp~ is a dex file that is waiting to be concatenated
+    // and then XZ compressed. The ~ character is a hack to ensure that
+    // the external apkbuilder tool does not copy this file to the final apk.
+    // The alternative would require either rewriting apkbuilder or writing substantial code
+    // to get around the current limitations of its API.
+
     @Override
     public String fileNameForSecondary(int index) {
-      // Since secondary dexes are created in parallel, we add a .tmp~
-      // extension to indicate that this process is not yet complete.
-      // A .dex.jar.xzs.tmp~ is a dex file that is waiting to be concatenated
-      // and then XZ compressed. The ~ character is a hack to ensure that
-      // the external apkbuilder tool does not copy this file to the final apk.
-      // The alternative would require either rewriting apkbuilder or writing substantial code
-      // to get around the current limitations of its API.
-      return String.format("secondary-%s.dex.jar.xzs.tmp~", index + 1);
+      return fileNameForSecondary("secondary", index);
     }
+
+    @Override
+    public String fileNameForSecondary(String prefix, int index) {
+      return String.format("%s-%s.dex.jar.xzs.tmp~", prefix, index + 1);
+    }
+
 
     @Override
     public boolean matchesPath(Path path) {
@@ -102,6 +124,13 @@ enum DexStore {
    * @return The appropriate name for the secondary dex file at {@code index}.
    */
   public abstract String fileNameForSecondary(int index);
+
+  /**
+   * @param prefix The prefix to use to name the file according to what store it is in
+   * @param index The index of a given secondary dex file, starting from 0.
+   * @return The appropriate name for the dex file at {@code index}.
+   */
+  public abstract String fileNameForSecondary(String prefix, int index);
 
   /**
    * @param path The path where a secondary dex file will be written.
