@@ -34,7 +34,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Set;
 import java.util.regex.Matcher;
 
@@ -193,9 +192,7 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
     if (output.canBorrow()) {
       tmp = output.getPath();
     } else {
-      Optional<Path> tmpDirPath = projectFilesystem.getPathRelativeToProjectRoot(Paths.get("tmp"));
-      projectFilesystem.mkdirs(tmpDirPath.get());
-      tmp = projectFilesystem.createTempFile(tmpDirPath.get(), "artifact", ".tmp");
+      tmp = projectFilesystem.createTempFile("artifact", ".tmp");
       projectFilesystem.copyFile(output.getPath(), tmp);
     }
     return tmp;

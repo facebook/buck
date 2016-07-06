@@ -30,6 +30,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -133,6 +135,11 @@ public class ProjectFilesystem {
   private final ImmutableSet<PathOrGlobMatcher> blackListedPaths;
   private final ImmutableSet<PathOrGlobMatcher> blackListedDirectories;
 
+  /**
+   * Supplier that returns an absolute path that is guaranteed to exist.
+   */
+  private final Supplier<Path> tmpDir;
+
   // Defaults to false, and so paths should be valid.
   @VisibleForTesting
   protected boolean ignoreValidityOfPaths;
@@ -231,6 +238,18 @@ public class ProjectFilesystem {
                   }
                 }))
         .toSet();
+    this.tmpDir = Suppliers.memoize(new Supplier<Path>() {
+      @Override
+      public Path get() {
+        Path relativeTmpDir = ProjectFilesystem.this.buckPaths.getTmpDir();
+        try {
+          mkdirs(relativeTmpDir);
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+        return relativeTmpDir;
+      }
+    });
   }
 
   private static BuckPaths getDefaultBuckPaths(Path rootPath) {
@@ -1123,6 +1142,24 @@ public class ProjectFilesystem {
     return false;
   }
 
+  /**
+   * Returns a relative path whose parent directory is guaranteed to exist. The path will be under
+   * {@code buck-out}, so it is safe to write to.
+   */
+  public Path createTempFile(
+      String prefix,
+      String suffix,
+      FileAttribute<?>... attrs)
+      throws IOException {
+    Path tmp = Files.createTempFile(tmpDir.get(), prefix, suffix, attrs);
+    return getPathRelativeToProjectRoot(tmp).or(tmp);
+  }
+
+  /**
+   * Prefer {@link #createTempFile(String, String, FileAttribute[])} so that temporary files are
+   * guaranteed to be created under {@code buck-out}. This method will be deprecated once t12079608
+   * is resolved.
+   */
   public Path createTempFile(
       Path directory,
       String prefix,
