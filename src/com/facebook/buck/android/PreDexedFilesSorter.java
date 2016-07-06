@@ -207,13 +207,13 @@ public class PreDexedFilesSorter {
   }
 
   /**
-   * @see com.facebook.buck.dalvik.CanaryFactory#create(int)
+   * @see com.facebook.buck.dalvik.CanaryFactory#create(String, int)
    */
   private DexWithClasses createCanary(
       final ProjectFilesystem filesystem,
       final int index,
       ImmutableList.Builder<Step> steps) {
-    final FileLike fileLike = CanaryFactory.create(index);
+    final FileLike fileLike = CanaryFactory.create("secondary", index);
     final String canaryDirName = "canary_" + String.valueOf(index);
     final Path scratchDirectoryForCanaryClass = scratchDirectory.resolve(canaryDirName);
 

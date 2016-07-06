@@ -263,7 +263,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
         Path outSecondaryDir,
         String secondaryPattern,
         CanaryStrategy canaryStrategy) {
-      super(outSecondaryDir, secondaryPattern, canaryStrategy);
+      super("secondary", outSecondaryDir, secondaryPattern, canaryStrategy);
     }
 
     @Override

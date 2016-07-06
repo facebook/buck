@@ -32,7 +32,7 @@ import java.util.Arrays;
  */
 public class CanaryFactory {
 
-  private static final String CANARY_PATH_FORMAT = "secondary/dex%02d/Canary.class";
+  static final String CANARY_PATH_FORMAT = "%s/dex%02d/Canary.class";
 
   /**
    * Produced by compiling the following Java file with JDK 7 with "-target 6 -source 6".
@@ -59,6 +59,7 @@ public class CanaryFactory {
    * updated for each canary class to change the package.
    */
   private static final int CANARY_INDEX_OFFSET = 32;
+  private static final int CANARY_STORE_OFFSET = 19;
 
   /** Utility class: do not instantiate */
   private CanaryFactory() {}
@@ -69,16 +70,21 @@ public class CanaryFactory {
    * secondary dex by loading an arbitrary class, but the class we try to load isn't
    * valid on that system (e.g., it depends on Google Maps, but we are on AOSP).
    *
+   * @param store dex store name of the current zip (to ensure unique names).
    * @param index Index of the current zip (to ensure unique names).
    */
-  public static FileLike create(final int index) {
+  public static FileLike create(final String store, final int index) {
     final byte[] canaryClass = Arrays.copyOf(CANARY_TEMPLATE, CANARY_TEMPLATE.length);
     final String canaryIndexStr = String.format("%02d", index);
     byte[] canaryIndexBytes = canaryIndexStr.getBytes(Charsets.UTF_8);
     Preconditions.checkState(canaryIndexBytes.length == 2,
-        "Formatted index string should always be 2 bytes.");
+        "Formatted index string \"" + canaryIndexStr + "\" is not exactly 2 bytes.");
     System.arraycopy(canaryIndexBytes, 0, canaryClass, CANARY_INDEX_OFFSET, 2);
-    String relativePath = String.format(CANARY_PATH_FORMAT, index);
+    byte[] canaryStoreBytes = store.getBytes(Charsets.UTF_8);
+    Preconditions.checkState(canaryStoreBytes.length == 9,
+        "Formatted store string \"" + store + "\" is not exactly 9 bytes.\"");
+    System.arraycopy(canaryStoreBytes, 0, canaryClass, CANARY_STORE_OFFSET, 9);
+    String relativePath = String.format(CANARY_PATH_FORMAT, store, index);
     return getCanaryClass(relativePath, canaryClass);
   }
 
