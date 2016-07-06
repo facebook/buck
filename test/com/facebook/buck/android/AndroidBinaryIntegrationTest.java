@@ -29,6 +29,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.relinker.Symbols;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -563,6 +564,25 @@ public class AndroidBinaryIntegrationTest {
     }
     file.close();
     contents.close();
+  }
+
+  @Test
+  public void testStripRulesAreShared() throws IOException {
+    workspace.runBuckCommand("build", "//apps/sample:app_cxx_lib_asset").assertSuccess();
+    workspace.resetBuildLogFile();
+    workspace.runBuckCommand("build", "//apps/sample:app_cxx_different_rule_name").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    for (BuildTarget target : buildLog.getAllTargets()) {
+      String rawTarget = target.toString();
+      if (rawTarget.contains("libgnustl_shared.so")) {
+        // Stripping the C++ runtime is currently not shared.
+        continue;
+      }
+      if (rawTarget.contains("strip")) {
+        buildLog.assertNotTargetBuiltLocally(rawTarget);
+      }
+    }
   }
 
   @Test

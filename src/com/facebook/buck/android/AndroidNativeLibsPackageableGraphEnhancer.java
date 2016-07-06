@@ -235,11 +235,13 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
             cpuFilters));
   }
 
+  // Note: this method produces rules that will be shared between multiple apps,
+  // so be careful not to let information about this particular app slip into the definitions.
   private static ImmutableMap<StripLinkable, StrippedObjectDescription> generateStripRules(
       BuildRuleParams buildRuleParams,
       SourcePathResolver pathResolver,
       BuildRuleResolver ruleResolver,
-      BuildTarget originalBuildTarget,
+      BuildTarget appRuleTarget,
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ImmutableMap<Pair<NdkCxxPlatforms.TargetCpuType, String>, SourcePath> libs) {
     ImmutableMap.Builder<StripLinkable, StrippedObjectDescription> result = ImmutableMap.builder();
@@ -251,8 +253,19 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       NdkCxxPlatform platform =
           Preconditions.checkNotNull(nativePlatforms.get(targetCpuType));
 
+      // To be safe, default to using the app rule target as the base for the strip rule.
+      // This will be used for stripping the C++ runtime.  We could use something more easily
+      // shareable (like just using the app's containing directory, or even the repo root),
+      // but stripping the C++ runtime is pretty fast, so just keep the safe old behavior for now.
+      BuildTarget baseBuildTarget = appRuleTarget;
+      // But if we're stripping a cxx_library, use that library as the base of the target
+      // to allow sharing the rule between all apps that depend on it.
+      if (sourcePath instanceof BuildTargetSourcePath) {
+        baseBuildTarget = ((BuildTargetSourcePath) sourcePath).getTarget();
+      }
+
       String sharedLibrarySoName = entry.getKey().getSecond();
-      BuildTarget targetForStripRule = BuildTarget.builder(originalBuildTarget)
+      BuildTarget targetForStripRule = BuildTarget.builder(baseBuildTarget)
           .addFlavors(ImmutableFlavor.of("android-strip"))
           .addFlavors(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(sharedLibrarySoName)))
           .addFlavors(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(targetCpuType.name())))
