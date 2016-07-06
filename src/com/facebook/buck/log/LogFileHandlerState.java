@@ -21,5 +21,9 @@ import java.io.Writer;
 import javax.annotation.Nullable;
 
 public interface LogFileHandlerState extends ThreadIdToCommandIdMapper {
+  /**
+   * @param commandId If null all available writers will be returned.
+   * @return Writers related to the argument commandId.
+   */
   Iterable<Writer> getWriters(@Nullable String commandId);
 }

@@ -20,11 +20,11 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
-public class LogFileHandler extends FileHandler {
+public class LogFileHandler extends Handler {
 
   private final LogFileHandlerState state;
 
@@ -53,5 +53,21 @@ public class LogFileHandler extends FileHandler {
         // There's a chance the writer may have been concurrently closed.
       }
     }
+  }
+
+  @Override
+  public void flush() {
+    for (Writer writer : state.getWriters(null)) {
+      try {
+        writer.flush();
+      } catch (IOException e) { // NOPMD
+        // There's a chance the writer may have been concurrently closed.
+      }
+    }
+  }
+
+  @Override
+  public void close() throws SecurityException {
+    // The streams are controlled globally by the GlobalStateManager.
   }
 }
