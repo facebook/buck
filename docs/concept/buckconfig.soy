@@ -1129,7 +1129,7 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'cxx' /}
-  {param name: 'cppxxflags' /}
+  {param name: 'cxxppflags' /}
   {param example_value: '-Wall' /}
   {param description}
     The flags to pass to the C++ preprocessor.
@@ -1156,7 +1156,7 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'cxx' /}
-  {param name: 'csflags' /}
+  {param name: 'asflags' /}
   {param example_value: '-W' /}
   {param description}
     The flags to pass to the assembler and assembly preprocessor.
