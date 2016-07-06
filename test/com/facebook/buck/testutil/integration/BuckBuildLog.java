@@ -61,7 +61,11 @@ public class BuckBuildLog {
 
   public void assertNotTargetBuiltLocally(String buildTargetRaw) {
     BuildLogEntry logEntry = getLogEntry(buildTargetRaw);
-    assertNotEquals(BuildRuleSuccessType.BUILT_LOCALLY, logEntry.successType.get());
+    assertNotEquals(
+        String.format(
+            "Build target %s should not have been built locally, but it was", buildTargetRaw),
+        BuildRuleSuccessType.BUILT_LOCALLY,
+        logEntry.successType.get());
   }
 
   public void assertTargetIsAbsent(String buildTargetRaw) {
