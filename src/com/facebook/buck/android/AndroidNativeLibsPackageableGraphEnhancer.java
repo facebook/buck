@@ -190,9 +190,21 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     }
 
     ImmutableMap<StripLinkable, StrippedObjectDescription> strippedLibsMap =
-        generateStripRules(nativeLinkableLibs);
+        generateStripRules(
+            buildRuleParams,
+            pathResolver,
+            ruleResolver,
+            originalBuildTarget,
+            nativePlatforms,
+            nativeLinkableLibs);
     ImmutableMap<StripLinkable, StrippedObjectDescription> strippedLibsAssetsMap =
-        generateStripRules(nativeLinkableLibsAssets);
+        generateStripRules(
+            buildRuleParams,
+            pathResolver,
+            ruleResolver,
+            originalBuildTarget,
+            nativePlatforms,
+            nativeLinkableLibsAssets);
 
     BuildTarget targetForCopyNativeLibraries = BuildTarget.builder(originalBuildTarget)
         .addFlavors(COPY_NATIVE_LIBS_FLAVOR)
@@ -223,7 +235,12 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
             cpuFilters));
   }
 
-  private ImmutableMap<StripLinkable, StrippedObjectDescription> generateStripRules(
+  private static ImmutableMap<StripLinkable, StrippedObjectDescription> generateStripRules(
+      BuildRuleParams buildRuleParams,
+      SourcePathResolver pathResolver,
+      BuildRuleResolver ruleResolver,
+      BuildTarget originalBuildTarget,
+      ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ImmutableMap<Pair<NdkCxxPlatforms.TargetCpuType, String>, SourcePath> libs) {
     ImmutableMap.Builder<StripLinkable, StrippedObjectDescription> result = ImmutableMap.builder();
     for (Map.Entry<Pair<NdkCxxPlatforms.TargetCpuType, String>, SourcePath> entry :
