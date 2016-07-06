@@ -1237,6 +1237,7 @@ public class CachingBuildEngineTest {
       assertTrue(cache.isEmpty());
     }
 
+    @Test
     public void fetchingFromCacheSeedsFileHashCache() throws Throwable {
       ArtifactCache artifactCache = new InMemoryArtifactCache();
       BuildContext buildContext = this.buildContext.withArtifactCache(artifactCache);
@@ -1275,7 +1276,7 @@ public class CachingBuildEngineTest {
       // Now run a second build that gets a cache hit.  We use an empty `FakeFileHashCache` which
       // does *not* contain the path, so any attempts to hash it will fail.
       FakeFileHashCache fakeFileHashCache =
-          new FakeFileHashCache(ImmutableMap.<Path, HashCode>of());
+          new FakeFileHashCache(new HashMap<Path, HashCode>());
       cachingBuildEngine =
           new CachingBuildEngine(
               toWeighted(MoreExecutors.newDirectExecutorService()),
