@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.MorePaths;
@@ -40,6 +41,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -47,6 +49,7 @@ import org.junit.rules.ExpectedException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class TargetsCommandIntegrationTest {
 
@@ -95,7 +98,7 @@ public class TargetsCommandIntegrationTest {
         "--show-rulekey",
         "//:test");
     result.assertSuccess();
-    assertEquals("//:test 54bd34938b1827baea88dc5137c6385fdf280d60\n", result.getStdout());
+    assertThat(result.getStdout().trim(), Matchers.matchesPattern("//:test [a-f0-9]{40}"));
   }
 
   @Test
@@ -128,11 +131,12 @@ public class TargetsCommandIntegrationTest {
         "--show-output",
         "//:test");
     result.assertSuccess();
-    assertEquals(
-        "//:test 54bd34938b1827baea88dc5137c6385fdf280d60 " +
-            MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output") +
-            "\n",
-        result.getStdout());
+    assertThat(
+        result.getStdout().trim(),
+        Matchers.matchesPattern(
+            "//:test [a-f0-9]{40} " +
+                Pattern.quote(
+                    MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output"))));
   }
 
   @Test
@@ -165,10 +169,9 @@ public class TargetsCommandIntegrationTest {
         "targets",
         "--show-rulekey");
     result.assertSuccess();
-    assertEquals(
-        "//:another-test 163589ad581be53e82f0a18e68ac3ae9111f1307\n" +
-            "//:test 54bd34938b1827baea88dc5137c6385fdf280d60\n",
-        result.getStdout());
+    assertThat(
+        result.getStdout().trim(),
+        Matchers.matchesPattern("//:another-test [a-f0-9]{40}\n//:test [a-f0-9]{40}"));
   }
 
   @Test

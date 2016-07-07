@@ -24,8 +24,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 
+import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -74,24 +76,39 @@ public class DefaultRuleKeyLoggerTest {
 
   @Test
   public void nullFieldsDontHaveKeys() {
+    ImmutableList<Matcher<? super Iterable<? super String>>> matchers =
+        ImmutableList.<Matcher<? super Iterable<? super String>>>of(
+            Matchers.hasItem("key(stringField):"),
+            Matchers.hasItem("key(pathField):"),
+            Matchers.hasItem("key(appendableField.appendableSubKey):"));
+
+    // First check that these fields show up with the expected format when not null.
     Fixture fixture = new Fixture();
-
-    TestRule fakeRule = new TestRule(
-        BuildTargetFactory.newInstance("//:foo"),
-        fixture.getPathResolver(),
-        null,
-        null,
-        null);
-
-    fixture.getRuleKeyBuilderFactory().build(fakeRule);
-
+    TestRule rule =
+        new TestRule(
+            BuildTargetFactory.newInstance("//:foo"),
+            fixture.getPathResolver(),
+            "hello",
+            new FakeSourcePath("hello"),
+            new TestAppendable());
+    fixture.getRuleKeyBuilderFactory().build(rule);
     assertThat(
         fixture.getLogger().getCurrentLogElements(),
-        Matchers.contains(
-            "number(0):", "key(buck.seed):",
-            "string(\"//:foo\"):", "key(name):",
-            "string(\"test_rule\"):", "key(buck.type):",
-            "string(\"N/A\"):", "key(buckVersionUid):"));
+        Matchers.allOf(matchers));
+
+    // Now verify that they don't show up when null.
+    Fixture nullFixture = new Fixture();
+    TestRule nullRule =
+        new TestRule(
+            BuildTargetFactory.newInstance("//:foo"),
+            nullFixture.getPathResolver(),
+            null,
+            null,
+            null);
+    nullFixture.getRuleKeyBuilderFactory().build(nullRule);
+    assertThat(
+        nullFixture.getLogger().getCurrentLogElements(),
+        Matchers.not(Matchers.anyOf(matchers)));
   }
 
   @Test
@@ -112,11 +129,7 @@ public class DefaultRuleKeyLoggerTest {
         ":f1134a34c0de):";
     assertThat(
         fixture.getLogger().getCurrentLogElements(),
-        Matchers.contains(
-            "number(0):", "key(buck.seed):",
-            "string(\"//:foo\"):", "key(name):",
-            "string(\"test_rule\"):", "key(buck.type):",
-            "string(\"N/A\"):", "key(buckVersionUid):",
+        Matchers.hasItems(
             expectedPath, "key(pathField):",
             "string(\"testString\"):", "key(stringField):"));
   }
@@ -139,12 +152,7 @@ public class DefaultRuleKeyLoggerTest {
         "!/member:f1134a34c0de):";
     assertThat(
         fixture.getLogger().getCurrentLogElements(),
-        Matchers.contains(
-            "number(0):", "key(buck.seed):",
-            "string(\"//:foo\"):", "key(name):",
-            "string(\"test_rule\"):", "key(buck.type):",
-            "string(\"N/A\"):", "key(buckVersionUid):",
-            expectedArchiveMember, "key(pathField):"));
+        Matchers.hasItems(expectedArchiveMember, "key(pathField):"));
 
   }
 
@@ -163,13 +171,9 @@ public class DefaultRuleKeyLoggerTest {
 
     assertThat(
         fixture.getLogger().getCurrentLogElements(),
-        Matchers.contains(
-            "number(0):", "key(buck.seed):",
-            "string(\"//:foo\"):", "key(name):",
-            "string(\"test_rule\"):", "key(buck.type):",
-            "string(\"N/A\"):", "key(buckVersionUid):",
+        Matchers.hasItems(
             "ruleKey(sha1=c2f62bbb5efd77b2a8b2b086824d16d03c17251d):",
-                "key(appendableField.appendableSubKey):"));
+            "key(appendableField.appendableSubKey):"));
   }
 
   private class Fixture {

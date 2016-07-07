@@ -166,8 +166,8 @@ public class ProjectFilesystem {
     this(
         root.getFileSystem(),
         root,
-        extractIgnorePaths(root, config, getDefaultBuckPaths(root)),
-        getDefaultBuckPaths(root));
+        extractIgnorePaths(root, config, getConfiguredBuckPaths(root, config)),
+        getConfiguredBuckPaths(root, config));
   }
 
   private ProjectFilesystem(
@@ -254,6 +254,17 @@ public class ProjectFilesystem {
 
   private static BuckPaths getDefaultBuckPaths(Path rootPath) {
     return BuckPaths.of(rootPath.getFileSystem().getPath(BuckConstant.getBuckOutputDirectory()));
+  }
+
+  private static BuckPaths getConfiguredBuckPaths(Path rootPath, Config config) {
+    BuckPaths buckPaths = getDefaultBuckPaths(rootPath);
+    Optional<String> configuredBuckOut = config.getValue("project", "buck_out");
+    if (configuredBuckOut.isPresent()) {
+      buckPaths =
+          buckPaths.withConfiguredBuckOut(
+              rootPath.getFileSystem().getPath(configuredBuckOut.get()));
+    }
+    return buckPaths;
   }
 
   private static Path getCacheDir(Path root, Optional<String> value, BuckPaths buckPaths) {

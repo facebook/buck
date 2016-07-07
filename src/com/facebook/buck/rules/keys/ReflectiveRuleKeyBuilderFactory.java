@@ -66,6 +66,12 @@ public abstract class ReflectiveRuleKeyBuilderFactory<T extends RuleKeyBuilder<U
     builder.setReflectively("buck.type", buildRule.getType());
     builder.setReflectively("buckVersionUid", BuckVersion.getVersion());
 
+    // We currently cache items using their full buck-out path, so make sure this is reflected in
+    // the rule key.
+    builder.setReflectively(
+        "buckOut",
+        buildRule.getProjectFilesystem().getBuckPaths().getConfiguredBuckOut().toString());
+
     if (buildRule instanceof RuleKeyAppendable) {
       // We call `setAppendableRuleKey` explicitly, since using `setReflectively` will try to add
       // the rule key of the `BuildRule`, which is what we're trying to calculate now.

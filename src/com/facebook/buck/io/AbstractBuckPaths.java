@@ -33,6 +33,17 @@ abstract class AbstractBuckPaths {
   public abstract Path getBuckOut();
 
   /**
+   * The relative path to the directory where Buck will generate its files.  This is used when
+   * configuring the output directory to some used-defined value and is a stop-gap until we can
+   * support configuring all output paths.  However, for now, only certain paths below will use
+   * this path.
+   */
+  @Value.Default
+  public Path getConfiguredBuckOut() {
+    return getBuckOut();
+  }
+
+  /**
    * The version the buck output directory was created for
    */
   @Value.Derived
@@ -42,22 +53,22 @@ abstract class AbstractBuckPaths {
 
   @Value.Derived
   public Path getGenDir() {
-    return getBuckOut().resolve("gen");
+    return getConfiguredBuckOut().resolve("gen");
   }
 
   @Value.Derived
   public Path getResDir() {
-    return getBuckOut().resolve("res");
+    return getConfiguredBuckOut().resolve("res");
   }
 
   @Value.Derived
   public Path getScratchDir() {
-    return getBuckOut().resolve("bin");
+    return getConfiguredBuckOut().resolve("bin");
   }
 
   @Value.Derived
   public Path getAnnotationDir() {
-    return getBuckOut().resolve("annotation");
+    return getConfiguredBuckOut().resolve("annotation");
   }
 
   @Value.Derived

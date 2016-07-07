@@ -18,6 +18,7 @@ package com.facebook.buck.testutil.integration;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
@@ -55,14 +56,18 @@ import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.martiansoftware.nailgun.NGContext;
+
+import org.hamcrest.Matchers;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
@@ -246,19 +251,39 @@ public class ProjectWorkspace {
   }
 
   public Path buildAndReturnOutput(String... args) throws IOException {
-    // Build the java_library.
-    ProjectWorkspace.ProcessResult buildResult = runBuckBuild(args);
+
+    // Add in `--show-output` to the build, so we can parse the output paths after the fact.
+    ImmutableList<String> buildArgs =
+        ImmutableList.<String>builder()
+            .add("--show-output")
+            .add(args)
+            .build();
+    ProjectWorkspace.ProcessResult buildResult =
+        runBuckBuild(buildArgs.toArray(new String[buildArgs.size()]));
     buildResult.assertSuccess();
 
-    // Use `buck targets` to find the output JAR file.
-    // TODO(oconnor663): This is going to overwrite the build.log. Maybe stash that and return it?
-    ProjectWorkspace.ProcessResult outputFileResult = runBuckCommand(
-        "targets",
-        "--show-output",
-        args[args.length - 1]);
-    outputFileResult.assertSuccess();
-    String pathToGeneratedJarFile = outputFileResult.getStdout().split(" ")[1].trim();
-    return getPath(pathToGeneratedJarFile);
+    // Grab the stdout lines, which have the build outputs.
+    List<String> lines =
+        Splitter.on(CharMatcher.anyOf(System.lineSeparator()))
+            .trimResults()
+            .omitEmptyStrings()
+            .splitToList(buildResult.getStdout());
+
+    // Skip the first line, which is just "The outputs are:".
+    assertThat(lines.get(0), Matchers.equalTo("The outputs are:"));
+    lines = lines.subList(1, lines.size());
+
+    // Verify we only have a single output.
+    assertThat(
+        String.format(
+            "expected only a single build target in command `%s`: %s",
+            ImmutableList.copyOf(args),
+            lines),
+        lines,
+        Matchers.hasSize(1));
+
+    String path = Splitter.on(' ').trimResults().splitToList(lines.get(0)).get(1);
+    return getPath(path);
   }
 
   public ProcessExecutor.Result runJar(Path jar,
