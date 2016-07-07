@@ -26,6 +26,7 @@ import static org.easymock.EasyMock.replay;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator.TRACKED_BOOKMARKS;
 
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -75,8 +76,13 @@ public class VersionControlStatsGeneratorTest {
     expect(cmdLineInterfaceMock.timestampSeconds(BRANCHED_FROM_MASTER_REVISION_ID)).andReturn(
         BRANCHED_FROM_MASTER_TS_SECS);
 
-    expect(factoryMock.createCmdLineInterface()).andReturn(cmdLineInterfaceMock);
+    expect(cmdLineInterfaceMock.trackedBookmarksOffRevisionId(
+        MASTER_REVISION_ID,
+        CURRENT_REVISION_ID,
+        TRACKED_BOOKMARKS))
+        .andReturn(ImmutableSet.<String>of());
 
+    expect(factoryMock.createCmdLineInterface()).andReturn(cmdLineInterfaceMock);
     Capture<VersionControlStatsEvent> eventCapture = Capture.newInstance();
     eventBus.post(capture(eventCapture));
     expectLastCall().once();

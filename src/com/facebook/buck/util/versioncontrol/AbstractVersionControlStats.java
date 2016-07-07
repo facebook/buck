@@ -17,6 +17,7 @@
 package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
 
@@ -25,6 +26,7 @@ import org.immutables.value.Value;
 interface AbstractVersionControlStats {
   int getNumberOfWorkingDirectoryChanges();
   String getCurrentRevisionId();
+  ImmutableSet<String> getBaseBookmarks();
   String getBranchedFromMasterRevisionId();
   long getBranchedFromMasterTsMillis();
 }

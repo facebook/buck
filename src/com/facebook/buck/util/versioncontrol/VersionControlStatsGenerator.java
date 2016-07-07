@@ -18,11 +18,15 @@ package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.concurrent.ExecutorService;
 
 public class VersionControlStatsGenerator {
   private static final Logger LOG = Logger.get(VersionControlStatsGenerator.class);
+
+  public static final ImmutableSet<String> TRACKED_BOOKMARKS = ImmutableSet.of(
+      "remote/master");
 
   private final ExecutorService executorService;
   private final VersionControlCmdLineInterfaceFactory versionControlCmdLineInterfaceFactory;
@@ -75,6 +79,11 @@ public class VersionControlStatsGenerator {
     String branchedFromMasterRevisionId =
         vcCmdLineInterface.commonAncestor(currentRevisionId, latestMasterRevisionId);
 
+    ImmutableSet<String> baseBookmarks = vcCmdLineInterface.trackedBookmarksOffRevisionId(
+        latestMasterRevisionId,
+        currentRevisionId,
+        TRACKED_BOOKMARKS);
+
     long branchedFromMasterTsMillis = vcCmdLineInterface.timestampSeconds(
         branchedFromMasterRevisionId) * 1000;
 
@@ -83,6 +92,7 @@ public class VersionControlStatsGenerator {
         .setCurrentRevisionId(currentRevisionId)
         .setBranchedFromMasterRevisionId(branchedFromMasterRevisionId)
         .setBranchedFromMasterTsMillis(branchedFromMasterTsMillis)
+        .setBaseBookmarks(baseBookmarks)
         .build();
 
     LOG.info("Version control stats generated successfully. \n%s", versionControlStats);

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rage;
 
+import static com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator.TRACKED_BOOKMARKS;
+
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.versioncontrol.VersionControlCmdLineInterface;
@@ -33,9 +35,6 @@ public class VcsInfoCollector {
 
   private static final Logger LOG = Logger.get(InteractiveReport.class);
   private static final String REMOTE_MASTER = "remote/master";
-
-  private static final ImmutableSet<String> TRACKED_BOOKMARKS = ImmutableSet.of(
-      REMOTE_MASTER);
 
   private final VersionControlCmdLineInterface vcCmdLineInterface;
 
