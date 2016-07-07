@@ -22,11 +22,13 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.TestProcessExecutorFactory;
 import com.facebook.buck.zip.Unzip;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -47,7 +49,6 @@ public class HgCmdLineInterfaceIntegrationTest {
   /**
    * Test constants
    */
-
   private static final long MASTER_THREE_TS = 1440589283L; // Wed Aug 26 11:41:23 2015 UTC
   private static final String MASTER_THREE_BOOKMARK = "master3";
   private static final String BRANCH_FROM_MASTER_THREE_BOOKMARK = "branch_from_master3";
@@ -129,6 +130,14 @@ public class HgCmdLineInterfaceIntegrationTest {
   }
 
   @Test
+  public void testRevisionIdOrAbsent() throws InterruptedException {
+    Optional<String> masterRevision = repoThreeCmdLine.revisionIdOrAbsent(MASTER_THREE_BOOKMARK);
+    Optional<String> absentRevision = repoThreeCmdLine.revisionIdOrAbsent("absent_bookmark");
+    assertTrue(masterRevision.get().startsWith(MASTER_THREE_ID));
+    assertEquals(absentRevision, Optional.<String>absent());
+  }
+
+  @Test
   public void whenWorkingDirectoryUnchangedThenHasWorkingDirectoryChangesReturnsFalse()
       throws VersionControlCommandFailedException, InterruptedException {
     assertThat(repoTwoCmdLine.changedFiles("."), hasSize(0));
@@ -148,6 +157,23 @@ public class HgCmdLineInterfaceIntegrationTest {
         MASTER_THREE_BOOKMARK);
 
     assertThat(commonAncestor.startsWith(MASTER_THREE_ID), is(true));
+  }
+
+  @Test
+  public void testExistingCommonAncestorOrAbsentWithBookmarks() throws InterruptedException {
+    assertTrue(repoThreeCmdLine.commonAncestorOrAbsent(
+        BRANCH_FROM_MASTER_THREE_BOOKMARK,
+        MASTER_THREE_BOOKMARK)
+        .get()
+        .startsWith(MASTER_THREE_ID));
+  }
+
+  @Test
+  public void testAbsentCommonAncestorOrAbsentWithBookmarks() throws InterruptedException {
+    assertEquals(repoThreeCmdLine.commonAncestorOrAbsent(
+        BRANCH_FROM_MASTER_THREE_BOOKMARK,
+        "absent_bookmark"),
+        Optional.<String>absent());
   }
 
   @Test
@@ -245,6 +271,18 @@ public class HgCmdLineInterfaceIntegrationTest {
     assertThat(
         MASTER_THREE_TS,
         is(equalTo(repoThreeCmdLine.timestampSeconds(MASTER_THREE_ID))));
+  }
+
+  @Test
+  public void testTrackedBookmarksOffRevisionId() throws InterruptedException {
+    ImmutableSet<String> bookmarks = ImmutableSet.of("master2");
+    assertEquals(
+        bookmarks,
+        repoThreeCmdLine.trackedBookmarksOffRevisionId("b1fd7e", "2911b3", bookmarks));
+    bookmarks = ImmutableSet.of("master3");
+    assertEquals(
+        bookmarks,
+        repoThreeCmdLine.trackedBookmarksOffRevisionId("dee670", "adf7a0", bookmarks));
   }
 
   @Test

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.versioncontrol;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -38,6 +39,15 @@ public interface VersionControlCmdLineInterface {
   String revisionId(String name) throws VersionControlCommandFailedException, InterruptedException;
 
   /**
+   * @param name Bookmark name, e.g master
+   * @return Global revision ID for given name or {@link Optional#absent} if the bookmark doesn't
+   * exist or an error was encountered. If you want to handle the exception use
+   * {@link #revisionId(String)}
+   * @throws InterruptedException
+   */
+  Optional<String> revisionIdOrAbsent(String name) throws InterruptedException;
+
+  /**
    *
    * @return Revision ID for current tip
    * @throws VersionControlCommandFailedException
@@ -55,6 +65,17 @@ public interface VersionControlCmdLineInterface {
    */
   String commonAncestor(String revisionIdOne, String revisionIdTwo)
       throws VersionControlCommandFailedException, InterruptedException;
+
+  /**
+   * @param revisionIdOne
+   * @param revisionIdTwo
+   * @return Revision ID that is an ancestor for both revisionIdOne and revisionIdTwo or
+   * {@link Optional#absent()} is there is no common ancestor or an error was encountered. If you
+   * want to handle the error use {@link #commonAncestor(String, String)}
+   * @throws InterruptedException
+   */
+  Optional<String> commonAncestorOrAbsent(String revisionIdOne, String revisionIdTwo)
+      throws InterruptedException;
 
   /**
    *
@@ -96,6 +117,20 @@ public interface VersionControlCmdLineInterface {
   long timestampSeconds(String revisionId)
       throws VersionControlCommandFailedException, InterruptedException;
 
+  /**
+   * First the method finds the common ancestor between the tipRevisionId and revisionId.
+   * Then compares that revision with the bookmarks.
+   * @param tipRevisionId the revision that will be used as a tip.
+   * @param revisionId  the revision that you want to check if is off the bookmarks
+   * @param bookmarks the set of bookmarks that will be checked
+   * @return a set of bookmarks that the revisionId is off.
+   * @throws InterruptedException
+   */
+  ImmutableSet<String> trackedBookmarksOffRevisionId(
+      String tipRevisionId,
+      String revisionId,
+      ImmutableSet<String> bookmarks
+  ) throws InterruptedException;
 
   /**
    *

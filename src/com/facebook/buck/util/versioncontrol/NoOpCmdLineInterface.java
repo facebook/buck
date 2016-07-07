@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.versioncontrol;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -35,6 +36,11 @@ public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   @Override
+  public Optional<String> revisionIdOrAbsent(String name) throws InterruptedException {
+    return Optional.absent();
+  }
+
+  @Override
   public String currentRevisionId()
       throws VersionControlCommandFailedException, InterruptedException {
     return "";
@@ -46,6 +52,13 @@ public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
       String revisionIdTwo)
       throws VersionControlCommandFailedException, InterruptedException {
     return "";
+  }
+
+  @Override
+  public Optional<String> commonAncestorOrAbsent(
+      String revisionOne,
+      String revisionTwo) throws InterruptedException {
+    return Optional.absent();
   }
 
   @Override
@@ -69,6 +82,15 @@ public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
   @Override
   public ImmutableSet<String> untrackedFiles()
       throws VersionControlCommandFailedException, InterruptedException {
+    return ImmutableSet.of();
+  }
+
+  @Override
+  public ImmutableSet<String> trackedBookmarksOffRevisionId(
+      String tipRevisionId,
+      String revisionId,
+      ImmutableSet<String> bookmarks
+  ) throws InterruptedException {
     return ImmutableSet.of();
   }
 

@@ -129,6 +129,15 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   @Override
+  public Optional<String> revisionIdOrAbsent(String name) throws InterruptedException {
+    try {
+      return Optional.of(revisionId(name));
+    } catch (VersionControlCommandFailedException e) {
+      return Optional.absent();
+    }
+  }
+
+  @Override
   public String commonAncestor(String revisionIdOne, String revisionIdTwo)
       throws VersionControlCommandFailedException, InterruptedException {
     return validateRevisionId(
@@ -137,6 +146,16 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
                 COMMON_ANCESTOR_COMMAND_TEMPLATE,
                 REVISION_IDS_TEMPLATE,
                 (revisionIdOne + "," + revisionIdTwo))));
+  }
+
+  @Override
+  public Optional<String> commonAncestorOrAbsent(String revisionIdOne, String revisionIdTwo)
+      throws InterruptedException {
+    try {
+      return Optional.of(commonAncestor(revisionIdOne, revisionIdTwo));
+    } catch (VersionControlCommandFailedException e) {
+      return Optional.absent();
+    }
   }
 
   @Override
@@ -196,6 +215,26 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
           }
         })
         .toSet();
+  }
+
+  @Override
+  public ImmutableSet<String> trackedBookmarksOffRevisionId(
+      String tipRevisionId,
+      String revisionId,
+      ImmutableSet<String> bookmarks
+  ) throws InterruptedException {
+    Optional<String> commonAncestor = commonAncestorOrAbsent(tipRevisionId, revisionId);
+    if (!commonAncestor.isPresent()) {
+      return ImmutableSet.of();
+    }
+
+    ImmutableSet.Builder<String> bookmarkSetBuilder = ImmutableSet.builder();
+    for (String bookmark : bookmarks) {
+      if (revisionIdOrAbsent(bookmark).equals(commonAncestor)) {
+        bookmarkSetBuilder.add(bookmark);
+      }
+    }
+    return bookmarkSetBuilder.build();
   }
 
   @Override
