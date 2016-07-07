@@ -17,201 +17,84 @@
 package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 
+import org.hamcrest.junit.ExpectedException;
+import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 
 public class InferLogLineTest {
 
-  private static CellPathResolver createFakeCellPathResolver(
-      final Map<String, Path> cellToRootPathMap,
-      final Optional<Path> defaultRootPath) {
-    return new CellPathResolver() {
-      @Override
-      public Path getCellPath(Optional<String> cellName) {
-        if (!cellName.isPresent()) {
-          return defaultRootPath.get();
-        }
-        Path p = cellToRootPathMap.get(cellName.get());
-        if (p == null) {
-          throw new RuntimeException("Cellname " + cellName + " is not part of the given map");
-        }
-        return p;
-      }
-    };
-  }
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   @Test
-  public void testToStringHasCellNameTokenInPathWhenCellNameIsKnown() {
+  public void testFromBuildTargetThrowsWhenPathIsNotAbsolute() {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
+    expectedException.expect(IllegalArgumentException.class);
+    expectedException.expectMessage("Path must be absolute");
     BuildTarget testBuildTarget = BuildTarget
         .builder()
         .setUnflavoredBuildTarget(
             UnflavoredBuildTarget.of(
-                Paths.get("/Users/user/src"),
-                Optional.of("cellname"),
-                "//target",
-                "short"))
-        .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
-        .build();
-
-    InferLogLine inferLogLine = new InferLogLine(testBuildTarget, Paths.get("buck-out/a/b/c/"));
-    String expectedOutput = "cellname//target:short#infer\t[infer]\tcellname//buck-out/a/b/c";
-    assertEquals(expectedOutput, inferLogLine.toString());
-  }
-
-  @Test
-  public void testToContextualizedStringHasAbsolutePathWhenCellNameIsKnown() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
-    Path rootPath = Paths.get("/Users/user/src");
-    BuildTarget testBuildTarget = BuildTarget
-        .builder()
-        .setUnflavoredBuildTarget(
-            UnflavoredBuildTarget.of(
-                rootPath,
-                Optional.of("cellname"),
-                "//target",
-                "short"))
-        .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
-        .build();
-
-    ImmutableMap<String, Path> map = ImmutableMap.<String, Path>builder()
-        .put("cellname", rootPath)
-        .build();
-
-    CellPathResolver cellPathResolver = createFakeCellPathResolver(map, Optional.<Path>absent());
-
-    InferLogLine inferLogLine = new InferLogLine(testBuildTarget, Paths.get("buck-out/a/b/c/"));
-    Path expectedContextualizedPath = rootPath.resolve("buck-out/a/b/c");
-    assertTrue("Contextualized path must be absolute", expectedContextualizedPath.isAbsolute());
-    String expectedOutput =
-        "cellname//target:short#infer\t[infer]\t" + expectedContextualizedPath.toString();
-    assertEquals(expectedOutput, inferLogLine.toContextualizedString(cellPathResolver));
-  }
-
-  @Test
-  public void testToStringHasNoCellNameTokenInPathWhenCellNameIsAbsent() {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
-    BuildTarget testBuildTarget = BuildTarget
-        .builder()
-        .setUnflavoredBuildTarget(
-            UnflavoredBuildTarget.of(
-                Paths.get("/Users/user/src"),
+                Paths.get("/User/user/src"),
                 Optional.<String>absent(),
                 "//target",
                 "short"))
         .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
         .build();
 
-    InferLogLine inferLogLine = new InferLogLine(testBuildTarget, Paths.get("buck-out/a/b/c/"));
-    String expectedOutput = "//target:short#infer\t[infer]\tbuck-out/a/b/c";
-    assertEquals(expectedOutput, inferLogLine.toString());
+    InferLogLine.fromBuildTarget(testBuildTarget, Paths.get("buck-out/a/b/c/"));
   }
 
   @Test
-  public void testToContextualizedStringHasAbsolutePathWhenCellNameIsAbsent() throws IOException {
+  public void testToStringWithCell() {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    Path rootPath = Paths.get("/Users/user/src");
     BuildTarget testBuildTarget = BuildTarget
         .builder()
         .setUnflavoredBuildTarget(
             UnflavoredBuildTarget.of(
-                rootPath,
+                Paths.get("/User/user/src"),
+                Optional.of("cellname"),
+                "//target",
+                "short"))
+        .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
+        .build();
+
+    String expectedOutput = "cellname//target:short#infer\t[infer]\t/User/user/src/buck-out/a/b/c";
+    assertEquals(
+        expectedOutput,
+        InferLogLine.fromBuildTarget(
+            testBuildTarget, Paths.get("/User/user/src/buck-out/a/b/c/"))
+            .toString());
+  }
+
+  @Test
+  public void testToStringWithoutCell() {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    BuildTarget testBuildTarget = BuildTarget
+        .builder()
+        .setUnflavoredBuildTarget(
+            UnflavoredBuildTarget.of(
+                Paths.get("/User/user/src"),
                 Optional.<String>absent(),
                 "//target",
                 "short"))
         .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
         .build();
 
-    CellPathResolver cellPathResolver =
-        createFakeCellPathResolver(ImmutableMap.<String, Path>of(), Optional.of(rootPath));
-
-    InferLogLine inferLogLine = new InferLogLine(testBuildTarget, Paths.get("buck-out/a/b/c/"));
-    Path expectedContextualizedPath = rootPath.resolve("buck-out/a/b/c");
-    assertTrue("Contextualized path must be absolute", expectedContextualizedPath.isAbsolute());
-    String expectedOutput =
-        "//target:short#infer\t[infer]\t" + expectedContextualizedPath.toString();
-    assertEquals(expectedOutput, inferLogLine.toContextualizedString(cellPathResolver));
-  }
-
-  @Test
-  public void testFromLineWithoutCellTokensToStringShouldReturnSameLine() {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
-    String line = "//target:short#infer\t[infer]\tbuck-out/a/b/c/";
-    assertEquals(line, InferLogLine.fromLine(line).toString());
-  }
-
-  @Test
-  public void testFromLineWithCellTokensToStringShouldReturnSameLine() {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
-    String line = "//target:short#infer\t[infer]\tcellname//buck-out/a/b/c/";
-    assertEquals(line, InferLogLine.fromLine(line).toString());
-  }
-
-  @Test
-  public void testFromLineWithCellTokensToContextualizedString() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
-    String cellName = "cellname";
-    Path rootPath = Paths.get("/Users/user/src");
-    String line = "//target:short#infer\t[infer]\t" + cellName + "//buck-out/a/b/c/";
-    Path expectedOutputPath = rootPath.resolve("buck-out/a/b/c");
-    assertTrue("Path must be absolute", expectedOutputPath.isAbsolute());
-    String expectedOutput =
-        "//target:short#infer\t[infer]\t" + expectedOutputPath.toString();
-    ImmutableMap<String, Path> map = ImmutableMap.<String, Path>builder()
-        .put("cellname", rootPath)
-        .build();
-    CellPathResolver cellPathResolver =
-        createFakeCellPathResolver(map, Optional.<Path>absent());
+    String expectedOutput = "//target:short#infer\t[infer]\t/User/user/src/buck-out/a/b/c";
     assertEquals(
-        expectedOutput, InferLogLine.fromLine(line).toContextualizedString(cellPathResolver));
-  }
-
-  @Test
-  public void testFromLineWithoutCellTokensToContextualizedString() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
-    Path rootPath = Paths.get("/Users/user/src");
-    String line = "//target:short#infer\t[infer]\tbuck-out/a/b/c/";
-    Path expectedOutputPath = rootPath.resolve("buck-out/a/b/c");
-    assertTrue("Path must be absolute", expectedOutputPath.isAbsolute());
-    String expectedOutput =
-        "//target:short#infer\t[infer]\t" + expectedOutputPath.toString();
-    CellPathResolver cellPathResolver =
-        createFakeCellPathResolver(ImmutableMap.<String, Path>of(), Optional.of(rootPath));
-    assertEquals(
-        expectedOutput, InferLogLine.fromLine(line).toContextualizedString(cellPathResolver));
-  }
-
-  @Test
-  public void testFromLineWithContextualizedPathToStringReturnSameLine() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
-    String line = "//target:short#infer\t[infer]\t/Users/user/src/buck-out/a/b/c";
-    assertEquals(
-        line, InferLogLine.fromLine(line).toString());
-  }
-
-  @Test
-  public void testFromLineWithContextualizedPathToContextualizedStringShouldReturnSameLine()
-      throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
-    Path rootPath = Paths.get("/Users/user/src");
-    String line = "//target:short#infer\t[infer]\t/Users/user/src/buck-out/a/b/c";
-    CellPathResolver cellPathResolver =
-        createFakeCellPathResolver(ImmutableMap.<String, Path>of(), Optional.of(rootPath));
-    assertEquals(
-        line, InferLogLine.fromLine(line).toContextualizedString(cellPathResolver));
+        expectedOutput,
+        InferLogLine.fromBuildTarget(
+            testBuildTarget, Paths.get("/User/user/src/buck-out/a/b/c/"))
+            .toString());
   }
 }

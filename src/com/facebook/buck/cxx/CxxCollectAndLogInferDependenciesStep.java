@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -28,7 +27,6 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 
 public final class CxxCollectAndLogInferDependenciesStep implements Step {
 
@@ -71,7 +69,9 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
   }
 
   private String processCaptureRule(CxxInferCapture captureRule) {
-    return new InferLogLine(captureRule.getBuildTarget(), captureRule.getPathToOutput()).toString();
+    return InferLogLine.fromBuildTarget(
+        captureRule.getBuildTarget(), captureRule.getAbsolutePathToOutput())
+      .toString();
   }
 
   private ImmutableList<String> processCaptureOnlyRule(CxxInferCaptureTransitive captureOnlyRule) {
@@ -86,7 +86,9 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
       CxxInferAnalyze analysisRule,
       ImmutableList.Builder<String> accumulator) {
     accumulator.add(
-        new InferLogLine(analysisRule.getBuildTarget(), analysisRule.getResultsDir()).toString());
+        InferLogLine.fromBuildTarget(
+            analysisRule.getBuildTarget(), analysisRule.getAbsolutePathToResultsDir())
+            .toString());
     accumulator.addAll(
         FluentIterable.from(analysisRule.getCaptureRules()).transform(
             new Function<CxxInferCapture, String>() {
@@ -130,43 +132,5 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     return "Log Infer's dependencies used for the analysis";
-  }
-
-  public static class CxxContextualizeLoggedInferDependenciesStep implements Step {
-    private ProjectFilesystem projectFilesystem;
-    private CellPathResolver cellPathResolver;
-    private Path inputFilename;
-
-    public CxxContextualizeLoggedInferDependenciesStep(
-        ProjectFilesystem projectFilesystem,
-        CellPathResolver cellPathResolver,
-        Path inputFilename) {
-      this.projectFilesystem = projectFilesystem;
-      this.cellPathResolver = cellPathResolver;
-      this.inputFilename = inputFilename;
-    }
-
-    @Override
-    public StepExecutionResult execute(ExecutionContext context)
-        throws IOException, InterruptedException {
-      List<String> content = projectFilesystem.readLines(inputFilename);
-      ImmutableList.Builder<String> contextualizedPaths = ImmutableList.builder();
-      for (String line : content) {
-        contextualizedPaths.add(
-            InferLogLine.fromLine(line).toContextualizedString(cellPathResolver));
-      }
-      projectFilesystem.writeLinesToPath(contextualizedPaths.build(), inputFilename);
-      return StepExecutionResult.SUCCESS;
-    }
-
-    @Override
-    public String getShortName() {
-      return "contextualize-infer-deps";
-    }
-
-    @Override
-    public String getDescription(ExecutionContext context) {
-      return "Contextualize infer-deps.txt file replacing cell tokens with their paths";
-    }
   }
 }

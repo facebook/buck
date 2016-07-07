@@ -95,6 +95,10 @@ public class CxxInferAnalyze extends AbstractBuildRule {
     return resultsDir;
   }
 
+  public Path getAbsolutePathToResultsDir() {
+    return getProjectFilesystem().resolve(resultsDir);
+  }
+
   public ImmutableSet<CxxInferCapture> getCaptureRules() {
     return captureAndAnalyzeRules.captureRules;
   }

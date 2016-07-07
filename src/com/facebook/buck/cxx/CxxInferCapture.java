@@ -134,6 +134,10 @@ public class CxxInferCapture
     return this.resultsDir;
   }
 
+  public Path getAbsolutePathToOutput() {
+    return getProjectFilesystem().resolve(resultsDir);
+  }
+
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     // Sanitize any relevant paths in the flags we pass to the preprocessor, to prevent them

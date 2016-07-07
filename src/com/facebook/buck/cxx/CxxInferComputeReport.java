@@ -23,7 +23,6 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
@@ -45,9 +44,7 @@ public class CxxInferComputeReport extends AbstractBuildRule implements HasPostB
   private CxxInferAnalyze analysisToReport;
   private ProjectFilesystem projectFilesystem;
   private Path outputDirectory;
-  private Path depsOutput;
   private Path reportOutput;
-  private CellPathResolver cellPathResolver;
 
   public CxxInferComputeReport(
       BuildRuleParams buildRuleParams,
@@ -57,10 +54,8 @@ public class CxxInferComputeReport extends AbstractBuildRule implements HasPostB
     this.analysisToReport = analysisToReport;
     this.outputDirectory =
         BuildTargets.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-%s");
-    this.depsOutput = this.outputDirectory.resolve("infer-deps.txt");
     this.reportOutput = this.outputDirectory.resolve("report.json");
     this.projectFilesystem = getProjectFilesystem();
-    this.cellPathResolver = buildRuleParams.getCellRoots();
   }
 
   @Override
@@ -68,7 +63,6 @@ public class CxxInferComputeReport extends AbstractBuildRule implements HasPostB
       BuildContext context,
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(reportOutput);
-    buildableContext.recordArtifact(depsOutput);
     ImmutableSortedSet<Path> reportsToMergeFromDeps =
         FluentIterable.from(analysisToReport.getTransitiveAnalyzeRules())
             .transform(
@@ -94,11 +88,6 @@ public class CxxInferComputeReport extends AbstractBuildRule implements HasPostB
                 reportOutput,
                 "infer-merge-reports",
                 "Merge Infer Reports"))
-        .add(
-            CxxCollectAndLogInferDependenciesStep.fromAnalyzeRule(
-                analysisToReport,
-                projectFilesystem,
-                depsOutput))
         .build();
   }
 
@@ -111,11 +100,13 @@ public class CxxInferComputeReport extends AbstractBuildRule implements HasPostB
   public ImmutableList<Step> getPostBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.<Step>builder()
+        .add(new MkdirStep(projectFilesystem, outputDirectory))
         .add(
-            new CxxCollectAndLogInferDependenciesStep.CxxContextualizeLoggedInferDependenciesStep(
-                projectFilesystem,
-                cellPathResolver,
-                depsOutput))
+            CxxCollectAndLogInferDependenciesStep.fromAnalyzeRule(
+                analysisToReport,
+                getProjectFilesystem(),
+                this.outputDirectory.resolve("infer-deps.txt"))
+        )
         .build();
   }
 }

@@ -22,7 +22,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -39,8 +38,6 @@ public class CxxInferCaptureTransitive extends AbstractBuildRule
 
   private ImmutableSet<CxxInferCapture> captureRules;
   private Path outputDirectory;
-  private Path depsOutput;
-  private CellPathResolver cellPathResolver;
 
   public CxxInferCaptureTransitive(
       BuildRuleParams params,
@@ -48,10 +45,8 @@ public class CxxInferCaptureTransitive extends AbstractBuildRule
       ImmutableSet<CxxInferCapture> captureRules) {
     super(params, pathResolver);
     this.captureRules = captureRules;
-    this.cellPathResolver = params.getCellRoots();
     this.outputDirectory =
         BuildTargets.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-%s");
-    this.depsOutput = this.outputDirectory.resolve("infer-deps.txt");
   }
 
   public ImmutableSet<CxxInferCapture> getCaptureRules() {
@@ -68,32 +63,27 @@ public class CxxInferCaptureTransitive extends AbstractBuildRule
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    buildableContext.recordArtifact(depsOutput);
     return ImmutableList.<Step>builder()
         .add(new MkdirStep(getProjectFilesystem(), outputDirectory))
-        .add(
-            CxxCollectAndLogInferDependenciesStep.fromCaptureOnlyRule(
-                this,
-                getProjectFilesystem(),
-                depsOutput)
-        )
         .build();
   }
 
   @Override
   public Path getPathToOutput() {
-    return depsOutput;
+    return outputDirectory;
   }
 
   @Override
   public ImmutableList<Step> getPostBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.<Step>builder()
+        .add(new MkdirStep(getProjectFilesystem(), outputDirectory))
         .add(
-            new CxxCollectAndLogInferDependenciesStep.CxxContextualizeLoggedInferDependenciesStep(
+            CxxCollectAndLogInferDependenciesStep.fromCaptureOnlyRule(
+                this,
                 getProjectFilesystem(),
-                cellPathResolver,
-                depsOutput))
+                this.outputDirectory.resolve("infer-deps.txt"))
+        )
         .build();
   }
 }

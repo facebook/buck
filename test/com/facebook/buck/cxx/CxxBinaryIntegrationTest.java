@@ -670,6 +670,172 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
+  public void testInferCxxBinaryWithDiamondDepsEmitsAllBuildRulesInvolvedWhenCacheHit()
+      throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
+        this,
+        tmp,
+        Optional.<String>absent());
+    workspace.enableDirCache(); // enable the cache
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+
+    BuildTarget inputBuildTarget = BuildTargetFactory.newInstance(
+        "//foo:binary_with_diamond_deps")
+        .withFlavors(CxxInferEnhancer.InferFlavors.INFER.get());
+    String buildTargetName = inputBuildTarget.getFullyQualifiedName();
+
+    /*
+     * Build the given target and check that it succeeds.
+     */
+    workspace.runBuckCommand("build", buildTargetName).assertSuccess();
+
+    /*
+     * Check that building after clean will use the cache
+     */
+    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("build", buildTargetName).assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    ImmutableSet<BuildTarget> allInvolvedTargets = buildLog.getAllTargets();
+    assertEquals(1, allInvolvedTargets.size()); // Only main target should be fetched from cache
+    for (BuildTarget bt : allInvolvedTargets) {
+      buildLog.assertTargetWasFetchedFromCache(bt.toString());
+    }
+
+    assertTrue(
+        Files.exists(
+            workspace.getPath(
+                BuildTargets.getGenPath(filesystem, inputBuildTarget, "infer-%s/infer-deps.txt"))));
+
+    String loggedDeps = workspace.getFileContents(
+        BuildTargets.getGenPath(filesystem, inputBuildTarget, "infer-%s/infer-deps.txt"));
+
+    BuildTarget analyzeMainTarget = BuildTargetFactory.newInstance(
+        "//foo:binary_with_diamond_deps#infer-analyze");
+    BuildTarget analyzeDepOneTarget = BuildTargetFactory.newInstance(
+        "//foo:diamond_dep_one#default,infer-analyze");
+    BuildTarget analyzeDepTwoTarget = BuildTargetFactory.newInstance(
+        "//foo:diamond_dep_two#default,infer-analyze");
+    BuildTarget analyzeSimpleLibTarget = BuildTargetFactory.newInstance(
+        "//foo:simple_lib#default,infer-analyze");
+
+    String sanitizedSimpleCpp = sanitize("simple.cpp.o");
+    String sanitizedDepOne = sanitize("dep_one.c.o");
+    String sanitizedDepTwo = sanitize("dep_two.c.o");
+    String sanitizedSrcWithDeps = sanitize("src_with_deps.c.o");
+    BuildTarget simpleCppTarget = BuildTargetFactory.newInstance(
+        "//foo:simple_lib#default,infer-capture-" + sanitizedSimpleCpp);
+    BuildTarget depOneTarget = BuildTargetFactory.newInstance(
+        "//foo:diamond_dep_one#default,infer-capture-" + sanitizedDepOne);
+    BuildTarget depTwoTarget = BuildTargetFactory.newInstance(
+        "//foo:diamond_dep_two#default,infer-capture-" + sanitizedDepTwo);
+    BuildTarget srcWithDepsTarget = BuildTargetFactory.newInstance(
+        "//foo:binary_with_diamond_deps#default,infer-capture-" + sanitizedSrcWithDeps);
+
+    Path basePath = filesystem.getRootPath().toRealPath();
+    String expectedOutput = Joiner.on('\n').join(
+        ImmutableList.of(
+            InferLogLine.fromBuildTarget(analyzeMainTarget, basePath.resolve(
+                    BuildTargets.getGenPath(
+                        filesystem, analyzeMainTarget, "infer-analysis-%s"))).toString(),
+            InferLogLine.fromBuildTarget(srcWithDepsTarget, basePath.resolve(
+                    BuildTargets.getGenPath(
+                        filesystem, srcWithDepsTarget, "infer-out-%s"))).toString(),
+            InferLogLine.fromBuildTarget(analyzeDepOneTarget, basePath.resolve(
+                    BuildTargets.getGenPath(
+                        filesystem, analyzeDepOneTarget, "infer-analysis-%s"))).toString(),
+            InferLogLine.fromBuildTarget(depOneTarget, basePath.resolve(
+                    BuildTargets.getGenPath(
+                        filesystem, depOneTarget, "infer-out-%s"))).toString(),
+            InferLogLine.fromBuildTarget(analyzeDepTwoTarget, basePath.resolve(
+                    BuildTargets.getGenPath(
+                        filesystem, analyzeDepTwoTarget, "infer-analysis-%s"))).toString(),
+            InferLogLine.fromBuildTarget(depTwoTarget, basePath.resolve(
+                    BuildTargets.getGenPath(
+                        filesystem, depTwoTarget, "infer-out-%s"))).toString(),
+            InferLogLine.fromBuildTarget(analyzeSimpleLibTarget, basePath.resolve(
+                    BuildTargets.getGenPath(
+                        filesystem, analyzeSimpleLibTarget, "infer-analysis-%s"))).toString(),
+            InferLogLine.fromBuildTarget(simpleCppTarget, basePath.resolve(
+                    BuildTargets.getGenPath(
+                        filesystem, simpleCppTarget, "infer-out-%s"))).toString()));
+
+    assertEquals(expectedOutput + "\n", loggedDeps);
+  }
+
+  @Test
+  public void testInferCaptureAllCxxBinaryWithDiamondDepsEmitsAllBuildRulesInvolvedWhenCacheHit()
+      throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
+        this,
+        tmp,
+        Optional.<String>absent());
+    workspace.enableDirCache(); // enable the cache
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+
+    BuildTarget inputBuildTarget = BuildTargetFactory.newInstance(
+        "//foo:binary_with_diamond_deps")
+        .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get());
+    String buildTargetName = inputBuildTarget.getFullyQualifiedName();
+
+    /*
+     * Build the given target and check that it succeeds.
+     */
+    workspace.runBuckCommand("build", buildTargetName).assertSuccess();
+
+    /*
+     * Check that building after clean will use the cache
+     */
+    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("build", buildTargetName).assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    ImmutableSet<BuildTarget> allInvolvedTargets = buildLog.getAllTargets();
+    for (BuildTarget bt : allInvolvedTargets) {
+      buildLog.assertTargetWasFetchedFromCache(bt.toString());
+    }
+
+    assertTrue(
+        Files.exists(
+            workspace.getPath(
+                BuildTargets.getGenPath(filesystem, inputBuildTarget, "infer-%s/infer-deps.txt"))));
+
+    String loggedDeps = workspace.getFileContents(
+        BuildTargets.getGenPath(filesystem, inputBuildTarget, "infer-%s/infer-deps.txt"));
+
+    String sanitizedSimpleCpp = sanitize("simple.cpp.o");
+    String sanitizedDepOne = sanitize("dep_one.c.o");
+    String sanitizedDepTwo = sanitize("dep_two.c.o");
+    String sanitizedSrcWithDeps = sanitize("src_with_deps.c.o");
+    BuildTarget simpleCppTarget = BuildTargetFactory.newInstance(
+        "//foo:simple_lib#default,infer-capture-" + sanitizedSimpleCpp);
+    BuildTarget depOneTarget = BuildTargetFactory.newInstance(
+        "//foo:diamond_dep_one#default,infer-capture-" + sanitizedDepOne);
+    BuildTarget depTwoTarget = BuildTargetFactory.newInstance(
+        "//foo:diamond_dep_two#default,infer-capture-" + sanitizedDepTwo);
+    BuildTarget srcWithDepsTarget = BuildTargetFactory.newInstance(
+        "//foo:binary_with_diamond_deps#default,infer-capture-" + sanitizedSrcWithDeps);
+
+    Path basePath = filesystem.getRootPath().toRealPath();
+    String expectedOutput = Joiner.on('\n').join(
+        ImmutableList.of(
+            InferLogLine.fromBuildTarget(srcWithDepsTarget, basePath.resolve(
+                    BuildTargets.getGenPath(
+                        filesystem, srcWithDepsTarget, "infer-out-%s"))).toString(),
+            InferLogLine.fromBuildTarget(depOneTarget, basePath.resolve(
+                    BuildTargets.getGenPath(
+                        filesystem, depOneTarget, "infer-out-%s"))).toString(),
+            InferLogLine.fromBuildTarget(depTwoTarget, basePath.resolve(
+                    BuildTargets.getGenPath(
+                        filesystem, depTwoTarget, "infer-out-%s"))).toString(),
+            InferLogLine.fromBuildTarget(simpleCppTarget, basePath.resolve(
+                    BuildTargets.getGenPath(
+                        filesystem, simpleCppTarget, "infer-out-%s"))).toString()));
+
+    assertEquals(expectedOutput + "\n", loggedDeps);
+  }
+
+  @Test
   public void testInferCxxBinaryWithDiamondDepsHasRuntimeDepsOfAllCaptureRulesWhenCacheHits(
   ) throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
