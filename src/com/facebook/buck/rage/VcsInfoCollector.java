@@ -53,23 +53,26 @@ public class VcsInfoCollector {
 
   public SourceControlInfo gatherScmInformation()
       throws InterruptedException, VersionControlCommandFailedException {
+    String currentRevisionId = vcCmdLineInterface.currentRevisionId();
     Optional<String> masterRevisionId = getMasterRevisionId();
     Optional<String> diffBase = masterRevisionId;
-    String currentRevisionId = vcCmdLineInterface.currentRevisionId();
 
     Optional<ImmutableSet<String>> filesChangedFromMasterBranchPoint = Optional.absent();
-    Optional<ImmutableSet<String>> diffBaseBookmarks = Optional.absent();
+    ImmutableSet<String> diffBaseBookmarks = ImmutableSet.of();
     Optional<String> producedDiff = Optional.absent();
 
     if (masterRevisionId.isPresent()) {
-      diffBase = getCommonAncestorRevisionId(currentRevisionId, masterRevisionId.get());
-      if (diffBase.isPresent()) {
-        filesChangedFromMasterBranchPoint = Optional.of(
-            vcCmdLineInterface.changedFiles(diffBase.get()));
-        diffBaseBookmarks = Optional.of(getBasedOffWhichTrackedBookmark(diffBase.get()));
-        producedDiff = Optional.of(
-            vcCmdLineInterface.diffBetweenRevisions(currentRevisionId, diffBase.get()));
-      }
+      diffBaseBookmarks = vcCmdLineInterface.trackedBookmarksOffRevisionId(
+          masterRevisionId.get(),
+          currentRevisionId,
+          TRACKED_BOOKMARKS);
+    }
+    if (!diffBaseBookmarks.isEmpty()) {
+      diffBase = Optional.of(vcCmdLineInterface.revisionId(diffBaseBookmarks.iterator().next()));
+      filesChangedFromMasterBranchPoint = Optional.of(
+          vcCmdLineInterface.changedFiles(diffBase.get()));
+      producedDiff = Optional.of(
+          vcCmdLineInterface.diffBetweenRevisions(currentRevisionId, diffBase.get()));
     }
 
     return SourceControlInfo.builder()
@@ -82,21 +85,6 @@ public class VcsInfoCollector {
         .build();
   }
 
-  private ImmutableSet<String> getBasedOffWhichTrackedBookmark(
-      String diffBaseRevisionId) throws InterruptedException {
-    ImmutableSet.Builder<String> bookmarkSet = ImmutableSet.builder();
-    for (String bookmark : TRACKED_BOOKMARKS) {
-      try {
-        if (diffBaseRevisionId.equals(vcCmdLineInterface.revisionId(bookmark))) {
-          bookmarkSet.add(bookmark);
-        }
-      } catch (VersionControlCommandFailedException e) {
-        LOG.info("%s bookmark doesn't point to %s.", bookmark, diffBaseRevisionId);
-      }
-    }
-    return bookmarkSet.build();
-  }
-
   private Optional<String> getMasterRevisionId() throws InterruptedException {
     try {
       return Optional.of(vcCmdLineInterface.revisionId(REMOTE_MASTER));
@@ -106,23 +94,11 @@ public class VcsInfoCollector {
     return Optional.absent();
   }
 
-  private Optional<String> getCommonAncestorRevisionId(String revisionOne, String revisionTwo)
-      throws InterruptedException {
-    try {
-      return Optional.of(vcCmdLineInterface.commonAncestor(revisionOne, revisionTwo));
-    } catch (VersionControlCommandFailedException e) {
-      LOG.info("Couldn't find common ancestor for %s & %s. Some information won't be available",
-          revisionOne,
-          revisionTwo);
-    }
-    return Optional.absent();
-  }
-
   @Value.Immutable
   @BuckStyleImmutable
   interface AbstractSourceControlInfo {
     String getCurrentRevisionId();
-    Optional<ImmutableSet<String>> getBasedOffWhichTracked();
+    ImmutableSet<String> getBasedOffWhichTracked();
     Optional<String> getRevisionIdOffTracked();
     @JsonIgnore
     Optional<String> getDiff();
