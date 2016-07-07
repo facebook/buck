@@ -388,6 +388,10 @@ public class SplitZipStep implements Step {
       BufferedWriter writer,
       List<Path> jarFiles,
       DexStore dexStore) throws IOException {
+    if (DexStore.RAW.equals(dexStore)) {
+      writer.write(".root_relative");
+      writer.newLine();
+    }
     for (int i = 0; i < jarFiles.size(); i++) {
       String filename = dexStore.fileNameForSecondary(i);
       String jarHash = hexSha1(jarFiles.get(i));
