@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,14 +13,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package foo;
 
-package com.facebook.buck.parser;
+public class A {
 
-import com.facebook.buck.rules.TargetNode;
-
-import java.io.IOException;
-import java.nio.file.Path;
-
-public interface TargetNodeListener {
-  void onCreate(Path buildFile, TargetNode<?> node) throws IOException;
 }

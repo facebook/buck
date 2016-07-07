@@ -25,6 +25,8 @@ import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistributedBuild;
 import com.facebook.buck.distributed.DistributedBuildFileHashes;
 import com.facebook.buck.distributed.DistributedBuildState;
+import com.facebook.buck.distributed.DistributedBuildTargetGraphCodec;
+import com.facebook.buck.distributed.DistributedBuildTypeCoercerFactory;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
@@ -37,8 +39,10 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildEngine;
@@ -46,8 +50,11 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.HttpService;
@@ -67,6 +74,7 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -375,8 +383,8 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private int executeDistributedBuild(
-      CommandRunnerParams params,
-      WeightedListeningExecutorService executorService)
+      final CommandRunnerParams params,
+      final WeightedListeningExecutorService executorService)
       throws IOException, InterruptedException, ActionGraphCreationException {
     ProjectFilesystem filesystem = params.getCell().getFilesystem();
 
@@ -393,13 +401,46 @@ public class BuildCommand extends AbstractCommand {
       TProtocol protocol = new TTupleProtocol(transport);
 
       try {
+        DistributedBuildTypeCoercerFactory typeCoercerFactory =
+            new DistributedBuildTypeCoercerFactory(params.getObjectMapper());
+        ParserTargetNodeFactory parserTargetNodeFactory =
+            DefaultParserTargetNodeFactory.createForDistributedBuild(
+                params.getBuckEventBus(),
+                new ConstructorArgMarshaller(typeCoercerFactory),
+                typeCoercerFactory);
+        DistributedBuildTargetGraphCodec targetGraphCodec = new DistributedBuildTargetGraphCodec(
+            params.getConsole(),
+            params.getClock(),
+            params.getCell().getFilesystem(),
+            params.getCell(),
+            params.getObjectMapper(),
+            parserTargetNodeFactory,
+            new Function<TargetNode<?>, Map<String, Object>>() {
+              @Nullable
+              @Override
+              public Map<String, Object> apply(TargetNode<?> input) {
+                try {
+                  return params.getParser().getRawTargetNode(
+                      params.getBuckEventBus(),
+                      params.getCell().getCell(input.getBuildTarget()),
+                      /* enableProfiling */ false,
+                      executorService,
+                      input);
+                } catch (BuildFileParseException | InterruptedException e) {
+                  throw new RuntimeException(e);
+                }
+              }
+            });
+
         if (loading) {
           DistributedBuildState state = DistributedBuildState.load(protocol);
-          BuckConfig buckConfig = state.createBuckConfig(filesystem);
+          BuckConfig rootCellBuckConfig = state.createBuckConfig(filesystem);
+          TargetGraph targetGraph = state.createTargetGraph(targetGraphCodec);
           params.getBuckEventBus().post(
               ConsoleEvent.info(
-                  "Done loading state. Aliases: %s",
-                  buckConfig.getAliases()));
+                  "Done loading state. Aliases %s, TargetNodes %s",
+                  rootCellBuckConfig.getAliases(),
+                  targetGraph.getNodes()));
         } else {
           TargetGraphAndBuildTargets targetGraphAndBuildTargets =
               createTargetGraph(params, executorService);
@@ -415,7 +456,9 @@ public class BuildCommand extends AbstractCommand {
               params.getBuckConfig().getKeySeed());
           BuildJobState jobState = DistributedBuildState.dump(
               buckConfig,
-              distributedBuildFileHashes);
+              distributedBuildFileHashes,
+              targetGraphCodec,
+              targetGraphAndBuildTargets.getTargetGraph());
           jobState.write(protocol);
           transport.flush();
         }

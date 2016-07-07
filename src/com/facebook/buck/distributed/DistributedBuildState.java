@@ -23,6 +23,7 @@ import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
 import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
@@ -51,14 +52,15 @@ public class DistributedBuildState {
 
   public static BuildJobState dump(
       BuckConfig buckConfig,
-      DistributedBuildFileHashes fileHashes
-  ) throws IOException, InterruptedException {
+      DistributedBuildFileHashes fileHashes,
+      DistributedBuildTargetGraphCodec targetGraphCodec,
+      TargetGraph targetGraph) throws IOException, InterruptedException {
     BuildJobState jobState = new BuildJobState();
     jobState.setBuckConfig(dumpConfig(buckConfig));
     jobState.setFileHashes(fileHashes.getFileHashes());
+    jobState.setTargetGraph(targetGraphCodec.dump(targetGraph.getNodes()));
     return jobState;
   }
-
 
   private static BuildJobStateBuckConfig dumpConfig(BuckConfig buckConfig) {
     BuildJobStateBuckConfig jobState = new BuildJobStateBuckConfig();
@@ -129,6 +131,11 @@ public class DistributedBuildState {
         remoteArchitecture,
         remotePlatform,
         ImmutableMap.copyOf(remoteBuckConfig.getUserEnvironment()));
+  }
+
+  public TargetGraph createTargetGraph(DistributedBuildTargetGraphCodec codec)
+      throws IOException, InterruptedException {
+    return codec.createTargetGraph(remoteState.getTargetGraph());
   }
 
 }

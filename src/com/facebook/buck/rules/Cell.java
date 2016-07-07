@@ -70,6 +70,7 @@ public class Cell {
   private final Watchman watchman;
   private final BuckConfig config;
   private final KnownBuildRuleTypes knownBuildRuleTypes;
+  private final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory;
   private final AndroidDirectoryResolver directoryResolver;
   private final String pythonInterpreter;
   private final String buildFileName;
@@ -122,6 +123,7 @@ public class Cell {
     PythonBuckConfig pythonConfig = new PythonBuckConfig(config, new ExecutableFinder());
     this.pythonInterpreter = pythonConfig.getPythonInterpreter();
 
+    this.knownBuildRuleTypesFactory = knownBuildRuleTypesFactory;
     this.knownBuildRuleTypes = knownBuildRuleTypesFactory.create(config);
 
     // The cache loader here uses a chunk of state from the to-be-minted cell. Creating this here
@@ -185,6 +187,22 @@ public class Cell {
       Clock clock) throws IOException, InterruptedException {
     Cache<Path, Cell> cells = CacheBuilder.newBuilder().build();
 
+    return new Cell(
+        filesystem,
+        console,
+        watchman,
+        config,
+        knownBuildRuleTypesFactory,
+        directoryResolver,
+        clock,
+        cells);
+  }
+
+  public Cell createCellForDistributedBuild(
+      Console console,
+      Clock clock,
+      ProjectFilesystem filesystem,
+      BuckConfig config) throws InterruptedException, IOException {
     return new Cell(
         filesystem,
         console,

@@ -15,10 +15,10 @@ NUM=`find src -name '*.java' | xargs grep ' = new ProjectFilesystem(' | wc -l`
 # Remove leading and trailing whitespace.
 NUM=$(echo $NUM)
 
-# Once in Main, once in Repository
-if [ "$NUM" = "2" ]; then
+# Once in Main, once in Repository, and once in DistributedBuildTargetGraphCodec
+if [ "$NUM" = "3" ]; then
   exit 0
 else
-  echo "There should be only two places where a ProjectFilesystem is created but there were $NUM."
+  echo "There should be only three places where a ProjectFilesystem is created but there were $NUM."
   exit 1
 fi

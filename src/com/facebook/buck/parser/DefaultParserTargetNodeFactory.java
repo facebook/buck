@@ -93,6 +93,23 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory {
         nodeListener);
   }
 
+  public static ParserTargetNodeFactory createForDistributedBuild(
+      BuckEventBus eventBus,
+      ConstructorArgMarshaller marshaller,
+      TypeCoercerFactory typeCoercerFactory) {
+    return new DefaultParserTargetNodeFactory(
+        eventBus,
+        marshaller,
+        typeCoercerFactory,
+        Optional.<LoadingCache<Cell, BuildFileTree>>absent(),
+        new TargetNodeListener() {
+          @Override
+          public void onCreate(Path buildFile, TargetNode<?> node) throws IOException {
+            // No-op.
+          }
+        });
+  }
+
   @Override
   public TargetNode<?> createTargetNode(
       Cell cell,

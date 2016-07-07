@@ -70,6 +70,13 @@ struct PathWithUnixSeparators {
   1: string path;
 }
 
+struct BuildJobStateBuildTarget {
+  1: optional string cellName;
+  2: string baseName;
+  3: string shortName;
+  4: set<string> flavors;
+}
+
 struct BuildJobStateFileHashEntry {
   1: optional PathWithUnixSeparators path;
   2: optional string archiveMemberPath; // Only present if this is a path to an archive member.
@@ -84,9 +91,21 @@ struct BuildJobStateFileHashes {
   2: optional list<BuildJobStateFileHashEntry> entries;
 }
 
+struct BuildJobStateTargetNode {
+  1: optional i32 fileSystemRootIndex;
+  2: optional string rawNode;
+  3: optional BuildJobStateBuildTarget buildTarget;
+}
+
+struct BuildJobStateTargetGraph {
+  1: optional map<i32, string> fileSystemRoots;
+  3: optional list<BuildJobStateTargetNode> nodes;
+}
+
 struct BuildJobState {
   1: optional BuildJobStateBuckConfig buckConfig;
   2: optional list<BuildJobStateFileHashes> fileHashes;
+  3: optional BuildJobStateTargetGraph targetGraph;
 }
 
 ##############################################################################

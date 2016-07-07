@@ -1,11 +1,15 @@
-#@# GENERATED FILE: DO NOT MODIFY 8626f025d8967db229a43cc17e4f535dab89aaad #@#
+#@# GENERATED FILE: DO NOT MODIFY 43d1270c0de7833d1bf24d835521d0c447a708a8 #@#
 {
   "distributed" : {
     "deps" : [
       "//src/com/facebook/buck/config:config",
+      "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/parser:parser",
+      "//src/com/facebook/buck/rules/coercer:types",
       "//src/com/facebook/buck/util/environment:platform",
       "//third-party/java/immutables:processor",
+      "//third-party/java/jackson:jackson-core",
       "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [
@@ -14,11 +18,15 @@
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/hashing:hashing",
       "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rule_key",
+      "//src/com/facebook/buck/rules:types",
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/slb:slb",
+      "//src/com/facebook/buck/timing:timing",
+      "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
