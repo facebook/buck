@@ -19,7 +19,7 @@ apple_bundle(
   deps = [':TestAppBinary'],
   binary = ':TestAppBinary',
   extension = 'app',
-  tests = [':TestAppTests'],
+  tests = [':TestAppTests', ':non_apple_test_should_be_ignored'],
   info_plist = 'Info.plist',
 )
 
@@ -33,6 +33,13 @@ apple_test(
     '//Libraries:Dep1',
     '//Libraries:Dep2',
   ],
+)
+
+sh_test(
+  name = 'non_apple_test_should_be_ignored',
+  test = 'dummy.sh',
+  args = [],
+  deps = [],
 )
 
 xcode_workspace_config(

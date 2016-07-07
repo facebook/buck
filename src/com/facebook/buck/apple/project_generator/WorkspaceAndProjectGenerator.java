@@ -27,6 +27,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
@@ -640,7 +641,7 @@ public class WorkspaceAndProjectGenerator {
     }
   }
 
-  private static void buildWorkspaceSchemes(
+  private void buildWorkspaceSchemes(
       TargetGraph projectGraph,
       boolean includeProjectTests,
       boolean includeDependenciesTests,
@@ -816,7 +817,7 @@ public class WorkspaceAndProjectGenerator {
    *
    * @return test targets that should be run.
    */
-  private static ImmutableSet<TargetNode<AppleTestDescription.Arg>> getOrderedTestNodes(
+  private ImmutableSet<TargetNode<AppleTestDescription.Arg>> getOrderedTestNodes(
       Optional<BuildTarget> mainTarget,
       TargetGraph targetGraph,
       boolean includeProjectTests,
@@ -845,10 +846,11 @@ public class WorkspaceAndProjectGenerator {
               if (castedNode.isPresent()) {
                 testsBuilder.add(castedNode.get());
               } else {
-                throw new HumanReadableException(
-                    "Test target specified in '%s' is not a test: '%s'",
+                buckEventBus.post(ConsoleEvent.warning(
+                    "Test target specified in '%s' is not a apple_test;" +
+                        " not including in project: '%s'",
                     node.getBuildTarget(),
-                    explicitTestTarget);
+                    explicitTestTarget));
               }
             } else {
               throw new HumanReadableException(
@@ -920,7 +922,7 @@ public class WorkspaceAndProjectGenerator {
     return builder.build();
   }
 
-  private static void buildWorkspaceSchemeTests(
+  private void buildWorkspaceSchemeTests(
       Optional<BuildTarget> mainTarget,
       TargetGraph projectGraph,
       boolean includeProjectTests,

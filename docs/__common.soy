@@ -962,6 +962,21 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {/template}
 
 /***/
+{template .tests_apple_arg}
+{call buck.arg}
+  {param name : 'tests' /}
+  {param default : '[]' /}
+  {param desc}
+  List of <a href="{ROOT}concept/build_target.html">build targets</a> that
+  identify the test rules that exercise this target.  Note that
+  non <a href="{ROOT}rule/apple_test.html"><code>apple_test</code></a> targets
+  will not be included in generated projects due to Xcode's limitations but will still work
+  with <a href="{ROOT}command/test.html"><code>buck test</code></a>.
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .test_label_arg}
 {call buck.arg}
   {param name: 'labels' /}
