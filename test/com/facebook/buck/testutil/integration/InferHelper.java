@@ -19,9 +19,8 @@ package com.facebook.buck.testutil.integration;
 
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.gson.GsonBuilder;
-
-import org.apache.commons.lang.ArrayUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -137,7 +136,7 @@ public class InferHelper {
     }
 
     public String[] toCrossCellCLIArgs(BuildTarget buildTarget) {
-      String[] baseConfig = {
+      ImmutableList<String> baseConfig = ImmutableList.of(
           buildTarget.getFullyQualifiedName(),
           "--config",
           "*//infer.infer_bin=" + inferBin.toString(),
@@ -147,17 +146,18 @@ public class InferHelper {
           "*//infer.clang_plugin=" + clangPlugin.toString(),
           "--config",
           "build.depfiles=cache"
-      };
+      );
 
-      String[] blacklistRegex = {};
+      ImmutableList<String> blacklistRegex = ImmutableList.of();
       if (rawBlacklistRegex.isPresent()) {
-        blacklistRegex = new String[] {
+        blacklistRegex = ImmutableList.of(
             "--config",
-            "*//infer.blacklist_regex=" + rawBlacklistRegex.get(),
-        };
+            "*//infer.blacklist_regex=" + rawBlacklistRegex.get()
+        );
       }
 
-      return (String[]) ArrayUtils.addAll(baseConfig, blacklistRegex);
+      return ImmutableList.builder().addAll(baseConfig).addAll(blacklistRegex).build().toArray(
+          new String[baseConfig.size() + blacklistRegex.size()]);
     }
 
     public String toBuckConfigLines() {
