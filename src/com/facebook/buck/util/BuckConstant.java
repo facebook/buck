@@ -24,7 +24,6 @@ import java.nio.file.Paths;
 import javax.annotation.Nullable;
 
 public class BuckConstant {
-  public static final String NON_COMMAND_LOG_FILE_SUFFIX = "non-command.log";
   public static final String BUCK_LOG_FILE_NAME = "buck.log";
   public static final String RULE_KEY_LOGGER_FILE_NAME = "rule_key_logger.tsv";
 
@@ -41,7 +40,6 @@ public class BuckConstant {
   private static final String DEFAULT_CACHE_DIR = getBuckOutputDirectory() + "/cache";
 
   // We put a . at the front of the name so Spotlight doesn't try to index the contents on OS X.
-  private static final String TRASH_DIR = getBuckOutputDirectory() + "/.trash";
   private static final Path TRASH_PATH = getBuckOutputPath().resolve(".trash");
 
   private BuckConstant() {}
@@ -89,10 +87,6 @@ public class BuckConstant {
 
   public static String getDefaultCacheDir() {
     return DEFAULT_CACHE_DIR;
-  }
-
-  public static String getTrashDir() {
-    return TRASH_DIR;
   }
 
   public static Path getTrashPath() {
