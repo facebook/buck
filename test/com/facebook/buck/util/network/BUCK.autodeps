@@ -1,8 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY 056fb9a272f4be4213e3792ed11cd2698b5843a4 #@#
+#@# GENERATED FILE: DO NOT MODIFY 633e78dea2450117cd3341d714d7ed4142714245 #@#
 {
   "network" : {
     "deps" : [
-      "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util/network:network",

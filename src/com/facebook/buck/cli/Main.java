@@ -195,7 +195,6 @@ public final class Main {
   private static final TimeSpan HANG_DETECTOR_TIMEOUT =
       new TimeSpan(5, TimeUnit.MINUTES);
 
-
   /**
    * Path to a directory of static content that should be served by the {@link WebServer}.
    */

@@ -16,13 +16,8 @@
 
 package com.facebook.buck.util.network;
 
-import com.facebook.buck.event.LogviewFormatter;
 import com.google.common.util.concurrent.ListenableFuture;
 
 public abstract class ScribeLogger implements AutoCloseable {
   public abstract ListenableFuture<Void> log(String category, Iterable<String> lines);
-
-  public ListenableFuture<Void> log(String category, Throwable t) {
-      return log(category, LogviewFormatter.format(t));
-  }
 }

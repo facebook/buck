@@ -1,8 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY 75f506b270ddd262cdcb9111419004d874e71628 #@#
+#@# GENERATED FILE: DO NOT MODIFY 6962efc0184163188f917d9cb9f4991d28a76d8a #@#
 {
   "network" : {
     "deps" : [
-      "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",
