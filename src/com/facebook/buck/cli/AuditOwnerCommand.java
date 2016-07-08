@@ -18,63 +18,17 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.query.QueryException;
-import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Sets;
-import com.google.common.collect.TreeMultimap;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 
 public class AuditOwnerCommand extends AbstractCommand {
-
-  @VisibleForTesting
-  static final class OwnersReport {
-    final ImmutableSetMultimap<TargetNode<?>, Path> owners;
-    final ImmutableSet<Path> inputsWithNoOwners;
-    final ImmutableSet<String> nonExistentInputs;
-    final ImmutableSet<String> nonFileInputs;
-
-    public OwnersReport(SetMultimap<TargetNode<?>, Path> owners,
-        Set<Path> inputsWithNoOwners,
-        Set<String> nonExistentInputs,
-        Set<String> nonFileInputs) {
-      this.owners = ImmutableSetMultimap.copyOf(owners);
-      this.inputsWithNoOwners = ImmutableSet.copyOf(inputsWithNoOwners);
-      this.nonExistentInputs = ImmutableSet.copyOf(nonExistentInputs);
-      this.nonFileInputs = ImmutableSet.copyOf(nonFileInputs);
-    }
-
-    public static OwnersReport emptyReport() {
-      return new OwnersReport(
-          ImmutableSetMultimap.<TargetNode<?>, Path>of(),
-          Sets.<Path>newHashSet(),
-          Sets.<String>newHashSet(),
-          Sets.<String>newHashSet());
-    }
-
-    public OwnersReport updatedWith(OwnersReport other) {
-      SetMultimap<TargetNode<?>, Path> updatedOwners =
-          TreeMultimap.create(owners);
-      updatedOwners.putAll(other.owners);
-
-      return new OwnersReport(
-          updatedOwners,
-          Sets.intersection(inputsWithNoOwners, other.inputsWithNoOwners),
-          Sets.union(nonExistentInputs, other.nonExistentInputs),
-          Sets.union(nonFileInputs, other.nonFileInputs));
-    }
-  }
 
   @Option(name = "--json",
       usage = "Output in JSON format")

@@ -70,9 +70,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * Outputs targets that own a specified list of files.
+ * Reports targets that own a specified list of files.
  */
-public class AuditOwnerCommandTest {
+public class OwnersReportTest {
   private TestConsole console;
 
   public static class FakeDescription implements Description<FakeDescription.FakeArg> {
@@ -199,7 +199,7 @@ public class AuditOwnerCommandTest {
     buckConfig = FakeBuckConfig.builder().build();
   }
 
-  private CommandRunnerParams createAuditOwnerCommandRunnerParams(ProjectFilesystem filesystem)
+  private CommandRunnerParams createOwnersReportRunnerParams(ProjectFilesystem filesystem)
       throws IOException, InterruptedException {
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
@@ -238,7 +238,7 @@ public class AuditOwnerCommandTest {
     BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
 
-    CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
+    CommandRunnerParams params = createOwnersReportRunnerParams(filesystem);
     OwnersReport report = OwnersReport.generateOwnersReport(
         params,
         targetNode,
@@ -269,7 +269,7 @@ public class AuditOwnerCommandTest {
     BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
 
-    CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
+    CommandRunnerParams params = createOwnersReportRunnerParams(filesystem);
     OwnersReport report = OwnersReport.generateOwnersReport(
         params,
         targetNode,
@@ -300,7 +300,7 @@ public class AuditOwnerCommandTest {
     BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
 
-    CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
+    CommandRunnerParams params = createOwnersReportRunnerParams(filesystem);
     OwnersReport report = OwnersReport.generateOwnersReport(
         params,
         targetNode,
@@ -332,7 +332,7 @@ public class AuditOwnerCommandTest {
         target,
         ImmutableSet.of(Paths.get("java/somefolder")));
 
-    CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
+    CommandRunnerParams params = createOwnersReportRunnerParams(filesystem);
     OwnersReport report = OwnersReport.generateOwnersReport(
         params,
         targetNode,
@@ -367,7 +367,7 @@ public class AuditOwnerCommandTest {
     BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(target, inputPaths);
 
-    CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
+    CommandRunnerParams params = createOwnersReportRunnerParams(filesystem);
     OwnersReport report = OwnersReport.generateOwnersReport(
         params,
         targetNode,
@@ -406,7 +406,7 @@ public class AuditOwnerCommandTest {
     TargetNode<?> targetNode1 = createTargetNode(target1, inputPaths);
     TargetNode<?> targetNode2 = createTargetNode(target2, inputPaths);
 
-    CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
+    CommandRunnerParams params = createOwnersReportRunnerParams(filesystem);
     OwnersReport report = OwnersReport.emptyReport();
     report = report.updatedWith(
         OwnersReport.generateOwnersReport(params, targetNode1, inputs));
