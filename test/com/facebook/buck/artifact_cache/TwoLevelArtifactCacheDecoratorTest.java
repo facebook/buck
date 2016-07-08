@@ -28,7 +28,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.MoreExecutors;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -54,7 +53,6 @@ public class TwoLevelArtifactCacheDecoratorTest {
              inMemoryArtifactCache,
              new ProjectFilesystem(tmp.getRoot()),
              BuckEventBusFactory.newInstance(),
-             MoreExecutors.newDirectExecutorService(),
              /* performTwoLevelStores */ true,
              /* minimumTwoLevelStoredArtifactSize */ 0L,
              /* maximumTwoLevelStoredArtifactSize */ Optional.<Long>absent())) {
@@ -92,7 +90,6 @@ public class TwoLevelArtifactCacheDecoratorTest {
              inMemoryArtifactCache,
              new ProjectFilesystem(tmp.getRoot()),
              BuckEventBusFactory.newInstance(),
-             MoreExecutors.newDirectExecutorService(),
              /* performTwoLevelStores */ true,
              /* minimumTwoLevelStoredArtifactSize */ 5L,
              /* maximumTwoLevelStoredArtifactSize */ Optional.of(10L))) {
@@ -137,7 +134,6 @@ public class TwoLevelArtifactCacheDecoratorTest {
              inMemoryArtifactCache,
              new ProjectFilesystem(tmp.getRoot()),
              BuckEventBusFactory.newInstance(),
-             MoreExecutors.newDirectExecutorService(),
              /* performTwoLevelStores */ true,
              /* minimumTwoLevelStoredArtifactSize */ 0L,
              /* maximumTwoLevelStoredArtifactSize */ Optional.<Long>absent())) {
@@ -178,7 +174,6 @@ public class TwoLevelArtifactCacheDecoratorTest {
              inMemoryArtifactCache,
              new ProjectFilesystem(tmp.getRoot()),
              BuckEventBusFactory.newInstance(),
-             MoreExecutors.newDirectExecutorService(),
              /* performTwoLevelStores */ true,
              /* minimumTwoLevelStoredArtifactSize */ 0L,
              /* maximumTwoLevelStoredArtifactSize */ Optional.<Long>absent());
@@ -186,7 +181,6 @@ public class TwoLevelArtifactCacheDecoratorTest {
           inMemoryArtifactCache,
           new ProjectFilesystem(tmp.getRoot()),
           BuckEventBusFactory.newInstance(),
-          MoreExecutors.newDirectExecutorService(),
              /* performTwoLevelStores */ false,
              /* minimumTwoLevelStoredArtifactSize */ 0L,
              /* maximumTwoLevelStoredArtifactSize */ Optional.<Long>absent())) {

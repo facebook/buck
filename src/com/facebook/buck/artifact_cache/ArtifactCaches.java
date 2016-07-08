@@ -198,7 +198,6 @@ public class ArtifactCaches {
         result,
         projectFilesystem,
         buckEventBus,
-        httpWriteExecutorService,
         buckConfig.getTwoLevelCachingEnabled(),
         buckConfig.getTwoLevelCachingMinimumSize(),
         buckConfig.getTwoLevelCachingMaximumSize());

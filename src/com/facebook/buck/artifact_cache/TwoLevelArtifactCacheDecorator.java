@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -63,7 +62,6 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
 
   private final ArtifactCache delegate;
   private final ProjectFilesystem projectFilesystem;
-  private final ListeningExecutorService listeningExecutorService;
   private final Path emptyFilePath;
   private final boolean performTwoLevelStores;
   private final long minimumTwoLevelStoredArtifactSize;
@@ -78,16 +76,15 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
       ArtifactCache delegate,
       ProjectFilesystem projectFilesystem,
       BuckEventBus buckEventBus,
-      ListeningExecutorService listeningExecutorService,
       boolean performTwoLevelStores,
       long minimumTwoLevelStoredArtifactSize,
       Optional<Long> maximumTwoLevelStoredArtifactSize) {
     this.delegate = delegate;
     this.projectFilesystem = projectFilesystem;
-    this.listeningExecutorService = listeningExecutorService;
     this.performTwoLevelStores = performTwoLevelStores;
     this.minimumTwoLevelStoredArtifactSize = minimumTwoLevelStoredArtifactSize;
     this.maximumTwoLevelStoredArtifactSize = maximumTwoLevelStoredArtifactSize;
+
     Path scratchDir = projectFilesystem.getBuckPaths().getScratchDir();
     try {
       projectFilesystem.mkdirs(scratchDir);
@@ -177,18 +174,18 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
       final ArtifactInfo info,
       final BorrowablePath output) {
 
-    ListenableFuture<Optional<String>> contentHash = Futures.transformAsync(
+    return Futures.transformAsync(
         Futures.<Void>immediateFuture(null),
-        new AsyncFunction<Void, Optional<String>>() {
+        new AsyncFunction<Void, Boolean>() {
           @Override
-          public ListenableFuture<Optional<String>> apply(Void input) throws Exception {
+          public ListenableFuture<Boolean> apply(Void input) throws Exception {
             long fileSize = projectFilesystem.getFileSize(output.getPath());
 
             if (!performTwoLevelStores ||
                 fileSize < minimumTwoLevelStoredArtifactSize ||
                 (maximumTwoLevelStoredArtifactSize.isPresent() &&
                     fileSize > maximumTwoLevelStoredArtifactSize.get())) {
-              return Futures.immediateFuture(Optional.<String>absent());
+              return Futures.immediateFuture(false);
             }
 
             long hashComputationStart = System.currentTimeMillis();
@@ -196,42 +193,27 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
             long hashComputationEnd = System.currentTimeMillis();
             secondLevelHashComputationTimeMs.addSample(hashComputationEnd - hashComputationStart);
 
-            return Futures.transform(
-                delegate.store(
-                    ArtifactInfo.builder().addRuleKeys(new RuleKey(hashCode)).build(),
-                    output),
-                Functions.constant(Optional.of(hashCode)));
-          }
-        },
-        listeningExecutorService
-    );
-
-    return Futures.transformAsync(
-        contentHash,
-        new AsyncFunction<Optional<String>, Boolean>() {
-          @Override
-          public ListenableFuture<Boolean> apply(Optional<String> contentHash) throws Exception {
-            if (!contentHash.isPresent()) {
-              return Futures.immediateFuture(false);
-            }
-
             ImmutableMap<String, String> metadataWithCacheKey =
                 ImmutableMap.<String, String>builder()
                     .putAll(info.getMetadata())
-                    .put(METADATA_KEY, contentHash.get())
+                    .put(METADATA_KEY, hashCode)
                     .build();
 
             return Futures.transform(
-                delegate.store(
-                    ArtifactInfo.builder()
-                        .setRuleKeys(info.getRuleKeys())
-                        .setMetadata(metadataWithCacheKey)
-                        .build(),
-                    BorrowablePath.notBorrowablePath(emptyFilePath)),
+                Futures.allAsList(
+                    delegate.store(
+                        ArtifactInfo.builder()
+                            .setRuleKeys(info.getRuleKeys())
+                            .setMetadata(metadataWithCacheKey)
+                            .build(),
+                        BorrowablePath.notBorrowablePath(emptyFilePath)),
+                    delegate.store(
+                        ArtifactInfo.builder().addRuleKeys(new RuleKey(hashCode)).build(),
+                        output)
+                ),
                 Functions.constant(true));
           }
-        },
-        listeningExecutorService
+        }
     );
   }
 
