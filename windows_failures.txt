@@ -1,8 +1,10 @@
+!TestBuildWithBuck
+!TestUUIDFix
 !com.facebook.buck.cli.ExternalTestRunnerIntegrationTest
 !com.facebook.buck.cli.RunCommandIntegrationTest
 !com.facebook.buck.cxx.ArchiveStepIntegrationTest#thatGeneratedArchivesAreDeterministic
-!com.facebook.buck.cxx.CxxBinaryDescriptionTest#createBuildRule
 !com.facebook.buck.cxx.CxxBinaryDescriptionTest#binaryShouldLinkOwnRequiredLibraries
+!com.facebook.buck.cxx.CxxBinaryDescriptionTest#createBuildRule
 !com.facebook.buck.cxx.CxxBinaryIntegrationTest
 !com.facebook.buck.cxx.CxxCompilationDatabaseIntegrationTest
 !com.facebook.buck.cxx.CxxCompilationDatabaseTest
@@ -28,6 +30,7 @@
 !com.facebook.buck.dotnet.CSharpLibraryIntegrationTest#shouldCompileLibraryWithSystemProvidedDeps
 !com.facebook.buck.python.PrebuiltPythonLibraryIntegrationTest
 !com.facebook.buck.python.PythonBinaryIntegrationTest
+!com.facebook.buck.python.PythonSrcZipIntegrationTest#testDependingOnSrcZipWorks
 !com.facebook.buck.python.PythonTestIntegrationTest
 !com.facebook.buck.step.fs.SymCopyStepTest#testSymCopyStep
 !com.facebook.buck.thrift.ThriftLibraryIntegrationTest#shouldBeAbleToConstructACxxLibraryFromThrift
