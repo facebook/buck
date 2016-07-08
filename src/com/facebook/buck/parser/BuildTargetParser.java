@@ -16,15 +16,17 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorParser;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Interner;
+import com.google.common.collect.Interners;
 
 import java.util.HashSet;
 import java.util.List;
@@ -41,6 +43,10 @@ public class BuildTargetParser {
   private static final String BUILD_RULE_SEPARATOR = ":";
   private static final Splitter BUILD_RULE_SEPARATOR_SPLITTER = Splitter.on(BUILD_RULE_SEPARATOR);
   private static final Set<String> INVALID_BASE_NAME_PARTS = ImmutableSet.of("", ".", "..");
+
+
+  private final Interner<UnflavoredBuildTarget> unflavoredTargetCache = Interners.newWeakInterner();
+  private final Interner<BuildTarget> flavoredTargetCache = Interners.newWeakInterner();
 
   private final FlavorParser flavorParser = new FlavorParser();
 
@@ -114,11 +120,14 @@ public class BuildTargetParser {
             // We are setting the cell name so we can print it later
             .setCell(givenCellName);
 
-    BuildTarget.Builder builder = BuildTarget.builder(unflavoredBuilder.build());
+    UnflavoredBuildTarget unflavoredBuildTarget =
+        unflavoredTargetCache.intern(unflavoredBuilder.build());
+
+    BuildTarget.Builder builder = BuildTarget.builder(unflavoredBuildTarget);
     for (String flavor : flavorNames) {
       builder.addFlavors(ImmutableFlavor.of(flavor));
     }
-    return builder.build();
+    return flavoredTargetCache.intern(builder.build());
   }
 
   protected static void checkBaseName(String baseName, String buildTargetName) {
