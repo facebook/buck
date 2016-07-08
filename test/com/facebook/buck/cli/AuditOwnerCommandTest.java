@@ -239,7 +239,7 @@ public class AuditOwnerCommandTest {
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
 
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
-    AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.generateOwnersReport(
+    OwnersReport report = OwnersReport.generateOwnersReport(
         params,
         targetNode,
         inputs);
@@ -270,7 +270,7 @@ public class AuditOwnerCommandTest {
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
 
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
-    AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.generateOwnersReport(
+    OwnersReport report = OwnersReport.generateOwnersReport(
         params,
         targetNode,
         inputs);
@@ -301,7 +301,7 @@ public class AuditOwnerCommandTest {
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
 
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
-    AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.generateOwnersReport(
+    OwnersReport report = OwnersReport.generateOwnersReport(
         params,
         targetNode,
         inputs);
@@ -333,7 +333,7 @@ public class AuditOwnerCommandTest {
         ImmutableSet.of(Paths.get("java/somefolder")));
 
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
-    AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.generateOwnersReport(
+    OwnersReport report = OwnersReport.generateOwnersReport(
         params,
         targetNode,
         inputs);
@@ -368,7 +368,7 @@ public class AuditOwnerCommandTest {
     TargetNode<?> targetNode = createTargetNode(target, inputPaths);
 
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
-    AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.generateOwnersReport(
+    OwnersReport report = OwnersReport.generateOwnersReport(
         params,
         targetNode,
         inputs);
@@ -407,11 +407,11 @@ public class AuditOwnerCommandTest {
     TargetNode<?> targetNode2 = createTargetNode(target2, inputPaths);
 
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
-    AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.OwnersReport.emptyReport();
+    OwnersReport report = OwnersReport.emptyReport();
     report = report.updatedWith(
-        AuditOwnerCommand.generateOwnersReport(params, targetNode1, inputs));
+        OwnersReport.generateOwnersReport(params, targetNode1, inputs));
     report = report.updatedWith(
-        AuditOwnerCommand.generateOwnersReport(params, targetNode2, inputs));
+        OwnersReport.generateOwnersReport(params, targetNode2, inputs));
 
     assertTrue(report.nonFileInputs.isEmpty());
     assertTrue(report.nonExistentInputs.isEmpty());

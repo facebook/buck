@@ -324,7 +324,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     try {
       BuildFileTree buildFileTree = Preconditions.checkNotNull(
           buildFileTrees.get(params.getCell()));
-      AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.buildOwnersReport(
+      OwnersReport report = OwnersReport.buildOwnersReport(
           params,
           buildFileTree,
           executor,

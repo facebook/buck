@@ -17,38 +17,23 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.model.BuildFileTree;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
-import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class AuditOwnerCommand extends AbstractCommand {
@@ -111,15 +96,6 @@ public class AuditOwnerCommand extends AbstractCommand {
     this.arguments = arguments;
   }
 
-  /**
-   * @return relative paths under the project root
-   */
-  public static Iterable<Path> getArgumentsAsPaths(Path projectRoot, Iterable<String> args)
-      throws IOException {
-    return PathArguments.getCanonicalFilesUnderProjectRoot(projectRoot, args)
-        .relativePathsUnderProjectRoot;
-  }
-
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     if (params.getConsole().getAnsi().isAnsiTerminal()) {
@@ -150,115 +126,9 @@ public class AuditOwnerCommand extends AbstractCommand {
     }
   }
 
-  static OwnersReport buildOwnersReport(
-      CommandRunnerParams params,
-      BuildFileTree buildFileTree,
-      ListeningExecutorService executor,
-      Iterable<String> arguments)
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
-    ProjectFilesystem cellFilesystem = params.getCell().getFilesystem();
-    final Path rootPath = cellFilesystem.getRootPath();
-    Preconditions.checkState(rootPath.isAbsolute());
-    Map<Path, ImmutableSet<TargetNode<?>>> targetNodes = Maps.newHashMap();
-    OwnersReport report = OwnersReport.emptyReport();
-
-    for (Path filePath : getArgumentsAsPaths(rootPath, arguments)) {
-      Optional<Path> basePath = buildFileTree.getBasePathOfAncestorTarget(filePath);
-      if (!basePath.isPresent()) {
-        report = report.updatedWith(
-            new OwnersReport(
-                ImmutableSetMultimap.<TargetNode<?>, Path>of(),
-                /* inputWithNoOwners */ ImmutableSet.of(filePath),
-                Sets.<String>newHashSet(),
-                Sets.<String>newHashSet()));
-        continue;
-      }
-
-      Path buckFile = cellFilesystem.resolve(basePath.get())
-          .resolve(params.getCell().getBuildFileName());
-      Preconditions.checkState(cellFilesystem.exists(buckFile));
-
-      // Parse buck files and load target nodes.
-      if (!targetNodes.containsKey(buckFile)) {
-        try {
-          targetNodes.put(
-              buckFile,
-              params.getParser().getAllTargetNodes(
-                  params.getBuckEventBus(),
-                  params.getCell(),
-                  /* enable profiling */ false,
-                  executor,
-                  buckFile));
-        } catch (BuildFileParseException e) {
-          Path targetBasePath = MorePaths.relativize(rootPath, rootPath.resolve(basePath.get()));
-          String targetBaseName = "//" + MorePaths.pathWithUnixSeparators(targetBasePath);
-
-          params
-              .getConsole()
-              .getStdErr()
-              .format("Could not parse build targets for %s", targetBaseName);
-          throw e;
-        }
-      }
-
-      for (TargetNode<?> targetNode : targetNodes.get(buckFile)) {
-        report = report.updatedWith(
-            generateOwnersReport(
-                params,
-                targetNode,
-                ImmutableList.of(filePath.toString())));
-      }
-    }
-    return report;
-  }
-
   @Override
   public boolean isReadOnly() {
     return true;
-  }
-
-  @VisibleForTesting
-  static OwnersReport generateOwnersReport(
-      CommandRunnerParams params,
-      TargetNode<?> targetNode,
-      Iterable<String> filePaths) {
-
-    // Process arguments assuming they are all relative file paths.
-    Set<Path> inputs = Sets.newHashSet();
-    Set<String> nonExistentInputs = Sets.newHashSet();
-    Set<String> nonFileInputs = Sets.newHashSet();
-
-    for (String filePath : filePaths) {
-      File file = params.getCell().getFilesystem().getFileForRelativePath(filePath);
-      if (!file.exists()) {
-        nonExistentInputs.add(filePath);
-      } else if (!file.isFile()) {
-        nonFileInputs.add(filePath);
-      } else {
-        inputs.add(Paths.get(filePath));
-      }
-    }
-
-    // Try to find owners for each valid and existing file.
-    Set<Path> inputsWithNoOwners = Sets.newHashSet(inputs);
-    SetMultimap<TargetNode<?>, Path> owners = TreeMultimap.create();
-    for (final Path commandInput : inputs) {
-      Predicate<Path> startsWith = new Predicate<Path>() {
-        @Override
-        public boolean apply(Path input) {
-          return !commandInput.equals(input) && commandInput.startsWith(input);
-        }
-      };
-
-      Set<Path> ruleInputs = targetNode.getInputs();
-      if (ruleInputs.contains(commandInput) ||
-          FluentIterable.from(ruleInputs).anyMatch(startsWith)) {
-        inputsWithNoOwners.remove(commandInput);
-        owners.put(targetNode, commandInput);
-      }
-    }
-
-    return new OwnersReport(owners, inputsWithNoOwners, nonExistentInputs, nonFileInputs);
   }
 
   @Override
