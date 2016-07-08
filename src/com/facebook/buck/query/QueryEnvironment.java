@@ -227,7 +227,9 @@ public interface QueryEnvironment {
       throws InterruptedException, QueryException;
 
   /** Returns the targets that own one or more of the given files. */
-  ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files)
+  ImmutableSet<QueryTarget> getFileOwners(
+      ImmutableList<String> files,
+      ListeningExecutorService executor)
       throws InterruptedException, QueryException;
 
   /** Returns the existing targets in the value of `attribute` of the given `target`. */

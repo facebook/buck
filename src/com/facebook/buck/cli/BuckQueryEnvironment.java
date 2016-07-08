@@ -318,14 +318,16 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files)
-      throws InterruptedException, QueryException {
+  public ImmutableSet<QueryTarget> getFileOwners(
+      ImmutableList<String> files,
+      ListeningExecutorService executor) throws InterruptedException, QueryException {
     try {
       BuildFileTree buildFileTree = Preconditions.checkNotNull(
           buildFileTrees.get(params.getCell()));
-      AuditOwnerCommand.OwnersReport report = new AuditOwnerCommand().buildOwnersReport(
+      AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.buildOwnersReport(
           params,
           buildFileTree,
+          executor,
           files);
       return getTargetsFromBuildTargetsContainer(report.owners.keySet());
     } catch (BuildFileParseException | BuildTargetException | IOException e) {

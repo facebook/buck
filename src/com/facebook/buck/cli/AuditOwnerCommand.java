@@ -22,7 +22,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.model.FilesystemBackedBuildFileTree;
+import com.facebook.buck.query.QueryException;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.annotations.VisibleForTesting;
@@ -35,10 +35,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -52,8 +52,6 @@ import java.util.Map;
 import java.util.Set;
 
 public class AuditOwnerCommand extends AbstractCommand {
-
-  private static final int BUILD_TARGET_ERROR = 13;
 
   @VisibleForTesting
   static final class OwnersReport {
@@ -124,10 +122,6 @@ public class AuditOwnerCommand extends AbstractCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(
-        params.getCell().getFilesystem(),
-        params.getCell().getBuildFileName());
-
     if (params.getConsole().getAnsi().isAnsiTerminal()) {
       params.getBuckEventBus().post(ConsoleEvent.info(
           "'buck audit owner' is deprecated. Please use 'buck query' instead. e.g.\n\t%s\n\n" +
@@ -135,23 +129,31 @@ public class AuditOwnerCommand extends AbstractCommand {
           QueryCommand.buildAuditOwnerQueryExpression(getArguments(), shouldGenerateJsonOutput())));
     }
 
-    try {
-      OwnersReport report = buildOwnersReport(
+    BuckQueryEnvironment env = new BuckQueryEnvironment(params, getEnableParserProfiling());
+    try (CommandThreadManager pool = new CommandThreadManager(
+        "Audit",
+        getConcurrencyLimit(params.getBuckConfig()))) {
+      return QueryCommand.runMultipleQuery(
           params,
-          buildFileTree,
-          getArguments());
-      printReport(params, report);
-    } catch (BuildFileParseException | BuildTargetException e) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return BUILD_TARGET_ERROR;
+          env,
+          pool.getExecutor(),
+          "owner('%s')",
+          getArguments(),
+          shouldGenerateJsonOutput());
+    } catch (QueryException e) {
+      if (e.getCause() instanceof InterruptedException) {
+        throw (InterruptedException) e.getCause();
+      }
+      params.getBuckEventBus().post(
+          ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      return 1;
     }
-    return 0;
   }
 
-  OwnersReport buildOwnersReport(
+  static OwnersReport buildOwnersReport(
       CommandRunnerParams params,
       BuildFileTree buildFileTree,
+      ListeningExecutorService executor,
       Iterable<String> arguments)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
     ProjectFilesystem cellFilesystem = params.getCell().getFilesystem();
@@ -178,16 +180,14 @@ public class AuditOwnerCommand extends AbstractCommand {
 
       // Parse buck files and load target nodes.
       if (!targetNodes.containsKey(buckFile)) {
-        try (CommandThreadManager pool = new CommandThreadManager(
-            "AuditOwner",
-            getConcurrencyLimit(params.getBuckConfig()))){
+        try {
           targetNodes.put(
               buckFile,
               params.getParser().getAllTargetNodes(
                   params.getBuckEventBus(),
                   params.getCell(),
                   /* enable profiling */ false,
-                  pool.getExecutor(),
+                  executor,
                   buckFile));
         } catch (BuildFileParseException e) {
           Path targetBasePath = MorePaths.relativize(rootPath, rootPath.resolve(basePath.get()));
@@ -259,43 +259,6 @@ public class AuditOwnerCommand extends AbstractCommand {
     }
 
     return new OwnersReport(owners, inputsWithNoOwners, nonExistentInputs, nonFileInputs);
-  }
-
-  private void printReport(CommandRunnerParams params, OwnersReport report) throws IOException {
-    if (shouldGenerateJsonOutput()) {
-      printOwnersOnlyJsonReport(params, report);
-    } else {
-      printOwnersOnlyReport(params, report);
-    }
-  }
-
-  /**
-   * Print only targets which were identified as owners.
-   */
-  private void printOwnersOnlyReport(CommandRunnerParams params, OwnersReport report) {
-    Set<TargetNode<?>> sortedTargetNodes = report.owners.keySet();
-    for (TargetNode<?> targetNode : sortedTargetNodes) {
-      params.getConsole().getStdOut().println(targetNode.getBuildTarget().getFullyQualifiedName());
-    }
-  }
-
-  /**
-   * Print only targets which were identified as owners in JSON.
-   */
-  @VisibleForTesting
-  void printOwnersOnlyJsonReport(CommandRunnerParams params, OwnersReport report)
-      throws IOException {
-    final Multimap<String, String> output = TreeMultimap.create();
-
-    Set<TargetNode<?>> sortedTargetNodes = report.owners.keySet();
-    for (TargetNode<?> targetNode : sortedTargetNodes) {
-      Set<Path> files = report.owners.get(targetNode);
-      for (Path input : files) {
-        output.put(input.toString(), targetNode.getBuildTarget().getFullyQualifiedName());
-      }
-    }
-
-    params.getObjectMapper().writeValue(params.getConsole().getStdOut(), output.asMap());
   }
 
   @Override

@@ -57,7 +57,8 @@ public class OwnerFunction implements QueryFunction {
       QueryEnvironment env,
       ImmutableList<Argument> args,
       ListeningExecutorService executor) throws QueryException, InterruptedException {
-    return Sets.newHashSet(env.getFileOwners(ImmutableList.of(args.get(0).getWord())));
+
+    return Sets.newHashSet(env.getFileOwners(ImmutableList.of(args.get(0).getWord()), executor));
   }
 
 }

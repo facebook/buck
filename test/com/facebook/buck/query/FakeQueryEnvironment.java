@@ -88,7 +88,9 @@ public class FakeQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files)
+  public ImmutableSet<QueryTarget> getFileOwners(
+      ImmutableList<String> files,
+      ListeningExecutorService executor)
       throws InterruptedException, QueryException {
     throw new QueryException("Method not implemented in FakeQueryEnvironment");
   }

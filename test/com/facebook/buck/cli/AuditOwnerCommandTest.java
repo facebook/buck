@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import static com.facebook.buck.io.MorePaths.asPaths;
-import static com.facebook.buck.io.MorePaths.pathWithPlatformSeparators;
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
@@ -55,8 +54,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -382,53 +379,6 @@ public class AuditOwnerCommandTest {
     assertEquals(inputs.size(), report.owners.size());
     assertTrue(report.owners.containsKey(targetNode));
     assertEquals(targetNode.getInputs(), report.owners.get(targetNode));
-  }
-
-  /**
-   * Verify that owners are correctly detected:
-   *  - one owner, multiple inputs, json output
-   */
-  @Test
-  public void verifyInputsWithOneOwnerAreCorrectlyReportedInJson()
-      throws CmdLineException, IOException, InterruptedException {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
-      @Override
-      public File getFileForRelativePath(String pathRelativeToProjectRoot) {
-        return new ExistingFile(getRootPath(), pathRelativeToProjectRoot);
-      }
-    };
-
-    ImmutableSet<String> inputs = ImmutableSet.of(
-        "java/somefolder/badfolder/somefile.java",
-        "java/somefolder/perfect.java",
-        "com/test/subtest/random.java");
-    ImmutableSortedSet<Path> inputPaths = asPaths(inputs);
-
-    BuildTarget target = BuildTargetFactory.newInstance("//base/name:name");
-    TargetNode<?> targetNode = createTargetNode(target, inputPaths);
-
-    AuditOwnerCommand command = new AuditOwnerCommand();
-    CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
-    AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.generateOwnersReport(
-        params,
-        targetNode,
-        inputs);
-    command.printOwnersOnlyJsonReport(params, report);
-
-    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
-    String expectedJson = Joiner.on("").join(
-      "{",
-      mapper.valueToTree(pathWithPlatformSeparators("com/test/subtest/random.java")),
-      ":[\"//base/name:name\"],",
-        mapper.valueToTree(pathWithPlatformSeparators("java/somefolder/badfolder/somefile.java")),
-      ":[\"//base/name:name\"],",
-        mapper.valueToTree(pathWithPlatformSeparators("java/somefolder/perfect.java")),
-      ":[\"//base/name:name\"]",
-      "}"
-    );
-
-    assertEquals(expectedJson, console.getTextWrittenToStdOut());
-    assertEquals("", console.getTextWrittenToStdErr());
   }
 
   /**

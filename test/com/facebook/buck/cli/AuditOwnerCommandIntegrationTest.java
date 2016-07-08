@@ -48,7 +48,8 @@ public class AuditOwnerCommandIntegrationTest {
 
   @Test
   public void testTwoFilesJSON() throws IOException {
-    String expectedJson = Platform.detect() == Platform.WINDOWS ?
+    boolean isPlatformWindows = Platform.detect() == Platform.WINDOWS;
+    String expectedJson = isPlatformWindows ?
         "stdout-one-two-windows.json" : "stdout-one-two.json";
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "audit_owner", tmp);
@@ -58,8 +59,8 @@ public class AuditOwnerCommandIntegrationTest {
         "audit",
         "owner",
         "--json",
-        "example/1.txt",
-        "example/lib/2.txt");
+        isPlatformWindows ? "example\\1.txt" : "example/1.txt",
+        isPlatformWindows ? "example\\lib\\2.txt" : "example/lib/2.txt");
     result.assertSuccess();
     assertEquals(workspace.getFileContents(expectedJson), result.getStdout());
   }
