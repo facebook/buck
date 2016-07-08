@@ -64,4 +64,14 @@ __run()
     native_libs_preload=old_native_libs_preload,
     main_module=main_module)
 
-os.execv(sys.executable, [sys.executable, '-Wd', '-E', '-c', STARTUP] + sys.argv[1:])
+
+args = [sys.executable, '-E', '-c', STARTUP]
+
+# Default to 'd' warnings, but allow users to control this via PYTHONWARNINGS
+# The -E causes python to ignore all PYTHON* environment vars so we have to
+# pass this down using the command line.
+warnings = sys.warnoptions or ['d']
+for item in reversed(warnings):
+    args.insert(1, '-W{0}'.format(item.strip()))
+
+os.execv(sys.executable, args + sys.argv[1:])
