@@ -111,7 +111,8 @@ public class ProvisioningProfileMetadataTest {
         ProvisioningProfileMetadata.fromProvisioningProfilePath(testFile);
 
     assertTrue(data.getEntitlements().containsKey("com.apple.security.application-groups"));
-    assertFalse(data.getMergeableEntitlements().containsKey("com.apple.security.application-groups"));
+    assertFalse(data.getMergeableEntitlements().containsKey(
+        "com.apple.security.application-groups"));
   }
 
 }
