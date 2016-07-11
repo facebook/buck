@@ -100,6 +100,7 @@ import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.WatchmanWatcherException;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.shutdown.NonReentrantSystemExit;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.cache.WatchedFileHashCache;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -249,6 +250,9 @@ public final class Main {
             }
           },
           HANG_DETECTOR_TIMEOUT);
+
+  private static final NonReentrantSystemExit NON_REENTRANT_SYSTEM_EXIT =
+      new NonReentrantSystemExit();
 
   /**
    * Daemon used to monitor the file system and cache build rules between Main() method
@@ -1596,7 +1600,7 @@ public final class Main {
           // We pass false for exitVM because otherwise Nailgun exits with code 0.
           context.get().getNGServer().shutdown(/* exitVM */ false);
         }
-        System.exit(FAIL_EXIT_CODE);
+        NON_REENTRANT_SYSTEM_EXIT.shutdownSoon(FAIL_EXIT_CODE);
       }
     });
   }

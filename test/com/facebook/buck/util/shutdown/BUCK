@@ -1,0 +1,26 @@
+standard_java_test()
+
+java_binary(
+  name = 'shutdown_binary',
+  main_class = 'com.facebook.buck.util.shutdown.NonReentrantSystemExitDemo',
+  deps = [
+    ':shutdown_library',
+  ],
+)
+
+java_library(
+  name = 'shutdown_library',
+  srcs = [
+    'NonReentrantSystemExitDemo.java',
+  ],
+  autodeps = True,
+)
+
+sh_test(
+  name = 'shutdown_test',
+  test = 'shutdown_test.sh',
+  test_rule_timeout_ms = 5000,
+  args = [
+    '$(exe :shutdown_binary)',
+  ],
+)
