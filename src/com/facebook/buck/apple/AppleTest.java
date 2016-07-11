@@ -36,6 +36,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
+import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.BuckConstant;
@@ -60,6 +61,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -360,7 +362,11 @@ public class AppleTest
       ExecutionContext executionContext,
       TestRunningOptions options,
       TestReportingCallback testReportingCallback) {
-    return getTestCommand(executionContext, options, testReportingCallback).getFirst();
+    if (isUiTest()) {
+      return ImmutableList.of();
+    } else {
+      return getTestCommand(executionContext, options, testReportingCallback).getFirst();
+    }
   }
 
   @Override
@@ -380,6 +386,11 @@ public class AppleTest
           // We've already run the tests with 'xctest' and parsed
           // their output; no need to parse the same output again.
           testCaseSummaries = xctestOutputReader.get().getTestCaseSummaries();
+        } else if (isUiTest()) {
+          TestCaseSummary noTestsSummary =
+                new TestCaseSummary("XCUITest runs not supported with buck test",
+                                    Collections.<TestResultSummary>emptyList());
+          testCaseSummaries = Collections.singletonList(noTestsSummary);
         } else {
           Path resolvedOutputPath = getProjectFilesystem().resolve(testOutputPath);
           try (BufferedReader reader =
