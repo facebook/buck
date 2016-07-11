@@ -136,6 +136,7 @@ import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
+import org.apache.commons.lang.math.NumberUtils;
 import org.kohsuke.args4j.CmdLineException;
 
 import java.io.Closeable;
@@ -201,7 +202,8 @@ public final class Main {
    */
   private static final String STATIC_CONTENT_DIRECTORY = System.getProperty(
       "buck.path_to_static_content", "webserver/static");
-  private static final int DISK_IO_STATS_TIMEOUT_SECONDS = 10;
+  private static final int DISK_IO_STATS_TIMEOUT_SECONDS = NumberUtils.toInt(System.getProperty(
+      "buck.disk_io_timeout"), 10);
   private static final int EXECUTOR_SERVICES_TIMEOUT_SECONDS = 60;
   private static final int COUNTER_AGGREGATOR_SERVICE_TIMEOUT_SECONDS = 20;
 
