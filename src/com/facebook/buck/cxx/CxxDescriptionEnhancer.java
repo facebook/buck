@@ -693,13 +693,13 @@ public class CxxDescriptionEnhancer {
 
       // Create a symlink tree with for all shared libraries needed by this binary.
       SymlinkTree sharedLibraries =
-          resolver.addToIndex(
-              createSharedLibrarySymlinkTree(
-                  params,
-                  sourcePathResolver,
-                  cxxPlatform,
-                  params.getDeps(),
-                  Predicates.instanceOf(NativeLinkable.class)));
+          requireSharedLibrarySymlinkTree(
+              params,
+              resolver,
+              sourcePathResolver,
+              cxxPlatform,
+              params.getDeps(),
+              Predicates.instanceOf(NativeLinkable.class));
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
@@ -1173,6 +1173,30 @@ public class CxxDescriptionEnhancer {
         pathResolver,
         symlinkTreeRoot,
         links.build());
+  }
+
+  public static SymlinkTree requireSharedLibrarySymlinkTree(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
+      Iterable<? extends BuildRule> deps,
+      Predicate<Object> traverse)
+      throws NoSuchBuildTargetException {
+    BuildTarget target =
+        createSharedLibrarySymlinkTreeTarget(params.getBuildTarget(), cxxPlatform.getFlavor());
+    SymlinkTree tree = resolver.getRuleOptionalWithType(target, SymlinkTree.class).orNull();
+    if (tree == null) {
+      tree =
+          resolver.addToIndex(
+              createSharedLibrarySymlinkTree(
+                  params,
+                  pathResolver,
+                  cxxPlatform,
+                  deps,
+                  traverse));
+    }
+    return tree;
   }
 
   public static Flavor flavorForLinkableDepType(Linker.LinkableDepType linkableDepType) {
