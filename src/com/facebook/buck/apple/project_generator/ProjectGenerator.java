@@ -2695,9 +2695,8 @@ public class ProjectGenerator {
             return ProductType.APPLICATION;
         }
       } else if (binaryNode.getType().equals(AppleTestDescription.TYPE)) {
-        @SuppressWarnings("unchecked")
         TargetNode<AppleTestDescription.Arg> testNode =
-              (TargetNode<AppleTestDescription.Arg>) binaryNode;
+            binaryNode.castArg(AppleTestDescription.Arg.class).get();
         if (testNode.getConstructorArg().isUiTest()) {
           return ProductType.UI_TEST;
         } else {
