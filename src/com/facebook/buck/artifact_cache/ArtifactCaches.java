@@ -281,7 +281,7 @@ public class ArtifactCaches {
           }
         });
     int timeoutSeconds = cacheDescription.getTimeoutSeconds();
-    storeClientBuilder.connectTimeout(timeoutSeconds, TimeUnit.SECONDS);
+    setTimeouts(storeClientBuilder, timeoutSeconds);
     storeClientBuilder.connectionPool(
         new ConnectionPool(
             /* maxIdleConnections */ (int) config.getThreadPoolSize(),
@@ -309,7 +309,7 @@ public class ArtifactCaches {
 
     // For fetches, use a client with a read timeout.
     OkHttpClient.Builder fetchClientBuilder = storeClient.newBuilder();
-    fetchClientBuilder.readTimeout(timeoutSeconds, TimeUnit.SECONDS);
+    setTimeouts(fetchClientBuilder, timeoutSeconds);
 
     // If read headers are specified, add them to every read client request.
     if (!readHeaders.isEmpty()) {
@@ -383,6 +383,15 @@ public class ArtifactCaches {
             .setHttpWriteExecutorService(httpWriteExecutorService)
             .setErrorTextTemplate(cacheDescription.getErrorMessageFormat())
             .build());
+  }
+
+  private static OkHttpClient.Builder setTimeouts(
+      OkHttpClient.Builder builder,
+      int timeoutSeconds) {
+    return builder
+        .connectTimeout(timeoutSeconds, TimeUnit.SECONDS)
+        .readTimeout(timeoutSeconds, TimeUnit.SECONDS)
+        .writeTimeout(timeoutSeconds, TimeUnit.SECONDS);
   }
 
   private static class ProgressResponseBody extends ResponseBody {
