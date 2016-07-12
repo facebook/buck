@@ -115,7 +115,13 @@ class Tracing(object):
 
     @staticmethod
     def clean_up_old_logs(buck_log_dir, logs_to_keep=25):
-        traces = filter(os.path.isfile, glob.glob(os.path.join(buck_log_dir, 'launch.*.trace')))
-        traces = sorted(traces, key=os.path.getmtime)
-        for f in traces[:-logs_to_keep]:
-            os.remove(f)
+        traces = filter(
+            os.path.isfile,
+            glob.glob(os.path.join(buck_log_dir, 'launch.*.trace')),
+        )
+        try:
+            traces = sorted(traces, key=os.path.getmtime)
+            for f in traces[:-logs_to_keep]:
+                os.remove(f)
+        except OSError:
+            return  # a concurrent run cleaned up the logs
