@@ -294,7 +294,8 @@ public class AppleTestDescription implements
         appleConfig.getTestLogDirectoryEnvironmentVariable(),
         appleConfig.getTestLogLevelEnvironmentVariable(),
         appleConfig.getTestLogLevel(),
-        args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs));
+        args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
+        args.isUiTest());
   }
 
   private Optional<SourcePath> getXctool(
@@ -487,6 +488,7 @@ public class AppleTestDescription implements
     public Optional<ImmutableSortedSet<Label>> labels;
     public Optional<Boolean> canGroup;
     public Optional<Boolean> runTestSeparately;
+    public Optional<Boolean> isUiTest;
     public Optional<BuildTarget> testHostApp;
 
     // Bundle related fields.
@@ -519,6 +521,10 @@ public class AppleTestDescription implements
 
     public boolean getRunTestSeparately() {
       return runTestSeparately.or(false);
+    }
+
+    public boolean isUiTest() {
+      return isUiTest.or(false);
     }
   }
 }

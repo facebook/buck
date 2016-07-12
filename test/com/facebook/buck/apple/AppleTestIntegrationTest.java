@@ -331,6 +331,30 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
+  public void skipsXCUITests() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_test_xcuitest", tmp);
+    workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(this).resolve("xctool"),
+        Paths.get("xctool"));
+    workspace.writeContentsToPath(
+        "[apple]\n  xctool_path = xctool/bin/xctool\n",
+        ".buckconfig.local");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:foo", "//:bar");
+    result.assertSuccess();
+    assertThat(
+        result.getStderr(),
+        containsString(
+            "NOTESTS <100ms  0 Passed   0 Skipped   0 Failed   XCUITest runs not supported"
+        ));
+    assertThat(
+        result.getStderr(),
+        containsString("1 Passed   0 Skipped   0 Failed   FooXCTest"));
+  }
+
+  @Test
   public void slowTestShouldFailWithTimeout() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(

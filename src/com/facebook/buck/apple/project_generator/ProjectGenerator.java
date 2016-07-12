@@ -1238,7 +1238,17 @@ public class ProjectGenerator {
     extraSettingsBuilder
         .put("TARGET_NAME", buildTargetName)
         .put("SRCROOT", pathRelativizer.outputPathToBuildTargetPath(buildTarget).toString());
-    if (bundleLoaderNode.isPresent() && isFocusedOnTarget) {
+    if (productType == ProductType.UI_TEST && isFocusedOnTarget) {
+      if (bundleLoaderNode.isPresent()) {
+        BuildTarget testTarget = bundleLoaderNode.get().getBuildTarget();
+        extraSettingsBuilder
+            .put("TEST_TARGET_NAME", getXcodeTargetName(testTarget));
+      } else {
+        throw new HumanReadableException(
+            "The test rule '%s' is configured with 'is_ui_test' but has no test_host_app",
+            buildTargetName);
+      }
+    } else if (bundleLoaderNode.isPresent() && isFocusedOnTarget) {
       TargetNode<AppleBundleDescription.Arg> bundleLoader = bundleLoaderNode.get();
       String bundleLoaderProductName = getProductNameForBuildTarget(bundleLoader.getBuildTarget());
       String bundleLoaderBundleName = bundleLoaderProductName + "." +
@@ -2685,7 +2695,13 @@ public class ProjectGenerator {
             return ProductType.APPLICATION;
         }
       } else if (binaryNode.getType().equals(AppleTestDescription.TYPE)) {
-        return ProductType.UNIT_TEST;
+        TargetNode<AppleTestDescription.Arg> testNode =
+            binaryNode.castArg(AppleTestDescription.Arg.class).get();
+        if (testNode.getConstructorArg().isUiTest()) {
+          return ProductType.UI_TEST;
+        } else {
+          return ProductType.UNIT_TEST;
+        }
       }
     }
 
