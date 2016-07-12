@@ -1,0 +1,9 @@
+standard_java_library(
+  tests = [
+    '//test/com/facebook/buck/thrift:thrift',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/rules:types',
+    '//test/com/facebook/buck/thrift:',
+  ],
+)
