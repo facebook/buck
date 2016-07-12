@@ -69,6 +69,7 @@ public class CleanCommandTest extends EasyMockSupport {
 
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getScratchDir());
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getGenDir());
+    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getTrashDir());
 
     // Simulate `buck clean`.
     CleanCommand cleanCommand = createCommandFromArgs();
@@ -77,6 +78,7 @@ public class CleanCommandTest extends EasyMockSupport {
 
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getScratchDir()));
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getGenDir()));
+    assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getTrashDir()));
   }
 
   @Test

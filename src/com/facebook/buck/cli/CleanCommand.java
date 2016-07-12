@@ -69,6 +69,8 @@ public class CleanCommand extends AbstractCommand {
           projectFilesystem.getBuckPaths().getScratchDir());
       projectFilesystem.deleteRecursivelyIfExists(
           projectFilesystem.getBuckPaths().getGenDir());
+      projectFilesystem.deleteRecursivelyIfExists(
+          projectFilesystem.getBuckPaths().getTrashDir());
     }
 
     return 0;
