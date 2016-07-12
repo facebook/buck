@@ -78,22 +78,22 @@ public class CxxPlatforms {
 
     builder
         .setFlavor(flavor)
-        .setAs(config.getCompilerProvider(flavor, "as").or(as))
-        .setAspp(config.getPreprocessorProvider(flavor, "aspp").or(aspp))
-        .setCc(config.getCompilerProvider(flavor, "cc").or(cc))
-        .setCxx(config.getCompilerProvider(flavor, "cxx").or(cxx))
-        .setCpp(config.getPreprocessorProvider(flavor, "cpp").or(cpp))
-        .setCxxpp(config.getPreprocessorProvider(flavor, "cxxpp").or(cxxpp))
-        .setCuda(config.getCompilerProvider(flavor, "cuda"))
-        .setCudapp(config.getPreprocessorProvider(flavor, "cudapp"))
-        .setAsm(config.getCompilerProvider(flavor, "asm"))
-        .setAsmpp(config.getPreprocessorProvider(flavor, "asmpp"))
-        .setLd(config.getLinkerProvider(flavor, "ld", ld.getType()).or(ld))
+        .setAs(config.getCompilerProvider("as").or(as))
+        .setAspp(config.getPreprocessorProvider("aspp").or(aspp))
+        .setCc(config.getCompilerProvider("cc").or(cc))
+        .setCxx(config.getCompilerProvider("cxx").or(cxx))
+        .setCpp(config.getPreprocessorProvider("cpp").or(cpp))
+        .setCxxpp(config.getPreprocessorProvider("cxxpp").or(cxxpp))
+        .setCuda(config.getCompilerProvider("cuda"))
+        .setCudapp(config.getPreprocessorProvider("cudapp"))
+        .setAsm(config.getCompilerProvider("asm"))
+        .setAsmpp(config.getPreprocessorProvider("asmpp"))
+        .setLd(config.getLinkerProvider("ld", ld.getType()).or(ld))
         .addAllLdflags(ldFlags)
-        .setAr(getTool(flavor, "ar", config).transform(getArchiver(ar.getClass(), config)).or(ar))
-        .setRanlib(getTool(flavor, "ranlib", config).or(ranlib))
-        .setStrip(getTool(flavor, "strip", config).or(strip))
-        .setSymbolNameTool(new PosixNmSymbolNameTool(getTool(flavor, "nm", config).or(nm)))
+        .setAr(getTool("ar", config).transform(getArchiver(ar.getClass(), config)).or(ar))
+        .setRanlib(getTool("ranlib", config).or(ranlib))
+        .setStrip(getTool("strip", config).or(strip))
+        .setSymbolNameTool(new PosixNmSymbolNameTool(getTool("nm", config).or(nm)))
         .setSharedLibraryExtension(sharedLibraryExtension)
         .setSharedLibraryVersionedExtensionFormat(sharedLibraryVersionedExtensionFormat)
         .setDebugPathSanitizer(
@@ -180,12 +180,8 @@ public class CxxPlatforms {
     return systemDefaultCxxPlatform;
   }
 
-  private static Optional<Path> getToolPath(Flavor flavor, String name, CxxBuckConfig config) {
-    return config.getPath(flavor.toString(), name);
-  }
-
-  private static Optional<Tool> getTool(Flavor flavor, String name, CxxBuckConfig config) {
-    return getToolPath(flavor, name, config)
+  private static Optional<Tool> getTool(String name, CxxBuckConfig config) {
+    return config.getPath(name)
         .transform(HashedFileTool.FROM_PATH)
         .transform(Functions.<Tool>identity());
   }

@@ -38,7 +38,6 @@ import com.google.common.collect.Maps;
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * Contains platform independent settings for C/C++ rules.
@@ -109,17 +108,8 @@ public class CxxBuckConfig {
     return delegate.getRequiredBuildTarget(cxxSection, "boost_test_dep");
   }
 
-  public Optional<Path> getPath(String flavor, String name) {
-    Optional<String> rawPath = delegate
-        .getValue(cxxSection, flavor + "_" + name)
-        .or(delegate.getValue(cxxSection, name));
-
-    if (!rawPath.isPresent()) {
-      return Optional.absent();
-    }
-
-    return Optional.fromNullable(
-        delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get(rawPath.get())));
+  public Optional<Path> getPath(String name) {
+    return delegate.getPath(cxxSection, name);
   }
 
   public Optional<String> getDefaultPlatform() {
@@ -225,61 +215,29 @@ public class CxxBuckConfig {
     }
   }
 
-  private Optional<PreprocessorProvider> getPreprocessorProvider(
-      Flavor flavor,
-      String field,
-      Optional<CxxToolProvider.Type> defaultType) {
-    Optional<CxxToolProviderParams> params =
-        getCxxToolProviderParams(flavor.toString() + '_' + field, defaultType)
-            .or(getCxxToolProviderParams(field, defaultType));
+  public Optional<PreprocessorProvider> getPreprocessorProvider(String field) {
+    Optional<CxxToolProvider.Type> defaultType = Optional.<CxxToolProvider.Type>absent();
+    Optional<CxxToolProviderParams> params = getCxxToolProviderParams(field, defaultType);
     if (!params.isPresent()) {
       return Optional.absent();
     }
     return Optional.of(params.get().getPreprocessorProvider());
   }
 
-  public Optional<PreprocessorProvider> getPreprocessorProvider(Flavor flavor, String field) {
-    return getPreprocessorProvider(flavor, field, Optional.<CxxToolProvider.Type>absent());
-  }
-
-  public Optional<PreprocessorProvider> getPreprocessorProvider(
-      Flavor flavor,
-      String field,
-      CxxToolProvider.Type defaultType) {
-    return getPreprocessorProvider(flavor, field, Optional.of(defaultType));
-  }
-
-  private Optional<CompilerProvider> getCompilerProvider(
-      Flavor flavor,
-      String field,
-      Optional<CxxToolProvider.Type> defaultType) {
-    Optional<CxxToolProviderParams> params =
-        getCxxToolProviderParams(flavor.toString() + '_' + field, defaultType)
-            .or(getCxxToolProviderParams(field, defaultType));
+  public Optional<CompilerProvider> getCompilerProvider(String field) {
+    Optional<CxxToolProviderParams> params = getCxxToolProviderParams(
+        field,
+        Optional.<CxxToolProvider.Type>absent());
     if (!params.isPresent()) {
       return Optional.absent();
     }
     return Optional.of(params.get().getCompilerProvider());
   }
 
-  public Optional<CompilerProvider> getCompilerProvider(Flavor flavor, String field) {
-    return getCompilerProvider(flavor, field, Optional.<CxxToolProvider.Type>absent());
-  }
-
-  public Optional<CompilerProvider> getCompilerProvider(
-      Flavor flavor,
-      String field,
-      CxxToolProvider.Type defaultType) {
-    return getCompilerProvider(flavor, field, Optional.of(defaultType));
-  }
-
   public Optional<LinkerProvider> getLinkerProvider(
-      Flavor flavor,
       String field,
       LinkerProvider.Type defaultType) {
-    Optional<ToolProvider> toolProvider =
-        delegate.getToolProvider(cxxSection, flavor.toString() + '_' + field)
-            .or(delegate.getToolProvider(cxxSection, field));
+    Optional<ToolProvider> toolProvider = delegate.getToolProvider(cxxSection, field);
     if (!toolProvider.isPresent()) {
       return Optional.absent();
     }
