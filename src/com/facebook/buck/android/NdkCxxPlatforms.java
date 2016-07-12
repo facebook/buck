@@ -609,9 +609,8 @@ public class NdkCxxPlatforms {
       String tool,
       String version,
       ExecutableFinder executableFinder) {
-    return new VersionedTool(
+    return VersionedTool.of(
         getGccToolPath(ndkRoot, targetConfiguration, host, tool, executableFinder),
-        ImmutableList.<String>of(),
         tool,
         version);
   }
@@ -623,9 +622,8 @@ public class NdkCxxPlatforms {
       String tool,
       String version,
       ExecutableFinder executableFinder) {
-    return new VersionedTool(
+    return VersionedTool.of(
         getToolPath(ndkRoot, targetConfiguration, host, tool, executableFinder),
-        ImmutableList.<String>of(),
         tool,
         version);
   }
@@ -748,11 +746,12 @@ public class NdkCxxPlatforms {
         "-L" + getCxxRuntimeLibsDirectory(ndkRoot, targetConfiguration, cxxRuntime).toString());
 
     return new GnuLinker(
-        new VersionedTool(
-            getToolPath(ndkRoot, targetConfiguration, host, tool, executableFinder),
-            flags.build(),
-            tool,
-            version));
+        VersionedTool.builder()
+            .setPath(getToolPath(ndkRoot, targetConfiguration, host, tool, executableFinder))
+            .setName(tool)
+            .setVersion(version)
+            .setExtraArgs(flags.build())
+            .build());
   }
 
   /**

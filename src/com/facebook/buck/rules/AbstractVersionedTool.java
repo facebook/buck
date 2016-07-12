@@ -16,11 +16,13 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Function;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+
+import org.immutables.value.Value;
 
 import java.nio.file.Path;
 
@@ -33,31 +35,26 @@ import java.nio.file.Path;
  * different flags) but we know that they produce identical output, in which case they should also
  * generate identical rule keys.
  */
-public class VersionedTool implements Tool {
+@Value.Immutable
+@BuckStyleImmutable
+abstract class AbstractVersionedTool implements Tool {
 
   /**
    * The path to the tool.  The contents or path to the tool do not contribute to the rule key.
    */
-  private final Path path;
+  @Value.Parameter
+  protected abstract Path getPath();
 
   /**
    * Additional flags that we pass to the tool, but which do *not* contribute to the rule key.
    */
-  private final ImmutableList<String> extraArgs;
+  protected abstract ImmutableList<String> getExtraArgs();
 
-  private final String name;
-  private final String version;
+  @Value.Parameter
+  protected abstract String getName();
 
-  public VersionedTool(
-      Path path,
-      ImmutableList<String> extraArgs,
-      String name,
-      String version) {
-    this.path = path;
-    this.extraArgs = extraArgs;
-    this.name = name;
-    this.version = version;
-  }
+  @Value.Parameter
+  protected abstract String getVersion();
 
   @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
@@ -72,8 +69,8 @@ public class VersionedTool implements Tool {
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
     return ImmutableList.<String>builder()
-        .add(path.toString())
-        .addAll(extraArgs)
+        .add(getPath().toString())
+        .addAll(getExtraArgs())
         .build();
   }
 
@@ -85,20 +82,7 @@ public class VersionedTool implements Tool {
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink
-        .setReflectively("name", name)
-        .setReflectively("version", version);
+        .setReflectively("name", getName())
+        .setReflectively("version", getVersion());
   }
-
-  public static Function<Path, VersionedTool> fromPathWithParams(
-      final String name,
-      final String version,
-      final ImmutableList<String> params) {
-    return new Function<Path, VersionedTool>() {
-      @Override
-      public VersionedTool apply(Path input) {
-        return new VersionedTool(input, params, name, version);
-      }
-    };
-  }
-
 }

@@ -24,7 +24,6 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
@@ -104,9 +103,8 @@ public class ToolTest {
     String version = "version";
 
     Tool tool1 =
-        new VersionedTool(
+        VersionedTool.of(
             Paths.get("something"),
-            ImmutableList.<String>of(),
             tool,
             version);
     RuleKey tool1RuleKey =
@@ -115,9 +113,8 @@ public class ToolTest {
             .build();
 
     Tool tool2 =
-        new VersionedTool(
+        VersionedTool.of(
             Paths.get("something-else"),
-            ImmutableList.<String>of(),
             tool,
             version);
     RuleKey tool2RuleKey =

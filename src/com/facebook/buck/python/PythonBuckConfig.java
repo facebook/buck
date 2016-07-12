@@ -224,11 +224,12 @@ public class PythonBuckConfig {
     if (executable.isPresent()) {
       return executable.get();
     }
-    return new VersionedTool(
-        Paths.get(getPythonInterpreter()),
-        ImmutableList.of(DEFAULT_PATH_TO_PEX.toString()),
-        "pex",
-        BuckVersion.getVersion());
+    return VersionedTool.builder()
+        .setName("pex")
+        .setVersion(BuckVersion.getVersion())
+        .setPath(Paths.get(getPythonInterpreter()))
+        .addExtraArgs(DEFAULT_PATH_TO_PEX.toString())
+        .build();
   }
 
   public Optional<BuildTarget> getPexExecutorTarget() {

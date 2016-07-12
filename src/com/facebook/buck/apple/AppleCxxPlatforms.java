@@ -42,7 +42,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
@@ -210,75 +209,65 @@ public class AppleCxxPlatforms {
 
     ImmutableList<Path> toolSearchPaths = toolSearchPathsBuilder.build();
 
-    Tool clangPath = new VersionedTool(
+    Tool clangPath = VersionedTool.of(
         getToolPath("clang", toolSearchPaths, executableFinder),
-        ImmutableList.<String>of(),
         "apple-clang",
         version);
 
-    Tool clangXxPath = new VersionedTool(
+    Tool clangXxPath = VersionedTool.of(
         getToolPath("clang++", toolSearchPaths, executableFinder),
-        ImmutableList.<String>of(),
         "apple-clang++",
         version);
 
-    Tool ar = new VersionedTool(
+    Tool ar = VersionedTool.of(
         getToolPath("ar", toolSearchPaths, executableFinder),
-        ImmutableList.<String>of(),
         "apple-ar",
         version);
 
-    Tool ranlib = new VersionedTool(
-        getToolPath("ranlib", toolSearchPaths, executableFinder),
-        ImmutableList.of("-s"),
-        "apple-ranlib",
-        version);
+    Tool ranlib = VersionedTool.builder()
+        .setPath(getToolPath("ranlib", toolSearchPaths, executableFinder))
+        .addExtraArgs("-s")
+        .setName("apple-ranlib")
+        .setVersion(version)
+        .build();
 
-    Tool strip = new VersionedTool(
+    Tool strip = VersionedTool.of(
         getToolPath("strip", toolSearchPaths, executableFinder),
-        ImmutableList.<String>of(),
         "apple-strip",
         version);
 
-    Tool nm = new VersionedTool(
+    Tool nm = VersionedTool.of(
         getToolPath("nm", toolSearchPaths, executableFinder),
-        ImmutableList.<String>of(),
         "apple-nm",
         version);
 
-    Tool actool = new VersionedTool(
+    Tool actool = VersionedTool.of(
         getToolPath("actool", toolSearchPaths, executableFinder),
-        ImmutableList.<String>of(),
         "apple-actool",
         version);
 
-    Tool ibtool = new VersionedTool(
+    Tool ibtool = VersionedTool.of(
         getToolPath("ibtool", toolSearchPaths, executableFinder),
-        ImmutableList.<String>of(),
         "apple-ibtool",
         version);
 
-    Tool xctest = new VersionedTool(
+    Tool xctest = VersionedTool.of(
         getToolPath("xctest", toolSearchPaths, executableFinder),
-        ImmutableList.<String>of(),
         "apple-xctest",
         version);
 
-    Tool dsymutil = new VersionedTool(
+    Tool dsymutil = VersionedTool.of(
         getToolPath("dsymutil", toolSearchPaths, executableFinder),
-        ImmutableList.<String>of(),
         "apple-dsymutil",
         version);
 
-    Tool lipo = new VersionedTool(
+    Tool lipo = VersionedTool.of(
         getToolPath("lipo", toolSearchPaths, executableFinder),
-        ImmutableList.<String>of(),
         "apple-lipo",
         version);
 
-    Tool lldb = new VersionedTool(
+    Tool lldb = VersionedTool.of(
         getToolPath("lldb", toolSearchPaths, executableFinder),
-        ImmutableList.<String>of(),
         "lldb",
         version);
 
@@ -479,14 +468,23 @@ public class AppleCxxPlatforms {
   }
 
   private static Optional<Tool> getOptionalToolWithParams(
-      String tool,
+      final String tool,
       ImmutableList<Path> toolSearchPaths,
       ExecutableFinder executableFinder,
-      String version,
-      ImmutableList<String> params) {
+      final String version,
+      final ImmutableList<String> params) {
     return getOptionalToolPath(tool, toolSearchPaths, executableFinder)
-        .transform(VersionedTool.fromPathWithParams(tool, version, params))
-        .transform(Functions.<Tool>identity());
+        .transform(new Function<Path, Tool>() {
+          @Override
+          public VersionedTool apply(Path input) {
+            return VersionedTool.builder()
+                .setPath(input)
+                .setName(tool)
+                .setVersion(version)
+                .setExtraArgs(params)
+                .build();
+          }
+        });
   }
 
   private static Path getToolPath(
