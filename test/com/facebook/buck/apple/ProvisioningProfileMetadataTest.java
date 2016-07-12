@@ -18,7 +18,9 @@ package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.dd.plist.NSDate;
@@ -98,4 +100,19 @@ public class ProvisioningProfileMetadataTest {
     thrown.expectMessage("Malformed app ID: invalid.");
     ProvisioningProfileMetadata.splitAppID("invalid.");
   }
+
+  @Test
+  public void testFilteredEntitlementsStripOut() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    Path testdataDir = TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles");
+    Path testFile = testdataDir.resolve("sample.mobileprovision");
+
+    ProvisioningProfileMetadata data =
+        ProvisioningProfileMetadata.fromProvisioningProfilePath(testFile);
+
+    assertTrue(data.getEntitlements().containsKey("com.apple.security.application-groups"));
+    assertFalse(data.getMergeableEntitlements().containsKey(
+        "com.apple.security.application-groups"));
+  }
+
 }

@@ -17,10 +17,15 @@
 package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.dd.plist.NSDictionary;
+import com.dd.plist.NSObject;
+import com.dd.plist.PropertyListParser;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -31,6 +36,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -51,6 +57,7 @@ public class ProvisioningProfileCopyStepTest {
   private Path tempOutputDir;
   private Path outputFile;
   private Path xcentFile;
+  private Path entitlementsFile;
   private ProjectFilesystem projectFilesystem;
   private ExecutionContext executionContext;
   private CodeSignIdentityStore codeSignIdentityStore;
@@ -82,7 +89,7 @@ public class ProvisioningProfileCopyStepTest {
     executionContext = TestExecutionContext.newInstance();
     codeSignIdentityStore =
         CodeSignIdentityStore.fromIdentities(ImmutableList.<CodeSignIdentity>of());
-
+    entitlementsFile = testdataDir.resolve("Entitlements.plist");
   }
 
   @Test
@@ -167,5 +174,61 @@ public class ProvisioningProfileCopyStepTest {
     step.execute(executionContext);
     assertTrue(profileFuture.isDone());
     assertNotNull(profileFuture.get());
+  }
+
+  @Test
+  public void testNoEntitlementsDoesNotMergeInvalidProfileKeys() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
+        projectFilesystem,
+        testdataDir.resolve("Info.plist"),
+        Optional.of("00000000-0000-0000-0000-000000000000"),
+        Optional.<Path>absent(),
+        ProvisioningProfileStore.fromSearchPath(testdataDir),
+        outputFile,
+        xcentFile,
+        codeSignIdentityStore
+    );
+    step.execute(executionContext);
+
+    ProvisioningProfileMetadata selectedProfile = step.getSelectedProvisioningProfileFuture().get();
+    ImmutableMap<String, NSObject> profileEntitlements = selectedProfile.getEntitlements();
+    assertTrue(profileEntitlements.containsKey("com.apple.security.application-groups"));
+
+    Optional<String> xcentContents = projectFilesystem.readFileIfItExists(xcentFile);
+    assertTrue(xcentContents.isPresent());
+    NSDictionary xcentPlist = (NSDictionary)
+        PropertyListParser.parse(xcentContents.get().getBytes());
+    assertFalse(xcentPlist.containsKey("com.apple.security.application-groups"));
+    assertEquals(xcentPlist.get("com.apple.developer.team-identifier"),
+        profileEntitlements.get("com.apple.developer.team-identifier"));
+  }
+
+  @Test
+  public void testEntitlementsDoesNotMergeInvalidProfileKeys() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
+        projectFilesystem,
+        testdataDir.resolve("Info.plist"),
+        Optional.of("00000000-0000-0000-0000-000000000000"),
+        Optional.of(entitlementsFile),
+        ProvisioningProfileStore.fromSearchPath(testdataDir),
+        outputFile,
+        xcentFile,
+        codeSignIdentityStore
+    );
+    step.execute(executionContext);
+
+    ProvisioningProfileMetadata selectedProfile = step.getSelectedProvisioningProfileFuture().get();
+    ImmutableMap<String, NSObject> profileEntitlements = selectedProfile.getEntitlements();
+    assertTrue(profileEntitlements.containsKey("com.apple.security.application-groups"));
+
+    Optional<String> xcentContents = projectFilesystem.readFileIfItExists(xcentFile);
+    assertTrue(xcentContents.isPresent());
+    NSDictionary xcentPlist = (NSDictionary)
+        PropertyListParser.parse(xcentContents.get().getBytes());
+    assertFalse(xcentPlist.containsKey("com.apple.security.application-groups"));
+    assertEquals(xcentPlist.get("com.apple.developer.team-identifier"),
+        profileEntitlements.get("com.apple.developer.team-identifier"));
   }
 }

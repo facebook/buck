@@ -156,21 +156,21 @@ class ProvisioningProfileCopyStep implements Step {
       return StepExecutionResult.ERROR;
     }
 
-    // Merge tne entitlements with the profile, and write out.
+    // Merge the entitlements with the profile, and write out.
     if (entitlementsPlist.isPresent()) {
       return (new PlistProcessStep(
           filesystem,
           entitlementsPlist.get(),
           Optional.<Path>absent(),
           signingEntitlementsTempPath,
-          bestProfile.get().getEntitlements(),
+          bestProfile.get().getMergeableEntitlements(),
           ImmutableMap.<String, NSObject>of(),
           PlistProcessStep.OutputFormat.XML)).execute(context);
     } else {
       // No entitlements.plist explicitly specified; write out the minimal entitlements needed.
       String appID = bestProfile.get().getAppID().getFirst() + "." + bundleID;
       NSDictionary entitlementsPlist = new NSDictionary();
-      entitlementsPlist.putAll(bestProfile.get().getEntitlements());
+      entitlementsPlist.putAll(bestProfile.get().getMergeableEntitlements());
       entitlementsPlist.put(APPLICATION_IDENTIFIER, appID);
       entitlementsPlist.put(KEYCHAIN_ACCESS_GROUPS, new String[]{appID});
       return (new WriteFileStep(
