@@ -97,4 +97,9 @@ abstract class AbstractBuckPaths {
     return getBuckOut().resolve(".trash");
   }
 
+  @Value.Derived
+  public Path getOfflineLogDir() {
+    return getLogDir().resolve("offline");
+  }
+
 }
