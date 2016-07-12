@@ -6,6 +6,9 @@
 # communicate with the buck-frontend server.
 # This protocol is under active development and
 # will likely be changed in non-compatible ways
+#
+# Whenever you change this file please run the following command to refresh the java source code:
+# $ thrift --gen java  -out src-gen/ src/com/facebook/buck/distributed/thrift/buck_dist.thrift
 
 namespace cpp buck.common
 namespace java com.facebook.buck.distributed.thrift
@@ -108,6 +111,13 @@ struct BuildJobState {
   3: optional BuildJobStateTargetGraph targetGraph;
 }
 
+enum RuleKeyStatus {
+  UNKNOWN = 0,
+  NEVER_STORED = 1,
+  STORED_WITHIN_SLA = 2,
+  OUTSIDE_SLA = 3,
+}
+
 ##############################################################################
 ## Request/Response structs
 ##############################################################################
@@ -128,6 +138,15 @@ struct BuildStatusResponse {
   1: optional BuildJob buildJob;
 }
 
+# Analyses the presence of RuleKeys in the buckcache.
+struct AnalyseRuleKeysRequest {
+  1: optional list<string> ruleKeys;
+}
+
+# Returns the status of all ruleKeys in the request in the same exact order.
+struct AnalyseRuleKeysResponse {
+  1: optional list<RuleKeyStatus> statuses;
+}
 
 ##############################################################################
 ## Top-Level Buck-Frontend HTTP body thrift Request/Response format
@@ -145,6 +164,7 @@ struct FrontendRequest {
   1: optional FrontendRequestType type = FrontendRequestType.UNKNOWN;
   2: optional StartBuildRequest startBuild;
   3: optional BuildStatusRequest buildStatus;
+  6: optional AnalyseRuleKeysRequest analyseRuleKeysRequest;
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -156,6 +176,7 @@ struct FrontendResponse {
   10: optional FrontendRequestType type = FrontendRequestType.UNKNOWN;
   11: optional StartBuildResponse startBuild;
   12: optional BuildStatusResponse buildStatus;
+  15: optional AnalyseRuleKeysResponse analyseRuleKeysResponse;
 
   // [100-199] Values are reserved for the buck cache request types.
 }
