@@ -1,8 +1,13 @@
 #import <XCTest/XCTest.h>
 
-@interface FooXCTest : XCTestCase
+@interface FooXCUITest : XCTestCase
 @end
 
-@implementation FooXCTest
+@implementation FooXCUITest
+
+- (void)testThisWillBeSkipped
+{
+  XCTAssertTrue(false);
+}
 
 @end
