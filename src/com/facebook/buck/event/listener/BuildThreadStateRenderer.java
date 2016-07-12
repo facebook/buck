@@ -40,14 +40,12 @@ public class BuildThreadStateRenderer implements ThreadStateRenderer {
       Ansi ansi,
       Function<Long, String> formatTimeFunction,
       long currentTimeMs,
-      Map<Long, Optional<? extends BuildRuleEvent>> buildEventsByThread,
       Map<Long, Optional<? extends LeafEvent>> runningStepsByThread,
-      Map<BuildTarget, AtomicLong> accumulatedTimesByRule) {
+      AccumulatedTimeTracker accumulatedTimeTracker) {
     this.threadInformationMap = getThreadInformationMap(
         currentTimeMs,
-        buildEventsByThread,
         runningStepsByThread,
-        accumulatedTimesByRule);
+        accumulatedTimeTracker);
     this.commonThreadStateRenderer = new CommonThreadStateRenderer(
         ansi,
         formatTimeFunction,
@@ -57,11 +55,12 @@ public class BuildThreadStateRenderer implements ThreadStateRenderer {
 
   private static ImmutableMap<Long, ThreadRenderingInformation> getThreadInformationMap(
       long currentTimeMs,
-      Map<Long, Optional<? extends BuildRuleEvent>> buildEventsByThread,
       Map<Long, Optional<? extends LeafEvent>> runningStepsByThread,
-      Map<BuildTarget, AtomicLong> accumulatedTimesByRule) {
+      AccumulatedTimeTracker accumulatedTimeTracker) {
     ImmutableMap.Builder<Long, ThreadRenderingInformation> threadInformationMapBuilder =
         ImmutableMap.builder();
+    Map<Long, Optional<? extends BuildRuleEvent>> buildEventsByThread =
+        accumulatedTimeTracker.getBuildEventsByThread();
     ImmutableList<Long> threadIds = ImmutableList.copyOf(buildEventsByThread.keySet());
     for (long threadId : threadIds) {
       Optional<? extends BuildRuleEvent> buildRuleEvent = buildEventsByThread.get(threadId);
@@ -74,7 +73,7 @@ public class BuildThreadStateRenderer implements ThreadStateRenderer {
       }
       AtomicLong accumulatedTime = null;
       if (buildTarget.isPresent()) {
-        accumulatedTime = accumulatedTimesByRule.get(buildTarget.get());
+        accumulatedTime = accumulatedTimeTracker.getTime(buildTarget.get());
       }
       long elapsedTimeMs = 0;
       if (buildRuleEvent.isPresent() && accumulatedTime != null) {

@@ -42,18 +42,16 @@ public class TestThreadStateRenderer implements ThreadStateRenderer {
       Ansi ansi,
       Function<Long, String> formatTimeFunction,
       long currentTimeMs,
-      Map<Long, Optional<? extends TestRuleEvent>> testEventsByThread,
       Map<Long, Optional<? extends TestSummaryEvent>> testSummariesByThread,
       Map<Long, Optional<? extends TestStatusMessageEvent>> testStatusMessagesByThread,
       Map<Long, Optional<? extends LeafEvent>> runningStepsByThread,
-      Map<BuildTarget, AtomicLong> accumulatedTimesByRule) {
+      AccumulatedTimeTracker accumulatedTimeTracker) {
     this.threadInformationMap = getThreadInformationMap(
         currentTimeMs,
-        testEventsByThread,
         testSummariesByThread,
         testStatusMessagesByThread,
         runningStepsByThread,
-        accumulatedTimesByRule);
+        accumulatedTimeTracker);
     this.commonThreadStateRenderer = new CommonThreadStateRenderer(
         ansi,
         formatTimeFunction,
@@ -63,13 +61,14 @@ public class TestThreadStateRenderer implements ThreadStateRenderer {
 
   private static ImmutableMap<Long, ThreadRenderingInformation> getThreadInformationMap(
       long currentTimeMs,
-      Map<Long, Optional<? extends TestRuleEvent>> testEventsByThread,
       Map<Long, Optional<? extends TestSummaryEvent>> testSummariesByThread,
       Map<Long, Optional<? extends TestStatusMessageEvent>> testStatusMessagesByThread,
       Map<Long, Optional<? extends LeafEvent>> runningStepsByThread,
-      Map<BuildTarget, AtomicLong> accumulatedTimesByRule) {
+      AccumulatedTimeTracker accumulatedTimeTracker) {
     ImmutableMap.Builder<Long, ThreadRenderingInformation> threadInformationMapBuilder =
         ImmutableMap.builder();
+    Map<Long, Optional<? extends TestRuleEvent>> testEventsByThread =
+        accumulatedTimeTracker.getTestEventsByThread();
     ImmutableList<Long> threadIds = ImmutableList.copyOf(testEventsByThread.keySet());
     for (long threadId : threadIds) {
       Optional<? extends TestRuleEvent> testRuleEvent = testEventsByThread.get(threadId);
@@ -91,7 +90,7 @@ public class TestThreadStateRenderer implements ThreadStateRenderer {
       }
       AtomicLong accumulatedTime = null;
       if (buildTarget.isPresent()) {
-        accumulatedTime = accumulatedTimesByRule.get(buildTarget.get());
+        accumulatedTime = accumulatedTimeTracker.getTime(buildTarget.get());
       }
       long elapsedTimeMs = 0;
       if (testRuleEvent.isPresent() && accumulatedTime != null) {

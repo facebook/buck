@@ -29,7 +29,6 @@ import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.NetworkEvent;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -41,7 +40,6 @@ import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.test.TestResults;
-import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.timing.Clock;
@@ -79,7 +77,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
@@ -100,18 +97,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private final Locale locale;
   private final Function<Long, String> formatTimeFunction;
   private final Optional<WebServer> webServer;
-  private final ConcurrentMap<Long, Optional<? extends BuildRuleEvent>>
-      threadsToRunningBuildRuleEvent;
-  private final ConcurrentMap<Long, Optional<? extends TestRuleEvent>>
-      threadsToRunningTestRuleEvent;
   private final ConcurrentMap<Long, Optional<? extends TestSummaryEvent>>
       threadsToRunningTestSummaryEvent;
   private final ConcurrentMap<Long, Optional<? extends TestStatusMessageEvent>>
       threadsToRunningTestStatusMessageEvent;
   private final ConcurrentMap<Long, Optional<? extends LeafEvent>> threadsToRunningStep;
-
-  // Time previously suspended runs of this rule.
-  private final ConcurrentMap<BuildTarget, AtomicLong> accumulatedRuleTime;
 
   // Counts the rules that have updated rule keys.
   private final AtomicInteger updated = new AtomicInteger(0);
@@ -159,7 +149,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       Locale locale,
       Path testLogPath,
       TimeZone timeZone) {
-    super(console, clock, locale);
+    super(console, clock, locale, executionEnvironment);
     this.locale = locale;
     this.formatTimeFunction = new Function<Long, String>(){
         @Override
@@ -168,16 +158,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         }
     };
     this.webServer = webServer;
-    this.threadsToRunningBuildRuleEvent = new ConcurrentHashMap<>(
-        executionEnvironment.getAvailableCores());
-    this.threadsToRunningTestRuleEvent = new ConcurrentHashMap<>(
-        executionEnvironment.getAvailableCores());
     this.threadsToRunningTestSummaryEvent = new ConcurrentHashMap<>(
         executionEnvironment.getAvailableCores());
     this.threadsToRunningTestStatusMessageEvent = new ConcurrentHashMap<>(
         executionEnvironment.getAvailableCores());
     this.threadsToRunningStep = new ConcurrentHashMap<>(executionEnvironment.getAvailableCores());
-    this.accumulatedRuleTime = new ConcurrentHashMap<>();
 
     this.logEvents = new ConcurrentLinkedQueue<>();
 
@@ -412,9 +397,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             ansi,
             formatTimeFunction,
             currentTimeMillis,
-            threadsToRunningBuildRuleEvent,
             threadsToRunningStep,
-            accumulatedRuleTime);
+            accumulatedTimeTracker);
         renderLines(renderer, lines, maxThreadLines, shouldAlwaysSortThreadsByTime);
       }
 
@@ -433,11 +417,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             ansi,
             formatTimeFunction,
             currentTimeMillis,
-            threadsToRunningTestRuleEvent,
             threadsToRunningTestSummaryEvent,
             threadsToRunningTestStatusMessageEvent,
             threadsToRunningStep,
-            accumulatedRuleTime);
+            accumulatedTimeTracker);
         renderLines(renderer, lines, maxThreadLines, shouldAlwaysSortThreadsByTime);
       }
 
@@ -647,16 +630,12 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Subscribe
   public void buildRuleStarted(BuildRuleEvent.Started started) {
     super.buildRuleStarted(started);
-    threadsToRunningBuildRuleEvent.put(started.getThreadId(), Optional.of(started));
-    accumulatedRuleTime.put(started.getBuildRule().getBuildTarget(), new AtomicLong(0));
   }
 
   @Override
   @Subscribe
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
     super.buildRuleFinished(finished);
-    threadsToRunningBuildRuleEvent.put(finished.getThreadId(), Optional.<BuildRuleEvent>absent());
-    accumulatedRuleTime.remove(finished.getBuildRule().getBuildTarget());
     if (finished.getStatus() == BuildRuleStatus.SUCCESS) {
       CacheResult cacheResult = finished.getCacheResult();
       switch (cacheResult.getType()) {
@@ -681,26 +660,12 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Subscribe
   public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {
     super.buildRuleSuspended(suspended);
-    Optional<? extends BuildRuleEvent> started =
-        Preconditions.checkNotNull(
-            threadsToRunningBuildRuleEvent.put(
-                suspended.getThreadId(),
-                Optional.<BuildRuleEvent>absent()));
-    Preconditions.checkState(started.isPresent());
-    Preconditions.checkState(suspended.getBuildRule().equals(started.get().getBuildRule()));
-    AtomicLong current = accumulatedRuleTime.get(suspended.getBuildRule().getBuildTarget());
-    // It's technically possible that another thread receives resumed and finished events
-    // while we're processing this one, so we have to check that the current counter exists.
-    if (current != null) {
-      current.getAndAdd(suspended.getTimestamp() - started.get().getTimestamp());
-    }
   }
 
   @Override
   @Subscribe
   public void buildRuleResumed(BuildRuleEvent.Resumed resumed) {
     super.buildRuleResumed(resumed);
-    threadsToRunningBuildRuleEvent.put(resumed.getThreadId(), Optional.of(resumed));
   }
 
   @Subscribe
@@ -784,18 +749,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     synchronized (console.getStdOut()) {
       console.getStdOut().println(testOutput);
     }
-  }
-
-  @Subscribe
-  public void testRuleStarted(TestRuleEvent.Started started) {
-    threadsToRunningTestRuleEvent.put(started.getThreadId(), Optional.of(started));
-    accumulatedRuleTime.put(started.getBuildTarget(), new AtomicLong(0));
-  }
-
-  @Subscribe
-  public void testRuleFinished(TestRuleEvent.Finished finished) {
-    threadsToRunningTestRuleEvent.put(finished.getThreadId(), Optional.<TestRuleEvent>absent());
-    accumulatedRuleTime.remove(finished.getBuildTarget());
   }
 
   @Subscribe

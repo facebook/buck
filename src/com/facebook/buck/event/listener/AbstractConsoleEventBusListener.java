@@ -35,9 +35,11 @@ import com.facebook.buck.rules.ActionGraphEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleStatus;
+import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -137,7 +139,14 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   private volatile double distributedBuildProgress = 0;
 
-  public AbstractConsoleEventBusListener(Console console, Clock clock, Locale locale) {
+  protected AccumulatedTimeTracker accumulatedTimeTracker;
+
+  public AbstractConsoleEventBusListener(
+      Console console,
+      Clock clock,
+      Locale locale,
+      ExecutionEnvironment executionEnvironment
+  ) {
     this.console = console;
     this.clock = clock;
     this.locale = locale;
@@ -164,6 +173,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     this.installFinished = null;
 
     this.networkStatsKeeper = new NetworkStatsKeeper();
+
+    this.accumulatedTimeTracker = new AccumulatedTimeTracker(executionEnvironment);
   }
 
   public void setProgressEstimator(ProgressEstimator estimator) {
@@ -519,28 +530,28 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     ruleCount = Optional.of(updated.getNumRules());
   }
 
-  @SuppressWarnings("unused")
   @Subscribe
   public void buildRuleStarted(BuildRuleEvent.Started started) {
     if (progressEstimator.isPresent()) {
       progressEstimator.get().didStartRule();
     }
+    accumulatedTimeTracker.didStartBuildRule(started);
   }
 
-  @SuppressWarnings("unused")
   @Subscribe
   public void buildRuleResumed(BuildRuleEvent.Resumed resumed) {
     if (progressEstimator.isPresent()) {
       progressEstimator.get().didResumeRule();
     }
+    accumulatedTimeTracker.didResumeBuildRule(resumed);
   }
 
-  @SuppressWarnings("unused")
   @Subscribe
   public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {
     if (progressEstimator.isPresent()) {
       progressEstimator.get().didSuspendRule();
     }
+    accumulatedTimeTracker.didSuspendBuildRule(suspended);
   }
 
   @Subscribe
@@ -551,6 +562,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       }
       numRulesCompleted.getAndIncrement();
     }
+    accumulatedTimeTracker.didFinishBuildRule(finished);
   }
 
   @Subscribe
@@ -559,6 +571,16 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     if (progressEstimator.isPresent()) {
       progressEstimator.get().didFinishBuild();
     }
+  }
+
+  @Subscribe
+  public void testRuleStarted(TestRuleEvent.Started started) {
+    accumulatedTimeTracker.didStartTestRule(started);
+  }
+
+  @Subscribe
+  public void testRuleFinished(TestRuleEvent.Finished finished) {
+    accumulatedTimeTracker.didFinishTestRule(finished);
   }
 
   @Subscribe

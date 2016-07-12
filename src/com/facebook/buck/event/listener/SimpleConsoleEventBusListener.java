@@ -29,6 +29,7 @@ import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -55,10 +56,12 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       Clock clock,
       TestResultSummaryVerbosity summaryVerbosity,
       Locale locale,
-      Path testLogPath) {
-    super(console, clock, locale);
+      Path testLogPath,
+      ExecutionEnvironment executionEnvironment) {
+    super(console, clock, locale, executionEnvironment);
     this.locale = locale;
     this.parseTime = new AtomicLong(0);
+
     this.testFormatter = new TestResultFormatter(
         console.getAnsi(),
         console.getVerbosity(),
@@ -200,22 +203,34 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   @Subscribe
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
     super.buildRuleFinished(finished);
+
     if (finished.getStatus() != BuildRuleStatus.SUCCESS ||
         console.getVerbosity().isSilent()) {
       return;
     }
-    String line = String.format(
-        locale,
-        "%s %s",
-        finished.getResultString(),
-        finished.getBuildRule().getFullyQualifiedName());
+
+    Long timeToRender = 0L;
+    AtomicLong totalTime = accumulatedTimeTracker.getTime(finished.getBuildRule().getBuildTarget());
+    if (totalTime != null) {
+      timeToRender = totalTime.get();
+    }
+
+    String jobsInfo = "";
     if (ruleCount.isPresent()) {
-      line += String.format(
+      jobsInfo = String.format(
           locale,
-          " (%d/%d JOBS)",
+          "%d/%d JOBS",
           numRulesCompleted.get(),
           ruleCount.get());
     }
+    String line = String.format(
+        locale,
+        "%s %s %s %s",
+        finished.getResultString(),
+        jobsInfo,
+        formatElapsedTime(timeToRender),
+        finished.getBuildRule().getFullyQualifiedName());
+
     console.getStdErr().println(line);
   }
 

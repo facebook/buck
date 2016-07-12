@@ -47,8 +47,10 @@ import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
+import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -101,7 +103,11 @@ public class SimpleConsoleEventBusListenerTest {
         fakeClock,
         TestResultSummaryVerbosity.of(false, false),
         Locale.US,
-        logPath);
+        logPath,
+        new DefaultExecutionEnvironment(
+            ImmutableMap.copyOf(System.getenv()),
+            System.getProperties())
+        );
     eventBus.register(listener);
 
     final long threadId = 0;
@@ -166,7 +172,7 @@ public class SimpleConsoleEventBusListenerTest {
         configureTestEventAtTime(
             BuildEvent.finished(buildEventStarted, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
 
-    expectedOutput += "BUILT //banana:stand\n" +
+    expectedOutput += "BUILT  0.4s //banana:stand\n" +
         "[-] BUILDING...FINISHED 0.8s\n" +
         "WAITING FOR HTTP CACHE UPLOADS (0 COMPLETE/0 FAILED/1 UPLOADING/1 PENDING)\n";
     assertOutput(expectedOutput, console);
@@ -236,7 +242,11 @@ public class SimpleConsoleEventBusListenerTest {
             fakeClock,
             TestResultSummaryVerbosity.of(false, false),
             Locale.US,
-            logPath);
+            logPath,
+            new DefaultExecutionEnvironment(
+                ImmutableMap.copyOf(System.getenv()),
+                System.getProperties())
+            );
     eventBus.register(listener);
 
     // Do a full parse and action graph cycle before the build event starts

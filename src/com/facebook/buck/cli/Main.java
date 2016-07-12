@@ -1526,7 +1526,8 @@ public final class Main {
         clock,
         testResultSummaryVerbosity,
         locale,
-        testLogPath);
+        testLogPath,
+        executionEnvironment);
   }
 
   @VisibleForTesting

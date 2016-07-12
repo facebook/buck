@@ -24,6 +24,7 @@ import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.TestEventConfigerator;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.TestStatusMessageEvent;
 import com.facebook.buck.rules.TestSummaryEvent;
 import com.facebook.buck.step.StepEvent;
@@ -287,11 +288,13 @@ public class TestThreadStateRendererTest {
         ANSI,
         FORMAT_TIME_FUNCTION,
         timeMs,
-        testEvents,
         testSummaries,
         testStatusMessages,
         runningSteps,
-        accumulatedTimes);
+        new AccumulatedTimeTracker(
+            ImmutableMap.<Long, Optional<? extends BuildRuleEvent>>of(),
+            testEvents,
+            accumulatedTimes));
   }
 
   private ImmutableList<String> renderLines(TestThreadStateRenderer renderer, boolean sortByTime) {

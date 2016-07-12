@@ -32,6 +32,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.StepEvent;
+import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.util.Ansi;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -208,9 +209,11 @@ public class BuildThreadStateRendererTest {
         ANSI,
         FORMAT_TIME_FUNCTION,
         timeMs,
-        buildEvents,
         runningSteps,
-        accumulatedTimes);
+        new AccumulatedTimeTracker(
+            buildEvents,
+            ImmutableMap.<Long, Optional<? extends TestRuleEvent>>of(),
+            accumulatedTimes));
   }
 
   private ImmutableList<String> renderLines(BuildThreadStateRenderer renderer, boolean sortByTime) {
