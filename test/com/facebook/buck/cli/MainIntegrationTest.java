@@ -16,7 +16,9 @@
 
 package com.facebook.buck.cli;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import static org.hamcrest.Matchers.containsString;
 
@@ -74,6 +76,22 @@ public class MainIntegrationTest {
     workspace.setUp();
     workspace.runBuckCommand("targets", "--config", "buildfile.includes=//includes.py")
         .assertSuccess();
+  }
+
+  @Test
+  public void testNoRepositoriesConfigOverride() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "includes_override", tmp);
+    workspace.setUp();
+    try {
+      workspace.runBuckCommand("targets", "--config", "repositories.secondary=../secondary");
+      fail("Did not expect to allow repositories override");
+    } catch (HumanReadableException expected) {
+      assertEquals("Overriding repository locations from the command line " +
+          "is not supported. Please place a .buckconfig.local in the appropriate location and " +
+          "use that instead.",
+          expected.getMessage());
+    }
   }
 
   @Test

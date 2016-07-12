@@ -107,7 +107,20 @@ public abstract class AbstractCommand implements Command {
             value);
       }
 
-      builder.put(cellName, key.get(0), key.get(1), value);
+      // Overrides for locations of transitive children of cells are weird as the order of overrides
+      // can affect the result (for example `-c a/b/c.k=v -c a/b//repositories.c=foo` causes an
+      // interesting problem as the a/b/c cell gets created as a side-effect of the first override,
+      // but the second override wants to change its identity).
+      // It's generally a better idea to use the .buckconfig.local mechanism when overriding
+      // repositories anyway, so here we simply disallow them.
+      String section = key.get(0);
+      if (section.equals("repositories")) {
+        throw new HumanReadableException("Overriding repository locations from the command line " +
+            "is not supported. Please place a .buckconfig.local in the appropriate location and " +
+            "use that instead.");
+      }
+
+      builder.put(cellName, section, key.get(1), value);
     }
     if (numThreads != null) {
       builder.put(Optional.of("*"), "build", "threads", String.valueOf(numThreads));
