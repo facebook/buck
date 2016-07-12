@@ -57,6 +57,7 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileBuilder;
+import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -781,6 +782,33 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         buildRule.getBuildTarget().getFlavors(),
         hasItem(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR));
+  }
+
+  @Test
+  public void linkerFlagsLocationMacro() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    Genrule dep =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("out")
+            .build(resolver);
+    CxxLibraryBuilder builder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule#shared,platform"))
+            .setLinkerFlags(ImmutableList.of("--linker-script=$(location //:dep)"))
+            .setSrcs(
+                ImmutableSortedSet.<SourceWithFlags>of(
+                    SourceWithFlags.of(new FakeSourcePath("foo.c"))));
+    assertThat(
+        builder.findImplicitDeps(),
+        hasItem(dep.getBuildTarget()));
+    BuildRule binary = builder.build(resolver);
+    assertThat(binary, instanceOf(CxxLink.class));
+    assertThat(
+        Arg.stringify(((CxxLink) binary).getArgs()),
+        hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+    assertThat(
+        binary.getDeps(),
+        hasItem(dep));
   }
 
   @Test

@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -32,7 +33,6 @@ import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.model.MacroException;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
@@ -264,6 +264,18 @@ public class CxxBinaryDescription implements
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg) {
+    return findDepsForTargetFromConstructorArgs(
+        buildTarget,
+        cellRoots,
+        constructorArg.linkerFlags.get(),
+        constructorArg.platformLinkerFlags.get().getValues());
+  }
+
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      ImmutableList<String> linkerFlags,
+      ImmutableList<ImmutableList<String>> platformLinkerFlags) {
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
 
     // Get any parse time deps from the C/C++ platforms.
@@ -273,10 +285,10 @@ public class CxxBinaryDescription implements
                 .getValue(buildTarget.getFlavors())
                 .or(defaultCxxPlatform)));
 
-    Iterable<Iterable<String>> macroStrings =
-        ImmutableList.<Iterable<String>>builder()
-            .add(constructorArg.linkerFlags.get())
-            .addAll(constructorArg.platformLinkerFlags.get().getValues())
+    ImmutableList<ImmutableList<String>> macroStrings =
+        ImmutableList.<ImmutableList<String>>builder()
+            .add(linkerFlags)
+            .addAll(platformLinkerFlags)
             .build();
     for (String macroString : Iterables.concat(macroStrings)) {
       try {
@@ -293,7 +305,7 @@ public class CxxBinaryDescription implements
     return deps.build();
   }
 
-  @Override
+      @Override
   public boolean hasFlavors(ImmutableSet<Flavor> inputFlavors) {
     Set<Flavor> flavors = inputFlavors;
 

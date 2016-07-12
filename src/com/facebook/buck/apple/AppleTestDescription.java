@@ -390,6 +390,11 @@ public class AppleTestDescription implements
     if (xctoolZipTarget.isPresent()) {
       deps.add(xctoolZipTarget.get());
     }
+    deps.addAll(
+        appleLibraryDescription.findDepsForTargetFromConstructorArgs(
+            buildTarget,
+            cellRoots,
+            constructorArg));
     return deps.build();
   }
 

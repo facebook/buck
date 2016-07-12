@@ -42,6 +42,12 @@ public class CxxTestBuilder extends
         target);
   }
 
+  public CxxTestBuilder(
+      BuildTarget target,
+      CxxBuckConfig config) {
+    this(target, config, createDefaultPlatform(), createDefaultPlatforms());
+  }
+
   public CxxTestBuilder(BuildTarget target) {
     this(target, createDefaultConfig(), createDefaultPlatform(), createDefaultPlatforms());
   }

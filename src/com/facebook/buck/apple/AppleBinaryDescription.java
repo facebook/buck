@@ -35,7 +35,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePath;
@@ -43,6 +45,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -61,11 +64,15 @@ import java.util.Set;
 public class AppleBinaryDescription implements
     Description<AppleBinaryDescription.Arg>,
     Flavored,
+    ImplicitDepsInferringDescription<AppleBinaryDescription.Arg>,
     ImplicitFlavorsInferringDescription,
     MetadataProvidingDescription<AppleBinaryDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_binary");
   public static final Flavor APP_FLAVOR = ImmutableFlavor.of("app");
+  public static final Sets.SetView<Flavor> NON_DELEGATE_FLAVORS = Sets.union(
+      AppleDebugFormat.FLAVOR_DOMAIN.getFlavors(),
+      ImmutableSet.of(APP_FLAVOR));
   public static final Flavor LEGACY_WATCH_FLAVOR = ImmutableFlavor.of("legacy_watch");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
@@ -117,17 +124,9 @@ public class AppleBinaryDescription implements
     if (FluentIterable.from(flavors).allMatch(IS_SUPPORTED_FLAVOR)) {
       return true;
     }
-    final ImmutableSet<Flavor> delegateFlavors = ImmutableSet.copyOf(
-        Sets.difference(
-            flavors,
-            Sets.union(
-                AppleDebugFormat.FLAVOR_DOMAIN.getFlavors(),
-                ImmutableSet.of(APP_FLAVOR))));
-    Collection<ImmutableSortedSet<Flavor>> thinFlavorSets =
-        MultiarchFileInfos.generateThinFlavors(
-            platformFlavorsToAppleCxxPlatforms.getFlavors(),
-            ImmutableSortedSet.copyOf(delegateFlavors));
-    if (thinFlavorSets.size() > 1) {
+
+    Collection<ImmutableSortedSet<Flavor>> thinFlavorSets = generateThinDelegateFlavors(flavors);
+    if (thinFlavorSets.size() > 0) {
       return Iterables.all(
           thinFlavorSets,
           new Predicate<ImmutableSortedSet<Flavor>>() {
@@ -137,8 +136,18 @@ public class AppleBinaryDescription implements
             }
           });
     } else {
-      return delegate.hasFlavors(delegateFlavors);
+      return delegate.hasFlavors(
+          ImmutableSet.copyOf(Sets.difference(flavors, NON_DELEGATE_FLAVORS)));
     }
+  }
+
+  private Collection<ImmutableSortedSet<Flavor>> generateThinDelegateFlavors(
+      ImmutableSet<Flavor> flavors) {
+    final ImmutableSet<Flavor> delegateFlavors = ImmutableSet.copyOf(
+        Sets.difference(flavors, NON_DELEGATE_FLAVORS));
+    return MultiarchFileInfos.generateThinFlavors(
+        platformFlavorsToAppleCxxPlatforms.getFlavors(),
+        ImmutableSortedSet.copyOf(delegateFlavors));
   }
 
   @Override
@@ -404,6 +413,36 @@ public class AppleBinaryDescription implements
         argDefaultFlavors,
         TYPE,
         CxxBinaryDescription.TYPE);
+  }
+
+  @Override
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      final BuildTarget buildTarget,
+      final CellPathResolver cellRoots,
+      final Arg constructorArg) {
+    Collection<ImmutableSortedSet<Flavor>> thinFlavorSets =
+        generateThinDelegateFlavors(buildTarget.getFlavors());
+    if (thinFlavorSets.size() > 0) {
+      return Iterables.concat(
+          Iterables.transform(
+              thinFlavorSets,
+              new Function<ImmutableSortedSet<Flavor>, Iterable<BuildTarget>>() {
+                @Override
+                public Iterable<BuildTarget> apply(ImmutableSortedSet<Flavor> input) {
+                  return delegate.findDepsForTargetFromConstructorArgs(
+                      buildTarget.withFlavors(input),
+                      cellRoots,
+                      constructorArg.linkerFlags.get(),
+                      constructorArg.platformLinkerFlags.get().getValues());
+                }
+              }));
+    } else {
+      return delegate.findDepsForTargetFromConstructorArgs(
+          buildTarget,
+          cellRoots,
+          constructorArg.linkerFlags.get(),
+          constructorArg.platformLinkerFlags.get().getValues());
+    }
   }
 
   @SuppressFieldNotInitialized

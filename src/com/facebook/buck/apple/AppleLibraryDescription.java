@@ -37,7 +37,9 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePath;
@@ -62,6 +64,7 @@ import java.util.Set;
 public class AppleLibraryDescription implements
     Description<AppleLibraryDescription.Arg>,
     Flavored,
+    ImplicitDepsInferringDescription<AppleLibraryDescription.Arg>,
     ImplicitFlavorsInferringDescription,
     MetadataProvidingDescription<AppleLibraryDescription.Arg> {
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_library");
@@ -420,6 +423,27 @@ public class AppleLibraryDescription implements
         argDefaultFlavors,
         TYPE,
         CxxLibraryDescription.TYPE);
+  }
+
+  @Override
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      final BuildTarget buildTarget,
+      final CellPathResolver cellRoots,
+      final AppleLibraryDescription.Arg constructorArg) {
+    return findDepsForTargetFromConstructorArgs(
+        buildTarget,
+        cellRoots,
+        (AppleNativeTargetDescriptionArg) constructorArg);
+  }
+
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      final BuildTarget buildTarget,
+      final CellPathResolver cellRoots,
+      final AppleNativeTargetDescriptionArg constructorArg) {
+    return delegate.findDepsForTargetFromConstructorArgs(
+        buildTarget,
+        cellRoots,
+        constructorArg);
   }
 
   public static boolean isSharedLibraryTarget(BuildTarget target) {

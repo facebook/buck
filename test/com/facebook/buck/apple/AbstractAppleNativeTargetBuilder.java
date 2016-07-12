@@ -21,10 +21,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -87,6 +87,10 @@ public abstract class AbstractAppleNativeTargetBuilder<
     return getThis();
   }
 
+  public BUILDER setLinkerFlags(ImmutableList<String> linkerFlags) {
+    return setLinkerFlags(Optional.of(linkerFlags));
+  }
+
   public BUILDER setExportedLinkerFlags(Optional<ImmutableList<String>> exportedLinkerFlags) {
     arg.exportedLinkerFlags = exportedLinkerFlags;
     return getThis();
@@ -95,6 +99,10 @@ public abstract class AbstractAppleNativeTargetBuilder<
   public BUILDER setSrcs(Optional<ImmutableSortedSet<SourceWithFlags>> srcs) {
     arg.srcs = srcs;
     return getThis();
+  }
+
+  public BUILDER setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
+    return setSrcs(Optional.of(srcs));
   }
 
   public BUILDER setExtraXcodeSources(Optional<ImmutableList<SourcePath>> extraXcodeSources) {

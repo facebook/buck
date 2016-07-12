@@ -254,6 +254,44 @@ public class CxxTestDescriptionTest {
         Matchers.hasItem(dep));
   }
 
+  @Test
+  public void linkerFlagsLocationMacro() throws Exception {
+    BuildTarget gtestTarget = BuildTargetFactory.newInstance("//:gtest_dep");
+    TargetNode<?> gtest = new CxxLibraryBuilder(gtestTarget).build();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(gtest),
+            new DefaultTargetNodeToBuildRuleTransformer());
+    new CxxLibraryBuilder(gtestTarget).build(resolver);
+    Genrule dep =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("out")
+            .build(resolver);
+    CxxBuckConfig config = new CxxBuckConfig(
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.<String, ImmutableMap<String, String>>of(
+                    "cxx",
+                    ImmutableMap.<String, String>of("gtest_dep", "//:gtest_dep")))
+            .build());
+    CxxTestBuilder builder =
+        new CxxTestBuilder(BuildTargetFactory.newInstance("//:rule"), config)
+            .setLinkerFlags(ImmutableList.of("--linker-script=$(location //:dep)"));
+    assertThat(
+        builder.findImplicitDeps(),
+        Matchers.hasItem(dep.getBuildTarget()));
+    CxxTest test = (CxxTest) builder.build(resolver);
+    CxxLink binary =
+        (CxxLink) resolver.getRule(
+            CxxDescriptionEnhancer.createCxxLinkTarget(test.getBuildTarget()));
+    assertThat(binary, Matchers.instanceOf(CxxLink.class));
+    assertThat(
+        Arg.stringify(binary.getArgs()),
+        Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+    assertThat(
+        binary.getDeps(),
+        Matchers.hasItem(dep));
+  }
 
   @Test
   public void platformLinkerFlagsLocationMacroWithMatch() throws Exception {

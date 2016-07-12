@@ -95,6 +95,11 @@ public abstract class AbstractNodeBuilder<A> {
     return build(resolver, new FakeProjectFilesystem(), TargetGraph.EMPTY);
   }
 
+  public final BuildRule build(BuildRuleResolver resolver, TargetGraph targetGraph)
+      throws NoSuchBuildTargetException {
+    return build(resolver, new FakeProjectFilesystem(), targetGraph);
+  }
+
   public final BuildRule build(BuildRuleResolver resolver, ProjectFilesystem filesystem)
       throws NoSuchBuildTargetException {
     return build(resolver, filesystem, TargetGraph.EMPTY);

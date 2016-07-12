@@ -22,6 +22,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.MacroException;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -45,7 +46,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
@@ -823,18 +823,15 @@ public class CxxLibraryDescription implements
     deps.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));
 
     try {
-      for (ImmutableList<String> values :
-          Optional.presentInstances(ImmutableList.of(
-                  constructorArg.linkerFlags,
-                  constructorArg.exportedLinkerFlags))) {
-        for (String val : values) {
-          deps.addAll(MACRO_HANDLER.extractParseTimeDeps(buildTarget, cellRoots, val));
-        }
+      for (String val : Iterables.concat(
+          constructorArg.linkerFlags.get(),
+          constructorArg.exportedLinkerFlags.get())) {
+        deps.addAll(MACRO_HANDLER.extractParseTimeDeps(buildTarget, cellRoots, val));
       }
       for (PatternMatchedCollection<ImmutableList<String>> values :
-          Optional.presentInstances(ImmutableList.of(
-                  constructorArg.platformLinkerFlags,
-                  constructorArg.exportedPlatformLinkerFlags))) {
+          ImmutableList.of(
+                  constructorArg.platformLinkerFlags.get(),
+                  constructorArg.exportedPlatformLinkerFlags.get())) {
         for (Pair<Pattern, ImmutableList<String>> pav : values.getPatternsAndValues()) {
           for (String val : pav.getSecond()) {
             deps.addAll(
