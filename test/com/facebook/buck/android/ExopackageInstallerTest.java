@@ -204,6 +204,8 @@ public class ExopackageInstallerTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.writeLinesToPath(
         ImmutableList.of(
+            ".some_config",
+            ".more_config with_spaces",
             "filename.jar aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             "dir/anotherfile.jar bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
         Paths.get("metadata.txt"));

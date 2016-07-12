@@ -738,6 +738,10 @@ public class ExopackageInstaller {
       ProjectFilesystem filesystem) throws IOException {
     ImmutableMultimap.Builder<String, Path> builder = ImmutableMultimap.builder();
     for (String line : filesystem.readLines(metadataTxt)) {
+      // ignore lines that start with '.'
+      if (line.startsWith(".")) {
+        continue;
+      }
       List<String> parts = Splitter.on(' ').splitToList(line);
       if (parts.size() < 2) {
         throw new RuntimeException("Illegal line in metadata file: " + line);
