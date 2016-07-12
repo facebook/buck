@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io;
 
+import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
@@ -52,6 +53,8 @@ import java.util.UUID;
 
 public final class MoreFiles {
 
+  private static final Logger LOG = Logger.get(MoreFiles.class);
+
   // Extended attribute bits for directories and symlinks; see:
   // http://unix.stackexchange.com/questions/14705/the-zip-formats-external-file-attribute
   @SuppressWarnings("PMD.AvoidUsingOctalValues")
@@ -60,8 +63,7 @@ public final class MoreFiles {
   public static final long S_IFLNK = 0120000;
 
   public enum DeleteRecursivelyOptions {
-      IGNORE_NO_SUCH_FILE_EXCEPTION,
-      DELETE_CONTENTS_ONLY,
+    DELETE_CONTENTS_ONLY,
   }
 
   // Unix has two illegal characters - '/', and '\0'.  Windows has ten, which includes those two.
@@ -103,7 +105,8 @@ public final class MoreFiles {
   public static void deleteRecursivelyIfExists(Path path) throws IOException {
     deleteRecursivelyWithOptions(
         path,
-        EnumSet.of(DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION));
+        EnumSet.noneOf(DeleteRecursivelyOptions.class),
+        ErrorHandler.IGNORE_MISSING);
   }
 
   /**
@@ -165,15 +168,21 @@ public final class MoreFiles {
   }
 
   public static void deleteRecursively(final Path path) throws IOException {
-    deleteRecursivelyWithOptions(path, EnumSet.noneOf(DeleteRecursivelyOptions.class));
+    deleteRecursivelyWithOptions(
+        path,
+        EnumSet.noneOf(DeleteRecursivelyOptions.class),
+        ErrorHandler.THROW);
   }
 
   public static void deleteRecursivelyWithOptions(
       final Path path,
-      final EnumSet<DeleteRecursivelyOptions> options) throws IOException {
-    try {
-        // Adapted from http://codingjunkie.net/java-7-copy-move/.
-        SimpleFileVisitor<Path> deleteDirVisitor = new SimpleFileVisitor<Path>() {
+      final EnumSet<DeleteRecursivelyOptions> options,
+      final ErrorHandler errorHandler)
+      throws IOException {
+    // Adapted from http://codingjunkie.net/java-7-copy-move/.
+    Files.walkFileTree(
+        path,
+        new SimpleFileVisitor<Path>() {
 
           @Override
           public FileVisitResult visitFile(
@@ -184,27 +193,26 @@ public final class MoreFiles {
           }
 
           @Override
+          public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+            errorHandler.handle(exc);
+            return FileVisitResult.CONTINUE;
+          }
+
+          @Override
           public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
-            if (e == null) {
+            if (e != null) {
+              errorHandler.handle(e);
+            } else {
               // Allow leaving the top-level directory in place (e.g. for deleting the contents of
               // the trash dir but not the trash dir itself)
               if (!(options.contains(DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY) &&
-                    dir.equals(path))) {
+                  dir.equals(path))) {
                 Files.delete(dir);
               }
-              return FileVisitResult.CONTINUE;
-            } else {
-              throw e;
             }
+            return FileVisitResult.CONTINUE;
           }
-        };
-        Files.walkFileTree(path, deleteDirVisitor);
-    } catch (NoSuchFileException e) {
-      if (!options.contains(DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION)) {
-        throw e;
-      }
-    }
-
+        });
   }
 
   /**
@@ -352,4 +360,51 @@ public final class MoreFiles {
       Files.deleteIfExists(tempPath);
     }
   }
+
+  /**
+   * Callback to handle errors encountered when deleting recursively.
+   */
+  public abstract static class ErrorHandler {
+
+    /**
+     * An error handler that throws all errors immediately.
+     */
+    public static final ErrorHandler THROW =
+        new ErrorHandler() {
+          @Override
+          public void handle(IOException e) throws IOException {
+            throw e;
+          }
+        };
+
+    /**
+     * An error handler that ignores missing files and throws all other errors.
+     */
+    public static final ErrorHandler IGNORE_MISSING =
+        new ErrorHandler() {
+          @Override
+          public void handle(IOException e) throws IOException {
+            if (e instanceof NoSuchFileException) {
+              return;
+            }
+            throw e;
+          }
+        };
+
+    /**
+     * @return an {@link ErrorHandler} which just logs a warning when encountering errors.
+     */
+    public static ErrorHandler warn(final String msg, final Object... params) {
+      return new ErrorHandler() {
+        @Override
+        public void handle(IOException e) throws IOException {
+          LOG.warn(e, msg, params);
+        }
+      };
+    }
+
+    public abstract void handle(IOException e) throws IOException;
+
+  }
+
 }

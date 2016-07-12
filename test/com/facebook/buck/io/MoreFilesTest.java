@@ -95,7 +95,8 @@ public class MoreFilesTest {
     Files.createDirectories(childDir);
     MoreFiles.deleteRecursivelyWithOptions(
         dirToDelete,
-        EnumSet.of(MoreFiles.DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY));
+        EnumSet.of(MoreFiles.DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY),
+        MoreFiles.ErrorHandler.THROW);
     assertThat(Files.exists(dirToDelete), is(true));
     assertThat(Files.exists(childDir), is(false));
   }

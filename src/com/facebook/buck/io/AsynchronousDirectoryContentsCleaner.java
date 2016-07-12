@@ -90,11 +90,10 @@ public class AsynchronousDirectoryContentsCleaner {
             try {
               MoreFiles.deleteRecursivelyWithOptions(
                   pathToClean,
-                  EnumSet.of(
-                      MoreFiles.DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION,
-                      MoreFiles.DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY));
+                  EnumSet.of(MoreFiles.DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY),
+                  MoreFiles.ErrorHandler.warn("I/O error cleaning trash"));
             } catch (IOException e) {
-              LOG.warn(e, "I/O error cleaning trash");
+              throw new RuntimeException(e);
             } finally {
               LOG.debug("Done cleaning %s", pathToClean);
             }
