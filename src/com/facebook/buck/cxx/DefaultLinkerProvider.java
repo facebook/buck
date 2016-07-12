@@ -56,9 +56,9 @@ public class DefaultLinkerProvider implements LinkerProvider {
       case WINDOWS:
         return new GnuLinker(tool);
       case UNKNOWN:
-        return new UnknownLinker(tool);
+      default:
+        throw new IllegalStateException("unexpected type: " + type);
     }
-    throw new IllegalStateException("unexpected type: " + type);
   }
 
   @Override
