@@ -179,11 +179,9 @@ public class CxxBuckConfig {
         result = new GnuArchiver(ar);
         break;
       case UNKNOWN:
-        result = new UnknownArchiver(ar);
-        break;
       default:
         throw new RuntimeException(
-            "Invalid platform for archiver. Must be one of {MACOS, LINUX, WINDOWS, UNKNOWN}");
+            "Invalid platform for archiver. Must be one of {MACOS, LINUX, WINDOWS}");
     }
     return Optional.of(result);
   }

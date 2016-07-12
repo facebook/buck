@@ -207,8 +207,6 @@ public class CxxPlatformsTest {
         getPlatformArchiver(Platform.LINUX), instanceOf(GnuArchiver.class));
     assertThat("WINDOWS archiver was not a GnuArchiver instance",
         getPlatformArchiver(Platform.WINDOWS), instanceOf(GnuArchiver.class));
-    assertThat("UNKNOWN archiver was not a UnknownArchiver instance",
-        getPlatformArchiver(Platform.UNKNOWN), instanceOf(UnknownArchiver.class));
   }
 
   @Test
