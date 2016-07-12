@@ -288,10 +288,10 @@ public class KnownBuildRuleTypes {
     if (hostCxxPlatform.isPresent()) {
       ImmutableFlavor hostFlavor = ImmutableFlavor.of(hostCxxPlatform.get());
       if (cxxPlatforms.containsKey(hostFlavor)) {
-        return CxxPlatforms.copyPlatformWithFlavorAndConfig(
-            cxxPlatforms.get(hostFlavor),
-            cxxBuckConfig,
-            DefaultCxxPlatforms.FLAVOR);
+        return CxxPlatform.builder()
+            .from(cxxPlatforms.get(hostFlavor))
+            .setFlavor(DefaultCxxPlatforms.FLAVOR)
+            .build();
       }
     }
 
@@ -390,21 +390,6 @@ public class KnownBuildRuleTypes {
         cxxBuckConfig,
         cxxPlatformsMap,
         systemDefaultCxxPlatform);
-
-    // Add platforms for each cxx flavor obtained from the buck config files
-    // from sections of the form cxx#{flavor name}
-    ImmutableSet<Flavor> cxxFlavors = CxxBuckConfig.getCxxFlavors(config);
-    for (Flavor flavor: cxxFlavors) {
-      CxxBuckConfig flavoredCxxBuckConfig =  new CxxBuckConfig(config, flavor);
-      CxxPlatform defaultPlatformForFlavor = CxxPlatforms.getConfigDefaultCxxPlatform(
-          flavoredCxxBuckConfig,
-          cxxPlatformsMap,
-          systemDefaultCxxPlatform);
-      cxxPlatformsBuilder.put(flavor, CxxPlatforms.copyPlatformWithFlavorAndConfig(
-          defaultPlatformForFlavor,
-          flavoredCxxBuckConfig,
-          flavor));
-    }
 
     cxxPlatformsMap = cxxPlatformsBuilder.build();
 

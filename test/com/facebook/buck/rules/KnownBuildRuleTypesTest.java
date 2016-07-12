@@ -36,7 +36,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -172,7 +171,7 @@ public class KnownBuildRuleTypesTest {
 
   @Test
   public void whenJavacIsSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithDifferentRuleKey()
-      throws IOException, NoSuchBuildTargetException, InterruptedException {
+      throws Exception {
     final File javac;
     if (Platform.detect() == Platform.WINDOWS) {
       javac = new File("C:/Windows/system32/rundll32.exe");
@@ -215,7 +214,7 @@ public class KnownBuildRuleTypesTest {
 
   @Test
   public void whenRegisteringDescriptionsLastOneWins()
-      throws IOException, NoSuchBuildTargetException {
+      throws Exception {
     FlavorDomain<CxxPlatform> cxxPlatforms = FlavorDomain.of("C/C++ platform");
     CxxPlatform defaultPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
 
@@ -256,7 +255,7 @@ public class KnownBuildRuleTypesTest {
 
   @Test
   public void createInstanceShouldReturnDifferentInstancesIfCalledWithDifferentParameters()
-      throws IOException, InterruptedException {
+      throws Exception {
     KnownBuildRuleTypes knownBuildRuleTypes1 = KnownBuildRuleTypes.createInstance(
         FakeBuckConfig.builder().build(),
         createExecutor(),
@@ -281,8 +280,7 @@ public class KnownBuildRuleTypesTest {
   }
 
   @Test
-  public void canSetDefaultPlatformToDefault() throws IOException,
-        InterruptedException {
+  public void canSetDefaultPlatformToDefault() throws Exception {
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
         "cxx", ImmutableMap.of("default_platform", "default"));
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
@@ -323,7 +321,6 @@ public class KnownBuildRuleTypesTest {
             CxxPlatformUtils.DEFAULT_PLATFORM);
     assertEquals(CxxPlatformUtils.DEFAULT_PLATFORM, hostPlatform);
   }
-
 
   private ProcessExecutor createExecutor() throws IOException {
     File javac = temporaryFolder.newFile();

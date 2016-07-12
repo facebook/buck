@@ -114,54 +114,6 @@ public class CxxPlatforms {
     return builder.build();
   }
 
-  /**
-   * Creates a CxxPlatform with a defined flavor for a CxxBuckConfig with default values
-   * provided from another default CxxPlatform
-   */
-  public static CxxPlatform copyPlatformWithFlavorAndConfig(
-    CxxPlatform defaultPlatform,
-    CxxBuckConfig config,
-    Flavor flavor
-  ) {
-    CxxPlatform.Builder builder = CxxPlatform.builder();
-    builder
-        .setFlavor(flavor)
-        .setAs(
-            config.getCompilerProvider(flavor, "as", CxxToolProvider.Type.GCC)
-                .or(defaultPlatform.getAs()))
-        .setAspp(
-            config.getPreprocessorProvider(flavor, "aspp", CxxToolProvider.Type.GCC)
-                .or(defaultPlatform.getAspp()))
-        .setCc(config.getCompilerProvider(flavor, "cc").or(defaultPlatform.getCc()))
-        .setCxx(config.getCompilerProvider(flavor, "cxx").or(defaultPlatform.getCxx()))
-        .setCpp(config.getPreprocessorProvider(flavor, "cpp").or(defaultPlatform.getCpp()))
-        .setCxxpp(config.getPreprocessorProvider(flavor, "cxxpp").or(defaultPlatform.getCxxpp()))
-        .setCuda(config.getCompilerProvider(flavor, "cuda").or(defaultPlatform.getCuda()))
-        .setCudapp(config.getPreprocessorProvider(flavor, "cudapp").or(defaultPlatform.getCudapp()))
-        .setAsm(config.getCompilerProvider(flavor, "asm").or(defaultPlatform.getAsm()))
-        .setAsmpp(config.getPreprocessorProvider(flavor, "asmpp").or(defaultPlatform.getAsmpp()))
-        .setLd(
-            config.getLinkerProvider(flavor, "ld", defaultPlatform.getLd().getType())
-                .or(defaultPlatform.getLd()))
-        .setAr(getTool(flavor, "ar", config)
-                .transform(getArchiver(defaultPlatform.getAr().getClass(), config))
-                .or(defaultPlatform.getAr()))
-        .setRanlib(getTool(flavor, "ranlib", config).or(defaultPlatform.getRanlib()))
-        .setStrip(getTool(flavor, "strip", config).or(defaultPlatform.getStrip()))
-        .setSymbolNameTool(defaultPlatform.getSymbolNameTool())
-        .setSharedLibraryExtension(defaultPlatform.getSharedLibraryExtension())
-        .setSharedLibraryVersionedExtensionFormat(
-            defaultPlatform.getSharedLibraryVersionedExtensionFormat())
-        .setDebugPathSanitizer(defaultPlatform.getDebugPathSanitizer());
-
-    if (config.getDefaultPlatform().isPresent()) {
-      // Try to add the tool flags from the default platform
-      CxxPlatforms.addToolFlagsFromCxxPlatform(builder, defaultPlatform);
-    }
-    CxxPlatforms.addToolFlagsFromConfig(config, builder);
-    return builder.build();
-  }
-
   private static Function<Tool, Archiver> getArchiver(final Class<? extends Archiver> arClass,
       final CxxBuckConfig config) {
     return new Function<Tool, Archiver>() {
@@ -202,21 +154,6 @@ public class CxxPlatforms {
         .addAllLdflags(config.getFlags("ldflags").or(DEFAULT_LDFLAGS))
         .addAllArflags(config.getFlags("arflags").or(DEFAULT_ARFLAGS))
         .addAllRanlibflags(config.getFlags("ranlibflags").or(DEFAULT_RANLIBFLAGS));
-  }
-
-  public static void addToolFlagsFromCxxPlatform(
-    CxxPlatform.Builder builder,
-    CxxPlatform platform) {
-    builder
-        .addAllAsflags(platform.getAsflags())
-        .addAllAsppflags(platform.getAsppflags())
-        .addAllCflags(platform.getCflags())
-        .addAllCxxflags(platform.getCxxflags())
-        .addAllCppflags(platform.getCppflags())
-        .addAllCxxppflags(platform.getCxxppflags())
-        .addAllLdflags(platform.getLdflags())
-        .addAllArflags(platform.getArflags())
-        .addAllRanlibflags(platform.getRanlibflags());
   }
 
   public static CxxPlatform getConfigDefaultCxxPlatform(
