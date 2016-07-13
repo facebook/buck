@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 633e78dea2450117cd3341d714d7ed4142714245 #@#
+#@# GENERATED FILE: DO NOT MODIFY 5bfcad6d43f47af2e2f1a2e1ccbe9a00a39c4b38 #@#
 {
   "network" : {
     "deps" : [
@@ -7,6 +7,7 @@
       "//src/com/facebook/buck/util/network:network",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/util:testutil",
+      "//test/com/facebook/buck/util/network:testutil",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:hamcrest-junit",
       "//third-party/java/hamcrest:java-hamcrest",
