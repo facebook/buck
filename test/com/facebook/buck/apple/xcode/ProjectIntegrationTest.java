@@ -330,4 +330,39 @@ public class ProjectIntegrationTest {
 
     assertThat(Files.exists(workspacePath), Matchers.equalTo(true));
   }
+
+  @Test
+  public void testBuckProjectBuckConfigWithoutTestsGenerate()
+      throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "project_buckconfig_without_tests_generate",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "//Apps:workspace");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
+
+  @Test
+  public void testBuckProjectBuckConfigWithoutTestsGenerateWithTests()
+      throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "project_buckconfig_without_tests_generate_with_tests",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--with-tests",
+        "//Apps:workspace");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
 }

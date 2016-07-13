@@ -171,6 +171,11 @@ public class ProjectCommand extends BuildCommand {
   private boolean withoutTests = false;
 
   @Option(
+      name = "--with-tests",
+      usage = "When generating a project slice, generate with all the tests")
+  private boolean withTests = false;
+
+  @Option(
       name = "--without-dependencies-tests",
       usage = "When generating a project slice, includes tests that test code in main target, " +
           "but exclude tests that test dependencies")
@@ -323,12 +328,31 @@ public class ProjectCommand extends BuildCommand {
             });
   }
 
-  public boolean isWithTests() {
-    return !withoutTests;
+  private ProjectTestsMode testsMode(BuckConfig buckConfig) {
+    ProjectTestsMode parameterMode = ProjectTestsMode.WITH_TESTS;
+
+    ProjectCommand.Ide projectIde = getIdeFromBuckConfig(buckConfig).orNull();
+    if (projectIde == Ide.XCODE) {
+      parameterMode = buckConfig.xcodeProjectTestsMode();
+    }
+
+    if (withoutTests) {
+      parameterMode = ProjectTestsMode.WITHOUT_TESTS;
+    } else if (withoutDependenciesTests) {
+      parameterMode = ProjectTestsMode.WITHOUT_DEPENDENCIES_TESTS;
+    } else if (withTests) {
+      parameterMode = ProjectTestsMode.WITH_TESTS;
+    }
+
+    return parameterMode;
   }
 
-  public boolean isWithDependenciesTests() {
-    return !withoutDependenciesTests;
+  public boolean isWithTests(BuckConfig buckConfig) {
+    return testsMode(buckConfig) != ProjectTestsMode.WITHOUT_TESTS;
+  }
+
+  public boolean isWithDependenciesTests(BuckConfig buckConfig) {
+    return testsMode(buckConfig) == ProjectTestsMode.WITH_TESTS;
   }
 
   private List<String> getInitialTargets(BuckConfig buckConfig) {
@@ -451,8 +475,8 @@ public class ProjectCommand extends BuildCommand {
             projectGraph,
             graphRoots,
             projectPredicates.getAssociatedProjectPredicate(),
-            isWithTests(),
-            isWithDependenciesTests(),
+            isWithTests(params.getBuckConfig()),
+            isWithDependenciesTests(params.getBuckConfig()),
             needsFullRecursiveParse,
             pool.getExecutor());
       } catch (BuildFileParseException |
@@ -854,8 +878,8 @@ public class ProjectCommand extends BuildCommand {
     AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
     ImmutableSet<ProjectGenerator.Option> options = buildWorkspaceGeneratorOptions(
         getReadOnly(params.getBuckConfig()),
-        isWithTests(),
-        isWithDependenciesTests(),
+        isWithTests(params.getBuckConfig()),
+        isWithDependenciesTests(params.getBuckConfig()),
         getCombinedProject(),
         appleConfig.shouldUseHeaderMapsInXcodeProject());
 

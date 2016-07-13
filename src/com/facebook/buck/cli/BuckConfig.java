@@ -481,6 +481,11 @@ public class BuckConfig {
     return getBooleanValue("log", "compress_traces", false);
   }
 
+  public ProjectTestsMode xcodeProjectTestsMode() {
+    return getEnum("project", "xcode_project_tests_mode", ProjectTestsMode.class)
+        .or(ProjectTestsMode.WITH_TESTS);
+  }
+
   public boolean getRestartAdbOnFailure() {
     return Boolean.parseBoolean(getValue("adb", "adb_restart_on_failure").or("true"));
   }
