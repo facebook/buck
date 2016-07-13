@@ -135,8 +135,3 @@ java_library(
     'PUBLIC',
   ],
 )
-
-sh_test(
-  name = 'limit_new_project_filesystem_test',
-  test = 'limit_new_project_filesystem_test.sh',
-)

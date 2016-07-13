@@ -279,9 +279,7 @@ public final class Main {
       this.hashCache = new WatchedFileHashCache(cell.getFilesystem());
       this.buckOutHashCache =
           DefaultFileHashCache.createBuckOutFileHashCache(
-              new ProjectFilesystem(
-                  cell.getFilesystem().getRootPath(),
-                  ImmutableSet.<PathOrGlobMatcher>of()),
+              new ProjectFilesystem(cell.getFilesystem().getRootPath()),
               cell.getFilesystem().getBuckPaths().getBuckOut());
       this.fileEventBus = new EventBus("file-change-events");
 
@@ -797,6 +795,13 @@ public final class Main {
 
         FileHashCache cellHashCache;
         FileHashCache buckOutHashCache;
+        // TODO(Coneko, ruibm, andrewjcg): Determine whether we can use the existing filesystem
+        // object that is in scope instead of creating a new rootCellProjectFilesystem. The primary
+        // difference appears to be that filesystem is created with a Config that is used to produce
+        // ImmutableSet<PathOrGlobMatcher> and BuckPaths for the ProjectFilesystem, whereas this one
+        // uses the defaults.
+        ProjectFilesystem rootCellProjectFilesystem = new ProjectFilesystem(
+            rootCell.getFilesystem().getRootPath());
         if (isDaemon) {
           cellHashCache = getFileHashCacheFromDaemon(rootCell);
           buckOutHashCache = getBuckOutFileHashCacheFromDaemon(rootCell);
@@ -804,9 +809,7 @@ public final class Main {
           cellHashCache = DefaultFileHashCache.createDefaultFileHashCache(rootCell.getFilesystem());
           buckOutHashCache =
               DefaultFileHashCache.createBuckOutFileHashCache(
-                  new ProjectFilesystem(
-                      rootCell.getFilesystem().getRootPath(),
-                      ImmutableSet.<PathOrGlobMatcher>of()),
+                  rootCellProjectFilesystem,
                   rootCell.getFilesystem().getBuckPaths().getBuckOut());
         }
 
@@ -819,8 +822,7 @@ public final class Main {
         // A cache which caches hashes of cell-relative paths which may have been ignore by
         // the main cell cache, and only serves to prevent rehashing the same file multiple
         // times in a single run.
-        allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(
-            new ProjectFilesystem(rootCell.getFilesystem().getRootPath())));
+        allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(rootCellProjectFilesystem));
         for (Path root : FileSystems.getDefault().getRootDirectories()) {
           if (!root.toFile().exists()) {
             // On Windows, it is possible that the system will have a
