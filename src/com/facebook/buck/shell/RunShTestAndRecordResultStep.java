@@ -73,7 +73,8 @@ public class RunShTestAndRecordResultStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     TestResultSummary summary;
     if (context.getPlatform() == Platform.WINDOWS) {
       // Ignore sh_test on Windows.
@@ -119,7 +120,8 @@ public class RunShTestAndRecordResultStep implements Step {
         }
 
         @Override
-        public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+        public StepExecutionResult execute(ExecutionContext context)
+            throws IOException, InterruptedException {
           StepExecutionResult executionResult = super.execute(context);
           if (timedOut) {
             throw new HumanReadableException(
@@ -171,8 +173,6 @@ public class RunShTestAndRecordResultStep implements Step {
     ObjectMapper mapper = context.getObjectMapper();
     try (OutputStream outputStream = filesystem.newFileOutputStream(pathToTestResultFile)) {
       mapper.writeValue(outputStream, summary);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
     }
 
     // Even though the test may have failed, this command executed successfully, so its exit code

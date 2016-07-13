@@ -86,7 +86,8 @@ public abstract class ShellStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws InterruptedException, IOException {
     // Kick off a Process in which this ShellCommand will be run.
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
 
@@ -101,15 +102,9 @@ public abstract class ShellStep implements Step {
       builder.setRedirectInput(ProcessBuilder.Redirect.PIPE);
     }
 
-    int exitCode;
     double initialLoad = OS_JMX.getSystemLoadAverage();
-    try {
-      startTime = System.currentTimeMillis();
-      exitCode = launchAndInteractWithProcess(context, builder.build());
-    } catch (IOException e) {
-      exitCode = 1;
-    }
-
+    startTime = System.currentTimeMillis();
+    int exitCode = launchAndInteractWithProcess(context, builder.build());
     endTime = System.currentTimeMillis();
     double endLoad = OS_JMX.getSystemLoadAverage();
 

@@ -75,12 +75,10 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     try (OutputStream propertyFileStream = new FileOutputStream(propertyFile.toFile())){
       saveParametersToPropertyStream(filesystem, propertyFileStream);
-    } catch (IOException e) {
-      context.logError(e, "Cannot write coverage report generator params to file.");
-      return StepExecutionResult.ERROR;
     }
 
     return super.execute(context);

@@ -180,7 +180,8 @@ public class DxStep extends ShellStep {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     if (options.contains(Option.RUN_IN_PROCESS)) {
       return StepExecutionResult.of(executeInProcess(context));
     } else {

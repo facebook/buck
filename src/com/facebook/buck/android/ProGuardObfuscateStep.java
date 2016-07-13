@@ -169,7 +169,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     StepExecutionResult executionResult = super.execute(context);
 
     // proguard has a peculiar behaviour when multiple -injars/outjars pairs are specified in which
