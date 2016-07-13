@@ -14,12 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
-
-import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.EventKey;
-import com.facebook.buck.event.LeafEvent;
-import com.facebook.buck.event.WorkAdvanceEvent;
+package com.facebook.buck.event;
 
 
 /**

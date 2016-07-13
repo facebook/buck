@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.counters.Counter;
 import com.facebook.buck.counters.IntegerCounter;
+import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;

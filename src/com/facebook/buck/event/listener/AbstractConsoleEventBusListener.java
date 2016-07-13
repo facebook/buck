@@ -31,7 +31,7 @@ import com.facebook.buck.json.ParseBuckFileEvent;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
-import com.facebook.buck.rules.ActionGraphEvent;
+import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleStatus;

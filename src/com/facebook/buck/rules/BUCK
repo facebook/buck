@@ -59,7 +59,6 @@ java_immutables_library(
     'AbstractTargetGraphAndTargetNodes.java',
     'AbstractVersionedTool.java',
     'ActionGraph.java',
-    'ActionGraphEvent.java',
     'AddToRuleKey.java',
     'ArchiveMemberSourcePath.java',
     'BinaryBuildRule.java',
