@@ -239,7 +239,7 @@ public class DaemonIntegrationTest {
               new CapturingPrintStream(),
               new CapturingPrintStream(),
               new ByteArrayInputStream("".getBytes("UTF-8")));
-          int exitCode = main.tryRunMainWithExitCode(
+          int exitCode = main.runMainWithExitCode(
               new BuildId(),
               tmp.getRootPath(),
               Optional.<NGContext>of(new TestContext()),

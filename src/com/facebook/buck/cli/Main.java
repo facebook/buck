@@ -549,92 +549,50 @@ public final class Main {
     this.objectMapper = ObjectMappers.newDefaultInstance();
   }
 
-  private void flushEventListeners(
-      Console console,
-      BuildId buildId,
-      ImmutableList<BuckEventListener> eventListeners)
-      throws InterruptedException {
-    for (BuckEventListener eventListener : eventListeners) {
-      try {
-        eventListener.outputTrace(buildId);
-      } catch (RuntimeException e) {
-        PrintStream stdErr = console.getStdErr();
-        stdErr.println("Ignoring non-fatal error!  The stack trace is below:");
-        e.printStackTrace(stdErr);
+  /* Define all error handling surrounding main command */
+  private void runMainThenExit(String[] args, Optional<NGContext> context) {
+    installUncaughtExceptionHandler(context);
+
+    Path projectRoot = Paths.get(".");
+    int exitCode = FAIL_EXIT_CODE;
+    BuildId buildId = getBuildId(context);
+
+    // Get the client environment, either from this process or from the Nailgun context.
+    ImmutableMap<String, String> clientEnvironment = getClientEnvironment(context);
+
+    try {
+      CommandMode commandMode = CommandMode.RELEASE;
+      exitCode = runMainWithExitCode(
+          buildId,
+          projectRoot,
+          context,
+          clientEnvironment,
+          commandMode,
+          args);
+    } catch (HumanReadableException e) {
+      Console console = new Console(
+          Verbosity.STANDARD_INFORMATION,
+          stdOut,
+          stdErr,
+          new Ansi(
+              AnsiEnvironmentChecking.environmentSupportsAnsiEscapes(platform, clientEnvironment)));
+      console.printBuildFailure(e.getHumanReadableErrorMessage());
+    } catch (InterruptionFailedException e) { // Command could not be interrupted.
+      if (context.isPresent()) {
+        context.get().getNGServer().shutdown(true); // Exit process to halt command execution.
       }
-    }
-  }
-
-  private static Optional<Path> getTestTempDirOverride(
-      BuckConfig config,
-      ImmutableMap<String, String> clientEnvironment,
-      String tmpDirName) {
-    Optional<ImmutableList<String>> testTempDirEnvVars = config.getTestTempDirEnvVars();
-    if (!testTempDirEnvVars.isPresent()) {
-      return Optional.absent();
-    } else {
-      for (String envVar : testTempDirEnvVars.get()) {
-        String val = clientEnvironment.get(envVar);
-        if (val != null) {
-          return Optional.of(Paths.get(val).resolve(tmpDirName));
-        }
+    } catch (Throwable t) {
+      LOG.error(t, "Uncaught exception at top level");
+    } finally {
+      if (context.isPresent()) {
+        System.gc(); // Let VM return memory to OS
       }
-      return Optional.of(Paths.get("/tmp").resolve(tmpDirName));
+      LOG.debug("Done.");
+      LogConfig.flushLogs();
+      // Exit explicitly so that non-daemon threads (of which we use many) don't
+      // keep the VM alive.
+      System.exit(exitCode);
     }
-  }
-
-  private static void moveToTrash(
-      ProjectFilesystem filesystem,
-      Console console,
-      BuildId buildId,
-      Path... pathsToMove) throws IOException {
-    Path trashPath = BuckConstant.getTrashPath().resolve(buildId.toString());
-    filesystem.mkdirs(trashPath);
-    for (Path pathToMove : pathsToMove) {
-      try {
-        // Technically this might throw AtomicMoveNotSupportedException,
-        // but we're moving a path within buck-out, so we don't expect this
-        // to throw.
-        //
-        // If it does throw, we'll complain loudly and synchronously delete
-        // the file instead.
-        filesystem.move(
-            pathToMove,
-            trashPath.resolve(pathToMove.getFileName()),
-            StandardCopyOption.ATOMIC_MOVE);
-      } catch (NoSuchFileException e) {
-        LOG.verbose(e, "Ignoring missing path %s", pathToMove);
-      } catch (AtomicMoveNotSupportedException e) {
-        console.getStdErr().format(
-            "Atomic moves not supported, falling back to synchronous delete: %s",
-            e);
-        MoreFiles.deleteRecursivelyIfExists(pathToMove);
-      }
-    }
-  }
-
-  private static final Watchman buildWatchman(
-      Optional<NGContext> context,
-      ParserConfig parserConfig,
-      Path projectRoot,
-      ImmutableMap<String, String> clientEnvironment,
-      Console console,
-      Clock clock) throws InterruptedException, IOException {
-    Watchman watchman;
-    if (context.isPresent() || parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN) {
-      watchman = Watchman.build(projectRoot, clientEnvironment, console, clock);
-
-      LOG.debug(
-          "Watchman capabilities: %s Watch root: %s Project prefix: %s Glob handler config: %s ",
-          watchman.getCapabilities(),
-          watchman.getWatchRoot(),
-          watchman.getProjectPrefix(),
-          parserConfig.getGlobHandler());
-
-    } else {
-      watchman = Watchman.NULL_WATCHMAN;
-    }
-    return watchman;
   }
 
   /**
@@ -1163,6 +1121,94 @@ public final class Main {
     }
   }
 
+  private void flushEventListeners(
+      Console console,
+      BuildId buildId,
+      ImmutableList<BuckEventListener> eventListeners)
+      throws InterruptedException {
+    for (BuckEventListener eventListener : eventListeners) {
+      try {
+        eventListener.outputTrace(buildId);
+      } catch (RuntimeException e) {
+        PrintStream stdErr = console.getStdErr();
+        stdErr.println("Ignoring non-fatal error!  The stack trace is below:");
+        e.printStackTrace(stdErr);
+      }
+    }
+  }
+
+  private static Optional<Path> getTestTempDirOverride(
+      BuckConfig config,
+      ImmutableMap<String, String> clientEnvironment,
+      String tmpDirName) {
+    Optional<ImmutableList<String>> testTempDirEnvVars = config.getTestTempDirEnvVars();
+    if (!testTempDirEnvVars.isPresent()) {
+      return Optional.absent();
+    } else {
+      for (String envVar : testTempDirEnvVars.get()) {
+        String val = clientEnvironment.get(envVar);
+        if (val != null) {
+          return Optional.of(Paths.get(val).resolve(tmpDirName));
+        }
+      }
+      return Optional.of(Paths.get("/tmp").resolve(tmpDirName));
+    }
+  }
+
+  private static void moveToTrash(
+      ProjectFilesystem filesystem,
+      Console console,
+      BuildId buildId,
+      Path... pathsToMove) throws IOException {
+    Path trashPath = BuckConstant.getTrashPath().resolve(buildId.toString());
+    filesystem.mkdirs(trashPath);
+    for (Path pathToMove : pathsToMove) {
+      try {
+        // Technically this might throw AtomicMoveNotSupportedException,
+        // but we're moving a path within buck-out, so we don't expect this
+        // to throw.
+        //
+        // If it does throw, we'll complain loudly and synchronously delete
+        // the file instead.
+        filesystem.move(
+            pathToMove,
+            trashPath.resolve(pathToMove.getFileName()),
+            StandardCopyOption.ATOMIC_MOVE);
+      } catch (NoSuchFileException e) {
+        LOG.verbose(e, "Ignoring missing path %s", pathToMove);
+      } catch (AtomicMoveNotSupportedException e) {
+        console.getStdErr().format(
+            "Atomic moves not supported, falling back to synchronous delete: %s",
+            e);
+        MoreFiles.deleteRecursivelyIfExists(pathToMove);
+      }
+    }
+  }
+
+  private static final Watchman buildWatchman(
+      Optional<NGContext> context,
+      ParserConfig parserConfig,
+      Path projectRoot,
+      ImmutableMap<String, String> clientEnvironment,
+      Console console,
+      Clock clock) throws InterruptedException, IOException {
+    Watchman watchman;
+    if (context.isPresent() || parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN) {
+      watchman = Watchman.build(projectRoot, clientEnvironment, console, clock);
+
+      LOG.debug(
+          "Watchman capabilities: %s Watch root: %s Project prefix: %s Glob handler config: %s ",
+          watchman.getCapabilities(),
+          watchman.getWatchRoot(),
+          watchman.getProjectPrefix(),
+          parserConfig.getGlobHandler());
+
+    } else {
+      watchman = Watchman.NULL_WATCHMAN;
+    }
+    return watchman;
+  }
+
   private static void closeExecutorService(
       String executorName,
       ExecutorService executorService,
@@ -1530,46 +1576,6 @@ public final class Main {
         executionEnvironment);
   }
 
-  @VisibleForTesting
-  int tryRunMainWithExitCode(
-      BuildId buildId,
-      Path projectRoot,
-      Optional<NGContext> context,
-      ImmutableMap<String, String> clientEnvironment,
-      CommandMode commandMode,
-      String... args)
-      throws IOException, InterruptedException {
-    try {
-      return runMainWithExitCode(
-          buildId,
-          projectRoot,
-          context,
-          clientEnvironment,
-          commandMode,
-          args);
-    } catch (HumanReadableException e) {
-      Console console = new Console(
-          Verbosity.STANDARD_INFORMATION,
-          stdOut,
-          stdErr,
-          new Ansi(
-              AnsiEnvironmentChecking.environmentSupportsAnsiEscapes(platform, clientEnvironment)));
-      console.printBuildFailure(e.getHumanReadableErrorMessage());
-      return FAIL_EXIT_CODE;
-    } catch (InterruptionFailedException e) { // Command could not be interrupted.
-      if (context.isPresent()) {
-        context.get().getNGServer().shutdown(true); // Exit process to halt command execution.
-      }
-      return FAIL_EXIT_CODE;
-    } finally {
-      final boolean isDaemon = context.isPresent();
-      if (isDaemon) {
-        System.gc(); // Let VM return memory to OS
-      }
-      LOG.debug("Done.");
-    }
-  }
-
   private static BuildId getBuildId(Optional<NGContext> context) {
     String specifiedBuildId;
     if (context.isPresent()) {
@@ -1604,34 +1610,6 @@ public final class Main {
         NON_REENTRANT_SYSTEM_EXIT.shutdownSoon(FAIL_EXIT_CODE);
       }
     });
-  }
-
-  private void runMainThenExit(String[] args, Optional<NGContext> context) {
-    installUncaughtExceptionHandler(context);
-
-    Path projectRoot = Paths.get(".");
-    int exitCode = FAIL_EXIT_CODE;
-    BuildId buildId = getBuildId(context);
-
-    // Get the client environment, either from this process or from the Nailgun context.
-    ImmutableMap<String, String> clientEnvironment = getClientEnvironment(context);
-
-    try {
-      exitCode = tryRunMainWithExitCode(
-          buildId,
-          projectRoot,
-          context,
-          clientEnvironment,
-          CommandMode.RELEASE,
-          args);
-    } catch (Throwable t) {
-      LOG.error(t, "Uncaught exception at top level");
-    } finally {
-      LogConfig.flushLogs();
-      // Exit explicitly so that non-daemon threads (of which we use many) don't
-      // keep the VM alive.
-      System.exit(exitCode);
-    }
   }
 
   public static void main(String[] args) {
