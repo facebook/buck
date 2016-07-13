@@ -16,6 +16,7 @@
 
 package com.facebook.buck.testutil;
 
+import com.facebook.buck.io.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.timing.Clock;
@@ -252,7 +253,9 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   public FakeProjectFilesystem(Clock clock, Path root, Set<Path> files) {
-    super(root);
+    // For testing, we always use a DefaultProjectFilesystemDelegate so that the logic being
+    // exercised is always the same, even if a test using FakeProjectFilesystem is used on EdenFS.
+    super(root, new DefaultProjectFilesystemDelegate(root));
     // We use LinkedHashMap to preserve insertion order, so the
     // behavior of this test is consistent across versions. (It also lets
     // us write tests which explicitly test iterating over entries in

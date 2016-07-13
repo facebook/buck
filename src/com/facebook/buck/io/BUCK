@@ -17,6 +17,18 @@ java_library(
   ],
 )
 
+PROJECT_FILESYSTEM_DELEGATE_SRCS = [
+  'ProjectFilesystemDelegate.java',
+]
+java_library(
+  name = 'ProjectFilesystemDelegate',
+  srcs = PROJECT_FILESYSTEM_DELEGATE_SRCS,
+  autodeps = True,
+  visibility = [
+    'PUBLIC',
+  ]
+)
+
 FINDER_SRCS = [
   'ExecutableFinder.java',
   'FileFinder.java',
@@ -30,7 +42,11 @@ java_library(
 
 java_immutables_library(
   name = 'io',
-  srcs = glob(['*.java'], excludes = FINDER_SRCS + WATCHMAN_SRCS),
+  srcs = glob(['*.java'], excludes = (
+    FINDER_SRCS +
+    PROJECT_FILESYSTEM_DELEGATE_SRCS +
+    WATCHMAN_SRCS)
+  ),
   tests = [
     '//test/com/facebook/buck/io:io',
   ],

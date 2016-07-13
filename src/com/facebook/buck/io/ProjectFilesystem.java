@@ -140,26 +140,33 @@ public class ProjectFilesystem {
    */
   private final Supplier<Path> tmpDir;
 
+  @SuppressWarnings("unused")
+  private final ProjectFilesystemDelegate delegate;
+
   // Defaults to false, and so paths should be valid.
   @VisibleForTesting
   protected boolean ignoreValidityOfPaths;
 
   public ProjectFilesystem(Path root) {
+    this(root, ImmutableSet.<PathOrGlobMatcher>of());
+  }
+
+  /**
+   * This constructor is restricted to {@code protected} because it is generally best to let
+   * {@link ProjectFilesystemDelegateFactory#newInstance(Path)} create an appropriate delegate.
+   * Currently, the only case in which we need to override this behavior is in unit tests.
+   */
+  protected ProjectFilesystem(Path root, ProjectFilesystemDelegate delegate) {
     this(
         root.getFileSystem(),
         root,
         ImmutableSet.<PathOrGlobMatcher>of(),
-        getDefaultBuckPaths(root));
+        getDefaultBuckPaths(root),
+        delegate);
   }
 
-  public ProjectFilesystem(
-      Path projectRoot,
-      ImmutableSet<PathOrGlobMatcher> blackListedPaths) {
-    this(
-        projectRoot.getFileSystem(),
-        projectRoot,
-        blackListedPaths,
-        getDefaultBuckPaths(projectRoot));
+  public ProjectFilesystem(Path root, ImmutableSet<PathOrGlobMatcher> blackListedPaths) {
+    this(root.getFileSystem(), root, blackListedPaths, getDefaultBuckPaths(root));
   }
 
   public ProjectFilesystem(Path root, Config config) {
@@ -175,10 +182,25 @@ public class ProjectFilesystem {
       final Path root,
       ImmutableSet<PathOrGlobMatcher> blackListedPaths,
       BuckPaths buckPaths) {
+    this(
+        vfs,
+        root,
+        blackListedPaths,
+        buckPaths,
+        ProjectFilesystemDelegateFactory.newInstance(root));
+  }
+
+  private ProjectFilesystem(
+      FileSystem vfs,
+      final Path root,
+      ImmutableSet<PathOrGlobMatcher> blackListedPaths,
+      BuckPaths buckPaths,
+      ProjectFilesystemDelegate delegate) {
     Preconditions.checkArgument(Files.isDirectory(root));
     Preconditions.checkState(vfs.equals(root.getFileSystem()));
     Preconditions.checkArgument(root.isAbsolute());
     this.projectRoot = MorePaths.normalize(root);
+    this.delegate = delegate;
     this.pathAbsolutifier = new Function<Path, Path>() {
       @Override
       public Path apply(Path path) {
