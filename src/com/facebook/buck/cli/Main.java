@@ -728,7 +728,6 @@ public final class Main {
       AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, platform);
       AndroidDirectoryResolver androidDirectoryResolver =
           new DefaultAndroidDirectoryResolver(
-              filesystem,
               androidBuckConfig.getBuildToolsVersion(),
               androidBuckConfig.getNdkVersion(),
               propertyFinder);

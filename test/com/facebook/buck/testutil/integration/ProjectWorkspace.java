@@ -576,7 +576,6 @@ public class ProjectWorkspace {
     TestConsole console = new TestConsole();
     ImmutableMap<String, String> env = ImmutableMap.copyOf(System.getenv());
     DefaultAndroidDirectoryResolver directoryResolver = new DefaultAndroidDirectoryResolver(
-        filesystem,
         Optional.<String>absent(),
         Optional.<String>absent(),
         new DefaultPropertyFinder(filesystem, env));

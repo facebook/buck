@@ -70,7 +70,6 @@ public class AndroidResourceFilterIntegrationTest {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
     AndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
-        filesystem,
         Optional.<String>absent(),
         Optional.<String>absent(),
         new DefaultPropertyFinder(filesystem, ImmutableMap.copyOf(System.getenv())));

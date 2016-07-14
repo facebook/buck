@@ -354,7 +354,6 @@ public class AndroidBinaryIntegrationTest {
   public void testNativeRelinker() throws IOException, InterruptedException {
     // TODO(cjhopman): is this really the simplest way to get the objdump tool?
     AndroidDirectoryResolver androidResolver = new DefaultAndroidDirectoryResolver(
-        workspace.asCell().getFilesystem(),
         Optional.<String>absent(),
         Optional.<String>absent(),
         new DefaultPropertyFinder(

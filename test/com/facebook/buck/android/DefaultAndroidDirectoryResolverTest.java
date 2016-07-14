@@ -22,7 +22,6 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.FakePropertyFinder;
 import com.facebook.buck.util.HumanReadableException;
@@ -340,7 +339,6 @@ public class DefaultAndroidDirectoryResolverTest {
     Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9q")[0];
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.of("r9e"),
             createPropertiesFinder(
@@ -362,7 +360,6 @@ public class DefaultAndroidDirectoryResolverTest {
     );
     DefaultAndroidDirectoryResolver androidDirectoryResolver1 =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.of("r9a"),
             createPropertiesFinder(
@@ -371,7 +368,6 @@ public class DefaultAndroidDirectoryResolverTest {
                 Optional.of(tmpDir.getRoot())));
     DefaultAndroidDirectoryResolver androidDirectoryResolver2 =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.of("r9b"),
             createPropertiesFinder(
@@ -387,7 +383,6 @@ public class DefaultAndroidDirectoryResolverTest {
     createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir-r9a", "r9a-rc2");
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             Optional.of(""),
             createPropertiesFinder(
@@ -406,7 +401,6 @@ public class DefaultAndroidDirectoryResolverTest {
     createBuildToolsVersions(sdkDir, "platform-tools");
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
             /* targetBuildToolsVersion */ Optional.<String>absent(),
             /* targetNdkVersion */ Optional.<String>absent(),
             createPropertiesFinder(
@@ -424,7 +418,6 @@ public class DefaultAndroidDirectoryResolverTest {
     createBuildToolsVersions(sdkDir, "build-tools/android-4.2.2");
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
             /* targetBuildToolsVersion */ Optional.<String>absent(),
             /* targetNdkVersion */ Optional.<String>absent(),
             createPropertiesFinder(
@@ -442,7 +435,6 @@ public class DefaultAndroidDirectoryResolverTest {
     createBuildToolsVersions(sdkDir, "build-tools/build-tools-17.2.2");
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
             /* targetBuildToolsVersion */ Optional.<String>absent(),
             /* targetNdkVersion */ Optional.<String>absent(),
             createPropertiesFinder(
@@ -460,7 +452,6 @@ public class DefaultAndroidDirectoryResolverTest {
     createBuildToolsVersions(sdkDir, "build-tools/foobar-17.2.2");
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
             /* targetBuildToolsVersion */ Optional.<String>absent(),
             /* targetNdkVersion */ Optional.<String>absent(),
             createPropertiesFinder(
@@ -482,7 +473,6 @@ public class DefaultAndroidDirectoryResolverTest {
     Path toolsDir = sdkDir.resolve("tools").toAbsolutePath();
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
             /* targetBuildToolsVersion */ Optional.<String>absent(),
             /* targetNdkVersion */ Optional.<String>absent(),
             createPropertiesFinder(
@@ -505,7 +495,6 @@ public class DefaultAndroidDirectoryResolverTest {
         "build-tools/23.0.0_rc1");
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
             /* targetBuildToolsVersion */ Optional.<String>absent(),
             /* targetNdkVersion */ Optional.<String>absent(),
             createPropertiesFinder(
@@ -526,7 +515,6 @@ public class DefaultAndroidDirectoryResolverTest {
         "build-tools/23.0.0_rc1");
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
             /* targetBuildToolsVersion */ Optional.<String>absent(),
             /* targetNdkVersion */ Optional.<String>absent(),
             createPropertiesFinder(
@@ -551,7 +539,6 @@ public class DefaultAndroidDirectoryResolverTest {
         "build-tools/16.0.0");
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
             /* targetBuildToolsVersion */ Optional.<String>absent(),
             /* targetNdkVersion */ Optional.<String>absent(),
             createPropertiesFinder(
@@ -573,7 +560,6 @@ public class DefaultAndroidDirectoryResolverTest {
         "build-tools/18.0.0");
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
             /* targetBuildToolsVersion */ Optional.of("17.0.0"),
             /* targetNdkVersion */ Optional.<String>absent(),
             createPropertiesFinder(
@@ -593,7 +579,6 @@ public class DefaultAndroidDirectoryResolverTest {
         "build-tools/18.0.0");
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot()),
             /* targetBuildToolsVersion */ Optional.of("2.0.0"),
             /* targetNdkVersion */ Optional.<String>absent(),
             createPropertiesFinder(
@@ -613,7 +598,6 @@ public class DefaultAndroidDirectoryResolverTest {
       Optional<Path> ndkRepository
   ) {
     return new DefaultAndroidDirectoryResolver(
-        new ProjectFilesystem(tmpDir.getRoot()),
         Optional.<String>absent(),
         targetNdkVersion,
         createPropertiesFinder(sdk, ndk, ndkRepository));

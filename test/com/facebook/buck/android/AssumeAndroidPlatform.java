@@ -38,7 +38,7 @@ public class AssumeAndroidPlatform {
 
   private static AndroidDirectoryResolver getAndroidDirectoryResolver() {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
-    return new DefaultAndroidDirectoryResolver(projectFilesystem,
+    return new DefaultAndroidDirectoryResolver(
         Optional.<String>absent(),
         Optional.<String>absent(),
         new DefaultPropertyFinder(projectFilesystem, ImmutableMap.copyOf(System.getenv())));

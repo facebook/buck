@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.android;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PropertyFinder;
@@ -64,7 +63,6 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   public static final ImmutableSet<String> BUILD_TOOL_PREFIXES =
       ImmutableSet.of("android-", "build-tools-");
 
-  private final ProjectFilesystem projectFilesystem;
   private final Optional<String> targetBuildToolsVersion;
   private final Optional<String> targetNdkVersion;
   private final PropertyFinder propertyFinder;
@@ -77,11 +75,9 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   private final Optional<Path> ndk;
 
   public DefaultAndroidDirectoryResolver(
-      ProjectFilesystem projectFilesystem,
       Optional<String> targetBuildToolsVersion,
       Optional<String> targetNdkVersion,
       PropertyFinder propertyFinder) {
-    this.projectFilesystem = projectFilesystem;
     this.targetBuildToolsVersion = targetBuildToolsVersion;
     this.targetNdkVersion = targetNdkVersion;
     this.propertyFinder = propertyFinder;
@@ -420,7 +416,6 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
     DefaultAndroidDirectoryResolver that = (DefaultAndroidDirectoryResolver) other;
 
     return
-        Objects.equals(projectFilesystem, that.projectFilesystem) &&
         Objects.equals(targetBuildToolsVersion, that.targetBuildToolsVersion) &&
         Objects.equals(targetNdkVersion, that.targetNdkVersion) &&
         Objects.equals(propertyFinder, that.propertyFinder) &&
@@ -430,10 +425,9 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   @Override
   public String toString() {
     return String.format(
-        "%s projectFilesystem=%s, targetBuildToolsVersion=%s, targetNdkVersion=%s, " +
+        "%s targetBuildToolsVersion=%s, targetNdkVersion=%s, " +
             "propertyFinder=%s, AndroidSdkDir=%s, AndroidBuildToolsDir=%s, AndroidNdkDir=%s",
         super.toString(),
-        projectFilesystem,
         targetBuildToolsVersion,
         targetNdkVersion,
         propertyFinder,
@@ -445,7 +439,6 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   @Override
   public int hashCode() {
     return Objects.hash(
-        projectFilesystem,
         targetBuildToolsVersion,
         targetNdkVersion,
         propertyFinder);

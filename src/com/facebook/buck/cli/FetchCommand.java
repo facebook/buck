@@ -145,7 +145,6 @@ public class FetchCommand extends BuildCommand {
 
   private FetchTargetNodeToBuildRuleTransformer createFetchTransformer(CommandRunnerParams params) {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
-        params.getCell().getFilesystem(),
         Optional.<String>absent(),
         Optional.<String>absent(),
         new DefaultPropertyFinder(params.getCell().getFilesystem(), params.getEnvironment()));
