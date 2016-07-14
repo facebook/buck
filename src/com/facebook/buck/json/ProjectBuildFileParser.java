@@ -303,6 +303,10 @@ public class ProjectBuildFileParser implements AutoCloseable {
           options.getWatchmanQueryTimeoutMs().get().toString());
     }
 
+    if (options.getEnableBuildFileSandboxing()) {
+      argBuilder.add("--enable_build_file_sandboxing");
+    }
+
     argBuilder.add("--project_root", options.getProjectRoot().toAbsolutePath().toString());
     argBuilder.add("--build_file_name", options.getBuildFileName());
 

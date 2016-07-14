@@ -141,4 +141,29 @@ public class ParserConfigTest {
         ", specified under read_only_paths does not exist.");
     parserConfig.getReadOnlyPaths();
   }
+
+  @Test
+  public void testGetEnableBuildFileSandboxing() throws IOException {
+    assertFalse(new ParserConfig(FakeBuckConfig.builder().build()).getEnableBuildFileSandboxing());
+
+    Reader reader = new StringReader(
+        Joiner.on('\n').join(
+            "[project]",
+            "enable_build_file_sandboxing = true"));
+    ParserConfig config = new ParserConfig(
+        BuckConfigTestUtils.createWithDefaultFilesystem(
+            temporaryFolder,
+            reader));
+    assertTrue(config.getEnableBuildFileSandboxing());
+
+    reader = new StringReader(
+        Joiner.on('\n').join(
+            "[project]",
+            "enable_build_file_sandboxing = false"));
+    config = new ParserConfig(
+        BuckConfigTestUtils.createWithDefaultFilesystem(
+            temporaryFolder,
+            reader));
+    assertFalse(config.getEnableBuildFileSandboxing());
+  }
 }

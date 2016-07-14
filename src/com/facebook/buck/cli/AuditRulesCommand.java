@@ -119,6 +119,7 @@ public class AuditRulesCommand extends AbstractCommand {
             .setDescriptions(
               // TODO(shs96c): When we land dynamic loading, this MUST change.
               params.getCell().getAllDescriptions())
+            .setEnableBuildFileSandboxing(parserConfig.getEnableBuildFileSandboxing())
             .build());
     try (ProjectBuildFileParser parser = factory.createParser(
         new ConstructorArgMarshaller(new DefaultTypeCoercerFactory(

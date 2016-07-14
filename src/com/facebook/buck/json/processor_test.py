@@ -3,6 +3,8 @@ import os
 import unittest
 import shutil
 import tempfile
+import sys
+import StringIO
 
 from .buck import BuildFileProcessor, DiagnosticMessageAndLevel, add_rule
 
@@ -49,6 +51,7 @@ class BuckTest(unittest.TestCase):
         self.build_file_name = 'BUCK'
         self.watchman_client = None
         self.watchman_error = None
+        self.enable_build_file_sandboxing = False
 
     def tearDown(self):
         shutil.rmtree(self.project_root, True)
@@ -71,6 +74,7 @@ class BuckTest(unittest.TestCase):
             False,              # ignore_buck_autodeps_files
             self.watchman_client,
             self.watchman_error,
+            self.enable_build_file_sandboxing,
             includes,
             **kwargs)
 
@@ -398,3 +402,25 @@ class BuckTest(unittest.TestCase):
         self.assertTrue(
             os.path.join(self.project_root, dep.path) in
             get_includes_from_results(results))
+
+    def test_enabled_sandboxing_prints_warnings(self):
+        self.enable_build_file_sandboxing = True
+        build_file = ProjectFile(
+            path='BUCK',
+            contents=('import ssl'))
+        py_file = ProjectFile(path='foo.py', contents=())
+        self.write_files(build_file, py_file)
+        build_file_processor = self.create_build_file_processor()
+        build_file_processor.install_builtins(__builtin__.__dict__)
+        diagnostics = set()
+
+        try:
+            out = StringIO.StringIO()
+            sys.stdout = out
+            build_file_path = os.path.join(self.project_root, build_file.path)
+            build_file_processor.process(build_file.path, diagnostics)
+            self.assertEqual(
+                sys.stdout.getvalue().strip(),
+                'Importing module ssl in file %s is discouraged' % build_file_path)
+        finally:
+            sys.stdout = sys.__stdout__

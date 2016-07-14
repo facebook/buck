@@ -176,4 +176,8 @@ public class ParserConfig {
         .or(ApplyDefaultFlavorsMode.ENABLED);
   }
 
+  public boolean getEnableBuildFileSandboxing() {
+    return delegate.getBooleanValue("project", "enable_build_file_sandboxing", false);
+  }
+
 }
