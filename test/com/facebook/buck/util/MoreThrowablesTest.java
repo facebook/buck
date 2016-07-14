@@ -16,7 +16,11 @@
 
 package com.facebook.buck.util;
 
+import static com.facebook.buck.util.MoreThrowables.getInitialCause;
+import static com.facebook.buck.util.MoreThrowables.getThrowableOrigin;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -67,6 +71,45 @@ public class MoreThrowablesTest {
   @Test
   public void otherException() throws InterruptedException {
     MoreThrowables.propagateIfInterrupt(new IOException());
+  }
+
+  @Test
+  public void testGetInitialCauseSingleThrowable() throws Exception {
+    Exception exception = new Exception();
+
+    assertEquals(getInitialCause(exception), exception);
+  }
+
+  @Test
+  public void testGetInitialCauseChainedThrowables() throws Exception {
+    Exception lowLevelException = new Exception();
+    Exception midLevelExceptionA = new Exception(lowLevelException);
+    Exception midLevelExceptionB = new Exception(midLevelExceptionA);
+    Exception midLevelExceptionC = new Exception(midLevelExceptionB);
+    Exception highLevelException = new Exception(midLevelExceptionC);
+
+    assertEquals(getInitialCause(highLevelException), lowLevelException);
+  }
+
+  @Test
+  public void testGetInitialCauseLoopedThrowables() throws Exception {
+    Exception lowLevelException = new Exception();
+    Exception midLevelExceptionA = new Exception(lowLevelException);
+    Exception midLevelExceptionB = new Exception(midLevelExceptionA);
+    Exception midLevelExceptionC = new Exception(midLevelExceptionB);
+    Exception highLevelException = new Exception(midLevelExceptionC);
+    lowLevelException.initCause(highLevelException);
+
+    assertEquals(getInitialCause(highLevelException), lowLevelException);
+  }
+
+  @Test
+  public void testGetOrigin() throws Exception {
+    Exception exception = new Exception();
+    String expectedPrefix = this.getClass().getCanonicalName() + ".testGetOrigin" + '(' +
+        this.getClass().getSimpleName() + ".java:";
+
+    assertTrue(getThrowableOrigin(exception).startsWith(expectedPrefix));
   }
 
   public static class CausedBy extends TypeSafeMatcher<Throwable> {

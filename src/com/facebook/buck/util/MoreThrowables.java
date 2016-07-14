@@ -16,9 +16,14 @@
 
 package com.facebook.buck.util;
 
+import com.google.common.base.Preconditions;
+
 import java.io.InterruptedIOException;
 import java.net.SocketTimeoutException;
 import java.nio.channels.ClosedByInterruptException;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
 
 public class MoreThrowables {
 
@@ -55,4 +60,36 @@ public class MoreThrowables {
     }
   }
 
+  /**
+   * If throwable has a non-empty cause, returns throwable at the bottom of the stack.
+   */
+  public static Throwable getInitialCause(Throwable throwable) {
+    if (throwable.getCause() != null) {
+      Set<Throwable> seen =
+          Collections.newSetFromMap(new IdentityHashMap<Throwable, Boolean>());
+      seen.add(throwable);
+      return getInitialCause(throwable, seen);
+    }
+    return throwable;
+  }
+
+  private static Throwable getInitialCause(Throwable throwable, Set<Throwable> seen) {
+    Throwable cause = throwable.getCause();
+    if ((cause == null) || seen.contains(cause)) {
+      return throwable;
+    }
+    seen.add(throwable);
+    return getInitialCause(cause, seen);
+  }
+
+  /**
+   * Returns string representing class, method, filename and line number that throwable was
+   * thrown from
+   */
+  public static String getThrowableOrigin(Throwable throwable) {
+    StackTraceElement[] stack = throwable.getStackTrace();
+    Preconditions.checkState(stack.length > 0);
+    StackTraceElement element = stack[0];
+    return element.toString();
+  }
 }

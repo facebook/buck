@@ -25,10 +25,9 @@
 # If you want to enable more verbose logging, do it here.
 .level=FINE
 
-# Enable the console logging handler and the file handler to
-# write rotating log files under buck-out/log/buck-*.log in the
-# project(s) being used.
-handlers=com.facebook.buck.cli.bootstrapper.ConsoleHandler,com.facebook.buck.cli.bootstrapper.LogFileHandler,java.util.logging.FileHandler
+# Enable console logging handler and file handler to write rotating log files under
+# buck-out/log/buck-*.log in the project(s) being used.
+handlers=com.facebook.buck.cli.bootstrapper.ConsoleHandler,com.facebook.buck.cli.bootstrapper.LogFileHandler,com.facebook.buck.cli.bootstrapper.MemoryHandler,java.util.logging.FileHandler
 
 # We handle console events via the event bus, so disable console logging by default.
 com.facebook.buck.log.ConsoleHandler.level=SEVERE
@@ -37,22 +36,30 @@ com.facebook.buck.log.ConsoleHandler.level=SEVERE
 httpclient.wire.content.level=SEVERE
 httpclient.wire.header.level=SEVERE
 
-
-# Log to buck-out/log/buck-*log.
+# Log to buck-out/log/buck-*.log.
 java.util.logging.FileHandler.pattern=<default_file_pattern>
 
-# Write to disk all log messages not otherwise filtered by the top-level ".level"
-# property.
+# Write to disk all log messages not otherwise filtered by the top-level ".level" property.
 java.util.logging.FileHandler.level=ALL
 
-# Ignore the environment and always write UTF-8 to files.
-java.util.logging.FileHandler.encoding=UTF-8
+# Rotate up to this many log files, then start deleting the oldest one.
+java.util.logging.FileHandler.count=<default_count>
 
 # Replace the default fugly multiline log formatter with a custom one.
 java.util.logging.FileHandler.formatter=com.facebook.buck.cli.bootstrapper.LogFormatter
 
-# Rotate up to this many log files, then start deleting the oldest one.
-java.util.logging.FileHandler.count=<default_count>
+# Ignore the environment and always write UTF-8 to files.
+java.util.logging.FileHandler.encoding=UTF-8
+
+# Use a circular buffer to store high granularity logging in memory, only interesting if we hit
+# an error.
+com.facebook.buck.log.MemoryHandler.level=ALL
+
+# Define the buffer size.
+com.facebook.buck.log.MemoryHandler.size=100
+
+# Define the push level.
+com.facebook.buck.log.MemoryHandler.push=SEVERE
 
 # TODO(t4624433): Temporarily disable logging for Guava's CombinedFuture
 # class until we can figure out what's going on.
