@@ -931,7 +931,6 @@ public class TargetsCommand extends AbstractCommand {
     ImmutableMap<BuildTarget, HashCode> buildTargetHashes =
         new TargetGraphHashing(
             params.getBuckEventBus(),
-            params.getCell(),
             targetGraphWithTests,
             fileHashLoader,
             targetGraphAndNodesWithTests.getTargetNodes())

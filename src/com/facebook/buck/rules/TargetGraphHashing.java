@@ -58,7 +58,6 @@ import java.util.concurrent.RecursiveTask;
 public class TargetGraphHashing {
   private static final Logger LOG = Logger.get(TargetGraphHashing.class);
   private final BuckEventBus eventBus;
-  private final Cell rootCell;
   private final TargetGraph targetGraph;
   private final FileHashLoader fileHashLoader;
   private final Iterable<TargetNode<?>> roots;
@@ -66,13 +65,11 @@ public class TargetGraphHashing {
 
   public TargetGraphHashing(
       final BuckEventBus eventBus,
-      final Cell rootCell,
       final TargetGraph targetGraph,
       final FileHashLoader fileHashLoader,
       final Iterable<TargetNode<?>> roots
   ) {
     this.eventBus = eventBus;
-    this.rootCell = rootCell;
     this.targetGraph = targetGraph;
     this.fileHashLoader = fileHashLoader;
     this.roots = roots;
@@ -158,7 +155,7 @@ public class TargetGraphHashing {
       LOG.verbose("Got rules hash %s", targetRuleHashCode);
       hasher.putBytes(targetRuleHashCode.asBytes());
 
-      ProjectFilesystem cellFilesystem = rootCell.getCell(node.getBuildTarget()).getFilesystem();
+      ProjectFilesystem cellFilesystem = node.getRuleFactoryParams().getProjectFilesystem();
 
       try {
         // Hash the contents of all input files and directories.
