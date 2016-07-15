@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.config.ConfigBuilder;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
@@ -50,11 +51,13 @@ public class BuckConfigTestUtils {
       Platform platform,
       ImmutableMap<String, String> environment)
       throws IOException {
+    Config config = new Config(ConfigBuilder.rawFromReader(reader));
     return new BuckConfig(
-        new Config(ConfigBuilder.rawFromReader(reader)),
+        config,
         projectFilesystem,
         architecture,
         platform,
-        environment);
+        environment,
+        new DefaultCellPathResolver(projectFilesystem.getRootPath(), config));
   }
 }

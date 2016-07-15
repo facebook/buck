@@ -22,9 +22,8 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.config.Config;
 import com.facebook.buck.cli.MissingSymbolsHandler;
-import com.facebook.buck.config.CellConfig;
+import com.facebook.buck.config.Config;
 import com.facebook.buck.config.Configs;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -32,6 +31,7 @@ import com.facebook.buck.event.MissingSymbolEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.testutil.TestConsole;
@@ -66,13 +66,14 @@ public class MissingSymbolsHandlerIntegrationTest {
     ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
 
     Config rawConfig =
-        Configs.createDefaultConfig(projectFilesystem.getRootPath(), CellConfig.of());
+        Configs.createDefaultConfig(projectFilesystem.getRootPath());
     BuckConfig config = new BuckConfig(
         rawConfig,
         projectFilesystem,
         Architecture.detect(),
         Platform.detect(),
-        environment);
+        environment,
+        new DefaultCellPathResolver(projectFilesystem.getRootPath(), rawConfig));
     ImmutableSet<Description<?>> allDescriptions =
         DefaultKnownBuildRuleTypes
         .getDefaultKnownBuildRuleTypes(projectFilesystem, environment)

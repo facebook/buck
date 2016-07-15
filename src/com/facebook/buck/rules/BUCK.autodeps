@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY dc703820c744684eb08b15cffe026d5d76e53ce2 #@#
+#@# GENERATED FILE: DO NOT MODIFY dd9764d8c7ce54d2ade17f243bd5f8388102daba #@#
 {
   "action_graph_cache" : {
     "deps" : [
@@ -71,9 +71,31 @@
       "//third-party/java/guava:guava"
     ]
   },
+  "default_cell_path_resolver" : {
+    "deps" : [
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/util:exceptions"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/config:config",
+      "//src/com/facebook/buck/rules:interfaces",
+      "//src/com/facebook/buck/rules:relative_cell_name",
+      "//third-party/java/guava:guava"
+    ]
+  },
   "interfaces" : {
     "deps" : [ ],
     "exported_deps" : [
+      "//third-party/java/guava:guava"
+    ]
+  },
+  "relative_cell_name" : {
+    "deps" : [
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava"
     ]
   },
@@ -141,7 +163,6 @@
       "//src/com/facebook/buck/android:steps",
       "//src/com/facebook/buck/apple:platform",
       "//src/com/facebook/buck/apple:rules",
-      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/d:d",
       "//src/com/facebook/buck/dotnet:dotnet",
       "//src/com/facebook/buck/file:downloader",
@@ -165,6 +186,8 @@
       "//src/com/facebook/buck/python:config",
       "//src/com/facebook/buck/python:rules",
       "//src/com/facebook/buck/python:support",
+      "//src/com/facebook/buck/rules:default_cell_path_resolver",
+      "//src/com/facebook/buck/rules:relative_cell_name",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rust:rust",
       "//src/com/facebook/buck/shell:rules",
@@ -174,11 +197,13 @@
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/zip:rules",
+      "//third-party/java/immutables:processor",
       "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/android:utils",
       "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/event:event",
@@ -190,6 +215,7 @@
       "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava"
     ]
   }

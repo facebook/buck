@@ -21,11 +21,9 @@ import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.config.CellConfig;
-import com.facebook.buck.config.Configs;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.config.Config;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.Config;
+import com.facebook.buck.config.Configs;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
@@ -33,6 +31,8 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultCellPathResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.ParameterizedTests;
@@ -247,14 +247,15 @@ public class LuaBinaryIntegrationTest {
   }
 
   private LuaBuckConfig getLuaBuckConfig() throws IOException {
-    Config rawConfig = Configs.createDefaultConfig(tmp.getRootPath(), CellConfig.of());
+    Config rawConfig = Configs.createDefaultConfig(tmp.getRootPath());
     BuckConfig buckConfig =
         new BuckConfig(
             rawConfig,
             new ProjectFilesystem(tmp.getRootPath()),
             Architecture.detect(),
             Platform.detect(),
-            ImmutableMap.<String, String>of());
+            ImmutableMap.<String, String>of(),
+            new DefaultCellPathResolver(tmp.getRootPath(), rawConfig));
     return new LuaBuckConfig(
         buckConfig,
         new FakeExecutableFinder(ImmutableList.<Path>of()));

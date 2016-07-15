@@ -37,6 +37,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -86,15 +87,17 @@ public class DistributedBuildStateTest {
   @Test
   public void canReconstructConfig() throws IOException, InterruptedException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    Config config = new Config(ConfigBuilder.rawFromLines());
     BuckConfig buckConfig = new BuckConfig(
-        new Config(ConfigBuilder.rawFromLines()),
+        config,
         filesystem,
         Architecture.detect(),
         Platform.detect(),
         ImmutableMap.<String, String>builder()
             .putAll(System.getenv())
             .put("envKey", "envValue")
-            .build());
+            .build(),
+        new DefaultCellPathResolver(filesystem.getRootPath(), config));
     Cell cell = new TestCellBuilder()
         .setFilesystem(filesystem)
         .setBuckConfig(buckConfig)
@@ -165,15 +168,17 @@ public class DistributedBuildStateTest {
   @Test
   public void throwsOnPlatformMismatch() throws IOException, InterruptedException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    Config config = new Config(ConfigBuilder.rawFromLines());
     BuckConfig buckConfig = new BuckConfig(
-        new Config(ConfigBuilder.rawFromLines()),
+        config,
         filesystem,
         Architecture.MIPSEL,
         Platform.UNKNOWN,
         ImmutableMap.<String, String>builder()
             .putAll(System.getenv())
             .put("envKey", "envValue")
-            .build());
+            .build(),
+        new DefaultCellPathResolver(filesystem.getRootPath(), config));
     Cell cell = new TestCellBuilder()
         .setFilesystem(filesystem)
         .setBuckConfig(buckConfig)

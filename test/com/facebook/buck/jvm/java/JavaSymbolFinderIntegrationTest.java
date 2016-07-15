@@ -20,7 +20,6 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.config.Configs;
 import com.facebook.buck.event.BuckEventBus;
@@ -35,6 +34,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -69,13 +69,14 @@ public class JavaSymbolFinderIntegrationTest {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
     ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
     Config rawConfig =
-        Configs.createDefaultConfig(projectFilesystem.getRootPath(), CellConfig.of());
+        Configs.createDefaultConfig(projectFilesystem.getRootPath());
     BuckConfig config = new BuckConfig(
         rawConfig,
         projectFilesystem,
         Architecture.detect(),
         Platform.detect(),
-        environment);
+        environment,
+        new DefaultCellPathResolver(projectFilesystem.getRootPath(), rawConfig));
 
     ParserConfig parserConfig = new ParserConfig(config);
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(

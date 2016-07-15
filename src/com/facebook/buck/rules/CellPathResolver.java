@@ -20,5 +20,9 @@ import com.google.common.base.Optional;
 import java.nio.file.Path;
 
 public interface CellPathResolver {
+  /**
+   * @param cellName name of cell, Optional.absent() for root cell.
+   * @return Path to the physical location of the cell.
+   */
   Path getCellPath(Optional<String> cellName);
 }

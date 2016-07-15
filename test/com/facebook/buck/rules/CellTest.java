@@ -18,26 +18,36 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 
+import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class CellTest {
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void shouldReturnItselfIfRequestedToGetACellWithAnAbsentOptionalName()
@@ -50,7 +60,7 @@ public class CellTest {
     assertSame(cell, owner);
   }
 
-  @Test(expected = HumanReadableException.class)
+  @Test
   public void shouldThrowAnExceptionIfTheNamedCellIsNotPresent()
       throws IOException, InterruptedException {
     Cell cell = new TestCellBuilder().build();
@@ -60,6 +70,7 @@ public class CellTest {
         "//does/not:matter");
 
     // Target's filesystem root is unknown to cell.
+    expectedException.expect(HumanReadableException.class);
     cell.getCell(target);
   }
 
@@ -114,5 +125,64 @@ public class CellTest {
     Path path = cell1.getCellRoots().getCellPath(Optional.of("example"));
 
     assertEquals(path, cell2Root);
+  }
+
+  @Test
+  public void shouldApplyCellConfigOverrides()
+      throws IOException, InterruptedException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+
+    Path root = vfs.getPath("/opt/local/");
+    Path cell1Root = root.resolve("repo1");
+    Files.createDirectories(cell1Root);
+    Path cell2Root = root.resolve("repo2");
+    Files.createDirectories(cell2Root);
+    Path cell3Root = root.resolve("repo3");
+    Files.createDirectories(cell3Root);
+
+
+    ProjectFilesystem filesystem1 = new ProjectFilesystem(cell1Root.toAbsolutePath());
+    ProjectFilesystem filesystem2 = new ProjectFilesystem(cell2Root.toAbsolutePath());
+    ProjectFilesystem filesystem3 = new ProjectFilesystem(cell3Root.toAbsolutePath());
+    BuckConfig config = FakeBuckConfig.builder()
+        .setFilesystem(filesystem1)
+        .setSections(
+            "[repositories]",
+            "second = " + cell2Root.toString(),
+            "third = " + cell3Root.toString())
+        .build();
+
+    Files.write(
+        cell2Root.resolve(".buckconfig"),
+        ImmutableList.of(
+            "[repositories]",
+            "third = " + cell3Root.toString()),
+        StandardCharsets.UTF_8);
+
+    Cell cell1 = new TestCellBuilder()
+        .setBuckConfig(config)
+        .setFilesystem(filesystem1)
+        .setCellConfigOverride(
+            CellConfig.builder()
+                .put(Optional.of("second"), "test", "value", "cell2")
+                .put(Optional.of("second/third"), "test", "value", "cell3")
+                .put(Optional.of("third"), "test", "other_value", "cell3")
+                .build())
+        .build();
+    BuildTarget target = BuildTargetFactory.newInstance(filesystem2, "//does/not:matter");
+
+    Cell cell2 = cell1.getCell(target);
+    assertThat(
+        cell2.getBuckConfig().getValue("test", "value"),
+        Matchers.equalTo(Optional.of("cell2")));
+
+    BuildTarget target3 = BuildTargetFactory.newInstance(filesystem3, "//does/not:matter");
+    Cell cell3 = cell1.getCell(target3);
+    assertThat(
+        cell3.getBuckConfig().getValue("test", "value"),
+        Matchers.equalTo(Optional.of("cell3")));
+    assertThat(
+        cell3.getBuckConfig().getValue("test", "other_value"),
+        Matchers.equalTo(Optional.of("cell3")));
   }
 }

@@ -24,9 +24,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.config.Config;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.config.CellConfig;
+import com.facebook.buck.config.Config;
 import com.facebook.buck.config.Configs;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -40,6 +39,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -72,14 +72,15 @@ public class OCamlIntegrationTest {
 
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRootPath());
 
-    Config rawConfig = Configs.createDefaultConfig(filesystem.getRootPath(), CellConfig.of());
+    Config rawConfig = Configs.createDefaultConfig(filesystem.getRootPath());
 
     BuckConfig buckConfig = new BuckConfig(
         rawConfig,
         filesystem,
         Architecture.detect(),
         Platform.detect(),
-        ImmutableMap.copyOf(System.getenv()));
+        ImmutableMap.copyOf(System.getenv()),
+        new DefaultCellPathResolver(filesystem.getRootPath(), rawConfig));
 
     OCamlBuckConfig oCamlBuckConfig = new OCamlBuckConfig(
         Platform.detect(),

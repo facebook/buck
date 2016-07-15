@@ -68,8 +68,10 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.step.ExecutionContext;
@@ -100,7 +102,6 @@ import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.WatchmanWatcherException;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.shutdown.NonReentrantSystemExit;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.cache.WatchedFileHashCache;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -113,6 +114,7 @@ import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.network.RemoteLoggerFactory;
+import com.facebook.buck.util.shutdown.NonReentrantSystemExit;
 import com.facebook.buck.util.versioncontrol.DefaultVersionControlCmdLineInterfaceFactory;
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
@@ -654,16 +656,16 @@ public final class Main {
     // Setup filesystem and buck config.
     Path canonicalRootPath = projectRoot.toRealPath().normalize();
     Config config = Configs.createDefaultConfig(
-        Optional.<String>absent(),
         canonicalRootPath,
-        command.getConfigOverrides());
+        command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME));
     ProjectFilesystem filesystem = new ProjectFilesystem(canonicalRootPath, config);
     BuckConfig buckConfig = new BuckConfig(
         config,
         filesystem,
         architecture,
         platform,
-        clientEnvironment);
+        clientEnvironment,
+        new DefaultCellPathResolver(filesystem.getRootPath(), config));
 
     // Setup the console.
     Verbosity verbosity = VerbosityParser.parse(args);
@@ -781,6 +783,7 @@ public final class Main {
             console,
             watchman,
             buckConfig,
+            command.getConfigOverrides(),
             factory,
             androidDirectoryResolver,
             clock);

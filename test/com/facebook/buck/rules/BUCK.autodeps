@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY f4e79dde57303345693d15e99dce1753115f5d1b #@#
+#@# GENERATED FILE: DO NOT MODIFY 3fa90ebd36edfffeacac98197554590ba51b897c #@#
 {
   "rules" : {
     "deps" : [
@@ -6,6 +6,7 @@
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cli:events",
+      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/counters:counters",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
@@ -22,7 +23,9 @@
       "//src/com/facebook/buck/rules:action_graph_cache",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:command_tool",
+      "//src/com/facebook/buck/rules:default_cell_path_resolver",
       "//src/com/facebook/buck/rules:interfaces",
+      "//src/com/facebook/buck/rules:relative_cell_name",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules:target_graph_hashing",
@@ -49,6 +52,7 @@
       "//test/com/facebook/buck/android:utils",
       "//test/com/facebook/buck/artifact_cache:testutil",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
+      "//test/com/facebook/buck/config:testutil",
       "//test/com/facebook/buck/cxx:testutil",
       "//test/com/facebook/buck/event:testutil",
       "//test/com/facebook/buck/io:testutil",
@@ -98,6 +102,7 @@
     "exported_deps" : [
       "//src/com/facebook/buck/android:utils",
       "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/io:watchman",
       "//src/com/facebook/buck/json:json",

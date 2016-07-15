@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY d310b0ff29610f3a6575bdff1ca1871ddae8d78b #@#
+#@# GENERATED FILE: DO NOT MODIFY 9c2fc5dd018f006518357d97c6673aba51248399 #@#
 {
   "FakeBuckConfig" : {
     "deps" : [
+      "//src/com/facebook/buck/rules:default_cell_path_resolver",
       "//test/com/facebook/buck/config:testutil",
       "//test/com/facebook/buck/testutil:testutil"
     ],
@@ -41,6 +42,7 @@
       "//src/com/facebook/buck/query:query",
       "//src/com/facebook/buck/rules:action_graph_cache",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:relative_cell_name",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules:types",
@@ -109,6 +111,7 @@
       "//src/com/facebook/buck/parser:config",
       "//src/com/facebook/buck/parser:parser",
       "//src/com/facebook/buck/rules:action_graph_cache",
+      "//src/com/facebook/buck/rules:default_cell_path_resolver",
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/timing:timing",

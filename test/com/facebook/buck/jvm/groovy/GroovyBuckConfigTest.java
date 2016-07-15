@@ -24,6 +24,7 @@ import com.facebook.buck.config.Config;
 import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
@@ -109,13 +110,15 @@ public class GroovyBuckConfigTest {
       ImmutableMap<String, String> environment,
       ImmutableMap<String, ImmutableMap<String, String>> rawConfig) {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
-    BuckConfig config = new BuckConfig(
-        new Config(RawConfig.of(rawConfig)),
+    Config config = new Config(RawConfig.of(rawConfig));
+    BuckConfig buckConfig = new BuckConfig(
+        config,
         projectFilesystem,
         Architecture.detect(),
         Platform.detect(),
-        environment);
+        environment,
+        new DefaultCellPathResolver(projectFilesystem.getRootPath(), config));
 
-    return new GroovyBuckConfig(config);
+    return new GroovyBuckConfig(buckConfig);
   }
 }

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 2221c6d9856548548713d86f66c3dfaff4e082b6 #@#
+#@# GENERATED FILE: DO NOT MODIFY 101a0b23e560c43c6e6c9faeebd9ad68b726a86e #@#
 {
   "config" : {
     "deps" : [
@@ -9,6 +9,7 @@
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/model:macros",
+      "//src/com/facebook/buck/rules:relative_cell_name",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava"
     ]

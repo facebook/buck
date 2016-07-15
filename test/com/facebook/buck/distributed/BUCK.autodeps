@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 6807240f74591bc1410e425936289d0b4ce21908 #@#
+#@# GENERATED FILE: DO NOT MODIFY 19f4ef1785ab48de15e76a259c1db06be317d3d7 #@#
 {
   "distributed" : {
     "deps" : [
@@ -13,6 +13,7 @@
       "//src/com/facebook/buck/parser:config",
       "//src/com/facebook/buck/parser:parser",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:default_cell_path_resolver",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules:types",
       "//src/com/facebook/buck/rules/coercer:coercer",

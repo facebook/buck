@@ -44,6 +44,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
@@ -570,7 +571,7 @@ public class ProjectWorkspace {
   }
 
   public Cell asCell() throws IOException, InterruptedException {
-    Config config = Configs.createDefaultConfig(getDestPath(), CellConfig.of());
+    Config config = Configs.createDefaultConfig(getDestPath());
 
     ProjectFilesystem filesystem = new ProjectFilesystem(getDestPath(), config);
     TestConsole console = new TestConsole();
@@ -583,7 +584,14 @@ public class ProjectWorkspace {
         filesystem,
         console,
         Watchman.NULL_WATCHMAN,
-        new BuckConfig(config, filesystem, Architecture.detect(), Platform.detect(), env),
+        new BuckConfig(
+            config,
+            filesystem,
+            Architecture.detect(),
+            Platform.detect(),
+            env,
+            new DefaultCellPathResolver(filesystem.getRootPath(), config)),
+        CellConfig.of(),
         new KnownBuildRuleTypesFactory(
             new ProcessExecutor(console),
             directoryResolver,

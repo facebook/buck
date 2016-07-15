@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
-import com.google.common.base.Optional;
+import com.facebook.buck.rules.RelativeCellName;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -58,7 +58,7 @@ public class BuildCommandOptionsTest {
     parser.parseArgument("--num-threads", "42");
 
     BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(command.getConfigOverrides().getForCell(Optional.<String>absent()))
+        .setSections(command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME))
         .build();
     assertThat(buckConfig.getNumThreads(), Matchers.equalTo(42));
   }

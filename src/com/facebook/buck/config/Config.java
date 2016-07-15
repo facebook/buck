@@ -55,8 +55,6 @@ public class Config {
 
   // rawConfig is the flattened configuration relevant to the current cell
   private final RawConfig rawConfig;
-  // configOverrides has all overrides for all cells
-  private final CellConfig configOverrides;
 
   private final Supplier<Integer> hashCodeSupplier = Suppliers.memoize(
     new Supplier<Integer>() {
@@ -78,16 +76,8 @@ public class Config {
     this(RawConfig.of());
   }
 
-  /**
-   * Convenience constructor to set no config overrides
-   */
   public Config(RawConfig rawConfig) {
-    this(rawConfig, CellConfig.of());
-  }
-
-  public Config(RawConfig rawConfig, CellConfig configOverrides) {
     this.rawConfig = rawConfig;
-    this.configOverrides = configOverrides;
   }
 
   // Some `.buckconfig`s embed genrule macros which break with recent changes to support the config
@@ -99,10 +89,6 @@ public class Config {
         return String.format("$(%s %s)", name, input);
       }
     };
-  }
-
-  public CellConfig getConfigOverrides() {
-    return configOverrides;
   }
 
   /**

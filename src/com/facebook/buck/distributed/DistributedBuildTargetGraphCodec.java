@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.config.Config;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuildTarget;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetGraph;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetNode;
@@ -26,6 +27,8 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.CellConstructionDelegateData;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.timing.Clock;
@@ -162,7 +165,7 @@ public class DistributedBuildTargetGraphCodec {
     // TODO(marcinkosiba): Sort out the story around Cells.
     for (Map.Entry<Integer, String> remoteFileSystemRoot :
         remoteTargetGraph.getFileSystemRoots().entrySet()) {
-      Path remoteFilesystemRoot = Files.createTempDirectory(
+      final Path remoteFilesystemRoot = Files.createTempDirectory(
           rootFilesystem.resolve(rootFilesystem.getBuckPaths().getBuckOut()),
           "remote_");
       ProjectFilesystem projectFilesystem = new ProjectFilesystem(remoteFilesystemRoot);
@@ -170,7 +173,23 @@ public class DistributedBuildTargetGraphCodec {
           console,
           clock,
           projectFilesystem,
-          rootCell.getBuckConfig());
+          rootCell.getBuckConfig(),
+          new Cell.CellConstructionDelegate() {
+            @Override
+            public CellConstructionDelegateData get(Path cellPath) throws IOException {
+              return CellConstructionDelegateData.builder()
+                  .setKnownRoots(ImmutableSet.<Path>of(remoteFilesystemRoot))
+                  .setConfig(new Config())
+                  .setCellPathResolver(new CellPathResolver() {
+                    @Override
+                    public Path getCellPath(Optional<String> cellName) {
+                      Preconditions.checkState(!cellName.isPresent());
+                      return remoteFilesystemRoot;
+                    }
+                  })
+                  .build();
+            }
+          });
       cellBuilder.put(remoteFileSystemRoot.getKey(), cell);
     }
     ImmutableMap<Integer, Cell> cells = cellBuilder.build();

@@ -1,0 +1,82 @@
+/*
+ * Copyright 2016-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.rules;
+
+import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
+import org.immutables.value.Value;
+
+/**
+ * Describes a cell name relative to another cell.
+ */
+@Value.Immutable
+@BuckStyleTuple
+abstract class AbstractRelativeCellName {
+  public static final char CELL_NAME_COMPONENT_SEPARATOR = '/';
+  public static final String ALL_CELLS_SPECIAL_NAME = "*";
+
+  public static final RelativeCellName ROOT_CELL_NAME =
+      RelativeCellName.of(ImmutableList.<String>of());
+
+  public abstract ImmutableList<String> getComponents();
+
+  public Optional<String> getLegacyName() {
+    if (getComponents().isEmpty()) {
+      return Optional.absent();
+    }
+    return Optional.of(Joiner.on(CELL_NAME_COMPONENT_SEPARATOR).join(getComponents()));
+  }
+
+  public RelativeCellName withAppendedComponent(String componentToAppend) {
+    return RelativeCellName.of(
+        ImmutableList.<String>builder()
+            .addAll(getComponents())
+            .add(componentToAppend)
+            .build()
+    );
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(RelativeCellName.class)
+        .addValue(getLegacyName())
+        .toString();
+  }
+
+  @Value.Check
+  protected void checkComponents() {
+    ImmutableSet<String> prohibitedSubstrings = ImmutableSet.of(
+        Character.toString(CELL_NAME_COMPONENT_SEPARATOR),
+        ALL_CELLS_SPECIAL_NAME);
+    for (String prohibited : prohibitedSubstrings) {
+      for (String component : getComponents()) {
+        Preconditions.checkState(
+            !component.contains(prohibited),
+            "Cell name component %s in cell %s should not contain %s.",
+            component,
+            getComponents(),
+            prohibited);
+      }
+    }
+  }
+}

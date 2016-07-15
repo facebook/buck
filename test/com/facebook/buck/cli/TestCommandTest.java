@@ -29,10 +29,10 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestRule;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -328,7 +328,7 @@ public class TestCommandTest {
     assertThat(
         command.getNumTestThreads(
             FakeBuckConfig.builder().setSections(
-                command.getConfigOverrides().getForCell(Optional.<String>absent())).build()),
+                command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME)).build()),
         Matchers.equalTo(15));
 
     command = getCommand("-j", "15", "--debug");
@@ -336,7 +336,7 @@ public class TestCommandTest {
     assertThat(
         command.getNumTestThreads(
             FakeBuckConfig.builder().setSections(
-                command.getConfigOverrides().getForCell(Optional.<String>absent())).build()),
+                command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME)).build()),
         Matchers.equalTo(1));
   }
 }

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY c615ad9d7a079f71b13e993d99fbe7490bbbfa46 #@#
+#@# GENERATED FILE: DO NOT MODIFY c6dbf3eb39d1c5f0498a79e4770229a7925d5645 #@#
 {
   "groovy" : {
     "deps" : [
@@ -6,6 +6,7 @@
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/groovy:groovy",
+      "//src/com/facebook/buck/rules:default_cell_path_resolver",
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/testutil/integration:integration",
       "//third-party/java/guava:guava",

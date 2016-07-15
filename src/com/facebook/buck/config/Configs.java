@@ -16,7 +16,6 @@
 package com.facebook.buck.config;
 
 import com.facebook.buck.log.Logger;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -47,9 +46,11 @@ public final class Configs {
   /**
    * Convienence constructor
    */
-  public static Config createDefaultConfig(Path root, CellConfig configOverrides)
+  public static Config createDefaultConfig(Path root)
       throws IOException {
-    return createDefaultConfig(Optional.<String>absent(), root, configOverrides);
+    return createDefaultConfig(
+        root,
+        RawConfig.of(ImmutableMap.<String, ImmutableMap<String, String>>of()));
   }
 
   /**
@@ -73,9 +74,9 @@ public final class Configs {
    * @throws IOException on any exceptions during the underlying filesystem operations.
    */
   public static Config createDefaultConfig(
-      Optional<String> cellName,
       Path root,
-      CellConfig configOverrides) throws IOException {
+      RawConfig configOverrides) throws IOException {
+    LOG.debug("Loading configuration for %s", root);
     ImmutableList.Builder<Path> configFileBuilder = ImmutableList.builder();
 
     configFileBuilder.addAll(listFiles(GLOBAL_BUCK_CONFIG_DIRECTORY_PATH));
@@ -110,9 +111,9 @@ public final class Configs {
         builder.putAll(parsedConfiguration);
       }
     }
-    LOG.debug("Adding configuration for %s: %s", cellName, configOverrides);
-    builder.putAll(configOverrides.getForCell(cellName));
-    return new Config(builder.build(), configOverrides);
+    LOG.debug("Adding configuration overrides %s", configOverrides);
+    builder.putAll(configOverrides);
+    return new Config(builder.build());
   }
 
   private static ImmutableSortedSet<Path> listFiles(Path root) throws IOException {

@@ -13,12 +13,15 @@ java_library(
   ],
 )
 
-java_library(
+java_immutables_library(
   name = 'types',
   srcs = [
     'Cell.java',
     'KnownBuildRuleTypes.java',
     'KnownBuildRuleTypesFactory.java',
+  ],
+  immutable_types = [
+    'CellConstructionDelegateData',
   ],
   tests = [
     '//test/com/facebook/buck/rules:rules',
@@ -234,4 +237,29 @@ java_library(
   ],
   autodeps = True,
   visibility = ['PUBLIC'],
+)
+
+java_immutables_library(
+  name = 'relative_cell_name',
+  srcs = [
+    'AbstractRelativeCellName.java',
+  ],
+  autodeps = True,
+  immutable_types = [
+    'RelativeCellName',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+java_library(
+  name = 'default_cell_path_resolver',
+  srcs = [
+    'DefaultCellPathResolver.java',
+  ],
+  autodeps = True,
+  visibility = [
+    'PUBLIC',
+  ],
 )

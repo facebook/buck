@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ExecutableFinder;
@@ -103,6 +104,7 @@ public class ThriftLibraryIntegrationTest {
         new TestConsole(),
         Watchman.NULL_WATCHMAN,
         config,
+        CellConfig.of(),
         new KnownBuildRuleTypesFactory(
             new ProcessExecutor(new TestConsole()),
             new FakeAndroidDirectoryResolver(),

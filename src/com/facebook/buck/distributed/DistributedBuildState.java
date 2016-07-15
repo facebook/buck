@@ -23,6 +23,7 @@ import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
 import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
@@ -125,12 +126,14 @@ public class DistributedBuildState {
         remotePlatform,
         localPlatform);
 
+    Config config = new Config(RawConfig.of(rawConfig));
     return new BuckConfig(
-        new Config(RawConfig.of(rawConfig)),
+        config,
         projectFilesystem,
         remoteArchitecture,
         remotePlatform,
-        ImmutableMap.copyOf(remoteBuckConfig.getUserEnvironment()));
+        ImmutableMap.copyOf(remoteBuckConfig.getUserEnvironment()),
+        new DefaultCellPathResolver(projectFilesystem.getRootPath(), config));
   }
 
   public TargetGraph createTargetGraph(DistributedBuildTargetGraphCodec codec)

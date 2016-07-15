@@ -1,10 +1,12 @@
-#@# GENERATED FILE: DO NOT MODIFY 2b4bf860325a5f43ca3fd75cc0707a160fcd9394 #@#
+#@# GENERATED FILE: DO NOT MODIFY fce22fd7bcc0ec50f7429a7d1620eeb901b4c219 #@#
 {
   "distributed" : {
     "deps" : [
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/rules:default_cell_path_resolver",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/util/environment:platform",
       "//third-party/java/immutables:processor",
       "//third-party/java/jackson:jackson-core",

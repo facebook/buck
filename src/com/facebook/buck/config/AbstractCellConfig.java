@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.config;
 
+import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -41,9 +42,9 @@ abstract class AbstractCellConfig {
    *
    * @return The contents of the raw config with the cell-view filter
    */
-  public RawConfig getForCell(Optional<String> cellName) {
+  public RawConfig getForCell(RelativeCellName cellName) {
     ImmutableMap<String, ImmutableMap<String, String>> config = Optional
-      .fromNullable(getValues().get(cellName))
+      .fromNullable(getValues().get(cellName.getLegacyName()))
       .or(ImmutableMap.<String, ImmutableMap<String, String>>of());
     ImmutableMap<String, ImmutableMap<String, String>> starConfig = Optional
       .fromNullable(getValues().get(Optional.of("*")))
