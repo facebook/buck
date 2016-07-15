@@ -37,7 +37,7 @@ public class OfflineScribeLoggerTest {
     final String whitelistedCategory2 = "whitelisted_category_2";
     final String blacklistedCategory = "blacklisted_category";
     FakeFailingOfflineScribeLogger fakeLogger = new FakeFailingOfflineScribeLogger(
-        ImmutableList.of(whitelistedCategory, whitelistedCategory2));
+        ImmutableList.of(blacklistedCategory));
 
 
     // Simulate network issues occurring for some of sending attempts (all after first one).
@@ -79,14 +79,14 @@ public class OfflineScribeLoggerTest {
   private final class FakeFailingOfflineScribeLogger extends ScribeLogger {
 
     private final OfflineScribeLogger offlineScribeLogger;
-    private final ImmutableList<String> offlineCategories;
+    private final ImmutableList<String> blacklistCategories;
     private final AtomicInteger storedCategoriesWithLines;
 
-    public FakeFailingOfflineScribeLogger(ImmutableList<String> offlineCategories) {
+    public FakeFailingOfflineScribeLogger(ImmutableList<String> blacklistCategories) {
       this.offlineScribeLogger = new OfflineScribeLogger(
           new FakeFailingScribeLogger(),
-          offlineCategories);
-      this.offlineCategories = offlineCategories;
+          blacklistCategories);
+      this.blacklistCategories = blacklistCategories;
       storedCategoriesWithLines = new AtomicInteger(0);
     }
 
@@ -102,7 +102,7 @@ public class OfflineScribeLoggerTest {
 
             @Override
             public void onFailure(Throwable t) {
-              if (offlineCategories.contains(category)) {
+              if (!blacklistCategories.contains(category)) {
                 storedCategoriesWithLines.incrementAndGet();
               }
             }

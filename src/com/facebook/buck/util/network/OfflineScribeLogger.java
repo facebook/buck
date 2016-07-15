@@ -27,11 +27,11 @@ public class OfflineScribeLogger extends ScribeLogger {
   private static final Logger LOG = Logger.get(OfflineScribeLogger.class);
 
   private final ScribeLogger scribeLogger;
-  private final ImmutableList<String> offlineCategories;
+  private final ImmutableList<String> blacklistCategories;
 
-  public OfflineScribeLogger(ScribeLogger scribeLogger, ImmutableList<String> offlineCategories) {
+  public OfflineScribeLogger(ScribeLogger scribeLogger, ImmutableList<String> blacklistCategories) {
     this.scribeLogger = scribeLogger;
-    this.offlineCategories = offlineCategories;
+    this.blacklistCategories = blacklistCategories;
   }
 
   @Override
@@ -46,7 +46,7 @@ public class OfflineScribeLogger extends ScribeLogger {
 
           @Override
           public void onFailure(Throwable t) {
-            if (offlineCategories.contains(category)) {
+            if (!blacklistCategories.contains(category)) {
               LOG.debug("Storing Scribe lines from category: %s.", category);
               //TODO(michsien): Here should later go writing to mmaped file.
             }
