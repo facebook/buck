@@ -24,18 +24,14 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
-import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -72,21 +68,6 @@ public class KnownBuildRuleTypesTest {
   private static final String FAKE_XCODE_DEV_PATH = "/Fake/Path/To/Xcode.app/Contents/Developer";
   private static final ImmutableMap<String, String> environment =
       ImmutableMap.copyOf(System.getenv());
-
-  private static final ImmutableMap<Flavor, CxxPlatform> FAKE_CXX_PLATFORMS =
-      ImmutableMap.<Flavor, CxxPlatform>of(
-          ImmutableFlavor.of("foo"),
-          CxxPlatform.builder()
-              .from(CxxPlatformUtils.DEFAULT_PLATFORM)
-              .setFlavor(ImmutableFlavor.of("foo"))
-              .setSharedLibraryExtension(".foo")
-              .build(),
-          ImmutableFlavor.of("bar"),
-          CxxPlatform.builder()
-              .from(CxxPlatformUtils.DEFAULT_PLATFORM)
-              .setFlavor(ImmutableFlavor.of("bar"))
-              .setSharedLibraryExtension(".bar")
-              .build());
 
   private static BuildRuleParams buildRuleParams;
 
@@ -291,35 +272,6 @@ public class KnownBuildRuleTypesTest {
         createExecutor(),
         new FakeAndroidDirectoryResolver(),
         Optional.<Path>absent()).build();
-  }
-
-  @Test
-  public void canOverrideHostPlatform() throws IOException,
-      InterruptedException {
-    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
-        "cxx", ImmutableMap.of("host_platform", "foo"));
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
-    CxxPlatform hostPlatform =
-        KnownBuildRuleTypes.getHostCxxPlatformFromConfig(
-            new CxxBuckConfig(buckConfig),
-            FAKE_CXX_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM);
-    assertEquals(DefaultCxxPlatforms.FLAVOR, hostPlatform.getFlavor());
-    assertEquals(".foo", hostPlatform.getSharedLibraryExtension());
-  }
-
-  @Test
-  public void hostPlatformReturnsDefaultIfNotFound() throws IOException,
-      InterruptedException {
-    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
-        "cxx", ImmutableMap.of("host_platform", "baz"));
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
-    CxxPlatform hostPlatform =
-        KnownBuildRuleTypes.getHostCxxPlatformFromConfig(
-            new CxxBuckConfig(buckConfig),
-            FAKE_CXX_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM);
-    assertEquals(CxxPlatformUtils.DEFAULT_PLATFORM, hostPlatform);
   }
 
   private ProcessExecutor createExecutor() throws IOException {

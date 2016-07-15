@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.DebugPathSanitizer;
 import com.facebook.buck.cxx.DefaultLinkerProvider;
 import com.facebook.buck.cxx.LinkerProvider;
 import com.facebook.buck.cxx.Linkers;
+import com.facebook.buck.cxx.PosixNmSymbolNameTool;
 import com.facebook.buck.cxx.PreprocessorProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.log.Logger;
@@ -380,7 +381,7 @@ public class AppleCxxPlatforms {
         strip,
         new BsdArchiver(ar),
         ranlib,
-        nm,
+        new PosixNmSymbolNameTool(nm),
         cflagsBuilder.build(),
         ImmutableList.<String>of(),
         cflags,

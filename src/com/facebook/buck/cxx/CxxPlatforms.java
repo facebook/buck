@@ -22,6 +22,8 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -64,7 +66,7 @@ public class CxxPlatforms {
       Tool strip,
       Archiver ar,
       Tool ranlib,
-      Tool nm,
+      SymbolNameTool nm,
       ImmutableList<String> asflags,
       ImmutableList<String> asppflags,
       ImmutableList<String> cflags,
@@ -93,7 +95,6 @@ public class CxxPlatforms {
         .setAr(getTool("ar", config).transform(getArchiver(ar.getClass(), config)).or(ar))
         .setRanlib(getTool("ranlib", config).or(ranlib))
         .setStrip(getTool("strip", config).or(strip))
-        .setSymbolNameTool(new PosixNmSymbolNameTool(getTool("nm", config).or(nm)))
         .setSharedLibraryExtension(sharedLibraryExtension)
         .setSharedLibraryVersionedExtensionFormat(sharedLibraryVersionedExtensionFormat)
         .setDebugPathSanitizer(
@@ -104,6 +105,13 @@ public class CxxPlatforms {
                     Paths.get("."),
                     ImmutableBiMap.<Path, Path>of())))
         .setFlagMacros(flagMacros);
+
+    Optional<Tool> configNm = getTool("nm", config);
+    if (configNm.isPresent()) {
+      nm = new PosixNmSymbolNameTool(configNm.get());
+    }
+    builder.setSymbolNameTool(nm);
+
     builder.addAllCflags(cflags);
     builder.addAllCxxflags(cflags);
     builder.addAllCppflags(cppflags);
@@ -112,6 +120,39 @@ public class CxxPlatforms {
     builder.addAllAsppflags(asppflags);
     CxxPlatforms.addToolFlagsFromConfig(config, builder);
     return builder.build();
+  }
+
+  /**
+   * Creates a CxxPlatform with a defined flavor for a CxxBuckConfig with default values
+   * provided from another default CxxPlatform
+   */
+  public static CxxPlatform copyPlatformWithFlavorAndConfig(
+      CxxPlatform defaultPlatform,
+      CxxBuckConfig config,
+      Flavor flavor) {
+    return CxxPlatforms.build(
+      flavor,
+      config,
+      defaultPlatform.getAs(),
+      defaultPlatform.getAspp(),
+      defaultPlatform.getCc(),
+      defaultPlatform.getCxx(),
+      defaultPlatform.getCpp(),
+      defaultPlatform.getCxxpp(),
+      defaultPlatform.getLd(),
+      defaultPlatform.getLdflags(),
+      defaultPlatform.getStrip(),
+      defaultPlatform.getAr(),
+      defaultPlatform.getRanlib(),
+      defaultPlatform.getSymbolNameTool(),
+      defaultPlatform.getAsflags(),
+      defaultPlatform.getAsppflags(),
+      defaultPlatform.getCflags(),
+      defaultPlatform.getCppflags(),
+      defaultPlatform.getSharedLibraryExtension(),
+      defaultPlatform.getSharedLibraryVersionedExtensionFormat(),
+      Optional.of(defaultPlatform.getDebugPathSanitizer()),
+      defaultPlatform.getFlagMacros());
   }
 
   private static Function<Tool, Archiver> getArchiver(final Class<? extends Archiver> arClass,
@@ -127,6 +168,25 @@ public class CxxPlatforms {
         }
       }
     };
+  }
+
+  private static ImmutableFlavor getHostFlavorFromPlatform(Platform platform) {
+    // TODO(Coneko): base the host flavor on architecture, too.
+    switch (platform) {
+      case LINUX:
+        return ImmutableFlavor.of("linux-x86_64");
+      case MACOS:
+        return ImmutableFlavor.of("macosx-x86_64");
+      case WINDOWS:
+        return ImmutableFlavor.of("windows-x86_64");
+      case UNKNOWN:
+      default:
+        throw new HumanReadableException("Unable to determine the host platform.");
+    }
+  }
+
+  public static ImmutableFlavor getHostFlavor() {
+    return getHostFlavorFromPlatform(Platform.detect());
   }
 
   public static void addToolFlagsFromConfig(

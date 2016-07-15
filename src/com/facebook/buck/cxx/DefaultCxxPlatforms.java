@@ -134,7 +134,7 @@ public class DefaultCxxPlatforms {
         new HashedFileTool(DEFAULT_STRIP),
         archiver,
         new HashedFileTool(DEFAULT_RANLIB),
-        new HashedFileTool(DEFAULT_NM),
+        new PosixNmSymbolNameTool(new HashedFileTool(DEFAULT_NM)),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),

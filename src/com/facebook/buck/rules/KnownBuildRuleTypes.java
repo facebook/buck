@@ -163,6 +163,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
@@ -285,25 +286,6 @@ public class KnownBuildRuleTypes {
   }
 
   @VisibleForTesting
-  static CxxPlatform getHostCxxPlatformFromConfig(
-      CxxBuckConfig cxxBuckConfig,
-      ImmutableMap<Flavor, CxxPlatform> cxxPlatforms,
-      CxxPlatform defaultCxxPlatform) {
-    Optional<String> hostCxxPlatform = cxxBuckConfig.getHostPlatform();
-    if (hostCxxPlatform.isPresent()) {
-      ImmutableFlavor hostFlavor = ImmutableFlavor.of(hostCxxPlatform.get());
-      if (cxxPlatforms.containsKey(hostFlavor)) {
-        return CxxPlatform.builder()
-            .from(cxxPlatforms.get(hostFlavor))
-            .setFlavor(DefaultCxxPlatforms.FLAVOR)
-            .build();
-      }
-    }
-
-    return defaultCxxPlatform;
-  }
-
-  @VisibleForTesting
   static Builder createBuilder(
       BuckConfig config,
       ProcessExecutor processExecutor,
@@ -364,39 +346,78 @@ public class KnownBuildRuleTypes {
     ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =
         ndkCxxPlatformsBuilder.build();
 
-    // Construct the C/C++ config wrapping the buck config.
-    ImmutableMap.Builder<Flavor, CxxPlatform> cxxPlatformsBuilder = ImmutableMap.builder();
+    // Create a map of system platforms.
+    ImmutableMap.Builder<Flavor, CxxPlatform> cxxSystemPlatformsBuilder = ImmutableMap.builder();
 
     // If an Android NDK is present, add platforms for that.  This is mostly useful for
     // testing our Android NDK support for right now.
     for (NdkCxxPlatform ndkCxxPlatform : ndkCxxPlatforms.values()) {
-      cxxPlatformsBuilder.put(
+      cxxSystemPlatformsBuilder.put(
           ndkCxxPlatform.getCxxPlatform().getFlavor(),
           ndkCxxPlatform.getCxxPlatform());
     }
 
     for (AppleCxxPlatform appleCxxPlatform : platformFlavorsToAppleCxxPlatforms.getValues()) {
-      cxxPlatformsBuilder.put(
+      cxxSystemPlatformsBuilder.put(
           appleCxxPlatform.getCxxPlatform().getFlavor(),
           appleCxxPlatform.getCxxPlatform());
     }
 
-    // Add the host's own C/C++ platform.
-    CxxPlatform systemDefaultCxxPlatform = getHostCxxPlatformFromConfig(
-        cxxBuckConfig,
-        cxxPlatformsBuilder.build(),
-        DefaultCxxPlatforms.build(platform, cxxBuckConfig));
+    CxxPlatform defaultHostCxxPlatform = DefaultCxxPlatforms.build(platform, cxxBuckConfig);
+    cxxSystemPlatformsBuilder.put(defaultHostCxxPlatform.getFlavor(), defaultHostCxxPlatform);
+    ImmutableMap<Flavor, CxxPlatform> cxxSystemPlatformsMap = cxxSystemPlatformsBuilder.build();
 
-    cxxPlatformsBuilder.put(systemDefaultCxxPlatform.getFlavor(), systemDefaultCxxPlatform);
-    ImmutableMap<Flavor, CxxPlatform> cxxPlatformsMap = cxxPlatformsBuilder.build();
+    // Add the host platform if needed (for example, when building on Linux).
+    Flavor hostFlavor = CxxPlatforms.getHostFlavor();
+    if (!cxxSystemPlatformsMap.containsKey(hostFlavor)) {
+      cxxSystemPlatformsBuilder.put(
+          hostFlavor,
+          CxxPlatform.builder()
+              .from(defaultHostCxxPlatform)
+              .setFlavor(hostFlavor)
+              .build());
+      cxxSystemPlatformsMap = cxxSystemPlatformsBuilder.build();
+    }
 
-    // Get the default platform from config.
-    CxxPlatform defaultCxxPlatform = CxxPlatforms.getConfigDefaultCxxPlatform(
-        cxxBuckConfig,
-        cxxPlatformsMap,
-        systemDefaultCxxPlatform);
+    // Add platforms for each cxx flavor obtained from the buck config files
+    // from sections of the form cxx#{flavor name}.
+    // These platforms are overrides for existing system platforms.
+    HashMap<Flavor, CxxPlatform> cxxOverridePlatformsMap =
+        new HashMap<Flavor, CxxPlatform>(cxxSystemPlatformsMap);
+    ImmutableSet<Flavor> cxxFlavors = CxxBuckConfig.getCxxFlavors(config);
+    for (Flavor flavor: cxxFlavors) {
+      if (!cxxSystemPlatformsMap.containsKey(flavor)) {
+        throw new HumanReadableException(
+            "Could not find platform for which overrides were specified: " + flavor);
+      }
 
-    cxxPlatformsMap = cxxPlatformsBuilder.build();
+      cxxOverridePlatformsMap.put(flavor, CxxPlatforms.copyPlatformWithFlavorAndConfig(
+          cxxOverridePlatformsMap.get(flavor),
+          new CxxBuckConfig(config, flavor),
+          flavor));
+    }
+
+    // Finalize our "default" host.
+    // TODO(Ktwu) The host flavor should default to a concrete flavor
+    // like "linux-x86_64", not "default".
+    hostFlavor = DefaultCxxPlatforms.FLAVOR;
+    Optional<String> hostCxxPlatformOverride = cxxBuckConfig.getHostPlatform();
+    if (hostCxxPlatformOverride.isPresent()) {
+      Flavor overrideFlavor = ImmutableFlavor.of(hostCxxPlatformOverride.get());
+      if (cxxOverridePlatformsMap.containsKey(overrideFlavor)) {
+        hostFlavor = overrideFlavor;
+      }
+    }
+    CxxPlatform hostCxxPlatform = CxxPlatform.builder()
+        .from(cxxOverridePlatformsMap.get(hostFlavor))
+        .setFlavor(DefaultCxxPlatforms.FLAVOR)
+        .build();
+    cxxOverridePlatformsMap.put(DefaultCxxPlatforms.FLAVOR, hostCxxPlatform);
+
+    ImmutableMap<Flavor, CxxPlatform> cxxPlatformsMap = ImmutableMap
+        .<Flavor, CxxPlatform>builder()
+        .putAll(cxxOverridePlatformsMap)
+        .build();
 
     ExecutableFinder executableFinder = new ExecutableFinder();
 
@@ -404,6 +425,12 @@ public class KnownBuildRuleTypes {
     FlavorDomain<CxxPlatform> cxxPlatforms = new FlavorDomain<>(
         "C/C++ platform",
         cxxPlatformsMap);
+
+    // Get the default target platform from config.
+    CxxPlatform defaultCxxPlatform = CxxPlatforms.getConfigDefaultCxxPlatform(
+        cxxBuckConfig,
+        cxxPlatformsMap,
+        hostCxxPlatform);
 
     DBuckConfig dBuckConfig = new DBuckConfig(config);
 
