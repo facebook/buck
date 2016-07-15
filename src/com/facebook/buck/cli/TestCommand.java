@@ -459,9 +459,7 @@ public class TestCommand extends BuildCommand {
       ActionGraphAndResolver actionGraphAndResolver = Preconditions.checkNotNull(
           params.getActionGraphCache().getActionGraph(
               params.getBuckEventBus(),
-              BuildIdSampler.apply(
-                  params.getBuckConfig().getActionGraphCacheCheckSampleRate(),
-                  params.getBuckEventBus().getBuildId()),
+              params.getBuckConfig().isActionGraphCheckingEnabled(),
               targetGraph,
               params.getBuckConfig().getKeySeed()));
       // Look up all of the test rules in the action graph.

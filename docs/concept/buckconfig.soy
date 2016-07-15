@@ -468,7 +468,7 @@ $ buck targets --resolve-alias app#src_jar
     <ul>
       <li>
         <code>shallow</code> (default): only the required transitive dependencies of a{sp}
-        {call buck.build_target /} are materialized locally.  Cache hits can result in missing
+        {call buck.build_target /} are materialized locally. Cache hits can result in missing
         transitive dependencies that are not needed for the final output.
       </li>
       <li>
@@ -839,6 +839,17 @@ $ buck targets --resolve-alias app#src_jar
   {param description}
     When performing a store artifacts bigger than this size will be stored
     directly, without the content hash redirection.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'action_graph_cache_check_enabled' /}
+  {param example_value: 'false' /}
+  {param description}
+    It enables an integrity checking mechanism in the action graph cache that compares the a newly
+    generated action graph with the one already in the cache in the case of a cache hit. If the
+    graphs do not match the build is stopped and the mismatching rules are printed and logged.
   {/param}
 {/call}
 

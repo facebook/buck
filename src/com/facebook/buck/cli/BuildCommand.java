@@ -557,9 +557,7 @@ public class BuildCommand extends AbstractCommand {
     ActionGraphAndResolver actionGraphAndResolver = Preconditions.checkNotNull(
         params.getActionGraphCache().getActionGraph(
             params.getBuckEventBus(),
-            BuildIdSampler.apply(
-                params.getBuckConfig().getActionGraphCacheCheckSampleRate(),
-                params.getBuckEventBus().getBuildId()),
+            params.getBuckConfig().isActionGraphCheckingEnabled(),
             targetGraphAndBuildTargets.getTargetGraph(),
             params.getBuckConfig().getKeySeed()));
 

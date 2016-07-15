@@ -579,12 +579,8 @@ public class BuckConfig {
     return Optional.absent();
   }
 
-  public SampleRate getActionGraphCacheCheckSampleRate() {
-    Optional<Float> sampleRate = config.getFloat("cache", "action_graph_cache_check_rate");
-    if (sampleRate.isPresent()) {
-      return SampleRate.of(sampleRate.get());
-    }
-    return SampleRate.of(0.25f);
+  public boolean isActionGraphCheckingEnabled() {
+    return getBooleanValue("cache", "action_graph_cache_check_enabled", false);
   }
 
   public Optional<ImmutableSet<PatternAndMessage>> getUnexpectedFlavorsMessages() {

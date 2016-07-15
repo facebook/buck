@@ -35,7 +35,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.MoreExecutors;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -85,7 +84,7 @@ public class ActionGraphCacheTest {
 
   @Test
   public void hitOnCache() throws InterruptedException {
-    ActionGraphCache cache = new ActionGraphCache(MoreExecutors.newDirectExecutorService());
+    ActionGraphCache cache = new ActionGraphCache();
 
     ActionGraphAndResolver resultRun1 =
         cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph, 0);
@@ -182,7 +181,7 @@ public class ActionGraphCacheTest {
 
   @Test
   public void cacheInvalidationBasedOnEvents() throws IOException, InterruptedException {
-    ActionGraphCache cache = new ActionGraphCache(MoreExecutors.newDirectExecutorService());
+    ActionGraphCache cache = new ActionGraphCache();
     Path file = tmpFilePath.newFile("foo.txt");
 
     // Fill the cache. An overflow event should invalidate the cache.
