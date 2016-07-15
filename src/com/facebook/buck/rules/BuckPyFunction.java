@@ -17,12 +17,19 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.io.Resources;
 
+import org.stringtemplate.v4.AutoIndentWriter;
+import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroup;
+import org.stringtemplate.v4.STGroupFile;
+
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Map;
-import java.util.SortedSet;
 
 import javax.annotation.Nullable;
 
@@ -44,6 +51,7 @@ public class BuckPyFunction {
    * the build rule being defined.
    */
   public static final String TYPE_PROPERTY_NAME = INTERNAL_PROPERTY_NAME_PREFIX + "type";
+  public static final String BUCK_PY_FUNCTION_TEMPLATE = "BuckPyFunction.stg";
 
   private final ConstructorArgMarshaller argMarshaller;
 
@@ -52,71 +60,44 @@ public class BuckPyFunction {
   }
 
   public String toPythonFunction(BuildRuleType type, Object dto) {
+    @Nullable TargetName defaultName = dto.getClass().getAnnotation(TargetName.class);
 
-    StringBuilder builder = new StringBuilder();
-
-    SortedSet<ParamInfo> mandatory = Sets.newTreeSet();
-    SortedSet<ParamInfo> optional = Sets.newTreeSet();
-
-    for (ParamInfo param : argMarshaller.getAllParamInfo(dto)) {
+    ImmutableList.Builder<StParamInfo> mandatory = ImmutableList.builder();
+    ImmutableList.Builder<StParamInfo> optional = ImmutableList.builder();
+    for (ParamInfo param : ImmutableSortedSet.copyOf(argMarshaller.getAllParamInfo(dto))) {
       if (isSkippable(param)) {
         continue;
       }
-
       if (param.isOptional()) {
-        optional.add(param);
+        optional.add(
+            new StParamInfo(param.getName(), param.getPythonName(), getPythonDefault(param)));
       } else {
-        mandatory.add(param);
+        mandatory.add(new StParamInfo(param.getName(), param.getPythonName(), null));
       }
     }
+    optional.add(new StParamInfo("visibility", "visibility", "[]"));
 
-    @Nullable TargetName defaultName = dto.getClass().getAnnotation(TargetName.class);
-
-    builder.append("@provide_for_build\n")
-        .append("def ").append(type.getName()).append("(");
-
-    if (defaultName == null) {
-      builder.append("name, ");
+    STGroup stGroup =
+        new STGroupFile(
+            Resources.getResource(BuckPyFunction.class, BUCK_PY_FUNCTION_TEMPLATE),
+            "UTF-8",
+            '<',
+            '>');
+    ST st = stGroup.getInstanceOf("buck_py_function");
+    st.add("name", type.getName());
+    // Mandatory params must come before optional ones.
+    st.add(
+        "params",
+        ImmutableList.builder().addAll(mandatory.build()).addAll(optional.build()).build());
+    st.add("typePropName", TYPE_PROPERTY_NAME);
+    st.add("defaultName", defaultName == null ? null : defaultName.name());
+    StringWriter stringWriter = new StringWriter();
+    try {
+      st.write(new AutoIndentWriter(stringWriter, "\n"));
+    } catch (IOException e) {
+      throw new IllegalStateException("ST writer should not throw with StringWriter", e);
     }
-
-    // Construct the args.
-    for (ParamInfo param : Iterables.concat(mandatory, optional)) {
-      appendPythonParameter(builder, param);
-    }
-    builder.append("visibility=[], build_env=None):\n")
-
-        // Define the rule.
-        .append("  add_rule({\n")
-        .append("    '" + TYPE_PROPERTY_NAME + "' : '").append(type.getName()).append("',\n");
-
-
-    if (defaultName != null) {
-      builder.append("    'name' : '").append(defaultName.name()).append("',\n");
-    } else {
-      builder.append("    'name' : name,\n");
-    }
-
-    // Iterate over args.
-    for (ParamInfo param : Iterables.concat(mandatory, optional)) {
-      builder.append("    '")
-          .append(param.getName())
-          .append("' : ")
-          .append(param.getPythonName())
-          .append(",\n");
-    }
-
-    builder.append("    'visibility' : visibility,\n");
-    builder.append("  }, build_env)\n\n");
-
-    return builder.toString();
-  }
-
-  private void appendPythonParameter(StringBuilder builder, ParamInfo param) {
-    builder.append(param.getPythonName());
-    if (param.isOptional()) {
-      builder.append("=").append(getPythonDefault(param));
-    }
-    builder.append(", ");
+    return stringWriter.toString();
   }
 
   private String getPythonDefault(ParamInfo param) {
@@ -148,5 +129,18 @@ public class BuckPyFunction {
     }
 
     return false;
+  }
+
+  @SuppressWarnings("unused")
+  private static class StParamInfo {
+    public final String name;
+    public final String pythonName;
+    @Nullable public final String pythonDefault;
+
+    public StParamInfo(String name, String pythonName, @Nullable String pythonDefault) {
+      this.name = name;
+      this.pythonName = pythonName;
+      this.pythonDefault = pythonDefault;
+    }
   }
 }

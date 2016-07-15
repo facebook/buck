@@ -1,8 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY a8e8218f92ac8e909cfeade26654d9a63f59e675 #@#
+#@# GENERATED FILE: DO NOT MODIFY e0ed931d213c9350c60abb5055d6f0d83448217a #@#
 {
   "thrift" : {
     "deps" : [
       "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/event:event",

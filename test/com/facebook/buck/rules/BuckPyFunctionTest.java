@@ -78,11 +78,11 @@ public class BuckPyFunctionTest {
     assertEquals(Joiner.on("\n").join(
         "@provide_for_build",
         "def named(name, visibility=[], build_env=None):",
-        "  add_rule({",
-        "    'buck.type' : 'named',",
-        "    'name' : name,",
-        "    'visibility' : visibility,",
-        "  }, build_env)",
+        "    add_rule({",
+        "        'buck.type': 'named',",
+        "        'name': name,",
+        "        'visibility': visibility,",
+        "    }, build_env)",
         "",
         ""
     ), definition);
@@ -100,12 +100,12 @@ public class BuckPyFunctionTest {
     assertEquals(Joiner.on("\n").join(
             "@provide_for_build",
             "def noname(foobar, visibility=[], build_env=None):",
-            "  add_rule({",
-            "    'buck.type' : 'noname',",
-            "    'name' : 'lollerskates',",
-            "    'foobar' : foobar,",
-            "    'visibility' : visibility,",
-            "  }, build_env)",
+            "    add_rule({",
+            "        'buck.type': 'noname',",
+            "        'name': 'lollerskates',",
+            "        'foobar': foobar,",
+            "        'visibility': visibility,",
+            "    }, build_env)",
             "",
             ""
         ), definition);
@@ -149,15 +149,15 @@ public class BuckPyFunctionTest {
     assertEquals(Joiner.on("\n").join(
         "@provide_for_build",
         "def either(name, dog, fake, cat=None, egg=None, visibility=[], build_env=None):",
-        "  add_rule({",
-        "    'buck.type' : 'either',",
-        "    'name' : name,",
-        "    'dog' : dog,",
-        "    'fake' : fake,",
-        "    'cat' : cat,",
-        "    'egg' : egg,",
-        "    'visibility' : visibility,",
-        "  }, build_env)",
+        "    add_rule({",
+        "        'buck.type': 'either',",
+        "        'name': name,",
+        "        'dog': dog,",
+        "        'fake': fake,",
+        "        'cat': cat,",
+        "        'egg': egg,",
+        "        'visibility': visibility,",
+        "    }, build_env)",
         "",
         ""
     ), definition);
@@ -188,13 +188,13 @@ public class BuckPyFunctionTest {
     assertEquals(Joiner.on("\n").join(
         "@provide_for_build",
         "def case(name, all_this_was_fields, some_field, visibility=[], build_env=None):",
-        "  add_rule({",
-        "    'buck.type' : 'case',",
-        "    'name' : name,",
-        "    'hintedField' : all_this_was_fields,",
-        "    'someField' : some_field,",
-        "    'visibility' : visibility,",
-        "  }, build_env)",
+        "    add_rule({",
+        "        'buck.type': 'case',",
+        "        'name': name,",
+        "        'hintedField': all_this_was_fields,",
+        "        'someField': some_field,",
+        "        'visibility': visibility,",
+        "    }, build_env)",
         "",
         ""
     ), definition);

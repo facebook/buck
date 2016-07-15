@@ -137,6 +137,9 @@ java_immutables_library(
     'Label',
     'SourceWithFlags',
   ],
+  resources = [
+    'BuckPyFunction.stg',
+  ],
   tests = [
     '//test/com/facebook/buck/rules/coercer:coercer',
     '//test/com/facebook/buck/rules:rules',

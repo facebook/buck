@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 3a1de69e3d1700109113f4f295ac05c389353b47 #@#
+#@# GENERATED FILE: DO NOT MODIFY 9d8afc8dd9188f08c54108378c81ce500bdb1a1b #@#
 {
   "log" : {
     "deps" : [
@@ -20,7 +20,8 @@
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/immutables:immutables",
-      "//third-party/java/guava:guava"
+      "//third-party/java/guava:guava",
+      "//third-party/java/jackson:jackson-annotations"
     ]
   }
 }

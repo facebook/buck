@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY dd9764d8c7ce54d2ade17f243bd5f8388102daba #@#
+#@# GENERATED FILE: DO NOT MODIFY 59e2e1d5593e03b36ebc5bcae66478614a1e74db #@#
 {
   "action_graph_cache" : {
     "deps" : [
@@ -9,7 +9,6 @@
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util/concurrent:concurrent",
       "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [
@@ -32,7 +31,8 @@
       "//src/com/facebook/buck/android:exceptions",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util/hash:hash",
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:processor",
+      "//third-party/java/stringtemplate:stringtemplate"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/android:utils",
@@ -153,7 +153,6 @@
       "//src/com/facebook/buck/hashing:hashing",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
-      "//src/com/facebook/buck/rules:types",
       "//third-party/java/guava:guava"
     ]
   },
@@ -163,6 +162,7 @@
       "//src/com/facebook/buck/android:steps",
       "//src/com/facebook/buck/apple:platform",
       "//src/com/facebook/buck/apple:rules",
+      "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/d:d",
       "//src/com/facebook/buck/dotnet:dotnet",
       "//src/com/facebook/buck/file:downloader",
@@ -205,7 +205,6 @@
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/cxx:platform",
-      "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/io:watchman",
