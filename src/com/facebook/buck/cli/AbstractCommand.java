@@ -25,6 +25,7 @@ import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
@@ -89,10 +90,12 @@ public abstract class AbstractCommand implements Command {
     // Parse command-line config overrides.
     for (Map.Entry<String, String> entry : configOverrides.entrySet()) {
       List<String> key = Splitter.on("//").limit(2).splitToList(entry.getKey());
-      Optional<String> cellName = Optional.<String>absent();
+      RelativeCellName cellName = RelativeCellName.ROOT_CELL_NAME;
       String configKey = key.get(0);
       if (key.size() == 2) {
-        cellName = Optional.of(key.get(0));
+        // Here we explicitly take the whole string as the cell name. We don't support transitive
+        // path overrides for cells.
+        cellName = RelativeCellName.of(ImmutableSet.of(key.get(0)));
         configKey = key.get(1);
       }
       key = Splitter.on('.').limit(2).splitToList(configKey);
@@ -123,10 +126,10 @@ public abstract class AbstractCommand implements Command {
       builder.put(cellName, section, key.get(1), value);
     }
     if (numThreads != null) {
-      builder.put(Optional.of("*"), "build", "threads", String.valueOf(numThreads));
+      builder.put(CellConfig.ALL_CELLS_OVERRIDE, "build", "threads", String.valueOf(numThreads));
     }
     if (noCache) {
-      builder.put(Optional.of("*"), "cache", "mode", "");
+      builder.put(CellConfig.ALL_CELLS_OVERRIDE, "cache", "mode", "");
     }
 
     return builder.build();

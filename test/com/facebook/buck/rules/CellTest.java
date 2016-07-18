@@ -164,9 +164,9 @@ public class CellTest {
         .setFilesystem(filesystem1)
         .setCellConfigOverride(
             CellConfig.builder()
-                .put(Optional.of("second"), "test", "value", "cell2")
-                .put(Optional.of("second/third"), "test", "value", "cell3")
-                .put(Optional.of("third"), "test", "other_value", "cell3")
+                .put(RelativeCellName.fromComponents("second"), "test", "value", "cell2")
+                .put(RelativeCellName.fromComponents("second", "third"), "test", "value", "cell3")
+                .put(RelativeCellName.fromComponents("third"), "test", "other_value", "cell3")
                 .build())
         .build();
     BuildTarget target = BuildTargetFactory.newInstance(filesystem2, "//does/not:matter");

@@ -19,6 +19,7 @@ import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
 import org.immutables.value.Value;
@@ -34,7 +35,10 @@ import java.util.Map;
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractCellConfig {
-  public abstract ImmutableMap<Optional<String>, ImmutableMap<String, ImmutableMap<String, String>>>
+  public static final RelativeCellName ALL_CELLS_OVERRIDE =
+      RelativeCellName.of(ImmutableSet.of(RelativeCellName.ALL_CELLS_SPECIAL_NAME));
+
+  public abstract ImmutableMap<RelativeCellName, ImmutableMap<String, ImmutableMap<String, String>>>
     getValues();
 
   /**
@@ -44,10 +48,10 @@ abstract class AbstractCellConfig {
    */
   public RawConfig getForCell(RelativeCellName cellName) {
     ImmutableMap<String, ImmutableMap<String, String>> config = Optional
-      .fromNullable(getValues().get(cellName.getLegacyName()))
+      .fromNullable(getValues().get(cellName))
       .or(ImmutableMap.<String, ImmutableMap<String, String>>of());
     ImmutableMap<String, ImmutableMap<String, String>> starConfig = Optional
-      .fromNullable(getValues().get(Optional.of("*")))
+      .fromNullable(getValues().get(ALL_CELLS_OVERRIDE))
       .or(ImmutableMap.<String, ImmutableMap<String, String>>of());
     return RawConfig.builder()
       .putAll(starConfig)
@@ -60,7 +64,7 @@ abstract class AbstractCellConfig {
    */
   public static CellConfig of() {
     return CellConfig.of(
-        ImmutableMap.<Optional<String>, ImmutableMap<String, ImmutableMap<String, String>>>of());
+        ImmutableMap.<RelativeCellName, ImmutableMap<String, ImmutableMap<String, String>>>of());
   }
 
   public static Builder builder() {
@@ -73,14 +77,14 @@ abstract class AbstractCellConfig {
    * Unless otherwise stated, duplicate keys overwrites earlier ones.
    */
   public static class Builder {
-    private Map<Optional<String>, Map<String, Map<String, String>>> values =
+    private Map<RelativeCellName, Map<String, Map<String, String>>> values =
         Maps.newLinkedHashMap();
 
     /**
      * Merge raw config values into this config.
      */
     public <M extends Map<String, String>> Builder putAll(
-        Optional<String> cellName, Map<String, M> config) {
+        RelativeCellName cellName, Map<String, M> config) {
       for (Map.Entry<String, M> entry : config.entrySet()) {
         requireSection(cellName, entry.getKey()).putAll(entry.getValue());
       }
@@ -91,28 +95,28 @@ abstract class AbstractCellConfig {
      * Merge the values from another {@code RawConfig}.
      */
     public Builder putAll(RawConfig config) {
-      return putAll(Optional.<String>absent(), config.getValues());
+      return putAll(RelativeCellName.ROOT_CELL_NAME, config.getValues());
     }
 
     /**
      * Merge the values from another {@code RawConfig}.
      */
-    public Builder putAll(Optional<String> cell, RawConfig config) {
+    public Builder putAll(RelativeCellName cell, RawConfig config) {
       return putAll(cell, config.getValues());
     }
 
     /**
      * Put a single value.
      */
-    public Builder put(Optional<String> cell, String section, String key, String value) {
+    public Builder put(RelativeCellName cell, String section, String key, String value) {
       requireSection(cell, section).put(key, value);
       return this;
     }
 
     public CellConfig build() {
-      ImmutableMap.Builder<Optional<String>, ImmutableMap<String, ImmutableMap<String, String>>>
+      ImmutableMap.Builder<RelativeCellName, ImmutableMap<String, ImmutableMap<String, String>>>
         builder = ImmutableMap.builder();
-      for (Optional<String> cell : values.keySet()) {
+      for (RelativeCellName cell : values.keySet()) {
         ImmutableMap.Builder<String, ImmutableMap<String, String>> rawBuilder =
             ImmutableMap.builder();
         Map<String, Map<String, String>> config = values.get(cell);
@@ -130,7 +134,7 @@ abstract class AbstractCellConfig {
     /**
      * Get a section or create it if it doesn't exist.
      */
-    private Map<String, Map<String, String>> requireCell(Optional<String> cellName) {
+    private Map<String, Map<String, String>> requireCell(RelativeCellName cellName) {
       Map<String, Map<String, String>> cell = values.get(cellName);
       if (cell == null) {
         cell = Maps.newLinkedHashMap();
@@ -142,7 +146,7 @@ abstract class AbstractCellConfig {
     /**
      * Get a section or create it if it doesn't exist.
      */
-    private Map<String, String> requireSection(Optional<String> cellName, String sectionName) {
+    private Map<String, String> requireSection(RelativeCellName cellName, String sectionName) {
       Map<String, Map<String, String>> cell = requireCell(cellName);
       Map<String, String> section = cell.get(sectionName);
       if (section == null) {
@@ -153,5 +157,4 @@ abstract class AbstractCellConfig {
     }
 
   }
-
 }

@@ -21,6 +21,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -56,6 +57,10 @@ abstract class AbstractRelativeCellName {
     );
   }
 
+  public static RelativeCellName fromComponents(String ... strings) {
+    return RelativeCellName.of(FluentIterable.of(strings));
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(RelativeCellName.class)
@@ -65,6 +70,10 @@ abstract class AbstractRelativeCellName {
 
   @Value.Check
   protected void checkComponents() {
+    // Special case for the single-component 'all cells' designator'
+    if (getComponents().size() == 1 && getComponents().get(0).equals(ALL_CELLS_SPECIAL_NAME)) {
+      return;
+    }
     ImmutableSet<String> prohibitedSubstrings = ImmutableSet.of(
         Character.toString(CELL_NAME_COMPONENT_SEPARATOR),
         ALL_CELLS_SPECIAL_NAME);
