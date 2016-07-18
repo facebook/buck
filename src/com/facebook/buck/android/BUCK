@@ -16,12 +16,15 @@ PACKAGEABLE_SRCS = [
   'AbstractAndroidPackageableCollection.java',
   'AndroidPackageable.java',
   'AndroidPackageableCollector.java',
+  'AbstractAPKModule.java',
+  'APKModuleGraph.java',
 ]
 java_immutables_library(
   name = 'packageable',
   srcs = PACKAGEABLE_SRCS,
   immutable_types = [
     'AndroidPackageableCollection',
+    'APKModule',
   ],
   tests = [
     '//test/com/facebook/buck/android:unit',
