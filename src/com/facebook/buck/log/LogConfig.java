@@ -62,7 +62,7 @@ public class LogConfig {
    */
   public LogConfig() throws IOException {
     setupLogging(LogConfigSetup.builder()
-        .from(AbstractLogConfigSetup.DEFAULT_SETUP)
+        .from(LogConfigSetup.DEFAULT_SETUP)
         .setLogFilePrefix("launch-")
         .setCount(1)
         .build());

@@ -66,8 +66,7 @@ public class GlobalStateManager {
     this.commandIdToLogFileHandlerWriter = new ConcurrentHashMap<>();
 
     rotateDefaultLogFileWriter(
-        InvocationInfo.of(new BuildId(), "launch",
-            AbstractLogConfigSetup.DEFAULT_SETUP.getLogDir())
+        InvocationInfo.of(new BuildId(), "launch", LogConfigSetup.DEFAULT_SETUP.getLogDir())
             .getLogFilePath());
   }
 
