@@ -49,7 +49,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -132,7 +131,7 @@ public class Cell {
         filesystem.getRootPath(),
         rootConfig.getEntriesForSection(DefaultCellPathResolver.REPOSITORIES_SECTION));
 
-    ImmutableMultimap<Path, RelativeCellName> transitiveCellPathMapping =
+    ImmutableMap<RelativeCellName, Path> transitiveCellPathMapping =
         rootCellCellPathResolver.getTransitivePathMapping();
     ImmutableMap<Path, RawConfig> pathToConfigOverrides = getPathToConfigOverrides(
         rootCellConfigOverrides,
@@ -170,8 +169,11 @@ public class Cell {
       final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
       final AndroidDirectoryResolver directoryResolver,
       final Clock clock,
-      final ImmutableMultimap<Path, RelativeCellName> transitiveCellPathMapping,
+      final ImmutableMap<RelativeCellName, Path> transitiveCellPathMapping,
       final ImmutableMap<Path, RawConfig> pathToConfigOverrides) {
+
+    final ImmutableSet<Path> allPossibleRoots =
+        ImmutableSet.copyOf(transitiveCellPathMapping.values());
 
     final AtomicReference<LoadingCache<Path, Cell>> loaderReference = new AtomicReference<>();
     CacheLoader<Path, Cell> loader = new CacheLoader<Path, Cell>() {
@@ -179,7 +181,6 @@ public class Cell {
       public Cell load(Path cellPath) throws Exception {
         cellPath = cellPath.toRealPath().normalize();
 
-        ImmutableSet<Path> allPossibleRoots = transitiveCellPathMapping.keySet();
         Preconditions.checkState(
             allPossibleRoots.contains(cellPath),
             "Cell %s outside of transitive closure of root cell (%s).",
@@ -223,17 +224,17 @@ public class Cell {
 
   private static ImmutableMap<Path, RawConfig> getPathToConfigOverrides(
       CellConfig rootCellConfigOverrides,
-      ImmutableMultimap<Path, RelativeCellName> transitivePathMapping) {
+      ImmutableMap<RelativeCellName, Path> transitivePathMapping) {
 
     Map<Path, RawConfig.Builder> overridesByPath = new HashMap<>();
-    for (Map.Entry<Path, RelativeCellName> entry : transitivePathMapping.entries()) {
-      Path cellPath = entry.getKey();
+    for (Map.Entry<RelativeCellName, Path> entry : transitivePathMapping.entrySet()) {
+      Path cellPath = entry.getValue();
       RawConfig.Builder builder = overridesByPath.get(cellPath);
       if (builder == null) {
         builder = RawConfig.builder();
         overridesByPath.put(cellPath, builder);
       }
-      builder.putAll(rootCellConfigOverrides.getForCell(entry.getValue()));
+      builder.putAll(rootCellConfigOverrides.getForCell(entry.getKey()));
     }
 
     return ImmutableMap.copyOf(

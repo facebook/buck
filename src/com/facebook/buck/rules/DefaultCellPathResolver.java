@@ -25,7 +25,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -62,9 +61,9 @@ public class DefaultCellPathResolver implements CellPathResolver {
    * @return MultiMap of Path to cell name. The map will contain multiple names for a path if
    *         that cell is reachable through different paths from the current cell.
    */
-  public ImmutableMultimap<Path, RelativeCellName> getTransitivePathMapping() {
-    ImmutableMultimap.Builder<Path, RelativeCellName> builder = ImmutableMultimap.builder();
-    builder.put(root, RelativeCellName.of(ImmutableList.<String>of()));
+  public ImmutableMap<RelativeCellName, Path> getTransitivePathMapping() {
+    ImmutableMap.Builder<RelativeCellName, Path> builder = ImmutableMap.builder();
+    builder.put(RelativeCellName.of(ImmutableList.<String>of()), root);
 
     HashSet<Path> seenPaths = new HashSet<>();
     seenPaths.add(root);
@@ -97,7 +96,7 @@ public class DefaultCellPathResolver implements CellPathResolver {
   }
 
   private static void constructFullMapping(
-      ImmutableMultimap.Builder<Path, RelativeCellName> result,
+      ImmutableMap.Builder<RelativeCellName, Path> result,
       Set<Path> pathStack,
       RelativeCellName parentCellPath,
       DefaultCellPathResolver parentStub) {
@@ -115,7 +114,7 @@ public class DefaultCellPathResolver implements CellPathResolver {
       pathStack.add(cellRoot);
 
       RelativeCellName relativeCellName = parentCellPath.withAppendedComponent(entry.getKey());
-      result.put(cellRoot, relativeCellName);
+      result.put(relativeCellName, cellRoot);
 
       Config config;
       try {

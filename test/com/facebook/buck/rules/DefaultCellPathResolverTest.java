@@ -20,7 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.ConfigBuilder;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 
@@ -76,9 +76,9 @@ public class DefaultCellPathResolverTest {
     assertThat(
         cellPathResolver.getTransitivePathMapping(),
         Matchers.equalTo(
-            ImmutableMultimap.of(
-                cell1Root, RelativeCellName.ROOT_CELL_NAME,
-                cell2Root, RelativeCellName.of(ImmutableList.of("simple"))
+            ImmutableMap.of(
+                RelativeCellName.ROOT_CELL_NAME, cell1Root,
+                RelativeCellName.of(ImmutableList.of("simple")), cell2Root
             )
         ));
   }
@@ -118,10 +118,10 @@ public class DefaultCellPathResolverTest {
     assertThat(
         cellPathResolver.getTransitivePathMapping(),
         Matchers.equalTo(
-            ImmutableMultimap.of(
-                cell1Root, RelativeCellName.ROOT_CELL_NAME,
-                cell2Root, RelativeCellName.of(ImmutableList.of("simple")),
-                cell3Root, RelativeCellName.of(ImmutableList.of("simple", "three"))
+            ImmutableMap.of(
+                RelativeCellName.ROOT_CELL_NAME, cell1Root,
+                RelativeCellName.of(ImmutableList.of("simple")), cell2Root,
+                RelativeCellName.of(ImmutableList.of("simple", "three")), cell3Root
             )
         ));
   }
@@ -164,12 +164,12 @@ public class DefaultCellPathResolverTest {
     assertThat(
         cellPathResolver.getTransitivePathMapping(),
         Matchers.equalTo(
-            ImmutableMultimap.<Path, RelativeCellName>builder()
-                .put(cell1Root, RelativeCellName.ROOT_CELL_NAME)
-                .put(cellLeftRoot, RelativeCellName.of(ImmutableList.of("left")))
-                .put(cellCenterRoot, RelativeCellName.of(ImmutableList.of("left", "center")))
-                .put(cellCenterRoot, RelativeCellName.of(ImmutableList.of("right", "center")))
-                .put(cellRightRoot, RelativeCellName.of(ImmutableList.of("right")))
+            ImmutableMap.<RelativeCellName, Path>builder()
+                .put(RelativeCellName.ROOT_CELL_NAME, cell1Root)
+                .put(RelativeCellName.of(ImmutableList.of("left")), cellLeftRoot)
+                .put(RelativeCellName.of(ImmutableList.of("left", "center")), cellCenterRoot)
+                .put(RelativeCellName.of(ImmutableList.of("right", "center")), cellCenterRoot)
+                .put(RelativeCellName.of(ImmutableList.of("right")), cellRightRoot)
             .build())
         );
   }
