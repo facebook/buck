@@ -410,8 +410,6 @@ public class BuildCommand extends AbstractCommand {
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 typeCoercerFactory);
         DistributedBuildTargetGraphCodec targetGraphCodec = new DistributedBuildTargetGraphCodec(
-            params.getConsole(),
-            params.getClock(),
             params.getCell().getFilesystem(),
             params.getCell(),
             params.getObjectMapper(),

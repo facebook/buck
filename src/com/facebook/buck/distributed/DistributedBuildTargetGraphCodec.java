@@ -16,7 +16,6 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.config.Config;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuildTarget;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetGraph;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetNode;
@@ -27,12 +26,8 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.CellConstructionDelegateData;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.timing.Clock;
-import com.facebook.buck.util.Console;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
@@ -57,8 +52,6 @@ import java.util.Map;
  */
 public class DistributedBuildTargetGraphCodec {
 
-  private final Console console;
-  private final Clock clock;
   private final ProjectFilesystem rootFilesystem;
   private final Cell rootCell;
   private final ObjectMapper objectMapper;
@@ -66,15 +59,11 @@ public class DistributedBuildTargetGraphCodec {
   private final Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode;
 
   public DistributedBuildTargetGraphCodec(
-      Console console,
-      Clock clock,
       ProjectFilesystem rootFilesystem,
       Cell rootCell,
       ObjectMapper objectMapper,
       ParserTargetNodeFactory parserTargetNodeFactory,
       Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode) {
-    this.console = console;
-    this.clock = clock;
     this.rootFilesystem = rootFilesystem;
     this.rootCell = rootCell;
     this.objectMapper = objectMapper;
@@ -170,26 +159,9 @@ public class DistributedBuildTargetGraphCodec {
           "remote_");
       ProjectFilesystem projectFilesystem = new ProjectFilesystem(remoteFilesystemRoot);
       Cell cell = rootCell.createCellForDistributedBuild(
-          console,
-          clock,
-          projectFilesystem,
-          rootCell.getBuckConfig(),
-          new Cell.CellConstructionDelegate() {
-            @Override
-            public CellConstructionDelegateData get(Path cellPath) throws IOException {
-              return CellConstructionDelegateData.builder()
-                  .setKnownRoots(ImmutableSet.<Path>of(remoteFilesystemRoot))
-                  .setConfig(new Config())
-                  .setCellPathResolver(new CellPathResolver() {
-                    @Override
-                    public Path getCellPath(Optional<String> cellName) {
-                      Preconditions.checkState(!cellName.isPresent());
-                      return remoteFilesystemRoot;
-                    }
-                  })
-                  .build();
-            }
-          });
+          remoteFilesystemRoot,
+          ImmutableMap.of(remoteFilesystemRoot, rootCell.getBuckConfig()),
+          ImmutableMap.of(remoteFilesystemRoot, projectFilesystem));
       cellBuilder.put(remoteFileSystemRoot.getKey(), cell);
     }
     ImmutableMap<Integer, Cell> cells = cellBuilder.build();

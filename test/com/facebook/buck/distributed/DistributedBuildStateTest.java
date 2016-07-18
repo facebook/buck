@@ -48,11 +48,9 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.environment.Architecture;
@@ -245,8 +243,6 @@ public class DistributedBuildStateTest {
             typeCoercerFactory);
 
     return new DistributedBuildTargetGraphCodec(
-        new TestConsole(),
-        new FakeClock(0),
         cell.getFilesystem(),
         cell,
         objectMapper,
