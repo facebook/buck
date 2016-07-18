@@ -16,7 +16,7 @@
 
 package com.facebook.buck.zip;
 
-import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.OVERWRITE_EXISTING;
+import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.THROW_EXCEPTION;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
@@ -175,7 +175,7 @@ public class ZipStep implements Step {
       BufferedOutputStream baseOut =
           new BufferedOutputStream(filesystem.newFileOutputStream(pathToZipFile));
       CustomZipOutputStream out =
-          ZipOutputStreams.newOutputStream(baseOut, OVERWRITE_EXISTING)) {
+          ZipOutputStreams.newOutputStream(baseOut, THROW_EXCEPTION)) {
 
       filesystem.walkRelativeFileTree(baseDir, pathFileVisitor);
 
