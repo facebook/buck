@@ -30,12 +30,14 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -54,7 +56,8 @@ import java.nio.file.Path;
 public class CxxTestDescription implements
     Description<CxxTestDescription.Arg>,
     Flavored,
-    ImplicitDepsInferringDescription<CxxTestDescription.Arg> {
+    ImplicitDepsInferringDescription<CxxTestDescription.Arg>,
+    MetadataProvidingDescription<CxxTestDescription.Arg> {
 
   private static final BuildRuleType TYPE = BuildRuleType.of("cxx_test");
   private static final CxxTestType DEFAULT_TEST_TYPE = CxxTestType.GTEST;
@@ -96,7 +99,8 @@ public class CxxTestDescription implements
     final BuildRuleParams params =
         CxxStrip.removeStripStyleFlavorInParams(inputParams, flavoredStripStyle);
 
-    CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
+    Optional<CxxPlatform> platform = cxxPlatforms.getValue(params.getBuildTarget());
+    CxxPlatform cxxPlatform = platform.or(defaultCxxPlatform);
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     if (params.getBuildTarget().getFlavors()
@@ -108,6 +112,16 @@ public class CxxTestDescription implements
           cxxBuckConfig,
           cxxPlatform,
           args);
+    }
+
+    if (params.getBuildTarget().getFlavors()
+          .contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
+      return CxxDescriptionEnhancer.createUberCompilationDatabase(
+          platform.isPresent() ?
+              params :
+              params.withFlavor(cxxPlatform.getFlavor()),
+          resolver
+      );
     }
 
     // Generate the link rule that builds the test binary.
@@ -318,6 +332,10 @@ public class CxxTestDescription implements
       return true;
     }
 
+    if (flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
+      return true;
+    }
+
     if (StripStyle.FLAVOR_DOMAIN.containsAnyOf(flavors)) {
       return true;
     }
@@ -329,6 +347,28 @@ public class CxxTestDescription implements
     }
 
     return false;
+  }
+
+  @Override
+  public <A extends Arg, U> Optional<U> createMetadata(
+      BuildTarget buildTarget,
+      BuildRuleResolver resolver,
+      A args,
+      final Class<U> metadataClass) throws NoSuchBuildTargetException {
+    if (!metadataClass.isAssignableFrom(CxxCompilationDatabaseDependencies.class) ||
+        !buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
+      return Optional.absent();
+    }
+    return CxxDescriptionEnhancer
+        .createCompilationDatabaseDependencies(buildTarget, cxxPlatforms, resolver, args)
+        .transform(
+            new Function<CxxCompilationDatabaseDependencies, U>() {
+              @Override
+              public U apply(CxxCompilationDatabaseDependencies input) {
+                return metadataClass.cast(input);
+              }
+            }
+        );
   }
 
   @SuppressFieldNotInitialized

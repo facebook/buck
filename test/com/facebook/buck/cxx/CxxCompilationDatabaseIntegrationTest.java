@@ -274,6 +274,71 @@ public class CxxCompilationDatabaseIntegrationTest {
   }
 
   @Test
+  public void testUberCompilationDatabase() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "compilation_database", tmp);
+    workspace.setUp();
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//:test#default,uber-compilation-database");
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
+    Path rootPath = tmp.getRootPath();
+    assertEquals(
+        BuildTargets.getGenPath(
+            filesystem,
+            target,
+            "uber-compilation-database-%s/compile_commands.json"),
+        rootPath.relativize(compilationDatabase));
+
+    Path binaryHeaderSymlinkTreeFolder =
+        BuildTargets.getGenPath(
+            filesystem,
+            target.withFlavors(
+                ImmutableFlavor.of("default"),
+                CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
+            "%s");
+    Path binaryExportedHeaderSymlinkTreeFolder =
+        BuildTargets.getGenPath(
+            filesystem,
+            target.withFlavors(
+                ImmutableFlavor.of("default"),
+                CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
+            "%s");
+
+    Map<String, CxxCompilationDatabaseEntry> fileToEntry =
+        CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
+    assertEquals(1, fileToEntry.size());
+    assertHasEntry(
+        fileToEntry,
+        "test.cpp",
+        new ImmutableList.Builder<String>()
+            .add(COMPILER_PATH)
+            .add("-fPIC")
+            .add("-fPIC")
+            .add("-I")
+            .add(headerSymlinkTreePath(binaryHeaderSymlinkTreeFolder).toString())
+            .add("-I")
+            .add(headerSymlinkTreePath(binaryExportedHeaderSymlinkTreeFolder).toString())
+            .addAll(getExtraFlagsForHeaderMaps(filesystem))
+            .addAll(COMPILER_SPECIFIC_FLAGS)
+            .add("-x")
+            .add("c++")
+            .add("-c")
+            .add("-o")
+            .add(
+                BuildTargets
+                    .getGenPath(
+                        filesystem,
+                        target.withFlavors(
+                            ImmutableFlavor.of("default"),
+                            ImmutableFlavor.of("compile-pic-" + sanitize("test.cpp.o"))),
+                        "%s/test.cpp.o")
+                    .toString())
+            .add(rootPath.resolve(Paths.get("test.cpp")).toRealPath().toString())
+            .build());
+  }
+
+  @Test
   public void compilationDatabaseFetchedFromCacheAlsoFetchesSymlinkTreeOrHeaderMap()
       throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
