@@ -144,7 +144,6 @@ import org.kohsuke.args4j.CmdLineException;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -884,8 +883,8 @@ public final class Main {
         try (Closeable loggersSetup = GlobalStateManager.singleton().setupLoggers(
             invocationInfo,
             console.getStdErr(),
-            Optional.<OutputStream>of(stdErr),
-            Optional.of(verbosity));
+            stdErr,
+            verbosity);
              AbstractConsoleEventBusListener consoleListener =
                  createConsoleEventListener(
                      clock,
