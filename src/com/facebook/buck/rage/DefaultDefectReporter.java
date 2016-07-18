@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rage;
 
-import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.OVERWRITE_EXISTING;
+import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
@@ -126,7 +126,7 @@ public class DefaultDefectReporter implements DefectReporter {
       OutputStream outputStream) throws IOException {
     try (BufferedOutputStream baseOut = new BufferedOutputStream(outputStream);
          CustomZipOutputStream out =
-             ZipOutputStreams.newOutputStream(baseOut, OVERWRITE_EXISTING)) {
+             ZipOutputStreams.newOutputStream(baseOut, APPEND_TO_ZIP)) {
       if (defectReport.getSourceControlInfo().isPresent() &&
           defectReport.getSourceControlInfo().get().getDiff().isPresent()) {
         addStringsAsFilesToArchive(
