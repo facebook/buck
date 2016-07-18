@@ -35,6 +35,7 @@ public class MachOAbsolutifyObjectPathsCommand extends MachOAbstractCommand {
           getOldCompDir(),
           getUpdatedCompDir(),
           params.getCell().getFilesystem(),
+          params.getCell().getKnownRoots(),
           decoder);
       updater.updatePaths();
     }

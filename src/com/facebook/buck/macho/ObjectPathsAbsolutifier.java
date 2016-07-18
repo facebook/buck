@@ -27,6 +27,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
 
@@ -50,6 +51,7 @@ public class ObjectPathsAbsolutifier {
 
   private final RandomAccessFile file;
   private final ProjectFilesystem filesystem;
+  private final ImmutableSet<Path> knownRoots;
   private final String oldCompDir;
   private final String newCompDir;
   private ByteBuffer buffer;
@@ -60,6 +62,7 @@ public class ObjectPathsAbsolutifier {
       String oldCompDir,
       String newCompDir,
       ProjectFilesystem filesystem,
+      ImmutableSet<Path> knownRoots,
       NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder) throws IOException {
     Path compDir = Paths.get(newCompDir);
     Preconditions.checkArgument(compDir.isAbsolute());
@@ -68,6 +71,7 @@ public class ObjectPathsAbsolutifier {
     this.filesystem = filesystem;
     this.oldCompDir = oldCompDir;
     this.newCompDir = newCompDir;
+    this.knownRoots = knownRoots;
     this.nulTerminatedCharsetDecoder = nulTerminatedCharsetDecoder;
     remapBuffer();
   }
@@ -472,16 +476,26 @@ public class ObjectPathsAbsolutifier {
   }
 
   private Path getAbsolutePath(String stringPath) throws IOException {
-    Path path = filesystem.resolve(Paths.get(stringPath));
+    // First do some parsing
+    Path path = Paths.get(stringPath);
     Optional<String> archiveEntryName = getArchiveEntryNameFromPath(path);
     path = getArchivePathFromPath(path);
-    if (path.toFile().exists()) {
-      path = path.toRealPath();
+
+    Path absolutePath = filesystem.resolve(path);
+    if (absolutePath.toFile().exists()) {
+      absolutePath = absolutePath.toRealPath();
+    } else {
+      for (Path otherCells : knownRoots) {
+        Path otherCellPath = otherCells.resolve(path);
+        if (otherCellPath.toFile().exists()) {
+          absolutePath = otherCellPath.toRealPath();
+        }
+      }
     }
     if (archiveEntryName.isPresent()) {
-      path = Paths.get(path.toString() + archiveEntryName.get());
+      absolutePath = Paths.get(absolutePath.toString() + archiveEntryName.get());
     }
-    return path.normalize();
+    return absolutePath.normalize();
   }
 
   private void updateNlistEntryWithNewContentsLocation(

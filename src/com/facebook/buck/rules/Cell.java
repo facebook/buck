@@ -440,6 +440,10 @@ public class Cell {
     return config.getCellRoots();
   }
 
+  public ImmutableSet<Path> getKnownRoots() {
+    return knownRoots;
+  }
+
   @SuppressWarnings("serial")
   public static class MissingBuildFileException extends BuildTargetException {
     public MissingBuildFileException(BuildTarget buildTarget, BuckConfig buckConfig) {
