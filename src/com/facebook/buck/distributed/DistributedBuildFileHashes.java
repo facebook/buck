@@ -76,6 +76,7 @@ public class DistributedBuildFileHashes {
       ActionGraph actionGraph,
       final SourcePathResolver sourcePathResolver,
       final FileHashCache rootCellFileHashCache,
+      final Function<? super Path, Integer> cellIndexer,
       ListeningExecutorService executorService,
       final int keySeed) {
 
@@ -84,7 +85,7 @@ public class DistributedBuildFileHashes {
           @Override
           public BuildJobStateFileHashes load(ProjectFilesystem filesystem) throws Exception {
             BuildJobStateFileHashes fileHashes = new BuildJobStateFileHashes();
-            fileHashes.setFileSystemRootName(filesystem.getRootPath().toString());
+            fileHashes.setCellIndex(cellIndexer.apply(filesystem.getRootPath()));
             return fileHashes;
           }
         });

@@ -51,6 +51,7 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -63,7 +64,9 @@ import org.junit.Test;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.jar.JarOutputStream;
 
 public class DistributedBuildFileHashesTest {
@@ -237,20 +240,21 @@ public class DistributedBuildFileHashesTest {
     };
 
     List<BuildJobStateFileHashes> recordedHashes = f.distributedBuildFileHashes.getFileHashes();
+    ImmutableBiMap<Path, Integer> cellIndex = f.cellIndexer.getIndex();
 
     assertThat(recordedHashes, Matchers.hasSize(2));
     for (BuildJobStateFileHashes hashes : recordedHashes) {
-      String name = hashes.getFileSystemRootName();
-      if (name.contains("first")) {
+      Path cellPath = cellIndex.inverse().get(hashes.getCellIndex());
+      if (cellPath.equals(f.projectFilesystem.getRootPath())) {
         assertThat(
             toFileHashEntryIndex(hashes),
             Matchers.hasKey(new PathWithUnixSeparators("src/A.java")));
-      } else if (name.contains("second")) {
+      } else if (cellPath.equals(f.secondProjectFilesystem.getRootPath())) {
         assertThat(
             toFileHashEntryIndex(hashes),
             Matchers.hasKey(new PathWithUnixSeparators("B.java")));
       } else {
-        fail("Unknown filesystem root:" + name);
+        fail("Unknown filesystem root:" + cellPath);
       }
     }
   }
@@ -267,6 +271,28 @@ public class DistributedBuildFileHashesTest {
         });
   }
 
+  private static class FakeIndexer implements Function<Path, Integer> {
+    private final Map<Path, Integer> cache;
+
+    private FakeIndexer() {
+      cache = new HashMap<>();
+    }
+
+    public ImmutableBiMap<Path, Integer> getIndex() {
+      return ImmutableBiMap.copyOf(cache);
+    }
+
+    @Override
+    public Integer apply(Path input) {
+      Integer result = cache.get(input);
+      if (result == null) {
+        result = cache.size();
+        cache.put(input, result);
+      }
+      return result;
+    }
+  }
+
   private abstract static class Fixture {
 
     protected final BuckEventBus eventBus;
@@ -279,6 +305,7 @@ public class DistributedBuildFileHashesTest {
     private final ActionGraph actionGraph;
     private final BuildRuleResolver buildRuleResolver;
     private final SourcePathResolver sourcePathResolver;
+    private final FakeIndexer cellIndexer;
     private final DistributedBuildFileHashes distributedBuildFileHashes;
 
     public Fixture(ProjectFilesystem first, ProjectFilesystem second) throws Exception {
@@ -295,11 +322,13 @@ public class DistributedBuildFileHashesTest {
       sourcePathResolver = new SourcePathResolver(buildRuleResolver);
       setUpRules(buildRuleResolver, sourcePathResolver);
       actionGraph = new ActionGraph(buildRuleResolver.getBuildRules());
+      cellIndexer = new FakeIndexer();
 
       distributedBuildFileHashes = new DistributedBuildFileHashes(
           actionGraph,
           sourcePathResolver,
           createFileHashCache(),
+          cellIndexer,
           MoreExecutors.newDirectExecutorService(),
           /* keySeed */ 0);
     }

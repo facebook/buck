@@ -90,7 +90,7 @@ struct BuildJobStateFileHashEntry {
 }
 
 struct BuildJobStateFileHashes {
-  1: optional string fileSystemRootName;
+  1: optional i32 cellIndex;
   2: optional list<BuildJobStateFileHashEntry> entries;
 }
 

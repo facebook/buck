@@ -108,7 +108,7 @@ public class DistributedBuildStateTest {
         .build();
 
     BuildJobState dump = DistributedBuildState.dump(
-        rootCellWhenSaving,
+        new DistributedBuildCellIndexer(rootCellWhenSaving),
         emptyActionGraph(),
         createDefaultCodec(rootCellWhenSaving, Optional.<Parser>absent()),
         createTargetGraph(filesystem));
@@ -157,7 +157,7 @@ public class DistributedBuildStateTest {
     DistributedBuildTargetGraphCodec targetGraphCodec =
         createDefaultCodec(cell, Optional.of(parser));
     BuildJobState dump = DistributedBuildState.dump(
-        cell,
+        new DistributedBuildCellIndexer(cell),
         emptyActionGraph(),
         targetGraphCodec,
         targetGraph);
@@ -202,7 +202,7 @@ public class DistributedBuildStateTest {
         .build();
 
     BuildJobState dump = DistributedBuildState.dump(
-        cell,
+        new DistributedBuildCellIndexer(cell),
         emptyActionGraph(),
         createDefaultCodec(cell, Optional.<Parser>absent()),
         createTargetGraph(filesystem));
@@ -240,7 +240,7 @@ public class DistributedBuildStateTest {
         .build();
 
     BuildJobState dump = DistributedBuildState.dump(
-        rootCellWhenSaving,
+        new DistributedBuildCellIndexer(rootCellWhenSaving),
         emptyActionGraph(),
         createDefaultCodec(rootCellWhenSaving, Optional.<Parser>absent()),
         createCrossCellTargetGraph(cell1Filesystem, cell2Filesystem));
@@ -264,6 +264,7 @@ public class DistributedBuildStateTest {
         actionGraph,
         sourcePathResolver,
         DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem),
+        Functions.constant(0),
         MoreExecutors.newDirectExecutorService(),
         /* keySeed */ 0);
   }

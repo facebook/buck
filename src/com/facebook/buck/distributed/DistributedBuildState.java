@@ -43,8 +43,6 @@ import org.apache.thrift.protocol.TProtocol;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -64,48 +62,17 @@ public class DistributedBuildState {
   }
 
   public static BuildJobState dump(
-      Cell rootCell,
+      DistributedBuildCellIndexer distributedBuildCellIndexer,
       DistributedBuildFileHashes fileHashes,
       DistributedBuildTargetGraphCodec targetGraphCodec,
       TargetGraph targetGraph) throws IOException, InterruptedException {
     BuildJobState jobState = new BuildJobState();
     jobState.setFileHashes(fileHashes.getFileHashes());
-    CellIndexer cellIndexer = new CellIndexer(rootCell);
     jobState.setTargetGraph(
         targetGraphCodec.dump(
             targetGraph.getNodes(),
-            cellIndexer));
-    jobState.setCells(cellIndexer.getState());
-    return jobState;
-  }
-
-  private static BuildJobStateCell dumpCell(Cell cell) {
-    BuildJobStateCell cellState = new BuildJobStateCell();
-    cellState.setConfig(dumpConfig(cell.getBuckConfig()));
-    cellState.setNameHint(cell.getRoot().getFileName().toString());
-    return cellState;
-  }
-
-  private static BuildJobStateBuckConfig dumpConfig(BuckConfig buckConfig) {
-    BuildJobStateBuckConfig jobState = new BuildJobStateBuckConfig();
-
-    jobState.setUserEnvironment(buckConfig.getEnvironment());
-    Map<String, List<OrderedStringMapEntry>> rawConfig = Maps.transformValues(
-        buckConfig.getRawConfigForDistBuild(),
-        new Function<ImmutableMap<String, String>, List<OrderedStringMapEntry>>() {
-          @Override
-          public List<OrderedStringMapEntry> apply(ImmutableMap<String, String> input) {
-            List<OrderedStringMapEntry> result = new ArrayList<>();
-            for (Map.Entry<String, String> entry : input.entrySet()) {
-              result.add(new OrderedStringMapEntry(entry.getKey(), entry.getValue()));
-            }
-            return result;
-          }
-        });
-    jobState.setRawBuckConfig(rawConfig);
-    jobState.setArchitecture(buckConfig.getArchitecture().name());
-    jobState.setPlatform(buckConfig.getPlatform().name());
-
+            distributedBuildCellIndexer));
+    jobState.setCells(distributedBuildCellIndexer.getState());
     return jobState;
   }
 
@@ -210,33 +177,4 @@ public class DistributedBuildState {
         Functions.forMap(cells));
   }
 
-  private static class CellIndexer implements Function<Path, Integer> {
-
-    final Cell rootCell;
-    final Map<Path, Integer> index;
-    final Map<Integer, BuildJobStateCell> state;
-
-    public CellIndexer(Cell rootCell) {
-      this.rootCell = rootCell;
-      this.index = new HashMap<>();
-      this.state = new HashMap<>();
-    }
-
-    public Map<Integer, BuildJobStateCell> getState() {
-      return state;
-    }
-
-    @Override
-    public Integer apply(Path input) {
-      Integer i = index.get(input);
-      if (i == null) {
-        i = index.size();
-        index.put(input, i);
-
-        Cell cell = rootCell.getCellIgnoringVisibilityCheck(input);
-        state.put(i, dumpCell(cell));
-      }
-      return i;
-    }
-  }
 }

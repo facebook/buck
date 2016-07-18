@@ -23,6 +23,7 @@ import com.facebook.buck.command.Build;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistributedBuild;
+import com.facebook.buck.distributed.DistributedBuildCellIndexer;
 import com.facebook.buck.distributed.DistributedBuildFileHashes;
 import com.facebook.buck.distributed.DistributedBuildState;
 import com.facebook.buck.distributed.DistributedBuildTargetGraphCodec;
@@ -442,14 +443,17 @@ public class BuildCommand extends AbstractCommand {
           ActionGraphAndResolver actionGraphAndResolver = createActionGraphAndResolver(
               params,
               targetGraphAndBuildTargets);
+          DistributedBuildCellIndexer cellIndexer =
+              new DistributedBuildCellIndexer(params.getCell());
           DistributedBuildFileHashes distributedBuildFileHashes = new DistributedBuildFileHashes(
               actionGraphAndResolver.getActionGraph(),
               new SourcePathResolver(actionGraphAndResolver.getResolver()),
               params.getFileHashCache(),
+              cellIndexer,
               executorService,
               params.getBuckConfig().getKeySeed());
           BuildJobState jobState = DistributedBuildState.dump(
-              params.getCell(),
+              cellIndexer,
               distributedBuildFileHashes,
               targetGraphCodec,
               targetGraphAndBuildTargets.getTargetGraph());
