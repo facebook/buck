@@ -165,8 +165,7 @@ public class CellTest {
         .setCellConfigOverride(
             CellConfig.builder()
                 .put(RelativeCellName.fromComponents("second"), "test", "value", "cell2")
-                .put(RelativeCellName.fromComponents("second", "third"), "test", "value", "cell3")
-                .put(RelativeCellName.fromComponents("third"), "test", "other_value", "cell3")
+                .put(CellConfig.ALL_CELLS_OVERRIDE, "test", "common_value", "all")
                 .build())
         .build();
     BuildTarget target = BuildTargetFactory.newInstance(filesystem2, "//does/not:matter");
@@ -179,10 +178,7 @@ public class CellTest {
     BuildTarget target3 = BuildTargetFactory.newInstance(filesystem3, "//does/not:matter");
     Cell cell3 = cell1.getCell(target3);
     assertThat(
-        cell3.getBuckConfig().getValue("test", "value"),
-        Matchers.equalTo(Optional.of("cell3")));
-    assertThat(
-        cell3.getBuckConfig().getValue("test", "other_value"),
-        Matchers.equalTo(Optional.of("cell3")));
+        cell3.getBuckConfig().getValue("test", "common_value"),
+        Matchers.equalTo(Optional.of("all")));
   }
 }

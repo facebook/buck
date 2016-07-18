@@ -17,13 +17,23 @@ package com.facebook.buck.config;
 
 import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.google.common.base.Functions;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimaps;
 
 import org.immutables.value.Value;
 
+import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -57,6 +67,66 @@ abstract class AbstractCellConfig {
       .putAll(starConfig)
       .putAll(config)
       .build();
+  }
+
+  /**
+   * Translates the 'cell name'->override map into a 'Path'->override map.
+   * @param pathMapping a map containing paths to all of the cells we want to query.
+   * @return 'Path'->override map
+   */
+  public ImmutableMap<Path, RawConfig> getOverridesByPath(
+      ImmutableMap<RelativeCellName, Path> pathMapping) throws MalformedOverridesException {
+
+    ImmutableSet<RelativeCellName> relativeNamesOfCellsWithOverrides =
+        FluentIterable.from(getValues().keySet())
+            .filter(Predicates.not(Predicates.equalTo(ALL_CELLS_OVERRIDE)))
+            .toSet();
+    ImmutableSet.Builder<Path> pathsWithOverrides = ImmutableSet.builder();
+    for (RelativeCellName cellWithOverride : relativeNamesOfCellsWithOverrides) {
+      if (!pathMapping.containsKey(cellWithOverride)) {
+        throw new MalformedOverridesException(
+            String.format("Trying to override settings for unknown cell %s", cellWithOverride));
+      }
+      pathsWithOverrides.add(pathMapping.get(cellWithOverride));
+    }
+
+
+    ImmutableMultimap<Path, RelativeCellName> pathToRelativeName =
+        Multimaps.index(pathMapping.keySet(), Functions.forMap(pathMapping));
+
+    for (Path pathWithOverrides : pathsWithOverrides.build()) {
+      ImmutableCollection<RelativeCellName> namesForPath = pathToRelativeName.get(
+          pathWithOverrides);
+      if (namesForPath.size() > 1) {
+        throw new MalformedOverridesException(
+            String.format("Configuration override is ambiguous: cell rooted at %s is reachable " +
+                "as [%s]. Please override the config by placing a .buckconfig.local file in the " +
+                "cell's root folder.",
+                pathWithOverrides,
+                Joiner.on(',').join(namesForPath)));
+      }
+    }
+
+    Map<Path, RawConfig> overridesByPath = new HashMap<>();
+    for (Map.Entry<RelativeCellName, Path> entry : pathMapping.entrySet()) {
+      RelativeCellName cellRelativeName = entry.getKey();
+      Path cellPath = entry.getValue();
+      RawConfig configFromOtherRelativeName = overridesByPath.get(cellPath);
+      RawConfig config = getForCell(cellRelativeName);
+      if (configFromOtherRelativeName != null) {
+        Preconditions.checkState(
+            configFromOtherRelativeName.equals(config),
+            "Attempting to create cell %s at %s with conflicting overrides [%s] vs [%s].",
+            cellRelativeName,
+            cellPath,
+            configFromOtherRelativeName,
+            config);
+      } else {
+        overridesByPath.put(cellPath, config);
+      }
+    }
+
+    return ImmutableMap.copyOf(overridesByPath);
   }
 
   /**
@@ -156,5 +226,11 @@ abstract class AbstractCellConfig {
       return section;
     }
 
+  }
+
+  public static class MalformedOverridesException extends Exception {
+    public MalformedOverridesException(String message) {
+      super(message);
+    }
   }
 }

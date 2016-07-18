@@ -38,7 +38,6 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -50,13 +49,10 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -133,9 +129,13 @@ public class Cell {
 
     ImmutableMap<RelativeCellName, Path> transitiveCellPathMapping =
         rootCellCellPathResolver.getTransitivePathMapping();
-    ImmutableMap<Path, RawConfig> pathToConfigOverrides = getPathToConfigOverrides(
-        rootCellConfigOverrides,
-        transitiveCellPathMapping);
+    ImmutableMap<Path, RawConfig> pathToConfigOverrides;
+    try {
+      pathToConfigOverrides =
+          rootCellConfigOverrides.getOverridesByPath(transitiveCellPathMapping);
+    } catch (CellConfig.MalformedOverridesException e) {
+      throw new HumanReadableException(e.getMessage());
+    }
 
     LoadingCache<Path, Cell> cellLoader = createCellLoader(
         console,
@@ -220,32 +220,6 @@ public class Cell {
 
     loaderReference.set(CacheBuilder.newBuilder().build(loader));
     return loaderReference.get();
-  }
-
-  private static ImmutableMap<Path, RawConfig> getPathToConfigOverrides(
-      CellConfig rootCellConfigOverrides,
-      ImmutableMap<RelativeCellName, Path> transitivePathMapping) {
-
-    Map<Path, RawConfig.Builder> overridesByPath = new HashMap<>();
-    for (Map.Entry<RelativeCellName, Path> entry : transitivePathMapping.entrySet()) {
-      Path cellPath = entry.getValue();
-      RawConfig.Builder builder = overridesByPath.get(cellPath);
-      if (builder == null) {
-        builder = RawConfig.builder();
-        overridesByPath.put(cellPath, builder);
-      }
-      builder.putAll(rootCellConfigOverrides.getForCell(entry.getKey()));
-    }
-
-    return ImmutableMap.copyOf(
-        Maps.transformValues(
-            overridesByPath,
-            new Function<RawConfig.Builder, RawConfig>() {
-              @Override
-              public RawConfig apply(RawConfig.Builder input) {
-                return input.build();
-              }
-            }));
   }
 
   public LoadingCache<Path, Cell> createCellLoaderForDistributedBuild(
