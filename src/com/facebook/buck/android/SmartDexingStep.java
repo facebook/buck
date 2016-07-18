@@ -74,7 +74,7 @@ import javax.annotation.Nullable;
 public class SmartDexingStep implements Step {
 
   public static final String SHORT_NAME = "smart_dex";
-  private static final String SECONDARY_SOLID_DEX_FILENAME = "secondary.dex.jar.xzs";
+  private static final String SECONDARY_SOLID_DEX_EXTENSION = ".dex.jar.xzs";
 
   public interface DexInputHashesProvider {
     ImmutableMap<Path, Sha1HashCode> getDexInputHashes();
@@ -150,37 +150,46 @@ public class SmartDexingStep implements Step {
             filesystem);
 
         // Concatenate if solid compression is specified.
-        ImmutableList.Builder<Path> secondaryDexJarsBuilder = ImmutableList.builder();
+        // create a mapping of the xzs file target and the dex.jar files that go into it
+        ImmutableMultimap.Builder<Path, Path> secondaryDexJarsMultimapBuilder =
+            ImmutableMultimap.builder();
         for (Path p : outputToInputs.keySet()) {
           if (DexStore.XZS.matchesPath(p)) {
-            secondaryDexJarsBuilder.add(p);
+            String[] matches = p.getFileName().toString().split("-");
+            Path output = p.getParent().resolve(matches[0].concat(SECONDARY_SOLID_DEX_EXTENSION));
+            secondaryDexJarsMultimapBuilder.put(output, p);
           }
         }
-        ImmutableList<Path> secondaryDexJars = secondaryDexJarsBuilder.build();
-        if (!secondaryDexJars.isEmpty()) {
-          // Construct the output path for our solid blob and its compressed form.
-          Path secondaryBlobOutput = Paths.get(
-              secondaryOutputDir.get().toString(),
-              "secondary.blob");
-          Path secondaryCompressedBlobOutput = Paths.get(
-              secondaryOutputDir.get().toString(),
-              SECONDARY_SOLID_DEX_FILENAME);
-          // Concatenate the jars into a blob and compress it.
-          StepRunner stepRunner = new DefaultStepRunner(context);
-          Step concatStep = new ConcatStep(filesystem, secondaryDexJars, secondaryBlobOutput);
-          Step xzStep;
-
-          if (xzCompressionLevel.isPresent()) {
-            xzStep = new XzStep(
+        ImmutableMultimap<Path, Path> secondaryDexJarsMultimap =
+            secondaryDexJarsMultimapBuilder.build();
+        if (!secondaryDexJarsMultimap.isEmpty()) {
+          for (Map.Entry<Path, Collection<Path>> entry :
+              secondaryDexJarsMultimap.asMap().entrySet()) {
+            Path store = entry.getKey();
+            Collection<Path> secondaryDexJars = entry.getValue();
+            // Construct the output path for our solid blob and its compressed form.
+            Path secondaryBlobOutput = store.getParent().resolve("uncompressed.dex.blob");
+            Path secondaryCompressedBlobOutput = store;
+            // Concatenate the jars into a blob and compress it.
+            StepRunner stepRunner = new DefaultStepRunner(context);
+            Step concatStep = new ConcatStep(
                 filesystem,
-                secondaryBlobOutput,
-                secondaryCompressedBlobOutput,
-                xzCompressionLevel.get().intValue());
-          } else {
-            xzStep = new XzStep(filesystem, secondaryBlobOutput, secondaryCompressedBlobOutput);
+                ImmutableList.copyOf(secondaryDexJars),
+                secondaryBlobOutput);
+            Step xzStep;
+
+            if (xzCompressionLevel.isPresent()) {
+              xzStep = new XzStep(
+                  filesystem,
+                  secondaryBlobOutput,
+                  secondaryCompressedBlobOutput,
+                  xzCompressionLevel.get().intValue());
+            } else {
+              xzStep = new XzStep(filesystem, secondaryBlobOutput, secondaryCompressedBlobOutput);
+            }
+            stepRunner.runStepForBuildTarget(concatStep, Optional.<BuildTarget>absent());
+            stepRunner.runStepForBuildTarget(xzStep, Optional.<BuildTarget>absent());
           }
-          stepRunner.runStepForBuildTarget(concatStep, Optional.<BuildTarget>absent());
-          stepRunner.runStepForBuildTarget(xzStep, Optional.<BuildTarget>absent());
         }
       }
     } catch (StepFailedException | IOException e) {
@@ -334,7 +343,10 @@ public class SmartDexingStep implements Step {
     String hashInputs() throws IOException {
       Hasher hasher = Hashing.sha1().newHasher();
       for (Path src : srcs) {
-        Preconditions.checkState(dexInputHashes.containsKey(src));
+        Preconditions.checkState(
+            dexInputHashes.containsKey(src),
+            "no hash key exists for path %s",
+            src.toString());
         hasher.putBytes(
             Preconditions.checkNotNull(dexInputHashes.get(src))
                 .getHash().getBytes(Charsets.UTF_8));
