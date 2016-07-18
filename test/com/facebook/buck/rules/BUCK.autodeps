@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 710b6227713ab448ce1f849dd4076ff7ca1c25a5 #@#
+#@# GENERATED FILE: DO NOT MODIFY 38026a23d9c1649274a8b2a963284c5439cf7f68 #@#
 {
   "rules" : {
     "deps" : [
@@ -95,6 +95,7 @@
       "//test/com/facebook/buck/step:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/timing:testutil",
+      "//third-party/java/jackson:jackson-databind",
       "//third-party/java/jsr:jsr305",
       "//third-party/java/junit:junit"
     ],
@@ -117,6 +118,7 @@
       "//src/com/facebook/buck/test:test",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/cache:cache",
+      "//src/com/facebook/buck/util/concurrent:concurrent",
       "//src/com/facebook/buck/util/sha1:sha1",
       "//test/com/facebook/buck/util:testutil",
       "//third-party/java/cglib:cglib",

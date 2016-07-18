@@ -31,6 +31,7 @@ import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.TargetDevice;
@@ -103,8 +104,8 @@ public class FetchCommand extends BuildCommand {
           actionGraphAndResolver.getResolver(),
           params.getAndroidPlatformTargetSupplier(),
           new CachingBuildEngine(
+              new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
               pool.getExecutor(),
-              params.getFileHashCache(),
               getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
               params.getBuckConfig().getBuildDepFiles(),
               params.getBuckConfig().getBuildMaxDepFileCacheEntries(),

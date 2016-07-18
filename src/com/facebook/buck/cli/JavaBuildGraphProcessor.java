@@ -32,6 +32,7 @@ import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ImmutableBuildContext;
+import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -129,8 +130,8 @@ final class JavaBuildGraphProcessor {
           graph,
           new DefaultTargetNodeToBuildRuleTransformer());
       BuildEngine buildEngine = new CachingBuildEngine(
+          new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
           executorService,
-          params.getFileHashCache(),
           CachingBuildEngine.BuildMode.SHALLOW,
           params.getBuckConfig().getBuildDepFiles(),
           params.getBuckConfig().getBuildMaxDepFileCacheEntries(),

@@ -169,6 +169,15 @@ java_library(
   autodeps = True,
 )
 
+java_library(
+  name = 'caching_build_engine_delegates',
+  srcs = [
+    'CachingBuildEngineDelegate.java',
+    'LocalCachingBuildEngineDelegate.java',
+  ],
+  autodeps = True,
+)
+
 java_immutables_library(
   name = 'rules',
   srcs = [

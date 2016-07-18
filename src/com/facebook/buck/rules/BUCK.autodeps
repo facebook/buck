@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 59e2e1d5593e03b36ebc5bcae66478614a1e74db #@#
+#@# GENERATED FILE: DO NOT MODIFY 5a9ad4c80d38863613b2521dba13b794c271492f #@#
 {
   "action_graph_cache" : {
     "deps" : [
@@ -61,6 +61,17 @@
       "//third-party/java/jackson:jackson-core",
       "//third-party/java/jackson:jackson-databind",
       "//third-party/java/jsr:jsr305"
+    ]
+  },
+  "caching_build_engine_delegates" : {
+    "deps" : [
+      "//third-party/java/jsr:jsr305"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/util/cache:cache",
+      "//third-party/java/guava:guava"
     ]
   },
   "command_tool" : {
@@ -126,6 +137,7 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:caching_build_engine_delegates",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/step:step",

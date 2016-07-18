@@ -27,7 +27,6 @@ import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -47,9 +46,7 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.zip.Unzip;
@@ -136,6 +133,7 @@ public class CachingBuildEngine implements BuildEngine {
   @Nullable
   private volatile Throwable firstFailure = null;
 
+  private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
   private final WeightedListeningExecutorService service;
   private final BuildMode buildMode;
   private final DepFiles depFiles;
@@ -146,9 +144,10 @@ public class CachingBuildEngine implements BuildEngine {
   private final LoadingCache<ProjectFilesystem, FileHashCache> fileHashCaches;
   private final LoadingCache<ProjectFilesystem, RuleKeyFactories> ruleKeyFactories;
 
+
   public CachingBuildEngine(
+      CachingBuildEngineDelegate cachingBuildEngineDelegate,
       WeightedListeningExecutorService service,
-      final FileHashCache fileHashCache,
       BuildMode buildMode,
       DepFiles depFiles,
       long maxDepFileCacheEntries,
@@ -157,6 +156,8 @@ public class CachingBuildEngine implements BuildEngine {
       ObjectMapper objectMapper,
       final BuildRuleResolver resolver,
       final int keySeed) {
+    this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
+
     this.ruleDeps = new RuleDepsCache(service);
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, service);
 
@@ -168,11 +169,11 @@ public class CachingBuildEngine implements BuildEngine {
     this.objectMapper = objectMapper;
     this.pathResolver = new SourcePathResolver(resolver);
 
-    this.fileHashCaches = createFileHashCacheLoader(fileHashCache);
+    this.fileHashCaches = cachingBuildEngineDelegate.createFileHashCacheLoader();
     this.ruleKeyFactories = CacheBuilder.newBuilder()
         .build(new CacheLoader<ProjectFilesystem, RuleKeyFactories>() {
           @Override
-          public RuleKeyFactories load(@Nonnull  ProjectFilesystem filesystem) throws Exception {
+          public RuleKeyFactories load(@Nonnull ProjectFilesystem filesystem) throws Exception {
             return RuleKeyFactories.build(
                 keySeed,
                 fileHashCaches.get(filesystem),
@@ -187,14 +188,16 @@ public class CachingBuildEngine implements BuildEngine {
    */
   @VisibleForTesting
   CachingBuildEngine(
+      CachingBuildEngineDelegate cachingBuildEngineDelegate,
       WeightedListeningExecutorService service,
-      FileHashCache fileHashCache,
       BuildMode buildMode,
       DepFiles depFiles,
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
       SourcePathResolver pathResolver,
       final Function<? super ProjectFilesystem, RuleKeyFactories> ruleKeyFactoriesFunction) {
+    this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
+
     this.ruleDeps = new RuleDepsCache(service);
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, service);
 
@@ -206,7 +209,7 @@ public class CachingBuildEngine implements BuildEngine {
     this.objectMapper = ObjectMappers.newDefaultInstance();
     this.pathResolver = pathResolver;
 
-    this.fileHashCaches = createFileHashCacheLoader(fileHashCache);
+    this.fileHashCaches = cachingBuildEngineDelegate.createFileHashCacheLoader();
     this.ruleKeyFactories = CacheBuilder.newBuilder()
         .build(new CacheLoader<ProjectFilesystem, RuleKeyFactories>() {
           @Override
@@ -225,24 +228,6 @@ public class CachingBuildEngine implements BuildEngine {
       return Optional.absent();
     }
     return Optional.of(new UnskippedRulesTracker(ruleDeps, service));
-  }
-
-  private static LoadingCache<ProjectFilesystem, FileHashCache> createFileHashCacheLoader(
-      final FileHashCache defaultCache) {
-    return CacheBuilder.newBuilder()
-        .build(new CacheLoader<ProjectFilesystem, FileHashCache>() {
-          @Override
-          public FileHashCache load(@Nonnull  ProjectFilesystem filesystem) {
-            FileHashCache cellCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
-            FileHashCache buckOutCache = DefaultFileHashCache.createBuckOutFileHashCache(
-                new ProjectFilesystem(
-                    filesystem.getRootPath(),
-                    ImmutableSet.<PathOrGlobMatcher>of()),
-                filesystem.getBuckPaths().getBuckOut());
-            return new StackedFileHashCache(
-                ImmutableList.of(defaultCache, cellCache, buckOutCache));
-          }
-        });
   }
 
   @VisibleForTesting
@@ -1226,6 +1211,8 @@ public class CachingBuildEngine implements BuildEngine {
     // Attempt to get an approximation of how long it takes to actually run the command.
     @SuppressWarnings("PMD.PrematureDeclaration")
     long start = System.nanoTime();
+
+    cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
 
     // Get and run all of the commands.
     List<Step> steps = rule.getBuildSteps(context, buildableContext);

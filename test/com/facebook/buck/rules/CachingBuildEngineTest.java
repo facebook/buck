@@ -105,7 +105,6 @@ import com.google.common.util.concurrent.AbstractListeningExecutorService;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 
 import org.easymock.EasyMockSupport;
 import org.hamcrest.Matchers;
@@ -134,6 +133,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -204,6 +204,12 @@ public class CachingBuildEngineTest {
           pathResolver,
           NO_INPUT_FILE_SIZE_LIMIT);
     }
+
+
+    protected CachingBuildEngineFactory cachingBuildEngineFactory() {
+      return new CachingBuildEngineFactory(resolver)
+          .setCachingBuildEngineDelegate(new LocalCachingBuildEngineDelegate(fileHashCache));
+    }
   }
 
   public static class OtherTests extends CommonFixture {
@@ -259,18 +265,7 @@ public class CachingBuildEngineTest {
               .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
               .build();
 
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              NO_INPUT_FILE_SIZE_LIMIT,
-              ObjectMappers.newDefaultInstance(),
-              resolver,
-              0);
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
 
       // Add a build step so we can verify that the steps are executed.
       buildSteps.add(
@@ -356,18 +351,9 @@ public class CachingBuildEngineTest {
 
       ListeningExecutorService service = listeningDecorator(Executors.newFixedThreadPool(2));
 
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(service),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              NO_INPUT_FILE_SIZE_LIMIT,
-              ObjectMappers.newDefaultInstance(),
-              resolver,
-              0);
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
+          .setExecutorService(service)
+          .build();
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
 
       BuildResult result = buildResult.get();
@@ -420,7 +406,6 @@ public class CachingBuildEngineTest {
           .andDelegateTo(
               new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
 
-      FileHashCache fileHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
       BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
       BuildContext buildContext = ImmutableBuildContext.builder()
           .setActionGraph(new ActionGraph(ImmutableList.of(buildRule)))
@@ -440,18 +425,9 @@ public class CachingBuildEngineTest {
 
       // Build the rule!
       replayAll();
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              NO_INPUT_FILE_SIZE_LIMIT,
-              ObjectMappers.newDefaultInstance(),
-              resolver,
-              0);
+
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
+
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
       buckEventBus.post(
           CommandEvent.finished(
@@ -506,7 +482,6 @@ public class CachingBuildEngineTest {
           .andDelegateTo(
               new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
 
-      FileHashCache fileHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
       BuildContext buildContext = ImmutableBuildContext.builder()
           .setActionGraph(new ActionGraph(ImmutableList.of(buildRule)))
           .setStepRunner(stepRunner)
@@ -525,18 +500,7 @@ public class CachingBuildEngineTest {
 
       // Build the rule!
       replayAll();
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              NO_INPUT_FILE_SIZE_LIMIT,
-              ObjectMappers.newDefaultInstance(),
-              resolver,
-              0);
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
       ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
       buckEventBus.post(
           CommandEvent.finished(
@@ -583,18 +547,7 @@ public class CachingBuildEngineTest {
               .build();
 
       // Create the build engine.
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              NO_INPUT_FILE_SIZE_LIMIT,
-              ObjectMappers.newDefaultInstance(),
-              resolver,
-              0);
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
 
       // Run the build.
       replayAll();
@@ -662,18 +615,9 @@ public class CachingBuildEngineTest {
               .build();
 
       // Create the build engine.
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.DEEP,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              NO_INPUT_FILE_SIZE_LIMIT,
-              ObjectMappers.newDefaultInstance(),
-              resolver,
-              0);
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
+          .setBuildMode(CachingBuildEngine.BuildMode.DEEP)
+          .build();
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
@@ -773,18 +717,7 @@ public class CachingBuildEngineTest {
               .build();
 
       // Create the build engine.
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              NO_INPUT_FILE_SIZE_LIMIT,
-              ObjectMappers.newDefaultInstance(),
-              resolver,
-              0);
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
@@ -871,18 +804,7 @@ public class CachingBuildEngineTest {
               .build();
 
       // Create the build engine.
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              NO_INPUT_FILE_SIZE_LIMIT,
-              ObjectMappers.newDefaultInstance(),
-              resolver,
-              0);
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
@@ -914,22 +836,42 @@ public class CachingBuildEngineTest {
                   .setProjectFilesystem(filesystem)
                   .build(),
               pathResolver);
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              NO_INPUT_FILE_SIZE_LIMIT,
-              ObjectMappers.newDefaultInstance(),
-              resolver,
-              0);
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
 
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
       assertThat(result.getSuccess(), equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
       assertThat(result.getCacheResult().getType(), equalTo(CacheResultType.ERROR));
+    }
+
+    @Test
+    public void testDelegateCalledBeforeRuleCreation() throws Exception {
+      // Use the artifact cache when running a simple rule that will build locally.
+      BuildContext buildContext =
+          FakeBuildContext.newBuilder()
+              .setArtifactCache(cache)
+              .setJavaPackageFinder(new FakeJavaPackageFinder())
+              .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
+              .build();
+
+      BuildRule rule =
+          new EmptyBuildRule(
+              new FakeBuildRuleParamsBuilder("//:rule")
+                  .setProjectFilesystem(filesystem)
+                  .build(),
+              pathResolver);
+      final AtomicReference<BuildRule> lastRuleToBeBuilt = new AtomicReference<>();
+      CachingBuildEngineDelegate testDelegate = new LocalCachingBuildEngineDelegate(fileHashCache) {
+        @Override
+        public void onRuleAboutToBeBuilt(BuildRule buildRule) {
+          super.onRuleAboutToBeBuilt(buildRule);
+          lastRuleToBeBuilt.set(buildRule);
+        }
+      };
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
+          .setCachingBuildEngineDelegate(testDelegate)
+          .build();
+      cachingBuildEngine.build(buildContext, rule).get();
+      assertThat(lastRuleToBeBuilt.get(), is(rule));
     }
 
     @Test
@@ -951,18 +893,7 @@ public class CachingBuildEngineTest {
           new WriteFile(params, pathResolver, "something else", output, /* executable */ false);
 
       // Create the build engine.
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              NO_INPUT_FILE_SIZE_LIMIT,
-              ObjectMappers.newDefaultInstance(),
-              resolver,
-              0);
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1029,18 +960,9 @@ public class CachingBuildEngineTest {
               /* output */ null);
 
       // Create the build engine.
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(service),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.DEEP,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              NO_INPUT_FILE_SIZE_LIMIT,
-              ObjectMappers.newDefaultInstance(),
-              resolver,
-              0);
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
+          .setBuildMode(CachingBuildEngine.BuildMode.DEEP)
+          .build();
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1066,7 +988,6 @@ public class CachingBuildEngineTest {
                   dep4.getBuildTarget())).getStatus(),
           Matchers.oneOf(BuildRuleStatus.SUCCESS, BuildRuleStatus.CANCELED));
     }
-
 
     @Test
     public void runningWithKeepGoingBuildsAsMuchAsPossible() throws Exception {
@@ -1125,18 +1046,9 @@ public class CachingBuildEngineTest {
               /* output */ null);
 
       // Create the build engine.
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(service),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              NO_INPUT_FILE_SIZE_LIMIT,
-              ObjectMappers.newDefaultInstance(),
-              resolver,
-              0);
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
+          .setExecutorService(service)
+          .build();
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1185,18 +1097,10 @@ public class CachingBuildEngineTest {
               .build(resolver);
 
       // Create the build engine.
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              new NullFileHashCache(),
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              NO_INPUT_FILE_SIZE_LIMIT,
-              ObjectMappers.newDefaultInstance(),
-              resolver,
-              0);
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
+          .setCachingBuildEngineDelegate(
+              new LocalCachingBuildEngineDelegate(new NullFileHashCache()))
+          .build();
 
       assertThat(
           cachingBuildEngine.getNumRulesToBuild(ImmutableList.of(rule1)),
@@ -1218,18 +1122,11 @@ public class CachingBuildEngineTest {
 
       // Create the build engine with low cache artifact limit which prevents caching the above\
       // rule.
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              new NullFileHashCache(),
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.of(2L),
-              NO_INPUT_FILE_SIZE_LIMIT,
-              ObjectMappers.newDefaultInstance(),
-              resolver,
-              0);
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
+          .setCachingBuildEngineDelegate(
+              new LocalCachingBuildEngineDelegate(new NullFileHashCache()))
+          .setArtifactCacheSizeLimit(Optional.of(2L))
+          .build();
 
       // Verify that after building successfully, nothing is cached.
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1253,18 +1150,8 @@ public class CachingBuildEngineTest {
           new WriteFile(params, pathResolver, "something else", output, /* executable */ false);
 
       // Run an initial build to seed the cache.
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              NO_INPUT_FILE_SIZE_LIMIT,
-              ObjectMappers.newDefaultInstance(),
-              resolver,
-              0);
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
+          .build();
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
       assertEquals(
           BuildRuleSuccessType.BUILT_LOCALLY,
@@ -1277,18 +1164,9 @@ public class CachingBuildEngineTest {
       // does *not* contain the path, so any attempts to hash it will fail.
       FakeFileHashCache fakeFileHashCache =
           new FakeFileHashCache(new HashMap<Path, HashCode>());
-      cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fakeFileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              NO_INPUT_FILE_SIZE_LIMIT,
-              ObjectMappers.newDefaultInstance(),
-              resolver,
-              0);
+      cachingBuildEngine = cachingBuildEngineFactory()
+          .setCachingBuildEngineDelegate(new LocalCachingBuildEngineDelegate(fakeFileHashCache))
+          .build();
       result = cachingBuildEngine.build(buildContext, rule).get();
       assertEquals(
           BuildRuleSuccessType.FETCHED_FROM_CACHE,
@@ -1327,15 +1205,8 @@ public class CachingBuildEngineTest {
           };
 
       // Create the build engine.
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              pathResolver,
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
+          .setRuleKeyFactoriesFunction(
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
                       NOOP_RULE_KEY_FACTORY,
@@ -1343,7 +1214,8 @@ public class CachingBuildEngineTest {
                           rule.getBuildTarget(),
                           Optional.of(inputRuleKey))),
                       NOOP_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)));
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .build();
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1386,22 +1258,16 @@ public class CachingBuildEngineTest {
               .resolve(BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY));
 
       // Create the build engine.
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              pathResolver,
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
+          .setRuleKeyFactoriesFunction(
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
                       ruleKeyBuilderFactory,
                       new FakeInputBasedRuleKeyBuilderFactory(
                           ImmutableMap.of(rule.getBuildTarget(), Optional.of(inputRuleKey))),
                       NOOP_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)));
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .build();
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1461,22 +1327,16 @@ public class CachingBuildEngineTest {
           BorrowablePath.notBorrowablePath(artifact));
 
       // Create the build engine.
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              pathResolver,
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
+          .setRuleKeyFactoriesFunction(
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
                       ruleKeyBuilderFactory,
                       new FakeInputBasedRuleKeyBuilderFactory(
                           ImmutableMap.of(rule.getBuildTarget(), Optional.of(inputRuleKey))),
                       NOOP_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)));
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .build();
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1554,22 +1414,16 @@ public class CachingBuildEngineTest {
       }
 
       // Create the build engine.
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              pathResolver,
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
+          .setRuleKeyFactoriesFunction(
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
                       ruleKeyBuilderFactory,
                       new FakeInputBasedRuleKeyBuilderFactory(
                           ImmutableMap.of(rule.getBuildTarget(), Optional.<RuleKey>absent())),
                       NOOP_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)));
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .build();
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -2131,20 +1985,15 @@ public class CachingBuildEngineTest {
 
     public CachingBuildEngine engineWithDepFileFactory(
         DependencyFileRuleKeyBuilderFactory depFileFactory) {
-      return new CachingBuildEngine(
-          toWeighted(MoreExecutors.newDirectExecutorService()),
-          fileHashCache,
-          CachingBuildEngine.BuildMode.SHALLOW,
-          CachingBuildEngine.DepFiles.ENABLED,
-          256L,
-          Optional.<Long>absent(),
-          pathResolver,
-          Functions.constant(
-              new CachingBuildEngine.RuleKeyFactories(
-                  ruleKeyBuilderFactory,
-                  NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                  NOOP_RULE_KEY_FACTORY,
-                  depFileFactory)));
+      return cachingBuildEngineFactory()
+          .setRuleKeyFactoriesFunction(
+              Functions.constant(
+                  new CachingBuildEngine.RuleKeyFactories(
+                      ruleKeyBuilderFactory,
+                      NOOP_INPUT_BASED_RULE_KEY_FACTORY,
+                      NOOP_RULE_KEY_FACTORY,
+                      depFileFactory)))
+          .build();
     }
   }
 
@@ -2207,20 +2056,16 @@ public class CachingBuildEngineTest {
 
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.CACHE,
-              256L,
-              Optional.<Long>absent(),
-              pathResolver,
-              Functions.constant(
-                  new CachingBuildEngine.RuleKeyFactories(
-                      ruleKeyBuilderFactory,
-                      inputBasedRuleKeyBuilderFactory,
-                      ruleKeyBuilderFactory,
-                      depFilefactory)));
+          cachingBuildEngineFactory()
+              .setDepFiles(CachingBuildEngine.DepFiles.CACHE)
+              .setRuleKeyFactoriesFunction(
+                   Functions.constant(
+                      new CachingBuildEngine.RuleKeyFactories(
+                          ruleKeyBuilderFactory,
+                          inputBasedRuleKeyBuilderFactory,
+                          ruleKeyBuilderFactory,
+                          depFilefactory)))
+              .build();
 
       // Run the build.
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -2315,20 +2160,16 @@ public class CachingBuildEngineTest {
 
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.CACHE,
-              256L,
-              Optional.<Long>absent(),
-              pathResolver,
-              Functions.constant(
-                  new CachingBuildEngine.RuleKeyFactories(
-                      ruleKeyBuilderFactory,
-                      inputBasedRuleKeyBuilderFactory,
-                      ruleKeyBuilderFactory,
-                      depFilefactory)));
+          cachingBuildEngineFactory()
+              .setDepFiles(CachingBuildEngine.DepFiles.CACHE)
+              .setRuleKeyFactoriesFunction(
+                  Functions.constant(
+                      new CachingBuildEngine.RuleKeyFactories(
+                          ruleKeyBuilderFactory,
+                          inputBasedRuleKeyBuilderFactory,
+                          ruleKeyBuilderFactory,
+                          depFilefactory)))
+              .build();
 
       // Seed the cache with an existing manifest with a dummy entry.
       Manifest manifest = Manifest.fromMap(
@@ -2436,20 +2277,17 @@ public class CachingBuildEngineTest {
 
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.CACHE,
-              1L,
-              Optional.<Long>absent(),
-              pathResolver,
-              Functions.constant(
-                  new CachingBuildEngine.RuleKeyFactories(
-                      ruleKeyBuilderFactory,
-                      inputBasedRuleKeyBuilderFactory,
-                      ruleKeyBuilderFactory,
-                      depFilefactory)));
+          cachingBuildEngineFactory()
+              .setDepFiles(CachingBuildEngine.DepFiles.CACHE)
+              .setMaxDepFileCacheEntries(1L)
+              .setRuleKeyFactoriesFunction(
+                  Functions.constant(
+                      new CachingBuildEngine.RuleKeyFactories(
+                          ruleKeyBuilderFactory,
+                          inputBasedRuleKeyBuilderFactory,
+                          ruleKeyBuilderFactory,
+                          depFilefactory)))
+              .build();
 
       // Seed the cache with an existing manifest with a dummy entry so that it's already at the max
       // size.
@@ -2548,20 +2386,16 @@ public class CachingBuildEngineTest {
 
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.CACHE,
-              256L,
-              Optional.<Long>absent(),
-              pathResolver,
-              Functions.constant(
-                  new CachingBuildEngine.RuleKeyFactories(
-                      ruleKeyBuilderFactory,
-                      inputBasedRuleKeyBuilderFactory,
-                      ruleKeyBuilderFactory,
-                      depFilefactory)));
+          cachingBuildEngineFactory()
+              .setDepFiles(CachingBuildEngine.DepFiles.CACHE)
+              .setRuleKeyFactoriesFunction(
+                  Functions.constant(
+                      new CachingBuildEngine.RuleKeyFactories(
+                          ruleKeyBuilderFactory,
+                          inputBasedRuleKeyBuilderFactory,
+                          ruleKeyBuilderFactory,
+                          depFilefactory)))
+              .build();
 
       // Seed the cache with the manifest and a referenced artifact.
       RuleKey artifactKey = new RuleKey("bbbb");
@@ -2613,15 +2447,8 @@ public class CachingBuildEngineTest {
               .setProjectFilesystem(filesystem)
               .build();
       FakeAbiRuleBuildRule rule = new FakeAbiRuleBuildRule(params, pathResolver);
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              pathResolver,
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
+          .setRuleKeyFactoriesFunction(
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
                       ruleKeyBuilderFactory,
@@ -2631,7 +2458,8 @@ public class CachingBuildEngineTest {
                           fileHashCache,
                           pathResolver,
                           ruleKeyBuilderFactory),
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)));
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .build();
 
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
@@ -2666,21 +2494,15 @@ public class CachingBuildEngineTest {
           fileHashCache,
           pathResolver,
           ruleKeyBuilderFactory);
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              pathResolver,
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
+          .setRuleKeyFactoriesFunction(
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
                       ruleKeyBuilderFactory,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       abiRuleKeyBuilderFactory,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)));
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .build();
 
       // Prepopulate the dep file rule key and dep file.
       filesystem.writeContentsToPath(
@@ -2712,21 +2534,15 @@ public class CachingBuildEngineTest {
           fileHashCache,
           pathResolver,
           NOOP_RULE_KEY_FACTORY);
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              pathResolver,
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
+          .setRuleKeyFactoriesFunction(
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       abiRuleKeyBuilderFactory,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)));
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .build();
 
       // Prepopulate the dep file rule key and dep file.
       filesystem.writeContentsToPath(
@@ -2761,21 +2577,15 @@ public class CachingBuildEngineTest {
           pathResolver,
           ImmutableList.<Step>of(),
           Paths.get("foo.out"));
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(MoreExecutors.newDirectExecutorService()),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              pathResolver,
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
+          .setRuleKeyFactoriesFunction(
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       NOOP_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)));
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .build();
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
       assertEquals(
           BuildRuleSuccessType.BUILT_LOCALLY,
@@ -2838,24 +2648,20 @@ public class CachingBuildEngineTest {
               pathResolver,
               RuleScheduleInfo.DEFAULT.withJobsMultiplier(2));
       ListeningSemaphore semaphore = new ListeningSemaphore(3);
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
+          .setExecutorService(
               new WeightedListeningExecutorService(
                   semaphore,
                   /* defaultWeight */ 1,
-                  listeningDecorator(Executors.newCachedThreadPool())),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              pathResolver,
+                  listeningDecorator(Executors.newCachedThreadPool())))
+          .setRuleKeyFactoriesFunction(
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       NOOP_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)));
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .build();
       ListenableFuture<BuildResult> result1 = cachingBuildEngine.build(buildContext, rule1);
       rule1.waitForStart();
       assertThat(rule1.hasStarted(), equalTo(true));
@@ -2950,21 +2756,16 @@ public class CachingBuildEngineTest {
               pathResolver);
 
       // Create the build engine.
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(SERVICE),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              pathResolver,
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
+          .setExecutorService(SERVICE)
+          .setRuleKeyFactoriesFunction(
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       NOOP_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)));
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .build();
 
       // The BuildContext that will be used by the rule's build() method.
       BuildContext context =
@@ -3008,21 +2809,16 @@ public class CachingBuildEngineTest {
               .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
       // Create the build engine.
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(SERVICE),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              pathResolver,
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
+          .setExecutorService(SERVICE)
+          .setRuleKeyFactoriesFunction(
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       NOOP_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)));
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .build();
 
       // The BuildContext that will be used by the rule's build() method.
       BuildContext context =
@@ -3065,21 +2861,16 @@ public class CachingBuildEngineTest {
               pathResolver);
 
       // Create the build engine.
-      CachingBuildEngine cachingBuildEngine =
-          new CachingBuildEngine(
-              toWeighted(SERVICE),
-              fileHashCache,
-              CachingBuildEngine.BuildMode.SHALLOW,
-              CachingBuildEngine.DepFiles.ENABLED,
-              256L,
-              Optional.<Long>absent(),
-              pathResolver,
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
+          .setExecutorService(SERVICE)
+          .setRuleKeyFactoriesFunction(
               Functions.constant(
                   new CachingBuildEngine.RuleKeyFactories(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       NOOP_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)));
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+          .build();
 
       // The BuildContext that will be used by the rule's build() method.
       BuildContext context =
@@ -3506,13 +3297,6 @@ public class CachingBuildEngineTest {
     return new DefaultStepRunner(executionContext);
   }
 
-  private static WeightedListeningExecutorService toWeighted(ListeningExecutorService service) {
-    return new WeightedListeningExecutorService(
-        new ListeningSemaphore(Integer.MAX_VALUE),
-        /* defaultPermits */ 1,
-        service);
-  }
-
   private static class EmptyBuildRule extends AbstractBuildRule {
 
     public EmptyBuildRule(
@@ -3534,5 +3318,4 @@ public class CachingBuildEngineTest {
     }
 
   }
-
 }
