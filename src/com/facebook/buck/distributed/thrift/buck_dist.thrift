@@ -95,18 +95,23 @@ struct BuildJobStateFileHashes {
 }
 
 struct BuildJobStateTargetNode {
-  1: optional i32 fileSystemRootIndex;
+  1: optional i32 cellIndex;
   2: optional string rawNode;
   3: optional BuildJobStateBuildTarget buildTarget;
 }
 
+struct BuildJobStateCell {
+  // This is just so we can generate a user-friendly path, we should not rely on this being unique.
+  1: optional string nameHint;
+  2: optional BuildJobStateBuckConfig config;
+}
+
 struct BuildJobStateTargetGraph {
-  1: optional map<i32, string> fileSystemRoots;
-  3: optional list<BuildJobStateTargetNode> nodes;
+  1: optional list<BuildJobStateTargetNode> nodes;
 }
 
 struct BuildJobState {
-  1: optional BuildJobStateBuckConfig buckConfig;
+  1: optional map<i32, BuildJobStateCell> cells;
   2: optional list<BuildJobStateFileHashes> fileHashes;
   3: optional BuildJobStateTargetGraph targetGraph;
 }

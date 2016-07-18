@@ -247,8 +247,7 @@ public class Cell {
             }));
   }
 
-  public Cell createCellForDistributedBuild(
-      Path rootCellPath,
+  public LoadingCache<Path, Cell> createCellLoaderForDistributedBuild(
       final ImmutableMap<Path, BuckConfig> cellConfigs,
       final ImmutableMap<Path, ProjectFilesystem> cellFilesystems
   ) throws InterruptedException, IOException {
@@ -275,8 +274,7 @@ public class Cell {
 
     LoadingCache<Path, Cell> cache = CacheBuilder.newBuilder().build(loader);
     cacheReference.set(cache);
-
-    return cache.getUnchecked(rootCellPath);
+    return cache;
   }
 
   public ProjectFilesystem getFilesystem() {
@@ -303,22 +301,23 @@ public class Cell {
     return enforceBuckPackageBoundaries;
   }
 
-  public Cell getCell(Path path) {
-    final Path cellPath = path;
-
-    if (!knownRoots.contains(path)) {
-      throw new HumanReadableException(
-          "Unable to find repository rooted at %s. Known roots are:\n  %s",
-          cellPath,
-          Joiner.on(",\n  ").join(knownRoots));
-    }
-
+  public Cell getCellIgnoringVisibilityCheck(Path cellPath) {
     try {
       return cellLoader.get(cellPath);
     } catch (ExecutionException | UncheckedExecutionException e) {
       Throwables.propagateIfInstanceOf(e.getCause(), HumanReadableException.class);
       throw Throwables.propagate(e);
     }
+  }
+
+  public Cell getCell(Path cellPath) {
+    if (!knownRoots.contains(cellPath)) {
+      throw new HumanReadableException(
+          "Unable to find repository rooted at %s. Known roots are:\n  %s",
+          cellPath,
+          Joiner.on(",\n  ").join(knownRoots));
+    }
+    return getCellIgnoringVisibilityCheck(cellPath);
   }
 
   public Cell getCell(BuildTarget target) {

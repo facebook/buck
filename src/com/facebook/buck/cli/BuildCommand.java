@@ -410,8 +410,6 @@ public class BuildCommand extends AbstractCommand {
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 typeCoercerFactory);
         DistributedBuildTargetGraphCodec targetGraphCodec = new DistributedBuildTargetGraphCodec(
-            params.getCell().getFilesystem(),
-            params.getCell(),
             params.getObjectMapper(),
             parserTargetNodeFactory,
             new Function<TargetNode<?>, Map<String, Object>>() {
@@ -432,13 +430,11 @@ public class BuildCommand extends AbstractCommand {
             });
 
         if (loading) {
-          DistributedBuildState state = DistributedBuildState.load(protocol);
-          BuckConfig rootCellBuckConfig = state.createBuckConfig(filesystem);
+          DistributedBuildState state = DistributedBuildState.load(protocol, params.getCell());
           TargetGraph targetGraph = state.createTargetGraph(targetGraphCodec);
           params.getBuckEventBus().post(
               ConsoleEvent.info(
                   "Done loading state. Aliases %s, TargetNodes %s",
-                  rootCellBuckConfig.getAliases(),
                   targetGraph.getNodes()));
         } else {
           TargetGraphAndBuildTargets targetGraphAndBuildTargets =
@@ -446,7 +442,6 @@ public class BuildCommand extends AbstractCommand {
           ActionGraphAndResolver actionGraphAndResolver = createActionGraphAndResolver(
               params,
               targetGraphAndBuildTargets);
-          BuckConfig buckConfig = params.getBuckConfig();
           DistributedBuildFileHashes distributedBuildFileHashes = new DistributedBuildFileHashes(
               actionGraphAndResolver.getActionGraph(),
               new SourcePathResolver(actionGraphAndResolver.getResolver()),
@@ -454,7 +449,7 @@ public class BuildCommand extends AbstractCommand {
               executorService,
               params.getBuckConfig().getKeySeed());
           BuildJobState jobState = DistributedBuildState.dump(
-              buckConfig,
+              params.getCell(),
               distributedBuildFileHashes,
               targetGraphCodec,
               targetGraphAndBuildTargets.getTargetGraph());

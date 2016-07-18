@@ -43,7 +43,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -552,7 +551,7 @@ public class ParsePipeline implements AutoCloseable {
               Joiner.on(",").withKeyValueSeparator("->").join(map)));
     }
     Path otherBasePath = cellRoot.relativize(MorePaths.getParentOrEmpty(rulePathForDebug));
-    if (!otherBasePath.equals(Paths.get(basePath))) {
+    if (!otherBasePath.equals(otherBasePath.getFileSystem().getPath(basePath))) {
       throw new IllegalStateException(
           String.format("Raw data claims to come from [%s], but we tried rooting it at [%s].",
               basePath,

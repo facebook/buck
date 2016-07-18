@@ -34,15 +34,11 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.BiMap;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
@@ -52,29 +48,23 @@ import java.util.Map;
  */
 public class DistributedBuildTargetGraphCodec {
 
-  private final ProjectFilesystem rootFilesystem;
-  private final Cell rootCell;
   private final ObjectMapper objectMapper;
   private final ParserTargetNodeFactory parserTargetNodeFactory;
   private final Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode;
 
   public DistributedBuildTargetGraphCodec(
-      ProjectFilesystem rootFilesystem,
-      Cell rootCell,
       ObjectMapper objectMapper,
       ParserTargetNodeFactory parserTargetNodeFactory,
       Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode) {
-    this.rootFilesystem = rootFilesystem;
-    this.rootCell = rootCell;
     this.objectMapper = objectMapper;
     this.parserTargetNodeFactory = parserTargetNodeFactory;
     this.nodeToRawNode = nodeToRawNode;
   }
 
   public BuildJobStateTargetGraph dump(
-      Collection<TargetNode<?>> targetNodes) throws InterruptedException {
+      Collection<TargetNode<?>> targetNodes,
+      Function<Path, Integer> cellIndexer) throws InterruptedException {
     BuildJobStateTargetGraph result = new BuildJobStateTargetGraph();
-    BiMap<Integer, ProjectFilesystem> filesystemIndex = HashBiMap.create();
 
     for (TargetNode<?> targetNode : targetNodes) {
       Map<String, Object> rawTargetNode = nodeToRawNode.apply(targetNode);
@@ -82,7 +72,7 @@ public class DistributedBuildTargetGraphCodec {
           targetNode.getRuleFactoryParams().getProjectFilesystem();
 
       BuildJobStateTargetNode remoteNode = new BuildJobStateTargetNode();
-      remoteNode.setFileSystemRootIndex(getIndex(projectFilesystem, filesystemIndex));
+      remoteNode.setCellIndex(cellIndexer.apply(projectFilesystem.getRootPath()));
       remoteNode.setBuildTarget(encodeBuildTarget(targetNode.getBuildTarget()));
       try {
         remoteNode.setRawNode(objectMapper.writeValueAsString(rawTargetNode));
@@ -92,27 +82,7 @@ public class DistributedBuildTargetGraphCodec {
       result.addToNodes(remoteNode);
     }
 
-    result.setFileSystemRoots(
-        Maps.transformValues(
-            filesystemIndex,
-            new Function<ProjectFilesystem, String>() {
-              @Override
-              public String apply(ProjectFilesystem input) {
-                return input.getRootPath().toString();
-              }
-            }
-        ));
-
     return result;
-  }
-
-  private static <T> int getIndex(T value, BiMap<Integer, T> index) {
-    Integer i = index.inverse().get(value);
-    if (i == null) {
-      i = index.size();
-      index.put(i, value);
-    }
-    return i;
   }
 
   public static BuildJobStateBuildTarget encodeBuildTarget(BuildTarget buildTarget) {
@@ -148,29 +118,15 @@ public class DistributedBuildTargetGraphCodec {
         .build();
   }
 
-  public TargetGraph createTargetGraph(BuildJobStateTargetGraph remoteTargetGraph)
-      throws IOException, InterruptedException {
-    ImmutableMap.Builder<Integer, Cell> cellBuilder = ImmutableMap.builder();
-    // TODO(marcinkosiba): Sort out the story around Cells.
-    for (Map.Entry<Integer, String> remoteFileSystemRoot :
-        remoteTargetGraph.getFileSystemRoots().entrySet()) {
-      final Path remoteFilesystemRoot = Files.createTempDirectory(
-          rootFilesystem.resolve(rootFilesystem.getBuckPaths().getBuckOut()),
-          "remote_");
-      ProjectFilesystem projectFilesystem = new ProjectFilesystem(remoteFilesystemRoot);
-      Cell cell = rootCell.createCellForDistributedBuild(
-          remoteFilesystemRoot,
-          ImmutableMap.of(remoteFilesystemRoot, rootCell.getBuckConfig()),
-          ImmutableMap.of(remoteFilesystemRoot, projectFilesystem));
-      cellBuilder.put(remoteFileSystemRoot.getKey(), cell);
-    }
-    ImmutableMap<Integer, Cell> cells = cellBuilder.build();
+  public TargetGraph createTargetGraph(
+      BuildJobStateTargetGraph remoteTargetGraph,
+      Function<Integer, Cell> cellLookup) throws IOException, InterruptedException {
 
     ImmutableMap.Builder<BuildTarget, TargetNode<?>> targetNodeIndexBuilder =
         ImmutableMap.builder();
 
     for (BuildJobStateTargetNode remoteNode : remoteTargetGraph.getNodes()) {
-      Cell cell = Preconditions.checkNotNull(cells.get(remoteNode.getFileSystemRootIndex()));
+      Cell cell = cellLookup.apply(remoteNode.getCellIndex());
       ProjectFilesystem projectFilesystem = cell.getFilesystem();
       BuildTarget target = decodeBuildTarget(remoteNode.getBuildTarget(), cell);
 

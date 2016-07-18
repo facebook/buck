@@ -21,14 +21,19 @@ import com.facebook.buck.config.Config;
 import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
+import com.facebook.buck.distributed.thrift.BuildJobStateCell;
 import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
@@ -36,7 +41,10 @@ import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TProtocol;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -46,21 +54,36 @@ import java.util.Map;
 public class DistributedBuildState {
 
   private final BuildJobState remoteState;
+  private final ImmutableMap<Integer, Cell> cells;
 
-  DistributedBuildState(BuildJobState state) {
-    this.remoteState = state;
+  public DistributedBuildState(
+      BuildJobState remoteState,
+      ImmutableMap<Integer, Cell> cells) {
+    this.remoteState = remoteState;
+    this.cells = cells;
   }
 
   public static BuildJobState dump(
-      BuckConfig buckConfig,
+      Cell rootCell,
       DistributedBuildFileHashes fileHashes,
       DistributedBuildTargetGraphCodec targetGraphCodec,
       TargetGraph targetGraph) throws IOException, InterruptedException {
     BuildJobState jobState = new BuildJobState();
-    jobState.setBuckConfig(dumpConfig(buckConfig));
     jobState.setFileHashes(fileHashes.getFileHashes());
-    jobState.setTargetGraph(targetGraphCodec.dump(targetGraph.getNodes()));
+    CellIndexer cellIndexer = new CellIndexer(rootCell);
+    jobState.setTargetGraph(
+        targetGraphCodec.dump(
+            targetGraph.getNodes(),
+            cellIndexer));
+    jobState.setCells(cellIndexer.getState());
     return jobState;
+  }
+
+  private static BuildJobStateCell dumpCell(Cell cell) {
+    BuildJobStateCell cellState = new BuildJobStateCell();
+    cellState.setConfig(dumpConfig(cell.getBuckConfig()));
+    cellState.setNameHint(cell.getRoot().getFileName().toString());
+    return cellState;
   }
 
   private static BuildJobStateBuckConfig dumpConfig(BuckConfig buckConfig) {
@@ -86,15 +109,49 @@ public class DistributedBuildState {
     return jobState;
   }
 
-  public static DistributedBuildState load(TProtocol protocol) throws TException {
+  public static DistributedBuildState load(TProtocol protocol, Cell rootCell)
+      throws TException, IOException, InterruptedException {
     BuildJobState jobState = new BuildJobState();
     jobState.read(protocol);
-    return new DistributedBuildState(jobState);
+    return load(jobState, rootCell);
   }
 
-  public BuckConfig createBuckConfig(ProjectFilesystem projectFilesystem) {
-    BuildJobStateBuckConfig remoteBuckConfig = remoteState.getBuckConfig();
+  @VisibleForTesting
+  static DistributedBuildState load(BuildJobState jobState, Cell rootCell)
+      throws IOException, InterruptedException {
+    return new DistributedBuildState(jobState, createCells(jobState, rootCell));
+  }
 
+  private static ImmutableMap<Integer, Cell> createCells(BuildJobState remoteState, Cell rootCell)
+      throws IOException, InterruptedException {
+    ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
+
+    ImmutableMap.Builder<Path, BuckConfig> cellConfigs = ImmutableMap.builder();
+    ImmutableMap.Builder<Path, ProjectFilesystem> cellFilesystems = ImmutableMap.builder();
+    ImmutableMap.Builder<Integer, Path> cellIndex = ImmutableMap.builder();
+
+    for (Map.Entry<Integer, BuildJobStateCell> remoteCellEntry :
+        remoteState.getCells().entrySet()) {
+      BuildJobStateCell remoteCell = remoteCellEntry.getValue();
+      Path cellRoot = Files.createTempDirectory(
+          rootCellFilesystem.getRootPath().resolve(rootCellFilesystem.getBuckPaths().getBuckOut()),
+          String.format("remote_%s_", remoteCell.getNameHint()));
+      Config config = createConfig(remoteCell.getConfig());
+      ProjectFilesystem projectFilesystem = new ProjectFilesystem(cellRoot, config);
+      BuckConfig buckConfig = createBuckConfig(config, projectFilesystem, remoteCell.getConfig());
+      cellConfigs.put(cellRoot, buckConfig);
+      cellFilesystems.put(cellRoot, projectFilesystem);
+      cellIndex.put(remoteCellEntry.getKey(), cellRoot);
+    }
+
+    LoadingCache<Path, Cell> cellLoader = rootCell.createCellLoaderForDistributedBuild(
+        cellConfigs.build(),
+        cellFilesystems.build());
+
+    return ImmutableMap.copyOf(Maps.transformValues(cellIndex.build(), cellLoader));
+  }
+
+  private static Config createConfig(BuildJobStateBuckConfig remoteBuckConfig) {
     ImmutableMap<String, ImmutableMap<String, String>> rawConfig = ImmutableMap.copyOf(
         Maps.transformValues(
             remoteBuckConfig.getRawBuckConfig(),
@@ -108,6 +165,13 @@ public class DistributedBuildState {
                 return builder.build();
               }
             }));
+    return new Config(RawConfig.of(rawConfig));
+  }
+
+  private static BuckConfig createBuckConfig(
+      Config config,
+      ProjectFilesystem projectFilesystem,
+      BuildJobStateBuckConfig remoteBuckConfig) {
 
     Architecture remoteArchitecture = Architecture.valueOf(remoteBuckConfig.getArchitecture());
     Architecture localArchitecture = Architecture.detect();
@@ -126,7 +190,6 @@ public class DistributedBuildState {
         remotePlatform,
         localPlatform);
 
-    Config config = new Config(RawConfig.of(rawConfig));
     return new BuckConfig(
         config,
         projectFilesystem,
@@ -136,9 +199,44 @@ public class DistributedBuildState {
         new DefaultCellPathResolver(projectFilesystem.getRootPath(), config));
   }
 
-  public TargetGraph createTargetGraph(DistributedBuildTargetGraphCodec codec)
-      throws IOException, InterruptedException {
-    return codec.createTargetGraph(remoteState.getTargetGraph());
+  public ImmutableMap<Integer, Cell> getCells() {
+    return cells;
   }
 
+  public TargetGraph createTargetGraph(DistributedBuildTargetGraphCodec codec)
+      throws IOException, InterruptedException {
+    return codec.createTargetGraph(
+        remoteState.getTargetGraph(),
+        Functions.forMap(cells));
+  }
+
+  private static class CellIndexer implements Function<Path, Integer> {
+
+    final Cell rootCell;
+    final Map<Path, Integer> index;
+    final Map<Integer, BuildJobStateCell> state;
+
+    public CellIndexer(Cell rootCell) {
+      this.rootCell = rootCell;
+      this.index = new HashMap<>();
+      this.state = new HashMap<>();
+    }
+
+    public Map<Integer, BuildJobStateCell> getState() {
+      return state;
+    }
+
+    @Override
+    public Integer apply(Path input) {
+      Integer i = index.get(input);
+      if (i == null) {
+        i = index.size();
+        index.put(input, i);
+
+        Cell cell = rootCell.getCellIgnoringVisibilityCheck(input);
+        state.put(i, dumpCell(cell));
+      }
+      return i;
+    }
+  }
 }
