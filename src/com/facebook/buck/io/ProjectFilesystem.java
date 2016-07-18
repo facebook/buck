@@ -1184,8 +1184,7 @@ public class ProjectFilesystem {
       String suffix,
       FileAttribute<?>... attrs)
       throws IOException {
-    Path tmp = Files.createTempFile(tmpDir.get(), prefix, suffix, attrs);
-    return getPathRelativeToProjectRoot(tmp).or(tmp);
+    return createTempFile(tmpDir.get(), prefix, suffix, attrs);
   }
 
   /**
