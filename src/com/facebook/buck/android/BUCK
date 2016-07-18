@@ -16,15 +16,12 @@ PACKAGEABLE_SRCS = [
   'AbstractAndroidPackageableCollection.java',
   'AndroidPackageable.java',
   'AndroidPackageableCollector.java',
-  'AbstractAPKModule.java',
-  'APKModuleGraph.java',
 ]
 java_immutables_library(
   name = 'packageable',
   srcs = PACKAGEABLE_SRCS,
   immutable_types = [
     'AndroidPackageableCollection',
-    'APKModule',
   ],
   tests = [
     '//test/com/facebook/buck/android:unit',
@@ -162,6 +159,25 @@ java_library(
   ],
 )
 
+APKMODULE_SRCS = [
+  'AbstractAPKModule.java',
+  'APKModuleGraph.java',
+]
+
+java_immutables_library(
+  name = 'apkmodule',
+  srcs = APKMODULE_SRCS,
+  immutable_types = [
+    'APKModule',
+  ],
+  tests = [
+    '//test/com/facebook/buck/android:integration',
+    '//test/com/facebook/buck/android:unit',
+  ],
+  autodeps = True,
+  visibility = ['PUBLIC'],
+)
+
 HELPERS_SRCS = [
   'AdbHelper.java',
   'ExopackageInstaller.java',
@@ -201,7 +217,7 @@ java_immutables_library(
   name = 'steps',
   srcs = glob(['*.java'],
               excludes = EXCEPTION_SRCS + PACKAGEABLE_SRCS + RULES_SRCS +
-                  SPLIT_DEX_SRCS + UTILS_SRCS + HELPERS_SRCS),
+                  SPLIT_DEX_SRCS + UTILS_SRCS + APKMODULE_SRCS + HELPERS_SRCS),
   immutable_types = [
     'NdkCxxPlatform',
   ],

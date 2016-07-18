@@ -1,5 +1,17 @@
-#@# GENERATED FILE: DO NOT MODIFY 1187effd839bdfd58882ed9b28c1c757a1ae33ec #@#
+#@# GENERATED FILE: DO NOT MODIFY 0f74f75c4e414a983e11d2b920b5b8c91b39b507 #@#
 {
+  "apkmodule" : {
+    "deps" : [
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/graph:graph",
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//third-party/java/guava:guava"
+    ]
+  },
   "exceptions" : {
     "deps" : [
       "//third-party/java/jsr:jsr305"
@@ -39,7 +51,6 @@
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/cxx:platform",
-      "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/jvm/core:classhash",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
@@ -77,6 +88,7 @@
       "//third-party/java/jackson:jackson-databind"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/android:apkmodule",
       "//src/com/facebook/buck/android:packageable",
       "//src/com/facebook/buck/android:split_dex",
       "//src/com/facebook/buck/android:steps",

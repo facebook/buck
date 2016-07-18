@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 8a227261eda062b6181cb5e85055d9fa24f33fba #@#
+#@# GENERATED FILE: DO NOT MODIFY 13c738e210efdacbde0257646f9301bf89c192d2 #@#
 {
   "aar-integration" : {
     "deps" : [
@@ -145,6 +145,7 @@
   },
   "unit" : {
     "deps" : [
+      "//src/com/facebook/buck/android:apkmodule",
       "//src/com/facebook/buck/android:helpers",
       "//src/com/facebook/buck/android:packageable",
       "//src/com/facebook/buck/android:rules",
