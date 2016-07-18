@@ -51,7 +51,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepRunner;
@@ -245,8 +245,8 @@ public class ApkGenruleTest {
         linkSource2.getTarget());
 
     Step seventhStep = steps.get(6);
-    assertTrue(seventhStep instanceof ShellStep);
-    ShellStep genruleCommand = (ShellStep) seventhStep;
+    assertTrue(seventhStep instanceof AbstractGenruleStep);
+    AbstractGenruleStep genruleCommand = (AbstractGenruleStep) seventhStep;
     assertEquals("genrule", genruleCommand.getShortName());
     ImmutableMap<String, String> environmentVariables = genruleCommand.getEnvironmentVariables(
         executionContext);
@@ -256,9 +256,13 @@ public class ApkGenruleTest {
                 BuildTargets.getGenPath(projectFilesystem, apkTarget, "%s.apk")).toString())
         .put("OUT", expectedApkOutput).build(),
         environmentVariables);
+
+    Path scriptFilePath = genruleCommand.getScriptFilePath(executionContext);
+    String scriptFileContents = genruleCommand.getScriptFileContents(executionContext);
     assertEquals(
-        ImmutableList.of("/bin/bash", "-e", "-c", "python signer.py $APK key.properties > $OUT"),
+        ImmutableList.of("/bin/bash", "-e", scriptFilePath.toString()),
         genruleCommand.getShellCommand(executionContext));
+    assertEquals("python signer.py $APK key.properties > $OUT", scriptFileContents);
 
     EasyMock.verify(parser);
   }

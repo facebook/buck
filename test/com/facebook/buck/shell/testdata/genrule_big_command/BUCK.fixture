@@ -1,0 +1,11 @@
+import os
+
+STRING_SIZE = 1000
+REPETITIONS = 10000
+COMMAND = 'echo {0}>$OUT'.format('X' * STRING_SIZE)
+
+genrule(
+  name = 'big',
+  out = 'file',
+  cmd = os.linesep.join([COMMAND] * REPETITIONS),
+)

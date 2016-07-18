@@ -18,8 +18,9 @@ package com.facebook.buck.apple;
 
 import static com.facebook.buck.apple.FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_I386_PLATFORM;
 import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
@@ -113,13 +114,13 @@ public class ExternallyBuiltApplePackageTest {
         new SourcePathResolver(resolver),
         config,
         new FakeSourcePath("Fake/Bundle/Location"));
-    ShellStep step = Iterables.getOnlyElement(
+    AbstractGenruleStep step = Iterables.getOnlyElement(
         Iterables.filter(
             rule.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext()),
             AbstractGenruleStep.class));
     assertThat(
-        step.getShellCommand(TestExecutionContext.newInstance()),
-        hasItem("echo $SDKROOT $OUT"));
+        step.getScriptFileContents(TestExecutionContext.newInstance()),
+        is(equalTo("echo $SDKROOT $OUT")));
   }
 
   @Test

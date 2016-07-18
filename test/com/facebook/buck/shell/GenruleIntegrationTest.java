@@ -80,7 +80,8 @@ public class GenruleIntegrationTest {
     // "(?s)" enables multiline matching for ".*". Parens have to be escaped.
     String outputPattern =
         "(?s).*BUILD FAILED: //:fail failed with exit code 1:(?s).*" +
-        "\\(cd .*/buck-out/gen/fail__srcs && /bin/bash -e -c 'false; echo >&2 hi'\\)(?s).*";
+        "\\(cd .*/buck-out/gen/fail__srcs && " +
+        "/bin/bash -e .*/buck-out/tmp/genrule-[0-9]*\\.sh\\)(?s).*";
 
     assertTrue(
         "Unexpected output:\n" + quoteOutput(buildResult.getStderr()),
@@ -139,6 +140,29 @@ public class GenruleIntegrationTest {
     assertThat(
         workspace.getFileContents("buck-out/gen/mkdir/directory/file"),
         equalTo("something" + System.lineSeparator()));
+  }
+
+  @Test
+  public void genruleWithBigCommand() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "genrule_big_command", temporaryFolder);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//:big").assertSuccess();
+
+    Path outputPath = workspace.resolve("buck-out/gen/big/file");
+    assertThat(Files.isRegularFile(outputPath), equalTo(true));
+
+    int stringSize = 1000;
+
+    StringBuilder expectedOutput = new StringBuilder();
+    for (int i = 0; i < stringSize; ++i) {
+      expectedOutput.append("X");
+    }
+    expectedOutput.append(System.lineSeparator());
+    assertThat(
+        workspace.getFileContents(outputPath),
+        equalTo(expectedOutput.toString()));
   }
 
   @Test

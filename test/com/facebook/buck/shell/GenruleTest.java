@@ -224,8 +224,8 @@ public class GenruleTest {
         linkSource2.getTarget());
 
     Step sixthStep = steps.get(6);
-    assertTrue(sixthStep instanceof ShellStep);
-    ShellStep genruleCommand = (ShellStep) sixthStep;
+    assertTrue(sixthStep instanceof AbstractGenruleStep);
+    AbstractGenruleStep genruleCommand = (AbstractGenruleStep) sixthStep;
     assertEquals("genrule", genruleCommand.getShortName());
     assertEquals(ImmutableMap.<String, String>builder()
         .put("OUT",
@@ -235,21 +235,25 @@ public class GenruleTest {
                 .toString())
         .build(),
         genruleCommand.getEnvironmentVariables(executionContext));
+    Path scriptFilePath = genruleCommand.getScriptFilePath(executionContext);
+    String scriptFileContents = genruleCommand.getScriptFileContents(executionContext);
     if (Platform.detect() == Platform.WINDOWS) {
       assertEquals(
-          ImmutableList.of(
-              "cmd.exe",
-              "/c",
-              "python convert_to_katana.py AndroidManifest.xml > %OUT%"),
+          ImmutableList.of(scriptFilePath.toString()),
           genruleCommand.getShellCommand(executionContext));
+      assertEquals(
+          "python convert_to_katana.py AndroidManifest.xml > %OUT%",
+          scriptFileContents);
     } else {
       assertEquals(
           ImmutableList.of(
               "/bin/bash",
               "-e",
-              "-c",
-              "python convert_to_katana.py AndroidManifest.xml > $OUT"),
+              scriptFilePath.toString()),
           genruleCommand.getShellCommand(executionContext));
+      assertEquals(
+          "python convert_to_katana.py AndroidManifest.xml > $OUT",
+          scriptFileContents);
     }
   }
 
@@ -562,13 +566,17 @@ public class GenruleTest {
         .setOut("out.txt")
         .build(resolver);
 
-    ImmutableList<String> command = genrule
-        .createGenruleStep()
-        .getShellCommand(linuxExecutionContext);
-    assertEquals(ImmutableList.of("/bin/bash", "-e", "-c", bash), command);
+    assertGenruleCommandAndScript(
+        genrule.createGenruleStep(),
+        linuxExecutionContext,
+        ImmutableList.of("/bin/bash", "-e"),
+        bash);
 
-    command = genrule.createGenruleStep().getShellCommand(windowsExecutionContext);
-    assertEquals(ImmutableList.of("cmd.exe", "/c", cmdExe), command);
+    assertGenruleCommandAndScript(
+        genrule.createGenruleStep(),
+        windowsExecutionContext,
+        ImmutableList.<String>of(),
+        cmdExe);
 
     // Test fallback
     genrule = (Genrule) GenruleBuilder
@@ -576,11 +584,17 @@ public class GenruleTest {
         .setCmd(cmd)
         .setOut("out.txt")
         .build(resolver);
-    command = genrule.createGenruleStep().getShellCommand(linuxExecutionContext);
-    assertEquals(ImmutableList.of("/bin/bash", "-e", "-c", cmd), command);
+    assertGenruleCommandAndScript(
+        genrule.createGenruleStep(),
+        linuxExecutionContext,
+        ImmutableList.of("/bin/bash", "-e"),
+        cmd);
 
-    command = genrule.createGenruleStep().getShellCommand(windowsExecutionContext);
-    assertEquals(ImmutableList.of("cmd.exe", "/c", cmd), command);
+    assertGenruleCommandAndScript(
+        genrule.createGenruleStep(),
+        windowsExecutionContext,
+        ImmutableList.<String>of(),
+        cmd);
 
     // Test command absent
     genrule = (Genrule) GenruleBuilder
@@ -600,6 +614,22 @@ public class GenruleTest {
       assertEquals(String.format("You must specify either cmd_exe or cmd for genrule %s.",
           genrule.getBuildTarget()), e.getHumanReadableErrorMessage());
     }
+  }
+
+  private void assertGenruleCommandAndScript(
+      AbstractGenruleStep genruleStep,
+      ExecutionContext context,
+      ImmutableList<String> expectedCommandPrefix,
+      String expectedScriptFileContents) throws IOException {
+    Path scriptFilePath = genruleStep.getScriptFilePath(context);
+    String actualContents = genruleStep.getScriptFileContents(context);
+    assertThat(actualContents, Matchers.equalTo(expectedScriptFileContents));
+    ImmutableList<String> expectedCommand = ImmutableList.<String>builder()
+        .addAll(expectedCommandPrefix)
+        .add(scriptFilePath.toString())
+        .build();
+    ImmutableList<String> actualCommand = genruleStep.getShellCommand(context);
+    assertThat(actualCommand, Matchers.equalTo(expectedCommand));
   }
 
   @Test

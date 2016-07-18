@@ -308,6 +308,7 @@ public class Genrule extends AbstractBuildRule
     // as srcs. Without this, a genrule is not guaranteed to be hermetic.
 
     return new AbstractGenruleStep(
+        getProjectFilesystem(),
         getBuildTarget(),
         new CommandString(
             flattenToSpaceSeparatedString(cmd),

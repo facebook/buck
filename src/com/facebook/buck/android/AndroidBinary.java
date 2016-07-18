@@ -674,6 +674,7 @@ public class AndroidBinary
           /* bash */ preprocessJavaClassesBash.transform(macroExpander),
           /* cmdExe */ Optional.<String>absent());
       steps.add(new AbstractGenruleStep(
+          getProjectFilesystem(),
           this.getBuildTarget(),
           commandString,
           getProjectFilesystem().getRootPath().resolve(preprocessJavaClassesInDir)) {

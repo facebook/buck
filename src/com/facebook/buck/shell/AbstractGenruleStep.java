@@ -16,28 +16,51 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 
 public abstract class AbstractGenruleStep extends ShellStep {
 
+  private final ProjectFilesystem projectFilesystem;
   private final CommandString commandString;
   private final BuildTarget target;
+  private final LoadingCache<Platform, Path> scriptFilePath = CacheBuilder.newBuilder().build(
+      new CacheLoader<Platform, Path>() {
+        @Override
+        public Path load(Platform platform) throws IOException {
+          ExecutionArgsAndCommand executionArgsAndCommand =
+              getExecutionArgsAndCommand(platform);
+          return projectFilesystem.resolve(
+              projectFilesystem.createTempFile(
+                  "genrule-",
+                  "." + executionArgsAndCommand.shellType.extension));
+        }
+      });
 
   public AbstractGenruleStep(
+      ProjectFilesystem projectFilesystem,
       BuildTarget target,
       CommandString commandString,
       Path workingDirectory) {
     super(workingDirectory);
+    this.projectFilesystem = projectFilesystem;
     this.target = target;
     this.commandString = commandString;
   }
@@ -48,16 +71,24 @@ public abstract class AbstractGenruleStep extends ShellStep {
   }
 
   @Override
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
+    Path scriptFilePath = getScriptFilePath(context);
+    String scriptFileContents = getScriptFileContents(context);
+    projectFilesystem.writeContentsToPath(
+        scriptFileContents + System.lineSeparator(),
+        scriptFilePath);
+    return super.execute(context);
+  }
+
+  @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ExecutionArgsAndCommand commandAndExecutionArgs = context.getPlatform() == Platform.WINDOWS ?
-        commandString.getExpandedCommandAndExecutionArgs(
-            Platform.WINDOWS,
-            getEnvironmentVariables(context),
-            target) :
-        commandString.getCommandAndExecutionArgs(context.getPlatform(), target);
+    ExecutionArgsAndCommand executionArgsAndCommand =
+        getExecutionArgsAndCommand(context.getPlatform());
+    Path scriptFilePath = this.scriptFilePath.getUnchecked(context.getPlatform());
     return ImmutableList.<String>builder()
-        .addAll(commandAndExecutionArgs.executionArgs)
-        .add(commandAndExecutionArgs.command)
+        .addAll(executionArgsAndCommand.shellType.executionArgs)
+        .add(scriptFilePath.toString())
         .build();
   }
 
@@ -70,8 +101,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
     // Long lists of environment variables can extend the length of the command such that it exceeds
     // exec()'s ARG_MAX limit. Defend against this by filtering out variables that do not appear in
     // the command string.
-    String command =
-        commandString.getCommandAndExecutionArgs(context.getPlatform(), target).command;
+    String command = getExecutionArgsAndCommand(context.getPlatform()).command;
     ImmutableMap.Builder<String, String> usedEnvironmentVariablesBuilder = ImmutableMap.builder();
     for (Map.Entry<String, String> environmentVariable : allEnvironmentVariables.entrySet()) {
       // We check for the presence of the variable without adornment for $ or %% so it works on both
@@ -90,23 +120,75 @@ public abstract class AbstractGenruleStep extends ShellStep {
     return usedEnvironmentVariablesBuilder.build();
   }
 
-  protected abstract void addEnvironmentVariables(ExecutionContext context,
-      ImmutableMap.Builder<String, String> environmentVariablesBuilder);
-
   @Override
   protected boolean shouldPrintStderr(Verbosity verbosity) {
     return true;
   }
 
+  @VisibleForTesting
+  public String getScriptFileContents(ExecutionContext context) {
+    ExecutionArgsAndCommand executionArgsAndCommand =
+        getExecutionArgsAndCommand(context.getPlatform());
+    if (context.getPlatform() == Platform.WINDOWS) {
+      executionArgsAndCommand = getExpandedCommandAndExecutionArgs(
+          executionArgsAndCommand,
+          getEnvironmentVariables(context));
+    }
+    return executionArgsAndCommand.command;
+  }
+
+  @VisibleForTesting
+  public Path getScriptFilePath(ExecutionContext context) throws IOException {
+    try {
+      return scriptFilePath.get(context.getPlatform());
+    } catch (Exception e) {
+      Throwables.propagateIfPossible(e, IOException.class);
+      throw new RuntimeException(e);
+    }
+  }
+
+  private ExecutionArgsAndCommand getExecutionArgsAndCommand(Platform platform) {
+    return commandString.getCommandAndExecutionArgs(platform, target);
+  }
+
+  protected abstract void addEnvironmentVariables(
+      ExecutionContext context,
+      ImmutableMap.Builder<String, String> environmentVariablesBuilder);
+
+  private static ExecutionArgsAndCommand getExpandedCommandAndExecutionArgs(
+      ExecutionArgsAndCommand original,
+      ImmutableMap<String, String> environmentVariablesToExpand) {
+    String expandedCommand = original.command;
+    for (Map.Entry<String, String> variable : environmentVariablesToExpand.entrySet()) {
+      expandedCommand = expandedCommand
+          .replace("$" + variable.getKey(), variable.getValue())
+          .replace("${" + variable.getKey() + "}", variable.getValue());
+    }
+    return new ExecutionArgsAndCommand(original.shellType, expandedCommand);
+  }
+
   private static class ExecutionArgsAndCommand {
 
-    private final ImmutableList<String> executionArgs;
+    private final ShellType shellType;
     private final String command;
-    private ExecutionArgsAndCommand(ImmutableList<String> executionArgs, String command) {
-      this.executionArgs = executionArgs;
+    private ExecutionArgsAndCommand(ShellType shellType, String command) {
+      this.shellType = shellType;
       this.command = command;
     }
 
+  }
+
+  private enum ShellType {
+    CMD_EXE("cmd", ImmutableList.<String>of()),
+    BASH("sh", ImmutableList.of("/bin/bash", "-e")),
+    ;
+    private final String extension;
+    private final ImmutableList<String> executionArgs;
+
+    ShellType(String extension, ImmutableList<String> executionArgs) {
+      this.extension = extension;
+      this.executionArgs = executionArgs;
+    }
   }
 
   public static class CommandString {
@@ -137,7 +219,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
           throw new HumanReadableException("You must specify either cmd_exe or cmd for genrule %s.",
               target.getFullyQualifiedName());
         }
-        return new ExecutionArgsAndCommand(ImmutableList.of("cmd.exe", "/c"), command);
+        return new ExecutionArgsAndCommand(ShellType.CMD_EXE, command);
       } else {
         if (!bash.or("").isEmpty()) {
           command = bash.get();
@@ -147,22 +229,8 @@ public abstract class AbstractGenruleStep extends ShellStep {
           throw new HumanReadableException("You must specify either bash or cmd for genrule %s.",
               target.getFullyQualifiedName());
         }
-        return new ExecutionArgsAndCommand(ImmutableList.of("/bin/bash", "-e", "-c"), command);
+        return new ExecutionArgsAndCommand(ShellType.BASH, command);
       }
-    }
-
-    public ExecutionArgsAndCommand getExpandedCommandAndExecutionArgs(
-        Platform platform,
-        ImmutableMap<String, String> environmentVariablesToExpand,
-        BuildTarget target) {
-      ExecutionArgsAndCommand original = getCommandAndExecutionArgs(platform, target);
-      String expandedCommand = original.command;
-      for (Map.Entry<String, String> variable : environmentVariablesToExpand.entrySet()) {
-        expandedCommand = expandedCommand
-            .replace("$" + variable.getKey(), variable.getValue())
-            .replace("${" + variable.getKey() + "}", variable.getValue());
-      }
-      return new ExecutionArgsAndCommand(original.executionArgs, expandedCommand);
     }
   }
 }
