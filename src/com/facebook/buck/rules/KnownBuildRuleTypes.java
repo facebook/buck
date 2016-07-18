@@ -109,6 +109,9 @@ import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.KeystoreDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
+import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
+import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
+import com.facebook.buck.jvm.kotlin.KotlinTestDescription;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaLibraryDescription;
 import com.facebook.buck.jvm.scala.ScalaTestDescription;
@@ -675,6 +678,15 @@ public class KnownBuildRuleTypes {
             defaultTestRuleTimeoutMs,
             defaultCxxPlatform));
     builder.register(new KeystoreDescription());
+    KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(config);
+    builder.register(
+        new KotlinLibraryDescription(kotlinBuckConfig));
+    builder.register(
+        new KotlinTestDescription(
+            kotlinBuckConfig,
+            defaultJavaOptions,
+            defaultJavacOptions,
+            defaultTestRuleTimeoutMs));
     builder.register(
         new LuaBinaryDescription(
             luaConfig,

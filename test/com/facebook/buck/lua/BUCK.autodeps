@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 8f3356bf20abdca5d2173de18d2a6c77d9dcb1bf #@#
+#@# GENERATED FILE: DO NOT MODIFY 6cc97877acb96a79cb0c7b0a2ad37570dfe39b80 #@#
 {
   "lua" : {
     "deps" : [
@@ -48,6 +48,7 @@
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/lua:lua",
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/python:support",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/util/immutables:immutables",

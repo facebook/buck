@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 9cbbba344111c3da4e94b06a0033987bcc713e5f #@#
+#@# GENERATED FILE: DO NOT MODIFY 1eef8f1e754b74c1c4ef281b76a6236b1fa8e3be #@#
 {
   "event" : {
     "deps" : [
@@ -14,7 +14,6 @@
       "//src/com/facebook/buck/test/result/type:type",
       "//src/com/facebook/buck/test/selectors:selectors",
       "//src/com/facebook/buck/timing:timing",
-      "//src/com/facebook/buck/util:object_mapper",
       "//test/com/facebook/buck/event:testutil",
       "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/rules:testutil",
@@ -24,7 +23,6 @@
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/jackson:jackson-core",
       "//third-party/java/jackson:jackson-databind",
-      "//third-party/java/jackson-datatype-guava:jackson-datatype-guava",
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]
