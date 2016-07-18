@@ -16,8 +16,10 @@
 
 package com.facebook.buck.zip;
 
+import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates;
 import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
 import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.OVERWRITE_EXISTING;
+import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.THROW_EXCEPTION;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Calendar.SEPTEMBER;
 import static java.util.zip.Deflater.BEST_COMPRESSION;
@@ -35,488 +37,528 @@ import com.facebook.buck.io.MorePosixFilePermissions;
 import com.facebook.buck.testutil.Zip;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.CharStreams;
 import com.google.common.io.Resources;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.TimeZone;
-import java.util.jar.JarOutputStream;
-import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+@SuppressWarnings("PMD.TestClassWithoutTestCases")
+@RunWith(Enclosed.class)
 public class ZipOutputStreamTest {
 
-  private Path output;
+  @RunWith(Parameterized.class)
+  public static class ModeIndependentTests {
 
-  @Before
-  public void createZipFileDestination() throws IOException {
-    output = Files.createTempFile("example", ".zip");
-  }
-
-  @Test
-  public void shouldBeAbleToCreateEmptyArchive() throws IOException {
-    CustomZipOutputStream ignored = ZipOutputStreams.newOutputStream(output);
-    ignored.close();
-
-    try (Zip zip = new Zip(output, /* forWriting */ false)) {
-      assertTrue(zip.getFileNames().isEmpty());
-    }
-  }
-
-  @Test
-  public void shouldBeAbleToCreateEmptyArchiveWhenOverwriting() throws IOException {
-    CustomZipOutputStream ignored = ZipOutputStreams.newOutputStream(output, OVERWRITE_EXISTING);
-    ignored.close();
-
-    try (Zip zip = new Zip(output, false)) {
-      assertTrue(zip.getFileNames().isEmpty());
-    }
-  }
-
-
-  @Test(expected = ZipException.class)
-  public void mustThrowAnExceptionIfNoZipEntryIsOpenWhenWritingData() throws IOException {
-    try (
-        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output)) {
-      // Note: we have not opened a zip entry.
-      out.write("cheese".getBytes());
-    }
-  }
-
-  @Test(expected = ZipException.class)
-  public void mustThrowAnExceptionIfNoZipEntryIsOpenWhenWritingDataWhenOverwriting()
-      throws IOException {
-    try (
-        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, OVERWRITE_EXISTING)
-    ) {
-      // Note: we have not opened a zip entry
-      out.write("cheese".getBytes());
-    }
-  }
-
-
-  @Test
-  public void shouldBeAbleToAddAZeroLengthFile() throws IOException {
-    File reference = File.createTempFile("reference", ".zip");
-
-    try (
-        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output);
-        ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))) {
-      ZipEntry entry = new ZipEntry("example.txt");
-      entry.setTime(System.currentTimeMillis());
-      out.putNextEntry(entry);
-      ref.putNextEntry(entry);
+    @Parameterized.Parameters(name = "{0}")
+    public static Collection<Object[]> data() {
+      return Arrays.asList(
+          new Object[][]{
+              {THROW_EXCEPTION},
+              {APPEND_TO_ZIP},
+              {OVERWRITE_EXISTING},
+          });
     }
 
-    byte[] seen = Files.readAllBytes(output);
-    byte[] expected = Files.readAllBytes(reference.toPath());
+    @Parameterized.Parameter(0)
+    public HandleDuplicates mode;
 
-    assertArrayEquals(expected, seen);
-  }
+    private Path output;
 
-  @Test
-  public void shouldBeAbleToAddAZeroLengthFileWhenOverwriting() throws IOException {
-    File reference = File.createTempFile("reference", ".zip");
-
-    try (
-        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, OVERWRITE_EXISTING);
-        ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))
-    ) {
-      ZipEntry entry = new ZipEntry("example.txt");
-      entry.setTime(System.currentTimeMillis());
-      out.putNextEntry(entry);
-      ref.putNextEntry(entry);
+    @Before
+    public void createZipFileDestination() throws IOException {
+      output = Files.createTempFile("example", ".zip");
     }
 
-    byte[] seen = Files.readAllBytes(output);
-    byte[] expected = Files.readAllBytes(reference.toPath());
+    @Test
+    public void shouldBeAbleToCreateEmptyArchive() throws IOException {
+      CustomZipOutputStream ignored = ZipOutputStreams.newOutputStream(output, mode);
+      ignored.close();
 
-    assertArrayEquals(expected, seen);
-  }
-
-  @Test
-  public void shouldBeAbleToAddTwoZeroLengthFiles() throws IOException {
-    File reference = File.createTempFile("reference", ".zip");
-
-    try (
-        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output);
-        ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))) {
-      ZipEntry entry = new ZipEntry("example.txt");
-      entry.setTime(System.currentTimeMillis());
-      out.putNextEntry(entry);
-      ref.putNextEntry(entry);
-
-      ZipEntry entry2 = new ZipEntry("example2.txt");
-      entry2.setTime(System.currentTimeMillis());
-      out.putNextEntry(entry2);
-      ref.putNextEntry(entry2);
-    }
-
-    byte[] seen = Files.readAllBytes(output);
-    byte[] expected = Files.readAllBytes(reference.toPath());
-
-    assertArrayEquals(expected, seen);
-  }
-
-  @Test
-  public void shouldBeAbleToAddASingleNonZeroLengthFile() throws IOException {
-    File reference = File.createTempFile("reference", ".zip");
-
-    try (
-        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output);
-        ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))) {
-      byte[] bytes = "cheese".getBytes();
-      ZipEntry entry = new ZipEntry("example.txt");
-      entry.setTime(System.currentTimeMillis());
-      out.putNextEntry(entry);
-      ref.putNextEntry(entry);
-      out.write(bytes);
-      ref.write(bytes);
-    }
-
-    byte[] seen = Files.readAllBytes(output);
-    byte[] expected = Files.readAllBytes(reference.toPath());
-
-    assertArrayEquals(expected, seen);
-  }
-
-  @Test(expected = ZipException.class)
-  public void writingTheSameFileMoreThanOnceIsNormallyAnError() throws IOException {
-    try (CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output)) {
-      ZipEntry entry = new ZipEntry("example.txt");
-      out.putNextEntry(entry);
-      out.putNextEntry(entry);
-    }
-  }
-
-  @Test
-  public void shouldBeAbleToSimplyStoreInputFilesWithoutCompressing() throws IOException {
-    File reference = File.createTempFile("reference", ".zip");
-
-    try (
-        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output);
-        ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))) {
-      byte[] bytes = "cheese".getBytes();
-      ZipEntry entry = new ZipEntry("example.txt");
-      entry.setMethod(ZipEntry.STORED);
-      entry.setTime(System.currentTimeMillis());
-      entry.setSize(bytes.length);
-      entry.setCrc(Hashing.crc32().hashBytes(bytes).padToLong());
-      out.putNextEntry(entry);
-      ref.putNextEntry(entry);
-      out.write(bytes);
-      ref.write(bytes);
-    }
-
-    byte[] seen = Files.readAllBytes(output);
-    byte[] expected = Files.readAllBytes(reference.toPath());
-
-    assertArrayEquals(expected, seen);
-  }
-
-  @Test
-  public void writingTheSameFileMoreThanOnceWhenInAppendModeWritesItTwiceToTheZip()
-      throws IOException {
-    try (
-        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, APPEND_TO_ZIP)
-    ) {
-      ZipEntry entry = new ZipEntry("example.txt");
-      out.putNextEntry(entry);
-      out.write("cheese".getBytes());
-      out.putNextEntry(entry);
-      out.write("cake".getBytes());
-    }
-
-    List<String> names = Lists.newArrayList();
-    try (ZipInputStream in = new ZipInputStream(Files.newInputStream(output))) {
-      for (ZipEntry entry = in.getNextEntry(); entry != null; entry = in.getNextEntry()) {
-        names.add(entry.getName());
+      try (Zip zip = new Zip(output, /* forWriting */ false)) {
+        assertTrue(zip.getFileNames().isEmpty());
       }
     }
 
-    assertEquals(ImmutableList.of("example.txt", "example.txt"), names);
-  }
-
-  @Test
-  public void writingTheSameFileMoreThanOnceWhenInOverwriteModeWritesItOnceToTheZip()
-      throws IOException {
-    try (
-        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, OVERWRITE_EXISTING)
-    ) {
-      ZipEntry entry = new ZipEntry("example.txt");
-      out.putNextEntry(entry);
-      out.write("cheese".getBytes());
-      out.putNextEntry(entry);
-      out.write("cake".getBytes());
-    }
-
-    List<String> names = Lists.newArrayList();
-    try (ZipInputStream in = new ZipInputStream(Files.newInputStream(output))) {
-      for (ZipEntry entry = in.getNextEntry(); entry != null; entry = in.getNextEntry()) {
-        assertEquals("example.txt", entry.getName());
-        names.add(entry.getName());
-        String out = CharStreams.toString(new InputStreamReader(in));
-        assertEquals("cake", out);
+    @Test(expected = ZipException.class)
+    public void writeMustThrowAnExceptionIfNoZipEntryIsOpen() throws IOException {
+      try (
+          CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, mode)) {
+        // Note: we have not opened a zip entry.
+        out.write("cheese".getBytes());
       }
     }
 
-    assertEquals(1, names.size());
-  }
+    @Test
+    public void shouldBeAbleToAddAZeroLengthFile() throws IOException {
+      File reference = File.createTempFile("reference", ".zip");
 
-  @Test
-  public void shouldSetTimestampOfEntries() throws IOException {
-    Calendar cal = Calendar.getInstance();
-    cal.set(1999, SEPTEMBER, 10);
-    long old = getTimeRoundedToSeconds(cal.getTime());
-
-    long now = getTimeRoundedToSeconds(new Date());
-
-    try (CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output)) {
-      ZipEntry oldAndValid = new ZipEntry("oldAndValid");
-      oldAndValid.setTime(old);
-      out.putNextEntry(oldAndValid);
-
-      ZipEntry current = new ZipEntry("current");
-      current.setTime(now);
-      out.putNextEntry(current);
-    }
-
-    try (ZipInputStream in = new ZipInputStream(Files.newInputStream(output))) {
-      ZipEntry entry = in.getNextEntry();
-      assertEquals("oldAndValid", entry.getName());
-      assertEquals(old, entry.getTime());
-
-      entry = in.getNextEntry();
-      assertEquals("current", entry.getName());
-      assertEquals(now, entry.getTime());
-    }
-  }
-
-  private long getTimeRoundedToSeconds(Date date) {
-    long time = date.getTime();
-
-    // Work in seconds.
-    time = time / 1000;
-
-    // the dos time function is only correct to 2 seconds.
-    // http://msdn.microsoft.com/en-us/library/ms724247%28v=vs.85%29.aspx
-    if (time % 2 == 1) {
-      time += 1;
-    }
-
-    // Back to milliseconds
-    time *= 1000;
-
-    return time;
-  }
-
-  @Test
-  public void compressionCanBeSetOnAPerFileBasisAndIsHonoured() throws IOException {
-    // Create some input that can be compressed.
-    String packageName = getClass().getPackage().getName().replace(".", "/");
-    URL sample = Resources.getResource(packageName + "/sample-bytes.properties");
-    byte[] input = Resources.toByteArray(sample);
-
-    try (CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output)) {
-      CustomZipEntry entry = new CustomZipEntry("default");
-      // Don't set the compression level. Should be the default.
-      out.putNextEntry(entry);
-      out.write(input);
-
-      entry = new CustomZipEntry("stored");
-      entry.setCompressionLevel(NO_COMPRESSION);
-      byte[] bytes = "stored".getBytes();
-      entry.setSize(bytes.length);
-      entry.setCrc(Hashing.crc32().hashBytes(bytes).padToLong());
-      out.putNextEntry(entry);
-
-      out.write(bytes);
-
-      entry = new CustomZipEntry("best");
-      entry.setCompressionLevel(BEST_COMPRESSION);
-      out.putNextEntry(entry);
-      out.write(input);
-    }
-
-    try (ZipInputStream in = new ZipInputStream(Files.newInputStream(output))) {
-      ZipEntry entry = in.getNextEntry();
-      assertEquals("default", entry.getName());
-      ByteStreams.copy(in, ByteStreams.nullOutputStream());
-      long defaultCompressedSize = entry.getCompressedSize();
-      assertNotEquals(entry.getCompressedSize(), entry.getSize());
-
-      entry = in.getNextEntry();
-      ByteStreams.copy(in, ByteStreams.nullOutputStream());
-      assertEquals("stored", entry.getName());
-      assertEquals(entry.getCompressedSize(), entry.getSize());
-
-      entry = in.getNextEntry();
-      ByteStreams.copy(in, ByteStreams.nullOutputStream());
-      assertEquals("best", entry.getName());
-      ByteStreams.copy(in, ByteStreams.nullOutputStream());
-      assertThat(entry.getCompressedSize(), lessThan(defaultCompressedSize));
-    }
-  }
-
-  @Test
-  public void shouldChangeMethodWhenCompressionLevelIsChanged() {
-    CustomZipEntry entry = new CustomZipEntry("cake");
-    assertEquals(ZipEntry.DEFLATED, entry.getMethod());
-    assertEquals(Deflater.DEFAULT_COMPRESSION, entry.getCompressionLevel());
-
-    entry.setCompressionLevel(NO_COMPRESSION);
-    assertEquals(ZipEntry.STORED, entry.getMethod());
-
-    entry.setCompressionLevel(BEST_COMPRESSION);
-    assertEquals(ZipEntry.DEFLATED, entry.getMethod());
-  }
-
-  @Test
-  public void canWriteContentToStoredZips() throws IOException {
-    Path overwriteZip = Files.createTempFile("overwrite", ".zip");
-
-    byte[] input = "I like cheese".getBytes(UTF_8);
-
-    try (
-      CustomZipOutputStream overwrite = ZipOutputStreams.newOutputStream(
-          overwriteZip, OVERWRITE_EXISTING);
-      CustomZipOutputStream appending = ZipOutputStreams.newOutputStream(output, APPEND_TO_ZIP)
-    ) {
-      CustomZipEntry entry = new CustomZipEntry("cheese.txt");
-      entry.setCompressionLevel(NO_COMPRESSION);
-      entry.setTime(0);
-      overwrite.putNextEntry(entry);
-      appending.putNextEntry(entry);
-      overwrite.write(input);
-      appending.write(input);
-    }
-  }
-
-  @Test
-  public void packingALargeFileShouldGenerateTheSameOutputWhenOverwritingAsWhenAppending()
-      throws IOException {
-    File reference = File.createTempFile("reference", ".zip");
-    String packageName = getClass().getPackage().getName().replace(".", "/");
-    URL sample = Resources.getResource(packageName + "/macbeth.properties");
-    byte[] input = Resources.toByteArray(sample);
-
-    try (
-        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, OVERWRITE_EXISTING);
-        ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))
-    ) {
-      CustomZipEntry entry = new CustomZipEntry("macbeth.properties");
-      entry.setTime(System.currentTimeMillis());
-      out.putNextEntry(entry);
-      ref.putNextEntry(entry);
-      out.write(input);
-      ref.write(input);
-    }
-
-    byte[] seen = Files.readAllBytes(output);
-    byte[] expected = Files.readAllBytes(reference.toPath());
-
-    // Make sure the output is valid.
-    try (ZipInputStream in = new ZipInputStream(Files.newInputStream(output))) {
-      ZipEntry entry = in.getNextEntry();
-      assertEquals("macbeth.properties", entry.getName());
-      assertNull(in.getNextEntry());
-    }
-
-    assertArrayEquals(expected, seen);
-  }
-
-  @Test
-  public void testThatExternalAttributesFieldIsFunctional()
-      throws IOException {
-
-    // Prepare some sample modes to write into the zip file.
-    final ImmutableList<String> samples = ImmutableList.of(
-        "rwxrwxrwx",
-        "rw-r--r--",
-        "--x--x--x",
-        "---------"
-    );
-
-    for (String stringMode : samples) {
-      long mode = MorePosixFilePermissions.toMode(PosixFilePermissions.fromString(stringMode));
-
-      // Write a tiny sample zip file, which sets the external attributes per the
-      // permission sample above.
-      try (CustomZipOutputStream out =
-               ZipOutputStreams.newOutputStream(output, OVERWRITE_EXISTING)) {
-        CustomZipEntry entry = new CustomZipEntry("test");
+      try (
+          CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, mode);
+          ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))
+      ) {
+        ZipEntry entry = new ZipEntry("example.txt");
         entry.setTime(System.currentTimeMillis());
-        entry.setExternalAttributes(mode << 16);
         out.putNextEntry(entry);
-        out.write(new byte[0]);
+        ref.putNextEntry(entry);
       }
 
-      // Now re-read the zip file using apache's commons-compress, which supports parsing
-      // the external attributes field.
-      try (ZipFile in = new ZipFile(output.toFile())) {
-        Enumeration<ZipArchiveEntry> entries = in.getEntries();
-        ZipArchiveEntry entry = entries.nextElement();
-        assertEquals(mode, entry.getExternalAttributes() >> 16);
-        assertFalse(entries.hasMoreElements());
+      byte[] seen = Files.readAllBytes(output);
+      byte[] expected = Files.readAllBytes(reference.toPath());
+
+      assertArrayEquals(expected, seen);
+    }
+
+    @Test
+    public void shouldBeAbleToAddTwoZeroLengthFiles() throws IOException {
+      File reference = File.createTempFile("reference", ".zip");
+
+      try (
+          CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, mode);
+          ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))) {
+        ZipEntry entry = new ZipEntry("example.txt");
+        entry.setTime(System.currentTimeMillis());
+        out.putNextEntry(entry);
+        ref.putNextEntry(entry);
+
+        ZipEntry entry2 = new ZipEntry("example2.txt");
+        entry2.setTime(System.currentTimeMillis());
+        out.putNextEntry(entry2);
+        ref.putNextEntry(entry2);
+      }
+
+      byte[] seen = Files.readAllBytes(output);
+      byte[] expected = Files.readAllBytes(reference.toPath());
+
+      assertArrayEquals(expected, seen);
+    }
+
+    @Test
+    public void shouldBeAbleToAddASingleNonZeroLengthFile() throws IOException {
+      File reference = File.createTempFile("reference", ".zip");
+
+      try (
+          CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, mode);
+          ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))) {
+        byte[] bytes = "cheese".getBytes();
+        ZipEntry entry = new ZipEntry("example.txt");
+        entry.setTime(System.currentTimeMillis());
+        out.putNextEntry(entry);
+        ref.putNextEntry(entry);
+        out.write(bytes);
+        ref.write(bytes);
+      }
+
+      byte[] seen = Files.readAllBytes(output);
+      byte[] expected = Files.readAllBytes(reference.toPath());
+
+      assertArrayEquals(expected, seen);
+    }
+
+    @Test
+    public void shouldSetTimestampOfEntries() throws IOException {
+      Calendar cal = Calendar.getInstance();
+      cal.set(1999, SEPTEMBER, 10);
+      long old = getTimeRoundedToSeconds(cal.getTime());
+
+      long now = getTimeRoundedToSeconds(new Date());
+
+      try (CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, mode)) {
+        ZipEntry oldAndValid = new ZipEntry("oldAndValid");
+        oldAndValid.setTime(old);
+        out.putNextEntry(oldAndValid);
+
+        ZipEntry current = new ZipEntry("current");
+        current.setTime(now);
+        out.putNextEntry(current);
+      }
+
+      try (ZipInputStream in = new ZipInputStream(Files.newInputStream(output))) {
+        ZipEntry entry = in.getNextEntry();
+        assertEquals("oldAndValid", entry.getName());
+        assertEquals(old, entry.getTime());
+
+        entry = in.getNextEntry();
+        assertEquals("current", entry.getName());
+        assertEquals(now, entry.getTime());
+      }
+    }
+
+    private long getTimeRoundedToSeconds(Date date) {
+      long time = date.getTime();
+
+      // Work in seconds.
+      time = time / 1000;
+
+      // the dos time function is only correct to 2 seconds.
+      // http://msdn.microsoft.com/en-us/library/ms724247%28v=vs.85%29.aspx
+      if (time % 2 == 1) {
+        time += 1;
+      }
+
+      // Back to milliseconds
+      time *= 1000;
+
+      return time;
+    }
+
+    @Test
+    public void compressionCanBeSetOnAPerFileBasisAndIsHonoured() throws IOException {
+      // Create some input that can be compressed.
+      String packageName = getClass().getPackage().getName().replace(".", "/");
+      URL sample = Resources.getResource(packageName + "/sample-bytes.properties");
+      byte[] input = Resources.toByteArray(sample);
+
+      try (CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, mode)) {
+        CustomZipEntry entry = new CustomZipEntry("default");
+        // Don't set the compression level. Should be the default.
+        out.putNextEntry(entry);
+        out.write(input);
+
+        entry = new CustomZipEntry("stored");
+        entry.setCompressionLevel(NO_COMPRESSION);
+        entry.setSize(input.length);
+        entry.setCompressedSize(input.length);
+        entry.setCrc(Hashing.crc32().hashBytes(input).padToLong());
+        out.putNextEntry(entry);
+        out.write(input);
+
+        entry = new CustomZipEntry("best");
+        entry.setCompressionLevel(BEST_COMPRESSION);
+        out.putNextEntry(entry);
+        out.write(input);
+      }
+
+      try (ZipInputStream in = new ZipInputStream(Files.newInputStream(output))) {
+        ZipEntry entry = in.getNextEntry();
+        assertEquals("default", entry.getName());
+        assertArrayEquals(input, ByteStreams.toByteArray(in));
+        long defaultCompressedSize = entry.getCompressedSize();
+        assertNotEquals(entry.getSize(), entry.getCompressedSize());
+
+        entry = in.getNextEntry();
+        assertEquals("stored", entry.getName());
+        assertArrayEquals(input, ByteStreams.toByteArray(in));
+        assertEquals(entry.getSize(), entry.getCompressedSize());
+
+        entry = in.getNextEntry();
+        assertEquals("best", entry.getName());
+        assertArrayEquals(input, ByteStreams.toByteArray(in));
+        assertThat(entry.getCompressedSize(), lessThan(defaultCompressedSize));
+      }
+    }
+
+    @Test
+    public void packingALargeFileShouldGenerateTheSameOutputAsReferenceImpl()
+        throws IOException {
+      File reference = File.createTempFile("reference", ".zip");
+      String packageName = getClass().getPackage().getName().replace(".", "/");
+      URL sample = Resources.getResource(packageName + "/macbeth.properties");
+      byte[] input = Resources.toByteArray(sample);
+
+      try (
+          CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, mode);
+          ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))
+      ) {
+        CustomZipEntry entry = new CustomZipEntry("macbeth.properties");
+        entry.setTime(System.currentTimeMillis());
+        out.putNextEntry(entry);
+        ref.putNextEntry(entry);
+        out.write(input);
+        ref.write(input);
+      }
+
+      // Make sure the output is valid.
+      try (ZipInputStream in = new ZipInputStream(Files.newInputStream(output))) {
+        ZipEntry entry = in.getNextEntry();
+        assertEquals("macbeth.properties", entry.getName());
+        assertArrayEquals(input, ByteStreams.toByteArray(in));
+        assertNull(in.getNextEntry());
+      }
+
+      byte[] seen = Files.readAllBytes(output);
+      byte[] expected = Files.readAllBytes(reference.toPath());
+      assertArrayEquals(expected, seen);
+    }
+
+    @Test
+    public void testThatExternalAttributesFieldIsFunctional()
+        throws IOException {
+
+      // Prepare some sample modes to write into the zip file.
+      final ImmutableList<String> samplePermissions = ImmutableList.of(
+          "rwxrwxrwx",
+          "rw-r--r--",
+          "--x--x--x",
+          "---------"
+      );
+
+      for (String stringPermissions : samplePermissions) {
+        long permissions =
+            MorePosixFilePermissions.toMode(PosixFilePermissions.fromString(stringPermissions));
+
+        // Write a tiny sample zip file, which sets the external attributes per the
+        // permission sample above.
+        try (CustomZipOutputStream out =
+                 ZipOutputStreams.newOutputStream(output, mode)) {
+          CustomZipEntry entry = new CustomZipEntry("test");
+          entry.setTime(System.currentTimeMillis());
+          entry.setExternalAttributes(permissions << 16);
+          out.putNextEntry(entry);
+          out.write(new byte[0]);
+        }
+
+        // Now re-read the zip file using apache's commons-compress, which supports parsing
+        // the external attributes field.
+        try (ZipFile in = new ZipFile(output.toFile())) {
+          Enumeration<ZipArchiveEntry> entries = in.getEntries();
+          ZipArchiveEntry entry = entries.nextElement();
+          assertEquals(permissions, entry.getExternalAttributes() >> 16);
+          assertFalse(entries.hasMoreElements());
+        }
       }
     }
   }
 
-  private HashCode writeSimpleJarAndGetHash() throws Exception {
-    try (FileOutputStream fileOutputStream = new FileOutputStream(output.toFile());
-         ZipOutputStream out = new JarOutputStream(fileOutputStream)) {
-      ZipEntry entry = new CustomZipEntry("test");
-      out.putNextEntry(entry);
-      out.write(new byte[0]);
-      entry = new ZipEntry("test1");
-      entry.setTime(ZipConstants.getFakeTime());
-      out.putNextEntry(entry);
-      out.write(new byte[0]);
+  public static class ModeDependentTests {
+    private Path output;
+
+    @Before
+    public void createZipFileDestination() throws IOException {
+      output = Files.createTempFile("example", ".zip");
     }
 
-    return Hashing.sha1().hashBytes(Files.readAllBytes(output));
-  }
-
-  @Test
-  public void producedZipFilesAreTimezoneAgnostic() throws Exception {
-    HashCode referenceHash = writeSimpleJarAndGetHash();
-    TimeZone previousDefault = TimeZone.getDefault();
-    try {
-      String[] availableIDs = TimeZone.getAvailableIDs();
-      assertThat(availableIDs.length, Matchers.greaterThan(1));
-
-      for (String timezoneID : availableIDs) {
-        TimeZone timeZone = TimeZone.getTimeZone(timezoneID);
-        TimeZone.setDefault(timeZone);
-
-        assertThat(writeSimpleJarAndGetHash(), Matchers.equalTo(referenceHash));
+    @Test(expected = ZipException.class)
+    public void writingTheSameFileMoreThanOnceIsNormallyAnError() throws IOException {
+      // Default HandleDuplicate mode is THROW_EXCEPTION
+      try (CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output)) {
+        ZipEntry entry = new ZipEntry("example.txt");
+        out.putNextEntry(entry);
+        out.putNextEntry(entry);
       }
-    } finally {
-      TimeZone.setDefault(previousDefault);
+    }
+
+    @Test
+    public void writingTheSameFileMoreThanOnceWhenInAppendModeWritesItTwiceToTheZip()
+        throws IOException {
+      final String name = "example.txt";
+      final byte[] input1 = "cheese".getBytes(UTF_8);
+      final byte[] input2 = "cake".getBytes(UTF_8);
+      final byte[] input3 = "dessert".getBytes(UTF_8);
+      try (
+          CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, APPEND_TO_ZIP)
+      ) {
+        ZipEntry entry = new ZipEntry(name);
+        out.putNextEntry(entry);
+        out.write(input1);
+        out.putNextEntry(entry);
+        out.write(input2);
+        out.putNextEntry(entry);
+        out.write(input3);
+      }
+
+      assertEquals(
+          ImmutableList.of(
+              new NameAndContent(name, input1),
+              new NameAndContent(name, input2),
+              new NameAndContent(name, input3)),
+          getExtractedEntries(output));
+    }
+
+    @Test
+    public void writingTheSameFileMoreThanOnceWhenInOverwriteModeWritesItOnceToTheZip()
+        throws IOException {
+      final String name = "example.txt";
+      final byte[] input1 = "cheese".getBytes(UTF_8);
+      final byte[] input2 = "cake".getBytes(UTF_8);
+      final byte[] input3 = "dessert".getBytes(UTF_8);
+      try (
+          CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, OVERWRITE_EXISTING)
+      ) {
+        ZipEntry entry = new ZipEntry(name);
+        out.putNextEntry(entry);
+        out.write(input1);
+        out.putNextEntry(entry);
+        out.write(input2);
+        out.putNextEntry(entry);
+        out.write(input3);
+      }
+
+      assertEquals(
+          ImmutableList.of(
+              new NameAndContent(name, input3)),
+          getExtractedEntries(output));
+    }
+
+
+    @Test
+    public void canWriteContentToStoredZipsInModeThrow() throws IOException {
+      String name = "cheese.txt";
+      byte[] input = "I like cheese".getBytes(UTF_8);
+      File reference = File.createTempFile("reference", ".zip");
+
+      try (
+          CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, THROW_EXCEPTION);
+          ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))) {
+        ZipEntry entry = new ZipEntry(name);
+        entry.setMethod(ZipEntry.STORED);
+        entry.setTime(System.currentTimeMillis());
+        entry.setSize(input.length);
+        entry.setCompressedSize(input.length);
+        entry.setCrc(calcCrc(input));
+        out.putNextEntry(entry);
+        ref.putNextEntry(entry);
+        out.write(input);
+        ref.write(input);
+      }
+
+      assertEquals(
+          ImmutableList.of(
+              new NameAndContent(name, input)),
+          getExtractedEntries(output));
+
+      // also check against the reference implementation
+      byte[] seen = Files.readAllBytes(output);
+      byte[] expected = Files.readAllBytes(reference.toPath());
+      assertArrayEquals(expected, seen);
+    }
+
+    @Test
+    public void canWriteContentToStoredZipsInModeAppend() throws IOException {
+      String name = "cheese.txt";
+      byte[] input1 = "I like cheese 1".getBytes(UTF_8);
+      byte[] input2 = "I like cheese 2".getBytes(UTF_8);
+
+      try (
+          CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, APPEND_TO_ZIP)
+      ) {
+        CustomZipEntry entry1 = new CustomZipEntry(name);
+        entry1.setCompressionLevel(NO_COMPRESSION);
+        entry1.setTime(0);
+        entry1.setSize(input1.length);
+        entry1.setCompressedSize(input1.length);
+        entry1.setCrc(calcCrc(input1));
+        out.putNextEntry(entry1);
+        out.write(input1);
+        CustomZipEntry entry2 = new CustomZipEntry(name);
+        entry2.setCompressionLevel(NO_COMPRESSION);
+        entry2.setTime(0);
+        entry2.setSize(input2.length);
+        entry2.setCompressedSize(input2.length);
+        entry2.setCrc(calcCrc(input2));
+        out.putNextEntry(entry2);
+        out.write(input2);
+      }
+
+      assertEquals(
+          ImmutableList.of(
+              new NameAndContent(name, input1),
+              new NameAndContent(name, input2)),
+          getExtractedEntries(output));
+    }
+
+    @Test
+    public void canWriteContentToStoredZipsInModeOverwrite() throws IOException {
+      String name = "cheese.txt";
+      byte[] input1 = "I like cheese 1".getBytes(UTF_8);
+      byte[] input2 = "I like cheese 2".getBytes(UTF_8);
+      File reference = File.createTempFile("reference", ".zip");
+
+      try (
+          CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, OVERWRITE_EXISTING);
+          ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))) {
+        CustomZipEntry entry1 = new CustomZipEntry(name);
+        entry1.setCompressionLevel(NO_COMPRESSION);
+        entry1.setTime(System.currentTimeMillis());
+        entry1.setSize(input1.length);
+        entry1.setCompressedSize(input1.length);
+        entry1.setCrc(calcCrc(input1));
+        out.putNextEntry(entry1);
+        out.write(input1);
+
+        CustomZipEntry entry2 = new CustomZipEntry(name);
+        entry2.setCompressionLevel(NO_COMPRESSION);
+        entry2.setTime(System.currentTimeMillis());
+        entry2.setSize(input2.length);
+        entry2.setCompressedSize(input2.length);
+        entry2.setCrc(calcCrc(input2));
+        out.putNextEntry(entry2);
+        ref.putNextEntry(entry2);
+        out.write(input2);
+        ref.write(input2);
+      }
+
+      assertEquals(
+          ImmutableList.of(
+              new NameAndContent(name, input2)),
+          getExtractedEntries(output));
+
+      // also check against the reference implementation
+      byte[] seen = Files.readAllBytes(output);
+      byte[] expected = Files.readAllBytes(reference.toPath());
+      assertArrayEquals(expected, seen);
     }
   }
 
+  private static List<NameAndContent> getExtractedEntries(Path zipFile) throws IOException {
+    List<NameAndContent> entries = Lists.newArrayList();
+    try (ZipInputStream in = new ZipInputStream(Files.newInputStream(zipFile))) {
+      for (ZipEntry entry = in.getNextEntry(); entry != null; entry = in.getNextEntry()) {
+        entries.add(new NameAndContent(entry.getName(), ByteStreams.toByteArray(in)));
+      }
+    }
+    return entries;
+  }
+
+  private static long calcCrc(byte[] bytes) {
+    return Hashing.crc32().hashBytes(bytes).padToLong();
+  }
+
+  private static class NameAndContent {
+    public final String name;
+    public final byte[] content;
+
+    public NameAndContent(String name, byte[] content) {
+      this.name = name;
+      this.content = content;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (!(obj instanceof NameAndContent)) {
+        return false;
+      }
+      NameAndContent that = (NameAndContent) obj;
+      return name.equals(that.name) && Arrays.equals(content, that.content);
+    }
+  }
 }

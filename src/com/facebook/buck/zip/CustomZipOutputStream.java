@@ -43,8 +43,17 @@ public abstract class CustomZipOutputStream extends OutputStream {
 
     state = State.OPEN;
     closeEntry();
+    validateEntry(entry);
     actuallyPutNextEntry(entry);
     entryOpen = true;
+  }
+
+  private void validateEntry(ZipEntry entry) {
+    if (entry.getMethod() == ZipEntry.STORED) {
+      Preconditions.checkState(
+          entry.getCompressedSize() == entry.getSize(),
+          "STORED entry where compressed != uncompressed size");
+    }
   }
 
   /**
