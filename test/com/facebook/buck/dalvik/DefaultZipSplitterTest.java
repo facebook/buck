@@ -18,8 +18,13 @@ package com.facebook.buck.dalvik;
 
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.APKModuleGraph;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -35,7 +40,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -55,6 +62,11 @@ public class DefaultZipSplitterTest {
       return name.startsWith("primary");
     }
   };
+  private APKModuleGraph apkModuleGraph =
+      new APKModuleGraph(
+          TargetGraph.EMPTY,
+          BuildTargetFactory.newInstance("//test:test"),
+          Optional.<Set<BuildTarget>>absent());
 
   @Before
   public void setUp() throws Exception {
@@ -120,6 +132,7 @@ public class DefaultZipSplitterTest {
         999 /* soft limit */,
         999 /* hard limit */,
         processor,
+        apkModuleGraph,
         ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
         ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES,
         tmpDir.newFolder("report"))
@@ -142,6 +155,7 @@ public class DefaultZipSplitterTest {
         12 /* soft limit */,
         12 /* hard limit */,
         processor,
+        apkModuleGraph,
         ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
         ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES,
         tmpDir.newFolder("report"))
@@ -164,6 +178,7 @@ public class DefaultZipSplitterTest {
         8 /* soft limit */,
         8 /* hard limit */,
         processor,
+        apkModuleGraph,
         ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
         ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES,
         tmpDir.newFolder("report"))
@@ -186,6 +201,7 @@ public class DefaultZipSplitterTest {
         999 /* soft limit */,
         999,
         processor,
+        apkModuleGraph,
         ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE,
         ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES,
         tmpDir.newFolder("report"))
@@ -208,6 +224,7 @@ public class DefaultZipSplitterTest {
         12 /* soft limit */,
         12,
         processor,
+        apkModuleGraph,
         ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE,
         ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES,
         tmpDir.newFolder("report"))
@@ -230,6 +247,7 @@ public class DefaultZipSplitterTest {
         8 /* soft limit */,
         8,
         processor,
+        apkModuleGraph,
         ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE,
         ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES,
         tmpDir.newFolder("report"))
@@ -252,6 +270,7 @@ public class DefaultZipSplitterTest {
         8 /* soft limit */,
         12 /* hard limit */,
         processor,
+        apkModuleGraph,
         ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
         ZipSplitter.CanaryStrategy.DONT_INCLUDE_CANARIES,
         tmpDir.newFolder("report"))
@@ -280,31 +299,43 @@ public class DefaultZipSplitterTest {
         80 /* soft limit */,
         80,
         processor,
+        apkModuleGraph,
         ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE,
         ZipSplitter.CanaryStrategy.INCLUDE_CANARIES,
         tmpDir.newFolder("report"))
         .execute();
-    assertTrue(nthSecondaryZipContains(1, "secondary/dex01/Canary"));
-    assertTrue(nthSecondaryZipContains(2, "secondary/dex02/Canary"));
-    assertTrue(nthSecondaryZipContains(3, "secondary/dex03/Canary"));
-    assertTrue(nthSecondaryZipContains(4, "secondary/dex04/Canary"));
+    assertTrue(nthSecondaryZipContains(1, Pattern.compile("secondary/dex\\d{2}/Canary\\.class")));
+    assertTrue(nthSecondaryZipContains(2, Pattern.compile("secondary/dex\\d{2}/Canary\\.class")));
+    assertTrue(nthSecondaryZipContains(3, Pattern.compile("secondary/dex\\d{2}/Canary\\.class")));
+    assertTrue(nthSecondaryZipContains(4, Pattern.compile("secondary/dex\\d{2}/Canary\\.class")));
   }
 
   private boolean primaryZipContains(String name) throws IOException {
-    return zipContains(outPrimary, name + ".class");
+    return zipContains(outPrimary, Pattern.compile(name + "\\.class"));
   }
 
   private boolean nthSecondaryZipContains(int index, String name) throws IOException {
-    String zipName = String.format(secondaryPattern, index);
-    return zipContains(tmpDir.getRoot().resolve(zipName), name + ".class");
+    return nthSecondaryZipContains(index, Pattern.compile(name + "\\.class"));
   }
 
-  private static boolean zipContains(Path file, String name) throws IOException {
+  private boolean nthSecondaryZipContains(int index, Pattern pattern) throws IOException {
+    String zipName = String.format(secondaryPattern, index);
+    return zipContains(tmpDir.getRoot().resolve(zipName), pattern);
+  }
+
+  private static boolean zipContains(Path file, Pattern pattern) throws IOException {
     ZipFile zip = new ZipFile(file.toFile());
     try {
-      return zip.getEntry(name) != null;
+      Enumeration<? extends ZipEntry> entries = zip.entries();
+      while (entries.hasMoreElements()) {
+        ZipEntry entry = entries.nextElement();
+        if (pattern.matcher(entry.getName()).matches()) {
+          return true;
+        }
+      }
     } finally {
       zip.close();
     }
+    return false;
   }
 }

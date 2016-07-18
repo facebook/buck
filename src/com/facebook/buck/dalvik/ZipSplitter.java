@@ -16,9 +16,11 @@
 
 package com.facebook.buck.dalvik;
 
+import com.facebook.buck.android.APKModule;
+import com.google.common.collect.ImmutableMultimap;
+
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 
 public interface ZipSplitter {
 
@@ -36,7 +38,7 @@ public interface ZipSplitter {
 
   /**
    * Writes the primary zip file and if necessary, the secondary zip files.
-   * @return Secondary output zip files.
+   * @return output map of dex store to zip files.
    */
-  List<Path> execute() throws IOException;
+  ImmutableMultimap<APKModule, Path> execute() throws IOException;
 }

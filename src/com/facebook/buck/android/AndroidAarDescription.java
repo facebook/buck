@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.Set;
 
 /**
  * Description for a {@link BuildRule} that generates an {@code .aar} file.
@@ -127,7 +128,11 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         new AndroidPackageableCollector(
             originalBuildRuleParams.getBuildTarget(),
             /* buildTargetsToExcludeFromDex */ ImmutableSet.<BuildTarget>of(),
-            /* resourcesToExclude */ ImmutableSet.<BuildTarget>of());
+            /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
+            new APKModuleGraph(
+                targetGraph,
+                originalBuildRuleParams.getBuildTarget(),
+                Optional.<Set<BuildTarget>>absent()));
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(
             originalBuildRuleParams.getDeps()));

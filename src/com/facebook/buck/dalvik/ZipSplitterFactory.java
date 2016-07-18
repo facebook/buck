@@ -16,8 +16,11 @@
 
 package com.facebook.buck.dalvik;
 
+import com.facebook.buck.android.APKModule;
+import com.facebook.buck.android.APKModuleGraph;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
@@ -48,6 +51,12 @@ public interface ZipSplitterFactory {
    * @param requiredInPrimaryZip Determine which input <em>entries</em> are necessary in the
    *     primary output zip file.  Note that this is referring to the entries contained within
    *     {@code inFiles}, not the input files themselves.
+   * @param secondaryHeadSet list of classes to include in the primary dex until it is full
+   * @param secondaryTailSet list of classes to include last in the secondary dex
+   * @param additionalDexStores mapping of APKModules to module names for creating additional dex
+   *                            stores beyond the primary and secondary dex
+   * @param apkModuleGraph the graph of APK Modules used for associating classes with additional dex
+   *                       stores beyond the primary and secondary dexes.
    * @param canaryStrategy Determine whether to include canary classes for easy verification.
    * @param reportDir Directory where to publish a report of which classes were written to which
    *     zip files with a corresponding size estimate.
@@ -58,9 +67,12 @@ public interface ZipSplitterFactory {
       Path outPrimary,
       Path outSecondaryDir,
       String secondaryPattern,
+      Path outDexStoresDir,
       Predicate<String> requiredInPrimaryZip,
       ImmutableSet<String> secondaryHeadSet,
       ImmutableSet<String> secondaryTailSet,
+      ImmutableMultimap<APKModule, String> additionalDexStores,
+      APKModuleGraph apkModuleGraph,
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
       Path reportDir);

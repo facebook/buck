@@ -190,7 +190,8 @@ public class AndroidBinaryGraphEnhancer {
         new AndroidPackageableCollector(
             originalBuildTarget,
             buildTargetsToExcludeFromDex,
-            resourcesToExclude);
+            resourcesToExclude,
+            apkModuleGraph);
     collector.addPackageables(AndroidPackageableCollector.getPackageableRules(originalDeps));
     AndroidPackageableCollection packageableCollection = collector.build();
     AndroidPackageableCollection.ResourceDetails resourceDetails =
@@ -446,6 +447,7 @@ public class AndroidBinaryGraphEnhancer {
                 .addAll(buildConfigJarFiles)
                 .build())
         .setFinalDeps(enhancedDeps.build())
+        .setAPKModuleGraph(apkModuleGraph)
         .build();
   }
 

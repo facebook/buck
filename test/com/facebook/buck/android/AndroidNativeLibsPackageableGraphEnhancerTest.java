@@ -49,6 +49,7 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.Set;
 
 public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
@@ -81,7 +82,11 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     AndroidPackageableCollector collector = new AndroidPackageableCollector(
         target,
         ImmutableSet.<BuildTarget>of(),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<BuildTarget>of(),
+        new APKModuleGraph(
+            TargetGraph.EMPTY,
+            target,
+            Optional.<Set<BuildTarget>>absent()));
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(
             ImmutableSet.<BuildRule>of(ndkLibrary)));
@@ -152,7 +157,11 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     AndroidPackageableCollector collector = new AndroidPackageableCollector(
         target,
         ImmutableSet.<BuildTarget>of(),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<BuildTarget>of(),
+        new APKModuleGraph(
+            TargetGraph.EMPTY,
+            target,
+            Optional.<Set<BuildTarget>>absent()));
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(
             ImmutableSet.<BuildRule>of(cxxLibrary)));

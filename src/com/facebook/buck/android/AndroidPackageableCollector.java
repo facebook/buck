@@ -22,9 +22,11 @@ import com.facebook.buck.jvm.core.HasJavaClassHashes;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -59,10 +61,14 @@ public class AndroidPackageableCollector {
   private final BuildTarget collectionRoot;
   private final ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex;
   private final ImmutableSet<BuildTarget> resourcesToExclude;
+  private final APKModuleGraph apkModuleGraph;
 
   @VisibleForTesting
   AndroidPackageableCollector(BuildTarget collectionRoot) {
-    this(collectionRoot, ImmutableSet.<BuildTarget>of(), ImmutableSet.<BuildTarget>of());
+    this(collectionRoot,
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.<BuildTarget>of(),
+        new APKModuleGraph(TargetGraph.EMPTY, collectionRoot, Optional.<Set<BuildTarget>>absent()));
   }
 
   /**
@@ -73,10 +79,12 @@ public class AndroidPackageableCollector {
   public AndroidPackageableCollector(
       BuildTarget collectionRoot,
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex,
-      ImmutableSet<BuildTarget> resourcesToExclude) {
+      ImmutableSet<BuildTarget> resourcesToExclude,
+      APKModuleGraph apkModuleGraph) {
     this.collectionRoot = collectionRoot;
     this.buildTargetsToExcludeFromDex = buildTargetsToExcludeFromDex;
     this.resourcesToExclude = resourcesToExclude;
+    this.apkModuleGraph = apkModuleGraph;
   }
 
   public void addPackageables(Iterable<AndroidPackageable> packageables) {
@@ -191,10 +199,13 @@ public class AndroidPackageableCollector {
   public AndroidPackageableCollector addClasspathEntry(
       HasJavaClassHashes hasJavaClassHashes,
       SourcePath classpathEntry) {
-    if (buildTargetsToExcludeFromDex.contains(hasJavaClassHashes.getBuildTarget())) {
+    BuildTarget target = hasJavaClassHashes.getBuildTarget();
+    if (buildTargetsToExcludeFromDex.contains(target)) {
       collectionBuilder.addNoDxClasspathEntries(classpathEntry);
     } else {
       collectionBuilder.addClasspathEntriesToDex(classpathEntry);
+      APKModule module = apkModuleGraph.findModuleForTarget(target);
+      collectionBuilder.putModuleMappedClasspathEntriesToDex(module, classpathEntry);
       javaClassHashesProviders.add(hasJavaClassHashes);
     }
     return this;

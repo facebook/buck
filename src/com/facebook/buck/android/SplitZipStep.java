@@ -109,7 +109,11 @@ public class SplitZipStep implements Step {
       };
 
   @VisibleForTesting
+  static final Pattern CANARY_CLASS_FILE_PATTERN = Pattern.compile("^([\\w/$]+)\\.Canary\\.class");
+  @VisibleForTesting
   static final Pattern CLASS_FILE_PATTERN = Pattern.compile("^([\\w/$]+)\\.class");
+
+  public static final String SECONDARY_DEX_ID = "dex";
 
   private final ProjectFilesystem filesystem;
   private final Set<Path> inputPathsToSplit;
@@ -117,6 +121,8 @@ public class SplitZipStep implements Step {
   private final Path primaryJarPath;
   private final Path secondaryJarDir;
   private final String secondaryJarPattern;
+  private final Path addtionalDexStoreJarMetaPath;
+  private final Path additionalDexStoreJarDir;
   private final Optional<Path> proguardFullConfigFile;
   private final Optional<Path> proguardMappingFile;
   private final DexSplitMode dexSplitMode;
@@ -126,9 +132,11 @@ public class SplitZipStep implements Step {
   private final Optional<Path> primaryDexClassesFile;
   private final Optional<Path> secondaryDexHeadClassesFile;
   private final Optional<Path> secondaryDexTailClassesFile;
+  private final ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap;
+  private final APKModuleGraph apkModuleGraph;
 
   @Nullable
-  private List<Path> outputFiles;
+  private ImmutableMultimap<APKModule, Path> outputFiles;
 
   /**
    * @param inputPathsToSplit Input paths that would otherwise have been passed to a single dx --dex
@@ -151,6 +159,8 @@ public class SplitZipStep implements Step {
       Path primaryJarPath,
       Path secondaryJarDir,
       String secondaryJarPattern,
+      Path addtionalDexStoreJarMetaPath,
+      Path additionalDexStoreJarDir,
       Optional<Path> proguardFullConfigFile,
       Optional<Path> proguardMappingFile,
       DexSplitMode dexSplitMode,
@@ -158,6 +168,8 @@ public class SplitZipStep implements Step {
       Optional<Path> primaryDexClassesFile,
       Optional<Path> secondaryDexHeadClassesFile,
       Optional<Path> secondaryDexTailClassesFile,
+      ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap,
+      APKModuleGraph apkModuleGraph,
       Path pathToReportDir) {
     this.filesystem = filesystem;
     this.inputPathsToSplit = ImmutableSet.copyOf(inputPathsToSplit);
@@ -165,6 +177,8 @@ public class SplitZipStep implements Step {
     this.primaryJarPath = primaryJarPath;
     this.secondaryJarDir = secondaryJarDir;
     this.secondaryJarPattern = secondaryJarPattern;
+    this.addtionalDexStoreJarMetaPath = addtionalDexStoreJarMetaPath;
+    this.additionalDexStoreJarDir = additionalDexStoreJarDir;
     this.proguardFullConfigFile = proguardFullConfigFile;
     this.proguardMappingFile = proguardMappingFile;
     this.dexSplitMode = dexSplitMode;
@@ -172,6 +186,8 @@ public class SplitZipStep implements Step {
     this.primaryDexClassesFile = primaryDexClassesFile;
     this.secondaryDexHeadClassesFile = secondaryDexHeadClassesFile;
     this.secondaryDexTailClassesFile = secondaryDexTailClassesFile;
+    this.apkModuleToJarPathMap = apkModuleToJarPathMap;
+    this.apkModuleGraph = apkModuleGraph;
     this.pathToReportDir = pathToReportDir;
 
     Preconditions.checkArgument(
@@ -197,6 +213,11 @@ public class SplitZipStep implements Step {
           getWantedPrimaryDexEntries(translatorFactory, classes);
       final ImmutableSet<String> secondaryHeadSet = getSecondaryHeadSet(translatorFactory);
       final ImmutableSet<String> secondaryTailSet = getSecondaryTailSet(translatorFactory);
+      final ImmutableMultimap<APKModule, String> additionalDexStoreClasses =
+          APKModuleGraph.getAPKModuleToClassesMap(
+              apkModuleToJarPathMap,
+              translatorFactory.createObfuscationFunction(),
+              filesystem);
 
       ZipSplitterFactory zipSplitterFactory;
       if (dexSplitMode.useLinearAllocSplitDex()) {
@@ -214,17 +235,44 @@ public class SplitZipStep implements Step {
           primaryJarPath,
           secondaryJarDir,
           secondaryJarPattern,
+          additionalDexStoreJarDir,
           requiredInPrimaryZip,
           secondaryHeadSet,
           secondaryTailSet,
+          additionalDexStoreClasses,
+          apkModuleGraph,
           dexSplitMode.getDexSplitStrategy(),
           ZipSplitter.CanaryStrategy.INCLUDE_CANARIES,
           filesystem.getPathForRelativePath(pathToReportDir))
           .execute();
 
-      try (BufferedWriter secondaryMetaInfoWriter = Files.newWriter(secondaryJarMetaPath.toFile(),
-          Charsets.UTF_8)) {
-        writeMetaList(secondaryMetaInfoWriter, outputFiles, dexSplitMode.getDexStore());
+      for (APKModule dexStore : outputFiles.keySet()) {
+        if (dexStore.getName().equals(SECONDARY_DEX_ID)) {
+          try (BufferedWriter secondaryMetaInfoWriter = Files.newWriter(
+              secondaryJarMetaPath.toFile(),
+              Charsets.UTF_8)) {
+            writeMetaList(
+                secondaryMetaInfoWriter,
+                SECONDARY_DEX_ID,
+                ImmutableSet.<APKModule>of(),
+                outputFiles.get(dexStore).asList(),
+                dexSplitMode.getDexStore());
+          }
+        } else {
+          try (BufferedWriter secondaryMetaInfoWriter = Files.newWriter(
+              addtionalDexStoreJarMetaPath
+                  .resolve("assets")
+                  .resolve(dexStore.getName())
+                  .resolve("metadata.txt").toFile(),
+              Charsets.UTF_8)) {
+            writeMetaList(
+                secondaryMetaInfoWriter,
+                dexStore.getName(),
+                apkModuleGraph.getGraph().getOutgoingNodesFor(dexStore),
+                outputFiles.get(dexStore).asList(),
+                dexSplitMode.getDexStore());
+          }
+        }
       }
 
       return StepExecutionResult.SUCCESS;
@@ -333,7 +381,6 @@ public class SplitZipStep implements Step {
     return ImmutableSet.copyOf(builder.build());
   }
 
-
   /**
    * Construct a {@link Set} of zip file entry names that should go into the primary dex to
    * improve performance.
@@ -386,16 +433,33 @@ public class SplitZipStep implements Step {
   @VisibleForTesting
   static void writeMetaList(
       BufferedWriter writer,
+      String id,
+      ImmutableSet<APKModule> requires,
       List<Path> jarFiles,
       DexStore dexStore) throws IOException {
-    if (DexStore.RAW.equals(dexStore)) {
+    boolean isSecondaryDexStore = id.equals(SECONDARY_DEX_ID);
+    if (DexStore.RAW.equals(dexStore) && isSecondaryDexStore) {
       writer.write(".root_relative");
       writer.newLine();
     }
+    if (!isSecondaryDexStore) {
+      writer.write(String.format(".id %s", id));
+      writer.newLine();
+    }
+    if (requires != null && !requires.isEmpty()) {
+      for (APKModule pkg : requires) {
+        writer.write(String.format(".requires %s", pkg.getName()));
+        writer.newLine();
+      }
+    }
     for (int i = 0; i < jarFiles.size(); i++) {
       String filename = dexStore.fileNameForSecondary(i);
+      if (!isSecondaryDexStore) {
+        filename = dexStore.fileNameForSecondary(id, i);
+      }
       String jarHash = hexSha1(jarFiles.get(i));
       String containedClass = findAnyClass(jarFiles.get(i));
+      Preconditions.checkNotNull(containedClass);
       writer.write(String.format("%s %s %s",
           filename, jarHash, containedClass));
       writer.newLine();
@@ -403,16 +467,29 @@ public class SplitZipStep implements Step {
   }
 
   private static String findAnyClass(Path jarFile) throws IOException {
+    String className = findAnyClass(CANARY_CLASS_FILE_PATTERN, jarFile);
+    if (className == null) {
+      className = findAnyClass(CLASS_FILE_PATTERN, jarFile);
+    }
+    if (className != null) {
+      return className;
+    }
+
+    // TODO(dreiss): It's possible for this to happen by chance, so we should handle it better.
+    throw new IllegalStateException("Couldn't find any class in " + jarFile.toAbsolutePath());
+  }
+
+  @Nullable
+  private static String findAnyClass(Pattern pattern, Path jarFile) throws IOException {
     try (ZipFile inZip = new ZipFile(jarFile.toFile())) {
       for (ZipEntry entry : Collections.list(inZip.entries())) {
-        Matcher m = CLASS_FILE_PATTERN.matcher(entry.getName());
+        Matcher m = pattern.matcher(entry.getName());
         if (m.matches()) {
           return m.group(1).replace('/', '.');
         }
       }
     }
-    // TODO(dreiss): It's possible for this to happen by chance, so we should handle it better.
-    throw new IllegalStateException("Couldn't find any class in " + jarFile.toAbsolutePath());
+    return null;
   }
 
   private static String hexSha1(Path file) throws IOException {
@@ -437,17 +514,34 @@ public class SplitZipStep implements Step {
   }
 
   public Supplier<Multimap<Path, Path>> getOutputToInputsMapSupplier(
-      final Path secondaryOutputDir) {
+      final Path secondaryOutputDir,
+      final Path additionalOutputDir) {
     return new Supplier<Multimap<Path, Path>>() {
       @Override
       public Multimap<Path, Path> get() {
         Preconditions.checkState(outputFiles != null,
             "SplitZipStep must complete successfully before listing its outputs.");
+
         ImmutableMultimap.Builder<Path, Path> builder = ImmutableMultimap.builder();
-        for (int i = 0; i < outputFiles.size(); i++) {
-          Path outputDexPath =
-              secondaryOutputDir.resolve(dexSplitMode.getDexStore().fileNameForSecondary(i));
-          builder.put(outputDexPath, outputFiles.get(i));
+        for (APKModule dexStore : outputFiles.keySet()) {
+          Path storeRoot;
+          if (dexStore.getName().equals(SECONDARY_DEX_ID)) {
+            storeRoot = secondaryOutputDir;
+          } else {
+            storeRoot = additionalOutputDir.resolve(dexStore.getName());
+          }
+          ImmutableList<Path> outputList = outputFiles.get(dexStore).asList();
+          for (int i = 0; i < outputList.size(); i++) {
+            String dexName;
+            if (dexStore.getName().equals(SECONDARY_DEX_ID)) {
+              dexName = dexSplitMode.getDexStore().fileNameForSecondary(i);
+            } else {
+              dexName = dexSplitMode.getDexStore().fileNameForSecondary(dexStore.getName(), i);
+            }
+            Path outputDexPath =
+                storeRoot.resolve(dexName);
+            builder.put(outputDexPath, outputList.get(i));
+          }
         }
         return builder.build();
       }

@@ -51,4 +51,6 @@ interface AbstractAndroidGraphEnhancementResult {
   ImmutableSet<SourcePath> getClasspathEntriesToDex();
 
   ImmutableSortedSet<BuildRule> getFinalDeps();
+
+  APKModuleGraph getAPKModuleGraph();
 }

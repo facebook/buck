@@ -16,6 +16,8 @@
 
 package com.facebook.buck.dalvik;
 
+import com.facebook.buck.android.APKModule;
+import com.facebook.buck.android.APKModuleGraph;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.classes.ClasspathTraversal;
 import com.facebook.buck.jvm.java.classes.ClasspathTraverser;
@@ -24,12 +26,12 @@ import com.facebook.buck.jvm.java.classes.FileLike;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -46,14 +48,16 @@ public class DefaultZipSplitter implements ZipSplitter {
   private final long zipSizeSoftLimit;
   private final long zipSizeHardLimit;
   private final ProjectFilesystem filesystem;
+  private final APKModuleGraph apkModuleGraph;
 
   @Nullable
   private DefaultZipOutputStreamHelper primaryOut;
   private long remainingSize;
 
   /**
-   * @see ZipSplitterFactory#newInstance(ProjectFilesystem, Set, Path, Path, String, Predicate,
-   *     ImmutableSet, ImmutableSet, com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy,
+   * @see ZipSplitterFactory#newInstance(ProjectFilesystem, Set, Path, Path, String, Path,
+   *     Predicate, ImmutableSet, ImmutableSet, ImmutableMultimap, APKModuleGraph,
+   *     com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy,
    *     com.facebook.buck.dalvik.ZipSplitter.CanaryStrategy, Path)
    */
   private DefaultZipSplitter(
@@ -65,6 +69,7 @@ public class DefaultZipSplitter implements ZipSplitter {
       long zipSizeSoftLimit,
       long zipSizeHardLimit,
       Predicate<String> requiredInPrimaryZip,
+      APKModuleGraph apkModuleGraph,
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
       Path reportDir) {
@@ -72,6 +77,7 @@ public class DefaultZipSplitter implements ZipSplitter {
     this.inFiles = ImmutableSet.copyOf(inFiles);
     this.outPrimary = outPrimary;
     this.requiredInPrimaryZip = requiredInPrimaryZip;
+    this.apkModuleGraph = apkModuleGraph;
     this.dexSplitStrategy = dexSplitStrategy;
     this.secondaryDexWriter =
         new MySecondaryDexHelper(outSecondaryDir, secondaryPattern, canaryStrategy);
@@ -89,6 +95,7 @@ public class DefaultZipSplitter implements ZipSplitter {
       long zipSizeSoftLimit,
       long zipSizeHardLimit,
       Predicate<String> requiredInPrimaryZip,
+      APKModuleGraph apkModuleGraph,
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
       Path reportDir) {
@@ -101,6 +108,7 @@ public class DefaultZipSplitter implements ZipSplitter {
         zipSizeSoftLimit,
         zipSizeHardLimit,
         requiredInPrimaryZip,
+        apkModuleGraph,
         dexSplitStrategy,
         canaryStrategy,
         reportDir);
@@ -108,7 +116,7 @@ public class DefaultZipSplitter implements ZipSplitter {
 
   // Not safe to execute multiple times.
   @Override
-  public List<Path> execute() throws IOException {
+  public ImmutableMultimap<APKModule, Path> execute() throws IOException {
     ClasspathTraverser classpathTraverser = new DefaultClasspathTraverser();
 
     // Compute the total size of the inputs so that we can figure out whether its safe
@@ -165,7 +173,12 @@ public class DefaultZipSplitter implements ZipSplitter {
       secondaryDexWriter.close();
     }
 
-    return secondaryDexWriter.getFiles();
+    ImmutableMultimap.Builder<APKModule, Path> outputFilesBuilder =
+        ImmutableMultimap.builder();
+    outputFilesBuilder.putAll(
+        apkModuleGraph.getRootAPKModule(),
+        secondaryDexWriter.getFiles());
+    return outputFilesBuilder.build();
   }
 
   private void processEntry(FileLike entry) throws IOException {

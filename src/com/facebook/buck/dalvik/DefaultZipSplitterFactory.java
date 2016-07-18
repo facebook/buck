@@ -16,8 +16,11 @@
 
 package com.facebook.buck.dalvik;
 
+import com.facebook.buck.android.APKModule;
+import com.facebook.buck.android.APKModuleGraph;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
@@ -49,9 +52,12 @@ public class DefaultZipSplitterFactory implements ZipSplitterFactory {
       Path outPrimary,
       Path outSecondaryDir,
       String secondaryPattern,
+      Path outDexStoresDir,
       Predicate<String> requiredInPrimaryZip,
       ImmutableSet<String> secondaryHeadSet,
       ImmutableSet<String> secondaryTailSet,
+      ImmutableMultimap<APKModule, String> additionalDexStores,
+      APKModuleGraph apkModuleGraph,
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
       Path reportDir) {
@@ -64,6 +70,7 @@ public class DefaultZipSplitterFactory implements ZipSplitterFactory {
         zipSizeSoftLimit,
         zipSizeHardLimit,
         requiredInPrimaryZip,
+        apkModuleGraph,
         dexSplitStrategy,
         canaryStrategy,
         reportDir);

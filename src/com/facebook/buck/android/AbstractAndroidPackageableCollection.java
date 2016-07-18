@@ -24,6 +24,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 
@@ -115,6 +116,11 @@ interface AbstractAndroidPackageableCollection {
    * Java classes (jars) to include in the package.
    */
   ImmutableSet<SourcePath> getClasspathEntriesToDex();
+
+  /**
+   * Java classes to include in the package sorted into modules
+   */
+  ImmutableMultimap<APKModule, SourcePath> getModuleMappedClasspathEntriesToDex();
 
   /**
    * Java classes that were used during compilation, but don't got into the package.

@@ -68,6 +68,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -84,6 +85,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
@@ -645,6 +647,25 @@ public class AndroidBinary
                 enhancementResult.getCompiledUberRDotJava().getPathToOutput()))
             .toSet();
 
+    ImmutableMultimap.Builder<APKModule, Path> additionalDexStoreToJarPathMapBuilder =
+        ImmutableMultimap.builder();
+    additionalDexStoreToJarPathMapBuilder.putAll(FluentIterable
+        .from(enhancementResult
+            .getPackageableCollection()
+            .getModuleMappedClasspathEntriesToDex()
+            .entries())
+        .transform(new Function<Map.Entry<APKModule, SourcePath>, Map.Entry<APKModule, Path>>() {
+          @Override
+          public Map.Entry<APKModule, Path> apply(Map.Entry<APKModule, SourcePath> input) {
+            return new AbstractMap.SimpleEntry<>(
+                input.getKey(),
+                getResolver().deprecatedPathFunction().apply(input.getValue()));
+          }
+        })
+        .toSet());
+    ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap =
+        additionalDexStoreToJarPathMapBuilder.build();
+
     // Execute preprocess_java_classes_binary, if appropriate.
     if (preprocessJavaClassesBash.isPresent()) {
       // Symlink everything in dexTransitiveDependencies.classpathEntriesToDex to the input
@@ -752,7 +773,8 @@ public class AndroidBinary
           steps,
           primaryDexPath,
           dexReorderToolFile,
-          dexReorderDataDumpFile);
+          dexReorderDataDumpFile,
+          additionalDexStoreToJarPathMap);
     } else if (!ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       secondaryDexDirectoriesBuilder.addAll(preDexMerge.get().getSecondaryDexDirectories());
     }
@@ -929,11 +951,15 @@ public class AndroidBinary
       ImmutableList.Builder<Step> steps,
       Path primaryDexPath,
       Optional<SourcePath> dexReorderToolFile,
-      Optional<SourcePath> dexReorderDataDumpFile) {
+      Optional<SourcePath> dexReorderDataDumpFile,
+      ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap) {
     final Supplier<Set<Path>> primaryInputsToDex;
     final Optional<Path> secondaryDexDir;
     final Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs;
     Path secondaryDexParentDir = getBinPath("__%s_secondary_dex__/");
+    Path additionalDexParentDir = getBinPath("__%s_additional_dex__/");
+    Path additionalDexAssetsDir = additionalDexParentDir.resolve("assets");
+    final Optional<ImmutableSet<Path>> additionalDexDirs;
 
     if (shouldSplitDex()) {
       Optional<Path> proguardFullConfigFile = Optional.absent();
@@ -965,6 +991,21 @@ public class AndroidBinary
       final Path secondaryZipDir = getBinPath("__%s_secondary_zip__");
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), secondaryZipDir));
 
+      // Intermediate directory holding the directories holding _ONLY_ the additional split-zip
+      // jar files that are intended for that dex store.
+      final Path additionalDexStoresZipDir = getBinPath("__%s_dex_stores_zip__");
+      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), additionalDexStoresZipDir));
+      for (APKModule dexStore : additionalDexStoreToJarPathMap.keySet()) {
+        steps.add(
+            new MakeCleanDirectoryStep(
+                getProjectFilesystem(),
+                additionalDexStoresZipDir.resolve(dexStore.getName())));
+        steps.add(
+            new MakeCleanDirectoryStep(
+                getProjectFilesystem(),
+                secondaryJarMetaDirParent.resolve("assets").resolve(dexStore.getName())));
+      }
+
       // Run the split-zip command which is responsible for dividing the large set of input
       // classpaths into a more compact set of jar files such that no one jar file when dexed will
       // yield a dex artifact too large for dexopt or the dx method limit to handle.
@@ -977,6 +1018,8 @@ public class AndroidBinary
           primaryJarPath,
           secondaryZipDir,
           "secondary-%d.jar",
+          secondaryJarMetaDirParent,
+          additionalDexStoresZipDir,
           proguardFullConfigFile,
           proguardMappingFile,
           dexSplitMode,
@@ -987,6 +1030,8 @@ public class AndroidBinary
               .transform(getResolver().deprecatedPathFunction()),
           dexSplitMode.getSecondaryDexTailClassesFile()
               .transform(getResolver().deprecatedPathFunction()),
+          additionalDexStoreToJarPathMap,
+          enhancementResult.getAPKModuleGraph(),
           zipSplitReportDir);
       steps.add(splitZipCommand);
 
@@ -1006,17 +1051,34 @@ public class AndroidBinary
         steps.add(new MkdirStep(getProjectFilesystem(), secondaryDexDir.get()));
       }
 
+      if (additionalDexStoreToJarPathMap.isEmpty()) {
+        additionalDexDirs = Optional.absent();
+      } else {
+        ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
+        for (APKModule dexStore : additionalDexStoreToJarPathMap.keySet()) {
+          Path dexStorePath = additionalDexAssetsDir.resolve(dexStore.getName());
+          builder.add(dexStorePath);
+          steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), dexStorePath));
+        }
+        additionalDexDirs = Optional.of(builder.build());
+      }
+
       if (dexSplitMode.getDexStore() == DexStore.RAW) {
         secondaryDexDirectories.add(secondaryDexDir.get());
       } else {
         secondaryDexDirectories.add(secondaryJarMetaDirParent);
         secondaryDexDirectories.add(secondaryDexParentDir);
       }
+      if (additionalDexDirs.isPresent()) {
+        secondaryDexDirectories.add(additionalDexParentDir);
+      }
 
       // Adjust smart-dex inputs for the split-zip case.
       primaryInputsToDex = Suppliers.<Set<Path>>ofInstance(ImmutableSet.of(primaryJarPath));
       Supplier<Multimap<Path, Path>> secondaryOutputToInputsMap =
-          splitZipCommand.getOutputToInputsMapSupplier(secondaryDexDir.get());
+          splitZipCommand.getOutputToInputsMapSupplier(
+              secondaryDexDir.get(),
+              additionalDexAssetsDir);
       secondaryOutputToInputs = Optional.of(secondaryOutputToInputsMap);
     } else {
       // Simple case where our inputs are the natural classpath directories and we don't have

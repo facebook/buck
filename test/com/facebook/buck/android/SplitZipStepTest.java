@@ -29,6 +29,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.CharStreams;
@@ -75,21 +76,75 @@ public class SplitZipStepTest {
 
     StringWriter stringWriter = new StringWriter();
     BufferedWriter writer = new BufferedWriter(stringWriter);
+    ImmutableSet<APKModule> requires = ImmutableSet.of();
     try {
-      SplitZipStep.writeMetaList(writer, ImmutableList.of(outJar), DexStore.JAR);
+      SplitZipStep.writeMetaList(
+          writer,
+          SplitZipStep.SECONDARY_DEX_ID,
+          requires,
+          ImmutableList.of(outJar),
+          DexStore.JAR);
     } finally {
       writer.close();
     }
     List<String> lines = CharStreams.readLines(new StringReader(stringWriter.toString()));
     assertEquals(1, lines.size());
 
-    String line = Iterables.getFirst(lines, null);
+    String line = Iterables.getLast(lines, null);
     String[] data = line.split(" ");
     assertEquals(3, data.length);
 
     // Note that we cannot test data[1] (the hash) because zip files change their hash each
     // time they are written due to timestamps written into the file.
     assertEquals("secondary-1.dex.jar", data[0]);
+    assertTrue(String.format("Unexpected class: %s", data[2]),
+        fileToClassName.values().contains(data[2]));
+  }
+
+  @Test
+  public void testMetaListApkModuule() throws IOException {
+    Path outJar = tempDir.newFile("test.jar").toPath();
+    ZipOutputStream zipOut = new ZipOutputStream(
+        new BufferedOutputStream(Files.newOutputStream(outJar)));
+    Map<String, String> fileToClassName = ImmutableMap.of(
+        "com/facebook/foo.class", "com.facebook.foo",
+        "bar.class", "bar");
+    try {
+      for (String entry : fileToClassName.keySet()) {
+        zipOut.putNextEntry(new ZipEntry(entry));
+        zipOut.write(new byte[] { 0 });
+      }
+    } finally {
+      zipOut.close();
+    }
+
+    StringWriter stringWriter = new StringWriter();
+    BufferedWriter writer = new BufferedWriter(stringWriter);
+    ImmutableSet<APKModule> requires = ImmutableSet.of(
+        APKModule.builder().setName("dependency").build());
+    try {
+      SplitZipStep.writeMetaList(
+          writer,
+          "module",
+          requires,
+          ImmutableList.of(outJar),
+          DexStore.JAR);
+    } finally {
+      writer.close();
+    }
+    List<String> lines = CharStreams.readLines(new StringReader(stringWriter.toString()));
+    assertEquals(3, lines.size());
+
+    assertEquals(lines.get(0), ".id module");
+    assertEquals(lines.get(1), ".requires dependency");
+
+    String line = Iterables.getLast(lines, null);
+    String[] data = line.split(" ");
+    assertEquals(3, data.length);
+
+    // Note that we cannot test data[1] (the hash) because zip files change their hash each
+    // time they are written due to timestamps written into the file.
+    assertEquals("module-1.dex.jar", data[0]);
     assertTrue(String.format("Unexpected class: %s", data[2]),
         fileToClassName.values().contains(data[2]));
   }
@@ -113,6 +168,8 @@ public class SplitZipStepTest {
         /* primaryJarPath */ Paths.get(""),
         /* secondaryJarDir */ Paths.get(""),
         /* secondaryJarPattern */ "",
+        /* additionalDexStoreJarMetaPath */ Paths.get(""),
+        /* additionalDexStoreJarDir */ Paths.get(""),
         /* proguardFullConfigFile */ Optional.<Path>absent(),
         /* proguardMappingFile */ Optional.<Path>absent(),
         new DexSplitMode(
@@ -131,6 +188,8 @@ public class SplitZipStepTest {
         Optional.of(Paths.get("the/manifest.txt")),
         Optional.<Path>absent(),
         Optional.<Path>absent(),
+        /* additionalDexStoreToJarPathMap */ ImmutableMultimap.<APKModule, Path>of(),
+        new APKModuleGraph(null, null, null),
         /* pathToReportDir */ Paths.get(""));
 
     Predicate<String> requiredInPrimaryZipPredicate = splitZipStep
@@ -200,6 +259,8 @@ public class SplitZipStepTest {
         /* primaryJarPath */ Paths.get(""),
         /* secondaryJarDir */ Paths.get(""),
         /* secondaryJarPattern */ "",
+        /* additionalDexStoreJarMetaPath */ Paths.get(""),
+        /* additionalDexStoreJarDir */ Paths.get(""),
         /* proguardFullConfigFile */ Optional.of(proguardConfigFile),
         /* proguardMappingFile */ Optional.of(proguardMappingFile),
         new DexSplitMode(
@@ -218,6 +279,8 @@ public class SplitZipStepTest {
         Optional.of(Paths.get("the/manifest.txt")),
         Optional.<Path>absent(),
         Optional.<Path>absent(),
+        /* additionalDexStoreToJarPathMap */ ImmutableMultimap.<APKModule, Path>of(),
+        new APKModuleGraph(null, null, null),
         /* pathToReportDir */ Paths.get(""));
 
     ProguardTranslatorFactory translatorFactory = ProguardTranslatorFactory.create(
@@ -270,6 +333,8 @@ public class SplitZipStepTest {
         /* primaryJarPath */ Paths.get(""),
         /* secondaryJarDir */ Paths.get(""),
         /* secondaryJarPattern */ "",
+        /* additionalDexStoreJarMetaPath */ Paths.get(""),
+        /* additionalDexStoreJarDir */ Paths.get(""),
         /* proguardFullConfigFile */ Optional.of(proguardConfigFile),
         /* proguardMappingFile */ Optional.of(proguardMappingFile),
         new DexSplitMode(
@@ -288,6 +353,8 @@ public class SplitZipStepTest {
         Optional.<Path>absent(),
         Optional.<Path>absent(),
         Optional.<Path>absent(),
+        /* additionalDexStoreToJarPathMap */ ImmutableMultimap.<APKModule, Path>of(),
+        new APKModuleGraph(null, null, null),
         /* pathToReportDir */ Paths.get(""));
 
     ProguardTranslatorFactory translatorFactory = ProguardTranslatorFactory.create(

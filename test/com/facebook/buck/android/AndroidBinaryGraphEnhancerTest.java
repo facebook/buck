@@ -176,8 +176,12 @@ public class AndroidBinaryGraphEnhancerTest {
 
     AndroidPackageableCollection collection = new AndroidPackageableCollector(
             /* collectionRoot */ apkTarget,
-        ImmutableSet.of(javaDep2BuildTarget),
-            /* resourcesToExclude */ ImmutableSet.<BuildTarget>of())
+            ImmutableSet.of(javaDep2BuildTarget),
+            /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
+            new APKModuleGraph(
+                TargetGraph.EMPTY,
+                apkTarget,
+                Optional.<Set<BuildTarget>>absent()))
         .addClasspathEntry(
             ((HasJavaClassHashes) javaDep1), new FakeSourcePath("ignored"))
         .addClasspathEntry(

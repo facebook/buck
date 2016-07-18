@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY c090ddfea457492de2e1303d7b9f54e1b124c967 #@#
+#@# GENERATED FILE: DO NOT MODIFY bdb6c5747aa35b85c082e25a48f2659d3dacab7a #@#
 {
   "dalvik" : {
     "deps" : [
@@ -6,6 +6,7 @@
       "//src/com/facebook/buck/util:exceptions"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/android:apkmodule",
       "//src/com/facebook/buck/dalvik:dalvik_stats_tool",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/java/classes:classes",

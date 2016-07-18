@@ -22,6 +22,12 @@ import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.classes.ClasspathTraversal;
+import com.facebook.buck.jvm.java.classes.ClasspathTraverser;
+import com.facebook.buck.jvm.java.classes.DefaultClasspathTraverser;
+import com.facebook.buck.jvm.java.classes.FileLike;
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
@@ -29,10 +35,13 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.facebook.buck.model.BuildTarget;
 
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -52,7 +61,6 @@ public class APKModuleGraph {
   private final TargetGraph targetGraph;
   private final BuildTarget target;
   private final Optional<Set<BuildTarget>> seedTargets;
-
 
   private final Supplier<ImmutableMap<BuildTarget, APKModule>> targetToModuleMapSupplier =
       Suppliers.memoize(new Supplier<ImmutableMap<BuildTarget, APKModule>>() {
@@ -134,6 +142,45 @@ public class APKModuleGraph {
   public APKModule findModuleForTarget(BuildTarget target) {
     APKModule module = targetToModuleMapSupplier.get().get(target);
     return (module == null ? rootAPKModuleSupplier.get() : module);
+  }
+
+  /**
+   * Group the classes in the input jars into a multimap based on the APKModule they belong to
+   *
+   * @param apkModuleToJarPathMap the mapping of APKModules to the path for the jar files
+   * @param translatorFunction function used to translate obfuscated names
+   * @param filesystem filesystem representation for resolving paths
+   * @return The mapping of APKModules to the class names they contain
+   * @throws IOException
+   */
+  public static ImmutableMultimap<APKModule, String> getAPKModuleToClassesMap(
+      final ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap,
+      final Function<String, String> translatorFunction,
+      final ProjectFilesystem filesystem) throws IOException {
+    final ImmutableMultimap.Builder<APKModule, String> builder =
+        ImmutableMultimap.builder();
+    if (!apkModuleToJarPathMap.isEmpty()) {
+      for (final APKModule dexStore : apkModuleToJarPathMap.keySet()) {
+        for (Path jarFilePath : apkModuleToJarPathMap.get(dexStore)) {
+          ClasspathTraverser classpathTraverser = new DefaultClasspathTraverser();
+          classpathTraverser.traverse(
+              new ClasspathTraversal(ImmutableSet.of(jarFilePath), filesystem) {
+                @Override
+                public void visit(FileLike entry) {
+                  if (!entry.getRelativePath().endsWith(".class")) {
+                    // ignore everything but class files in the jar.
+                    return;
+                  }
+
+                  builder.put(
+                      dexStore,
+                      translatorFunction.apply(entry.getRelativePath()));
+                }
+              });
+        }
+      }
+    }
+    return builder.build();
   }
 
   /**

@@ -51,6 +51,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -325,7 +326,8 @@ public class AndroidBinaryTest {
         commandsBuilder,
         primaryDexPath,
         Optional.<SourcePath>absent(),
-        Optional.<SourcePath>absent());
+        Optional.<SourcePath>absent(),
+        /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.<APKModule, Path>of());
 
     assertEquals("Expected 2 new assets paths (one for metadata.txt and the other for the " +
         "secondary zips)", 2, secondaryDexDirectories.build().size());
@@ -369,7 +371,8 @@ public class AndroidBinaryTest {
         commandsBuilder,
         primaryDexPath,
         Optional.of(reorderTool),
-        Optional.of(reorderData));
+        Optional.of(reorderData),
+        /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.<APKModule, Path>of());
 
     assertEquals(
         "Expected 2 new assets paths (one for metadata.txt and the other for the " +
