@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLinkAndCompileRules;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.CxxStrip;
@@ -59,6 +60,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 public class HalideLibraryDescription
     implements Description<HalideLibraryDescription.Arg>, Flavored {
@@ -249,9 +251,9 @@ public class HalideLibraryDescription
           HeaderVisibility.PUBLIC);
     } else if (flavors.contains(HALIDE_COMPILER_FLAVOR)) {
       // We always want to build the halide "compiler" for the host platform, so
-      // we use the "default" flavor here, regardless of the flavors on the build
+      // we use the host flavor here, regardless of the flavors on the build
       // target.
-      CxxPlatform hostCxxPlatform = cxxPlatforms.getValue(ImmutableFlavor.of("default"));
+      CxxPlatform hostCxxPlatform = cxxPlatforms.getValue(CxxPlatforms.getHostFlavor());
       Preconditions.checkState(args.srcs.isPresent());
       final ImmutableSortedSet<BuildTarget> compilerDeps =
           args.compilerDeps.or(ImmutableSortedSet.<BuildTarget>of());
@@ -298,12 +300,14 @@ public class HalideLibraryDescription
     return new HalideLibrary(
         params,
         resolver,
-        new SourcePathResolver(resolver));
+        new SourcePathResolver(resolver),
+        args.supportedPlatformsRegex);
   }
 
   @SuppressFieldNotInitialized
   public class Arg extends CxxBinaryDescription.Arg {
     public Optional<ImmutableSortedSet<BuildTarget>> compilerDeps;
     public Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs;
+    public Optional<Pattern> supportedPlatformsRegex;
   }
 }

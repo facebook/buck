@@ -24,6 +24,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxSymlinkTreeHeaders;
 import com.facebook.buck.cxx.HeaderVisibility;
@@ -52,6 +53,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.regex.Pattern;
 
 public class HalideLibraryDescriptionTest {
 
@@ -115,5 +117,44 @@ public class HalideLibraryDescriptionTest {
             .transformAndConcat(Arg.getDepsFunction(new SourcePathResolver(resolver)))
             .get(0);
     assertThat(buildRule, is(instanceOf(Archive.class)));
+  }
+
+
+  @Test
+  public void supportedPlatforms() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+
+    // First, make sure without any platform regex, we get something back for each of the interface
+    // methods.
+    HalideLibraryBuilder halideLibraryBuilder =
+        new HalideLibraryBuilder(target);
+    TargetGraph targetGraph1 = TargetGraphFactory.newInstance(halideLibraryBuilder.build());
+    BuildRuleResolver resolver1 =
+        new BuildRuleResolver(targetGraph1, new DefaultTargetNodeToBuildRuleTransformer());
+    HalideLibrary halideLibrary = (HalideLibrary) halideLibraryBuilder
+        .build(resolver1, filesystem, targetGraph1);
+    assertThat(
+        halideLibrary
+            .getNativeLinkableInput(
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                Linker.LinkableDepType.STATIC)
+            .getArgs(),
+        Matchers.not(Matchers.empty()));
+
+    // Now, verify we get nothing when the supported platform regex excludes our platform.
+    halideLibraryBuilder.setSupportedPlatformsRegex(Pattern.compile("nothing"));
+    TargetGraph targetGraph2 = TargetGraphFactory.newInstance(halideLibraryBuilder.build());
+    BuildRuleResolver resolver2 =
+        new BuildRuleResolver(targetGraph2, new DefaultTargetNodeToBuildRuleTransformer());
+    halideLibrary = (HalideLibrary) halideLibraryBuilder
+        .build(resolver2, filesystem, targetGraph2);
+    assertThat(
+        halideLibrary
+            .getNativeLinkableInput(
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                Linker.LinkableDepType.STATIC)
+            .getArgs(),
+        Matchers.empty());
   }
 }

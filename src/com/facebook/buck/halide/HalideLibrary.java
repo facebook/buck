@@ -48,6 +48,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import java.util.regex.Pattern;
 
 public class HalideLibrary
     extends NoopBuildRule
@@ -55,6 +56,7 @@ public class HalideLibrary
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
+  private final Optional<Pattern> supportedPlatformsRegex;
 
   private final LoadingCache<
           CxxPreprocessables.CxxPreprocessorInputCacheKey,
@@ -65,14 +67,26 @@ public class HalideLibrary
   protected HalideLibrary(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver) {
+      SourcePathResolver pathResolver,
+      Optional<Pattern> supportedPlatformsRegex) {
     super(params, pathResolver);
     this.params = params;
     this.ruleResolver = ruleResolver;
+    this.supportedPlatformsRegex = supportedPlatformsRegex;
+  }
+
+  private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
+    return !supportedPlatformsRegex.isPresent() ||
+        supportedPlatformsRegex.get()
+            .matcher(cxxPlatform.getFlavor().toString())
+            .find();
   }
 
   @Override
   public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+    if (!isPlatformSupported(cxxPlatform)) {
+      return ImmutableList.of();
+    }
     return FluentIterable.from(getDeps())
         .filter(CxxPreprocessorDep.class);
   }
@@ -118,6 +132,9 @@ public class HalideLibrary
 
   @Override
   public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+    if (!isPlatformSupported(cxxPlatform)) {
+      return ImmutableList.of();
+    }
     return FluentIterable.from(getDeclaredDeps())
         .filter(NativeLinkable.class);
   }
@@ -146,6 +163,9 @@ public class HalideLibrary
   public NativeLinkableInput getNativeLinkableInput(
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+    if (!isPlatformSupported(cxxPlatform)) {
+      return NativeLinkableInput.of();
+    }
     return NativeLinkableInput.of(
         ImmutableList.of(requireLibraryArg(cxxPlatform, type)),
         ImmutableSet.<FrameworkPath>of(),
