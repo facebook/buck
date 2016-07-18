@@ -23,7 +23,17 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-interface AbstractAPKModule {
-  String getName();
-  ImmutableSet<BuildTarget> getBuildTargets();
+abstract class AbstractAPKModule {
+  public abstract String getName();
+
+  @Value.Derived
+  public String getCanaryClassName() {
+    if (getName().equals(APKModuleGraph.ROOT_APKMODULE_NAME)) {
+      return "secondary";
+    } else {
+      return String.format("store%04x", getName().hashCode() & 0xFFFF);
+    }
+  }
+
+  public abstract ImmutableSet<BuildTarget> getBuildTargets();
 }

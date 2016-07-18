@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY d56a84a62e6a6468461e31dbd3eef1f17add849b #@#
+#@# GENERATED FILE: DO NOT MODIFY 1187effd839bdfd58882ed9b28c1c757a1ae33ec #@#
 {
   "exceptions" : {
     "deps" : [
@@ -35,8 +35,7 @@
   "packageable" : {
     "deps" : [
       "//src/com/facebook/buck/util:exceptions",
-      "//third-party/java/immutables:processor",
-      "//third-party/java/jsr:jsr305"
+      "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/cxx:platform",

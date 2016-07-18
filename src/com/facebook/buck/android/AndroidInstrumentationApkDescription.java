@@ -53,6 +53,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.nio.file.Path;
 import java.util.EnumSet;
+import java.util.Set;
 
 public class AndroidInstrumentationApkDescription
     implements Description<AndroidInstrumentationApkDescription.Arg> {
@@ -151,7 +152,11 @@ public class AndroidInstrumentationApkDescription
         AndroidBinary.RelinkerMode.DISABLED,
         dxExecutorService,
         apkUnderTest.getManifestEntries(),
-        cxxBuckConfig);
+        cxxBuckConfig,
+        new APKModuleGraph(
+            targetGraph,
+            params.getBuildTarget(),
+            Optional.<Set<BuildTarget>>absent()));
 
     AndroidGraphEnhancementResult enhancementResult =
         graphEnhancer.createAdditionalBuildables();

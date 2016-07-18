@@ -22,10 +22,13 @@ import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.facebook.buck.model.BuildTarget;
 
@@ -49,6 +52,29 @@ public class APKModuleGraph {
   private final TargetGraph targetGraph;
   private final BuildTarget target;
   private final Optional<Set<BuildTarget>> seedTargets;
+
+
+  private final Supplier<ImmutableMap<BuildTarget, APKModule>> targetToModuleMapSupplier =
+      Suppliers.memoize(new Supplier<ImmutableMap<BuildTarget, APKModule>>() {
+        @Override
+        public ImmutableMap<BuildTarget, APKModule> get() {
+          final ImmutableMap.Builder<BuildTarget, APKModule> mapBuilder = ImmutableMap.builder();
+          new AbstractBreadthFirstTraversal<APKModule>(getGraph().getNodesWithNoIncomingEdges()) {
+            @Override
+            public ImmutableSet<APKModule> visit(final APKModule node) {
+              if (node.equals(rootAPKModuleSupplier.get())) {
+                return ImmutableSet.of();
+              }
+              mapBuilder.putAll(
+                  FluentIterable
+                      .from(node.getBuildTargets())
+                      .toMap(Functions.constant(node)));
+              return getGraph().getOutgoingNodesFor(node);
+            }
+          }.start();
+          return mapBuilder.build();
+        }
+      });
 
   private final Supplier<APKModule> rootAPKModuleSupplier =
       Suppliers.memoize(new Supplier<APKModule>() {
@@ -92,6 +118,25 @@ public class APKModuleGraph {
   }
 
   /**
+   * Get the APKModule representing the core application that is always included in the apk
+   *
+   * @return the root APK Module
+   */
+  public APKModule getRootAPKModule() {
+    return rootAPKModuleSupplier.get();
+  }
+
+  /**
+   * Get the Module that contains the given target
+   * @param target target to serach for in modules
+   * @return the module that contains the target
+   */
+  public APKModule findModuleForTarget(BuildTarget target) {
+    APKModule module = targetToModuleMapSupplier.get().get(target);
+    return (module == null ? rootAPKModuleSupplier.get() : module);
+  }
+
+  /**
    * Generate the graph by identifying root targets, then marking targets with the seeds they are
    * reachable with, then consolidating the targets reachable by multiple seeds into shared
    * modules
@@ -120,20 +165,22 @@ public class APKModuleGraph {
    */
   private APKModule generateRootModule() {
     final Set<BuildTarget> rootTargets = new HashSet<>();
-    new AbstractBreadthFirstTraversal<TargetNode<?>>(targetGraph.get(target)) {
-      @Override
-      public ImmutableSet<TargetNode<?>> visit(TargetNode<?> node) {
+    if (targetGraph != TargetGraph.EMPTY) {
+      new AbstractBreadthFirstTraversal<TargetNode<?>>(targetGraph.get(target)) {
+        @Override
+        public ImmutableSet<TargetNode<?>> visit(TargetNode<?> node) {
 
-        ImmutableSet.Builder<TargetNode<?>> depsBuilder = ImmutableSet.builder();
-        for (BuildTarget depTarget : node.getDeps()) {
-          if (!isSeedTarget(depTarget)) {
-            depsBuilder.add(targetGraph.get(depTarget));
-            rootTargets.add(depTarget);
+          ImmutableSet.Builder<TargetNode<?>> depsBuilder = ImmutableSet.builder();
+          for (BuildTarget depTarget : node.getDeps()) {
+            if (!isSeedTarget(depTarget)) {
+              depsBuilder.add(targetGraph.get(depTarget));
+              rootTargets.add(depTarget);
+            }
           }
+          return depsBuilder.build();
         }
-        return depsBuilder.build();
-      }
-    }.start();
+      }.start();
+    }
     return APKModule.builder()
         .setName(ROOT_APKMODULE_NAME)
         .setBuildTargets(rootTargets)

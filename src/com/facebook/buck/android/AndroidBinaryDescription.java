@@ -156,6 +156,11 @@ public class AndroidBinaryDescription
           keystore.getType());
     }
 
+    APKModuleGraph apkModuleGraph = new APKModuleGraph(
+        targetGraph,
+        target,
+        args.applicationModuleTargets);
+
     ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =
         args.androidSdkProguardConfig.or(ProGuardObfuscateStep.SdkProguardType.DEFAULT);
 
@@ -225,7 +230,8 @@ public class AndroidBinaryDescription
         args.enableRelinker.or(false) ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
         dxExecutorService,
         args.manifestEntries.get(),
-        cxxBuckConfig);
+        cxxBuckConfig,
+        apkModuleGraph);
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
     if (target.getFlavors().contains(PACKAGE_STRING_ASSETS_FLAVOR)) {
@@ -377,6 +383,7 @@ public class AndroidBinaryDescription
     public Optional<Boolean> primaryDexScenarioOverflowAllowed;
     public Optional<SourcePath> secondaryDexHeadClassesFile;
     public Optional<SourcePath> secondaryDexTailClassesFile;
+    public Optional<Set<BuildTarget>> applicationModuleTargets;
     public Optional<Long> linearAllocHardLimit;
     public Optional<List<String>> resourceFilter;
     public Optional<Set<RType>> bannedDuplicateResourceTypes;
