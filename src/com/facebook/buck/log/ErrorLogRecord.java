@@ -50,11 +50,11 @@ public class ErrorLogRecord {
   }
 
   private ImmutableMap<String, String> getTraits(LogRecord record) {
-    String commandId = COMMAND_ID_MAP.threadIdToCommandId(record.getThreadID());
+
     String logger = record.getLoggerName();
     ImmutableMap<String, String> traits = ImmutableMap.of(
         "severity", record.getLevel().toString(),
-        "commandId", commandId != null ? commandId : "None",
+
         "logger", logger != null ? logger : "None"
     );
     return traits;
@@ -64,21 +64,22 @@ public class ErrorLogRecord {
       LogRecord record,
       String message,
       ImmutableList<String> contextLogs) {
-    PrettyPrintLogRecord.Builder prettyPrint = PrettyPrintLogRecord.builder()
+    LogRecordFields.Builder logRecordFields = LogRecordFields.builder()
         .setMessage(message)
         .setLogs(contextLogs)
-        .setLogger(record.getLoggerName());
+        .setLogger(record.getLoggerName())
+        .setCommandId(COMMAND_ID_MAP.threadIdToCommandId(record.getThreadID()));
     Throwable throwable = record.getThrown();
     if (throwable != null) {
       Throwable initialCause = getInitialCause(throwable);
-      prettyPrint.setCause(Optional.of(initialCause))
+      logRecordFields.setCause(Optional.of(initialCause))
           .setInitialError(Optional.of(initialCause.getClass().getName()))
           .setInitialErrorMsg(Optional.of(initialCause.getLocalizedMessage()))
           .setOrigin(Optional.of(getThrowableOrigin(initialCause)))
           .setStackTrace(Optional.of(getStackTraceAsString(throwable)));
     }
     try {
-      return OBJECT_MAPPER.writeValueAsString(prettyPrint.build());
+      return OBJECT_MAPPER.writeValueAsString(logRecordFields.build());
     } catch (JsonProcessingException e) {
       e.printStackTrace();
     }

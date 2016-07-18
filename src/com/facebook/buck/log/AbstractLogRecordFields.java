@@ -17,22 +17,22 @@
 package com.facebook.buck.log;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.immutables.value.Value;
 
-
 @Value.Immutable
 @BuckStyleImmutable
-interface AbstractPrettyPrintLogRecord {
-  @JsonProperty("message") String getMessage();
-  @JsonProperty("contextLogs") ImmutableList<String> getLogs();
-  @JsonProperty("logger") String getLogger();
-  @JsonProperty("cause") Optional<Throwable> getCause();
-  @JsonProperty("initialError") Optional<String> getInitialError();
-  @JsonProperty("initialErrorMsg") Optional<String> getInitialErrorMsg();
-  @JsonProperty("origin") Optional<String> getOrigin();
-  @JsonProperty("stackTrace") Optional<String> getStackTrace();
+interface AbstractLogRecordFields {
+  String getMessage();
+  ImmutableList<String> getLogs();
+  String getLogger();
+  String getCommandId();
+  Optional<Throwable> getCause();
+  Optional<String> getInitialError();
+  Optional<String> getInitialErrorMsg();
+  Optional<String> getOrigin();
+  Optional<String> getStackTrace();
 }

@@ -17,9 +17,12 @@
 package com.facebook.buck.log;
 
 import com.google.common.annotations.VisibleForTesting;
+
 import com.google.common.base.Preconditions;
 
 import java.io.IOException;
+
+
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -100,9 +103,9 @@ public class MemoryHandler extends Handler {
           return intSize;
         }
       } catch (NumberFormatException e) {
-          LOG.warn("Invalid buffer size specified in logging.properties (must be > 0), using " +
-              "default buffer size of %s", DEFAULT_BUFFER_SIZE);
-        }
+        LOG.warn("Invalid buffer size specified in logging.properties (must be > 0), using " +
+            "default buffer size of %s", DEFAULT_BUFFER_SIZE);
+      }
     }
     LOG.info("No buffer size specified so default size %s will be used", DEFAULT_BUFFER_SIZE);
     return DEFAULT_BUFFER_SIZE;
