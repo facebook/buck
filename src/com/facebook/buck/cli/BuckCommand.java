@@ -51,7 +51,6 @@ public class BuckCommand extends AbstractContainerCommand {
       @SubCommand(name = "root", impl = RootCommand.class),
       @SubCommand(name = "run", impl = RunCommand.class),
       @SubCommand(name = "server", impl = ServerCommand.class),
-      @SubCommand(name = "simulate", impl = SimulateCommand.class),
       @SubCommand(name = "suggest", impl = SuggestCommand.class),
       @SubCommand(name = "targets", impl = TargetsCommand.class),
       @SubCommand(name = "test", impl = TestCommand.class),

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 35a7b3bf20f9bc14245371bd830dcc5d2501143a #@#
+#@# GENERATED FILE: DO NOT MODIFY 3b0d0c1f0f4a30ba6435e857257f365b439ac414 #@#
 {
   "cli" : {
     "deps" : [
@@ -45,7 +45,6 @@
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/rules/coercer:types",
       "//src/com/facebook/buck/rules/keys:keys",
-      "//src/com/facebook/buck/simulate:simulate",
       "//src/com/facebook/buck/slb:slb",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/test:config",
