@@ -20,10 +20,17 @@ import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
+import com.facebook.buck.cxx.CxxPreprocessables;
+import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
+import com.facebook.buck.cxx.CxxSourceTypes;
+import com.facebook.buck.cxx.CxxToolFlags;
+import com.facebook.buck.cxx.ExplicitCxxToolFlags;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkables;
+import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.model.BuildTarget;
@@ -50,6 +57,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -109,7 +117,20 @@ public class HaskellDescriptionUtils {
       }
     }.start();
 
-    Tool compiler = haskellConfig.getCompiler().resolve(resolver);
+    Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, baseParams.getDeps());
+    ExplicitCxxToolFlags.Builder toolFlagsBuilder = CxxToolFlags.explicitBuilder();
+    PreprocessorFlags.Builder ppFlagsBuilder = PreprocessorFlags.builder();
+    toolFlagsBuilder.setPlatformFlags(
+        CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, CxxSource.Type.C));
+    for (CxxPreprocessorInput input : cxxPreprocessorInputs) {
+      ppFlagsBuilder.addAllIncludes(input.getIncludes());
+      ppFlagsBuilder.addAllSystemIncludePaths(input.getSystemIncludeRoots());
+      ppFlagsBuilder.addAllFrameworkPaths(input.getFrameworks());
+      toolFlagsBuilder.addAllRuleFlags(input.getPreprocessorFlags().get(CxxSource.Type.C));
+    }
+    ppFlagsBuilder.setOtherFlags(toolFlagsBuilder.build());
+    PreprocessorFlags ppFlags = ppFlagsBuilder.build();
 
     ImmutableList<String> compileFlags =
         ImmutableList.<String>builder()
@@ -124,25 +145,14 @@ public class HaskellDescriptionUtils {
     ImmutableSortedMap<String, HaskellPackage> exposedPackages = exposedPackagesBuilder.build();
     ImmutableSortedMap<String, HaskellPackage> packages = packagesBuilder.build();
 
-    return new HaskellCompileRule(
-        baseParams.copyWithChanges(
-            target,
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(compiler.getDeps(pathResolver))
-                    .addAll(pathResolver.filterBuildRuleInputs(includes))
-                    .addAll(sources.getDeps(pathResolver))
-                    .addAll(
-                        FluentIterable.from(exposedPackages.values())
-                            .transformAndConcat(HaskellPackage.getDepsFunction(pathResolver)))
-                    .addAll(
-                        FluentIterable.from(packages.values())
-                            .transformAndConcat(HaskellPackage.getDepsFunction(pathResolver)))
-                    .build()),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+    return HaskellCompileRule.from(
+        target,
+        baseParams,
         pathResolver,
         haskellConfig.getCompiler().resolve(resolver),
         compileFlags,
+        ppFlags,
+        cxxPlatform,
         picType,
         main,
         packageInfo,

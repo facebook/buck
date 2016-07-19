@@ -16,14 +16,22 @@
 
 package com.facebook.buck.haskell;
 
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
+import com.facebook.buck.cxx.CxxToolFlags;
+import com.facebook.buck.cxx.PreprocessorFlags;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -36,6 +44,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -48,13 +58,16 @@ import java.nio.file.Path;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class HaskellCompileRule extends AbstractBuildRule {
+public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppendable {
 
   @AddToRuleKey
   private final Tool compiler;
 
   @AddToRuleKey
   private final ImmutableList<String> flags;
+
+  private final PreprocessorFlags ppFlags;
+  private final CxxPlatform cxxPlatform;
 
   @AddToRuleKey
   private final CxxSourceRuleFactory.PicType picType;
@@ -88,11 +101,13 @@ public class HaskellCompileRule extends AbstractBuildRule {
   @AddToRuleKey
   private final HaskellSources sources;
 
-  public HaskellCompileRule(
+  private HaskellCompileRule(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       Tool compiler,
       ImmutableList<String> flags,
+      PreprocessorFlags ppFlags,
+      CxxPlatform cxxPlatform,
       CxxSourceRuleFactory.PicType picType,
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
@@ -103,6 +118,8 @@ public class HaskellCompileRule extends AbstractBuildRule {
     super(buildRuleParams, resolver);
     this.compiler = compiler;
     this.flags = flags;
+    this.ppFlags = ppFlags;
+    this.cxxPlatform = cxxPlatform;
     this.picType = picType;
     this.main = main;
     this.packageInfo = packageInfo;
@@ -110,6 +127,63 @@ public class HaskellCompileRule extends AbstractBuildRule {
     this.exposedPackages = exposedPackages;
     this.packages = packages;
     this.sources = sources;
+  }
+
+  public static HaskellCompileRule from(
+      BuildTarget target,
+      BuildRuleParams baseParams,
+      final SourcePathResolver resolver,
+      final Tool compiler,
+      ImmutableList<String> flags,
+      final PreprocessorFlags ppFlags,
+      CxxPlatform cxxPlatform,
+      CxxSourceRuleFactory.PicType picType,
+      Optional<String> main,
+      Optional<HaskellPackageInfo> packageInfo,
+      final ImmutableList<SourcePath> includes,
+      final ImmutableSortedMap<String, HaskellPackage> exposedPackages,
+      final ImmutableSortedMap<String, HaskellPackage> packages,
+      final HaskellSources sources) {
+    return new HaskellCompileRule(
+        baseParams.copyWithChanges(
+            target,
+            Suppliers.memoize(
+                new Supplier<ImmutableSortedSet<BuildRule>>() {
+                  @Override
+                  public ImmutableSortedSet<BuildRule> get() {
+                    return ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(compiler.getDeps(resolver))
+                        .addAll(ppFlags.getDeps(resolver))
+                        .addAll(resolver.filterBuildRuleInputs(includes))
+                        .addAll(sources.getDeps(resolver))
+                        .addAll(
+                            FluentIterable.from(exposedPackages.values())
+                                .transformAndConcat(HaskellPackage.getDepsFunction(resolver)))
+                        .addAll(
+                            FluentIterable.from(packages.values())
+                                .transformAndConcat(HaskellPackage.getDepsFunction(resolver)))
+                        .build();
+                  }
+                }),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+        resolver,
+        compiler,
+        flags,
+        ppFlags,
+        cxxPlatform,
+        picType,
+        main,
+        packageInfo,
+        includes,
+        exposedPackages,
+        packages,
+        sources);
+  }
+
+  @Override
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    ppFlags.appendToRuleKey(sink, cxxPlatform.getDebugPathSanitizer());
+    sink.setReflectively("headers", ppFlags.getIncludes());
   }
 
   private Path getObjectDir() {
@@ -182,6 +256,17 @@ public class HaskellCompileRule extends AbstractBuildRule {
         .build();
   }
 
+  private Iterable<String> getPreprocessorFlags() {
+    CxxToolFlags cxxToolFlags =
+        ppFlags.toToolFlags(
+            getResolver(),
+            Functions.<Path>identity(),
+            CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, getResolver()));
+    return MoreIterables.zipAndConcat(
+        Iterables.cycle("-optP"),
+        cxxToolFlags.getAllFlags());
+  }
+
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
@@ -218,6 +303,7 @@ public class HaskellCompileRule extends AbstractBuildRule {
                         Iterables.cycle("-main-is"),
                         main.asSet()))
                 .addAll(getPackageNameArgs())
+                .addAll(getPreprocessorFlags())
                 .add("-odir", getProjectFilesystem().resolve(getObjectDir()).toString())
                 .add("-hidir", getProjectFilesystem().resolve(getInterfaceDir()).toString())
                 .add("-stubdir", getProjectFilesystem().resolve(getStubDir()).toString())

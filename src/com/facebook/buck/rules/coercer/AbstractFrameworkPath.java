@@ -17,9 +17,11 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -63,6 +65,10 @@ abstract class AbstractFrameworkPath implements
 
   @Value.Parameter
   public abstract Optional<SourcePath> getSourcePath();
+
+  public Iterable<BuildRule> getDeps(SourcePathResolver resolver) {
+    return resolver.filterBuildRuleInputs(getSourcePath().asSet());
+  }
 
   public Path getFileName(Function<SourcePath, Path> resolver) {
     switch (getType()) {

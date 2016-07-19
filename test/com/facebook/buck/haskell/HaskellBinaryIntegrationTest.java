@@ -114,4 +114,23 @@ public class HaskellBinaryIntegrationTest {
     assertThat(result.getStdout().trim(), Matchers.equalTo("-some-flag"));
   }
 
+  @Test
+  public void cHeader() throws IOException {
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "run",
+            "//:hs_header#default," + getLinkFlavor());
+    result.assertSuccess();
+    assertThat(result.getStdout(), Matchers.equalTo("hello"));
+
+    // Now modify the header, and verify this gets reflected in the rebuilt binary.
+    workspace.replaceFileContents("header.h", "hello", "good bye");
+    result =
+        workspace.runBuckCommand(
+            "run",
+            "//:hs_header#default," + getLinkFlavor());
+    result.assertSuccess();
+    assertThat(result.getStdout(), Matchers.equalTo("good bye"));
+  }
+
 }

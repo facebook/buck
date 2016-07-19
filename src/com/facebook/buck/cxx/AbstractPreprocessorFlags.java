@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -68,6 +69,18 @@ abstract class AbstractPreprocessorFlags {
    */
   @Value.Parameter
   public abstract ImmutableSet<Path> getSystemIncludePaths();
+
+  public Iterable<BuildRule> getDeps(SourcePathResolver resolver) {
+    ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
+    deps.addAll(resolver.filterBuildRuleInputs(getPrefixHeader().asSet()));
+    for (CxxHeaders cxxHeaders : getIncludes()) {
+      deps.addAll(cxxHeaders.getDeps(resolver));
+    }
+    for (FrameworkPath frameworkPath : getFrameworkPaths()) {
+      deps.addAll(frameworkPath.getDeps(resolver));
+    }
+    return deps.build();
+  }
 
   /**
    * Append to rule key the members which are not handled elsewhere.

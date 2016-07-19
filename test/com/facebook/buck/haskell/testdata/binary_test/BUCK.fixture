@@ -54,3 +54,22 @@ cxx_genrule(
   out = 'Main.hs',
   cmd = 'echo \'module Main where\nmain = putStrLn "$(cppflags)"\' > $OUT',
 )
+
+cxx_library(
+  name = 'c_header',
+  exported_headers = [
+    'header.h',
+  ],
+)
+
+haskell_binary(
+  name = 'hs_header',
+  main = 'HsHeader',
+  compiler_flags = ['-cpp'],
+  srcs = [
+    'HsHeader.hs',
+  ],
+  deps = [
+    ':c_header',
+  ],
+)

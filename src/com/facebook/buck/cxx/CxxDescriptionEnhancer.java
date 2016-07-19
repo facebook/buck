@@ -533,7 +533,7 @@ public class CxxDescriptionEnhancer {
    * @return a function that transforms the {@link FrameworkPath} to search paths with any embedded
    * macros expanded.
    */
-  static RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathToSearchPath(
+  public static RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathToSearchPath(
       final CxxPlatform cxxPlatform,
       final SourcePathResolver resolver) {
     return new RuleKeyAppendableFunction<FrameworkPath, Path>() {
