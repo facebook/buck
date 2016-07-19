@@ -1,7 +1,9 @@
 standard_java_library(
   immutable_types = [
     'LuaBinaryPackageComponents',
+    'LuaNativeExecutableStarter',
     'LuaPackageComponents',
+    'LuaScriptStarter',
   ],
   tests = [
     '//test/com/facebook/buck/lua:lua',
