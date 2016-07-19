@@ -65,12 +65,18 @@ public class RobolectricTest extends JavaTest {
       ANDROID, LIBRARY, TEST);
 
   private final Optional<DummyRDotJava> optionalDummyRDotJava;
+  private final Optional<SourcePath> manifest;
+  private final Optional<String> runtimeDependency;
+
   /**
    * Used by robolectric test runner to get list of resource directories that
    * can be used for tests.
    */
   static final String LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME =
       "buck.robolectric_res_directories";
+
+  static final String ROBOLECTRIC_MANIFEST =
+      "buck.robolectric_manifest";
 
   private final Function<HasAndroidResourceDeps, Path> resourceDirectoryFunction =
       new Function<HasAndroidResourceDeps, Path>() {
@@ -115,7 +121,9 @@ public class RobolectricTest extends JavaTest {
       boolean runTestSeparately,
       ForkMode forkMode,
       Optional<Level> stdOutLogLevel,
-      Optional<Level> stdErrLogLevel) {
+      Optional<Level> stdErrLogLevel,
+      Optional<String> runtimeDependency,
+      Optional<SourcePath> manifest) {
     super(
         buildRuleParams,
         resolver,
@@ -134,6 +142,8 @@ public class RobolectricTest extends JavaTest {
         stdOutLogLevel,
         stdErrLogLevel);
     this.optionalDummyRDotJava = optionalDummyRDotJava;
+    this.runtimeDependency = runtimeDependency;
+    this.manifest = manifest;
   }
 
   @Override
@@ -158,6 +168,12 @@ public class RobolectricTest extends JavaTest {
 
     // Force robolectric to only use local dependency resolution.
     vmArgsBuilder.add("-Drobolectric.offline=true");
+    if (this.manifest.isPresent()) {
+      vmArgsBuilder.add(String.format("-D%s=%s", ROBOLECTRIC_MANIFEST, this.manifest.get()));
+    }
+    if (runtimeDependency.isPresent()) {
+      vmArgsBuilder.add("-Drobolectric.dependency.dir=" + runtimeDependency.get());
+    }
   }
 
   @VisibleForTesting
