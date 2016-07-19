@@ -26,8 +26,8 @@ import com.facebook.buck.cxx.OmnibusLibrary;
 import com.facebook.buck.cxx.OmnibusRoot;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.Omnibus;
+import com.facebook.buck.cxx.OmnibusRoots;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
-import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
@@ -43,10 +43,8 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -57,11 +55,8 @@ import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 
 public class PythonUtil {
 
@@ -154,9 +149,9 @@ public class PythonUtil {
         new PythonPackageComponents.Builder(params.getBuildTarget());
 
     final Map<BuildTarget, CxxPythonExtension> extensions = new LinkedHashMap<>();
-    final Map<BuildTarget, NativeLinkTarget> nativeLinkTargetRoots = new LinkedHashMap<>();
     final Map<BuildTarget, NativeLinkable> nativeLinkableRoots = new LinkedHashMap<>();
-    final Set<BuildTarget> excludedNativeLinkableRoots = new LinkedHashSet<>();
+
+    final OmnibusRoots.Builder omnibusRoots = OmnibusRoots.builder(cxxPlatform, preloadDeps);
 
     // Add the top-level components.
     allComponents.addComponent(packageComponents, params.getBuildTarget());
@@ -169,12 +164,11 @@ public class PythonUtil {
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
         Iterable<BuildRule> deps = empty;
-        Optional<NativeLinkTarget> linkTarget =
-            nativeLinkStrategy == NativeLinkStrategy.MERGED ?
-                NativeLinkables.getNativeLinkTarget(rule, cxxPlatform) :
-                Optional.<NativeLinkTarget>absent();
         if (rule instanceof CxxPythonExtension) {
-          extensions.put(rule.getBuildTarget(), (CxxPythonExtension) rule);
+          CxxPythonExtension extension = (CxxPythonExtension) rule;
+          NativeLinkTarget target = ((CxxPythonExtension) rule).getNativeLinkTarget(pythonPlatform);
+          extensions.put(target.getBuildTarget(), extension);
+          omnibusRoots.addIncludedRoot(target);
         } else if (rule instanceof PythonPackagable) {
           PythonPackagable packagable = (PythonPackagable) rule;
           PythonPackageComponents comps =
@@ -184,16 +178,16 @@ public class PythonUtil {
             for (BuildRule dep : rule.getDeps()) {
               if (dep instanceof NativeLinkable) {
                 NativeLinkable linkable = (NativeLinkable) dep;
-                excludedNativeLinkableRoots.add(linkable.getBuildTarget());
                 nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
+                omnibusRoots.addExcludedRoot(linkable);
               }
             }
           }
           deps = rule.getDeps();
-        } else if (linkTarget.isPresent() && !preloadDeps.contains(rule.getBuildTarget())) {
-          nativeLinkTargetRoots.put(linkTarget.get().getBuildTarget(), linkTarget.get());
         } else if (rule instanceof NativeLinkable) {
-          nativeLinkableRoots.put(rule.getBuildTarget(), (NativeLinkable) rule);
+          NativeLinkable linkable = (NativeLinkable) rule;
+          nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
+          omnibusRoots.addPotentialRoot(linkable);
         }
         return deps;
       }
@@ -202,38 +196,7 @@ public class PythonUtil {
     // For the merged strategy, build up the lists of included native linkable roots, and the
     // excluded native linkable roots.
     if (nativeLinkStrategy == NativeLinkStrategy.MERGED) {
-
-      // Recursively expand the excluded nodes including any preloaded deps, as we'll need this full
-      // list to know which roots to exclude from omnibus linking.
-      final Set<BuildTarget> transitivelyExcludedNativeLinkables = new HashSet<>();
-      new AbstractBreadthFirstTraversal<NativeLinkable>(
-          Iterables.transform(excludedNativeLinkableRoots, Functions.forMap(nativeLinkableRoots))) {
-        @Override
-        public Iterable<NativeLinkable> visit(NativeLinkable linkable) {
-          transitivelyExcludedNativeLinkables.add(linkable.getBuildTarget());
-          return Iterables.concat(
-              linkable.getNativeLinkableDeps(cxxPlatform),
-              linkable.getNativeLinkableExportedDeps(cxxPlatform));
-        }
-      }.start();
-
-      // Include all native link targets we found which aren't explicitly excluded.
-      Map<BuildTarget, NativeLinkTarget> includedNativeLinkTargetRoots =
-          new LinkedHashMap<>();
-      for (Map.Entry<BuildTarget, NativeLinkTarget> ent : nativeLinkTargetRoots.entrySet()) {
-        if (!transitivelyExcludedNativeLinkables.contains(ent.getKey())) {
-          includedNativeLinkTargetRoots.put(ent.getKey(), ent.getValue());
-        }
-      }
-
-      // All C/C++ python extensions are included native link targets.
-      Map<BuildTarget, CxxPythonExtension> includedExtensions = new LinkedHashMap<>();
-      for (CxxPythonExtension extension : extensions.values()) {
-        NativeLinkTarget target = extension.getNativeLinkTarget(pythonPlatform);
-        includedExtensions.put(target.getBuildTarget(), extension);
-        includedNativeLinkTargetRoots.put(target.getBuildTarget(), target);
-      }
-
+      OmnibusRoots roots = omnibusRoots.build();
       OmnibusLibraries libraries =
           Omnibus.getSharedLibraries(
               params,
@@ -242,21 +205,19 @@ public class PythonUtil {
               cxxBuckConfig,
               cxxPlatform,
               extraLdflags,
-              includedNativeLinkTargetRoots.values(),
-              Maps.filterKeys(
-                  nativeLinkableRoots,
-                  Predicates.not(Predicates.in(includedNativeLinkTargetRoots.keySet()))).values());
+              roots.getIncludedRoots().values(),
+              roots.getExcludedRoots().values());
 
       // Add all the roots from the omnibus link.  If it's an extension, add it as a module.
       // Otherwise, add it as a native library.
       for (Map.Entry<BuildTarget, OmnibusRoot> root : libraries.getRoots().entrySet()) {
-        CxxPythonExtension extension = includedExtensions.get(root.getKey());
+        CxxPythonExtension extension = extensions.get(root.getKey());
         if (extension != null) {
           allComponents.addModule(extension.getModule(), root.getValue().getPath(), root.getKey());
         } else {
           NativeLinkTarget target =
               Preconditions.checkNotNull(
-                  nativeLinkTargetRoots.get(root.getKey()),
+                  roots.getIncludedRoots().get(root.getKey()),
                   "%s: linked unexpected omnibus root: %s",
                   params.getBuildTarget(),
                   root.getKey());
@@ -288,7 +249,7 @@ public class PythonUtil {
       for (Map.Entry<BuildTarget, CxxPythonExtension> entry : extensions.entrySet()) {
         allComponents.addComponent(
             entry.getValue().getPythonPackageComponents(pythonPlatform, cxxPlatform),
-            entry.getKey());
+            entry.getValue().getBuildTarget());
         extensionNativeDeps.putAll(
             Maps.uniqueIndex(
                 entry.getValue().getNativeLinkTarget(pythonPlatform)
