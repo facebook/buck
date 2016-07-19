@@ -51,6 +51,7 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -269,6 +270,7 @@ public class BuildCommand extends AbstractCommand {
       BuckConfig buckConfig,
       ActionGraph graph,
       BuildRuleResolver ruleResolver,
+      Cell rootCell,
       Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
       BuildEngine buildEngine,
       ArtifactCache artifactCache,
@@ -288,6 +290,7 @@ public class BuildCommand extends AbstractCommand {
     return new Build(
         graph,
         ruleResolver,
+        rootCell,
         targetDevice,
         androidPlatformTargetSupplier,
         buildEngine,
@@ -601,6 +604,7 @@ public class BuildCommand extends AbstractCommand {
         params.getBuckConfig(),
         actionGraphAndResolver.getActionGraph(),
         actionGraphAndResolver.getResolver(),
+        params.getCell(),
         params.getAndroidPlatformTargetSupplier(),
         new CachingBuildEngine(
             new LocalCachingBuildEngineDelegate(params.getFileHashCache()),

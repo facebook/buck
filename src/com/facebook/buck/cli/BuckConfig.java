@@ -962,4 +962,13 @@ public class BuckConfig {
     }
     return Optional.of(ImmutableList.copyOf(Splitter.on(' ').splitToList(value.get())));
   }
+
+  /**
+   * @return whether to symlink the default output location (`buck-out`) to the user-provided
+   *         override for compatibility.
+   */
+  public boolean getBuckOutCompatLink() {
+    return getBooleanValue("project", "buck_out_compat_link", false);
+  }
+
 }

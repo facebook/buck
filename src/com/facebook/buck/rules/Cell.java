@@ -306,6 +306,13 @@ public class Cell {
     return Optional.absent();
   }
 
+  /**
+   * @return all loaded {@link Cell}s that are children of this {@link Cell}.
+   */
+  public ImmutableMap<Path, Cell> getLoadedCells() {
+    return ImmutableMap.copyOf(cellLoader.asMap());
+  }
+
   public Description<?> getDescription(BuildRuleType type) {
     return getKnownBuildRuleTypes().getDescription(type);
   }

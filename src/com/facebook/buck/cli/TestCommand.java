@@ -494,6 +494,7 @@ public class TestCommand extends BuildCommand {
           params.getBuckConfig(),
           actionGraphAndResolver.getActionGraph(),
           actionGraphAndResolver.getResolver(),
+          params.getCell(),
           params.getAndroidPlatformTargetSupplier(),
           cachingBuildEngine,
           params.getArtifactCache(),

@@ -102,6 +102,7 @@ public class FetchCommand extends BuildCommand {
           params.getBuckConfig(),
           actionGraphAndResolver.getActionGraph(),
           actionGraphAndResolver.getResolver(),
+          params.getCell(),
           params.getAndroidPlatformTargetSupplier(),
           new CachingBuildEngine(
               new LocalCachingBuildEngineDelegate(params.getFileHashCache()),

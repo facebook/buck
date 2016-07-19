@@ -18,10 +18,12 @@ package com.facebook.buck.io;
 
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Splitter;
 
 import org.hamcrest.Matchers;
@@ -68,6 +70,20 @@ public class ConfiguredBuckOutIntegrationTest {
             .getStdout();
     String configuredRuleKey = Splitter.on(' ').splitToList(configuredOut).get(1);
     assertThat(ruleKey, Matchers.not(Matchers.equalTo(configuredRuleKey)));
+  }
+
+  @Test
+  public void buckOutCompatSymlink() throws IOException {
+    assumeThat(Platform.detect(), Matchers.not(Matchers.is(Platform.WINDOWS)));
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckBuild(
+            "-c", "project.buck_out=something",
+            "-c", "project.buck_out_compat_link=true",
+            "//:dummy");
+    result.assertSuccess();
+    assertThat(
+        Files.readSymbolicLink(workspace.resolve("buck-out/gen")),
+        Matchers.equalTo(workspace.getDestPath().getFileSystem().getPath("../something/gen")));
   }
 
 }

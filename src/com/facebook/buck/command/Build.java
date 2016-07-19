@@ -18,9 +18,12 @@ package com.facebook.buck.command;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
+import com.facebook.buck.io.BuckPaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
@@ -34,6 +37,7 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -91,6 +95,7 @@ public class Build implements Closeable {
 
   private final ActionGraph actionGraph;
   private final BuildRuleResolver ruleResolver;
+  private final Cell rootCell;
   private final ExecutionContext executionContext;
   private final ArtifactCache artifactCache;
   private final BuildEngine buildEngine;
@@ -106,6 +111,7 @@ public class Build implements Closeable {
   public Build(
       ActionGraph actionGraph,
       BuildRuleResolver ruleResolver,
+      Cell rootCell,
       Optional<TargetDevice> targetDevice,
       Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
       BuildEngine buildEngine,
@@ -127,6 +133,7 @@ public class Build implements Closeable {
       Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors) {
     this.actionGraph = actionGraph;
     this.ruleResolver = ruleResolver;
+    this.rootCell = rootCell;
     this.executionContext = ExecutionContext.builder()
         .setConsole(console)
         .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
@@ -169,6 +176,54 @@ public class Build implements Closeable {
   @Nullable
   public BuildContext getBuildContext() {
     return buildContext;
+  }
+
+  private void collectAllCells(Cell cell, Map<Path, Cell> collector)  {
+    if (!collector.containsKey(cell.getRoot())) {
+      collector.put(cell.getRoot(), cell);
+      for (Cell child : cell.getLoadedCells().values()) {
+        collectAllCells(child, collector);
+      }
+    }
+  }
+
+  /**
+   * @return all {@link Cell}s reachable from the root {@link Cell}.
+   */
+  private ImmutableList<Cell> getAllCells() {
+    Map<Path, Cell> cells = new LinkedHashMap<>();
+    collectAllCells(rootCell, cells);
+    return ImmutableList.copyOf(cells.values());
+  }
+
+  /**
+   * When the user overrides the configured buck-out directory via the `.buckconfig` and also sets
+   * the `project.buck_out_compat_link` setting to `true`, we symlink the original output path
+   * (`buck-out/`) to this newly configured location for backwards compatibility.
+   */
+  private void createConfiguredBuckOutSymlinks() throws IOException {
+    for (Cell cell : getAllCells()) {
+      BuckConfig buckConfig = cell.getBuckConfig();
+      ProjectFilesystem filesystem = cell.getFilesystem();
+      BuckPaths configuredPaths = filesystem.getBuckPaths();
+      if (!configuredPaths.getConfiguredBuckOut().equals(configuredPaths.getBuckOut()) &&
+          buckConfig.getBuckOutCompatLink() &&
+          Platform.detect() != Platform.WINDOWS) {
+        BuckPaths unconfiguredPaths =
+            configuredPaths.withConfiguredBuckOut(configuredPaths.getBuckOut());
+        ImmutableMap<Path, Path> paths =
+            ImmutableMap.of(
+                unconfiguredPaths.getGenDir(), configuredPaths.getGenDir(),
+                unconfiguredPaths.getScratchDir(), configuredPaths.getScratchDir());
+        for (Map.Entry<Path, Path> entry : paths.entrySet()) {
+          filesystem.deleteRecursivelyIfExists(entry.getKey());
+          filesystem.createSymLink(
+              entry.getKey(),
+              entry.getKey().getParent().relativize(entry.getValue()),
+            /* force */ false);
+        }
+      }
+    }
   }
 
   /**
@@ -232,6 +287,9 @@ public class Build implements Closeable {
         BuildEvent.ruleCountCalculated(
             targetsToBuild,
             numRules));
+
+    // Setup symlinks required when configuring the output path.
+    createConfiguredBuckOutSymlinks();
 
     final BuildContext currentBuildContext = buildContext;
     List<ListenableFuture<BuildResult>> futures = FluentIterable.from(rulesToBuild)
