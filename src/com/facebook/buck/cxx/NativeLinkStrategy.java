@@ -14,12 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.python;
+package com.facebook.buck.cxx;
 
 /**
- * The ways that Python binaries pull in native linkable dependencies.
+ * The ways that other language (e.g. Python, Lua) binaries pull in native linkable dependencies.
  */
-enum NativeLinkStrategy {
+public enum NativeLinkStrategy {
 
   /**
    * Pull transitive native deps in as fully linked standalone shared libraries.  This is typically
@@ -29,12 +29,12 @@ enum NativeLinkStrategy {
   SEPARATE,
 
   /**
-   * Statically link all transitive native deps, which don't have an explicit dep from python code,
-   * into a monolithic shared library.  Native dep roots, which have an explicit dep from python
-   * code, remain as fully linked standalone shared libraries so that, typically, application code
-   * doesn't need to change to work with this strategy.  This strategy incurs a relatively big
-   * build-time cost, but can significantly reduce the size of native code and number of shared
-   * libraries pulled into the binary.
+   * Statically link all transitive native deps, which don't have an explicit dep from non-C/C++
+   * code (e.g. Python), into a monolithic shared library.  Native dep roots, which have an explicit
+   * dep from non-C/C++ code, remain as fully linked standalone shared libraries so that, typically,
+   * application code doesn't need to change to work with this strategy.  This strategy incurs a
+   * relatively big build-time cost, but can significantly reduce the size of native code and number
+   * of shared libraries pulled into the binary.
    */
   MERGED,
 

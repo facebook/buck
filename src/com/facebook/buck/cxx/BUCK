@@ -24,6 +24,7 @@ PLATFORM_SRCS = [
   'Linkers.java',
   'NativeLinkable.java',
   'NativeLinkables.java',
+  'NativeLinkStrategy.java',
   'NativeLinkTarget.java',
   'ObjectFileCommonModificationDate.java',
   'ObjectFileScrubbers.java',

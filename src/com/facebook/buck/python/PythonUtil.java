@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.NativeLinkStrategy;
 import com.facebook.buck.cxx.NativeLinkTarget;
 import com.facebook.buck.cxx.NativeLinkTargetMode;
 import com.facebook.buck.cxx.NativeLinkables;

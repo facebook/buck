@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cxx.NativeLinkStrategy;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
