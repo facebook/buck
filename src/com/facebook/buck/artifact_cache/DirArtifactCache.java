@@ -335,6 +335,9 @@ public class DirArtifactCache implements ArtifactCache {
         maxTrimMark = Optional.of(i);
       }
       if (currentSizeBytes > maxSizeBytes) {
+        LOG.debug("Deleting %d files of %d bytes from the cache",
+            files.length - maxTrimMark.get(),
+            currentSizeBytes);
         return ArrayIterable.of(files, maxTrimMark.get(), files.length);
       }
     }
