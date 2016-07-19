@@ -47,6 +47,12 @@ public class ParserConfig {
     ;
   }
 
+  public enum WatchmanGlobSanityCheck {
+    NONE,
+    STAT,
+    ;
+  }
+
   public enum AllowSymlinks {
     ALLOW,
     WARN,
@@ -148,6 +154,11 @@ public class ParserConfig {
 
   public GlobHandler getGlobHandler() {
     return delegate.getEnum("project", "glob_handler", GlobHandler.class).or(GlobHandler.PYTHON);
+  }
+
+  public WatchmanGlobSanityCheck getWatchmanGlobSanityCheck() {
+    return delegate.getEnum("project", "watchman_glob_sanity_check", WatchmanGlobSanityCheck.class)
+        .or(WatchmanGlobSanityCheck.STAT);
   }
 
   public Optional<Long> getWatchmanQueryTimeoutMs() {

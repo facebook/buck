@@ -74,6 +74,7 @@ class BuckTest(unittest.TestCase):
             False,              # ignore_buck_autodeps_files
             self.watchman_client,
             self.watchman_error,
+            False,
             self.enable_build_file_sandboxing,
             includes,
             **kwargs)

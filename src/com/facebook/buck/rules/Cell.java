@@ -358,7 +358,11 @@ public class Cell {
     boolean useWatchmanGlob =
         parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN &&
         watchman.hasWildmatchGlob();
-    ProjectBuildFileParserFactory factory = createBuildFileParserFactory(useWatchmanGlob);
+    boolean watchmanGlobStatResults =
+        parserConfig.getWatchmanGlobSanityCheck() == ParserConfig.WatchmanGlobSanityCheck.STAT;
+    ProjectBuildFileParserFactory factory = createBuildFileParserFactory(
+        useWatchmanGlob,
+        watchmanGlobStatResults);
     return factory.createParser(
         marshaller,
         console,
@@ -368,7 +372,9 @@ public class Cell {
   }
 
   @VisibleForTesting
-  protected ProjectBuildFileParserFactory createBuildFileParserFactory(boolean useWatchmanGlob) {
+  protected ProjectBuildFileParserFactory createBuildFileParserFactory(
+      boolean useWatchmanGlob,
+      boolean watchmanGlobStatResults) {
     ParserConfig parserConfig = new ParserConfig(getBuckConfig());
 
     return new DefaultProjectBuildFileParserFactory(
@@ -381,6 +387,7 @@ public class Cell {
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
             .setDescriptions(getAllDescriptions())
             .setUseWatchmanGlob(useWatchmanGlob)
+            .setWatchmanGlobStatResults(watchmanGlobStatResults)
             .setWatchman(watchman)
             .setWatchmanQueryTimeoutMs(parserConfig.getWatchmanQueryTimeoutMs())
             .setRawConfig(getBuckConfig().getRawConfigForParser())

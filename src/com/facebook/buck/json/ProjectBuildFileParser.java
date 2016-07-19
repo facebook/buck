@@ -283,6 +283,10 @@ public class ProjectBuildFileParser implements AutoCloseable {
       argBuilder.add("--use_watchman_glob");
     }
 
+    if (options.getWatchmanGlobStatResults()) {
+      argBuilder.add("--watchman_glob_stat_results");
+    }
+
     if (options.getWatchman().getProjectPrefix().isPresent()) {
       argBuilder.add("--watchman_project_prefix", options.getWatchman().getProjectPrefix().get());
     }

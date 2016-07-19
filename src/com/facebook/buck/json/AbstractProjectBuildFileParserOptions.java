@@ -47,6 +47,11 @@ abstract class AbstractProjectBuildFileParserOptions {
   }
 
   @Value.Default
+  public boolean getWatchmanGlobStatResults() {
+    return false;
+  }
+
+  @Value.Default
   Watchman getWatchman() {
     return Watchman.NULL_WATCHMAN;
   }

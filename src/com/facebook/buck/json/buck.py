@@ -73,7 +73,8 @@ class BuildFileContext(object):
 
     def __init__(self, project_root, base_path, dirname, autodeps, allow_empty_globs, ignore_paths,
                  watchman_client, watchman_watch_root, watchman_project_prefix,
-                 sync_cookie_state, watchman_error, enable_build_file_sandboxing):
+                 sync_cookie_state, watchman_error, watchman_glob_stat_results,
+                 enable_build_file_sandboxing):
         self.globals = {}
         self.includes = set()
         self.used_configs = {}
@@ -88,6 +89,7 @@ class BuildFileContext(object):
         self.watchman_project_prefix = watchman_project_prefix
         self.sync_cookie_state = sync_cookie_state
         self.watchman_error = watchman_error
+        self.watchman_glob_stat_results = watchman_glob_stat_results
         self._enable_build_file_sandboxing = enable_build_file_sandboxing
         self.diagnostics = set()
         self.rules = {}
@@ -247,7 +249,8 @@ def glob(includes, excludes=[], include_dotfiles=False, build_env=None, search_b
                 build_env.watchman_project_prefix,
                 build_env.sync_cookie_state,
                 build_env.watchman_client,
-                build_env.diagnostics)
+                build_env.diagnostics,
+                build_env.watchman_glob_stat_results)
         except build_env.watchman_error as e:
             build_env.diagnostics.add(
                 DiagnosticMessageAndLevel(
@@ -365,7 +368,8 @@ def format_watchman_query_params(includes, excludes, include_dotfiles, relative_
 
 @memoized
 def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watch_root,
-                  watchman_project_prefix, sync_cookie_state, watchman_client, diagnostics):
+                  watchman_project_prefix, sync_cookie_state, watchman_client, diagnostics,
+                  watchman_glob_stat_results):
     assert includes, "The includes argument must be a non-empty list of strings."
 
     if watchman_project_prefix:
@@ -391,7 +395,26 @@ def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watc
                 message='Watchman warning: {0}'.format(res.get('warning')),
                 level='warning'))
     result = res.get('files', [])
+    if watchman_glob_stat_results:
+        result = stat_results(base_path, result, diagnostics)
     return sorted(result)
+
+
+def stat_results(base_path, result, diagnostics):
+    statted_result = []
+    for path in result:
+        # We really shouldn't have to stat() every result from Watchman, but
+        # occasionally it returns non-existent files.
+        resolved_path = os.path.join(base_path, path)
+        if os.path.exists(resolved_path):
+            statted_result.append(path)
+        else:
+            diagnostics.add(
+                DiagnosticMessageAndLevel(
+                    message='Watchman query returned non-existent file: {0}'.format(
+                        resolved_path),
+                    level='warning'))
+    return statted_result
 
 
 def glob_internal(includes, excludes, project_root_relative_excludes, include_dotfiles, search_base, project_root):
@@ -482,8 +505,8 @@ class BuildFileProcessor(object):
 
     def __init__(self, project_root, watchman_watch_root, watchman_project_prefix, build_file_name,
                  allow_empty_globs, ignore_buck_autodeps_files, watchman_client, watchman_error,
-                 enable_build_file_sandboxing, implicit_includes=[], extra_funcs=[], configs={},
-                 ignore_paths=[]):
+                 watchman_glob_stat_results, enable_build_file_sandboxing, implicit_includes=[],
+                 extra_funcs=[], configs={}, ignore_paths=[]):
         self._cache = {}
         self._build_env_stack = []
         self._sync_cookie_state = SyncCookieState()
@@ -498,6 +521,7 @@ class BuildFileProcessor(object):
         self._enable_build_file_sandboxing = enable_build_file_sandboxing
         self._watchman_client = watchman_client
         self._watchman_error = watchman_error
+        self._watchman_glob_stat_results = watchman_glob_stat_results
         self._configs = configs
         self._ignore_paths = ignore_paths
 
@@ -771,6 +795,7 @@ class BuildFileProcessor(object):
             self._watchman_project_prefix,
             self._sync_cookie_state,
             self._watchman_error,
+            self._watchman_glob_stat_results,
             self._enable_build_file_sandboxing)
 
         # If the .autodeps file has been successfully parsed, then treat it as if it were
@@ -996,6 +1021,11 @@ def main():
         dest='use_watchman_glob',
         help='Invokes `watchman query` to get lists of files instead of globbing in-process.')
     parser.add_option(
+        '--watchman_glob_stat_results',
+        action='store_true',
+        dest='watchman_glob_stat_results',
+        help='Invokes `stat()` to sanity check result of `watchman query`.')
+    parser.add_option(
         '--watchman_watch_root',
         action='store',
         type='string',
@@ -1094,6 +1124,7 @@ def main():
         options.ignore_buck_autodeps_files,
         watchman_client,
         watchman_error,
+        options.watchman_glob_stat_results,
         options.enable_build_file_sandboxing,
         implicit_includes=options.include or [],
         configs=configs,
