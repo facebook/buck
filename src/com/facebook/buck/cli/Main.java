@@ -1437,7 +1437,7 @@ public final class Main {
 
   @SuppressWarnings("PMD.PrematureDeclaration")
   private ImmutableList<BuckEventListener> addEventListeners(
-      BuckEventBus buckEvents,
+      BuckEventBus buckEventBus,
       ProjectFilesystem projectFilesystem,
       InvocationInfo invocationInfo,
       BuckConfig config,
@@ -1505,7 +1505,7 @@ public final class Main {
           projectFilesystem,
           knownBuildRuleTypes.getAllDescriptions(),
           config,
-          buckEvents,
+          buckEventBus,
           console,
           javacOptions,
           environment));
@@ -1516,7 +1516,7 @@ public final class Main {
     ImmutableList<BuckEventListener> eventListeners = eventListenersBuilder.build();
 
     for (BuckEventListener eventListener : eventListeners) {
-      buckEvents.register(eventListener);
+      buckEventBus.register(eventListener);
     }
 
     return eventListeners;

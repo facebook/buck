@@ -141,6 +141,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
 
   public static class Finished extends ArtifactCacheEvent.Finished {
 
+    private static final String ARTIFACT_SIZE_BYTES_KEY = "artifact_size_bytes";
     @JsonProperty("event_info")
     private final ImmutableMap<String, Object> eventInfo;
 
@@ -171,6 +172,14 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
       this.wasUploadSuccessful = wasUploadSuccessful;
     }
 
+    public Optional<Long> getArtifactSizeBytes() {
+      if (eventInfo.containsKey(ARTIFACT_SIZE_BYTES_KEY)) {
+        return Optional.of((long) eventInfo.get(ARTIFACT_SIZE_BYTES_KEY));
+      }
+
+      return Optional.absent();
+    }
+
     public long getRequestDurationMillis() {
       return requestDurationMillis;
     }
@@ -181,9 +190,12 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
 
     @Override
     public void configure(
-        long timestamp, long nanoTime, long threadId, BuildId buildId) {
-      super.configure(timestamp, nanoTime, threadId, buildId);
-      requestDurationMillis = timestamp - startedEvent.getTimestamp();
+        long timestampMillis,
+        long nanoTime,
+        long threadId,
+        BuildId buildId) {
+      super.configure(timestampMillis, nanoTime, threadId, buildId);
+      requestDurationMillis = timestampMillis - startedEvent.getTimestamp();
     }
 
     @Override
@@ -213,7 +225,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
       }
 
       public Builder setArtifactSizeBytes(long artifactSizeBytes) {
-        data.put("artifact_size_bytes", artifactSizeBytes);
+        data.put(ARTIFACT_SIZE_BYTES_KEY, artifactSizeBytes);
         return this;
       }
 
