@@ -17,6 +17,8 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Resources;
@@ -53,6 +55,19 @@ public class BuckPyFunction {
   public static final String TYPE_PROPERTY_NAME = INTERNAL_PROPERTY_NAME_PREFIX + "type";
   public static final String BUCK_PY_FUNCTION_TEMPLATE = "BuckPyFunction.stg";
 
+  private static final Supplier<STGroup> buckPyFunctionTemplate = Suppliers.memoize(
+      new Supplier<STGroup>() {
+        @Override
+        public STGroup get() {
+          return new STGroupFile(
+              Resources.getResource(BuckPyFunction.class, BUCK_PY_FUNCTION_TEMPLATE),
+              "UTF-8",
+              '<',
+              '>');
+        }
+      }
+  );
+
   private final ConstructorArgMarshaller argMarshaller;
 
   public BuckPyFunction(ConstructorArgMarshaller argMarshaller) {
@@ -77,13 +92,13 @@ public class BuckPyFunction {
     }
     optional.add(new StParamInfo("visibility", "visibility", "[]"));
 
-    STGroup stGroup =
-        new STGroupFile(
-            Resources.getResource(BuckPyFunction.class, BUCK_PY_FUNCTION_TEMPLATE),
-            "UTF-8",
-            '<',
-            '>');
-    ST st = stGroup.getInstanceOf("buck_py_function");
+    STGroup group = buckPyFunctionTemplate.get();
+    ST st;
+    // STGroup#getInstanceOf may not be thread safe.
+    // See discussion in: https://github.com/antlr/stringtemplate4/issues/61
+    synchronized (group) {
+      st = group.getInstanceOf("buck_py_function");
+    }
     st.add("name", type.getName());
     // Mandatory params must come before optional ones.
     st.add(
