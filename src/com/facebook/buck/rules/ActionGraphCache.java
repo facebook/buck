@@ -16,12 +16,11 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.counters.Counter;
-import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
+import com.facebook.buck.event.WatchmanEvent;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
@@ -29,8 +28,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyBuilderFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
@@ -39,6 +36,7 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
@@ -50,32 +48,12 @@ import javax.annotation.Nullable;
 public class ActionGraphCache {
   private static final Logger LOG = Logger.get(ActionGraphCache.class);
 
-  private static final String COUNTER_CATEGORY = "buck_action_graph_cache";
-  private static final String CACHE_HIT_COUNTER_NAME = "cache_hit";
-  private static final String CACHE_MISS_COUNTER_NAME = "cache_miss";
-  private static final String NEW_AND_CACHED_ACTIONGRAPHS_MISMATCH_NAME =
-      "new_and_cached_actiongraphs_mismatch";
-
-  private final IntegerCounter cacheHitCounter;
-  private final IntegerCounter cacheMissCounter;
-  private final IntegerCounter actionGraphsMismatch;
-
   @Nullable
   private Pair<TargetGraph, ActionGraphAndResolver> lastActionGraph;
+  private Stack<WatchmanEvent> watchmanEventsStack;
 
   public ActionGraphCache() {
-    this.cacheHitCounter = new IntegerCounter(
-        COUNTER_CATEGORY,
-        CACHE_HIT_COUNTER_NAME,
-        ImmutableMap.<String, String>of());
-    this.cacheMissCounter = new IntegerCounter(
-        COUNTER_CATEGORY,
-        CACHE_MISS_COUNTER_NAME,
-        ImmutableMap.<String, String>of());
-    this.actionGraphsMismatch = new IntegerCounter(
-        COUNTER_CATEGORY,
-        NEW_AND_CACHED_ACTIONGRAPHS_MISMATCH_NAME,
-        ImmutableMap.<String, String>of());
+    watchmanEventsStack = new Stack<WatchmanEvent>();
   }
 
   /**
@@ -95,13 +73,13 @@ public class ActionGraphCache {
     eventBus.post(started);
     try {
       if (lastActionGraph != null && lastActionGraph.getFirst().equals(targetGraph)) {
-        cacheHitCounter.inc();
+        eventBus.post(ActionGraphEvent.Cache.hit());
         LOG.info("ActionGraph cache hit.");
         if (checkActionGraphs) {
           compareActionGraphs(eventBus, lastActionGraph.getSecond(), targetGraph, keySeed);
         }
       } else {
-        cacheMissCounter.inc();
+        eventBus.post(ActionGraphEvent.Cache.miss());
         if (lastActionGraph == null) {
           LOG.info("ActionGraph cache miss. Cache was empty.");
         } else {
@@ -116,6 +94,10 @@ public class ActionGraphCache {
       }
     } finally {
       eventBus.post(ActionGraphEvent.finished(started));
+
+      while (!watchmanEventsStack.isEmpty()) {
+        eventBus.post(watchmanEventsStack.pop());
+      }
     }
     return lastActionGraph.getSecond();
   }
@@ -241,7 +223,6 @@ public class ActionGraphCache {
           keySeed);
 
       if (!lastActionGraphRuleKeys.equals(newActionGraphRuleKeys)) {
-        actionGraphsMismatch.inc();
         invalidateCache();
         String mismatchInfo = "RuleKeys of cached and new ActionGraph don't match:\n";
         MapDifference<BuildRule, RuleKey> mismatchedRules =
@@ -261,27 +242,25 @@ public class ActionGraphCache {
     }
   }
 
-  public void invalidateBasedOn(WatchEvent<?> event) throws InterruptedException {
-    if (!isFileContentModificationEvent(event)) {
-      LOG.info("ActionGraph cache invalidation due to Watchman event %s.", event);
-      invalidateCache();
-    }
-  }
-
   @Subscribe
-  private static boolean isFileContentModificationEvent(WatchEvent<?> event) {
-    return event.kind() == StandardWatchEventKinds.ENTRY_MODIFY;
+  public void invalidateBasedOn(WatchEvent<?> event) throws InterruptedException {
+    // We invalidate in every case except a modify event.
+    if (event.kind() != StandardWatchEventKinds.ENTRY_MODIFY) {
+      LOG.info("ActionGraphCache invalidation due to Watchman event %s.", event);
+      invalidateCache();
+
+      if (event.kind() == StandardWatchEventKinds.OVERFLOW) {
+        watchmanEventsStack.add(WatchmanEvent.overflow());
+      } else if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
+        watchmanEventsStack.add(WatchmanEvent.fileCreation());
+      } else if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
+        watchmanEventsStack.add(WatchmanEvent.fileDeletion());
+      }
+    }
   }
 
   private void invalidateCache() {
     lastActionGraph = null;
-  }
-
-  public ImmutableList<Counter> getCounters() {
-    return ImmutableList.<Counter>of(
-        cacheHitCounter,
-        cacheMissCounter,
-        actionGraphsMismatch);
   }
 
   @VisibleForTesting

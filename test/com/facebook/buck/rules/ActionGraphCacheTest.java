@@ -21,8 +21,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.counters.Counter;
-import com.facebook.buck.counters.IntegerCounter;
+import com.facebook.buck.event.ActionGraphEvent;
+import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -33,8 +33,8 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.WatchEventsForTests;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.IncrementingFakeClock;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.eventbus.Subscribe;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -47,12 +47,12 @@ import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class ActionGraphCacheTest {
 
-  private static final int CACHE_HIT_COUNTER_INDEX = 0;
-  private static final int CACHE_MISS_COUNTER_INDEX = 1;
   private static final boolean CHECK_GRAPHS = true;
   private static final boolean NOT_CHECK_GRAPHS = false;
 
@@ -60,6 +60,7 @@ public class ActionGraphCacheTest {
   private TargetNode<?> nodeB;
   private TargetGraph targetGraph;
   private BuckEventBus eventBus;
+  private BlockingQueue<BuckEvent> trackedEvents = new LinkedBlockingQueue<>();
 
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
@@ -80,6 +81,18 @@ public class ActionGraphCacheTest {
 
     eventBus = BuckEventBusFactory.newInstance(
         new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1)));
+
+    eventBus.register(new Object() {
+     @Subscribe
+     public void actionGraphCacheHit(ActionGraphEvent.Cache.Hit event) {
+       trackedEvents.add(event);
+    }
+
+     @Subscribe
+     public void actionGraphCacheMiss(ActionGraphEvent.Cache.Miss event) {
+       trackedEvents.add(event);
+     }
+   });
   }
 
   @Test
@@ -89,16 +102,14 @@ public class ActionGraphCacheTest {
     ActionGraphAndResolver resultRun1 =
         cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph, 0);
     // The 1st time you query the ActionGraph it's a cache miss.
-    ImmutableList<Counter> counters = cache.getCounters();
-    assertEquals(((IntegerCounter) counters.get(CACHE_HIT_COUNTER_INDEX)).get(), 0);
-    assertEquals(((IntegerCounter) counters.get(CACHE_MISS_COUNTER_INDEX)).get(), 1);
+    assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 0);
+    assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 1);
 
     ActionGraphAndResolver resultRun2 =
         cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph, 0);
     // The 2nd time it should be a cache hit and the ActionGraphs should be exactly the same.
-    counters = cache.getCounters();
-    assertEquals(((IntegerCounter) counters.get(CACHE_HIT_COUNTER_INDEX)).get(), 1);
-    assertEquals(((IntegerCounter) counters.get(CACHE_MISS_COUNTER_INDEX)).get(), 1);
+    assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 1);
+    assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 1);
 
     // Check all the RuleKeys are the same between the 2 ActionGraphs.
     Map<BuildRule, RuleKey> resultRun1RuleKeys = getRuleKeysFromBuildRules(
@@ -114,13 +125,11 @@ public class ActionGraphCacheTest {
   @Test
   public void missOnCache() {
     ActionGraphCache cache = new ActionGraphCache();
-
     ActionGraphAndResolver resultRun1 =
         cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph, 0);
     // Each time you call it for a different TargetGraph so all calls should be misses.
-    ImmutableList<Counter> counters = cache.getCounters();
-    assertEquals(((IntegerCounter) counters.get(CACHE_HIT_COUNTER_INDEX)).get(), 0);
-    assertEquals(((IntegerCounter) counters.get(CACHE_MISS_COUNTER_INDEX)).get(), 1);
+    assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 0);
+    assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 1);
 
     ActionGraphAndResolver resultRun2 = cache.getActionGraph(
         eventBus,
@@ -128,15 +137,13 @@ public class ActionGraphCacheTest {
         targetGraph.getSubgraph(ImmutableSet.of(nodeB)),
         0);
 
-    counters = cache.getCounters();
-    assertEquals(((IntegerCounter) counters.get(CACHE_HIT_COUNTER_INDEX)).get(), 0);
-    assertEquals(((IntegerCounter) counters.get(CACHE_MISS_COUNTER_INDEX)).get(), 2);
+    assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 0);
+    assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 2);
 
     ActionGraphAndResolver resultRun3 =
         cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph, 0);
-    counters = cache.getCounters();
-    assertEquals(((IntegerCounter) counters.get(CACHE_HIT_COUNTER_INDEX)).get(), 0);
-    assertEquals(((IntegerCounter) counters.get(CACHE_MISS_COUNTER_INDEX)).get(), 3);
+    assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 0);
+    assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 3);
 
     // Run1 and Run2 should not match, but Run1 and Run3 should
     Map<BuildRule, RuleKey> resultRun1RuleKeys = getRuleKeysFromBuildRules(
@@ -214,9 +221,8 @@ public class ActionGraphCacheTest {
 
     // We should have 4 cache misses and 1 hit from when you request the same graph after a file
     // modification.
-    ImmutableList<Counter> counters = cache.getCounters();
-    assertEquals(((IntegerCounter) counters.get(CACHE_HIT_COUNTER_INDEX)).get(), 1);
-    assertEquals(((IntegerCounter) counters.get(CACHE_MISS_COUNTER_INDEX)).get(), 4);
+    assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 1);
+    assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 4);
   }
 
   private TargetNode<?> createTargetNode(String name, TargetNode<?>... deps) {
@@ -226,6 +232,16 @@ public class ActionGraphCacheTest {
       targetNodeBuilder.addDep(dep.getBuildTarget());
     }
     return targetNodeBuilder.build();
+  }
+
+  private int countEventsOf(Class<? extends ActionGraphEvent> trackedClass) {
+    int i = 0;
+    for (BuckEvent event : trackedEvents) {
+      if (trackedClass.isInstance(event)) {
+        i++;
+      }
+    }
+    return i;
   }
 
   private Map<BuildRule, RuleKey> getRuleKeysFromBuildRules(

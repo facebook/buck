@@ -1016,13 +1016,6 @@ public final class Main {
           // The counters will be unregistered once the counter registry is closed.
           counterRegistry.registerCounters(parser.getCounters());
 
-          // Because the ActionGraphCache is potentially constructed before the CounterRegistry,
-          // we need to manually register its counters after it's created. We register the counters
-          // of the ActionGraphCache only if we run the daemon.
-          if (context.isPresent()) {
-            counterRegistry.registerCounters(actionGraphCache.getCounters());
-          }
-
           JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootCell.getFilesystem());
 
           Optional<ProcessManager> processManager;

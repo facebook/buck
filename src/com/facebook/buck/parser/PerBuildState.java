@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.ProjectBuildFileParser;
@@ -267,6 +268,7 @@ class PerBuildState implements AutoCloseable {
         LOG.warn(msg);
       }
 
+      eventBus.post(ParsingEvent.symlinkInvalidation());
       buildInputPathsUnderSymlink.add(buildFile);
     }
   }

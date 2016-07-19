@@ -95,4 +95,38 @@ public abstract class ActionGraphEvent
       return "BuildActionGraphFinished";
     }
   }
+
+  public static class Cache extends ActionGraphEvent {
+    private final String eventName;
+
+    public Cache(String eventName) {
+      super(EventKey.unique());
+      this.eventName = eventName;
+    }
+
+    public static Hit hit() {
+      return new Hit();
+    }
+
+    public static Miss miss() {
+      return new Miss();
+    }
+
+    public static class Hit extends Cache {
+      public Hit() {
+        super("ActionGraphCacheHit");
+      }
+    }
+
+    public static class Miss extends Cache {
+      public Miss() {
+        super("ActionGraphCacheMiss");
+      }
+    }
+
+    @Override
+    public String getEventName() {
+      return eventName;
+    }
+  }
 }
