@@ -62,7 +62,7 @@ class AppendingZipOutputStream extends CustomZipOutputStream {
   @Override
   protected void actuallyWrite(byte[] b, int off, int len) throws IOException {
     Preconditions.checkNotNull(currentEntry);
-    currentOffset += currentEntry.write(delegate, b, off, len);
+    currentEntry.write(delegate, b, off, len);
   }
 
   @Override
@@ -84,7 +84,7 @@ class AppendingZipOutputStream extends CustomZipOutputStream {
       return; // no-op
     }
 
-    currentOffset += currentEntry.close(delegate);
+    currentOffset += currentEntry.finish(delegate);
 
     currentEntry = null;
   }

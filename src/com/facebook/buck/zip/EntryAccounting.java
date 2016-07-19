@@ -55,9 +55,10 @@ class EntryAccounting {
   private final Method method;
   private Hasher crc = Hashing.crc32().newHasher();
   private long offset;
+  private long length = 0;
   private long externalAttributes = 0;
 
-  /*
+  /**
    * General purpose bit flag:
    *  Bit 00: encrypted file
    *  Bit 01: compression option
@@ -76,6 +77,7 @@ class EntryAccounting {
    *  Defaults to indicate that names are stored as UTF8.
    */
   private int flags = UTF8_NAMES_FLAG;
+
   private final Deflater deflater = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
   private final byte[] buffer = new byte[ARBITRARY_SIZE];
 
@@ -248,45 +250,51 @@ class EntryAccounting {
     return written;
   }
 
-  public long write(OutputStream out, byte[] b, int off, int len) throws IOException {
+  public void write(OutputStream out, byte[] b, int off, int len) throws IOException {
+    if (len == 0) {
+      return;
+    }
     updateCrc(b, off, len);
 
     if (method == Method.STORE) {
       out.write(b, off, len);
-      return len;
+      length += len;
+    } else if (method == Method.DEFLATE) {
+      Preconditions.checkState(!deflater.finished());
+      deflater.setInput(b, off, len);
+      while (!deflater.needsInput()) {
+        deflate(out);
+      }
     }
-
-    if (len == 0) {
-      return 0;
-    }
-
-    Preconditions.checkState(!deflater.finished());
-    deflater.setInput(b, off, len);
-
-    while (!deflater.needsInput()) {
-      deflate(out);
-    }
-    return 0; // We calculate how many bytes we write when closing deflated entries.
   }
 
-  public long close(OutputStream out) throws IOException {
+  /**
+   * Finish the entry and return the total number of compressed bytes written
+   * (not counting the local file header, but counting the data descriptor if present).
+   * Must be called exactly once.
+   */
+  public long finish(OutputStream out) throws IOException {
     if (method == Method.STORE) {
-      // If we're not doing deflation, end the deflater to free native resources.
-      deflater.end();
-      // Nothing left to do.
-      return 0;
+      Preconditions.checkState(
+          entry.getSize() == length && entry.getCompressedSize() == length,
+          "Number of bytes written differs from what is specified in the entry.");
+      Preconditions.checkState(
+          entry.getCrc() == calculateCrc(),
+          "CRC of bytes written differs from what is specified in the entry.");
+    } else if (method == Method.DEFLATE) {
+      deflater.finish();
+      while (!deflater.finished()) {
+        deflate(out);
+      }
+      entry.setSize(deflater.getBytesRead());
+      entry.setCompressedSize(deflater.getBytesWritten());
+      entry.setCrc(calculateCrc());
     }
 
-    deflater.finish();
-    while (!deflater.finished()) {
-      deflate(out);
-    }
-    entry.setSize(deflater.getBytesRead());
-    entry.setCompressedSize(deflater.getBytesWritten());
-    entry.setCrc(calculateCrc());
-
+    // regardless of the method used, end the deflater to free native resources.
     deflater.end();
 
+    // write the data descriptor if required
     byte[] dataDescriptor = getDataDescriptor();
     out.write(dataDescriptor);
 

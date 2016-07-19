@@ -114,17 +114,7 @@ public class OverwritingZipOutputStream extends CustomZipOutputStream {
 
       Files.copy(mapEntry.getKey().toPath(), delegate);
 
-      // If `entry.close()` returns 0, this means that we're using the STORED method, which doesn't
-      // perform compression.  In this case, we're responsible for manually updating the offset
-      // accounted for by the written output.  However, if a non-0 size is returned, we're using
-      // the DEFLATED method, so we don't update the offset, as entry.close will write the file
-      // header, which contains the correct size of the output.
-      long closeSize = entry.close(delegate);
-      if (closeSize == 0) {
-        currentOffset += entry.getSize();
-      } else {
-        currentOffset += closeSize;
-      }
+      currentOffset += entry.finish(delegate);
     }
 
     new CentralDirectory().writeCentralDirectory(delegate, currentOffset, entries.values());
