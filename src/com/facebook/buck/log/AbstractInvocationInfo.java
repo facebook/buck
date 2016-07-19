@@ -33,8 +33,9 @@ import java.util.regex.Pattern;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractInvocationInfo {
-
   public static final SimpleDateFormat DIR_DATE_FORMAT;
+  public static final String DIR_NAME_REGEX = ".+_.+_.+";
+  private static final String DIR_NAME_TEMPLATE = "%s_%s_%s";
 
   static {
     DIR_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH'h'mm'm'ss's'");
@@ -67,7 +68,7 @@ abstract class AbstractInvocationInfo {
 
   public String getLogDirectoryName() {
     return String.format(
-        "%s_%s_%s",
+        DIR_NAME_TEMPLATE,
         DIR_DATE_FORMAT.format(getTimestampMillis()),
         getSubCommand(),
         getBuildId());

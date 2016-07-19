@@ -18,15 +18,14 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
-import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.util.collect.ArrayIterable;
+import com.facebook.buck.util.DirectoryCleaner;
+import com.facebook.buck.util.DirectoryCleanerArgs;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -36,7 +35,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
@@ -273,24 +271,18 @@ public class DirArtifactCache implements ArtifactCache {
     if (!maxCacheSizeBytes.isPresent()) {
       return;
     }
+
+    Path cacheDirInFs = filesystem.resolve(cacheDir);
     try {
-      for (File fileAccessedEntry : findFilesToDelete()) {
-        try {
-          Files.deleteIfExists(fileAccessedEntry.toPath());
-        } catch (IOException e) {
-          // Eat any IOExceptions while attempting to clean up the cache directory.  If the file is
-          // now in use, we no longer want to delete it.
-          continue;
-        }
-      }
+      newDirectoryCleaner().clean(cacheDirInFs);
     } catch (IOException e) {
-      LOG.error(e, "Failed to delete old files from cache");
+      LOG.error(e, "Failed to clean path [%s].", cacheDirInFs);
     }
   }
 
   @VisibleForTesting
-  File[] getAllFilesInCache() throws IOException {
-    final List<File> allFiles = new ArrayList<>();
+  List<Path> getAllFilesInCache() throws IOException {
+    final List<Path> allFiles = new ArrayList<>();
     Files.walkFileTree(
         filesystem.resolve(cacheDir),
         ImmutableSet.<FileVisitOption>of(),
@@ -308,36 +300,38 @@ public class DirArtifactCache implements ArtifactCache {
           }
 
           @Override
-          public FileVisitResult visitFile(Path file,
+          public FileVisitResult visitFile(
+              Path file,
               BasicFileAttributes attrs) throws IOException {
-            allFiles.add(file.toFile());
+            allFiles.add(file);
             return super.visitFile(file, attrs);
           }
         });
-    return allFiles.toArray(new File[0]);
+
+    return allFiles;
   }
 
-  private Iterable<File> findFilesToDelete() throws IOException {
-    Preconditions.checkState(maxCacheSizeBytes.isPresent());
-    long maxSizeBytes = maxCacheSizeBytes.get();
+  private DirectoryCleaner newDirectoryCleaner() {
+    DirectoryCleanerArgs cleanerArgs = DirectoryCleanerArgs.builder()
+        .setPathSelector(
+            new DirectoryCleaner.PathSelector() {
 
-    File[] files = getAllFilesInCache();
-    MoreFiles.sortFilesByAccessTime(files);
+              @Override
+              public Iterable<Path> getCandidatesToDelete(Path rootPath) throws IOException {
+                return getAllFilesInCache();
+              }
 
-    // Finds the first N from the list ordered by last access time who's combined size is less than
-    // maxCacheSizeBytes.
-    long currentSizeBytes = 0;
-    Optional<Integer> maxTrimMark = Optional.absent();
-    for (int i = 0; i < files.length; ++i) {
-      File file = files[i];
-      currentSizeBytes += file.length();
-      if (!maxTrimMark.isPresent() && currentSizeBytes > maxSizeBytes * MAX_BYTES_TRIM_RATIO) {
-        maxTrimMark = Optional.of(i);
-      }
-      if (currentSizeBytes > maxSizeBytes) {
-        return ArrayIterable.of(files, maxTrimMark.get(), files.length);
-      }
-    }
-    return ImmutableList.of();
+              @Override
+              public int comparePaths(
+                  DirectoryCleaner.PathStats path1,
+                  DirectoryCleaner.PathStats path2) {
+                return (int) (path1.getLastAccessMillis() - path2.getLastAccessMillis());
+              }
+            })
+        .setMaxTotalSizeBytes(maxCacheSizeBytes.get())
+        .setMaxBytesAfterDeletion((long) (maxCacheSizeBytes.get() * MAX_BYTES_TRIM_RATIO))
+        .build();
+
+    return new DirectoryCleaner(cleanerArgs);
   }
 }

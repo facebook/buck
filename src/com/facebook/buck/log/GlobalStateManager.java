@@ -17,6 +17,7 @@
 package com.facebook.buck.log;
 
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.util.DirectoryCleaner;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -43,6 +44,8 @@ public class GlobalStateManager {
 
   private static final GlobalStateManager SINGLETON = new GlobalStateManager();
   private static final String DEFAULT_LOG_FILE_WRITER_KEY = "DEFAULT";
+  private static final DirectoryCleaner LOG_FILE_DIR_CLEANER = LogFileHandler.newCleaner(
+      LogFileHandler.getMaxSizeBytes(), LogFileHandler.getMaxLogCount());
 
   // Shared global state.
   private final ConcurrentMap<Long, String> threadIdToCommandId;
@@ -65,12 +68,13 @@ public class GlobalStateManager {
     this.commandIdToLogFileHandlerWriter = new ConcurrentHashMap<>();
 
     rotateDefaultLogFileWriter(
-        InvocationInfo.of(new BuildId(), "launch", LogConfigSetup.DEFAULT_SETUP.getLogDir())
+        InvocationInfo.of(new BuildId(), "launch",
+            LogConfigSetup.DEFAULT_SETUP.getLogDir())
             .getLogFilePath());
   }
 
   public Closeable setupLoggers(
-      InvocationInfo info,
+      final InvocationInfo info,
       OutputStream consoleHandlerStream,
       final OutputStream consoleHandlerOriginalStream,
       final Verbosity consoleHandlerVerbosity) {
@@ -129,6 +133,12 @@ public class GlobalStateManager {
           if (commandId.equals(threadIdToCommandId.get(threadId))) {
             threadIdToCommandId.remove(threadId);
           }
+        }
+
+        try {
+          LOG_FILE_DIR_CLEANER.clean(info.getLogDirectoryPath().getParent());
+        } catch (IOException e) {
+          LOG.info(e, "It's possible another concurrent buck command removed the file.");
         }
       }
     };

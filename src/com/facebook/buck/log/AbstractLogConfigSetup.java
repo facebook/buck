@@ -27,6 +27,12 @@ import java.nio.file.Paths;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractLogConfigSetup {
+  // Total maximum amount of logs stored.
+  public static final int DEFAULT_COUNT = 25;
+
+  // Total maximum disk space used for all logs.
+  public static final long DEFAULT_MAX_LOG_SIZE_BYTES = 100 * 1024 * 1024;
+
   private static final String DEFAULT_LOG_FILE_PREFIX = "buck-";
 
   // At this point we can't guarantee that CWD is writeable so our logs go into the system's
@@ -50,7 +56,12 @@ abstract class AbstractLogConfigSetup {
 
   @Value.Default
   public int getCount() {
-    return 25;
+    return DEFAULT_COUNT;
+  }
+
+  @Value.Default
+  public long getMaxLogSizeBytes() {
+    return DEFAULT_MAX_LOG_SIZE_BYTES;
   }
 
   @Value.Default

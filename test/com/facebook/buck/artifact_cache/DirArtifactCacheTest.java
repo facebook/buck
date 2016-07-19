@@ -54,12 +54,12 @@ import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
+import java.util.List;
 
 public class DirArtifactCacheTest {
   @Rule
@@ -286,14 +286,14 @@ public class DirArtifactCacheTest {
     assertEquals(inputRuleY, new BuildRuleForTest(fileY));
     assertEquals(inputRuleZ, new BuildRuleForTest(fileZ));
 
-    ImmutableList<File> cachedFiles = ImmutableList.copyOf(dirArtifactCache.getAllFilesInCache());
+    ImmutableList<Path> cachedFiles = ImmutableList.copyOf(dirArtifactCache.getAllFilesInCache());
     assertEquals(6, cachedFiles.size());
 
     ImmutableSet<String> filenames = FluentIterable.from(cachedFiles).transform(
-        new Function<File, String>() {
+        new Function<Path, String>() {
           @Override
-          public String apply(File input) {
-            return input.toPath().getFileName().toString();
+          public String apply(Path input) {
+            return input.getFileName().toString();
           }
         }).toSet();
 
@@ -524,17 +524,10 @@ public class DirArtifactCacheTest {
 
     dirArtifactCache.deleteOldFiles();
 
-    File[] filesInCache = dirArtifactCache.getAllFilesInCache();
+    List<Path> filesInCache = dirArtifactCache.getAllFilesInCache();
     assertEquals(
         ImmutableSet.of(fileZ, fileW),
-        FluentIterable.of(filesInCache).transform(
-            new Function<File, Path>() {
-              @Override
-              public Path apply(File input) {
-                return input.toPath();
-              }
-            })
-            .toSet());
+        FluentIterable.from(filesInCache).toSet());
   }
 
   @Test

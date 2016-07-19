@@ -61,6 +61,12 @@ com.facebook.buck.log.MemoryHandler.size=100
 # Define the push level.
 com.facebook.buck.log.MemoryHandler.push=SEVERE
 
+# Max size in bytes all logs will take.
+com.facebook.buck.log.LogFileHandler.max_size_bytes=<default_max_size_bytes>
+
+# Max number of logs preserved in disk.
+com.facebook.buck.log.LogFileHandler.count=25
+
 # TODO(t4624433): Temporarily disable logging for Guava's CombinedFuture
 # class until we can figure out what's going on.
 com.google.common.util.concurrent.level=OFF

@@ -138,7 +138,7 @@ public class DefaultJavaLibraryIntegrationTest {
         workspace.getDestPath(),
         buildCache);
 
-    int totalArtifactsCount = DirArtifactCacheTestUtil.getAllFilesInCache(dirCache).length;
+    int totalArtifactsCount = DirArtifactCacheTestUtil.getAllFilesInCache(dirCache).size();
 
     assertEquals("There should be two entries (a zip and metadata) in the build cache.",
         2,
@@ -156,7 +156,8 @@ public class DefaultJavaLibraryIntegrationTest {
         FluentIterable.from(
             ImmutableList.copyOf(DirArtifactCacheTestUtil.getAllFilesInCache(dirCache)))
             .toSortedList(Ordering.natural())
-            .get(0);
+            .get(0)
+            .toFile();
     FileSystem zipFs = FileSystems.newFileSystem(artifactZip.toPath(), /* loader */ null);
     Path outputInZip = zipFs.getPath("/" + outputPath.toString());
     Files.write(outputInZip, "Hello world!".getBytes(), WRITE);

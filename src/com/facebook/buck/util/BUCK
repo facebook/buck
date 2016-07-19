@@ -48,6 +48,7 @@ java_library(
 
 IO_SRCS = [
   'AbstractCharsetProcessListener.java',
+  'AbstractDirectoryCleanerArgs.java',
   'AbstractProcessExecutorParams.java',
   'Ansi.java',
   'AnsiEnvironmentChecking.java',
@@ -56,6 +57,7 @@ IO_SRCS = [
   'Libc.java',
   'Console.java',
   'CapturingPrintStream.java',
+  'DirectoryCleaner.java',
   'DirtyPrintStreamDecorator.java',
   'InputStreamConsumer.java',
   'LineFetcher.java',
@@ -75,6 +77,7 @@ java_immutables_library(
   name = 'io',
   srcs = IO_SRCS,
   immutable_types = [
+    'DirectoryCleanerArgs',
     'ProcessExecutorParams',
   ],
   tests = [

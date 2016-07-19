@@ -19,9 +19,9 @@ import com.facebook.buck.rules.RuleKey;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 public class DirArtifactCacheTestUtil {
   private DirArtifactCacheTestUtil() {}
@@ -36,7 +36,7 @@ public class DirArtifactCacheTestUtil {
     return dirArtifactCache.getPathForRuleKey(ruleKey, extension);
   }
 
-  public static File[] getAllFilesInCache(ArtifactCache cache) throws IOException {
+  public static List<Path> getAllFilesInCache(ArtifactCache cache) throws IOException {
     Preconditions.checkArgument(cache instanceof DirArtifactCache);
     DirArtifactCache dirArtifactCache = (DirArtifactCache) cache;
     return dirArtifactCache.getAllFilesInCache();

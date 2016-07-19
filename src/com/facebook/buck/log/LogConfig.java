@@ -55,7 +55,6 @@ import java.util.logging.Logger;
 public class LogConfig {
 
   private static final byte[] NEWLINE = {'\n'};
-  private static final long MAX_LOG_SIZE = 100 * 1024 * 1024;
 
   /**
    * Default constructor, called by LogManager.
@@ -140,6 +139,7 @@ public class LogConfig {
       st.add("default_file_pattern",
           MorePaths.pathWithUnixSeparators(logConfigSetup.getLogFilePath()).toString());
       st.add("default_count", logConfigSetup.getCount());
+      st.add("default_max_size_bytes", logConfigSetup.getMaxLogSizeBytes());
       String result = st.render();
       inputStreamsBuilder.add(new ByteArrayInputStream(result.getBytes(Charsets.UTF_8)));
       inputStreamsBuilder.add(new ByteArrayInputStream(NEWLINE));
@@ -169,7 +169,7 @@ public class LogConfig {
              PathListing.GET_PATH_MODIFIED_TIME,
              PathListing.FilterMode.EXCLUDE,
              Optional.<Integer>absent(),
-             Optional.of(MAX_LOG_SIZE))) {
+             Optional.of(logConfigSetup.getMaxLogSizeBytes()))) {
       Files.deleteIfExists(path);
     }
   }

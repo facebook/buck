@@ -16,15 +16,27 @@
 
 package com.facebook.buck.log;
 
+import com.facebook.buck.util.DirectoryCleaner;
+import com.facebook.buck.util.DirectoryCleanerArgs;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class LogFileHandler extends Handler {
+
+  private static final Pattern DIR_PATTERN = Pattern.compile(InvocationInfo.DIR_NAME_REGEX);
 
   private final LogFileHandlerState state;
 
@@ -37,6 +49,24 @@ public class LogFileHandler extends Handler {
       throws IOException, SecurityException {
     this.state = state;
     setFormatter(formatter);
+  }
+
+  public static long getMaxSizeBytes() {
+    return getConfig("max_size_bytes", LogConfigSetup.DEFAULT_MAX_LOG_SIZE_BYTES);
+  }
+
+  public static int getMaxLogCount() {
+    return (int) getConfig("count", LogConfigSetup.DEFAULT_COUNT);
+  }
+
+  private static long getConfig(String suffix, long defaultValue) {
+    String maxSizeBytesStr = LogManager.getLogManager().getProperty(
+        LogFileHandler.class.getName() + "." + suffix);
+    if (maxSizeBytesStr == null) {
+      return defaultValue;
+    }
+
+    return Long.parseLong(maxSizeBytesStr);
   }
 
   @Override
@@ -69,5 +99,40 @@ public class LogFileHandler extends Handler {
   @Override
   public void close() throws SecurityException {
     // The streams are controlled globally by the GlobalStateManager.
+  }
+
+  public static DirectoryCleaner newCleaner(long maxLogsSizeBytes, int maxLogsDirectories) {
+    DirectoryCleanerArgs cleanerArgs = DirectoryCleanerArgs.builder()
+        .setPathSelector(
+            new DirectoryCleaner.PathSelector() {
+
+              @Override
+              public Iterable<Path> getCandidatesToDelete(Path rootPath) throws IOException {
+                List<Path> dirPaths = Lists.newArrayList();
+                try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(rootPath)) {
+                  for (Path path : directoryStream) {
+                    Matcher matcher = DIR_PATTERN.matcher(path.getFileName().toString());
+                    if (matcher.matches()) {
+                      dirPaths.add(path);
+                    }
+                  }
+                }
+
+                return dirPaths;
+              }
+
+              @Override
+              public int comparePaths(
+                  DirectoryCleaner.PathStats path1,
+                  DirectoryCleaner.PathStats path2) {
+                return (int) (path1.getCreationMillis() - path2.getCreationMillis());
+              }
+            })
+        .setMaxTotalSizeBytes(maxLogsSizeBytes)
+        .setMaxPathCount(maxLogsDirectories)
+        .build();
+
+    DirectoryCleaner cleaner = new DirectoryCleaner(cleanerArgs);
+    return cleaner;
   }
 }
