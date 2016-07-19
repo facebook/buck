@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY f9502efe4bdf2ad316a9751c126ce3b9b4a393a4 #@#
+#@# GENERATED FILE: DO NOT MODIFY a85e75309309a4f06c85e04dfdeba16f4875db11 #@#
 {
   "halide" : {
     "deps" : [
@@ -23,6 +23,7 @@
   "testutil" : {
     "deps" : [
       "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/cxx:rules",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/testutil:testutil",
       "//third-party/java/guava:guava"

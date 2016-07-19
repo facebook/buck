@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 19f4ef1785ab48de15e76a259c1db06be317d3d7 #@#
+#@# GENERATED FILE: DO NOT MODIFY db70a0166e2c274a9d3baf112166ed9302c759df #@#
 {
   "distributed" : {
     "deps" : [
@@ -10,6 +10,7 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/json:json",
       "//src/com/facebook/buck/jvm/java:rules",
+      "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:config",
       "//src/com/facebook/buck/parser:parser",
       "//src/com/facebook/buck/rules:build_rule",
@@ -28,7 +29,6 @@
       "//test/com/facebook/buck/rules:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
-      "//test/com/facebook/buck/timing:testutil",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/jackson:jackson-databind",

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY fce22fd7bcc0ec50f7429a7d1620eeb901b4c219 #@#
+#@# GENERATED FILE: DO NOT MODIFY 191a39f2f4683fd65aa42cdb240737d4daae1045 #@#
 {
   "distributed" : {
     "deps" : [
@@ -6,7 +6,6 @@
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/rules:default_cell_path_resolver",
-      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/util/environment:platform",
       "//third-party/java/immutables:processor",
       "//third-party/java/jackson:jackson-core",
@@ -26,8 +25,6 @@
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/slb:slb",
-      "//src/com/facebook/buck/timing:timing",
-      "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",

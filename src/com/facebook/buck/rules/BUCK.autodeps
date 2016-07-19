@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 5a9ad4c80d38863613b2521dba13b794c271492f #@#
+#@# GENERATED FILE: DO NOT MODIFY 450c83193f5f843f45cd8ae80c631b02e31df251 #@#
 {
   "action_graph_cache" : {
     "deps" : [
@@ -31,8 +31,7 @@
       "//src/com/facebook/buck/android:exceptions",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util/hash:hash",
-      "//third-party/java/immutables:processor",
-      "//third-party/java/stringtemplate:stringtemplate"
+      "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/android:utils",
@@ -60,7 +59,8 @@
       "//third-party/java/jackson:jackson-annotations",
       "//third-party/java/jackson:jackson-core",
       "//third-party/java/jackson:jackson-databind",
-      "//third-party/java/jsr:jsr305"
+      "//third-party/java/jsr:jsr305",
+      "//third-party/java/stringtemplate:stringtemplate"
     ]
   },
   "caching_build_engine_delegates" : {
@@ -209,7 +209,6 @@
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/zip:rules",
-      "//third-party/java/immutables:processor",
       "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [
@@ -226,7 +225,6 @@
       "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:io",
-      "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava"
     ]
   }
