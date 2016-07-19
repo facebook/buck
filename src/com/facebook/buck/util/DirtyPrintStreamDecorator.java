@@ -21,6 +21,7 @@ import java.io.PrintStream;
 import java.util.Locale;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.GuardedBy;
 
 /**
  * Decorator of PrintStreams that tracks whether or not that stream has been written to.  This is
@@ -29,6 +30,8 @@ import javax.annotation.Nullable;
  */
 public class DirtyPrintStreamDecorator extends PrintStream {
   private final PrintStream delegate;
+
+  @GuardedBy("delegate")
   private volatile boolean dirty;
 
   public DirtyPrintStreamDecorator(PrintStream delegate) {
@@ -37,192 +40,254 @@ public class DirtyPrintStreamDecorator extends PrintStream {
     this.dirty = false;
   }
 
-  public synchronized PrintStream getRawStream() {
-    return delegate;
+  public PrintStream getRawStream() {
+    synchronized (delegate) {
+      return delegate;
+    }
   }
 
-  public synchronized boolean isDirty() {
-    return dirty;
-  }
-
-  @Override
-  public synchronized void write(int b) {
-    dirty = true;
-    delegate.write(b);
-  }
-
-  @Override
-  public synchronized void write(byte[] b) throws IOException {
-    dirty = true;
-    delegate.write(b);
+  public boolean isDirty() {
+    synchronized (delegate) {
+      return dirty;
+    }
   }
 
   @Override
-  public synchronized void write(byte[] buf, int off, int len) {
-    dirty = true;
-    delegate.write(buf, off, len);
+  public void write(int b) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.write(b);
+    }
   }
 
   @Override
-  public synchronized void print(boolean b) {
-    dirty = true;
-    delegate.print(b);
+  public void write(byte[] b) throws IOException {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.write(b);
+    }
   }
 
   @Override
-  public synchronized void print(char c) {
-    dirty = true;
-    delegate.print(c);
+  public void write(byte[] buf, int off, int len) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.write(buf, off, len);
+    }
   }
 
   @Override
-  public synchronized void print(int i) {
-    dirty = true;
-    delegate.print(i);
+  public void print(boolean b) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.print(b);
+    }
   }
 
   @Override
-  public synchronized void print(long l) {
-    dirty = true;
-    delegate.print(l);
+  public void print(char c) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.print(c);
+    }
   }
 
   @Override
-  public synchronized void print(float f) {
-    dirty = true;
-    delegate.print(f);
+  public void print(int i) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.print(i);
+    }
   }
 
   @Override
-  public synchronized void print(double d) {
-    dirty = true;
-    delegate.print(d);
+  public void print(long l) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.print(l);
+    }
   }
 
   @Override
-  public synchronized void print(char[] s) {
-    dirty = true;
-    delegate.print(s);
+  public void print(float f) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.print(f);
+    }
   }
 
   @Override
-  public synchronized void print(@Nullable String s) {
-    dirty = true;
-    delegate.print(s);
+  public void print(double d) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.print(d);
+    }
   }
 
   @Override
-  public synchronized void print(Object obj) {
-    dirty = true;
-    delegate.print(obj);
+  public void print(char[] s) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.print(s);
+    }
   }
 
   @Override
-  public synchronized void println() {
-    dirty = true;
-    delegate.println();
+  public void print(@Nullable String s) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.print(s);
+    }
   }
 
   @Override
-  public synchronized void println(boolean x) {
-    dirty = true;
-    delegate.println(x);
+  public void print(Object obj) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.print(obj);
+    }
   }
 
   @Override
-  public synchronized void println(char x) {
-    dirty = true;
-    delegate.println(x);
+  public void println() {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.println();
+    }
   }
 
   @Override
-  public synchronized void println(int x) {
-    dirty = true;
-    delegate.println(x);
+  public void println(boolean x) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.println(x);
+    }
   }
 
   @Override
-  public synchronized void println(long x) {
-    dirty = true;
-    delegate.println(x);
+  public void println(char x) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.println(x);
+    }
   }
 
   @Override
-  public synchronized void println(float x) {
-    dirty = true;
-    delegate.println(x);
+  public void println(int x) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.println(x);
+    }
   }
 
   @Override
-  public synchronized void println(double x) {
-    dirty = true;
-    delegate.println(x);
+  public void println(long x) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.println(x);
+    }
   }
 
   @Override
-  public synchronized void println(char[] x) {
-    dirty = true;
-    delegate.println(x);
+  public void println(float x) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.println(x);
+    }
   }
 
   @Override
-  public synchronized void println(String x) {
-    dirty = true;
-    delegate.println(x);
+  public void println(double x) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.println(x);
+    }
   }
 
   @Override
-  public synchronized void println(Object x) {
-    dirty = true;
-    delegate.println(x);
+  public void println(char[] x) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.println(x);
+    }
   }
 
   @Override
-  public synchronized PrintStream printf(String format, Object... args) {
-    dirty = true;
-    delegate.printf(format, args);
+  public void println(String x) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.println(x);
+    }
+  }
+
+  @Override
+  public void println(Object x) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.println(x);
+    }
+  }
+
+  @Override
+  public PrintStream printf(String format, Object... args) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.printf(format, args);
+    }
     return this;
   }
 
   @Override
-  public synchronized PrintStream printf(Locale l, String format, Object... args) {
-    dirty = true;
-    delegate.printf(l, format, args);
+  public PrintStream printf(Locale l, String format, Object... args) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.printf(l, format, args);
+    }
     return this;
   }
 
   @Override
-  public synchronized PrintStream format(String format, Object... args) {
-    dirty = true;
-    delegate.format(format, args);
+  public PrintStream format(String format, Object... args) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.format(format, args);
+    }
     return this;
   }
 
   @Override
-  public synchronized PrintStream format(Locale l, String format, Object... args) {
-    dirty = true;
-    delegate.format(l, format, args);
+  public PrintStream format(Locale l, String format, Object... args) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.format(l, format, args);
+    }
     return this;
   }
 
   @Override
-  public synchronized PrintStream append(CharSequence csq) {
-    dirty = true;
-    delegate.append(csq);
+  public PrintStream append(CharSequence csq) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.append(csq);
+    }
     return this;
   }
 
   @Override
-  public synchronized PrintStream append(CharSequence csq, int start, int end) {
-    dirty = true;
-    delegate.append(csq, start, end);
+  public PrintStream append(CharSequence csq, int start, int end) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.append(csq, start, end);
+    }
     return this;
   }
 
   @Override
-  public synchronized PrintStream append(char c) {
-    dirty = true;
-    delegate.append(c);
+  public PrintStream append(char c) {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.append(c);
+    }
     return this;
   }
 }
