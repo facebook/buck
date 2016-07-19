@@ -53,7 +53,7 @@ public class LuaStandaloneBinary extends AbstractBuildRule {
   private final Path output;
 
   @AddToRuleKey
-  private final Optional<SourcePath> nativeStarter;
+  private final Optional<SourcePath> starter;
 
   @AddToRuleKey
   private final LuaPackageComponents components;
@@ -72,7 +72,7 @@ public class LuaStandaloneBinary extends AbstractBuildRule {
       Tool builder,
       ImmutableList<String> builderArgs,
       Path output,
-      Optional<SourcePath> nativeStarter,
+      Optional<SourcePath> starter,
       LuaPackageComponents components,
       String mainModule,
       Tool lua,
@@ -81,7 +81,7 @@ public class LuaStandaloneBinary extends AbstractBuildRule {
     this.builder = builder;
     this.builderArgs = builderArgs;
     this.output = output;
-    this.nativeStarter = nativeStarter;
+    this.starter = starter;
     this.components = components;
     this.mainModule = mainModule;
     this.lua = lua;
@@ -142,8 +142,8 @@ public class LuaStandaloneBinary extends AbstractBuildRule {
             command.addAll(builderArgs);
             command.add("--entry-point", mainModule);
             command.add("--interpreter");
-            if (nativeStarter.isPresent()) {
-              command.add(getResolver().getAbsolutePath(nativeStarter.get()).toString());
+            if (starter.isPresent()) {
+              command.add(getResolver().getAbsolutePath(starter.get()).toString());
             } else {
               command.add(lua.getCommandPrefix(getResolver()).get(0));
             }

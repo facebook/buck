@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 38026a23d9c1649274a8b2a963284c5439cf7f68 #@#
+#@# GENERATED FILE: DO NOT MODIFY 8d4e93d0ca8b68dc9bf6b8a88e472498c0b807b3 #@#
 {
   "rules" : {
     "deps" : [
@@ -7,7 +7,6 @@
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cli:events",
       "//src/com/facebook/buck/config:config",
-      "//src/com/facebook/buck/counters:counters",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/file:rules",

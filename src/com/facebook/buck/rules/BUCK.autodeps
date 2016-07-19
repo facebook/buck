@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 450c83193f5f843f45cd8ae80c631b02e31df251 #@#
+#@# GENERATED FILE: DO NOT MODIFY da7db805f4667913c914c7af3f86924fcca4bc96 #@#
 {
   "action_graph_cache" : {
     "deps" : [
@@ -12,7 +12,6 @@
       "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [
-      "//src/com/facebook/buck/counters:counters",
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/rules:build_rule",
       "//third-party/java/guava:guava"
