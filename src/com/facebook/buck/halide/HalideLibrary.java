@@ -95,6 +95,9 @@ public class HalideLibrary
   public CxxPreprocessorInput getCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
+    if (!isPlatformSupported(cxxPlatform)) {
+      return CxxPreprocessorInput.EMPTY;
+    }
     switch (headerVisibility) {
       case PUBLIC:
         return CxxPreprocessables.getCxxPreprocessorInput(
