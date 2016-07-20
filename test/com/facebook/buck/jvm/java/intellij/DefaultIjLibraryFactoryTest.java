@@ -48,6 +48,7 @@ public class DefaultIjLibraryFactoryTest {
   private IjLibrary androidSupportLibrary;
   private IjLibrary baseLibrary;
   private TargetNode<?> base;
+  private Path androidSupportBinaryJarPath;
   private Path baseOutputPath;
   private DefaultIjLibraryFactory.IjLibraryFactoryResolver libraryFactoryResolver;
   private IjLibraryFactory factory;
@@ -74,6 +75,7 @@ public class DefaultIjLibraryFactoryTest {
         .addDep(guava.getBuildTarget())
         .build();
 
+    androidSupportBinaryJarPath = Paths.get("buck_out/support.aar/classes.jar");
     baseOutputPath = Paths.get("buck-out/base.jar");
 
     libraryFactoryResolver = new DefaultIjLibraryFactory.IjLibraryFactoryResolver() {
@@ -86,6 +88,9 @@ public class DefaultIjLibraryFactoryTest {
       public Optional<Path> getPathIfJavaLibrary(TargetNode<?> targetNode) {
         if (targetNode.equals(base)) {
           return Optional.of(baseOutputPath);
+        }
+        if (targetNode.equals(androidSupport)) {
+          return Optional.of(androidSupportBinaryJarPath);
         }
         return Optional.absent();
       }
@@ -108,7 +113,7 @@ public class DefaultIjLibraryFactoryTest {
   @Test
   public void testPrebuiltAar() {
     assertEquals("library_third_party_java_support_support", androidSupportLibrary.getName());
-    assertEquals(Optional.of(androidSupportBinaryPath), androidSupportLibrary.getBinaryJar());
+    assertEquals(Optional.of(androidSupportBinaryJarPath), androidSupportLibrary.getBinaryJar());
     assertEquals(ImmutableSet.of(androidSupport), androidSupportLibrary.getTargets());
   }
 
