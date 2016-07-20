@@ -17,12 +17,9 @@
 package com.facebook.buck.log;
 
 import com.google.common.annotations.VisibleForTesting;
-
 import com.google.common.base.Preconditions;
 
 import java.io.IOException;
-
-
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
