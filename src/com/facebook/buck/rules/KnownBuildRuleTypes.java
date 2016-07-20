@@ -487,6 +487,8 @@ public class KnownBuildRuleTypes {
     JavacOptions defaultJavacOptions = javaConfig.getDefaultJavacOptions();
     JavaOptions defaultJavaOptions = javaConfig.getDefaultJavaOptions();
 
+    KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(config);
+
     ScalaBuckConfig scalaConfig = new ScalaBuckConfig(config);
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
@@ -678,7 +680,6 @@ public class KnownBuildRuleTypes {
             defaultTestRuleTimeoutMs,
             defaultCxxPlatform));
     builder.register(new KeystoreDescription());
-    KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(config);
     builder.register(
         new KotlinLibraryDescription(kotlinBuckConfig));
     builder.register(
