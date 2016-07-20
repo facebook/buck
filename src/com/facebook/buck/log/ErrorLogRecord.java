@@ -18,36 +18,72 @@ package com.facebook.buck.log;
 
 import static com.facebook.buck.util.MoreThrowables.getInitialCause;
 import static com.facebook.buck.util.MoreThrowables.getThrowableOrigin;
+import static com.google.common.base.Throwables.getStackTraceAsString;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.ObjectMappers;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import org.immutables.value.Value;
-
 import java.util.logging.LogRecord;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractErrorLogRecord {
+public class ErrorLogRecord {
 
-  private static final ThreadIdToCommandIdMapper MAPPER = GlobalStateManager
+  private final ImmutableMap<String, String> traits;
+  private final String category;
+  private final String text;
+
+  private static final ObjectMapper OBJECT_MAPPER = ObjectMappers.newDefaultInstance();
+  private static final ThreadIdToCommandIdMapper COMMAND_ID_MAP = GlobalStateManager
       .singleton()
       .getThreadIdToCommandIdMapper();
 
-  public abstract LogRecord getRecord();
-  public abstract String getMessage();
-  public abstract ImmutableList<String> getLogs();
+  public ErrorLogRecord(
+      LogRecord record,
+      String message,
+      ImmutableList<String> contextLogs) {
+    this.traits = getTraits(record);
+    this.category = getCategory(record);
+    this.text = getText(record, message, contextLogs);
+  }
 
-  @Value.Derived
-  public ImmutableMap<String, String> getTraits() {
-    String logger = getRecord().getLoggerName();
+  private ImmutableMap<String, String> getTraits(LogRecord record) {
+
+    String logger = record.getLoggerName();
     ImmutableMap<String, String> traits = ImmutableMap.of(
-        "severity", getRecord().getLevel().toString(),
+        "severity", record.getLevel().toString(),
+
         "logger", logger != null ? logger : "None"
     );
     return traits;
+  }
+
+  private String getText(
+      LogRecord record,
+      String message,
+      ImmutableList<String> contextLogs) {
+    LogRecordFields.Builder logRecordFields = LogRecordFields.builder()
+        .setMessage(message)
+        .setLogs(contextLogs)
+        .setLogger(record.getLoggerName())
+        .setCommandId(COMMAND_ID_MAP.threadIdToCommandId(record.getThreadID()));
+    Throwable throwable = record.getThrown();
+    if (throwable != null) {
+      Throwable initialCause = getInitialCause(throwable);
+      logRecordFields.setCause(Optional.of(initialCause))
+          .setInitialError(Optional.of(initialCause.getClass().getName()))
+          .setInitialErrorMsg(Optional.of(initialCause.getLocalizedMessage()))
+          .setOrigin(Optional.of(getThrowableOrigin(initialCause)))
+          .setStackTrace(Optional.of(getStackTraceAsString(throwable)));
+    }
+    try {
+      return OBJECT_MAPPER.writeValueAsString(logRecordFields.build());
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    }
+    return "";
   }
 
   /**
@@ -55,71 +91,19 @@ abstract class AbstractErrorLogRecord {
    * present, categorizes on the class + method that threw it. If no exception
    * is found, categorizes on the logger name and the beginning of the message.
    */
-  @Value.Derived
-  public String getCategory() {
+  private String getCategory(LogRecord record) {
     String logger = "";
-    if (getRecord().getLoggerName() != null) {
-      logger = getRecord().getLoggerName();
+    if (record.getLoggerName() != null) {
+      logger = record.getLoggerName();
     }
     StringBuilder sb = new StringBuilder(logger).append(":");
-    Throwable throwable = getRecord().getThrown();
+    Throwable throwable = record.getThrown();
     if (throwable != null) {
       sb.append(extractClassMethod(getThrowableOrigin(getInitialCause(throwable))));
     } else {
-      sb.append(truncateMessage(getRecord().getMessage()));
+      sb.append(truncateMessage(record.getMessage()));
     }
     return sb.toString();
-  }
-
-  @Value.Derived
-  public long getTime() {
-    return getRecord().getMillis();
-  };
-
-  @Value.Derived
-  public String getLogger() {
-    return getRecord().getLoggerName();
-  };
-
-  @Value.Derived
-  public String getCommandId() {
-    return MAPPER.threadIdToCommandId(getRecord().getThreadID());
-  }
-
-  @Value.Derived
-  public Optional<StackTraceElement[]> getStack() {
-    Throwable throwable = getRecord().getThrown();
-    if (throwable != null) {
-      return Optional.of(throwable.getStackTrace());
-    }
-    return Optional.absent();
-  }
-
-  @Value.Derived
-  public Optional<String> getInitialError() {
-    Throwable throwable = getRecord().getThrown();
-    if (throwable != null) {
-      return Optional.of(getInitialCause(throwable).getClass().getName());
-    }
-    return Optional.absent();
-  }
-
-  @Value.Derived
-  public Optional<String> getInitialErrorMsg() {
-    Throwable throwable = getRecord().getThrown();
-    if (throwable != null) {
-      return Optional.of(getInitialCause(throwable).getLocalizedMessage());
-    }
-    return Optional.absent();
-  }
-
-  @Value.Derived
-  public Optional<String> getOrigin() {
-    Throwable throwable = getRecord().getThrown();
-    if (throwable != null) {
-      return Optional.of(getThrowableOrigin(throwable));
-    }
-    return Optional.absent();
   }
 
   /**
@@ -145,5 +129,17 @@ abstract class AbstractErrorLogRecord {
       return name.split("\\(", 1)[0];
     }
     return "";
+  }
+
+  public ImmutableMap<String, String> getTraits() {
+    return traits;
+  }
+
+  public String getCategory() {
+    return category;
+  }
+
+  public String getText() {
+    return text;
   }
 }
