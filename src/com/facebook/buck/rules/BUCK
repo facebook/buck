@@ -176,6 +176,9 @@ java_library(
     'LocalCachingBuildEngineDelegate.java',
   ],
   autodeps = True,
+  visibility = [
+    'PUBLIC',
+  ],
 )
 
 java_immutables_library(

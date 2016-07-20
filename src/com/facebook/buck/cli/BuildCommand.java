@@ -28,6 +28,7 @@ import com.facebook.buck.distributed.DistributedBuildFileHashes;
 import com.facebook.buck.distributed.DistributedBuildState;
 import com.facebook.buck.distributed.DistributedBuildTargetGraphCodec;
 import com.facebook.buck.distributed.DistributedBuildTypeCoercerFactory;
+import com.facebook.buck.distributed.DistributedCachingBuildEngineDelegate;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
@@ -44,6 +45,7 @@ import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
+import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildEngine;
@@ -52,6 +54,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -83,6 +86,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -435,11 +439,40 @@ public class BuildCommand extends AbstractCommand {
 
         if (loading) {
           DistributedBuildState state = DistributedBuildState.load(protocol, params.getCell());
-          TargetGraph targetGraph = state.createTargetGraph(targetGraphCodec);
-          params.getBuckEventBus().post(
-              ConsoleEvent.info(
-                  "Done loading state. Aliases %s, TargetNodes %s",
-                  targetGraph.getNodes()));
+          final TargetGraph targetGraph = state.createTargetGraph(targetGraphCodec);
+
+          ActionGraphAndResolver actionGraphAndResolver = Preconditions.checkNotNull(
+              params.getActionGraphCache().getActionGraph(
+                  params.getBuckEventBus(),
+                  /* checkActionGraphs */ false,
+                  targetGraph,
+                  params.getBuckConfig().getKeySeed()));
+          BuckConfig rootCellBuckConfig = state.getRootCell().getBuckConfig();
+          DistributedCachingBuildEngineDelegate cachingBuildEngineDelegate =
+              new DistributedCachingBuildEngineDelegate(
+                  new SourcePathResolver(actionGraphAndResolver.getResolver()),
+                  state);
+
+          // TODO(ruibm, marcinkosiba): This is incorrect, we probably need rule-level control
+          // over what gets built.
+          ImmutableList<TargetNodeSpec> targetNodeSpecs = parseArgumentsAsTargetNodeSpecs(
+              rootCellBuckConfig,
+              getArguments());
+          FluentIterable<BuildTarget> targetsToBuild = FluentIterable.from(targetNodeSpecs)
+              .transformAndConcat(new Function<TargetNodeSpec, Iterable<BuildTarget>>() {
+                @Override
+                public Iterable<BuildTarget> apply(TargetNodeSpec input) {
+                  return input.filter(targetGraph.getNodes()).keySet();
+                }
+              });
+          return executeBuild(
+              params,
+              actionGraphAndResolver,
+              executorService,
+              params.getArtifactCache(),
+              cachingBuildEngineDelegate,
+              rootCellBuckConfig,
+              targetsToBuild);
         } else {
           TargetGraphAndBuildTargets targetGraphAndBuildTargets =
               createTargetGraph(params, executorService);
@@ -462,6 +495,7 @@ public class BuildCommand extends AbstractCommand {
               targetGraphAndBuildTargets.getTargetGraph());
           jobState.write(protocol);
           transport.flush();
+          return 0;
         }
       } catch (TException e) {
         throw new RuntimeException(e);
@@ -477,8 +511,8 @@ public class BuildCommand extends AbstractCommand {
     OkHttpClient client = config.createOkHttpClient();
 
     try (HttpService httpService = new LoadBalancedService(slb, client, params.getBuckEventBus());
-        ThriftService<FrontendRequest, FrontendResponse> service = new ThriftOverHttpService<>(
-            ThriftOverHttpServiceConfig.of(httpService))) {
+         ThriftService<FrontendRequest, FrontendResponse> service = new ThriftOverHttpService<>(
+             ThriftOverHttpServiceConfig.of(httpService))) {
       DistributedBuild build = new DistributedBuild(
           new DistBuildService(service, params.getBuckEventBus()));
       return build.executeAndPrintFailuresToEventBus();
@@ -600,29 +634,47 @@ public class BuildCommand extends AbstractCommand {
       artifactCache = new NoopArtifactCache();
     }
 
-    try (Build build = createBuild(
+    return executeBuild(
+        params,
+        actionGraphAndResolver,
+        executor,
+        artifactCache,
+        new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
         params.getBuckConfig(),
+        buildTargets);
+  }
+
+  private int executeBuild(
+      CommandRunnerParams params,
+      ActionGraphAndResolver actionGraphAndResolver,
+      WeightedListeningExecutorService executor,
+      ArtifactCache artifactCache,
+      CachingBuildEngineDelegate cachingBuildEngineDelegate,
+      BuckConfig rootCellBuckConfig,
+      Iterable<? extends HasBuildTarget> targetsToBuild) throws IOException, InterruptedException {
+    try (Build build = createBuild(
+        rootCellBuckConfig,
         actionGraphAndResolver.getActionGraph(),
         actionGraphAndResolver.getResolver(),
         params.getCell(),
         params.getAndroidPlatformTargetSupplier(),
         new CachingBuildEngine(
-            new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
+            cachingBuildEngineDelegate,
             executor,
-            getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
-            params.getBuckConfig().getBuildDepFiles(),
-            params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
-            params.getBuckConfig().getBuildArtifactCacheSizeLimit(),
-            params.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
+            getBuildEngineMode().or(rootCellBuckConfig.getBuildEngineMode()),
+            rootCellBuckConfig.getBuildDepFiles(),
+            rootCellBuckConfig.getBuildMaxDepFileCacheEntries(),
+            rootCellBuckConfig.getBuildArtifactCacheSizeLimit(),
+            rootCellBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
             params.getObjectMapper(),
             actionGraphAndResolver.getResolver(),
-            params.getBuckConfig().getKeySeed()),
+            rootCellBuckConfig.getKeySeed()),
         artifactCache,
         params.getConsole(),
         params.getBuckEventBus(),
         Optional.<TargetDevice>absent(),
-        params.getPlatform(),
-        params.getEnvironment(),
+        rootCellBuckConfig.getPlatform(),
+        rootCellBuckConfig.getEnvironment(),
         params.getObjectMapper(),
         params.getClock(),
         Optional.<AdbOptions>absent(),
@@ -630,11 +682,11 @@ public class BuildCommand extends AbstractCommand {
         params.getExecutors())) {
       lastBuild = build;
       return build.executeAndPrintFailuresToEventBus(
-          buildTargets,
+          targetsToBuild,
           isKeepGoing(),
           params.getBuckEventBus(),
           params.getConsole(),
-          getPathToBuildReport(params.getBuckConfig()));
+          getPathToBuildReport(rootCellBuckConfig));
     }
   }
 

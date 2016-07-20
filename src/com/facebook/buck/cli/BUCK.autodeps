@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 3b0d0c1f0f4a30ba6435e857257f365b439ac414 #@#
+#@# GENERATED FILE: DO NOT MODIFY ccdd6c2224264c55d98f50b7ac58ed026a5e5814 #@#
 {
   "cli" : {
     "deps" : [
@@ -38,6 +38,7 @@
       "//src/com/facebook/buck/python:config",
       "//src/com/facebook/buck/rage:config",
       "//src/com/facebook/buck/rage:rage",
+      "//src/com/facebook/buck/rules:caching_build_engine_delegates",
       "//src/com/facebook/buck/rules:default_cell_path_resolver",
       "//src/com/facebook/buck/rules:relative_cell_name",
       "//src/com/facebook/buck/rules:rule_key",

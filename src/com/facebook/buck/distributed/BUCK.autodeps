@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 191a39f2f4683fd65aa42cdb240737d4daae1045 #@#
+#@# GENERATED FILE: DO NOT MODIFY 6c0a46b7bb0f623f42c218d5362e6b3301202770 #@#
 {
   "distributed" : {
     "deps" : [
@@ -20,6 +20,7 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:parser",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:caching_build_engine_delegates",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules:types",
       "//src/com/facebook/buck/rules/coercer:coercer",

@@ -115,7 +115,20 @@ public class DistributedBuildFileHashes {
                 remoteFileHashes.get(key));
           }
         });
-    this.ruleKeyFactories = CacheBuilder.newBuilder().build(
+    this.ruleKeyFactories = createRuleKeyFactories(sourcePathResolver, fileHashLoaders, keySeed);
+    this.ruleKeys = ruleKeyComputation(actionGraph, this.ruleKeyFactories, executorService);
+    this.fileHashes = fileHashesComputation(
+        Futures.transform(this.ruleKeys, Functions.<Void>constant(null)),
+        this.remoteFileHashes,
+        executorService);
+  }
+
+  public static LoadingCache<ProjectFilesystem, DefaultRuleKeyBuilderFactory>
+  createRuleKeyFactories(
+      final SourcePathResolver sourcePathResolver,
+      final LoadingCache<ProjectFilesystem, FileHashLoader> fileHashLoaders,
+      final int keySeed) {
+    return CacheBuilder.newBuilder().build(
         new CacheLoader<ProjectFilesystem, DefaultRuleKeyBuilderFactory>() {
           @Override
           public DefaultRuleKeyBuilderFactory load(ProjectFilesystem key) throws Exception {
@@ -126,11 +139,6 @@ public class DistributedBuildFileHashes {
             );
           }
         });
-    this.ruleKeys = ruleKeyComputation(actionGraph, this.ruleKeyFactories, executorService);
-    this.fileHashes = fileHashesComputation(
-        Futures.transform(this.ruleKeys, Functions.<Void>constant(null)),
-        this.remoteFileHashes,
-        executorService);
   }
 
   private static ListenableFuture<ImmutableMap<BuildRule, RuleKey>> ruleKeyComputation(

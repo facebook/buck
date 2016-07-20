@@ -22,6 +22,7 @@ import com.facebook.buck.distributed.thrift.BuildJobStateCell;
 import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;
 import com.facebook.buck.rules.Cell;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
@@ -36,6 +37,8 @@ import java.util.Map;
  */
 public class DistributedBuildCellIndexer implements Function<Path, Integer> {
 
+  public static final Integer ROOT_CELL_INDEX = 0;
+
   final Cell rootCell;
   final Map<Path, Integer> index;
   final Map<Integer, BuildJobStateCell> state;
@@ -44,6 +47,8 @@ public class DistributedBuildCellIndexer implements Function<Path, Integer> {
     this.rootCell = rootCell;
     this.index = new HashMap<>();
     this.state = new HashMap<>();
+    // Make sure root cell is at index 0.
+    Preconditions.checkState(ROOT_CELL_INDEX == this.apply(rootCell.getRoot()));
   }
 
   public Map<Integer, BuildJobStateCell> getState() {

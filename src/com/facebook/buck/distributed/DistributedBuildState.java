@@ -22,11 +22,14 @@ import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateCell;
+import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;
+import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
@@ -34,6 +37,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
@@ -52,13 +56,27 @@ import java.util.Map;
 public class DistributedBuildState {
 
   private final BuildJobState remoteState;
-  private final ImmutableMap<Integer, Cell> cells;
+  private final ImmutableBiMap<Integer, Cell> cells;
+  private final Map<ProjectFilesystem, BuildJobStateFileHashes> fileHashes;
 
-  public DistributedBuildState(
+  private DistributedBuildState(
       BuildJobState remoteState,
-      ImmutableMap<Integer, Cell> cells) {
+      final ImmutableBiMap<Integer, Cell> cells) {
     this.remoteState = remoteState;
     this.cells = cells;
+    this.fileHashes = Maps.uniqueIndex(
+        remoteState.getFileHashes(),
+        new Function<BuildJobStateFileHashes, ProjectFilesystem>() {
+          @Override
+          public ProjectFilesystem apply(BuildJobStateFileHashes input) {
+            int cellIndex = input.getCellIndex();
+            Cell cell = Preconditions.checkNotNull(
+                cells.get(cellIndex),
+                "Unknown cell index %s. Distributed build state dump corrupt?",
+                cellIndex);
+            return cell.getFilesystem();
+          }
+        });
   }
 
   public static BuildJobState dump(
@@ -89,7 +107,7 @@ public class DistributedBuildState {
     return new DistributedBuildState(jobState, createCells(jobState, rootCell));
   }
 
-  private static ImmutableMap<Integer, Cell> createCells(BuildJobState remoteState, Cell rootCell)
+  private static ImmutableBiMap<Integer, Cell> createCells(BuildJobState remoteState, Cell rootCell)
       throws IOException, InterruptedException {
     ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
 
@@ -115,7 +133,7 @@ public class DistributedBuildState {
         cellConfigs.build(),
         cellFilesystems.build());
 
-    return ImmutableMap.copyOf(Maps.transformValues(cellIndex.build(), cellLoader));
+    return ImmutableBiMap.copyOf(Maps.transformValues(cellIndex.build(), cellLoader));
   }
 
   private static Config createConfig(BuildJobStateBuckConfig remoteBuckConfig) {
@@ -170,6 +188,10 @@ public class DistributedBuildState {
     return cells;
   }
 
+  public Cell getRootCell() {
+    return Preconditions.checkNotNull(cells.get(DistributedBuildCellIndexer.ROOT_CELL_INDEX));
+  }
+
   public TargetGraph createTargetGraph(DistributedBuildTargetGraphCodec codec)
       throws IOException, InterruptedException {
     return codec.createTargetGraph(
@@ -177,4 +199,21 @@ public class DistributedBuildState {
         Functions.forMap(cells));
   }
 
+  public FileHashCache createFileHashLoader(ProjectFilesystem projectFilesystem) {
+    BuildJobStateFileHashes remoteFileHashes = Preconditions.checkNotNull(
+        fileHashes.get(projectFilesystem),
+        "Don't have file hashes for filesystem %s.",
+        projectFilesystem);
+    return DistributedBuildFileHashes.createFileHashCache(projectFilesystem, remoteFileHashes);
+  }
+
+  public FileHashLoader createMaterializingLoader(ProjectFilesystem projectFilesystem) {
+    BuildJobStateFileHashes remoteFileHashes = Preconditions.checkNotNull(
+        fileHashes.get(projectFilesystem),
+        "Don't have file hashes for filesystem %s.",
+        projectFilesystem);
+    return DistributedBuildFileHashes.createMaterializingLoader(
+        projectFilesystem,
+        remoteFileHashes);
+  }
 }
