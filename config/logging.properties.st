@@ -83,8 +83,8 @@ com.google.common.util.concurrent.level=OFF
 # Example: Disable logging for all classes under com.facebook.buck.rules
 # com.facebook.buck.rules.level=OFF
 
-# Disable Jetty session-scavenging noise (logged at level FINE)
-org.eclipse.jetty.server.session.level=INFO
+# Disable Jetty debug noise (logged at level FINE)
+org.eclipse.jetty.level=INFO
 
 # Allow watchman to log itself to the console
 com.facebook.buck.io.level=INFO
