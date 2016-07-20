@@ -370,7 +370,9 @@ public class LuaBinaryDescription implements
             ruleResolver,
             pathResolver,
             cxxPlatform,
-            output,
+            packageStyle == LuaConfig.PackageStyle.STANDALONE ?
+                output.resolveSibling(output.getFileName() + "-starter") :
+                output,
             starterType,
             nativeStarterLibrary,
             mainModule,
