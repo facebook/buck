@@ -1,4 +1,6 @@
+import os
 import unittest
+import tempfile
 
 from diff_rulekeys import *
 
@@ -125,6 +127,31 @@ class TestRuleKeyDiff(unittest.TestCase):
                 '    -[path(c:3)]',
                 '    +[<missing>]']
         self.assertEqual(result, expected)
+
+    def test_interesting_path_report(self):
+        temp_file = None
+        try:
+            temp_file = tempfile.NamedTemporaryFile(delete=False)
+            temp_file.close()
+
+            dirpath = os.getcwd()
+            filepath = temp_file.name
+
+            empty_hash = 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
+            self.assertEqual(
+                    reportOnInterestingPaths([dirpath, filepath]),
+                    [' %s is not a file' % dirpath,
+                     ' %s exists and hashes to %s' % (filepath, empty_hash)])
+
+            self.assertEqual(
+                    reportOnInterestingPaths(['no/suchfile', dirpath]),
+                    [' no/suchfile does not exist',
+                     ' %s is not a file' % dirpath])
+
+        finally:
+            if temp_file is not None:
+                os.unlink(temp_file.name)
+
 
 if __name__ == '__main__':
     unittest.main()

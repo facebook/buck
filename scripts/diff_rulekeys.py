@@ -263,15 +263,22 @@ def reportOnInterestingPaths(paths):
         if not os.path.exists(path):
             result.append(' %s does not exist' % path)
         else:
-            h = hashlib.sha1()
-            with open(path, 'rb') as f:
-                while True:
-                    buf = f.read(128 * 1204)
-                    if len(buf) == 0:
-                        break
-                    h.update(buf)
-            result.append(
-                    ' %s exists and hashes to %s' % (path, h.hexdigest()))
+            try:
+                if not os.path.isfile(path):
+                    result.append(' %s is not a file' % (path))
+                else:
+                    h = hashlib.sha1()
+                    with open(path, 'rb') as f:
+                        while True:
+                            buf = f.read(128 * 1024)
+                            if len(buf) == 0:
+                                break
+                            h.update(buf)
+                    result.append(
+                            ' %s exists and hashes to %s' %
+                            (path, h.hexdigest()))
+            except Exception as e:
+                result.append(' %s error hashing: %s' % (path, e))
 
     return result
 
