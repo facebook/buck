@@ -118,9 +118,10 @@ public class DistributedBuildState {
     for (Map.Entry<Integer, BuildJobStateCell> remoteCellEntry :
         remoteState.getCells().entrySet()) {
       BuildJobStateCell remoteCell = remoteCellEntry.getValue();
-      Path cellRoot = Files.createTempDirectory(
-          rootCellFilesystem.getRootPath().resolve(rootCellFilesystem.getBuckPaths().getBuckOut()),
-          String.format("remote_%s_", remoteCell.getNameHint()));
+      Path sandboxPath = rootCellFilesystem.getRootPath().resolve(
+          rootCellFilesystem.getBuckPaths().getRemoteSandboxDir());
+      rootCellFilesystem.mkdirs(sandboxPath);
+      Path cellRoot = Files.createTempDirectory(sandboxPath, remoteCell.getNameHint());
       Config config = createConfig(remoteCell.getConfig());
       ProjectFilesystem projectFilesystem = new ProjectFilesystem(cellRoot, config);
       BuckConfig buckConfig = createBuckConfig(config, projectFilesystem, remoteCell.getConfig());

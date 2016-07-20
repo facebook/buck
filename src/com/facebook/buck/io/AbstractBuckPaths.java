@@ -102,4 +102,8 @@ abstract class AbstractBuckPaths {
     return getLogDir().resolve("offline");
   }
 
+  @Value.Derived
+  public Path getRemoteSandboxDir() {
+    return getBuckOut().resolve("remote_sandbox");
+  }
 }
