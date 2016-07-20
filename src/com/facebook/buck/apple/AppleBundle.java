@@ -44,6 +44,8 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.FindAndReplaceStep;
@@ -115,6 +117,9 @@ public class AppleBundle
   private final Tool ibtool;
 
   @AddToRuleKey
+  private final Tool momc;
+
+  @AddToRuleKey
   private final ImmutableSortedSet<BuildTarget> tests;
 
   @AddToRuleKey
@@ -146,6 +151,7 @@ public class AppleBundle
   private final Optional<String> platformBuildVersion;
   private final Optional<String> xcodeVersion;
   private final Optional<String> xcodeBuildVersion;
+  private final Path sdkRoot;
 
   private final String minOSVersion;
   private final String binaryName;
@@ -187,6 +193,7 @@ public class AppleBundle
     this.extensionBundlePaths = extensionBundlePaths;
     this.frameworks = frameworks;
     this.ibtool = appleCxxPlatform.getIbtool();
+    this.momc = appleCxxPlatform.getMomc();
     this.assetCatalog = assetCatalog;
     this.binaryName = getBinaryName(getBuildTarget(), this.productName);
     this.bundleRoot =
@@ -198,6 +205,7 @@ public class AppleBundle
     this.platformName = sdk.getApplePlatform().getName();
     this.sdkName = sdk.getName();
     this.sdkVersion = sdk.getVersion();
+    this.sdkRoot = appleCxxPlatform.getAppleSdkPaths().getSdkPath();
     this.minOSVersion = appleCxxPlatform.getMinVersion();
     this.platformBuildVersion = appleCxxPlatform.getBuildVersion();
     this.xcodeBuildVersion = appleCxxPlatform.getXcodeBuildVersion();
@@ -722,6 +730,41 @@ public class AppleBundle
     }
   }
 
+  private void addCoreDataCompilationSteps(
+      final Path sourcePath,
+      final Path destinationPath,
+      ImmutableList.Builder<Step> stepsBuilder) {
+    LOG.debug("Compiling core data model %s to %s", sourcePath, destinationPath);
+
+    stepsBuilder.add(
+        new ShellStep(getProjectFilesystem().getRootPath()) {
+          @Override
+          protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+            ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
+
+            commandBuilder.addAll(momc.getCommandPrefix(getResolver()));
+            commandBuilder.add(
+                "--sdkroot", sdkRoot.toString(),
+                "--" + sdkName + "-deployment-target", minOSVersion,
+                "--module", binaryName,
+                getProjectFilesystem().resolve(sourcePath).toString(),
+                getProjectFilesystem().resolve(destinationPath.getParent()).toString());
+
+            return commandBuilder.build();
+          }
+
+          @Override
+          public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+            return momc.getEnvironment(getResolver());
+          }
+
+          @Override
+          public String getShortName() {
+            return "momc";
+          }
+        });
+  }
+
   private void addResourceProcessingSteps(
       Path sourcePath,
       Path destinationPath,
@@ -744,6 +787,9 @@ public class AppleBundle
         break;
       case "storyboard":
         addStoryboardProcessingSteps(sourcePath, destinationPath, stepsBuilder);
+        break;
+      case "xcdatamodeld":
+        addCoreDataCompilationSteps(sourcePath, destinationPath, stepsBuilder);
         break;
       case "xib":
         String compiledNibFilename = Files.getNameWithoutExtension(destinationPath.toString()) +

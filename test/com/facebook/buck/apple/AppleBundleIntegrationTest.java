@@ -720,7 +720,7 @@ public class AppleBundleIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
-        "app_bundle_with_xib_and_storyboard",
+        "app_bundle_with_compiled_resources",
         tmp);
     workspace.setUp();
     BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
@@ -744,6 +744,7 @@ public class AppleBundleIntegrationTest {
             "%s")
         .resolve(target.getShortName() + ".app");
     assertTrue(Files.exists(workspace.getPath(appPath.resolve("AppViewController.nib"))));
+    assertTrue(Files.exists(workspace.getPath(appPath.resolve("Model.momd"))));
   }
 
   @Test

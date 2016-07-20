@@ -553,7 +553,7 @@ public class AppleTestIntegrationTest {
   public void successForAppTestWithXib() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "app_bundle_with_xib_and_storyboard", tmp);
+        this, "app_bundle_with_compiled_resources", tmp);
     workspace.setUp();
     workspace.copyRecursively(
         TestDataHelper.getTestDataDirectory(this).resolve("xctool"),

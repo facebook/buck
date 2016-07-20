@@ -252,6 +252,11 @@ public class AppleCxxPlatforms {
         "apple-ibtool",
         version);
 
+    Tool momc = VersionedTool.of(
+        getToolPath("momc", toolSearchPaths, executableFinder),
+        "apple-momc",
+        version);
+
     Tool xctest = VersionedTool.of(
         getToolPath("xctest", toolSearchPaths, executableFinder),
         "apple-xctest",
@@ -416,6 +421,7 @@ public class AppleCxxPlatforms {
         .setBuildVersion(buildVersion)
         .setActool(actool)
         .setIbtool(ibtool)
+        .setMomc(momc)
         .setXctest(xctest)
         .setDsymutil(dsymutil)
         .setLipo(lipo)
