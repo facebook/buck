@@ -80,7 +80,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     ImmutableList.Builder<String> lines = ImmutableList.builder();
     this.parseTime.set(logEventPair(
         "PARSING BUCK FILES",
-        /* suffix */ Optional.<String>absent(),
+        /* suffix */ getParsingStatus(),
         clock.currentTimeMillis(),
         0L,
         buckFilesProcessing.values(),

@@ -254,7 +254,7 @@ class PerBuildState implements AutoCloseable {
       }
 
       // If we're not explicitly forbidding symlinks, either warn to the console or the log file
-      // depennding on the config setting.
+      // depending on the config setting.
       String msg =
           String.format(
               "Disabling caching for target %s, because one or more input files are under a " +

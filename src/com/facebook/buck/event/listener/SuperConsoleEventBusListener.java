@@ -284,7 +284,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
 
     long parseTime = logEventPair("PROCESSING BUCK FILES",
-        /* suffix */ Optional.<String>absent(),
+        /* suffix */ getParsingStatus(),
         currentTimeMillis,
         /* offsetMs */ 0L,
         buckFilesProcessing.values(),
