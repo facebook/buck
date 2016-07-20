@@ -26,6 +26,8 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.hashing.FileHashLoader;
+import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.HashingDeterministicJarWriter;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -51,16 +53,20 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -71,25 +77,36 @@ import java.util.jar.JarOutputStream;
 
 public class DistributedBuildFileHashesTest {
 
+
+  private static class SingleFileFixture extends Fixture {
+    protected Path javaSrcPath;
+    protected HashCode writtenHashCode;
+    protected String writtenContents;
+
+    public SingleFileFixture() throws Exception {
+    }
+
+    @Override
+    protected void setUpRules(
+        BuildRuleResolver resolver,
+        SourcePathResolver sourcePathResolver) throws Exception {
+      javaSrcPath = getPath("src", "A.java");
+
+      projectFilesystem.createParentDirs(javaSrcPath);
+      writtenContents = "public class A {}";
+      projectFilesystem.writeContentsToPath(writtenContents, javaSrcPath);
+      writtenHashCode = HashCode.fromString(projectFilesystem.computeSha1(javaSrcPath));
+
+      JavaLibraryBuilder.createBuilder(
+          BuildTargetFactory.newInstance(projectFilesystem, "//:java_lib"), projectFilesystem)
+          .addSrc(javaSrcPath)
+          .build(resolver, projectFilesystem);
+    }
+  }
+
   @Test
   public void recordsFileHashes() throws Exception {
-    Fixture f = new Fixture() {
-
-      @Override
-      protected void setUpRules(
-          BuildRuleResolver resolver,
-          SourcePathResolver sourcePathResolver) throws Exception {
-        Path javaSrcPath = getPath("src", "A.java");
-
-        projectFilesystem.createParentDirs(javaSrcPath);
-        projectFilesystem.writeContentsToPath("public class A {}", javaSrcPath);
-
-        JavaLibraryBuilder.createBuilder(
-            BuildTargetFactory.newInstance(projectFilesystem, "//:java_lib"), projectFilesystem)
-            .addSrc(javaSrcPath)
-            .build(resolver, projectFilesystem);
-      }
-    };
+    SingleFileFixture f = new SingleFileFixture();
 
     List<BuildJobStateFileHashes> recordedHashes = f.distributedBuildFileHashes.getFileHashes();
 
@@ -105,46 +122,143 @@ public class DistributedBuildFileHashesTest {
   }
 
   @Test
-  public void recordsArchiveHashes() throws Exception {
-    DebuggableTemporaryFolder firstFolder = null;
-    DebuggableTemporaryFolder secondFolder = null;
-    try {
-      firstFolder = new DebuggableTemporaryFolder();
-      firstFolder.create();
-      secondFolder = new DebuggableTemporaryFolder();
-      secondFolder.create();
-      Fixture f = new Fixture(
-          new ProjectFilesystem(firstFolder.getRootPath()),
-          new ProjectFilesystem(secondFolder.getRootPath())) {
+  public void cacheReadsHashesForFiles() throws Exception {
+    SingleFileFixture f = new SingleFileFixture();
 
-        @Override
-        protected void setUpRules(
-            BuildRuleResolver resolver,
-            SourcePathResolver sourcePathResolver) throws Exception {
-          Path archivePath = getPath("src", "archive.jar");
-          Path archiveMemberPath = getPath("Archive.class");
+    List<BuildJobStateFileHashes> fileHashes = f.distributedBuildFileHashes.getFileHashes();
+    f.projectFilesystem.getRootPath().getFileSystem().close();
+    f.secondProjectFilesystem.getRootPath().getFileSystem().close();
 
-          projectFilesystem.createParentDirs(archivePath);
-          try (HashingDeterministicJarWriter jarWriter =
-                   new HashingDeterministicJarWriter(
-                       new JarOutputStream(
-                           projectFilesystem.newFileOutputStream(archivePath)))) {
-            jarWriter.writeEntry("Archive.class", ByteSource.wrap("data".getBytes(Charsets.UTF_8)));
+    ProjectFilesystem readProjectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem(
+        "/read_hashes");
+    FileHashCache fileHashCache = DistributedBuildFileHashes.createFileHashCache(
+        readProjectFilesystem,
+        fileHashes.get(0));
 
-          }
+    assertThat(
+        fileHashCache.willGet(readProjectFilesystem.resolve(f.javaSrcPath)),
+        Matchers.equalTo(true));
 
-          resolver.addToIndex(new BuildRuleWithToolAndPath(
-              new FakeBuildRuleParamsBuilder("//:with_tool")
-                  .setProjectFilesystem(projectFilesystem)
-                  .build(),
-              sourcePathResolver,
-              null,
-              new ArchiveMemberSourcePath(
-                  new PathSourcePath(projectFilesystem, archivePath),
-                  archiveMemberPath)));
+    assertThat(
+        fileHashCache.get(readProjectFilesystem.resolve(f.javaSrcPath)),
+        Matchers.equalTo(f.writtenHashCode));
+  }
+
+  @Test
+  public void materializerWritesContents() throws Exception {
+    SingleFileFixture f = new SingleFileFixture();
+
+    List<BuildJobStateFileHashes> fileHashes = f.distributedBuildFileHashes.getFileHashes();
+    f.projectFilesystem.getRootPath().getFileSystem().close();
+    f.secondProjectFilesystem.getRootPath().getFileSystem().close();
+
+    ProjectFilesystem materializeProjectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem(
+        "/read_hashes");
+    FileHashLoader materializer = DistributedBuildFileHashes.createMaterializingLoader(
+        materializeProjectFilesystem,
+        fileHashes.get(0));
+
+    materializer.get(materializeProjectFilesystem.resolve(f.javaSrcPath));
+    assertThat(
+        materializeProjectFilesystem.readFileIfItExists(f.javaSrcPath),
+        Matchers.equalTo(Optional.of(f.writtenContents)));
+  }
+
+  @Test
+  public void cacheMaterializes() throws Exception {
+    SingleFileFixture f = new SingleFileFixture();
+
+    List<BuildJobStateFileHashes> fileHashes = f.distributedBuildFileHashes.getFileHashes();
+    f.projectFilesystem.getRootPath().getFileSystem().close();
+    f.secondProjectFilesystem.getRootPath().getFileSystem().close();
+
+    ProjectFilesystem readProjectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem(
+        "/read_hashes");
+    FileHashCache fileHashCache = DistributedBuildFileHashes.createFileHashCache(
+        readProjectFilesystem,
+        fileHashes.get(0));
+
+    assertThat(
+        fileHashCache.willGet(readProjectFilesystem.resolve("src/A.java")),
+        Matchers.equalTo(true));
+
+    assertThat(
+        fileHashCache.get(readProjectFilesystem.resolve("src/A.java")),
+        Matchers.equalTo(f.writtenHashCode));
+  }
+
+  private static class ArchiveFilesFixture extends Fixture implements AutoCloseable {
+    private final DebuggableTemporaryFolder firstFolder;
+    private final DebuggableTemporaryFolder secondFolder;
+    protected Path archivePath;
+    protected Path archiveMemberPath;
+    protected HashCode archiveMemberHash;
+
+    private ArchiveFilesFixture(
+        DebuggableTemporaryFolder firstFolder,
+        DebuggableTemporaryFolder secondFolder) throws Exception {
+      super(new ProjectFilesystem(firstFolder.getRootPath()),
+          new ProjectFilesystem(secondFolder.getRootPath()));
+      this.firstFolder = firstFolder;
+      this.secondFolder = secondFolder;
+    }
+
+    public static ArchiveFilesFixture create() throws Exception {
+      DebuggableTemporaryFolder firstFolder = null;
+      DebuggableTemporaryFolder secondFolder = null;
+      try {
+        firstFolder = new DebuggableTemporaryFolder();
+        firstFolder.create();
+        secondFolder = new DebuggableTemporaryFolder();
+        secondFolder.create();
+        return new ArchiveFilesFixture(firstFolder, secondFolder);
+      } catch (IOException e) {
+        firstFolder.delete();
+        if (secondFolder != null) {
+          secondFolder.delete();
         }
-      };
+        throw e;
+      }
+    }
 
+    @Override
+    protected void setUpRules(
+        BuildRuleResolver resolver,
+        SourcePathResolver sourcePathResolver) throws Exception {
+      archivePath = getPath("src", "archive.jar");
+      archiveMemberPath = getPath("Archive.class");
+
+      projectFilesystem.createParentDirs(archivePath);
+      try (HashingDeterministicJarWriter jarWriter =
+               new HashingDeterministicJarWriter(
+                   new JarOutputStream(
+                       projectFilesystem.newFileOutputStream(archivePath)))) {
+        byte[] archiveMemberData = "data".getBytes(Charsets.UTF_8);
+        archiveMemberHash = Hashing.murmur3_128().hashBytes(archiveMemberData);
+        jarWriter.writeEntry("Archive.class", ByteSource.wrap(archiveMemberData));
+      }
+
+      resolver.addToIndex(new BuildRuleWithToolAndPath(
+          new FakeBuildRuleParamsBuilder("//:with_tool")
+              .setProjectFilesystem(projectFilesystem)
+              .build(),
+          sourcePathResolver,
+          null,
+          new ArchiveMemberSourcePath(
+              new PathSourcePath(projectFilesystem, archivePath),
+              archiveMemberPath)));
+    }
+
+    @Override
+    public void close() throws Exception {
+      firstFolder.delete();
+      secondFolder.delete();
+    }
+  }
+
+  @Test
+  public void recordsArchiveHashes() throws Exception {
+    try (ArchiveFilesFixture f = ArchiveFilesFixture.create()) {
       List<BuildJobStateFileHashes> recordedHashes = f.distributedBuildFileHashes.getFileHashes();
 
       assertThat(recordedHashes, Matchers.hasSize(1));
@@ -156,13 +270,29 @@ public class DistributedBuildFileHashesTest {
       assertThat(fileHashEntry.getArchiveMemberPath(), Matchers.equalTo("Archive.class"));
       assertFalse(fileHashEntry.isPathIsAbsolute());
       assertFalse(fileHashEntry.isIsDirectory());
-    } finally {
-      if (firstFolder != null) {
-        firstFolder.delete();
-      }
-      if (secondFolder != null) {
-        secondFolder.delete();
-      }
+    }
+  }
+
+  @Test
+  public void readsHashesForArchiveMembers() throws Exception {
+    try (ArchiveFilesFixture f = ArchiveFilesFixture.create()) {
+      List<BuildJobStateFileHashes> recordedHashes = f.distributedBuildFileHashes.getFileHashes();
+
+      ProjectFilesystem readProjectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem(
+          "/read_hashes");
+      FileHashCache fileHashCache = DistributedBuildFileHashes.createFileHashCache(
+          readProjectFilesystem,
+          recordedHashes.get(0));
+
+      ArchiveMemberPath archiveMemberPath = ArchiveMemberPath.of(
+          readProjectFilesystem.resolve(f.archivePath),
+          f.archiveMemberPath);
+      assertThat(
+          fileHashCache.willGet(archiveMemberPath),
+          Matchers.is(true));
+      assertThat(
+          fileHashCache.get(archiveMemberPath),
+          Matchers.is(f.archiveMemberHash));
     }
   }
 
@@ -302,11 +432,11 @@ public class DistributedBuildFileHashesTest {
     protected final ProjectFilesystem secondProjectFilesystem;
     protected final FileSystem secondJavaFs;
 
-    private final ActionGraph actionGraph;
-    private final BuildRuleResolver buildRuleResolver;
-    private final SourcePathResolver sourcePathResolver;
-    private final FakeIndexer cellIndexer;
-    private final DistributedBuildFileHashes distributedBuildFileHashes;
+    protected final ActionGraph actionGraph;
+    protected final BuildRuleResolver buildRuleResolver;
+    protected final SourcePathResolver sourcePathResolver;
+    protected final FakeIndexer cellIndexer;
+    protected final DistributedBuildFileHashes distributedBuildFileHashes;
 
     public Fixture(ProjectFilesystem first, ProjectFilesystem second) throws Exception {
       eventBus = BuckEventBusFactory.newInstance();

@@ -34,10 +34,13 @@ import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -47,7 +50,9 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -63,6 +68,15 @@ import javax.annotation.concurrent.GuardedBy;
  * and presenting it as a Thrift data structure.
  */
 public class DistributedBuildFileHashes {
+
+  private static final Function<BuildJobStateFileHashEntry, HashCode>
+      HASH_CODE_FROM_FILE_HASH_ENTRY =
+      new Function<BuildJobStateFileHashEntry, HashCode>() {
+        @Override
+        public HashCode apply(BuildJobStateFileHashEntry input) {
+          return HashCode.fromString(input.getHashCode());
+        }
+      };
 
   private final LoadingCache<ProjectFilesystem, BuildJobStateFileHashes> remoteFileHashes;
   private final LoadingCache<ProjectFilesystem, FileHashLoader> fileHashLoaders;
@@ -186,6 +200,193 @@ public class DistributedBuildFileHashes {
     }
   }
 
+  /**
+   * Creates a {@link FileHashCache} that returns the hash codes cached on the remote end.
+   *
+   * @param projectFilesystem filesystem in which the new cache will be rooted. The serialized state
+   *                          only contains relative path, therefore this is needed to indicate
+   *                          where on the local machine we wish to transplant the files from the
+   *                          remote to.
+   * @param remoteFileHashes the serialized state.
+   * @return the cache.
+   */
+  public static FileHashCache createFileHashCache(
+      ProjectFilesystem projectFilesystem,
+      BuildJobStateFileHashes remoteFileHashes) {
+    return new RemoteStateBasedFileHashCache(projectFilesystem, remoteFileHashes);
+  }
+
+  /**
+   * Creates a {@link FileHashLoader} which creates the files that are being hashed but does
+   * not return a HashCode.
+   *
+   * @param projectFilesystem filesystem in which the new cache will be rooted. The serialized state
+   *                          only contains relative path, therefore this is needed to indicate
+   *                          where on the local machine we wish to transplant the files from the
+   *                          remote to.
+   * @param remoteFileHashes the serialized state.
+   * @return the loader.
+   */
+  public static FileHashLoader createMaterializingLoader(
+      ProjectFilesystem projectFilesystem,
+      BuildJobStateFileHashes remoteFileHashes) {
+    return new FileMaterializer(projectFilesystem, remoteFileHashes);
+  }
+
+  private static ImmutableMap<Path, BuildJobStateFileHashEntry> indexEntriesByPath(
+      final ProjectFilesystem projectFilesystem,
+      BuildJobStateFileHashes remoteFileHashes) {
+    return FluentIterable.from(remoteFileHashes.entries)
+        .filter(new Predicate<BuildJobStateFileHashEntry>() {
+          @Override
+          public boolean apply(BuildJobStateFileHashEntry input) {
+            return !input.isPathIsAbsolute() && !input.isSetArchiveMemberPath();
+          }
+        })
+        .uniqueIndex(
+            new Function<BuildJobStateFileHashEntry, Path>() {
+              @Override
+              public Path apply(BuildJobStateFileHashEntry input) {
+                return projectFilesystem.resolve(
+                    MorePaths.pathWithPlatformSeparators(input.getPath().getPath()));
+              }
+            });
+  }
+
+  private static ImmutableMap<ArchiveMemberPath, BuildJobStateFileHashEntry>
+  indexEntriesByArchivePath(
+      final ProjectFilesystem projectFilesystem,
+      BuildJobStateFileHashes remoteFileHashes) {
+    return FluentIterable.from(remoteFileHashes.entries)
+        .filter(new Predicate<BuildJobStateFileHashEntry>() {
+          @Override
+          public boolean apply(BuildJobStateFileHashEntry input) {
+            return !input.isPathIsAbsolute() && input.isSetArchiveMemberPath();
+          }
+        })
+        .uniqueIndex(
+            new Function<BuildJobStateFileHashEntry, ArchiveMemberPath>() {
+              @Override
+              public ArchiveMemberPath apply(BuildJobStateFileHashEntry input) {
+                return ArchiveMemberPath.of(
+                    projectFilesystem.resolve(
+                        MorePaths.pathWithPlatformSeparators(input.getPath().getPath())),
+                    Paths.get(input.getArchiveMemberPath())
+                );
+              }
+            });
+  }
+
+  private static class FileMaterializer implements FileHashLoader {
+    private final Map<Path, BuildJobStateFileHashEntry> remoteFileHashes;
+    private final Set<Path> materializedPaths;
+
+    public FileMaterializer(
+        final ProjectFilesystem projectFilesystem,
+        BuildJobStateFileHashes remoteFileHashes) {
+      this.remoteFileHashes = indexEntriesByPath(projectFilesystem, remoteFileHashes);
+      this.materializedPaths = new HashSet<>();
+    }
+
+    private void materializeIfNeeded(Path path) throws IOException {
+      if (materializedPaths.contains(path)) {
+        return;
+      }
+      materializedPaths.add(path);
+
+      BuildJobStateFileHashEntry fileHashEntry = remoteFileHashes.get(path);
+      if (fileHashEntry == null ||
+          fileHashEntry.isIsDirectory() ||
+          fileHashEntry.isPathIsAbsolute() ||
+          !fileHashEntry.isSetContents()) {
+        return;
+      }
+      Files.createDirectories(path.getParent());
+      Files.write(path, fileHashEntry.getContents());
+    }
+
+    @Override
+    public HashCode get(Path path) throws IOException {
+      materializeIfNeeded(path);
+      return HashCode.fromInt(0);
+    }
+
+    @Override
+    public long getSize(Path path) throws IOException {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
+      materializeIfNeeded(archiveMemberPath.getArchivePath());
+      return HashCode.fromInt(0);
+    }
+  }
+
+  private static class RemoteStateBasedFileHashCache implements FileHashCache {
+    private final Map<Path, HashCode> remoteFileHashes;
+    private final Map<ArchiveMemberPath, HashCode> remoteArchiveHashes;
+
+    public RemoteStateBasedFileHashCache(
+        final ProjectFilesystem projectFilesystem,
+        BuildJobStateFileHashes remoteFileHashes) {
+      this.remoteFileHashes =
+          Maps.transformValues(
+              indexEntriesByPath(projectFilesystem, remoteFileHashes),
+              HASH_CODE_FROM_FILE_HASH_ENTRY);
+      this.remoteArchiveHashes =
+          Maps.transformValues(
+              indexEntriesByArchivePath(projectFilesystem, remoteFileHashes),
+              HASH_CODE_FROM_FILE_HASH_ENTRY);
+    }
+
+    @Override
+    public HashCode get(Path path) throws IOException {
+      return Preconditions.checkNotNull(
+          remoteFileHashes.get(path),
+          "Path %s not in remote file hash.",
+          path);
+    }
+
+    @Override
+    public long getSize(Path path) throws IOException {
+      return 0;
+    }
+
+    @Override
+    public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
+      return Preconditions.checkNotNull(
+          remoteArchiveHashes.get(archiveMemberPath),
+          "Archive path %s not in remote file hash.",
+          archiveMemberPath);
+    }
+
+    @Override
+    public boolean willGet(Path path) {
+      return remoteFileHashes.containsKey(path);
+    }
+
+    @Override
+    public boolean willGet(ArchiveMemberPath archiveMemberPath) {
+      return remoteArchiveHashes.containsKey(archiveMemberPath);
+    }
+
+    @Override
+    public void invalidate(Path path) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void invalidateAll() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void set(Path path, HashCode hashCode) throws IOException {
+      throw new UnsupportedOperationException();
+    }
+  }
+
   private static class RecordingFileHashLoader implements FileHashLoader {
     private final FileHashLoader delegate;
     private final ProjectFilesystem projectFilesystem;
@@ -229,19 +430,23 @@ public class DistributedBuildFileHashes {
           projectFilesystem.getPathRelativeToProjectRoot(path);
       BuildJobStateFileHashEntry fileHashEntry = new BuildJobStateFileHashEntry();
       Path entryKey;
-      if (pathRelativeToProjectRoot.isPresent()) {
-        entryKey = pathRelativeToProjectRoot.get();
-        fileHashEntry.setPathIsAbsolute(false);
-      } else {
-        entryKey = path;
-        fileHashEntry.setPathIsAbsolute(true);
-      }
-      fileHashEntry.setIsDirectory(projectFilesystem.isDirectory(path));
+      boolean pathIsAbsolute = !pathRelativeToProjectRoot.isPresent();
+      fileHashEntry.setPathIsAbsolute(pathIsAbsolute);
+      entryKey = pathIsAbsolute ? path : pathRelativeToProjectRoot.get();
+      boolean isDirectory = projectFilesystem.isDirectory(path);
+      fileHashEntry.setIsDirectory(isDirectory);
       fileHashEntry.setHashCode(hashCode.toString());
       fileHashEntry.setPath(
           new PathWithUnixSeparators(MorePaths.pathWithUnixSeparators(entryKey)));
       if (memberPath.isPresent()) {
         fileHashEntry.setArchiveMemberPath(memberPath.get().toString());
+      }
+      if (!isDirectory && !pathIsAbsolute) {
+        try {
+          fileHashEntry.setContents(Files.readAllBytes(path));
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
       }
       remoteFileHashes.addToEntries(fileHashEntry);
     }

@@ -87,6 +87,7 @@ struct BuildJobStateFileHashEntry {
   4: optional bool isDirectory;
   // The paths to source files are relative, the paths to tools, SDKs, etc.. are absolute.
   5: optional bool pathIsAbsolute;
+  6: optional binary contents;
 }
 
 struct BuildJobStateFileHashes {
