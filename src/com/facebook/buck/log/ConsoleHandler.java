@@ -18,14 +18,13 @@ package com.facebook.buck.log;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Iterables;
 
 import java.io.IOError;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.Collection;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -67,9 +66,11 @@ public class ConsoleHandler extends Handler {
   }
 
   @Override
-  public synchronized void publish(LogRecord record) {
-    if (closed || !(isLoggable(record) || isLoggableWithRegisteredLogLevel(record))) {
-      return;
+  public void publish(LogRecord record) {
+    synchronized (this) {
+      if (closed || !(isLoggable(record) || isLoggableWithRegisteredLogLevel(record))) {
+        return;
+      }
     }
 
     Iterable<OutputStreamWriter> outputStreamWriters = getOutputStreamWritersForRecord(record);
@@ -78,9 +79,11 @@ public class ConsoleHandler extends Handler {
       String formatted = getFormatter().format(record);
 
       for (OutputStreamWriter outputStreamWriter : outputStreamWriters) {
-        outputStreamWriter.write(formatted);
-        if (record.getLevel().intValue() >= Level.SEVERE.intValue()) {
-          outputStreamWriter.flush();
+        synchronized (outputStreamWriter) {
+          outputStreamWriter.write(formatted);
+          if (record.getLevel().intValue() >= Level.SEVERE.intValue()) {
+            outputStreamWriter.flush();
+          }
         }
       }
     } catch (IOException e) {
@@ -89,23 +92,34 @@ public class ConsoleHandler extends Handler {
   }
 
   @Override
-  public synchronized void close() {
-    flush();
-    // We explicitly do not close any registered writers, so we don't close
-    // System.err accidentally.
-    closed = true;
+  public void close() {
+    synchronized (this) {
+      if (!closed) {
+        flush();
+        // We explicitly do not close any registered writers, so we don't close
+        // System.err accidentally.
+        closed = true;
+      }
+    }
   }
 
   @Override
-  public synchronized void flush() {
-    if (closed) {
-      return;
+  public void flush() {
+    synchronized (this) {
+      if (closed) {
+        return;
+      }
     }
+
     try {
       for (OutputStreamWriter outputStreamWriter : state.getAllAvailableWriters()) {
-        outputStreamWriter.flush();
+        synchronized (outputStreamWriter) {
+          outputStreamWriter.flush();
+        }
       }
-      defaultOutputStreamWriter.flush();
+      synchronized (defaultOutputStreamWriter) {
+        defaultOutputStreamWriter.flush();
+      }
     } catch (IOException e) {
       throw new IOError(e);
     }
@@ -147,26 +161,24 @@ public class ConsoleHandler extends Handler {
   }
 
   private Iterable<OutputStreamWriter> getOutputStreamWritersForRecord(LogRecord record) {
-    ImmutableSet.Builder<OutputStreamWriter> builder = ImmutableSet.builder();
     long recordThreadId = record.getThreadID();
     String logRecordCommandId = state.threadIdToCommandId(recordThreadId);
     if (logRecordCommandId != null) {
       OutputStreamWriter consoleWriter = state.getWriter(logRecordCommandId);
       if (consoleWriter != null) {
-        builder.add(consoleWriter);
+        return ImmutableSet.of(consoleWriter);
       } else {
-        builder.add(defaultOutputStreamWriter);
+        return ImmutableSet.of(defaultOutputStreamWriter);
       }
     } else {
-      Collection<OutputStreamWriter> allConsoleWriters = Lists.newArrayList(
-          state.getAllAvailableWriters());
-      if (allConsoleWriters.isEmpty()) {
-        builder.add(defaultOutputStreamWriter);
+      Iterable<OutputStreamWriter> allConsoleWriters = state.getAllAvailableWriters();
+      if (Iterables.isEmpty(allConsoleWriters)) {
+        return ImmutableSet.of(defaultOutputStreamWriter);
       } else {
+        ImmutableSet.Builder<OutputStreamWriter> builder = ImmutableSet.builder();
         builder.addAll(allConsoleWriters);
+        return builder.build();
       }
     }
-
-    return builder.build();
   }
 }
