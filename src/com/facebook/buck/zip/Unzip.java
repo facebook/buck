@@ -55,7 +55,16 @@ public class Unzip {
       ProjectFilesystem filesystem,
       Path relativePath,
       ExistingFileMode existingFileMode) throws IOException {
-
+    // if requested, clean before extracting
+    if (existingFileMode == ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES) {
+      try (ZipFile zip = new ZipFile(zipFile.toFile())) {
+        Enumeration<ZipArchiveEntry> entries = zip.getEntries();
+        while (entries.hasMoreElements()) {
+          ZipArchiveEntry entry = entries.nextElement();
+          filesystem.deleteRecursivelyIfExists(relativePath.resolve(entry.getName()));
+        }
+      }
+    }
     ImmutableList.Builder<Path> filesWritten = ImmutableList.builder();
     try (ZipFile zip = new ZipFile(zipFile.toFile())) {
       Enumeration<ZipArchiveEntry> entries = zip.getEntries();
@@ -63,17 +72,6 @@ public class Unzip {
         ZipArchiveEntry entry = entries.nextElement();
         String fileName = entry.getName();
         Path target = relativePath.resolve(fileName);
-        if (filesystem.exists(target)) {
-          switch (existingFileMode) {
-            case OVERWRITE:
-              // Unpack the file or directory as usual, overwriting the file.
-              break;
-            case OVERWRITE_AND_CLEAN_DIRECTORIES:
-              // Delete the file or directory before unpacking it.
-              filesystem.deleteRecursivelyIfExists(target);
-              break;
-          }
-        }
 
         // TODO(bolinfest): Keep track of which directories have already been written to avoid
         // making unnecessary Files.createDirectories() calls. In practice, a single zip file will
