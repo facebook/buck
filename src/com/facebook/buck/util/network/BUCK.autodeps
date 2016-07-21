@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 6962efc0184163188f917d9cb9f4991d28a76d8a #@#
+#@# GENERATED FILE: DO NOT MODIFY b26080485438fe276e50dce7e6d6ac03c705de48 #@#
 {
   "network" : {
     "deps" : [
@@ -10,6 +10,8 @@
       "//third-party/java/jackson:jackson-core"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/util:io",
       "//third-party/java/guava:guava",
       "//third-party/java/jackson:jackson-databind",

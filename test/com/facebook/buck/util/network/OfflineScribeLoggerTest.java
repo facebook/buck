@@ -16,60 +16,176 @@
 
 package com.facebook.buck.util.network;
 
-
-
+import static com.facebook.buck.util.network.OfflineScribeLogger.LOGFILE_PATTERN;
+import static com.facebook.buck.util.network.OfflineScribeLogger.LOGFILE_PREFIX;
+import static com.facebook.buck.util.network.OfflineScribeLogger.LOGFILE_SUFFIX;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildId;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.util.ObjectMappers;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.hamcrest.Matchers;
+import org.hamcrest.collection.IsIterableWithSize;
+import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class OfflineScribeLoggerTest {
+
+  @Rule
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void unsentLinesStoredForOffline() throws Exception {
     final String whitelistedCategory = "whitelisted_category";
     final String whitelistedCategory2 = "whitelisted_category_2";
     final String blacklistedCategory = "blacklisted_category";
-    FakeFailingOfflineScribeLogger fakeLogger = new FakeFailingOfflineScribeLogger(
-        ImmutableList.of(blacklistedCategory));
 
+    final ImmutableList<String> blacklistCategories = ImmutableList.of(blacklistedCategory);
+    final int maxScribeOfflineLogsKB = 7;
+    final ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    final Path logDir = filesystem.getBuckPaths().getOfflineLogDir();
+    final ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
+    String[] ids = {"test1", "test2", "test3", "test4"};
 
-    // Simulate network issues occurring for some of sending attempts (all after first one).
+    char[] longLineBytes = new char[1000];
+    Arrays.fill(longLineBytes, 'A');
+    String longLine = new String(longLineBytes);
+    char[] tooLongLineBytes = new char[6000];
+    Arrays.fill(longLineBytes, 'A');
+    String tooLongLine = new String(tooLongLineBytes);
 
-    // Logging succeeds.
-    fakeLogger.log(
-        whitelistedCategory,
-        ImmutableList.of(
-            "hello world 1",
-            "hello world 2"));
-    // Logging fails.
-    fakeLogger.log(
-        whitelistedCategory,
-        ImmutableList.of(
-            "hello world 3",
-            "hello world 4"));
-    // Event with blacklisted (not whitelisted) category for offline logging.
-    fakeLogger.log(
-        blacklistedCategory,
-        ImmutableList.of(
-            "hello world 5",
-            "hello world 6"));
-    // Logging fails.
-    fakeLogger.log(
-        whitelistedCategory2,
-        ImmutableList.of(
-            "hello world 7",
-            "hello world 8"));
+    // As we set max space for logs to 7KB, then we expect storing data with 2 'longLine' (which,
+    // given UTF-8 is used, will be ~ 2 * 1KB) to succeed. We then expect subsequent attempt to
+    // store data with 'tooLongLine' (~6KB) to fail. We also expect that logfile created by first
+    // fakeLogger ('test1' id) will be removed as otherwise data from last logger would not fit.
+    FakeFailingOfflineScribeLogger fakeLogger = null;
+    for (String id : ids) {
+      fakeLogger = new FakeFailingOfflineScribeLogger(
+          blacklistCategories,
+          maxScribeOfflineLogsKB,
+          filesystem,
+          logDir,
+          objectMapper,
+          new BuildId(id));
 
-    fakeLogger.close();
+      // Simulate network issues occurring for some of sending attempts (all after first one).
 
-    assertEquals(2, fakeLogger.getStoredCategoriesWithLinesCount());
+      // Logging succeeds.
+      fakeLogger.log(
+          whitelistedCategory,
+          ImmutableList.of(
+              "hello world 1",
+              "hello world 2"));
+      // Logging fails.
+      fakeLogger.log(
+          whitelistedCategory,
+              ImmutableList.of(
+              "hello world 3",
+              "hello world 4"));
+      // Event with blacklisted category for offline logging.
+      fakeLogger.log(
+          blacklistedCategory,
+          ImmutableList.of(
+              "hello world 5",
+              "hello world 6"));
+      // Logging fails.
+      fakeLogger.log(
+          whitelistedCategory2,
+          ImmutableList.of(
+              longLine,
+              longLine));
+      // Logging fails, but offline logging rejects data as well - too big.
+      fakeLogger.log(
+          whitelistedCategory2,
+          ImmutableList.of(
+              tooLongLine));
+
+      fakeLogger.close();
+    }
+
+    // Check correct logs are in the directory (1st log removed).
+    Path[] expectedLogPaths = FluentIterable
+        .from(ImmutableList.copyOf(ids))
+        .transform(
+            new Function<String, Path>() {
+              @Override
+              public Path apply(String id) {
+                return filesystem.resolve(logDir.resolve(LOGFILE_PREFIX + id + LOGFILE_SUFFIX));
+              }
+            })
+        .toArray(Path.class);
+
+    ImmutableSortedSet<Path> logs =
+        filesystem.getSortedMatchingDirectoryContents(logDir, LOGFILE_PATTERN);
+    assertThat(logs, Matchers.allOf(
+        hasItem(expectedLogPaths[1]),
+        hasItem(expectedLogPaths[2]),
+        hasItem(expectedLogPaths[3]),
+        IsIterableWithSize.<Path>iterableWithSize(3)
+    ));
+
+    // Check that last logger logged correct data.
+    assertEquals(3, fakeLogger.getAttemptStoringCategoriesWithLinesCount());
+
+    InputStream logFile = fakeLogger.getStoredLog();
+    String[] whitelistedCategories = {whitelistedCategory, whitelistedCategory2};
+    String[][] whitelistedLines = {{"hello world 3", "hello world 4"}, {longLine, longLine}};
+
+    Iterator<OfflineScribeLogger.ScribeData> it = null;
+    try {
+      it = new ObjectMapper().readValues(
+          new JsonFactory().createParser(logFile), OfflineScribeLogger.ScribeData.class);
+    } catch (Exception e) {
+      fail("Obtaining iterator for reading the log failed.");
+    }
+
+    int dataNum = 0;
+    try {
+      while (it.hasNext()) {
+        assertTrue(dataNum < 2);
+
+        OfflineScribeLogger.ScribeData data = it.next();
+        assertThat(data.getCategory(), is(whitelistedCategories[dataNum]));
+        assertThat(data.getLines(), Matchers.allOf(
+            hasItem(whitelistedLines[dataNum][0]),
+            hasItem(whitelistedLines[dataNum][1]),
+            IsIterableWithSize.<String>iterableWithSize(2)
+        ));
+
+        dataNum++;
+      }
+    } catch (Exception e) {
+      fail("Reading stored offline log failed.");
+    }
+
+    logFile.close();
+    assertEquals(2, dataNum);
   }
 
   /**
@@ -78,16 +194,33 @@ public class OfflineScribeLoggerTest {
    */
   private final class FakeFailingOfflineScribeLogger extends ScribeLogger {
 
-    private final OfflineScribeLogger offlineScribeLogger;
     private final ImmutableList<String> blacklistCategories;
+    private final BuildId id;
+    private final ProjectFilesystem filesystem;
+    private final Path logDir;
+    private final OfflineScribeLogger offlineScribeLogger;
     private final AtomicInteger storedCategoriesWithLines;
 
-    public FakeFailingOfflineScribeLogger(ImmutableList<String> blacklistCategories) {
+
+    public FakeFailingOfflineScribeLogger(
+        ImmutableList<String> blacklistCategories,
+        int maxScribeOfflineLogs,
+        ProjectFilesystem filesystem,
+        Path logDir,
+        ObjectMapper objectMapper,
+        BuildId id) throws IOException {
+      this.blacklistCategories = blacklistCategories;
+      this.id = id;
+      this.filesystem = filesystem;
+      this.logDir = logDir;
       this.offlineScribeLogger = new OfflineScribeLogger(
           new FakeFailingScribeLogger(),
-          blacklistCategories);
-      this.blacklistCategories = blacklistCategories;
-      storedCategoriesWithLines = new AtomicInteger(0);
+          blacklistCategories,
+          maxScribeOfflineLogs,
+          filesystem,
+          objectMapper,
+          id);
+      this.storedCategoriesWithLines = new AtomicInteger(0);
     }
 
     @Override
@@ -115,8 +248,17 @@ public class OfflineScribeLoggerTest {
       offlineScribeLogger.close();
     }
 
-    public int getStoredCategoriesWithLinesCount() {
+    public int getAttemptStoringCategoriesWithLinesCount() {
       return storedCategoriesWithLines.get();
+    }
+
+
+    public BufferedInputStream getStoredLog() throws FileNotFoundException {
+      return new BufferedInputStream(
+          new FileInputStream(
+              filesystem
+                  .resolve(logDir.resolve(LOGFILE_PREFIX + id + LOGFILE_SUFFIX))
+                  .toFile()));
     }
 
   }
