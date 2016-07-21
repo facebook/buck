@@ -45,6 +45,10 @@ BUILD_FUNCTIONS = []
 
 VERIFY_AUTODEPS_SIGNATURE = False
 
+# Wait this many seconds on recv() or send() in the pywatchman client
+# if not otherwise specified in .buckconfig
+DEFAULT_WATCHMAN_QUERY_TIMEOUT = 5.0
+
 class SyncCookieState(object):
     """
     Process-wide state used to enable Watchman sync cookies only on
@@ -1109,6 +1113,8 @@ def main():
             # pywatchman expects a timeout as a nonnegative floating-point
             # value in seconds.
             client_args['timeout'] = max(0.0, options.watchman_query_timeout_ms / 1000.0)
+        else:
+            client_args['timeout'] = DEFAULT_WATCHMAN_QUERY_TIMEOUT
         if options.watchman_socket_path is not None:
             client_args['sockpath'] = options.watchman_socket_path
             client_args['transport'] = 'local'
