@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildEvent;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 
-import java.util.concurrent.TimeUnit;
 
 /**
  * In charge for monitoring builds that store artifacts to the remote cache and computing
@@ -127,7 +126,7 @@ public class HttpArtifactCacheUploadListener implements BuckEventListener {
     if (totalNetworkTimeMillis > 0) {
       builder.putValues(
           "average_bytes_per_second",
-          totalUploadedBytes / TimeUnit.MILLISECONDS.toSeconds(totalNetworkTimeMillis));
+          (1000 * totalUploadedBytes) / totalNetworkTimeMillis);
     }
 
     if (buildFinishMillis != -1 && lastUploadFinishMillis != -1) {
