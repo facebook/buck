@@ -343,18 +343,26 @@ def subdir_glob(glob_specs, excludes=[], prefix=None, build_env=None, search_bas
     return merge_maps(*results)
 
 
+COLLAPSE_SLASHES = re.compile(r'/+')
+
 def format_watchman_query_params(includes, excludes, include_dotfiles, relative_root):
     match_exprs = ["allof", "exists", ["anyof", ["type", "f"], ["type", "l"]]]
     match_flags = {}
+
     if include_dotfiles:
         match_flags["includedotfiles"] = True
     if includes:
         match_exprs.append(
-            ["anyof"] + [["match", i, "wholename", match_flags] for i in includes])
+            ["anyof"] +
+            # Collapse multiple consecutive slashes in pattern until fix in
+            # https://github.com/facebook/watchman/pull/310/ is available
+            [["match", COLLAPSE_SLASHES.sub('/', i), "wholename", match_flags] for i in includes])
     if excludes:
         match_exprs.append(
             ["not",
-                ["anyof"] + [["match", x, "wholename", match_flags] for x in excludes]])
+             ["anyof"] +
+             [["match", COLLAPSE_SLASHES.sub('/', x), "wholename", match_flags]
+              for x in excludes]])
 
     return {
         "relative_root": relative_root,
