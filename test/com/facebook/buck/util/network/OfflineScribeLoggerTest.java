@@ -157,10 +157,10 @@ public class OfflineScribeLoggerTest {
     String[] whitelistedCategories = {whitelistedCategory, whitelistedCategory2};
     String[][] whitelistedLines = {{"hello world 3", "hello world 4"}, {longLine, longLine}};
 
-    Iterator<OfflineScribeLogger.ScribeData> it = null;
+    Iterator<ScribeData> it = null;
     try {
       it = new ObjectMapper().readValues(
-          new JsonFactory().createParser(logFile), OfflineScribeLogger.ScribeData.class);
+          new JsonFactory().createParser(logFile), ScribeData.class);
     } catch (Exception e) {
       fail("Obtaining iterator for reading the log failed.");
     }
@@ -170,7 +170,7 @@ public class OfflineScribeLoggerTest {
       while (it.hasNext()) {
         assertTrue(dataNum < 2);
 
-        OfflineScribeLogger.ScribeData data = it.next();
+        ScribeData data = it.next();
         assertThat(data.getCategory(), is(whitelistedCategories[dataNum]));
         assertThat(data.getLines(), Matchers.allOf(
             hasItem(whitelistedLines[dataNum][0]),
@@ -252,7 +252,6 @@ public class OfflineScribeLoggerTest {
       return storedCategoriesWithLines.get();
     }
 
-
     public BufferedInputStream getStoredLog() throws FileNotFoundException {
       return new BufferedInputStream(
           new FileInputStream(
@@ -260,6 +259,5 @@ public class OfflineScribeLoggerTest {
                   .resolve(logDir.resolve(LOGFILE_PREFIX + id + LOGFILE_SUFFIX))
                   .toFile()));
     }
-
   }
 }

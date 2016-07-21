@@ -1,4 +1,7 @@
 standard_java_library(
+  immutable_types = [
+    'ScribeData',
+  ],
   tests = [
     '//test/com/facebook/buck/util/network:network',
     '//test/com/facebook/buck/util:util',

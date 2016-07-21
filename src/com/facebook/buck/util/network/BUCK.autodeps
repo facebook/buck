@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY b26080485438fe276e50dce7e6d6ac03c705de48 #@#
+#@# GENERATED FILE: DO NOT MODIFY c7345ca3ca21b6f35bffffb13062a24796e59928 #@#
 {
   "network" : {
     "deps" : [
@@ -7,12 +7,14 @@
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/concurrent:concurrent",
       "//src/com/facebook/buck/util/environment:platform",
+      "//third-party/java/immutables:processor",
       "//third-party/java/jackson:jackson-core"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
       "//third-party/java/jackson:jackson-databind",
       "//third-party/java/jna:jna",

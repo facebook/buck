@@ -107,7 +107,11 @@ public class OfflineScribeLogger extends ScribeLogger {
               byte[] scribeData;
               try {
                 scribeData = objectMapper
-                    .writeValueAsString(new ScribeData(category, lines))
+                    .writeValueAsString(
+                        ScribeData.builder()
+                            .setCategory(category)
+                            .setLines(lines)
+                            .build())
                     .getBytes(Charsets.UTF_8);
               } catch (Exception e) {
                 LOG.error("Failed generating JSON to store for category: %s.", category);
@@ -117,7 +121,6 @@ public class OfflineScribeLogger extends ScribeLogger {
               storeOffline(category, scribeData);
             }
           }
-
         });
 
     return upload;
@@ -200,37 +203,6 @@ public class OfflineScribeLogger extends ScribeLogger {
       } else {
         totalSize += logSize;
       }
-    }
-  }
-
-  // Wrapper class for (de)serialization with ObjectMapper.
-  // Setters and default constructor are required for this process.
-  protected static class ScribeData {
-    private String category;
-    private Iterable<String> lines;
-
-    public ScribeData() {
-    }
-
-    public ScribeData(String category, Iterable<String> lines) {
-      this.category = category;
-      this.lines = lines;
-    }
-
-    public String getCategory() {
-      return category;
-    }
-
-    public Iterable<String> getLines() {
-      return lines;
-    }
-
-    public void setCategory(String category) {
-      this.category = category;
-    }
-
-    public void setLines(Iterable<String> lines) {
-      this.lines = lines;
     }
   }
 }
