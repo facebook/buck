@@ -11,6 +11,7 @@ import __future__
 from collections import namedtuple
 from pathlib import Path, PureWindowsPath, PurePath
 from pywatchman import bser
+import copy
 import StringIO
 import cProfile
 import functools
@@ -202,6 +203,9 @@ class memoized(object):
     '''Decorator. Caches a function's return value each time it is called.
     If called later with the same arguments, the cached value is returned
     (not reevaluated).
+
+    Makes a defensive copy of the cached value each time it's returned,
+    so callers mutating the result do not poison the cache.
     '''
     def __init__(self, func):
         self.func = func
@@ -209,12 +213,12 @@ class memoized(object):
 
     def __call__(self, *args):
         args_key = repr(args)
-        if args_key in self.cache:
-            return self.cache[args_key]
-        else:
+        value = self.cache.get(args_key)
+        if value is None:
             value = self.func(*args)
             self.cache[args_key] = value
-            return value
+        # Return a copy to ensure callers mutating the result don't poison the cache.
+        return copy.deepcopy(value)
 
     def __repr__(self):
         '''Return the function's docstring.'''

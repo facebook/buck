@@ -74,7 +74,7 @@ class BuckTest(unittest.TestCase):
             False,              # ignore_buck_autodeps_files
             self.watchman_client,
             self.watchman_error,
-            False,
+            False,              # watchman_glob_stat_results
             self.enable_build_file_sandboxing,
             includes,
             **kwargs)
@@ -295,7 +295,7 @@ class BuckTest(unittest.TestCase):
             pass
 
         class FakeWatchmanClient:
-            def FakeWatchmanClient(self):
+            def __init__(self):
                 self.query_invoked = False
 
             def query(self, *args):
