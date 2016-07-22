@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 import static org.junit.Assume.assumeNotNull;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.util.DefaultPropertyFinder;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
@@ -39,8 +38,9 @@ public class AssumeAndroidPlatform {
   private static AndroidDirectoryResolver getAndroidDirectoryResolver() {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
     return new DefaultAndroidDirectoryResolver(
+        projectFilesystem.getRootPath().getFileSystem(),
+        ImmutableMap.copyOf(System.getenv()),
         Optional.<String>absent(),
-        Optional.<String>absent(),
-        new DefaultPropertyFinder(projectFilesystem, ImmutableMap.copyOf(System.getenv())));
+        Optional.<String>absent());
   }
 }

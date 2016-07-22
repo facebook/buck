@@ -89,8 +89,8 @@ abstract class AbstractExecutionContext implements Closeable {
   abstract Optional<AdbOptions> getAdbOptions();
 
   /**
-   * Returns an {@link AndroidPlatformTarget} if the user specified one via {@code local.properties}
-   * or some other mechanism. If the user failed to specify one, an exception will be thrown.
+   * Returns an {@link AndroidPlatformTarget} if the user specified one. If the user failed to
+   * specify one, an exception will be thrown.
    */
   @Value.Default
   public Supplier<AndroidPlatformTarget> getAndroidPlatformTargetSupplier() {

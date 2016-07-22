@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,24 +38,25 @@ public class BadAndroidConfigIntegrationTest {
   private ProjectWorkspace workspace;
 
   /**
-   * In this scenario, the local.properties file contains an sdk.dir property that points to a
-   * non-existent directory. When a {@code java_library()} rule is built that has no dependency on
-   * the Android SDK, the build should succeed even though the Android SDK is misconfigured.
+   * In this scenario, the {@code ANDROID_SDK} environment variable points to a non-existent
+   * directory. When a {@code java_library()} rule is built that has no dependency on the Android
+   * SDK, the build should succeed even though the Android SDK is misconfigured.
    * <p>
    * However, when an {@code android_library()} rule is built that does depend on the Android SDK,
-   * the build should fail, alerting the user to the issue with the local.properties file.
+   * the build should fail, alerting the user to the issue.
    */
   @Test
   public void testBadAndroidConfigDoesNotInterfereNonAndroidBuild() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "bad_android_config", tmp);
     workspace.setUp();
-    workspace.runBuckBuild("//:hello_java").assertSuccess();
+    ImmutableMap<String, String> badEnvironment =
+        ImmutableMap.of("ANDROID_SDK", "/this/directory/does/not/exist");
+    workspace.runBuckCommand(badEnvironment, "build", "//:hello_java").assertSuccess();
 
     expectedException.expect(NoAndroidSdkException.class);
-    expectedException.expectMessage("Must define a local.properties file with a property " +
-        "named 'sdk.dir' that points to the absolute path of your Android SDK directory, " +
-        "or set ANDROID_HOME or ANDROID_SDK.");
-    workspace.runBuckBuild("//:hello_android").assertFailure();
+    expectedException.expectMessage(
+        "Must set ANDROID_SDK to point to the absolute path of your Android SDK directory.");
+    workspace.runBuckCommand(badEnvironment, "build", "//:hello_android").assertFailure();
   }
 }

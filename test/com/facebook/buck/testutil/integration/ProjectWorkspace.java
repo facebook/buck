@@ -50,7 +50,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
-import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Architecture;
@@ -78,7 +77,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.Channels;
 import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
@@ -193,14 +191,6 @@ public class ProjectWorkspace {
     } catch (FileAlreadyExistsException | NoSuchFileException e) {
       // If the current version file already exists we don't need to create it
       // If buck-out doesn't exist we don't need to stamp it
-    }
-
-    // If there's a local.properties in the host project but not in the destination, make a copy.
-    Path localProperties = FileSystems.getDefault().getPath("local.properties");
-    Path destLocalProperties = destPath.resolve(localProperties.getFileName());
-
-    if (localProperties.toFile().exists() && !destLocalProperties.toFile().exists()) {
-      Files.copy(localProperties, destLocalProperties);
     }
 
     if (Platform.detect() == Platform.WINDOWS) {
@@ -342,6 +332,15 @@ public class ProjectWorkspace {
         destPath,
         Optional.<NGContext>absent(),
         ImmutableMap.<String, String>of(),
+        args);
+  }
+
+  public ProcessResult runBuckCommand(ImmutableMap<String, String> environment, String... args)
+      throws IOException {
+    return runBuckCommandWithEnvironmentOverridesAndContext(
+        destPath,
+        Optional.<NGContext>absent(),
+        environment,
         args);
   }
 
@@ -580,9 +579,10 @@ public class ProjectWorkspace {
     TestConsole console = new TestConsole();
     ImmutableMap<String, String> env = ImmutableMap.copyOf(System.getenv());
     DefaultAndroidDirectoryResolver directoryResolver = new DefaultAndroidDirectoryResolver(
+        filesystem.getRootPath().getFileSystem(),
+        env,
         Optional.<String>absent(),
-        Optional.<String>absent(),
-        new DefaultPropertyFinder(filesystem, env));
+        Optional.<String>absent());
     return Cell.createCell(
         filesystem,
         console,

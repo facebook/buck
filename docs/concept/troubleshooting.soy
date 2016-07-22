@@ -80,9 +80,9 @@ not under version control. The <code>-n</code> switch is for "dry run,"
 which means that Git will not delete any files when you run
 {sp}<code>git clean</code>. If you want to use Git to remove the generated
 files while preserving some non-versioned files (such
-as <code>local.properties</code>), then use it with the <code>-e</code> switch:
+as <code>.buckconfig.local</code>), then use it with the <code>-e</code> switch:
 
-<pre>git clean -xfd -e local.properties</pre>
+<pre>git clean -xfd -e .buckconfig.local</pre>
 
 Note that <code>-e</code> can be specified multiple times.
 

@@ -76,9 +76,8 @@ public class NdkBuildStep extends ShellStep {
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     Optional<Path> ndkRoot = context.getAndroidPlatformTarget().getNdkDirectory();
     if (!ndkRoot.isPresent()) {
-      throw new HumanReadableException("Must define a local.properties file" +
-          " with a property named 'ndk.dir' that points to the absolute path of" +
-          " your Android NDK directory, or set ANDROID_NDK.");
+      throw new HumanReadableException(
+          "Must set ANDROID_NDK to point to the absolute path of your Android NDK directory.");
     }
     Optional<Path> ndkBuild = new ExecutableFinder().getOptionalExecutable(
         Paths.get("ndk-build"),

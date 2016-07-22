@@ -26,16 +26,15 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.VersionStringComparator;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
@@ -70,9 +69,10 @@ public class AndroidResourceFilterIntegrationTest {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
     AndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
+        filesystem.getRootPath().getFileSystem(),
+        ImmutableMap.copyOf(System.getenv()),
         Optional.<String>absent(),
-        Optional.<String>absent(),
-        new DefaultPropertyFinder(filesystem, ImmutableMap.copyOf(System.getenv())));
+        Optional.<String>absent());
     pathToAapt = AndroidPlatformTarget.getDefaultPlatformTarget(
         resolver,
         Optional.<Path>absent()).getAaptExecutable();

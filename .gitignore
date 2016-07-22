@@ -14,7 +14,6 @@ src/com/facebook/buck/intellij/plugin/third-party/*.iml
 
 # Buck
 /buck-out
-/local.properties
 /.buckconfig.local
 /.buckd
 .buckversion

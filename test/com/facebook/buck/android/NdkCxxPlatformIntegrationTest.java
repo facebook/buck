@@ -31,7 +31,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.DefaultPropertyFinder;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -121,9 +120,10 @@ public class NdkCxxPlatformIntegrationTest {
   private Path getNdkRoot() {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
+        projectFilesystem.getRootPath().getFileSystem(),
+        ImmutableMap.copyOf(System.getenv()),
         Optional.<String>absent(),
-        Optional.<String>absent(),
-        new DefaultPropertyFinder(projectFilesystem, ImmutableMap.copyOf(System.getenv())));
+        Optional.<String>absent());
     Optional<Path> ndkDir = resolver.getNdkOrAbsent();
     assertTrue(ndkDir.isPresent());
     assertTrue(java.nio.file.Files.exists(ndkDir.get()));

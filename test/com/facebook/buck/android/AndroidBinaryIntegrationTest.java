@@ -42,7 +42,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
-import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.ZipConstants;
@@ -354,11 +353,10 @@ public class AndroidBinaryIntegrationTest {
   public void testNativeRelinker() throws IOException, InterruptedException {
     // TODO(cjhopman): is this really the simplest way to get the objdump tool?
     AndroidDirectoryResolver androidResolver = new DefaultAndroidDirectoryResolver(
+        workspace.asCell().getRoot().getFileSystem(),
+        ImmutableMap.copyOf(System.getenv()),
         Optional.<String>absent(),
-        Optional.<String>absent(),
-        new DefaultPropertyFinder(
-            workspace.asCell().getFilesystem(),
-            ImmutableMap.copyOf(System.getenv())));
+        Optional.<String>absent());
 
     Optional<Path> ndkPath = androidResolver.getNdkOrAbsent();
     assertTrue(ndkPath.isPresent());

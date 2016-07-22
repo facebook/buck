@@ -184,8 +184,6 @@ public class QuickstartCommand extends AbstractCommand {
             buckConfig,
             StandardCharsets.UTF_8);
 
-        File localProperties = new File(projectDir + "/local.properties");
-        Files.write("sdk.dir=" + sdkLocation + "\n", localProperties, StandardCharsets.UTF_8);
         break;
       }
 

@@ -25,9 +25,7 @@ import javax.annotation.Nullable;
 public class NoAndroidSdkException extends HumanReadableException {
 
   private static final String DEFAULT_MESSAGE =
-      "Must define a local.properties file with a property named 'sdk.dir' " +
-      "that points to the absolute path of your Android SDK directory, " +
-      "or set ANDROID_HOME or ANDROID_SDK.";
+      "Must set ANDROID_SDK to point to the absolute path of your Android SDK directory.";
 
   public NoAndroidSdkException() {
     this((Throwable) null);

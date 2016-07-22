@@ -33,12 +33,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Properties;
 
 /**
  * Note: because we use {@link com.facebook.buck.util.PackagedResource}, which expects zips to be
@@ -81,17 +79,6 @@ public class QuickstartIntegrationTest {
         "`buck quickstart` should output the contents of the README file to standard output.",
         new String(Files.readAllBytes(readme), StandardCharsets.UTF_8),
         result.getStdout());
-
-    Path localProp = destDir.getRoot().resolve("local.properties");
-    Properties prop = new Properties();
-    prop.load(Files.newInputStream(localProp));
-    assertTrue(
-        "`buck quickstart` should create a local.properties file.",
-        Files.isRegularFile(localProp));
-    String androidSdk = prop.getProperty("sdk.dir");
-    assertTrue(
-        "`buck quickstart` should put the Android SDK in the local.properties file.",
-        androidSdk != null && new File(androidSdk).isDirectory());
 
     // We can't test building if the user does not have an Android SDK. First, test targets, since
     // it does not have that dependency.

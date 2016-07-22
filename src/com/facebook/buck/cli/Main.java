@@ -86,7 +86,6 @@ import com.facebook.buck.util.AsyncCloseable;
 import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.Libc;
@@ -96,7 +95,6 @@ import com.facebook.buck.util.PkillProcessManager;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
-import com.facebook.buck.util.PropertyFinder;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.WatchmanWatcherException;
@@ -723,15 +721,13 @@ public final class Main {
         }
       }
 
-      PropertyFinder propertyFinder = new DefaultPropertyFinder(
-          filesystem,
-          clientEnvironment);
       AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, platform);
       AndroidDirectoryResolver androidDirectoryResolver =
           new DefaultAndroidDirectoryResolver(
+              filesystem.getRootPath().getFileSystem(),
+              clientEnvironment,
               androidBuckConfig.getBuildToolsVersion(),
-              androidBuckConfig.getNdkVersion(),
-              propertyFinder);
+              androidBuckConfig.getNdkVersion());
 
       ProcessExecutor processExecutor = new ProcessExecutor(console);
 

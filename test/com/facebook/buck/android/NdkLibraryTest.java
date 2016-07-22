@@ -34,7 +34,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
@@ -60,9 +59,10 @@ public class NdkLibraryTest {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
     AndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
+        projectFilesystem.getRootPath().getFileSystem(),
+        ImmutableMap.copyOf(System.getenv()),
         Optional.<String>absent(),
-        Optional.<String>absent(),
-        new DefaultPropertyFinder(projectFilesystem, ImmutableMap.copyOf(System.getenv())));
+        Optional.<String>absent());
 
     AndroidPlatformTarget androidPlatformTarget = AndroidPlatformTarget.getDefaultPlatformTarget(
         resolver,
