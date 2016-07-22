@@ -94,6 +94,8 @@ class DaemonicParserState implements ParsePipeline.Cache {
   private static final String FILES_CHANGED_COUNTER_NAME = "files_changed";
   private static final String RULES_INVALIDATED_BY_WATCH_EVENTS_COUNTER_NAME =
       "rules_invalidated_by_watch_events";
+  private static final String PATHS_ADDED_OR_REMOVED_INVALIDATING_BUILD_FILES =
+      "paths_added_or_removed_invalidating_build_files";
 
   /**
    * Taken from {@link ConcurrentMap}.
@@ -108,6 +110,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
   private final IntegerCounter buildFilesInvalidatedByFileAddOrRemoveCounter;
   private final IntegerCounter filesChangedCounter;
   private final IntegerCounter rulesInvalidatedByWatchEventsCounter;
+  private final TagSetCounter pathsAddedOrRemovedInvalidatingBuildFiles;
 
   /**
    * The set of {@link Cell} instances that have been seen by this state. This information is used
@@ -168,6 +171,11 @@ class DaemonicParserState implements ParsePipeline.Cache {
         COUNTER_CATEGORY,
         RULES_INVALIDATED_BY_WATCH_EVENTS_COUNTER_NAME,
         ImmutableMap.<String, String>of());
+    this.pathsAddedOrRemovedInvalidatingBuildFiles =
+        new TagSetCounter(
+            COUNTER_CATEGORY,
+            PATHS_ADDED_OR_REMOVED_INVALIDATING_BUILD_FILES,
+            ImmutableMap.<String, String>of());
     this.buildFileTrees = CacheBuilder.newBuilder().build(
         new CacheLoader<Cell, BuildFileTree>() {
           @Override
@@ -431,6 +439,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
     }
 
     buildFilesInvalidatedByFileAddOrRemoveCounter.inc(packageBuildFiles.size());
+    pathsAddedOrRemovedInvalidatingBuildFiles.add(path.toString());
 
     try (AutoCloseableLock readLock = cellStateLock.readLock()) {
       DaemonicCellState state = cellPathToDaemonicState.get(cell.getRoot());
@@ -571,14 +580,14 @@ class DaemonicParserState implements ParsePipeline.Cache {
   }
 
   public ImmutableList<Counter> getCounters() {
-    return ImmutableList.<Counter>of(
+    return ImmutableList.of(
         cacheInvalidatedByEnvironmentVariableChangeCounter,
         cacheInvalidatedByDefaultIncludesChangeCounter,
         cacheInvalidatedByWatchOverflowCounter,
         buildFilesInvalidatedByFileAddOrRemoveCounter,
         filesChangedCounter,
-        rulesInvalidatedByWatchEventsCounter
-    );
+        rulesInvalidatedByWatchEventsCounter,
+        pathsAddedOrRemovedInvalidatingBuildFiles);
   }
 
   @Override
