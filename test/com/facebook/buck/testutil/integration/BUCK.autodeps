@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 8ab7d2d04af7b10ca9d282913517204b3c63dc19 #@#
+#@# GENERATED FILE: DO NOT MODIFY 958a222a54c0834dc98fc1678e398553026edaeb #@#
 {
   "integration" : {
     "deps" : [
@@ -17,6 +17,7 @@
       "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:util",
+      "//src/com/facebook/buck/util:watchman",
       "//src/com/facebook/buck/util/environment:env-filter",
       "//src/com/facebook/buck/util/environment:environment",
       "//src/com/facebook/buck/util/environment:platform",

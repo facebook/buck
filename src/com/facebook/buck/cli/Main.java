@@ -401,7 +401,9 @@ public final class Main {
     private void watchFileSystem(
         CommandEvent commandEvent,
         BuckEventBus eventBus,
-        WatchmanWatcher watchmanWatcher) throws IOException, InterruptedException {
+        WatchmanWatcher watchmanWatcher,
+        WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction)
+      throws IOException, InterruptedException {
 
       // Synchronize on parser object so that all outstanding watch events are processed
       // as a single, atomic Parser cache update and are not interleaved with Parser cache
@@ -411,7 +413,10 @@ public final class Main {
         parser.recordParseStartTime(eventBus);
         fileEventBus.post(commandEvent);
         ImmutableSet.Builder<String> encounteredWatchmanWarningsBuilder = ImmutableSet.builder();
-        watchmanWatcher.postEvents(eventBus, encounteredWatchmanWarningsBuilder);
+        watchmanWatcher.postEvents(
+            eventBus,
+            encounteredWatchmanWarningsBuilder,
+            watchmanFreshInstanceAction);
 
         // TODO(bhamiltoncx): Pass encountered Watchman warnings to parser so Watchman glob can
         // ignore them.
@@ -554,6 +559,13 @@ public final class Main {
     int exitCode = FAIL_EXIT_CODE;
     BuildId buildId = getBuildId(context);
 
+    // Only post an overflow event if Watchman indicates a fresh instance event
+    // after our initial query.
+    WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction =
+        daemon == null
+          ? WatchmanWatcher.FreshInstanceAction.NONE
+          : WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT;
+
     // Get the client environment, either from this process or from the Nailgun context.
     ImmutableMap<String, String> clientEnvironment = getClientEnvironment(context);
 
@@ -565,6 +577,7 @@ public final class Main {
           context,
           clientEnvironment,
           commandMode,
+          watchmanFreshInstanceAction,
           args);
     } catch (HumanReadableException e) {
       Console console = new Console(
@@ -605,8 +618,10 @@ public final class Main {
       Optional<NGContext> context,
       ImmutableMap<String, String> clientEnvironment,
       CommandMode commandMode,
+      WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction,
       String... args)
       throws IOException, InterruptedException {
+
     // Parse the command line args.
     BuckCommand command = new BuckCommand();
     AdditionalOptionsCmdLineParser cmdLineParser = new AdditionalOptionsCmdLineParser(command);
@@ -987,7 +1002,8 @@ public final class Main {
                   rootCell,
                   startedEvent,
                   buildEventBus,
-                  watchmanWatcher);
+                  watchmanWatcher,
+                  watchmanFreshInstanceAction);
             } catch (WatchmanWatcherException | IOException e) {
               buildEventBus.post(
                   ConsoleEvent.warning(
@@ -1337,11 +1353,17 @@ public final class Main {
       Cell cell,
       CommandEvent commandEvent,
       BuckEventBus eventBus,
-      WatchmanWatcher watchmanWatcher) throws IOException, InterruptedException {
+      WatchmanWatcher watchmanWatcher,
+      WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction)
+    throws IOException, InterruptedException {
     // Wire up daemon to new client and get cached Parser.
-    Daemon daemon = getDaemon(cell, objectMapper);
-    daemon.watchClient(context.get());
-    daemon.watchFileSystem(commandEvent, eventBus, watchmanWatcher);
+    Daemon daemonForParser = getDaemon(cell, objectMapper);
+    daemonForParser.watchClient(context.get());
+    daemonForParser.watchFileSystem(
+        commandEvent,
+        eventBus,
+        watchmanWatcher,
+        watchmanFreshInstanceAction);
     return daemon.getParser();
   }
 

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 9c2fc5dd018f006518357d97c6673aba51248399 #@#
+#@# GENERATED FILE: DO NOT MODIFY a53a5196254b7343c85b3ce04b1491383043e702 #@#
 {
   "FakeBuckConfig" : {
     "deps" : [
@@ -55,6 +55,7 @@
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",
+      "//src/com/facebook/buck/util:watchman",
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/concurrent:concurrent",
       "//src/com/facebook/buck/util/environment:environment",

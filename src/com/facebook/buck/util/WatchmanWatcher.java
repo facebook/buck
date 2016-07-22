@@ -54,6 +54,15 @@ import javax.annotation.Nullable;
  */
 public class WatchmanWatcher {
 
+  // Action to take if Watchman indicates a fresh instance (which happens
+  // both on the first buckd command as well as if Watchman needs to recrawl
+  // for any reason).
+  public enum FreshInstanceAction {
+      NONE,
+      POST_OVERFLOW_EVENT,
+      ;
+  };
+
   private static final Logger LOG = Logger.get(WatchmanWatcher.class);
   private static final int DEFAULT_OVERFLOW_THRESHOLD = 10000;
   private static final long DEFAULT_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(10);
@@ -201,7 +210,8 @@ public class WatchmanWatcher {
   @SuppressWarnings("unchecked")
   public void postEvents(
       BuckEventBus buckEventBus,
-      ImmutableSet.Builder<String> watchmanWarningsBuilder
+      ImmutableSet.Builder<String> watchmanWarningsBuilder,
+      FreshInstanceAction freshInstanceAction
   ) throws IOException, InterruptedException {
     try {
       Optional<? extends Map<String, ? extends Object>> queryResponse =
@@ -238,7 +248,16 @@ public class WatchmanWatcher {
 
       Boolean isFreshInstance = (Boolean) response.get("is_fresh_instance");
       if (isFreshInstance != null && isFreshInstance) {
-        postWatchEvent(createOverflowEvent());
+        LOG.debug(
+            "Watchman indicated a fresh instance (fresh instance action %s)",
+            freshInstanceAction);
+        switch (freshInstanceAction) {
+          case NONE:
+            break;
+          case POST_OVERFLOW_EVENT:
+            postWatchEvent(createOverflowEvent());
+            break;
+        }
         return;
       }
 

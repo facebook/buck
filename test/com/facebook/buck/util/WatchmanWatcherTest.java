@@ -26,6 +26,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -86,7 +87,8 @@ public class WatchmanWatcherTest {
         watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder());
+        ImmutableSet.<String>builder(),
+        WatchmanWatcher.FreshInstanceAction.NONE);
     verify(eventBus);
   }
 
@@ -104,7 +106,8 @@ public class WatchmanWatcherTest {
         watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder());
+        ImmutableSet.<String>builder(),
+        WatchmanWatcher.FreshInstanceAction.NONE);
     verify(eventBus);
     assertEquals("Should be modify event.",
         StandardWatchEventKinds.ENTRY_MODIFY,
@@ -130,7 +133,8 @@ public class WatchmanWatcherTest {
         watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder());
+        ImmutableSet.<String>builder(),
+        WatchmanWatcher.FreshInstanceAction.NONE);
     verify(eventBus);
     assertEquals("Should be create event.",
         StandardWatchEventKinds.ENTRY_CREATE,
@@ -154,7 +158,8 @@ public class WatchmanWatcherTest {
         watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder());
+        ImmutableSet.<String>builder(),
+        WatchmanWatcher.FreshInstanceAction.NONE);
     verify(eventBus);
     assertEquals("Should be delete event.",
         StandardWatchEventKinds.ENTRY_DELETE,
@@ -179,7 +184,8 @@ public class WatchmanWatcherTest {
         watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder());
+        ImmutableSet.<String>builder(),
+        WatchmanWatcher.FreshInstanceAction.NONE);
     verify(eventBus);
     assertEquals("Should be delete event.",
         StandardWatchEventKinds.ENTRY_DELETE,
@@ -204,7 +210,8 @@ public class WatchmanWatcherTest {
         watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder());
+        ImmutableSet.<String>builder(),
+        WatchmanWatcher.FreshInstanceAction.NONE);
     verify(eventBus);
     assertEquals("Path should match watchman output.",
         MorePaths.pathWithPlatformSeparators("foo/bar/baz"),
@@ -234,7 +241,8 @@ public class WatchmanWatcherTest {
         10000 /* timeout */);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder());
+        ImmutableSet.<String>builder(),
+        WatchmanWatcher.FreshInstanceAction.NONE);
     verify(eventBus);
     assertEquals("Should be overflow event.",
         StandardWatchEventKinds.OVERFLOW,
@@ -259,7 +267,8 @@ public class WatchmanWatcherTest {
     try {
       watcher.postEvents(
           new BuckEventBus(new FakeClock(0), new BuildId()),
-          ImmutableSet.<String>builder());
+          ImmutableSet.<String>builder(),
+        WatchmanWatcher.FreshInstanceAction.NONE);
       fail("Should have thrown IOException.");
     } catch (IOException e) {
       assertTrue("Should be expected error", e.getMessage().startsWith("oops"));
@@ -289,7 +298,8 @@ public class WatchmanWatcherTest {
     try {
       watcher.postEvents(
           new BuckEventBus(new FakeClock(0), new BuildId()),
-          ImmutableSet.<String>builder());
+          ImmutableSet.<String>builder(),
+          WatchmanWatcher.FreshInstanceAction.NONE);
     } catch (InterruptedException e) {
       assertEquals("Should be test interruption.", e.getMessage(), message);
     }
@@ -316,7 +326,8 @@ public class WatchmanWatcherTest {
     try {
       watcher.postEvents(
           new BuckEventBus(new FakeClock(0), new BuildId()),
-          ImmutableSet.<String>builder());
+          ImmutableSet.<String>builder(),
+        WatchmanWatcher.FreshInstanceAction.NONE);
       fail("Should have thrown RuntimeException");
     } catch (RuntimeException e) {
       assertThat("Should contain watchman error.",
@@ -341,7 +352,8 @@ public class WatchmanWatcherTest {
     try {
       watcher.postEvents(
           new BuckEventBus(new FakeClock(0), new BuildId()),
-          ImmutableSet.<String>builder());
+          ImmutableSet.<String>builder(),
+          WatchmanWatcher.FreshInstanceAction.NONE);
     } finally {
       assertEquals("Should be overflow event.",
         StandardWatchEventKinds.OVERFLOW,
@@ -350,7 +362,7 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenWatchmanInstanceIsFreshAllCachesAreCleared()
+  public void whenWatchmanInstanceIsFreshAndActionIsPostThenAllCachesAreCleared()
       throws IOException, InterruptedException {
     ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
         "version", "2.9.2",
@@ -372,13 +384,47 @@ public class WatchmanWatcherTest {
         watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder());
+        ImmutableSet.<String>builder(),
+        WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT);
 
     boolean overflowSeen = false;
     for (WatchEvent<?> event : events) {
       overflowSeen |= event.kind().equals(StandardWatchEventKinds.OVERFLOW);
     }
     assertTrue(overflowSeen);
+  }
+
+  @Test
+  public void whenWatchmanInstanceIsFreshAndActionIsNoneThenCachesNotCleared()
+      throws IOException, InterruptedException {
+    ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
+        "version", "2.9.2",
+        "clock", "c:1386170113:26390:5:50273",
+        "is_fresh_instance", true,
+        "files", ImmutableList.of());
+
+    final Set<WatchEvent<?>> events = Sets.newHashSet();
+    EventBus bus = new EventBus("watchman test");
+    bus.register(
+        new Object() {
+          @Subscribe
+          public void listen(WatchEvent<?> event) {
+            events.add(event);
+          }
+        });
+    WatchmanWatcher watcher = createWatcher(
+        bus,
+        watchmanOutput);
+    watcher.postEvents(
+        new BuckEventBus(new FakeClock(0), new BuildId()),
+        ImmutableSet.<String>builder(),
+        WatchmanWatcher.FreshInstanceAction.NONE);
+
+    boolean overflowSeen = false;
+    for (WatchEvent<?> event : events) {
+      overflowSeen |= event.kind().equals(StandardWatchEventKinds.OVERFLOW);
+    }
+    assertFalse(overflowSeen);
   }
 
   @Test
@@ -408,7 +454,8 @@ public class WatchmanWatcherTest {
         -1 /* timeout */);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder());
+        ImmutableSet.<String>builder(),
+        WatchmanWatcher.FreshInstanceAction.NONE);
 
     boolean overflowSeen = false;
     for (WatchEvent<?> event : events) {
@@ -569,7 +616,8 @@ public class WatchmanWatcherTest {
         watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder());
+        ImmutableSet.<String>builder(),
+        WatchmanWatcher.FreshInstanceAction.NONE);
     verify(eventBus);
   }
   @Test
@@ -587,7 +635,10 @@ public class WatchmanWatcherTest {
     WatchmanWatcher watcher = createWatcher(
         eventBus,
         watchmanOutput);
-    watcher.postEvents(buckEventBus, ImmutableSet.<String>builder());
+    watcher.postEvents(
+        buckEventBus,
+        ImmutableSet.<String>builder(),
+        WatchmanWatcher.FreshInstanceAction.NONE);
     verify(buckEventBus);
     assertThat(eventCapture.getValue().getMessage(), Matchers.containsString(message));
   }
@@ -606,7 +657,8 @@ public class WatchmanWatcherTest {
     ImmutableSet.Builder<String> warningsBuilder = ImmutableSet.builder();
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        warningsBuilder);
+        warningsBuilder,
+        WatchmanWatcher.FreshInstanceAction.NONE);
     assertThat(warningsBuilder.build(), equalTo(ImmutableSet.of(message)));
   }
 

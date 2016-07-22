@@ -52,6 +52,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.Platform;
@@ -458,6 +459,7 @@ public class ProjectWorkspace {
           context,
           sanizitedEnv,
           CommandMode.TEST,
+          WatchmanWatcher.FreshInstanceAction.NONE,
           args);
     } catch (InterruptedException e) {
       e.printStackTrace(stderr);
