@@ -118,4 +118,9 @@ public class HalideLibraryBuilder extends
     return this;
   }
 
+  public HalideLibraryBuilder setFunctionNameOverride(String functionName) {
+    arg.functionName = Optional.of(functionName);
+    return this;
+  }
+
 }

@@ -188,7 +188,8 @@ public class HalideLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
-      CxxPlatform platform) throws NoSuchBuildTargetException {
+      CxxPlatform platform,
+      Optional<String> functionNameOverride) throws NoSuchBuildTargetException {
     BuildRule halideCompile = ruleResolver.requireRule(
         params.getBuildTarget().withFlavors(HALIDE_COMPILE_FLAVOR, platform.getFlavor()));
     BuildTarget buildTarget = halideCompile.getBuildTarget();
@@ -207,7 +208,10 @@ public class HalideLibraryDescription
         ImmutableList.<SourcePath>of(
             new BuildTargetSourcePath(
                 buildTarget,
-                HalideCompile.objectOutputPath(buildTarget, params.getProjectFilesystem()))));
+                HalideCompile.objectOutputPath(
+                    buildTarget,
+                    params.getProjectFilesystem(),
+                    functionNameOverride))));
   }
 
   private Optional<ImmutableList<String>> expandInvocationFlags(
@@ -231,7 +235,8 @@ public class HalideLibraryDescription
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
       CxxPlatform platform,
-      Optional<ImmutableList<String>> compilerInvocationFlags) throws NoSuchBuildTargetException {
+      Optional<ImmutableList<String>> compilerInvocationFlags,
+      Optional<String> functionName) throws NoSuchBuildTargetException {
     CxxBinary halideCompiler = (CxxBinary) resolver.requireRule(
         params.getBuildTarget().withFlavors(HALIDE_COMPILER_FLAVOR));
 
@@ -241,7 +246,8 @@ public class HalideLibraryDescription
         pathResolver,
         halideCompiler.getExecutableCommand(),
         halideBuckConfig.getHalideTargetForPlatform(platform),
-        expandInvocationFlags(compilerInvocationFlags, platform));
+        expandInvocationFlags(compilerInvocationFlags, platform),
+        functionName);
   }
 
   @Override
@@ -258,8 +264,10 @@ public class HalideLibraryDescription
       BuildTarget compileTarget = resolver
           .requireRule(target.withFlavors(HALIDE_COMPILE_FLAVOR, cxxPlatform.getFlavor()))
           .getBuildTarget();
-      Path outputPath =
-          HalideCompile.headerOutputPath(compileTarget, params.getProjectFilesystem());
+      Path outputPath = HalideCompile.headerOutputPath(
+          compileTarget,
+          params.getProjectFilesystem(),
+          args.functionName);
       headersBuilder.put(
           outputPath.getFileName(),
           new BuildTargetSourcePath(compileTarget, outputPath));
@@ -301,7 +309,8 @@ public class HalideLibraryDescription
           params,
           resolver,
           new SourcePathResolver(resolver),
-          cxxPlatform);
+          cxxPlatform,
+          args.functionName);
     } else if (flavors.contains(CxxDescriptionEnhancer.SHARED_FLAVOR)) {
       throw new HumanReadableException(
           "halide_library '%s' does not support shared libraries as output",
@@ -316,7 +325,8 @@ public class HalideLibraryDescription
           resolver,
           new SourcePathResolver(resolver),
           cxxPlatform,
-          args.compilerInvocationFlags);
+          args.compilerInvocationFlags,
+          args.functionName);
     }
 
     return new HalideLibrary(
@@ -332,5 +342,6 @@ public class HalideLibraryDescription
     public Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs;
     public Optional<Pattern> supportedPlatformsRegex;
     public Optional<ImmutableList<String>> compilerInvocationFlags;
+    public Optional<String> functionName;
   }
 }

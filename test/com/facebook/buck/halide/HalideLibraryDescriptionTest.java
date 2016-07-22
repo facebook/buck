@@ -17,8 +17,11 @@
 package com.facebook.buck.halide;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.Archive;
@@ -48,6 +51,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -95,7 +99,10 @@ public class HalideLibraryDescriptionTest {
     BuildTarget flavoredLibTarget = libTarget.withFlavors(
         HalideLibraryDescription.HALIDE_COMPILE_FLAVOR,
         cxxPlatform.getFlavor());
-    Path headerPath = HalideCompile.headerOutputPath(flavoredLibTarget, lib.getProjectFilesystem());
+    Path headerPath = HalideCompile.headerOutputPath(
+        flavoredLibTarget,
+        lib.getProjectFilesystem(),
+        Optional.<String>absent());
     CxxSymlinkTreeHeaders publicHeaders =
         (CxxSymlinkTreeHeaders) lib.getCxxPreprocessorInput(
             cxxPlatform,
@@ -144,7 +151,7 @@ public class HalideLibraryDescriptionTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 Linker.LinkableDepType.STATIC)
             .getArgs(),
-        Matchers.not(Matchers.empty()));
+        not(Matchers.empty()));
 
     // Now, verify we get nothing when the supported platform regex excludes our platform.
     halideLibraryBuilder.setSupportedPlatformsRegex(Pattern.compile("nothing"));
@@ -198,7 +205,7 @@ public class HalideLibraryDescriptionTest {
         TestExecutionContext.newInstance());
     assertThat(
         shellCommand,
-        Matchers.not(Matchers.hasItems("--test-flag", "test-value")));
+        not(hasItems("--test-flag", "test-value")));
 
     // Next verify that the shell command picks up on the extra compiler flags.
     compileBuilder.setCompilerInvocationFlags(extraCompilerFlags);
@@ -217,6 +224,65 @@ public class HalideLibraryDescriptionTest {
     shellCommand = compilerStep.getShellCommandInternal(TestExecutionContext.newInstance());
     assertThat(
         shellCommand,
-        Matchers.hasItems("--test-flag", "test-value", "test_macro_expansion"));
+        hasItems("--test-flag", "test-value", "test_macro_expansion"));
+  }
+
+  @Test
+  public void functionNameOverride() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    // Set up a #halide-compile rule, then check its build steps.
+    String defaultName = "default-halide-name";
+    BuildTarget compileTarget = BuildTargetFactory
+        .newInstance("//:" + defaultName)
+        .withFlavors(HalideLibraryDescription.HALIDE_COMPILE_FLAVOR);
+    HalideLibraryBuilder compileBuilder = new HalideLibraryBuilder(compileTarget);
+    compileBuilder.setSrcs(
+        ImmutableSortedSet.of(
+            SourceWithFlags.of(
+                new FakeSourcePath("main.cpp"))));
+
+    // First, make sure the compile step passes the rulename "default-halide-name"
+    // for the function output name.
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(compileBuilder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    HalideCompile compile = (HalideCompile) compileBuilder.build(
+        resolver,
+        filesystem,
+        targetGraph);
+
+    ImmutableList<Step> buildSteps = compile.getBuildSteps(
+        FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext()
+    );
+    HalideCompilerStep compilerStep = (HalideCompilerStep) buildSteps.get(1);
+    ImmutableList<String> shellCommand = compilerStep.getShellCommandInternal(
+        TestExecutionContext.newInstance());
+    assertThat(
+        shellCommand,
+        hasItem(defaultName));
+
+    // Next verify that the shell command picks up on the override name.
+    String overrideName = "override-halide-name";
+    compileBuilder.setFunctionNameOverride(overrideName);
+    targetGraph = TargetGraphFactory.newInstance(compileBuilder.build());
+    resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    compile = (HalideCompile) compileBuilder.build(
+        resolver,
+        filesystem,
+        targetGraph);
+
+    buildSteps = compile.getBuildSteps(
+        FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext()
+    );
+    compilerStep = (HalideCompilerStep) buildSteps.get(1);
+    shellCommand = compilerStep.getShellCommandInternal(TestExecutionContext.newInstance());
+    assertThat(
+        shellCommand,
+        hasItem(overrideName));
+    assertThat(
+        shellCommand,
+        not(hasItem(defaultName)));
   }
 }

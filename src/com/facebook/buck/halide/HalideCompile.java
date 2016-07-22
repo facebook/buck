@@ -44,16 +44,21 @@ public class HalideCompile extends AbstractBuildRule {
   @AddToRuleKey
   private final Optional<ImmutableList<String>> compilerInvocationFlags;
 
+  @AddToRuleKey
+  private final Optional<String> functionNameOverride;
+
   public HalideCompile(
       BuildRuleParams params,
       SourcePathResolver pathResolver,
       Tool halideCompiler,
       String targetPlatform,
-      Optional<ImmutableList<String>> compilerInvocationFlags) {
+      Optional<ImmutableList<String>> compilerInvocationFlags,
+      Optional<String> functionNameOverride) {
     super(params, pathResolver);
     this.halideCompiler = halideCompiler;
     this.targetPlatform = targetPlatform;
     this.compilerInvocationFlags = compilerInvocationFlags;
+    this.functionNameOverride = functionNameOverride;
   }
 
   @Override
@@ -61,20 +66,26 @@ public class HalideCompile extends AbstractBuildRule {
       BuildContext context,
       BuildableContext buildableContext) {
     Path outputDir = getPathToOutput();
-    String shortName = getBuildTarget().getShortName();
-    buildableContext.recordArtifact(objectOutputPath(getBuildTarget(), getProjectFilesystem()));
-    buildableContext.recordArtifact(headerOutputPath(getBuildTarget(), getProjectFilesystem()));
+    buildableContext.recordArtifact(objectOutputPath(
+        getBuildTarget(),
+        getProjectFilesystem(),
+        functionNameOverride));
+    buildableContext.recordArtifact(headerOutputPath(
+        getBuildTarget(),
+        getProjectFilesystem(),
+        functionNameOverride));
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     commands.add(new MakeCleanDirectoryStep(projectFilesystem, outputDir));
+
     commands.add(
         new HalideCompilerStep(
             projectFilesystem.getRootPath(),
             halideCompiler.getEnvironment(getResolver()),
             halideCompiler.getCommandPrefix(getResolver()),
             outputDir,
-            shortName,
+            fileOutputName(getBuildTarget(), functionNameOverride),
             targetPlatform,
             compilerInvocationFlags));
     return commands.build();
@@ -89,12 +100,26 @@ public class HalideCompile extends AbstractBuildRule {
     return BuildTargets.getGenPath(filesystem, buildTarget, "%s");
   }
 
-  public static Path objectOutputPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
-    return pathToOutput(buildTarget, filesystem).resolve(buildTarget.getShortName() + ".o");
+  public static Path objectOutputPath(
+      BuildTarget buildTarget,
+      ProjectFilesystem filesystem,
+      Optional<String> functionNameOverride) {
+    String functionName = fileOutputName(buildTarget, functionNameOverride);
+    return pathToOutput(buildTarget, filesystem).resolve(functionName + ".o");
   }
 
-  public static Path headerOutputPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
-    return pathToOutput(buildTarget, filesystem).resolve(buildTarget.getShortName() + ".h");
+  public static Path headerOutputPath(
+      BuildTarget buildTarget,
+      ProjectFilesystem filesystem,
+      Optional<String> functionNameOverride) {
+    String functionName = fileOutputName(buildTarget, functionNameOverride);
+    return pathToOutput(buildTarget, filesystem).resolve(functionName + ".h");
+  }
+
+  public static String fileOutputName(
+      BuildTarget buildTarget,
+      Optional<String> functionNameOverride) {
+    return functionNameOverride.or(buildTarget.getShortName());
   }
 
 }

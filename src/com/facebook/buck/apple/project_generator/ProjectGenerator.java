@@ -2261,6 +2261,7 @@ public class ProjectGenerator {
     return builder.build();
   }
 
+  @SuppressWarnings("unchecked")
   private ImmutableSet<Path> collectRecursiveHalideLibraryHeaderPaths(
       TargetNode<? extends CxxLibraryDescription.Arg> targetNode) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
@@ -2272,16 +2273,19 @@ public class ProjectGenerator {
             Optional.of(
                 ImmutableSet.<BuildRuleType>of(
                     HalideLibraryDescription.TYPE)))) {
-      BuildTarget buildTarget = input.getBuildTarget();
-      builder.add(
-          pathRelativizer.outputDirToRootRelative(
-              HalideCompile
-                  .headerOutputPath(
-                      buildTarget.withFlavors(
-                          HalideLibraryDescription.HALIDE_COMPILE_FLAVOR,
-                          defaultCxxPlatform.getFlavor()),
-                      projectFilesystem)
-                  .getParent()));
+        TargetNode<HalideLibraryDescription.Arg> halideNode =
+            (TargetNode<HalideLibraryDescription.Arg>) input;
+        BuildTarget buildTarget = halideNode.getBuildTarget();
+        builder.add(
+            pathRelativizer.outputDirToRootRelative(
+                HalideCompile
+                    .headerOutputPath(
+                        buildTarget.withFlavors(
+                            HalideLibraryDescription.HALIDE_COMPILE_FLAVOR,
+                            defaultCxxPlatform.getFlavor()),
+                        projectFilesystem,
+                        halideNode.getConstructorArg().functionName)
+                    .getParent()));
     }
     return builder.build();
   }
