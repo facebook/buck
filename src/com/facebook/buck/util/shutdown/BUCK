@@ -1,5 +1,1 @@
-standard_java_library(
-  tests = [
-    '//test/com/facebook/buck/util/shutdown:system_exit',
-  ],
-)
+standard_java_library()

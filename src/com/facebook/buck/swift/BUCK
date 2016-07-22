@@ -1,5 +1,5 @@
 standard_java_library(
   tests = [
-    '//test/com/facebook/buck/swift:swift_test_integration',
+    '//test/com/facebook/buck/swift:swift',
   ],
 )
