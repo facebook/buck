@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 68749df6ed1e1acc1cc3040defaa45ca6bbc1a60 #@#
+#@# GENERATED FILE: DO NOT MODIFY 906db0e2a1fd405e01b7cbd91e44e8be2f6dcf29 #@#
 {
   "autodeps" : {
     "deps" : [
@@ -135,8 +135,10 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/zip:unzip",
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:processor",
+      "//third-party/java/jackson:jackson-core"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/event:event",

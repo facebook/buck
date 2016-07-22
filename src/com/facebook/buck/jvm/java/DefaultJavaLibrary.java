@@ -29,7 +29,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
@@ -59,7 +58,6 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -74,7 +72,6 @@ import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -135,7 +132,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @SuppressWarnings("PMD.UnusedPrivateField")
   private final JarArchiveDependencySupplier abiClasspath;
   private final ImmutableSortedSet<BuildRule> deps;
-  @Nullable private DependencyFileInputListBuilder depFileListBuilder;
+  @Nullable private Path depFileOutputPath;
 
   private final BuildOutputInitializer<Data> buildOutputInitializer;
   private final ImmutableSortedSet<BuildTarget> tests;
@@ -210,13 +207,12 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         abiJar,
         trackClassUsage,
         new JarArchiveDependencySupplier(
-            Suppliers.memoize(
-                new Supplier<ImmutableSortedSet<SourcePath>>() {
-                  @Override
-                  public ImmutableSortedSet<SourcePath> get() {
-                    return JavaLibraryRules.getAbiInputs(params.getDeps());
-                  }
-                }),
+            Suppliers.memoize(new Supplier<ImmutableSortedSet<SourcePath>>() {
+              @Override
+              public ImmutableSortedSet<SourcePath> get() {
+                return JavaLibraryRules.getAbiInputs(params.getDeps());
+              }
+            }),
             params.getProjectFilesystem()),
         additionalClasspathEntries,
         compileStepFactory,
@@ -246,8 +242,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSortedSet<BuildTarget> tests,
       ImmutableSet<Pattern> classesToRemoveFromJar) {
     super(
-        params.appendExtraDeps(
-            new Supplier<Iterable<? extends BuildRule>>() {
+        params.appendExtraDeps(new Supplier<Iterable<? extends BuildRule>>() {
               @Override
               public Iterable<? extends BuildRule> get() {
                 return resolver.filterBuildRuleInputs(abiClasspath.get());
@@ -507,11 +502,10 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       if (trackClassUsage) {
         final Path usedClassesFilePath =
             getUsedClassesFilePath(getBuildTarget(), getProjectFilesystem());
-        ClassUsageTracker classUsageTracker = new ClassUsageTracker();
-        depFileListBuilder = new DependencyFileInputListBuilder(deps, classUsageTracker);
+        depFileOutputPath = getProjectFilesystem().getPathForRelativePath(usedClassesFilePath);
         usedClassesFileWriter = new DefaultClassUsageFileWriter(
             usedClassesFilePath,
-            classUsageTracker);
+            new ClassUsageTracker());
 
         buildableContext.recordArtifact(usedClassesFilePath);
       } else {
@@ -658,67 +652,10 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Override
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally() throws IOException {
     Preconditions.checkState(useDependencyFileRuleKeys());
-
-    return Preconditions.checkNotNull(depFileListBuilder).build();
+    return DefaultClassUsageFileReader.loadFromFile(
+        getProjectFilesystem(),
+        Preconditions.checkNotNull(depFileOutputPath),
+        deps);
   }
 
-  private static class DependencyFileInputListBuilder {
-    private final ClassUsageTracker tracker;
-    private final ImmutableSortedSet<BuildRule> deps;
-
-    public DependencyFileInputListBuilder(
-        ImmutableSortedSet<BuildRule> deps,
-        ClassUsageTracker tracker) {
-      this.tracker = tracker;
-      this.deps = deps;
-    }
-
-    private ImmutableMap<Path, SourcePath> buildJarToAbiJarMap(ImmutableSortedSet<BuildRule> deps) {
-      ImmutableMap.Builder<Path, SourcePath> jarAbsolutePathToAbiJarSourcePathBuilder =
-          ImmutableMap.builder();
-
-      for (BuildRule dep : deps) {
-        if (!(dep instanceof HasJavaAbi)) {
-          continue;
-        }
-
-        HasJavaAbi depWithJavaAbi = (HasJavaAbi) dep;
-        Optional<SourcePath> depAbiJar = depWithJavaAbi.getAbiJar();
-        if (!depAbiJar.isPresent()) {
-          continue;
-        }
-
-        Function<Path, Path> absolutifier = dep.getProjectFilesystem().getAbsolutifier();
-        Path jarAbsolutePath = absolutifier.apply(dep.getPathToOutput());
-
-        jarAbsolutePathToAbiJarSourcePathBuilder.put(jarAbsolutePath, depAbiJar.get());
-      }
-
-      return jarAbsolutePathToAbiJarSourcePathBuilder.build();
-    }
-
-    public ImmutableList<SourcePath> build() {
-      final ImmutableMap<Path, SourcePath> jarAbsolutePathToAbiJarSourcePath =
-          buildJarToAbiJarMap(deps);
-
-      final ImmutableList.Builder<SourcePath> builder = ImmutableList.builder();
-      final ImmutableMap<Path, Collection<Path>> classUsageMap = tracker.getClassUsageMap().asMap();
-      for (Map.Entry<Path, Collection<Path>> jarUsedClassesEntry : classUsageMap.entrySet()) {
-        Path jarAbsolutePath = jarUsedClassesEntry.getKey();
-        SourcePath abiJarSourcePath = jarAbsolutePathToAbiJarSourcePath.get(jarAbsolutePath);
-        if (abiJarSourcePath == null) {
-          // This indicates a dependency that wasn't among the deps of the rule; i.e., it came from
-          // the build environment (JDK, Android SDK, etc.)
-          continue;
-        }
-
-        Collection<Path> classAbsolutePaths = jarUsedClassesEntry.getValue();
-        for (Path classAbsolutePath : classAbsolutePaths) {
-          builder.add(new ArchiveMemberSourcePath(abiJarSourcePath, classAbsolutePath));
-        }
-      }
-
-      return builder.build();
-    }
-  }
 }

@@ -42,6 +42,7 @@ java_immutables_library(
     'BuildsAnnotationProcessor.java',
     'ClassUsageFileWriter.java',
     'ClassUsageTracker.java',
+    'DefaultClassUsageFileReader.java',
     'DefaultClassUsageFileWriter.java',
     'DiagnosticPrettyPrinter.java',
     'ExternalJavaRuntimeLauncher.java',
