@@ -42,9 +42,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ShBinaryRuleIntegrationTest {
 
@@ -149,14 +147,11 @@ public class ShBinaryRuleIntegrationTest {
     workspace.setUp();
 
     String alteredPwd = workspace.getDestPath().toString() + "////////";
-    Map<String, String> env = new HashMap<>();
-    env.putAll(System.getenv());
-    env.put("PWD", alteredPwd);
     ProcessResult buildResult =
-        workspace.runBuckCommandWithEnvironmentAndContext(
+        workspace.runBuckCommandWithEnvironmentOverridesAndContext(
             workspace.getDestPath(),
             Optional.<NGContext>absent(),
-            Optional.of(ImmutableMap.copyOf(env)),
+            ImmutableMap.of("PWD", alteredPwd),
             "run",
             "//:pwd");
     buildResult.assertSuccess();

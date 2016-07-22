@@ -36,7 +36,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.martiansoftware.nailgun.NGContext;
 
@@ -51,7 +50,6 @@ import org.junit.runners.Parameterized;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Map;
 
 @RunWith(Parameterized.class)
 public class CxxPreprocessAndCompileIntegrationTest {
@@ -128,14 +126,12 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
     // Run the build, setting PWD to the above symlink.  Typically, this causes compilers to use
     // the symlinked directory, even though it's not the right project root.
-    Map<String, String> envCopy = Maps.newHashMap(System.getenv());
-    envCopy.put("PWD", symlinkedRoot.toString());
     BuildTarget target = BuildTargetFactory.newInstance("//:simple#default,static");
     workspace
-        .runBuckCommandWithEnvironmentAndContext(
+        .runBuckCommandWithEnvironmentOverridesAndContext(
             tmp.getRootPath(),
             Optional.<NGContext>absent(),
-            Optional.of(ImmutableMap.copyOf(envCopy)),
+            ImmutableMap.<String, String>of("PWD", symlinkedRoot.toString()),
             "build",
             target.getFullyQualifiedName())
         .assertSuccess();

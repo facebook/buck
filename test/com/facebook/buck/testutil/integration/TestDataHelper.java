@@ -95,15 +95,15 @@ public class TestDataHelper {
     }
 
     @Override
-    public ProcessResult runBuckCommandWithEnvironmentAndContext(
+    public ProcessResult runBuckCommandWithEnvironmentOverridesAndContext(
         Path repoRoot,
         Optional<NGContext> context,
-        Optional<ImmutableMap<String, String>> env,
+        ImmutableMap<String, String> environmentOverrides,
         String... args) throws IOException {
-      ProcessResult result = super.runBuckCommandWithEnvironmentAndContext(
+      ProcessResult result = super.runBuckCommandWithEnvironmentOverridesAndContext(
           repoRoot,
           context,
-          env,
+          environmentOverrides,
           args);
 
       // javac has a global cache of zip/jar file content listings. It determines the validity of

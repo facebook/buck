@@ -365,12 +365,13 @@ public class InterCellIntegrationTest {
     mainRepo.setUp();
     Path primary = mainRepo.getPath("primary");
 
-    ProjectWorkspace.ProcessResult result = mainRepo.runBuckCommandWithEnvironmentAndContext(
-        primary,
-        Optional.<NGContext>absent(),
-        Optional.<ImmutableMap<String, String>>absent(),
-        "build",
-        "//:bin");
+    ProjectWorkspace.ProcessResult result =
+        mainRepo.runBuckCommandWithEnvironmentOverridesAndContext(
+            primary,
+            Optional.<NGContext>absent(),
+            ImmutableMap.<String, String>of(),
+            "build",
+            "//:bin");
 
     result.assertSuccess();
   }

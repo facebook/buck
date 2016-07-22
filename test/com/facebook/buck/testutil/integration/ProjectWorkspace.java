@@ -90,7 +90,9 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -336,19 +338,19 @@ public class ProjectWorkspace {
    */
   public ProcessResult runBuckCommand(String... args)
       throws IOException {
-    return runBuckCommandWithEnvironmentAndContext(
+    return runBuckCommandWithEnvironmentOverridesAndContext(
         destPath,
         Optional.<NGContext>absent(),
-        Optional.<ImmutableMap<String, String>>absent(),
+        ImmutableMap.<String, String>of(),
         args);
   }
 
   public ProcessResult runBuckCommand(Path repoRoot, String... args)
       throws IOException {
-    return runBuckCommandWithEnvironmentAndContext(
+    return runBuckCommandWithEnvironmentOverridesAndContext(
         repoRoot,
         Optional.<NGContext>absent(),
-        Optional.<ImmutableMap<String, String>>absent(),
+        ImmutableMap.<String, String>of(),
         args);
   }
 
@@ -379,32 +381,32 @@ public class ProjectWorkspace {
         new ExecutableFinder(Platform.detect()).getOptionalExecutable(
             Paths.get("watchman"),
             ImmutableMap.copyOf(System.getenv())).isPresent());
-    return runBuckCommandWithEnvironmentAndContext(
+    return runBuckCommandWithEnvironmentOverridesAndContext(
         destPath,
         Optional.of(context),
-        Optional.<ImmutableMap<String, String>>absent(),
+        ImmutableMap.<String, String>of(),
         stderr,
         args);
   }
 
-  public ProcessResult runBuckCommandWithEnvironmentAndContext(
+  public ProcessResult runBuckCommandWithEnvironmentOverridesAndContext(
       Path repoRoot,
       Optional<NGContext> context,
-      Optional<ImmutableMap<String, String>> env,
+      ImmutableMap<String, String> environmentOverrides,
       String... args)
       throws IOException {
-    return runBuckCommandWithEnvironmentAndContext(
+    return runBuckCommandWithEnvironmentOverridesAndContext(
         repoRoot,
         context,
-        env,
+        environmentOverrides,
         new CapturingPrintStream(),
         args);
   }
 
-  public ProcessResult runBuckCommandWithEnvironmentAndContext(
+  public ProcessResult runBuckCommandWithEnvironmentOverridesAndContext(
       Path repoRoot,
       Optional<NGContext> context,
-      Optional<ImmutableMap<String, String>> env,
+      ImmutableMap<String, String> environmentOverrides,
       CapturingPrintStream stderr,
       String... args)
     throws IOException {
@@ -438,14 +440,15 @@ public class ProjectWorkspace {
 
         // TODO(#6586154): set TMP variable for ShellSteps
         "TMP");
-    ImmutableMap.Builder<String, String> envBuilder = ImmutableMap.builder();
+    Map<String, String> envBuilder = new HashMap<>();
     for (String variable : inheritedEnvVars) {
       String value = System.getenv(variable);
       if (value != null) {
         envBuilder.put(variable, value);
       }
     }
-    ImmutableMap<String, String> sanizitedEnv = envBuilder.build();
+    envBuilder.putAll(environmentOverrides);
+    ImmutableMap<String, String> sanizitedEnv = ImmutableMap.copyOf(envBuilder);
 
     Main main = new Main(stdout, stderr, stdin);
     int exitCode;
@@ -454,7 +457,7 @@ public class ProjectWorkspace {
           new BuildId(),
           repoRoot,
           context,
-          env.or(sanizitedEnv),
+          sanizitedEnv,
           CommandMode.TEST,
           args);
     } catch (InterruptedException e) {
