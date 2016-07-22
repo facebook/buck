@@ -61,6 +61,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.HttpService;
@@ -412,11 +413,11 @@ public class BuildCommand extends AbstractCommand {
       try {
         DistributedBuildTypeCoercerFactory typeCoercerFactory =
             new DistributedBuildTypeCoercerFactory(params.getObjectMapper());
-        ParserTargetNodeFactory parserTargetNodeFactory =
+        ParserTargetNodeFactory<TargetNode<?>> parserTargetNodeFactory =
             DefaultParserTargetNodeFactory.createForDistributedBuild(
                 params.getBuckEventBus(),
                 new ConstructorArgMarshaller(typeCoercerFactory),
-                typeCoercerFactory);
+                new TargetNodeFactory(typeCoercerFactory));
         DistributedBuildTargetGraphCodec targetGraphCodec = new DistributedBuildTargetGraphCodec(
             params.getObjectMapper(),
             parserTargetNodeFactory,

@@ -26,8 +26,8 @@ import java.util.Map;
 /**
  * Creates {@link TargetNode} instances for the parser.
  */
-public interface ParserTargetNodeFactory {
-  TargetNode<?> createTargetNode(
+public interface ParserTargetNodeFactory<T> {
+  T createTargetNode(
       Cell cell,
       Path buildFile,
       BuildTarget target,

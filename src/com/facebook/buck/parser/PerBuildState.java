@@ -28,6 +28,7 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -76,7 +77,6 @@ class PerBuildState implements AutoCloseable {
    * paths contain an element which exists in {@code symlinkExistenceCache}.
    */
   private final Set<Path> buildInputPathsUnderSymlink;
-  private final TargetNodeListener<TargetNode<?>> symlinkCheckers;
 
   /**
    * Cache of (symlink path: symlink target) pairs used to avoid repeatedly
@@ -111,7 +111,7 @@ class PerBuildState implements AutoCloseable {
     this.stderr = new PrintStream(ByteStreams.nullOutputStream());
     this.console = new Console(Verbosity.STANDARD_INFORMATION, stdout, stderr, Ansi.withoutTty());
 
-    this.symlinkCheckers = new TargetNodeListener<TargetNode<?>>() {
+    TargetNodeListener<TargetNode<?>> symlinkCheckers = new TargetNodeListener<TargetNode<?>>() {
       @Override
       public void onCreate(Path buildFile, TargetNode<?> node) throws IOException {
         registerInputsUnderSymlinks(buildFile, node);
@@ -132,9 +132,9 @@ class PerBuildState implements AutoCloseable {
         DefaultParserTargetNodeFactory.createForParser(
             eventBus,
             marshaller,
-            permState.getTypeCoercerFactory(),
             permState.getBuildFileTrees(),
-            symlinkCheckers),
+            symlinkCheckers,
+            new TargetNodeFactory(permState.getTypeCoercerFactory())),
         parserConfig.getEnableParallelParsing() ?
             executorService :
             MoreExecutors.newDirectExecutorService(),

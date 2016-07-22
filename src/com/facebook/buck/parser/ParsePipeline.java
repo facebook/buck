@@ -75,7 +75,7 @@ public class ParsePipeline implements AutoCloseable {
 
   private final Object lock = new Object();
   private final Cache cache;
-  private final ParserTargetNodeFactory delegate;
+  private final ParserTargetNodeFactory<TargetNode<?>> delegate;
   @GuardedBy("lock")
   private final Map<BuildTarget, ListenableFuture<TargetNode<?>>> targetNodeJobsCache;
   @GuardedBy("lock")
@@ -99,7 +99,7 @@ public class ParsePipeline implements AutoCloseable {
    */
   public ParsePipeline(
       Cache cache,
-      ParserTargetNodeFactory delegate,
+      ParserTargetNodeFactory<TargetNode<?>> delegate,
       ListeningExecutorService executorService,
       BuckEventBus buckEventBus,
       ProjectBuildFileParserPool projectBuildFileParserPool,

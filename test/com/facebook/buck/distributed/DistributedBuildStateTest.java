@@ -47,6 +47,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -298,11 +299,11 @@ public class DistributedBuildStateTest {
 
     DistributedBuildTypeCoercerFactory typeCoercerFactory =
         new DistributedBuildTypeCoercerFactory(objectMapper);
-    ParserTargetNodeFactory parserTargetNodeFactory =
+    ParserTargetNodeFactory<TargetNode<?>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             eventBus,
             new ConstructorArgMarshaller(typeCoercerFactory),
-            typeCoercerFactory);
+            new TargetNodeFactory(typeCoercerFactory));
 
     return new DistributedBuildTargetGraphCodec(
         objectMapper,

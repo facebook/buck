@@ -49,12 +49,12 @@ import java.util.Map;
 public class DistributedBuildTargetGraphCodec {
 
   private final ObjectMapper objectMapper;
-  private final ParserTargetNodeFactory parserTargetNodeFactory;
+  private final ParserTargetNodeFactory<TargetNode<?>> parserTargetNodeFactory;
   private final Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode;
 
   public DistributedBuildTargetGraphCodec(
       ObjectMapper objectMapper,
-      ParserTargetNodeFactory parserTargetNodeFactory,
+      ParserTargetNodeFactory<TargetNode<?>> parserTargetNodeFactory,
       Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode) {
     this.objectMapper = objectMapper;
     this.parserTargetNodeFactory = parserTargetNodeFactory;

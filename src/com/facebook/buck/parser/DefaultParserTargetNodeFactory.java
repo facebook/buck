@@ -38,7 +38,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.VisibilityPattern;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -56,58 +55,58 @@ import java.util.Map;
  * Creates {@link TargetNode} instances from raw data coming in form the
  * {@link com.facebook.buck.json.ProjectBuildFileParser}.
  */
-public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory {
+public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<TargetNode<?>> {
 
   private static final Logger LOG = Logger.get(DefaultParserTargetNodeFactory.class);
 
   private final BuckEventBus eventBus;
   private final ConstructorArgMarshaller marshaller;
-  private final TypeCoercerFactory typeCoercerFactory;
   private final Optional<LoadingCache<Cell, BuildFileTree>> buildFileTrees;
   private final TargetNodeListener<TargetNode<?>> nodeListener;
+  private final TargetNodeFactory targetNodeFactory;
 
   private DefaultParserTargetNodeFactory(
       BuckEventBus eventBus,
       ConstructorArgMarshaller marshaller,
-      TypeCoercerFactory typeCoercerFactory,
       Optional<LoadingCache<Cell, BuildFileTree>> buildFileTrees,
-      TargetNodeListener<TargetNode<?>> nodeListener) {
+      TargetNodeListener<TargetNode<?>> nodeListener,
+      TargetNodeFactory targetNodeFactory) {
     this.eventBus = eventBus;
     this.marshaller = marshaller;
-    this.typeCoercerFactory = typeCoercerFactory;
     this.buildFileTrees = buildFileTrees;
     this.nodeListener = nodeListener;
+    this.targetNodeFactory = targetNodeFactory;
   }
 
-  public static ParserTargetNodeFactory createForParser(
+  public static ParserTargetNodeFactory<TargetNode<?>> createForParser(
       BuckEventBus eventBus,
       ConstructorArgMarshaller marshaller,
-      TypeCoercerFactory typeCoercerFactory,
       LoadingCache<Cell, BuildFileTree> buildFileTrees,
-      TargetNodeListener<TargetNode<?>> nodeListener) {
+      TargetNodeListener<TargetNode<?>> nodeListener,
+      TargetNodeFactory targetNodeFactory) {
     return new DefaultParserTargetNodeFactory(
         eventBus,
         marshaller,
-        typeCoercerFactory,
         Optional.of(buildFileTrees),
-        nodeListener);
+        nodeListener,
+        targetNodeFactory);
   }
 
-  public static ParserTargetNodeFactory createForDistributedBuild(
+  public static ParserTargetNodeFactory<TargetNode<?>> createForDistributedBuild(
       BuckEventBus eventBus,
       ConstructorArgMarshaller marshaller,
-      TypeCoercerFactory typeCoercerFactory) {
+      TargetNodeFactory targetNodeFactory) {
     return new DefaultParserTargetNodeFactory(
         eventBus,
         marshaller,
-        typeCoercerFactory,
         Optional.<LoadingCache<Cell, BuildFileTree>>absent(),
         new TargetNodeListener<TargetNode<?>>() {
           @Override
           public void onCreate(Path buildFile, TargetNode<?> node) throws IOException {
             // No-op.
           }
-        });
+        },
+        targetNodeFactory);
   }
 
   @Override
@@ -188,7 +187,6 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory {
         Hasher hasher = Hashing.sha1().newHasher();
         hasher.putString(BuckVersion.getVersion(), UTF_8);
         JsonObjectHashing.hashJsonObject(hasher, rawNode);
-        TargetNodeFactory targetNodeFactory = new TargetNodeFactory(typeCoercerFactory);
         TargetNode<?> node = targetNodeFactory.createFromObject(
             hasher.hash(),
             description,
