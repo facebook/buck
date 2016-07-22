@@ -154,6 +154,7 @@ public class PythonBinaryDescription implements
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       String mainModule,
+      Optional<String> extension,
       PythonPackageComponents components,
       ImmutableSet<String> preloadLibraries) {
 
@@ -198,7 +199,7 @@ public class PythonBinaryDescription implements
         mainModule,
         components,
         pythonPlatform.getEnvironment(),
-        pythonBuckConfig.getPexExtension(),
+        extension.or(pythonBuckConfig.getPexExtension()),
         preloadLibraries);
   }
 
@@ -209,6 +210,7 @@ public class PythonBinaryDescription implements
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       String mainModule,
+      Optional<String> extension,
       PythonPackageComponents components,
       ImmutableList<String> buildArgs,
       PythonBuckConfig.PackageStyle packageStyle,
@@ -224,6 +226,7 @@ public class PythonBinaryDescription implements
             pythonPlatform,
             cxxPlatform,
             mainModule,
+            extension,
             components,
             preloadLibraries);
 
@@ -244,7 +247,7 @@ public class PythonBinaryDescription implements
             pexTool,
             buildArgs,
             pythonBuckConfig.getPexExecutor(resolver).or(pythonPlatform.getEnvironment()),
-            pythonBuckConfig.getPexExtension(),
+            extension.or(pythonBuckConfig.getPexExtension()),
             pythonPlatform.getEnvironment(),
             mainModule,
             components,
@@ -335,6 +338,7 @@ public class PythonBinaryDescription implements
         pythonPlatform,
         cxxPlatform,
         mainModule,
+        args.extension,
         allPackageComponents,
         args.buildArgs.or(ImmutableList.<String>of()),
         args.packageStyle.or(pythonBuckConfig.getPackageStyle()),
@@ -376,6 +380,7 @@ public class PythonBinaryDescription implements
     public Optional<PythonBuckConfig.PackageStyle> packageStyle;
     public Optional<ImmutableSet<BuildTarget>> preloadDeps;
     public Optional<ImmutableList<String>> linkerFlags;
+    public Optional<String> extension;
   }
 
 }

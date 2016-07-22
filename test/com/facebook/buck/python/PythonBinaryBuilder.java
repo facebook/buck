@@ -84,6 +84,11 @@ public class PythonBinaryBuilder extends AbstractNodeBuilder<PythonBinaryDescrip
     return this;
   }
 
+  public PythonBinaryBuilder setExtension(String extension) {
+    arg.extension = Optional.of(extension);
+    return this;
+  }
+
   public PythonBinaryBuilder setBuildArgs(ImmutableList<String> buildArgs) {
     arg.buildArgs = Optional.of(buildArgs);
     return this;

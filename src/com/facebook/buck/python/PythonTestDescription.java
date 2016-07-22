@@ -301,6 +301,7 @@ public class PythonTestDescription implements
             pythonPlatform,
             cxxPlatform,
             mainModule,
+            args.extension,
             allComponents,
             args.buildArgs.or(ImmutableList.<String>of()),
             args.packageStyle.or(pythonBuckConfig.getPackageStyle()),
@@ -404,6 +405,7 @@ public class PythonTestDescription implements
     public Optional<ImmutableSet<Label>> labels;
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
     public Optional<String> platform;
+    public Optional<String> extension;
     public Optional<PythonBuckConfig.PackageStyle> packageStyle;
     public Optional<ImmutableSet<BuildTarget>> preloadDeps;
     public Optional<ImmutableList<String>> linkerFlags;
