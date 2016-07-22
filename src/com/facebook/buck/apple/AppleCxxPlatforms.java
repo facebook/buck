@@ -309,6 +309,7 @@ public class AppleCxxPlatforms {
     ImmutableMap.Builder<String, String> macrosBuilder = ImmutableMap.builder();
     macrosBuilder.put("SDKROOT", sdkPaths.getSdkPath().toString());
     macrosBuilder.put("PLATFORM_DIR", sdkPaths.getPlatformPath().toString());
+    macrosBuilder.put("CURRENT_ARCH", targetArchitecture);
     if (sdkPaths.getDeveloperPath().isPresent()) {
       macrosBuilder.put("DEVELOPER_DIR", sdkPaths.getDeveloperPath().get().toString());
     }

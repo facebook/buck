@@ -28,6 +28,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -40,14 +41,19 @@ public class HalideCompile extends AbstractBuildRule {
   @AddToRuleKey
   private final String targetPlatform;
 
+  @AddToRuleKey
+  private final Optional<ImmutableList<String>> compilerInvocationFlags;
+
   public HalideCompile(
       BuildRuleParams params,
       SourcePathResolver pathResolver,
       Tool halideCompiler,
-      String targetPlatform) {
+      String targetPlatform,
+      Optional<ImmutableList<String>> compilerInvocationFlags) {
     super(params, pathResolver);
     this.halideCompiler = halideCompiler;
     this.targetPlatform = targetPlatform;
+    this.compilerInvocationFlags = compilerInvocationFlags;
   }
 
   @Override
@@ -69,7 +75,8 @@ public class HalideCompile extends AbstractBuildRule {
             halideCompiler.getCommandPrefix(getResolver()),
             outputDir,
             shortName,
-            targetPlatform));
+            targetPlatform,
+            compilerInvocationFlags));
     return commands.build();
   }
 

@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxFlags;
 import com.facebook.buck.cxx.CxxLinkAndCompileRules;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
@@ -36,6 +37,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -208,19 +210,38 @@ public class HalideLibraryDescription
                 HalideCompile.objectOutputPath(buildTarget, params.getProjectFilesystem()))));
   }
 
+  private Optional<ImmutableList<String>> expandInvocationFlags(
+      Optional<ImmutableList<String>> optionalFlags,
+      CxxPlatform platform) {
+    if (optionalFlags.isPresent()) {
+      RuleKeyAppendableFunction<String, String> macroMapper =
+          CxxFlags.getTranslateMacrosFn(platform);
+      ImmutableList<String> flags = optionalFlags.get();
+      ImmutableList.Builder<String> builder = ImmutableList.builder();
+      for (String flag : flags) {
+        builder.add(macroMapper.apply(flag));
+      }
+      optionalFlags = Optional.of(builder.build());
+    }
+    return optionalFlags;
+  }
+
   private BuildRule createHalideCompile(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
-      CxxPlatform platform) throws NoSuchBuildTargetException {
+      CxxPlatform platform,
+      Optional<ImmutableList<String>> compilerInvocationFlags) throws NoSuchBuildTargetException {
     CxxBinary halideCompiler = (CxxBinary) resolver.requireRule(
         params.getBuildTarget().withFlavors(HALIDE_COMPILER_FLAVOR));
+
     return new HalideCompile(
         params.copyWithExtraDeps(
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(halideCompiler))),
         pathResolver,
         halideCompiler.getExecutableCommand(),
-        halideBuckConfig.getHalideTargetForPlatform(platform));
+        halideBuckConfig.getHalideTargetForPlatform(platform),
+        expandInvocationFlags(compilerInvocationFlags, platform));
   }
 
   @Override
@@ -294,7 +315,8 @@ public class HalideLibraryDescription
                   ImmutableSortedSet.<BuildRule>of())),
           resolver,
           new SourcePathResolver(resolver),
-          cxxPlatform);
+          cxxPlatform,
+          args.compilerInvocationFlags);
     }
 
     return new HalideLibrary(
@@ -309,5 +331,6 @@ public class HalideLibraryDescription
     public Optional<ImmutableSortedSet<BuildTarget>> compilerDeps;
     public Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs;
     public Optional<Pattern> supportedPlatformsRegex;
+    public Optional<ImmutableList<String>> compilerInvocationFlags;
   }
 }

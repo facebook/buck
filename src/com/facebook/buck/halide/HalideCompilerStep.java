@@ -18,6 +18,7 @@ package com.facebook.buck.halide;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -39,19 +40,24 @@ public class HalideCompilerStep extends ShellStep {
   // The Halide target string for the target architecture, e.g. "x86-64-osx".
   private final String halideTarget;
 
+  // Flags that can be passed directly to the Halide compiler.
+  private final Optional<ImmutableList<String>> compilerInvocationFlags;
+
   public HalideCompilerStep(
       Path workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> compilerPrefix,
       Path outputDir,
       String funcName,
-      String halideTarget) {
+      String halideTarget,
+      Optional<ImmutableList<String>> compilerInvocationFlags) {
     super(workingDirectory);
     this.environment = environment;
     this.compilerPrefix = compilerPrefix;
     this.outputDir = outputDir;
     this.funcName = funcName;
     this.halideTarget = halideTarget;
+    this.compilerInvocationFlags = compilerInvocationFlags;
   }
 
   @Override
@@ -61,6 +67,10 @@ public class HalideCompilerStep extends ShellStep {
     builder.add("-h");
     builder.add("-o", outputDir.toString());
     builder.add("-t", halideTarget);
+
+    if (compilerInvocationFlags.isPresent()) {
+      builder.addAll(compilerInvocationFlags.get());
+    }
 
     builder.add(funcName);
     return builder.build();
