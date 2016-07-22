@@ -76,7 +76,7 @@ class PerBuildState implements AutoCloseable {
    * paths contain an element which exists in {@code symlinkExistenceCache}.
    */
   private final Set<Path> buildInputPathsUnderSymlink;
-  private final TargetNodeListener symlinkCheckers;
+  private final TargetNodeListener<TargetNode<?>> symlinkCheckers;
 
   /**
    * Cache of (symlink path: symlink target) pairs used to avoid repeatedly
@@ -111,7 +111,7 @@ class PerBuildState implements AutoCloseable {
     this.stderr = new PrintStream(ByteStreams.nullOutputStream());
     this.console = new Console(Verbosity.STANDARD_INFORMATION, stdout, stderr, Ansi.withoutTty());
 
-    this.symlinkCheckers = new TargetNodeListener() {
+    this.symlinkCheckers = new TargetNodeListener<TargetNode<?>>() {
       @Override
       public void onCreate(Path buildFile, TargetNode<?> node) throws IOException {
         registerInputsUnderSymlinks(buildFile, node);

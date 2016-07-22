@@ -16,11 +16,10 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.rules.TargetNode;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
-public interface TargetNodeListener {
-  void onCreate(Path buildFile, TargetNode<?> node) throws IOException;
+interface TargetNodeListener<T> {
+  void onCreate(Path buildFile, T node) throws IOException;
 }

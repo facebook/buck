@@ -64,14 +64,14 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory {
   private final ConstructorArgMarshaller marshaller;
   private final TypeCoercerFactory typeCoercerFactory;
   private final Optional<LoadingCache<Cell, BuildFileTree>> buildFileTrees;
-  private final TargetNodeListener nodeListener;
+  private final TargetNodeListener<TargetNode<?>> nodeListener;
 
   private DefaultParserTargetNodeFactory(
       BuckEventBus eventBus,
       ConstructorArgMarshaller marshaller,
       TypeCoercerFactory typeCoercerFactory,
       Optional<LoadingCache<Cell, BuildFileTree>> buildFileTrees,
-      TargetNodeListener nodeListener) {
+      TargetNodeListener<TargetNode<?>> nodeListener) {
     this.eventBus = eventBus;
     this.marshaller = marshaller;
     this.typeCoercerFactory = typeCoercerFactory;
@@ -84,7 +84,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory {
       ConstructorArgMarshaller marshaller,
       TypeCoercerFactory typeCoercerFactory,
       LoadingCache<Cell, BuildFileTree> buildFileTrees,
-      TargetNodeListener nodeListener) {
+      TargetNodeListener<TargetNode<?>> nodeListener) {
     return new DefaultParserTargetNodeFactory(
         eventBus,
         marshaller,
@@ -102,7 +102,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory {
         marshaller,
         typeCoercerFactory,
         Optional.<LoadingCache<Cell, BuildFileTree>>absent(),
-        new TargetNodeListener() {
+        new TargetNodeListener<TargetNode<?>>() {
           @Override
           public void onCreate(Path buildFile, TargetNode<?> node) throws IOException {
             // No-op.
