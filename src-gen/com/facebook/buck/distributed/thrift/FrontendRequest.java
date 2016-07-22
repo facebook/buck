@@ -41,7 +41,6 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
   private static final org.apache.thrift.protocol.TField TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("type", org.apache.thrift.protocol.TType.I32, (short)1);
   private static final org.apache.thrift.protocol.TField START_BUILD_FIELD_DESC = new org.apache.thrift.protocol.TField("startBuild", org.apache.thrift.protocol.TType.STRUCT, (short)2);
   private static final org.apache.thrift.protocol.TField BUILD_STATUS_FIELD_DESC = new org.apache.thrift.protocol.TField("buildStatus", org.apache.thrift.protocol.TType.STRUCT, (short)3);
-  private static final org.apache.thrift.protocol.TField ANALYSE_RULE_KEYS_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("analyseRuleKeysRequest", org.apache.thrift.protocol.TType.STRUCT, (short)6);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -56,7 +55,6 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
   public FrontendRequestType type; // optional
   public StartBuildRequest startBuild; // optional
   public BuildStatusRequest buildStatus; // optional
-  public AnalyseRuleKeysRequest analyseRuleKeysRequest; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -66,8 +64,7 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
      */
     TYPE((short)1, "type"),
     START_BUILD((short)2, "startBuild"),
-    BUILD_STATUS((short)3, "buildStatus"),
-    ANALYSE_RULE_KEYS_REQUEST((short)6, "analyseRuleKeysRequest");
+    BUILD_STATUS((short)3, "buildStatus");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -88,8 +85,6 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
           return START_BUILD;
         case 3: // BUILD_STATUS
           return BUILD_STATUS;
-        case 6: // ANALYSE_RULE_KEYS_REQUEST
-          return ANALYSE_RULE_KEYS_REQUEST;
         default:
           return null;
       }
@@ -130,7 +125,7 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
   }
 
   // isset id assignments
-  private static final _Fields optionals[] = {_Fields.TYPE,_Fields.START_BUILD,_Fields.BUILD_STATUS,_Fields.ANALYSE_RULE_KEYS_REQUEST};
+  private static final _Fields optionals[] = {_Fields.TYPE,_Fields.START_BUILD,_Fields.BUILD_STATUS};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -140,8 +135,6 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, StartBuildRequest.class)));
     tmpMap.put(_Fields.BUILD_STATUS, new org.apache.thrift.meta_data.FieldMetaData("buildStatus", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, BuildStatusRequest.class)));
-    tmpMap.put(_Fields.ANALYSE_RULE_KEYS_REQUEST, new org.apache.thrift.meta_data.FieldMetaData("analyseRuleKeysRequest", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, AnalyseRuleKeysRequest.class)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(FrontendRequest.class, metaDataMap);
   }
@@ -164,9 +157,6 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     if (other.isSetBuildStatus()) {
       this.buildStatus = new BuildStatusRequest(other.buildStatus);
     }
-    if (other.isSetAnalyseRuleKeysRequest()) {
-      this.analyseRuleKeysRequest = new AnalyseRuleKeysRequest(other.analyseRuleKeysRequest);
-    }
   }
 
   public FrontendRequest deepCopy() {
@@ -179,7 +169,6 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
 
     this.startBuild = null;
     this.buildStatus = null;
-    this.analyseRuleKeysRequest = null;
   }
 
   /**
@@ -262,30 +251,6 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     }
   }
 
-  public AnalyseRuleKeysRequest getAnalyseRuleKeysRequest() {
-    return this.analyseRuleKeysRequest;
-  }
-
-  public FrontendRequest setAnalyseRuleKeysRequest(AnalyseRuleKeysRequest analyseRuleKeysRequest) {
-    this.analyseRuleKeysRequest = analyseRuleKeysRequest;
-    return this;
-  }
-
-  public void unsetAnalyseRuleKeysRequest() {
-    this.analyseRuleKeysRequest = null;
-  }
-
-  /** Returns true if field analyseRuleKeysRequest is set (has been assigned a value) and false otherwise */
-  public boolean isSetAnalyseRuleKeysRequest() {
-    return this.analyseRuleKeysRequest != null;
-  }
-
-  public void setAnalyseRuleKeysRequestIsSet(boolean value) {
-    if (!value) {
-      this.analyseRuleKeysRequest = null;
-    }
-  }
-
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case TYPE:
@@ -312,14 +277,6 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
       }
       break;
 
-    case ANALYSE_RULE_KEYS_REQUEST:
-      if (value == null) {
-        unsetAnalyseRuleKeysRequest();
-      } else {
-        setAnalyseRuleKeysRequest((AnalyseRuleKeysRequest)value);
-      }
-      break;
-
     }
   }
 
@@ -333,9 +290,6 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
 
     case BUILD_STATUS:
       return getBuildStatus();
-
-    case ANALYSE_RULE_KEYS_REQUEST:
-      return getAnalyseRuleKeysRequest();
 
     }
     throw new IllegalStateException();
@@ -354,8 +308,6 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
       return isSetStartBuild();
     case BUILD_STATUS:
       return isSetBuildStatus();
-    case ANALYSE_RULE_KEYS_REQUEST:
-      return isSetAnalyseRuleKeysRequest();
     }
     throw new IllegalStateException();
   }
@@ -400,15 +352,6 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
         return false;
     }
 
-    boolean this_present_analyseRuleKeysRequest = true && this.isSetAnalyseRuleKeysRequest();
-    boolean that_present_analyseRuleKeysRequest = true && that.isSetAnalyseRuleKeysRequest();
-    if (this_present_analyseRuleKeysRequest || that_present_analyseRuleKeysRequest) {
-      if (!(this_present_analyseRuleKeysRequest && that_present_analyseRuleKeysRequest))
-        return false;
-      if (!this.analyseRuleKeysRequest.equals(that.analyseRuleKeysRequest))
-        return false;
-    }
-
     return true;
   }
 
@@ -430,11 +373,6 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     list.add(present_buildStatus);
     if (present_buildStatus)
       list.add(buildStatus);
-
-    boolean present_analyseRuleKeysRequest = true && (isSetAnalyseRuleKeysRequest());
-    list.add(present_analyseRuleKeysRequest);
-    if (present_analyseRuleKeysRequest)
-      list.add(analyseRuleKeysRequest);
 
     return list.hashCode();
   }
@@ -473,16 +411,6 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     }
     if (isSetBuildStatus()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.buildStatus, other.buildStatus);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = Boolean.valueOf(isSetAnalyseRuleKeysRequest()).compareTo(other.isSetAnalyseRuleKeysRequest());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetAnalyseRuleKeysRequest()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.analyseRuleKeysRequest, other.analyseRuleKeysRequest);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -536,16 +464,6 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
       }
       first = false;
     }
-    if (isSetAnalyseRuleKeysRequest()) {
-      if (!first) sb.append(", ");
-      sb.append("analyseRuleKeysRequest:");
-      if (this.analyseRuleKeysRequest == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.analyseRuleKeysRequest);
-      }
-      first = false;
-    }
     sb.append(")");
     return sb.toString();
   }
@@ -558,9 +476,6 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     }
     if (buildStatus != null) {
       buildStatus.validate();
-    }
-    if (analyseRuleKeysRequest != null) {
-      analyseRuleKeysRequest.validate();
     }
   }
 
@@ -624,15 +539,6 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 6: // ANALYSE_RULE_KEYS_REQUEST
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.analyseRuleKeysRequest = new AnalyseRuleKeysRequest();
-              struct.analyseRuleKeysRequest.read(iprot);
-              struct.setAnalyseRuleKeysRequestIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -669,13 +575,6 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
           oprot.writeFieldEnd();
         }
       }
-      if (struct.analyseRuleKeysRequest != null) {
-        if (struct.isSetAnalyseRuleKeysRequest()) {
-          oprot.writeFieldBegin(ANALYSE_RULE_KEYS_REQUEST_FIELD_DESC);
-          struct.analyseRuleKeysRequest.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -703,10 +602,7 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
       if (struct.isSetBuildStatus()) {
         optionals.set(2);
       }
-      if (struct.isSetAnalyseRuleKeysRequest()) {
-        optionals.set(3);
-      }
-      oprot.writeBitSet(optionals, 4);
+      oprot.writeBitSet(optionals, 3);
       if (struct.isSetType()) {
         oprot.writeI32(struct.type.getValue());
       }
@@ -716,15 +612,12 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
       if (struct.isSetBuildStatus()) {
         struct.buildStatus.write(oprot);
       }
-      if (struct.isSetAnalyseRuleKeysRequest()) {
-        struct.analyseRuleKeysRequest.write(oprot);
-      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, FrontendRequest struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
-      BitSet incoming = iprot.readBitSet(4);
+      BitSet incoming = iprot.readBitSet(3);
       if (incoming.get(0)) {
         struct.type = com.facebook.buck.distributed.thrift.FrontendRequestType.findByValue(iprot.readI32());
         struct.setTypeIsSet(true);
@@ -738,11 +631,6 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
         struct.buildStatus = new BuildStatusRequest();
         struct.buildStatus.read(iprot);
         struct.setBuildStatusIsSet(true);
-      }
-      if (incoming.get(3)) {
-        struct.analyseRuleKeysRequest = new AnalyseRuleKeysRequest();
-        struct.analyseRuleKeysRequest.read(iprot);
-        struct.setAnalyseRuleKeysRequestIsSet(true);
       }
     }
   }
