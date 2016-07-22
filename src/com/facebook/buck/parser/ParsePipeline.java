@@ -16,6 +16,9 @@
 
 package com.facebook.buck.parser;
 
+import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInstanceOf;
+import static com.google.common.base.Throwables.propagateIfInstanceOf;
+
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.MorePaths;
@@ -32,7 +35,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.AsyncFunction;
@@ -129,8 +131,10 @@ public class ParsePipeline implements AutoCloseable {
     try {
       return getAllTargetNodesJob(cell, buildFile).get();
     } catch (Exception e) {
-      Throwables.propagateIfInstanceOf(e.getCause(), BuildFileParseException.class);
-      throw propagateRuntimeException(e);
+      propagateIfInstanceOf(e.getCause(), BuildFileParseException.class);
+      propagateCauseIfInstanceOf(e, ExecutionException.class);
+      propagateCauseIfInstanceOf(e, UncheckedExecutionException.class);
+      throw new RuntimeException(e);
     }
   }
 
@@ -156,9 +160,11 @@ public class ParsePipeline implements AutoCloseable {
     try {
       return getTargetNodeJob(cell, buildTarget).get();
     } catch (Exception e) {
-      Throwables.propagateIfInstanceOf(e.getCause(), BuildFileParseException.class);
-      Throwables.propagateIfInstanceOf(e.getCause(), BuildTargetException.class);
-      throw propagateRuntimeException(e);
+      propagateIfInstanceOf(e.getCause(), BuildFileParseException.class);
+      propagateIfInstanceOf(e.getCause(), BuildTargetException.class);
+      propagateCauseIfInstanceOf(e, ExecutionException.class);
+      propagateCauseIfInstanceOf(e, UncheckedExecutionException.class);
+      throw new RuntimeException(e);
     }
   }
 
@@ -185,8 +191,10 @@ public class ParsePipeline implements AutoCloseable {
     try {
       return getRawNodesJob(cell, buildFile).get();
     } catch (Exception e) {
-      Throwables.propagateIfInstanceOf(e.getCause(), BuildFileParseException.class);
-      throw propagateRuntimeException(e);
+      propagateIfInstanceOf(e.getCause(), BuildFileParseException.class);
+      propagateCauseIfInstanceOf(e, ExecutionException.class);
+      propagateCauseIfInstanceOf(e, UncheckedExecutionException.class);
+      throw new RuntimeException(e);
     }
   }
 
@@ -560,19 +568,6 @@ public class ParsePipeline implements AutoCloseable {
     return UnflavoredBuildTarget.builder(UnflavoredBuildTarget.BUILD_TARGET_PREFIX + basePath, name)
         .setCellPath(cellRoot)
         .build();
-  }
-
-  // Un-wraps the ExcecutionException used by Futures to wrap checked exceptions.
-  public static final RuntimeException propagateRuntimeException(Throwable e) {
-    if (e instanceof ExecutionException | e instanceof UncheckedExecutionException) {
-      Throwable cause = e.getCause();
-      if (cause != null) {
-        Throwables.propagateIfInstanceOf(cause, HumanReadableException.class);
-        return Throwables.propagate(cause);
-      }
-    }
-
-    return Throwables.propagate(e);
   }
 
   /**

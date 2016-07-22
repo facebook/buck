@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.concurrent;
 
+import static com.google.common.base.Throwables.propagate;
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
 import com.google.common.base.Preconditions;
@@ -180,7 +181,7 @@ public class MoreFutures {
         from,
         new AsyncFunction<F, T>() {
           @Override
-          public ListenableFuture<T> apply(@Nonnull F result)
+          public ListenableFuture<T> apply(F result)
               throws Exception {
             return to;
           }
@@ -188,4 +189,9 @@ public class MoreFutures {
         executor);
   }
 
+  public static <X extends Throwable> void propagateCauseIfInstanceOf(Throwable e, Class<X> type) {
+    if (e.getCause() != null && type.isInstance(e)) {
+      propagate(e.getCause());
+    }
+  }
 }

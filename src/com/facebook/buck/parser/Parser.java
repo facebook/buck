@@ -548,7 +548,7 @@ public class Parser {
       Throwables.propagateIfInstanceOf(e.getCause(), BuildFileParseException.class);
       Throwables.propagateIfInstanceOf(e.getCause(), BuildTargetException.class);
       Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
-      throw ParsePipeline.propagateRuntimeException(e);
+      throw Throwables.propagate(e.getCause());
     }
 
     // Finally, pull out the final build target results in input target spec order, and place them
