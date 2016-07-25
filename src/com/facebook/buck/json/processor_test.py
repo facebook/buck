@@ -404,27 +404,49 @@ class BuckTest(unittest.TestCase):
             os.path.join(self.project_root, dep.path) in
             get_includes_from_results(results))
 
-    def test_enabled_sandboxing_prints_warnings(self):
+    def test_import_works_without_sandboxing(self):
+        self.enable_build_file_sandboxing = False
+        build_file = ProjectFile(
+            path='BUCK',
+            contents=(
+                'import ssl',
+            ))
+        self.write_files(build_file)
+        build_file_processor = self.create_build_file_processor()
+        build_file_processor.install_builtins(__builtin__.__dict__)
+        build_file_processor.process(build_file.path, set())
+
+    def test_enabled_sandboxing_blocks_import(self):
         self.enable_build_file_sandboxing = True
         build_file = ProjectFile(
             path='BUCK',
-            contents=('import ssl'))
-        py_file = ProjectFile(path='foo.py', contents=())
-        self.write_files(build_file, py_file)
+            contents=(
+                'import ssl',
+            ))
+        self.write_files(build_file)
         build_file_processor = self.create_build_file_processor()
         build_file_processor.install_builtins(__builtin__.__dict__)
-        diagnostics = set()
+        self.assertRaises(
+            ImportError,
+            build_file_processor.process,
+            build_file.path, set())
 
-        try:
-            out = StringIO.StringIO()
-            sys.stdout = out
-            build_file_path = os.path.join(self.project_root, build_file.path)
-            build_file_processor.process(build_file.path, diagnostics)
-            self.assertEqual(
-                sys.stdout.getvalue().strip(),
-                'Importing module ssl in file %s is discouraged' % build_file_path)
-        finally:
-            sys.stdout = sys.__stdout__
+    def test_allow_unsafe_import_allows_to_import(self):
+        """
+        Verify that `allow_unsafe_import()` allows to import specified modules
+        """
+        self.enable_build_file_sandboxing = True
+        # Importing httplib results in `__import__()` calls for other modules, e.g. socket, sys
+        build_file = ProjectFile(
+            path='BUCK',
+            contents=(
+                'with allow_unsafe_import():',
+                '    import math, httplib',
+            ))
+        self.write_files(build_file)
+        build_file_processor = self.create_build_file_processor()
+        build_file_processor.install_builtins(__builtin__.__dict__)
+        build_file_processor.process(build_file.path, set())
 
     def test_modules_are_not_copied_unless_specified(self):
         """

@@ -11,6 +11,7 @@ import __future__
 from collections import namedtuple
 from pathlib import Path, PureWindowsPath, PurePath
 from pywatchman import bser
+from contextlib import contextmanager
 import copy
 import StringIO
 import cProfile
@@ -49,6 +50,8 @@ VERIFY_AUTODEPS_SIGNATURE = False
 # if not otherwise specified in .buckconfig
 DEFAULT_WATCHMAN_QUERY_TIMEOUT = 5.0
 
+ORIGINAL_IMPORT = __builtin__.__import__
+
 class SyncCookieState(object):
     """
     Process-wide state used to enable Watchman sync cookies only on
@@ -78,8 +81,7 @@ class BuildFileContext(object):
 
     def __init__(self, project_root, base_path, dirname, autodeps, allow_empty_globs, ignore_paths,
                  watchman_client, watchman_watch_root, watchman_project_prefix,
-                 sync_cookie_state, watchman_error, watchman_glob_stat_results,
-                 enable_build_file_sandboxing):
+                 sync_cookie_state, watchman_error, watchman_glob_stat_results):
         self.globals = {}
         self.includes = set()
         self.used_configs = {}
@@ -95,7 +97,6 @@ class BuildFileContext(object):
         self.sync_cookie_state = sync_cookie_state
         self.watchman_error = watchman_error
         self.watchman_glob_stat_results = watchman_glob_stat_results
-        self._enable_build_file_sandboxing = enable_build_file_sandboxing
         self.diagnostics = set()
         self.rules = {}
 
@@ -685,19 +686,50 @@ class BuildFileProcessor(object):
         if self._build_env_stack:
             self._update_functions(self._build_env_stack[-1])
 
-    def custom_import(self, enable_build_file_sandboxing, path):
+    def _custom_import(self):
         """
-        Returns customised `__import__` function.
+        Returns customised '__import__' function that blocks importing modules.
         """
-
-        original_import = __builtin__.__import__
 
         def _import(name, globals=None, locals=None, fromlist=(), level=0):
-            if enable_build_file_sandboxing:
-                print 'Importing module %s in file %s is discouraged' % (name, path)
-            return original_import(name, globals, locals, fromlist, level)
+            raise ImportError(
+                'Importing module %s is forbidden. ' % name +
+                'If you really need to import this module read about ' +
+                'allow_unsafe_import() function'
+            )
+            # TODO(mlowicki): this looks like a good place for implementing things like global
+            # whitelist or wrapping imported modules.
+            # Importing a module may cause more '__import__' calls if the module uses other
+            # modules. Such calls should not be blocked if the top-level import was allowed.
+            # Restoring original '__import__' may be used to avoid that:
+            # with allow_unsafe_import(build_env=build_env):
+            #     return ORIGINAL_IMPORT(name, globals, locals, fromlist, level)
 
         return _import
+
+    @contextmanager
+    def _allow_unsafe_import(self, allow=True):
+        """
+        Controls behavior of 'import' in a context.
+        Default value for 'allow' is True, which corresponds to default 'import' behavior, False
+        overrides that with 'custom_import()' if sandboxing is enabled.
+
+        :param allow: True if default 'import' behavior should be allowed in the context
+        """
+
+        # Override '__import__' function. It might have already been overriden if current file
+        # was included by other build file, original '__import__' is stored in 'ORIGINAL_IMPORT'.
+        previous_import = __builtin__.__import__
+        if allow or not self._enable_build_file_sandboxing:
+            __builtin__.__import__ = ORIGINAL_IMPORT
+        else:
+            __builtin__.__import__ = self._custom_import()
+
+        try:
+            yield
+        finally:
+            # Restore previous '__builtin__.__import__'
+            __builtin__.__import__ = previous_import
 
     def _process(self, build_env, path, implicit_includes=[]):
         """
@@ -726,6 +758,9 @@ class BuildFileProcessor(object):
         # Install the 'read_config' function into our global object.
         default_globals['read_config'] = self._read_config
 
+        # Install the 'allow_unsafe_import' function into our global object.
+        default_globals['allow_unsafe_import'] = self._allow_unsafe_import
+
         # If any implicit includes were specified, process them first.
         for include in implicit_includes:
             include_path = self._get_include_path(include)
@@ -752,14 +787,9 @@ class BuildFileProcessor(object):
         future_features = __future__.absolute_import.compiler_flag
         code = compile(contents, path, 'exec', future_features, 1)
 
-        # Override '__import__' function.
-        original_import = __builtin__.__import__
-        __builtin__.__import__ = self.custom_import(self._enable_build_file_sandboxing, path)
-
-        exec(code, module.__dict__)
-
-        # Restore original `__builtin__.__import__`
-        __builtin__.__import__ = original_import
+        # Execute code with overriden import
+        with self._allow_unsafe_import(False):
+            exec(code, module.__dict__)
 
         # Restore the previous build context.
         self._pop_build_env()
@@ -814,8 +844,7 @@ class BuildFileProcessor(object):
             self._watchman_project_prefix,
             self._sync_cookie_state,
             self._watchman_error,
-            self._watchman_glob_stat_results,
-            self._enable_build_file_sandboxing)
+            self._watchman_glob_stat_results)
 
         # If the .autodeps file has been successfully parsed, then treat it as if it were
         # a file loaded via include_defs() in that a change to the .autodeps file should
