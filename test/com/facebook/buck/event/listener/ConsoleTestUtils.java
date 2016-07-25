@@ -34,7 +34,7 @@ public class ConsoleTestUtils {
       BuckEventBus eventBus,
       long threadId,
       String target,
-      long time) {
+      long timeInMs) {
     HttpArtifactCacheEvent.Scheduled storeScheduled =
         HttpArtifactCacheEvent.newStoreScheduledEvent(
             Optional.of(target), ImmutableSet.<RuleKey>of());
@@ -42,7 +42,7 @@ public class ConsoleTestUtils {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             storeScheduled,
-            time,
+            timeInMs,
             TimeUnit.MILLISECONDS,
             threadId));
     return storeScheduled;
@@ -51,7 +51,7 @@ public class ConsoleTestUtils {
   public static HttpArtifactCacheEvent.Started postStoreStarted(
       BuckEventBus eventBus,
       long threadId,
-      long time,
+      long timeInMs,
       HttpArtifactCacheEvent.Scheduled storeScheduled) {
     HttpArtifactCacheEvent.Started storeStartedOne =
         HttpArtifactCacheEvent.newStoreStartedEvent(storeScheduled);
@@ -59,7 +59,7 @@ public class ConsoleTestUtils {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             storeStartedOne,
-            time,
+            timeInMs,
             TimeUnit.MILLISECONDS,
             threadId));
     return storeStartedOne;
@@ -68,18 +68,20 @@ public class ConsoleTestUtils {
   public static void postStoreFinished(
       BuckEventBus eventBus,
       long threadId,
-      long time,
+      long artifactSizeInBytes,
+      long timeInMs,
       boolean success,
       HttpArtifactCacheEvent.Started storeStartedOne) {
     HttpArtifactCacheEvent.Finished storeFinished =
         HttpArtifactCacheEvent.newFinishedEventBuilder(storeStartedOne)
             .setWasUploadSuccessful(success)
+            .setArtifactSizeBytes(artifactSizeInBytes)
             .build();
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             storeFinished,
-            time,
+            timeInMs,
             TimeUnit.MILLISECONDS,
             threadId));
   }

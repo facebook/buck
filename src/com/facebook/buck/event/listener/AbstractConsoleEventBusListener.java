@@ -42,6 +42,7 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
+import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -63,6 +64,7 @@ import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
@@ -129,6 +131,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected final AtomicInteger httpArtifactUploadsScheduledCount = new AtomicInteger(0);
   protected final AtomicInteger httpArtifactUploadsStartedCount = new AtomicInteger(0);
   protected final AtomicInteger httpArtifactUploadedCount = new AtomicInteger(0);
+  protected final AtomicLong httpArtifactTotalBytesUploaded = new AtomicLong(0);
   protected final AtomicInteger httpArtifactUploadFailedCount = new AtomicInteger(0);
 
   @Nullable
@@ -296,6 +299,22 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
         ImmutableList.of(pair),
         progress,
         lines);
+  }
+
+
+  /**
+   * Adds a line about a the state of cache uploads to lines.
+   *
+   * @param lines The builder to append lines to.
+   */
+  protected void logHttpCacheUploads(ImmutableList.Builder<String> lines) {
+    if (firstHttpCacheUploadScheduled.get() != null) {
+      boolean isFinished = httpShutdownEvent != null;
+      lines.add(String.format("[%s] HTTP CACHE UPLOAD...%s%s",
+          isFinished ? "-" : "+",
+          isFinished ? "FINISHED " : "",
+          renderHttpUploads()));
+    }
   }
 
   /**
@@ -626,6 +645,10 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     if (event.getOperation() == ArtifactCacheEvent.Operation.STORE) {
       if (event.wasUploadSuccessful()) {
         httpArtifactUploadedCount.incrementAndGet();
+        Optional<Long> artifactSizeBytes = event.getArtifactSizeBytes();
+        if (artifactSizeBytes.isPresent()) {
+          httpArtifactTotalBytesUploaded.addAndGet(artifactSizeBytes.get());
+        }
       } else {
         httpArtifactUploadFailedCount.incrementAndGet();
       }
@@ -688,23 +711,28 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     parsingStatus = Optional.of(EMOJI_SLOW + "  (Symlink caused cache invalidation)");
   }
 
-  protected Optional<String> renderHttpUploads() {
+  protected String renderHttpUploads() {
+    long bytesUploaded = httpArtifactTotalBytesUploaded.longValue();
+    String humanReadableBytesUploaded = SizeUnit.toHumanReadableString(
+        SizeUnit.getHumanReadableSize(bytesUploaded, SizeUnit.BYTES),
+        locale
+    );
     int scheduled = httpArtifactUploadsScheduledCount.get();
     int complete = httpArtifactUploadedCount.get();
     int failed = httpArtifactUploadFailedCount.get();
     int uploading = httpArtifactUploadsStartedCount.get() - (complete + failed);
     int pending = scheduled - (uploading + complete + failed);
     if (scheduled > 0) {
-      return Optional.of(
-          String.format(
-              "(%d COMPLETE/%d FAILED/%d UPLOADING/%d PENDING)",
-              complete,
-              failed,
-              uploading,
-              pending
-          ));
+      return String.format(
+            "%s (%d COMPLETE/%d FAILED/%d UPLOADING/%d PENDING)",
+            humanReadableBytesUploaded,
+            complete,
+            failed,
+            uploading,
+            pending
+      );
     } else {
-      return Optional.absent();
+      return humanReadableBytesUploaded;
     }
   }
 

@@ -75,6 +75,7 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
+import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -108,6 +109,7 @@ import java.util.concurrent.TimeUnit;
 public class SuperConsoleEventBusListenerTest {
   private static final String TARGET_ONE = "TARGET_ONE";
   private static final String TARGET_TWO = "TARGET_TWO";
+  private static final String TARGET_THREE = "TARGET_THREE";
   private static final String DOWNLOAD_STRING =
       "[+] DOWNLOADING... (0.00 B/S, TOTAL: 0.00 B, 0 Artifacts)";
   private static final String FINISHED_DOWNLOAD_STRING =
@@ -446,39 +448,54 @@ public class SuperConsoleEventBusListenerTest {
     HttpArtifactCacheEvent.Scheduled storeScheduledTwo =
         postStoreScheduled(eventBus, 0L, TARGET_TWO, 6010L);
 
-    validateConsole(console, listener, 6011L, ImmutableList.of(parsingLine,
+    HttpArtifactCacheEvent.Scheduled storeScheduledThree =
+        postStoreScheduled(eventBus, 0L, TARGET_THREE, 6020L);
+
+    validateConsole(console, listener, 6021L, ImmutableList.of(parsingLine,
         FINISHED_DOWNLOAD_STRING,
         buildingLine,
         installingFinished,
-        "[+] HTTP CACHE UPLOAD...0.0s (0 COMPLETE/0 FAILED/0 UPLOADING/2 PENDING)"));
+        "[+] HTTP CACHE UPLOAD...0.00 B (0 COMPLETE/0 FAILED/0 UPLOADING/3 PENDING)"));
 
     HttpArtifactCacheEvent.Started storeStartedOne =
-        postStoreStarted(eventBus, 0, 6015L, storeScheduledOne);
+        postStoreStarted(eventBus, 0, 6025L, storeScheduledOne);
 
     validateConsole(console, listener, 7000, ImmutableList.of(parsingLine,
         FINISHED_DOWNLOAD_STRING,
         buildingLine,
         installingFinished,
-        "[+] HTTP CACHE UPLOAD...1.0s (0 COMPLETE/0 FAILED/1 UPLOADING/1 PENDING)"));
+        "[+] HTTP CACHE UPLOAD...0.00 B (0 COMPLETE/0 FAILED/1 UPLOADING/2 PENDING)"));
 
-    postStoreFinished(eventBus, 0, 7020L, true, storeStartedOne);
+    long artifactSizeOne = SizeUnit.KILOBYTES.toBytes(1.5);
+    postStoreFinished(eventBus, 0, artifactSizeOne, 7020L, true, storeStartedOne);
 
     validateConsole(console, listener, 7020, ImmutableList.of(parsingLine,
         FINISHED_DOWNLOAD_STRING,
         buildingLine,
         installingFinished,
-        "[+] HTTP CACHE UPLOAD...1.0s (1 COMPLETE/0 FAILED/0 UPLOADING/1 PENDING)"));
+        "[+] HTTP CACHE UPLOAD...1.50 KB (1 COMPLETE/0 FAILED/0 UPLOADING/2 PENDING)"));
 
     HttpArtifactCacheEvent.Started storeStartedTwo =
         postStoreStarted(eventBus, 0, 7030L, storeScheduledTwo);
-    postStoreFinished(eventBus, 0, 7030L, false, storeStartedTwo);
+    long artifactSizeTwo = SizeUnit.KILOBYTES.toBytes(1.6);
+    postStoreFinished(eventBus, 0, artifactSizeTwo, 7030L, false, storeStartedTwo);
 
     validateConsole(console, listener, 7040, ImmutableList.of(parsingLine,
         FINISHED_DOWNLOAD_STRING,
         buildingLine,
         installingFinished,
-        "[+] HTTP CACHE UPLOAD...1.0s (1 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)"));
+        "[+] HTTP CACHE UPLOAD...1.50 KB (1 COMPLETE/1 FAILED/0 UPLOADING/1 PENDING)"));
 
+    HttpArtifactCacheEvent.Started storeStartedThree =
+        postStoreStarted(eventBus, 0, 7040L, storeScheduledThree);
+    long artifactSizeThree = SizeUnit.KILOBYTES.toBytes(0.6);
+    postStoreFinished(eventBus, 0, artifactSizeThree, 7040L, true, storeStartedThree);
+
+    validateConsole(console, listener, 7040, ImmutableList.of(parsingLine,
+        FINISHED_DOWNLOAD_STRING,
+        buildingLine,
+        installingFinished,
+        "[+] HTTP CACHE UPLOAD...2.10 KB (2 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)"));
 
     listener.render();
     String beforeStderrWrite = console.getTextWrittenToStdErr();

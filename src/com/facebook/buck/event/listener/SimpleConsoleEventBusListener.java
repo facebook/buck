@@ -119,9 +119,9 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         getApproximateBuildProgress(),
         lines);
 
-    Optional<String> httpStatus = renderHttpUploads();
-    if (httpStatus.isPresent()) {
-      lines.add("WAITING FOR HTTP CACHE UPLOADS " + httpStatus.get());
+    String httpStatus = renderHttpUploads();
+    if (httpArtifactUploadsScheduledCount.get() > 0) {
+      lines.add("WAITING FOR HTTP CACHE UPLOADS " + httpStatus);
     }
 
     printLines(lines);
@@ -242,15 +242,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       return;
     }
     ImmutableList.Builder<String> lines = ImmutableList.builder();
-    logEventPair(
-        "HTTP CACHE UPLOAD",
-        renderHttpUploads(),
-        clock.currentTimeMillis(),
-        0L,
-        firstHttpCacheUploadScheduled.get(),
-        httpShutdownEvent,
-        Optional.<Double>absent(),
-        lines);
+    logHttpCacheUploads(lines);
 
     printLines(lines);
   }

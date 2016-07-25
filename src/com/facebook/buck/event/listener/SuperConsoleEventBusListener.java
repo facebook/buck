@@ -433,14 +433,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           Optional.<Double>absent(),
           lines);
 
-      logEventPair("HTTP CACHE UPLOAD",
-          renderHttpUploads(),
-          currentTimeMillis,
-          0,
-          firstHttpCacheUploadScheduled.get(),
-          httpShutdownEvent,
-          Optional.<Double>absent(),
-          lines);
+      logHttpCacheUploads(lines);
     }
     return lines.build();
   }
@@ -459,9 +452,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       columns.add(
           String.format(
               locale,
-              "%.2f %s/S " + "AVG",
-              readableSpeed.getFirst(),
-              readableSpeed.getSecond().getAbbreviation()));
+              "%s/S " + "AVG",
+              SizeUnit.toHumanReadableString(readableSpeed, locale)
+          )
+      );
     } else {
       Pair<Double, SizeUnit> downloadSpeed = networkStatsKeeper.getDownloadSpeed();
       Pair<Double, SizeUnit> readableDownloadSpeed =
@@ -469,9 +463,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       columns.add(
           String.format(
               locale,
-              "%.2f %s/S",
-              readableDownloadSpeed.getFirst(),
-              readableDownloadSpeed.getSecond().getAbbreviation()
+              "%s/S",
+              SizeUnit.toHumanReadableString(readableDownloadSpeed, locale)
           )
       );
     }
@@ -483,9 +476,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     columns.add(
         String.format(
             locale,
-            "TOTAL: %.2f %s",
-            readableBytesDownloaded.getFirst(),
-            readableBytesDownloaded.getSecond().getAbbreviation()));
+            "TOTAL: %s",
+            SizeUnit.toHumanReadableString(readableBytesDownloaded, locale)
+        )
+    );
     columns.add(
         String.format(
             locale,

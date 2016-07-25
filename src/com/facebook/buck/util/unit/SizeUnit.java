@@ -21,6 +21,7 @@ import com.facebook.buck.util.MoreStrings;
 import com.google.common.collect.ImmutableMap;
 
 import java.math.BigDecimal;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -140,5 +141,9 @@ public enum SizeUnit {
       }
     }
     return new Pair<>(resultSize, SizeUnit.values()[ordinal]);
+  }
+
+  public static String toHumanReadableString(Pair<Double, SizeUnit> size, Locale locale) {
+    return String.format(locale, "%.2f %s", size.getFirst(), size.getSecond().getAbbreviation());
   }
 }

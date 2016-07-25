@@ -48,6 +48,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
+import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -174,7 +175,7 @@ public class SimpleConsoleEventBusListenerTest {
 
     expectedOutput += "BUILT  0.4s //banana:stand\n" +
         "[-] BUILDING...FINISHED 0.8s\n" +
-        "WAITING FOR HTTP CACHE UPLOADS (0 COMPLETE/0 FAILED/1 UPLOADING/1 PENDING)\n";
+        "WAITING FOR HTTP CACHE UPLOADS 0.00 B (0 COMPLETE/0 FAILED/1 UPLOADING/1 PENDING)\n";
     assertOutput(expectedOutput, console);
 
     eventBus.postWithoutConfiguring(
@@ -207,13 +208,14 @@ public class SimpleConsoleEventBusListenerTest {
     expectedOutput += "[-] INSTALLING...FINISHED 1.5s\n";
     assertOutput(expectedOutput, console);
 
-
-    postStoreFinished(eventBus, threadId, 5015L, true, storeStartedOne);
+    long artifactSizeOne = SizeUnit.MEGABYTES.toBytes(1.5);
+    postStoreFinished(eventBus, threadId, artifactSizeOne, 5015L, true, storeStartedOne);
 
     HttpArtifactCacheEvent.Started storeStartedTwo =
         postStoreStarted(eventBus, threadId, 5020L, storeScheduledTwo);
 
-    postStoreFinished(eventBus, threadId, 5020L, false, storeStartedTwo);
+    long artifactSizeTwo = 600;
+    postStoreFinished(eventBus, threadId, artifactSizeTwo, 5020L, false, storeStartedTwo);
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -223,7 +225,7 @@ public class SimpleConsoleEventBusListenerTest {
             threadId));
 
     expectedOutput +=
-        "[-] HTTP CACHE UPLOAD...FINISHED 5.3s (1 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)\n";
+        "[-] HTTP CACHE UPLOAD...FINISHED 1.50 MB (1 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)\n";
     assertOutput(expectedOutput, console);
   }
 
