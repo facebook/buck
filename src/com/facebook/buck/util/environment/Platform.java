@@ -19,6 +19,7 @@ public enum Platform {
   LINUX("Linux", "linux"),
   MACOS("OS X", "darwin"),
   WINDOWS("Windows", "windows"),
+  FREEBSD("FreeBSD", "freebsd"),
   UNKNOWN("Unknown", "unknown");
 
   private String autoconfName;
@@ -48,6 +49,8 @@ public enum Platform {
       return MACOS;
     } else if (platformName.startsWith("Windows")) {
       return WINDOWS;
+    } else if (platformName.startsWith("FreeBSD")) {
+      return FREEBSD;
     } else {
       return UNKNOWN;
     }

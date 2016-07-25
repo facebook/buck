@@ -505,6 +505,9 @@ public class ProjectWorkspace {
       case WINDOWS:
         platformExt = "win";
         break;
+      case FREEBSD:
+        platformExt = "freebsd";
+        break;
       case UNKNOWN:
         // Leave platformExt as null.
         break;

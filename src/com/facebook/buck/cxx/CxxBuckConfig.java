@@ -162,6 +162,7 @@ public class CxxBuckConfig {
     Archiver result;
     switch (archiverPlatform.get()) {
       case MACOS:
+      case FREEBSD:
         result = new BsdArchiver(ar);
         break;
       case LINUX:

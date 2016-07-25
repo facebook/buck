@@ -179,6 +179,8 @@ public class CxxPlatforms {
         return ImmutableFlavor.of("macosx-x86_64");
       case WINDOWS:
         return ImmutableFlavor.of("windows-x86_64");
+      case FREEBSD:
+        return ImmutableFlavor.of("freebsd-x86_64");
       case UNKNOWN:
       default:
         throw new HumanReadableException("Unable to determine the host platform.");

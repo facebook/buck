@@ -14,23 +14,30 @@ def monotonic_time_nanos():
     # This function should be overwritten below on supported platforms.
     raise Exception('Unsupported platform: ' + platform.system())
 
+
 NSEC_PER_SEC = 1000000000
+
+
+def set_posix_time_nanos(clock_gettime, clock_id):
+    global monotonic_time_nanos
+    class struct_timespec(ctypes.Structure):
+        _fields_ = [('tv_sec', ctypes.c_long), ('tv_nsec', ctypes.c_long)]
+    clock_gettime.argtypes = [ctypes.c_int, ctypes.POINTER(struct_timespec)]
+
+    def _monotonic_time_nanos_posix():
+        t = struct_timespec()
+        clock_gettime(clock_id, ctypes.byref(t))
+        return t.tv_sec * NSEC_PER_SEC + t.tv_nsec
+    monotonic_time_nanos = _monotonic_time_nanos_posix
+
 
 if platform.system() == 'Linux':
     # From <linux/time.h>, available since 2.6.28 (released 24-Dec-2008).
     CLOCK_MONOTONIC_RAW = 4
     librt = ctypes.CDLL('librt.so.1', use_errno=True)
     clock_gettime = librt.clock_gettime
+    set_posix_time_nanos(clock_gettime, CLOCK_MONOTONIC_RAW)
 
-    class struct_timespec(ctypes.Structure):
-        _fields_ = [('tv_sec', ctypes.c_long), ('tv_nsec', ctypes.c_long)]
-    clock_gettime.argtypes = [ctypes.c_int, ctypes.POINTER(struct_timespec)]
-
-    def _monotonic_time_nanos_linux():
-        t = struct_timespec()
-        clock_gettime(CLOCK_MONOTONIC_RAW, ctypes.byref(t))
-        return t.tv_sec * NSEC_PER_SEC + t.tv_nsec
-    monotonic_time_nanos = _monotonic_time_nanos_linux
 elif platform.system() == 'Darwin':
     # From <mach/mach_time.h>
     KERN_SUCCESS = 0
@@ -70,3 +77,9 @@ elif sys.platform == 'cygwin':
         k32.QueryPerformanceCounter(ctypes.byref(perf_counter))
         return perf_counter.value * NSEC_PER_SEC / perf_frequency.value
     monotonic_time_nanos = _monotonic_time_nanos_cygwin
+elif platform.system() == 'FreeBSD':
+    CLOCK_MONOTONIC = 4
+    # On FreeBSD9 and FreeBSD10
+    libc = ctypes.CDLL('libc.so.7', use_errno=True)
+    clock_gettime = libc.clock_gettime
+    set_posix_time_nanos(clock_gettime, CLOCK_MONOTONIC)

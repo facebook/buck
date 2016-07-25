@@ -87,6 +87,14 @@ public class DefaultCxxPlatforms {
         linkerType = LinkerProvider.Type.GNU;
         archiver = new GnuArchiver(new HashedFileTool(DEFAULT_AR));
         break;
+      case FREEBSD:
+        sharedLibraryExtension = "so";
+        sharedLibraryVersionedExtensionFormat = "so.%s";
+        defaultCFrontend = DEFAULT_C_FRONTEND;
+        defaultCxxFrontend = DEFAULT_CXX_FRONTEND;
+        linkerType = LinkerProvider.Type.GNU;
+        archiver = new BsdArchiver(new HashedFileTool(DEFAULT_AR));
+        break;
       //$CASES-OMITTED$
       default:
         throw new RuntimeException(String.format("Unsupported platform: %s", platform));
