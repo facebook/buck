@@ -46,6 +46,11 @@ enum BuildStatus {
   FAILED = 4,
 }
 
+struct ScribeData {
+  1: optional string category;
+  2: optional list<string> lines;
+}
+
 ##############################################################################
 ## Buck client build state
 ##############################################################################
@@ -137,6 +142,16 @@ struct BuildStatusResponse {
   1: optional BuildJob buildJob;
 }
 
+enum LogRequestType {
+  UNKNOWN = 0,
+  SCRIBE_DATA = 1,
+}
+
+struct LogRequest {
+  1: optional LogRequestType type = LogRequestType.UNKNOWN;
+  2: optional ScribeData scribeData;
+}
+
 ##############################################################################
 ## Top-Level Buck-Frontend HTTP body thrift Request/Response format
 ##############################################################################
@@ -145,6 +160,7 @@ enum FrontendRequestType {
   UNKNOWN = 0,
   START_BUILD = 1,
   BUILD_STATUS = 2,
+  LOG = 3,
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -153,6 +169,7 @@ struct FrontendRequest {
   1: optional FrontendRequestType type = FrontendRequestType.UNKNOWN;
   2: optional StartBuildRequest startBuild;
   3: optional BuildStatusRequest buildStatus;
+  4: optional LogRequest log;
 
   // [100-199] Values are reserved for the buck cache request types.
 }

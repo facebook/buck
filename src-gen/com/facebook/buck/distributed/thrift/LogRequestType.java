@@ -11,15 +11,13 @@ import java.util.Map;
 import java.util.HashMap;
 import org.apache.thrift.TEnum;
 
-public enum FrontendRequestType implements org.apache.thrift.TEnum {
+public enum LogRequestType implements org.apache.thrift.TEnum {
   UNKNOWN(0),
-  START_BUILD(1),
-  BUILD_STATUS(2),
-  LOG(3);
+  SCRIBE_DATA(1);
 
   private final int value;
 
-  private FrontendRequestType(int value) {
+  private LogRequestType(int value) {
     this.value = value;
   }
 
@@ -34,16 +32,12 @@ public enum FrontendRequestType implements org.apache.thrift.TEnum {
    * Find a the enum type by its integer value, as defined in the Thrift IDL.
    * @return null if the value is not found.
    */
-  public static FrontendRequestType findByValue(int value) { 
+  public static LogRequestType findByValue(int value) { 
     switch (value) {
       case 0:
         return UNKNOWN;
       case 1:
-        return START_BUILD;
-      case 2:
-        return BUILD_STATUS;
-      case 3:
-        return LOG;
+        return SCRIBE_DATA;
       default:
         return null;
     }
