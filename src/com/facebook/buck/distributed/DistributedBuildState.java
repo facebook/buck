@@ -132,7 +132,8 @@ public class DistributedBuildState {
 
     LoadingCache<Path, Cell> cellLoader = rootCell.createCellLoaderForDistributedBuild(
         cellConfigs.build(),
-        cellFilesystems.build());
+        cellFilesystems.build(),
+        rootCell.getWatchmanDiagnosticCache());
 
     return ImmutableBiMap.copyOf(Maps.transformValues(cellIndex.build(), cellLoader));
   }

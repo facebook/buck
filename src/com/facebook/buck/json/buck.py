@@ -138,7 +138,7 @@ class LazyBuildEnvPartial(object):
         return self.func(*args, **updated_kwargs)
 
 
-DiagnosticMessageAndLevel = namedtuple('DiagnosticMessageAndLevel', ['message', 'level'])
+Diagnostic = namedtuple('Diagnostic', ['message', 'level', 'source'])
 
 
 def provide_for_build(func):
@@ -262,9 +262,10 @@ def glob(includes, excludes=[], include_dotfiles=False, build_env=None, search_b
                 build_env.watchman_glob_stat_results)
         except build_env.watchman_error as e:
             build_env.diagnostics.add(
-                DiagnosticMessageAndLevel(
-                    message='Watchman error, falling back to slow glob: {0}'.format(e),
-                    level='error'))
+                Diagnostic(
+                    message=str(e),
+                    level='error',
+                    source='watchman'))
             try:
                 build_env.watchman_client.close()
             except:
@@ -406,11 +407,20 @@ def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watc
 
     query = ["query", watchman_watch_root, query_params]
     res = watchman_client.query(*query)
-    if res.get('warning'):
+    error_message = res.get('error')
+    if error_message is not None:
         diagnostics.add(
-            DiagnosticMessageAndLevel(
-                message='Watchman warning: {0}'.format(res.get('warning')),
-                level='warning'))
+            Diagnostic(
+                message=error_message,
+                level='error',
+                source='watchman'))
+    warning_message = res.get('warning')
+    if warning_message is not None:
+        diagnostics.add(
+            Diagnostic(
+                message=warning_message,
+                level='warning',
+                source='watchman'))
     result = res.get('files', [])
     if watchman_glob_stat_results:
         result = stat_results(base_path, result, diagnostics)
@@ -427,10 +437,11 @@ def stat_results(base_path, result, diagnostics):
             statted_result.append(path)
         else:
             diagnostics.add(
-                DiagnosticMessageAndLevel(
+                Diagnostic(
                     message='Watchman query returned non-existent file: {0}'.format(
                         resolved_path),
-                    level='warning'))
+                    level='warning',
+                    source='watchman'))
     return statted_result
 
 
@@ -854,7 +865,10 @@ class BuildFileProcessor(object):
 
         if invalid_signature_error_message:
             build_env.diagnostics.add(
-                DiagnosticMessageAndLevel(message=invalid_signature_error_message, level='fatal'))
+                Diagnostic(
+                    message=invalid_signature_error_message,
+                    level='fatal',
+                    source='autodeps'))
 
         return self._process(
             build_env,
@@ -959,6 +973,7 @@ def encode_result(values, diagnostics, profile):
             encoded_diagnostics.append({
                 'message': d.message,
                 'level': d.level,
+                'source': d.source,
             })
         result['diagnostics'] = encoded_diagnostics
     if profile is not None:
@@ -998,9 +1013,10 @@ def process_with_diagnostics(build_file, build_file_processor, to_parent,
         # Control-C and sys.exit() don't emit diagnostics.
         if not (e is KeyboardInterrupt or e is SystemExit):
             diagnostics.add(
-                DiagnosticMessageAndLevel(
+                Diagnostic(
                     message=format_traceback_and_exception(),
-                    level='fatal'))
+                    level='fatal',
+                    source='parse'))
         raise e
     finally:
         if profile is not None:

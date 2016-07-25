@@ -25,6 +25,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
@@ -109,7 +110,8 @@ public class TestCellBuilder {
           cellConfig,
           typesFactory,
           androidDirectoryResolver,
-          new FakeClock(0));
+          new FakeClock(0),
+          new WatchmanDiagnosticCache());
     }
 
     // The constructor for `Cell` is private, and it's in such a central location I don't really

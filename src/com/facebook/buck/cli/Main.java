@@ -54,6 +54,7 @@ import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.TempDirectoryCreator;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.log.CommandThreadFactory;
@@ -402,7 +403,8 @@ public final class Main {
         CommandEvent commandEvent,
         BuckEventBus eventBus,
         WatchmanWatcher watchmanWatcher,
-        WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction)
+        WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction,
+        WatchmanDiagnosticCache watchmanDiagnosticCache)
       throws IOException, InterruptedException {
 
       // Synchronize on parser object so that all outstanding watch events are processed
@@ -412,14 +414,10 @@ public final class Main {
       synchronized (parser) {
         parser.recordParseStartTime(eventBus);
         fileEventBus.post(commandEvent);
-        ImmutableSet.Builder<String> encounteredWatchmanWarningsBuilder = ImmutableSet.builder();
         watchmanWatcher.postEvents(
             eventBus,
-            encounteredWatchmanWarningsBuilder,
+            watchmanDiagnosticCache,
             watchmanFreshInstanceAction);
-
-        // TODO(bhamiltoncx): Pass encountered Watchman warnings to parser so Watchman glob can
-        // ignore them.
       }
     }
 
@@ -788,6 +786,8 @@ public final class Main {
             androidDirectoryResolver,
             testTempDirOverride);
 
+        WatchmanDiagnosticCache watchmanDiagnosticCache = new WatchmanDiagnosticCache();
+
         Cell rootCell = Cell.createCell(
             filesystem,
             console,
@@ -796,7 +796,8 @@ public final class Main {
             command.getConfigOverrides(),
             factory,
             androidDirectoryResolver,
-            clock);
+            clock,
+            watchmanDiagnosticCache);
 
         int exitCode;
         ImmutableList<BuckEventListener> eventListeners = ImmutableList.of();
@@ -1003,7 +1004,8 @@ public final class Main {
                   startedEvent,
                   buildEventBus,
                   watchmanWatcher,
-                  watchmanFreshInstanceAction);
+                  watchmanFreshInstanceAction,
+                  watchmanDiagnosticCache);
             } catch (WatchmanWatcherException | IOException e) {
               buildEventBus.post(
                   ConsoleEvent.warning(
@@ -1354,7 +1356,8 @@ public final class Main {
       CommandEvent commandEvent,
       BuckEventBus eventBus,
       WatchmanWatcher watchmanWatcher,
-      WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction)
+      WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction,
+      WatchmanDiagnosticCache watchmanDiagnosticCache)
     throws IOException, InterruptedException {
     // Wire up daemon to new client and get cached Parser.
     Daemon daemonForParser = getDaemon(cell, objectMapper);
@@ -1363,7 +1366,8 @@ public final class Main {
         commandEvent,
         eventBus,
         watchmanWatcher,
-        watchmanFreshInstanceAction);
+        watchmanFreshInstanceAction,
+        watchmanDiagnosticCache);
     return daemon.getParser();
   }
 

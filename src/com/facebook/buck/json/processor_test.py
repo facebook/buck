@@ -6,7 +6,7 @@ import tempfile
 import sys
 import StringIO
 
-from .buck import BuildFileProcessor, DiagnosticMessageAndLevel, add_rule
+from .buck import BuildFileProcessor, Diagnostic, add_rule
 
 
 def foo_rule(name, srcs=[], visibility=[], build_env=None):
@@ -300,7 +300,7 @@ class BuckTest(unittest.TestCase):
 
             def query(self, *args):
                 self.query_invoked = True
-                raise FakeWatchmanError("whoops")
+                raise FakeWatchmanError("Nobody watches the watchmen")
 
             def close(self):
                 pass
@@ -325,9 +325,10 @@ class BuckTest(unittest.TestCase):
         self.assertTrue(self.watchman_client.query_invoked)
         self.assertEqual(['Foo.java'], rules[0]['srcs'])
         self.assertEqual(
-            set([DiagnosticMessageAndLevel(
-                'Watchman error, falling back to slow glob: whoops',
-                'error')]),
+            set([Diagnostic(
+                message='Nobody watches the watchmen',
+                level='error',
+                source='watchman')]),
             diagnostics)
 
     def test_watchman_glob_warning_adds_diagnostic(self):
@@ -356,7 +357,10 @@ class BuckTest(unittest.TestCase):
         rules = build_file_processor.process(build_file.path, diagnostics)
         self.assertEqual(['Foo.java'], rules[0]['srcs'])
         self.assertEqual(
-            set([DiagnosticMessageAndLevel('Watchman warning: This is a warning', 'warning')]),
+            set([Diagnostic(
+                message='This is a warning',
+                level='warning',
+                source='watchman')]),
             diagnostics)
 
     def test_read_config(self):

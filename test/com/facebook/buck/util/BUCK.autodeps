@@ -1,8 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY da9c287367c408c60fb10fc56a5feb64eb57ffc1 #@#
+#@# GENERATED FILE: DO NOT MODIFY 9c2aead9d704532741a7018327437c2f735f7b3b #@#
 {
   "testutil" : {
     "deps" : [
-      "//src/com/facebook/buck/io:io",
       "//test/com/facebook/buck/testutil:testutil",
       "//third-party/java/immutables:processor"
     ],

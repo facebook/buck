@@ -28,6 +28,8 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.PathOrGlobMatcher;
+import com.facebook.buck.io.WatchmanDiagnostic;
+import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
@@ -52,6 +54,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
 
 import org.hamcrest.Matchers;
@@ -70,6 +73,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ProjectBuildFileParserTest {
 
@@ -179,7 +183,7 @@ public class ProjectBuildFileParserTest {
     buckEventBus.register(eventListener);
     try (ProjectBuildFileParser buildFileParser =
              buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessWithWarning(
-                 buckEventBus, "This is a warning")) {
+                 buckEventBus, "This is a warning", "parser")) {
       buildFileParser.initIfNeeded();
       buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"));
     }
@@ -187,6 +191,77 @@ public class ProjectBuildFileParserTest {
         consoleEvents,
         Matchers.contains(
             Matchers.hasToString("Warning raised by BUCK file parser: This is a warning")));
+    assertThat(buildFileParserFactory.watchmanDiagnostics, Matchers.empty());
+  }
+
+  @Test
+  public void whenSubprocessReturnsNewWatchmanWarningThenConsoleEventPublishedAndCacheUpdated()
+      throws IOException, BuildFileParseException, InterruptedException {
+    // This test depends on unix utilities that don't exist on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
+    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance(new FakeClock(0));
+    final List<ConsoleEvent> consoleEvents = new ArrayList<>();
+    class EventListener {
+      @Subscribe
+      public void onConsoleEvent(ConsoleEvent consoleEvent) {
+        consoleEvents.add(consoleEvent);
+      }
+    }
+    EventListener eventListener = new EventListener();
+    buckEventBus.register(eventListener);
+    try (ProjectBuildFileParser buildFileParser =
+             buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessWithWarning(
+                 buckEventBus, "This is a watchman warning", "watchman")) {
+      buildFileParser.initIfNeeded();
+      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"));
+    }
+    assertThat(
+        consoleEvents,
+        Matchers.contains(
+            Matchers.hasToString("Watchman raised a warning: This is a watchman warning")));
+    assertThat(
+        buildFileParserFactory.watchmanDiagnostics,
+        Matchers.hasItem(
+            WatchmanDiagnostic.of(
+                WatchmanDiagnostic.Level.WARNING,
+                "This is a watchman warning")));
+  }
+
+  @Test
+  public void whenSubprocessReturnsDuplicateWatchmanWarningThenNoConsoleEventPublished()
+      throws IOException, BuildFileParseException, InterruptedException {
+    // This test depends on unix utilities that don't exist on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
+    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance(new FakeClock(0));
+    final List<ConsoleEvent> consoleEvents = new ArrayList<>();
+    class EventListener {
+      @Subscribe
+      public void onConsoleEvent(ConsoleEvent consoleEvent) {
+        consoleEvents.add(consoleEvent);
+      }
+    }
+    EventListener eventListener = new EventListener();
+    buckEventBus.register(eventListener);
+    // Stick a warning in the cache to pretend we already saw it.
+    buildFileParserFactory.watchmanDiagnostics.add(
+        WatchmanDiagnostic.of(
+            WatchmanDiagnostic.Level.WARNING,
+            "This is a dupe watchman warning"));
+    try (ProjectBuildFileParser buildFileParser =
+             buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessWithWarning(
+                 buckEventBus, "This is a dupe watchman warning", "watchman")) {
+      buildFileParser.initIfNeeded();
+      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"));
+    }
+    assertThat(
+        consoleEvents,
+        Matchers.empty());
   }
 
   @Test
@@ -209,7 +284,7 @@ public class ProjectBuildFileParserTest {
     buckEventBus.register(eventListener);
     try (ProjectBuildFileParser buildFileParser =
              buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessWithError(
-                 buckEventBus, "This is an error")) {
+                 buckEventBus, "This is an error", "parser")) {
       buildFileParser.initIfNeeded();
       buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"));
     }
@@ -226,12 +301,16 @@ public class ProjectBuildFileParserTest {
   private static class TestProjectBuildFileParserFactory implements ProjectBuildFileParserFactory {
     private final Path projectRoot;
     private final KnownBuildRuleTypes buildRuleTypes;
+    public final Set<WatchmanDiagnostic> watchmanDiagnostics;
+    private final WatchmanDiagnosticCache watchmanDiagnosticCache;
 
     public TestProjectBuildFileParserFactory(
         Path projectRoot,
         KnownBuildRuleTypes buildRuleTypes) {
       this.projectRoot = projectRoot;
       this.buildRuleTypes = buildRuleTypes;
+      this.watchmanDiagnostics = Sets.newConcurrentHashSet();
+      this.watchmanDiagnosticCache = new WatchmanDiagnosticCache(watchmanDiagnostics);
     }
 
     @Override
@@ -240,13 +319,16 @@ public class ProjectBuildFileParserTest {
         Console console,
         ImmutableMap<String, String> environment,
         BuckEventBus buckEventBus,
-        boolean ignoreBuckAutodepsFiles) {
+        boolean ignoreBuckAutodepsFiles,
+        WatchmanDiagnosticCache watchmanDiagnosticCache) {
       PythonBuckConfig config = new PythonBuckConfig(
           FakeBuckConfig.builder().setEnvironment(environment).build(),
           new ExecutableFinder());
       return new TestProjectBuildFileParser(
           config.getPythonInterpreter(),
-          new ProcessExecutor(console));
+          new ProcessExecutor(console),
+          BuckEventBusFactory.newInstance(),
+          watchmanDiagnosticCache);
     }
 
     public ProjectBuildFileParser createNoopParserThatAlwaysReturnsError() {
@@ -263,7 +345,9 @@ public class ProjectBuildFileParserTest {
                       Optional.<String>absent());
                 }
               },
-              new TestConsole()));
+              new TestConsole()),
+          BuckEventBusFactory.newInstance(),
+          watchmanDiagnosticCache);
     }
 
     public ProjectBuildFileParser createNoopParserThatAlwaysReturnsSuccess() {
@@ -280,7 +364,9 @@ public class ProjectBuildFileParserTest {
                       Optional.<String>absent());
                 }
               },
-              new TestConsole()));
+              new TestConsole()),
+          BuckEventBusFactory.newInstance(),
+          watchmanDiagnosticCache);
     }
 
     public ProjectBuildFileParser createNoopParserThatAlwaysReturnsSuccessAndPrintsToStderr(
@@ -299,12 +385,14 @@ public class ProjectBuildFileParserTest {
                 }
               },
               new TestConsole()),
-          buckEventBus);
+          buckEventBus,
+          watchmanDiagnosticCache);
     }
 
     public ProjectBuildFileParser createNoopParserThatAlwaysReturnsSuccessWithWarning(
         BuckEventBus buckEventBus,
-        final String warning) {
+        final String warning,
+        final String source) {
       return new TestProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
@@ -316,17 +404,25 @@ public class ProjectBuildFileParserTest {
                       ImmutableList.of(),
                       Optional.<List<Object>>of(
                           ImmutableList.<Object>of(
-                              ImmutableMap.of("level", "warning", "message", warning))),
+                              ImmutableMap.of(
+                                  "level",
+                                  "warning",
+                                  "message",
+                                  warning,
+                                  "source",
+                                  source))),
                       Optional.<String>absent());
                 }
               },
               new TestConsole()),
-          buckEventBus);
+          buckEventBus,
+          watchmanDiagnosticCache);
     }
 
     public ProjectBuildFileParser createNoopParserThatAlwaysReturnsSuccessWithError(
         BuckEventBus buckEventBus,
-        final String error) {
+        final String error,
+        final String source) {
       return new TestProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
@@ -338,24 +434,27 @@ public class ProjectBuildFileParserTest {
                       ImmutableList.of(),
                       Optional.<List<Object>>of(
                           ImmutableList.<Object>of(
-                              ImmutableMap.of("level", "error", "message", error))),
+                              ImmutableMap.of(
+                                  "level",
+                                  "error",
+                                  "message",
+                                  error,
+                                  "source",
+                                  source))),
                       Optional.<String>absent());
                 }
               },
               new TestConsole()),
-          buckEventBus);
+          buckEventBus,
+          watchmanDiagnosticCache);
     }
 
     private class TestProjectBuildFileParser extends ProjectBuildFileParser {
       public TestProjectBuildFileParser(
           String pythonInterpreter,
-          ProcessExecutor processExecutor) {
-        this(pythonInterpreter, processExecutor, BuckEventBusFactory.newInstance());
-      }
-      public TestProjectBuildFileParser(
-          String pythonInterpreter,
           ProcessExecutor processExecutor,
-          BuckEventBus buckEventBus) {
+          BuckEventBus buckEventBus,
+          WatchmanDiagnosticCache watchmanDiagnosticCache) {
         super(
             ProjectBuildFileParserOptions.builder()
                 .setProjectRoot(projectRoot)
@@ -372,7 +471,8 @@ public class ProjectBuildFileParserTest {
             ImmutableMap.<String, String>of(),
             buckEventBus,
             processExecutor,
-            /* ignoreBuckAutodepsFiles */ false);
+            /* ignoreBuckAutodepsFiles */ false,
+            watchmanDiagnosticCache);
       }
     }
   }

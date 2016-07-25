@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 5248fcefdc83a23189687e22a7ef735253e3154c #@#
+#@# GENERATED FILE: DO NOT MODIFY c92d913dd97d6ac83a55ba146f46709b5e177f7e #@#
 {
   "apkmodule" : {
     "deps" : [
@@ -184,11 +184,11 @@
       "//src/com/facebook/buck/android:exceptions",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/environment:platform"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/io:io",
-      "//src/com/facebook/buck/util:util",
       "//third-party/java/guava:guava"
     ]
   }

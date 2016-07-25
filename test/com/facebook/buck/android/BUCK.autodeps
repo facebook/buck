@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY a3726f0e2551e06ea4d06ac627ccd86f70346dbf #@#
+#@# GENERATED FILE: DO NOT MODIFY ad645fcbc81f941bc42c256a52c3b21aeabfdb95 #@#
 {
   "aar-integration" : {
     "deps" : [
@@ -24,7 +24,6 @@
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:object_mapper",
-      "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/zip:stream",
       "//test/com/facebook/buck/android:testutil",
@@ -125,7 +124,6 @@
       "//src/com/facebook/buck/android:steps",
       "//src/com/facebook/buck/android:utils",
       "//src/com/facebook/buck/cxx:rules",
-      "//src/com/facebook/buck/util:util",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/cxx:testutil",
       "//test/com/facebook/buck/jvm/java:javac-env",
@@ -203,7 +201,6 @@
       "//test/com/facebook/buck/step:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
-      "//test/com/facebook/buck/util:testutil",
       "//third-party/java/args4j:args4j",
       "//third-party/java/asm:asm",
       "//third-party/java/ddmlib:ddmlib",

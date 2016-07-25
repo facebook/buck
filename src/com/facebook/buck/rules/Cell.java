@@ -26,6 +26,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
@@ -76,6 +77,7 @@ public class Cell {
   private final boolean enforceBuckPackageBoundaries;
   private final ImmutableSet<Pattern> tempFilePatterns;
   private final LoadingCache<Path, Cell> cellLoader;
+  private final WatchmanDiagnosticCache watchmanDiagnosticCache;
 
   private final Supplier<Integer> hashCodeSupplier = Suppliers.memoize(
       new Supplier<Integer>() {
@@ -92,7 +94,8 @@ public class Cell {
       final BuckConfig config,
       final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
       final AndroidDirectoryResolver directoryResolver,
-      final LoadingCache<Path, Cell> cellLoader) throws IOException, InterruptedException {
+      final LoadingCache<Path, Cell> cellLoader,
+      WatchmanDiagnosticCache watchmanDiagnosticCache) throws IOException, InterruptedException {
 
     this.knownRoots = knownRoots;
     this.filesystem = filesystem;
@@ -111,6 +114,7 @@ public class Cell {
     this.knownBuildRuleTypesFactory = knownBuildRuleTypesFactory;
     this.knownBuildRuleTypes = knownBuildRuleTypesFactory.create(config);
     this.cellLoader = cellLoader;
+    this.watchmanDiagnosticCache = watchmanDiagnosticCache;
   }
 
   public static Cell createCell(
@@ -121,7 +125,8 @@ public class Cell {
       CellConfig rootCellConfigOverrides,
       final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
       final AndroidDirectoryResolver directoryResolver,
-      final Clock clock) throws IOException, InterruptedException {
+      final Clock clock,
+      WatchmanDiagnosticCache watchmanDiagnosticCache) throws IOException, InterruptedException {
 
     DefaultCellPathResolver rootCellCellPathResolver = new DefaultCellPathResolver(
         filesystem.getRootPath(),
@@ -145,7 +150,8 @@ public class Cell {
         directoryResolver,
         clock,
         transitiveCellPathMapping,
-        pathToConfigOverrides);
+        pathToConfigOverrides,
+        watchmanDiagnosticCache);
 
     // We would like to go through the cellLoader, however that would mean recreating the Filesystem
     // and BuckConfig. These are being provided from Main.java, so using different values in the
@@ -157,7 +163,8 @@ public class Cell {
         rootConfig,
         knownBuildRuleTypesFactory,
         directoryResolver,
-        cellLoader);
+        cellLoader,
+        watchmanDiagnosticCache);
     cellLoader.put(filesystem.getRootPath(), rootCell);
     return rootCell;
   }
@@ -170,7 +177,8 @@ public class Cell {
       final AndroidDirectoryResolver directoryResolver,
       final Clock clock,
       final ImmutableMap<RelativeCellName, Path> transitiveCellPathMapping,
-      final ImmutableMap<Path, RawConfig> pathToConfigOverrides) {
+      final ImmutableMap<Path, RawConfig> pathToConfigOverrides,
+      final WatchmanDiagnosticCache watchmanDiagnosticCache) {
 
     final ImmutableSet<Path> allPossibleRoots =
         ImmutableSet.copyOf(transitiveCellPathMapping.values());
@@ -214,7 +222,8 @@ public class Cell {
             buckConfig,
             knownBuildRuleTypesFactory,
             directoryResolver,
-            loaderReference.get());
+            loaderReference.get(),
+            watchmanDiagnosticCache);
       }
     };
 
@@ -224,7 +233,8 @@ public class Cell {
 
   public LoadingCache<Path, Cell> createCellLoaderForDistributedBuild(
       final ImmutableMap<Path, BuckConfig> cellConfigs,
-      final ImmutableMap<Path, ProjectFilesystem> cellFilesystems
+      final ImmutableMap<Path, ProjectFilesystem> cellFilesystems,
+      final WatchmanDiagnosticCache watchmanDiagnosticCache
   ) throws InterruptedException, IOException {
 
     final AtomicReference<LoadingCache<Path, Cell>> cacheReference = new AtomicReference<>();
@@ -242,7 +252,8 @@ public class Cell {
             buckConfig,
             knownBuildRuleTypesFactory,
             directoryResolver,
-            cacheReference.get()
+            cacheReference.get(),
+            watchmanDiagnosticCache
         );
       }
     };
@@ -345,6 +356,10 @@ public class Cell {
     return watchman;
   }
 
+  public WatchmanDiagnosticCache getWatchmanDiagnosticCache() {
+    return watchmanDiagnosticCache;
+  }
+
   /**
    * Callers are responsible for managing the life-cycle of the created {@link
    * ProjectBuildFileParser}.
@@ -368,7 +383,8 @@ public class Cell {
         console,
         config.getEnvironment(),
         eventBus,
-        ignoreBuckAutodepsFiles);
+        ignoreBuckAutodepsFiles,
+        watchmanDiagnosticCache);
   }
 
   @VisibleForTesting

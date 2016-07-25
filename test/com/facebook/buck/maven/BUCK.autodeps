@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 05222bfa1c6ed97678037ddb87d14fc933665c6a #@#
+#@# GENERATED FILE: DO NOT MODIFY 7c0634447d1e9e44ee9039e0157bca43c7edfc0f #@#
 {
   "maven" : {
     "deps" : [
@@ -7,6 +7,7 @@
       "//src/com/facebook/buck/file:file",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/io:watchman",
       "//src/com/facebook/buck/json:json",
       "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/jvm/java:support",

@@ -26,6 +26,8 @@ import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.PathOrGlobMatcher;
+import com.facebook.buck.io.WatchmanDiagnostic;
+import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
@@ -109,6 +111,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private final BserSerializer bserSerializer;
   private final AssertScopeExclusiveAccess assertSingleThreadedParsing;
   private final boolean ignoreBuckAutodepsFiles;
+  private final WatchmanDiagnosticCache watchmanDiagnosticCache;
 
   private boolean isInitialized;
   private boolean isClosed;
@@ -124,7 +127,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus,
       ProcessExecutor processExecutor,
-      boolean ignoreBuckAutodepsFiles) {
+      boolean ignoreBuckAutodepsFiles,
+      WatchmanDiagnosticCache watchmanDiagnosticCache) {
     this.pathToBuckPy = Optional.absent();
     this.options = options;
     this.marshaller = marshaller;
@@ -135,6 +139,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     this.bserSerializer = new BserSerializer();
     this.assertSingleThreadedParsing = new AssertScopeExclusiveAccess();
     this.ignoreBuckAutodepsFiles = ignoreBuckAutodepsFiles;
+    this.watchmanDiagnosticCache = watchmanDiagnosticCache;
 
     this.rawConfigJson =
         Suppliers.memoize(
@@ -393,7 +398,11 @@ public class ProjectBuildFileParser implements AutoCloseable {
         throw new IOException("Parser exited unexpectedly", e);
       }
       BuildFilePythonResult resultObject = handleDeserializedValue(deserializedValue);
-      handleDiagnostics(buildFile, resultObject.getDiagnostics(), buckEventBus);
+      handleDiagnostics(
+          buildFile,
+          resultObject.getDiagnostics(),
+          buckEventBus,
+          watchmanDiagnosticCache);
       values = resultObject.getValues();
       LOG.verbose("Got rules: %s", values);
       LOG.debug("Parsed %d rules from process", values.size());
@@ -439,38 +448,90 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private static void handleDiagnostics(
       Path buildFile,
       List<Map<String, String>> diagnosticsList,
-      BuckEventBus buckEventBus) throws IOException, BuildFileParseException {
+      BuckEventBus buckEventBus,
+      WatchmanDiagnosticCache watchmanDiagnosticCache) throws IOException, BuildFileParseException {
     for (Map<String, String> diagnostic : diagnosticsList) {
       String level = diagnostic.get("level");
       String message = diagnostic.get("message");
+      String source = diagnostic.get("source");
       if (level == null || message == null) {
         throw new IOException(
-            String.format("Invalid diagnostic(level=%s, message=%s)", level, message));
+            String.format(
+                "Invalid diagnostic(level=%s, message=%s, source=%s)",
+                level,
+                message,
+                source));
       }
-      switch (level) {
-        case "warning":
-          LOG.warn("Warning raised by BUCK file parser for file %s: %s", buildFile, message);
-          buckEventBus.post(
-              ConsoleEvent.warning("Warning raised by BUCK file parser: %s", message));
-          break;
-        case "error":
-          LOG.warn("Error raised by BUCK file parser for file %s: %s", buildFile, message);
-          buckEventBus.post(
-              ConsoleEvent.severe("Error raised by BUCK file parser: %s", message));
-          break;
-        case "fatal":
-          LOG.warn("Fatal error raised by BUCK file parser for file %s: %s", buildFile, message);
-          throw BuildFileParseException.createForBuildFileParseError(
-              buildFile,
-              new IOException(message));
-        default:
-          LOG.warn(
-              "Unknown diagnostic (level %s) raised by BUCK file parser for build file %s: %s",
-              level,
-              buildFile,
-              message);
-          break;
+      if (source != null && source.equals("watchman")) {
+        handleWatchmanDiagnostic(level, message, buckEventBus, watchmanDiagnosticCache);
+      } else {
+        switch (level) {
+          case "warning":
+            LOG.warn("Warning raised by BUCK file parser for file %s: %s", buildFile, message);
+            buckEventBus.post(
+                ConsoleEvent.warning("Warning raised by BUCK file parser: %s", message));
+            break;
+          case "error":
+            LOG.warn("Error raised by BUCK file parser for file %s: %s", buildFile, message);
+            buckEventBus.post(
+                ConsoleEvent.severe("Error raised by BUCK file parser: %s", message));
+            break;
+          case "fatal":
+            LOG.warn("Fatal error raised by BUCK file parser for file %s: %s", buildFile, message);
+            throw BuildFileParseException.createForBuildFileParseError(
+                buildFile,
+                new IOException(message));
+          default:
+            LOG.warn(
+                "Unknown diagnostic (level %s) raised by BUCK file parser for build file %s: %s",
+                level,
+                buildFile,
+                message);
+            break;
+        }
       }
+    }
+  }
+
+  private static void handleWatchmanDiagnostic(
+      String level,
+      String message,
+      BuckEventBus buckEventBus,
+      WatchmanDiagnosticCache watchmanDiagnosticCache) {
+    WatchmanDiagnostic.Level watchmanDiagnosticLevel;
+    switch (level) {
+      case "warning":
+        watchmanDiagnosticLevel = WatchmanDiagnostic.Level.WARNING;
+        break;
+      case "error":
+        watchmanDiagnosticLevel = WatchmanDiagnostic.Level.ERROR;
+        break;
+      default:
+        throw new RuntimeException(
+            String.format(
+                "Unrecognized watchman diagnostic level: %s (message=%s)",
+                level,
+                message));
+    }
+    WatchmanDiagnostic watchmanDiagnostic = WatchmanDiagnostic.of(
+        watchmanDiagnosticLevel,
+        message);
+    switch (watchmanDiagnosticCache.addDiagnostic(watchmanDiagnostic)) {
+      case NEW_DIAGNOSTIC:
+        switch (watchmanDiagnosticLevel) {
+          case WARNING:
+            buckEventBus.post(
+                ConsoleEvent.warning("Watchman raised a warning: %s", message));
+            break;
+          case ERROR:
+            buckEventBus.post(
+                ConsoleEvent.severe("Watchman raised an error: %s", message));
+            break;
+        }
+        break;
+      case DUPLICATE_DIAGNOSTIC:
+        // Nothing to do.
+        break;
     }
   }
 

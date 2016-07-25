@@ -1,12 +1,16 @@
 WATCHMAN_SRCS = [
   'Watchman.java',
   'WatchmanClient.java',
+  'WatchmanDiagnosticCache.java',
   'WatchmanSocketClient.java',
 ]
-java_library(
+java_immutables_library(
   name = 'watchman',
   srcs = WATCHMAN_SRCS,
   autodeps = True,
+  immutable_types = [
+    'WatchmanDiagnostic',
+  ],
   visibility = [
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/json:json',

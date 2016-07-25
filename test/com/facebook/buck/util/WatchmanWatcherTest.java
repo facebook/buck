@@ -22,7 +22,6 @@ import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.newCapture;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
@@ -37,6 +36,8 @@ import com.facebook.buck.io.FakeWatchmanClient;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.WatchmanDiagnostic;
+import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.timing.FakeClock;
 import com.google.common.base.Optional;
@@ -58,6 +59,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -87,7 +89,7 @@ public class WatchmanWatcherTest {
         watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder(),
+        new WatchmanDiagnosticCache(),
         WatchmanWatcher.FreshInstanceAction.NONE);
     verify(eventBus);
   }
@@ -106,7 +108,7 @@ public class WatchmanWatcherTest {
         watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder(),
+        new WatchmanDiagnosticCache(),
         WatchmanWatcher.FreshInstanceAction.NONE);
     verify(eventBus);
     assertEquals("Should be modify event.",
@@ -133,7 +135,7 @@ public class WatchmanWatcherTest {
         watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder(),
+        new WatchmanDiagnosticCache(),
         WatchmanWatcher.FreshInstanceAction.NONE);
     verify(eventBus);
     assertEquals("Should be create event.",
@@ -158,7 +160,7 @@ public class WatchmanWatcherTest {
         watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder(),
+        new WatchmanDiagnosticCache(),
         WatchmanWatcher.FreshInstanceAction.NONE);
     verify(eventBus);
     assertEquals("Should be delete event.",
@@ -184,7 +186,7 @@ public class WatchmanWatcherTest {
         watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder(),
+        new WatchmanDiagnosticCache(),
         WatchmanWatcher.FreshInstanceAction.NONE);
     verify(eventBus);
     assertEquals("Should be delete event.",
@@ -210,7 +212,7 @@ public class WatchmanWatcherTest {
         watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder(),
+        new WatchmanDiagnosticCache(),
         WatchmanWatcher.FreshInstanceAction.NONE);
     verify(eventBus);
     assertEquals("Path should match watchman output.",
@@ -241,7 +243,7 @@ public class WatchmanWatcherTest {
         10000 /* timeout */);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder(),
+        new WatchmanDiagnosticCache(),
         WatchmanWatcher.FreshInstanceAction.NONE);
     verify(eventBus);
     assertEquals("Should be overflow event.",
@@ -267,8 +269,8 @@ public class WatchmanWatcherTest {
     try {
       watcher.postEvents(
           new BuckEventBus(new FakeClock(0), new BuildId()),
-          ImmutableSet.<String>builder(),
-        WatchmanWatcher.FreshInstanceAction.NONE);
+          new WatchmanDiagnosticCache(),
+          WatchmanWatcher.FreshInstanceAction.NONE);
       fail("Should have thrown IOException.");
     } catch (IOException e) {
       assertTrue("Should be expected error", e.getMessage().startsWith("oops"));
@@ -298,7 +300,7 @@ public class WatchmanWatcherTest {
     try {
       watcher.postEvents(
           new BuckEventBus(new FakeClock(0), new BuildId()),
-          ImmutableSet.<String>builder(),
+          new WatchmanDiagnosticCache(),
           WatchmanWatcher.FreshInstanceAction.NONE);
     } catch (InterruptedException e) {
       assertEquals("Should be test interruption.", e.getMessage(), message);
@@ -326,8 +328,8 @@ public class WatchmanWatcherTest {
     try {
       watcher.postEvents(
           new BuckEventBus(new FakeClock(0), new BuildId()),
-          ImmutableSet.<String>builder(),
-        WatchmanWatcher.FreshInstanceAction.NONE);
+          new WatchmanDiagnosticCache(),
+          WatchmanWatcher.FreshInstanceAction.NONE);
       fail("Should have thrown RuntimeException");
     } catch (RuntimeException e) {
       assertThat("Should contain watchman error.",
@@ -352,7 +354,7 @@ public class WatchmanWatcherTest {
     try {
       watcher.postEvents(
           new BuckEventBus(new FakeClock(0), new BuildId()),
-          ImmutableSet.<String>builder(),
+          new WatchmanDiagnosticCache(),
           WatchmanWatcher.FreshInstanceAction.NONE);
     } finally {
       assertEquals("Should be overflow event.",
@@ -384,7 +386,7 @@ public class WatchmanWatcherTest {
         watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder(),
+        new WatchmanDiagnosticCache(),
         WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT);
 
     boolean overflowSeen = false;
@@ -417,7 +419,7 @@ public class WatchmanWatcherTest {
         watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder(),
+        new WatchmanDiagnosticCache(),
         WatchmanWatcher.FreshInstanceAction.NONE);
 
     boolean overflowSeen = false;
@@ -454,7 +456,7 @@ public class WatchmanWatcherTest {
         -1 /* timeout */);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder(),
+        new WatchmanDiagnosticCache(),
         WatchmanWatcher.FreshInstanceAction.NONE);
 
     boolean overflowSeen = false;
@@ -616,7 +618,7 @@ public class WatchmanWatcherTest {
         watchmanOutput);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        ImmutableSet.<String>builder(),
+        new WatchmanDiagnosticCache(),
         WatchmanWatcher.FreshInstanceAction.NONE);
     verify(eventBus);
   }
@@ -637,14 +639,14 @@ public class WatchmanWatcherTest {
         watchmanOutput);
     watcher.postEvents(
         buckEventBus,
-        ImmutableSet.<String>builder(),
+        new WatchmanDiagnosticCache(),
         WatchmanWatcher.FreshInstanceAction.NONE);
     verify(buckEventBus);
     assertThat(eventCapture.getValue().getMessage(), Matchers.containsString(message));
   }
 
   @Test
-  public void whenWatchmanProducesAWarningThenWarningReturned()
+  public void whenWatchmanProducesAWarningThenWarningAddedToCache()
       throws IOException, InterruptedException {
     String message = "I'm a warning!";
     ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
@@ -654,12 +656,18 @@ public class WatchmanWatcherTest {
     WatchmanWatcher watcher = createWatcher(
         eventBus,
         watchmanOutput);
-    ImmutableSet.Builder<String> warningsBuilder = ImmutableSet.builder();
+    Set<WatchmanDiagnostic> diagnostics = new HashSet<>();
+    WatchmanDiagnosticCache watchmanDiagnosticCache = new WatchmanDiagnosticCache(diagnostics);
     watcher.postEvents(
         new BuckEventBus(new FakeClock(0), new BuildId()),
-        warningsBuilder,
+        watchmanDiagnosticCache,
         WatchmanWatcher.FreshInstanceAction.NONE);
-    assertThat(warningsBuilder.build(), equalTo(ImmutableSet.of(message)));
+    assertThat(
+        diagnostics,
+        hasItem(
+            WatchmanDiagnostic.of(
+                WatchmanDiagnostic.Level.WARNING,
+                message)));
   }
 
   private WatchmanWatcher createWatcher(

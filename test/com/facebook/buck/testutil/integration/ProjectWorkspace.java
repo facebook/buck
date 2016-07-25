@@ -38,6 +38,7 @@ import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
@@ -605,7 +606,8 @@ public class ProjectWorkspace {
             directoryResolver,
             Optional.<Path>absent()),
         directoryResolver,
-        new DefaultClock());
+        new DefaultClock(),
+        new WatchmanDiagnosticCache());
   }
 
   public BuildTarget newBuildTarget(String fullyQualifiedName)
