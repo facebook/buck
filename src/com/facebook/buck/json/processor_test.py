@@ -425,3 +425,59 @@ class BuckTest(unittest.TestCase):
                 'Importing module ssl in file %s is discouraged' % build_file_path)
         finally:
             sys.stdout = sys.__stdout__
+
+    def test_modules_are_not_copied_unless_specified(self):
+        """
+        Test that modules are not copied by 'include_defs' unless specified in '__all__'.
+        """
+
+        include_def = ProjectFile(
+            path='inc_def',
+            contents=(
+                'import math',
+                'def math_pi():',
+                '    return math.pi',
+            ))
+        self.write_files(include_def)
+
+        # Module math should not be accessible
+        build_file = ProjectFile(
+            path='BUCK',
+            contents=(
+                'include_defs({0!r})'.format(include_def.name),
+                'assert(round(math.pi, 2) == 3.14)',
+            ))
+        self.write_file(build_file)
+        build_file_processor = self.create_build_file_processor()
+        self.assertRaises(
+            NameError,
+            build_file_processor.process,
+            build_file.path, set())
+
+        # Confirm that math_pi() works
+        build_file = ProjectFile(
+            path='BUCK',
+            contents=(
+                'include_defs({0!r})'.format(include_def.name),
+                'assert(round(math_pi(), 2) == 3.14)',
+            ))
+        self.write_file(build_file)
+        build_file_processor = self.create_build_file_processor()
+        build_file_processor.process(build_file.path, set())
+
+        # If specified in '__all__', math should be accessible
+        include_def = ProjectFile(
+            path='inc_def',
+            contents=(
+                '__all__ = ["math"]',
+                'import math',
+            ))
+        build_file = ProjectFile(
+            path='BUCK',
+            contents=(
+                'include_defs({0!r})'.format(include_def.name),
+                'assert(round(math.pi, 2) == 3.14)',
+            ))
+        self.write_files(include_def, build_file)
+        build_file_processor = self.create_build_file_processor()
+        build_file_processor.process(build_file.path, set())

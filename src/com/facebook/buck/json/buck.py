@@ -27,7 +27,7 @@ import re
 import subprocess
 import sys
 import traceback
-import copy
+import types
 
 # When build files are executed, the functions in this file tagged with
 # @provide_for_build will be provided in the build file's local symbol table.
@@ -562,7 +562,10 @@ class BuildFileProcessor(object):
         keys = getattr(mod, '__all__', mod.__dict__.keys())
 
         for key in keys:
-            if not key.startswith('_') and key not in hidden:
+            # Block copying modules unless they were specified in '__all__'
+            block_copying_module = not hasattr(mod, '__all__') and isinstance(
+                mod.__dict__[key], types.ModuleType)
+            if not key.startswith('_') and key not in hidden and not block_copying_module:
                 dst[key] = mod.__dict__[key]
 
     def _update_functions(self, build_env):
