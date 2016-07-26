@@ -407,6 +407,9 @@ public class ProjectBuildFileParser implements AutoCloseable {
       LOG.verbose("Got rules: %s", values);
       LOG.debug("Parsed %d rules from process", values.size());
       profile = resultObject.getProfile();
+      if (profile != null) {
+        LOG.debug("Profile result: %s", profile);
+      }
       return values;
     } finally {
       buckEventBus.post(ParseBuckFileEvent.finished(parseBuckFileStarted, values, profile));
