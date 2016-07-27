@@ -20,12 +20,14 @@ import static com.facebook.buck.util.MoreThrowables.getInitialCause;
 import static com.facebook.buck.util.MoreThrowables.getThrowableOrigin;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.network.HostnameFetching;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
 
+import java.io.IOException;
 import java.util.logging.LogRecord;
 
 @Value.Immutable
@@ -35,6 +37,7 @@ abstract class AbstractErrorLogRecord {
   private static final ThreadIdToCommandIdMapper MAPPER = GlobalStateManager
       .singleton()
       .getThreadIdToCommandIdMapper();
+  private static final Logger LOG = Logger.get(AbstractErrorLogRecord.class);
 
   public abstract LogRecord getRecord();
   public abstract String getMessage();
@@ -43,10 +46,22 @@ abstract class AbstractErrorLogRecord {
   @Value.Derived
   public ImmutableMap<String, String> getTraits() {
     String logger = getRecord().getLoggerName();
-    ImmutableMap<String, String> traits = ImmutableMap.of(
-        "severity", getRecord().getLevel().toString(),
-        "logger", logger != null ? logger : "None"
-    );
+    String hostname = "unknown";
+    try {
+      hostname = HostnameFetching.getHostname();
+    } catch (IOException e) {
+      LOG.debug(e, "Unable to fetch hostname");
+    }
+    ImmutableMap<String, String> traits = ImmutableMap.<String, String> builder()
+        .put("severity", getRecord().getLevel().toString())
+        .put("logger", logger != null ? logger : "unknown")
+        .put("buckGitCommit", System.getProperty("buck.git_commit", "unknown"))
+        .put("javaVersion", System.getProperty("java.version", "unknown"))
+        .put("os", System.getProperty("os.name", "unknown"))
+        .put("osVersion", System.getProperty("os.version", "unknown"))
+        .put("user", System.getProperty("user.name", "unknown"))
+        .put("hostname", hostname)
+        .build();
     return traits;
   }
 
@@ -86,10 +101,10 @@ abstract class AbstractErrorLogRecord {
   };
 
   @Value.Derived
-  public Optional<String> getCommandId() {
-    String commandId = MAPPER.threadIdToCommandId(getRecord().getThreadID());
-    if (commandId != null) {
-      return Optional.of(commandId);
+  public Optional<String> getBuildUuid() {
+    String buildUuid = MAPPER.threadIdToCommandId(getRecord().getThreadID());
+    if (buildUuid != null) {
+      return Optional.of(buildUuid);
     }
     return Optional.absent();
   }
@@ -99,6 +114,15 @@ abstract class AbstractErrorLogRecord {
     Throwable throwable = getRecord().getThrown();
     if (throwable != null) {
       return Optional.of(throwable.getStackTrace());
+    }
+    return Optional.absent();
+  }
+
+  @Value.Derived
+  public Optional<String> getErrorMessage() {
+    Throwable throwable = getRecord().getThrown();
+    if (throwable != null && throwable.getMessage() != null) {
+      return Optional.of(throwable.getMessage());
     }
     return Optional.absent();
   }
