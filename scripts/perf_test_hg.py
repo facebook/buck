@@ -325,7 +325,7 @@ def run_tests_for_diff(args, revisions_to_test, test_index, last_result):
         suspect_keys = [
             x
             for x in result.cache_results.keys()
-            if x not in ['DIR_HIT', 'IGNORED']
+            if x not in ['DIR_HIT', 'IGNORED', 'LOCAL_KEY_UNCHANGED_HIT']
         ]
         if suspect_keys:
             log('Building at revision %s with the new buck version '
@@ -333,13 +333,14 @@ def run_tests_for_diff(args, revisions_to_test, test_index, last_result):
                 'This suggests one of the rule keys contains an '
                 'absolute path.' % (
                     revisions_to_test[test_index - 1]))
-            for rule in result.cache_results['MISS']:
-                rule_name = rule['rule_name']
-                key, key_debug = result.rule_key_map[rule_name]
-                old_key, old_key_debug = last_result.rule_key_map[rule_name]
-                log('Rule %s missed.' % rule_name)
-                log('\tOld Rule Key (%s): %s.' % (old_key, old_key_debug))
-                log('\tNew Rule Key (%s): %s.' % (key, key_debug))
+            for result_type in suspect_keys:
+                for rule in result.cache_results[result_type]:
+                    rule_name = rule['rule_name']
+                    key, key_debug = result.rule_key_map[rule_name]
+                    old_key, old_key_debug = last_result.rule_key_map[rule_name]
+                    log('Rule %s, result %s.' % (rule_name, result_type))
+                    log('\tOld Rule Key (%s): %s.' % (old_key, old_key_debug))
+                    log('\tNew Rule Key (%s): %s.' % (key, key_debug))
             raise Exception('Failed to reuse cache across directories!!!')
 
         checkout(revisions_to_test[test_index], cwd_root)
