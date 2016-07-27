@@ -40,7 +40,6 @@ abstract class AbstractErrorLogRecord {
   private static final Logger LOG = Logger.get(AbstractErrorLogRecord.class);
 
   public abstract LogRecord getRecord();
-  public abstract String getMessage();
   public abstract ImmutableList<String> getLogs();
 
   @Value.Derived
@@ -63,6 +62,33 @@ abstract class AbstractErrorLogRecord {
         .put("hostname", hostname)
         .build();
     return traits;
+  }
+
+  @Value.Derived
+  public String getMessage() {
+    Optional<String> initialErr = Optional.absent();
+    Optional<String> initialErrorMsg = Optional.absent();
+    Optional<String> errorMsg = Optional.absent();
+    Throwable throwable = getRecord().getThrown();
+    if (throwable != null) {
+      initialErr = Optional.of(getInitialCause(throwable).getClass().getName());
+      if (throwable.getMessage() != null) {
+        initialErrorMsg = Optional.of(getInitialCause(throwable).getLocalizedMessage());
+      }
+    }
+    String message = getRecord().getMessage();
+    if (message != null) {
+      errorMsg = Optional.of(message);
+    }
+    StringBuilder sb = new StringBuilder();
+    for (Optional<String> field : ImmutableList.of(initialErr, initialErrorMsg, errorMsg)) {
+      sb.append(field.or(""));
+      if (field.isPresent()) {
+        sb.append(": ");
+      }
+    }
+    sb.append(getRecord().getLoggerName());
+    return sb.toString();
   }
 
   /**
