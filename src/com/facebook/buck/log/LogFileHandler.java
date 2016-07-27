@@ -125,7 +125,7 @@ public class LogFileHandler extends Handler {
               public int comparePaths(
                   DirectoryCleaner.PathStats path1,
                   DirectoryCleaner.PathStats path2) {
-                return (int) (path1.getCreationMillis() - path2.getCreationMillis());
+                return Long.compare(path1.getCreationMillis(), path2.getCreationMillis());
               }
             })
         .setMaxTotalSizeBytes(maxLogsSizeBytes)

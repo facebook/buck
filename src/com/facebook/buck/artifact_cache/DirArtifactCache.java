@@ -325,7 +325,7 @@ public class DirArtifactCache implements ArtifactCache {
               public int comparePaths(
                   DirectoryCleaner.PathStats path1,
                   DirectoryCleaner.PathStats path2) {
-                return (int) (path1.getLastAccessMillis() - path2.getLastAccessMillis());
+                return Long.compare(path1.getLastAccessMillis(), path2.getLastAccessMillis());
               }
             })
         .setMaxTotalSizeBytes(maxCacheSizeBytes.get())
