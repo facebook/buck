@@ -103,12 +103,15 @@ public class MacWifiSsidFinder {
       LOG.debug("No SSID found for interface %s.", defaultInterface.get());
       return Optional.absent();
     }
+    String ssidString;
     if (!(ssid instanceof String)) {
-      LOG.error("Fetched SSID, but got unexpected non-string type (got: %s).", ssid);
-      return Optional.absent();
+      LOG.warn("Fetched SSID, but got unexpected non-string type (got: %s).",
+          ssid.getClass().getName());
+      ssidString = ssid.toString();
+    } else {
+      ssidString = (String) ssid;
     }
 
-    String ssidString = (String) ssid;
     LOG.debug("Found SSID: %s", ssidString);
     return Optional.of(ssidString);
   }
