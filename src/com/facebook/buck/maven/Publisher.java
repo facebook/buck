@@ -21,6 +21,13 @@ import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.StandardSystemProperty;
@@ -44,8 +51,10 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.util.artifact.SubArtifact;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -67,6 +76,7 @@ public class Publisher {
   }
   private static final Logger LOG = Logger.get(Publisher.class);
 
+  private final Optional<String> signingPassphrase;
   private final ServiceLocator locator;
   private final LocalRepository localRepo;
   private final RemoteRepository remoteRepo;
@@ -77,8 +87,15 @@ public class Publisher {
       Optional<URL> remoteRepoUrl,
       Optional<String> username,
       Optional<String> password,
+      Optional<String> signingPassphrase,
       boolean dryRun) {
-    this(repositoryFilesystem.getRootPath(), remoteRepoUrl, username, password, dryRun);
+    this(
+        repositoryFilesystem.getRootPath(),
+        remoteRepoUrl,
+        username,
+        password,
+        signingPassphrase,
+        dryRun);
   }
 
   /**
@@ -93,18 +110,20 @@ public class Publisher {
       Optional<URL> remoteRepoUrl,
       Optional<String> username,
       Optional<String> password,
+      Optional<String> signingPassphrase,
       boolean dryRun) {
     this.localRepo = new LocalRepository(localRepoPath.toFile());
     this.remoteRepo = AetherUtil.toRemoteRepository(
         remoteRepoUrl.orElse(MAVEN_CENTRAL),
         username,
         password);
+    this.signingPassphrase = signingPassphrase;
     this.locator = AetherUtil.initServiceLocator();
     this.dryRun = dryRun;
   }
 
   public ImmutableSet<DeployResult> publish(
-      ImmutableSet<MavenPublishable> publishables) throws DeploymentException {
+      ImmutableSet<MavenPublishable> publishables) throws DeploymentException, InterruptedException {
     ImmutableListMultimap<UnflavoredBuildTarget, UnflavoredBuildTarget> duplicateBuiltinBuileRules =
         checkForDuplicatePackagedDeps(publishables);
     if (duplicateBuiltinBuileRules.size() > 0) {
@@ -196,7 +215,7 @@ public class Publisher {
       String artifactId,
       String version,
       List<File> toPublish)
-      throws DeploymentException {
+      throws DeploymentException, InterruptedException {
     return publish(new DefaultArtifact(groupId, artifactId, "", version), toPublish);
   }
 
@@ -209,7 +228,7 @@ public class Publisher {
    *                  extension of each given file will be used as a maven "extension" coordinate
    */
   public DeployResult publish(Artifact descriptor, List<File> toPublish)
-      throws DeploymentException {
+      throws DeploymentException, InterruptedException {
     String providedExtension = descriptor.getExtension();
     if (!providedExtension.isEmpty()) {
       LOG.warn(
@@ -234,7 +253,8 @@ public class Publisher {
    *                  coordinates in the corresponding {@link Artifact}.
    * @see Artifact#setFile
    */
-  public DeployResult publish(List<Artifact> toPublish) throws DeploymentException {
+  private DeployResult publish(List<Artifact> toPublish)
+      throws DeploymentException, InterruptedException {
     RepositorySystem repoSys = Preconditions.checkNotNull(
         locator.getService(RepositorySystem.class));
 
@@ -253,7 +273,7 @@ public class Publisher {
     }
   }
 
-  private DeployRequest createDeployRequest(List<Artifact> toPublish) {
+  private DeployRequest createDeployRequest(List<Artifact> toPublish) throws InterruptedException {
     DeployRequest deployRequest = new DeployRequest().setRepository(remoteRepo);
     for (Artifact artifact : toPublish) {
       File file = artifact.getFile();
@@ -261,7 +281,57 @@ public class Publisher {
       Preconditions.checkArgument(file.exists(), "No such file: %s", file.getAbsolutePath());
 
       deployRequest.addArtifact(artifact);
+
+      if (signingPassphrase.isPresent()) {
+        deployRequest.addArtifact(sign(artifact, file));
+      }
     }
     return deployRequest;
+  }
+
+  private SubArtifact sign(Artifact descriptor, File file) throws InterruptedException {
+    // Run gpg
+    try (PrintStream stdout = new PrintStream(new ByteArrayOutputStream());
+         PrintStream stderr = new PrintStream(new ByteArrayOutputStream())) {
+      File expectedOutput = new File(file.getAbsolutePath() + ".asc");
+      if (expectedOutput.exists()) {
+        if (!expectedOutput.delete()) {
+          throw new HumanReadableException(
+              "Existing signature exists, but cannot be deleted: %s",
+              file);
+        }
+      }
+
+      ProcessExecutor processExecutor = new DefaultProcessExecutor(
+          new Console(
+              Verbosity.SILENT,
+              stdout,
+              stderr,
+              Ansi.withoutTty()));
+      ProcessExecutorParams args = ProcessExecutorParams.builder()
+          .addCommand(
+              "gpg",
+              "-ab",
+              "--batch",
+              "--passphrase", signingPassphrase.get(),
+              file.getAbsolutePath())
+          .build();
+      ProcessExecutor.Result result = processExecutor.launchAndExecute(args);
+      if (result.getExitCode() != 0) {
+        throw new HumanReadableException("Unable to sign %s", file);
+      }
+
+      if (!expectedOutput.exists()) {
+        throw new HumanReadableException("Unable to find signature for %s", file);
+      }
+
+      return new SubArtifact(
+          descriptor,
+          descriptor.getClassifier(),
+          "*.asc",
+          expectedOutput);
+    } catch (IOException e) {
+      throw new HumanReadableException(e, "Unable to generate signauture for %s", file);
+    }
   }
 }

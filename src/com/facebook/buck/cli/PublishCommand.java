@@ -87,6 +87,10 @@ public class PublishCommand extends BuildCommand {
       usage = "Password to use to authenticate with the server")
   private String password;
 
+  @Option(
+      name = "--signing-passphrase",
+      usage = "Passphrase to use for signing published artifacts")
+  private String pgpPassphrase;
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
@@ -111,7 +115,7 @@ public class PublishCommand extends BuildCommand {
 
   private boolean publishTargets(
       ImmutableList<BuildTarget> buildTargets,
-      CommandRunnerParams params) {
+      CommandRunnerParams params) throws InterruptedException {
     ImmutableSet.Builder<MavenPublishable> publishables = ImmutableSet.builder();
     boolean success = true;
     for (BuildTarget buildTarget : buildTargets) {
@@ -148,6 +152,7 @@ public class PublishCommand extends BuildCommand {
         Optional.ofNullable(remoteRepo),
         Optional.ofNullable(username),
         Optional.ofNullable(password),
+        Optional.ofNullable(pgpPassphrase),
         dryRun);
 
     try {
