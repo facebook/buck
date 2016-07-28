@@ -24,8 +24,8 @@ import static org.junit.Assume.assumeThat;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableSet;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,7 +41,7 @@ import java.nio.file.Paths;
 public class SymlinkFilesIntoDirectoryStepIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   /**
    * Verifies that {@link SymlinkFilesIntoDirectoryStep} works correctly by symlinking files at
@@ -54,32 +53,32 @@ public class SymlinkFilesIntoDirectoryStepIntegrationTest {
         this, "symlink_files_into_directory", tmp);
     workspace.setUp();
 
-    File outputFolder = tmp.newFolder("output");
+    Path outputFolder = tmp.newFolder("output");
 
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     SymlinkFilesIntoDirectoryStep symlinkStep = new SymlinkFilesIntoDirectoryStep(
         projectFilesystem,
-        tmp.getRoot().toPath(),
+        tmp.getRoot(),
         ImmutableSet.of(Paths.get("a.txt"), Paths.get("foo/b.txt"), Paths.get("foo/bar/c.txt")),
-        outputFolder.toPath());
+        outputFolder);
     int exitCode = symlinkStep.execute(executionContext).getExitCode();
     assertEquals(0, exitCode);
 
     // The remainder of the checks assert that we've created symlinks, which we may not have done
     // on certain operating systems.
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
-    Path symlinkToADotTxt = new File(tmp.getRoot(), "output/a.txt").toPath();
+    Path symlinkToADotTxt = tmp.getRoot().resolve("output/a.txt");
     assertTrue(Files.isSymbolicLink(symlinkToADotTxt));
     assertEquals(projectFilesystem.resolve(Paths.get("a.txt")),
         Files.readSymbolicLink(symlinkToADotTxt));
 
-    Path symlinkToBDotTxt = new File(tmp.getRoot(), "output/foo/b.txt").toPath();
+    Path symlinkToBDotTxt = tmp.getRoot().resolve("output/foo/b.txt");
     assertTrue(Files.isSymbolicLink(symlinkToBDotTxt));
     assertEquals(projectFilesystem.resolve(Paths.get("foo/b.txt")),
         Files.readSymbolicLink(symlinkToBDotTxt));
 
-    Path symlinkToCDotTxt = new File(tmp.getRoot(), "output/foo/bar/c.txt").toPath();
+    Path symlinkToCDotTxt = tmp.getRoot().resolve("output/foo/bar/c.txt");
     assertTrue(Files.isSymbolicLink(symlinkToCDotTxt));
     assertEquals(projectFilesystem.resolve(Paths.get("foo/bar/c.txt")),
         Files.readSymbolicLink(symlinkToCDotTxt));

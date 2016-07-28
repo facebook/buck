@@ -25,7 +25,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.rules.ActionGraphCache;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -68,7 +68,7 @@ import java.util.HashMap;
 public class ReplCommandIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void replWorksOnlyInInteractiveMode() throws IOException {

@@ -24,7 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.jvm.java.HasMavenCoordinates;
 import com.facebook.buck.jvm.java.MavenPublishable;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -54,7 +54,7 @@ public class PomIntegrationTest extends EasyMockSupport {
   private static final String URL = "http://example.com";
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testMultipleInvocation() throws Exception{

@@ -21,7 +21,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
@@ -38,7 +38,7 @@ import java.nio.file.Paths;
 public class QueryCommandIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   private static final ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
 

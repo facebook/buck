@@ -25,7 +25,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -41,7 +41,7 @@ import java.nio.file.Path;
 public class AndroidBinaryFlavorsIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 

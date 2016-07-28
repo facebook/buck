@@ -18,7 +18,7 @@ package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
@@ -31,7 +31,7 @@ import java.nio.file.Path;
 
 public class ExportFileIntegrationTest {
 
-  @Rule public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void exportFileWillPopulateDepsCorrectlyWhenSourceParameterIsASourcePath()

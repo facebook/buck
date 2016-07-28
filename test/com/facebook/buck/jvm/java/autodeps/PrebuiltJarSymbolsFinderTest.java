@@ -37,7 +37,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.ObjectMappers;
@@ -68,7 +68,7 @@ import java.util.zip.ZipEntry;
 
 public class PrebuiltJarSymbolsFinderTest {
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void extractSymbolsFromBinaryJar() throws IOException {
@@ -188,9 +188,9 @@ public class PrebuiltJarSymbolsFinderTest {
   public void generatedBinaryJarShouldNotAffectRuleKey() {
     SourcePathResolver pathResolver = null;
 
-    File jarFile = new File(tmp.getRoot(), "common.jar");
+    Path jarFile = tmp.getRoot().resolve("common.jar");
     Map<Path, HashCode> pathsToHashes = ImmutableMap.of(
-        jarFile.toPath(),
+        jarFile,
         HashCode.fromString(Strings.repeat("abcd", 10)));
     FakeFileHashCache fileHashCache = new FakeFileHashCache(pathsToHashes);
 
@@ -227,10 +227,10 @@ public class PrebuiltJarSymbolsFinderTest {
       String jarFileName,
       Iterable<String> entries) throws IOException {
     Clock clock = new FakeClock(1);
-    File jarFile = tmp.newFile(jarFileName);
+    Path jarFile = tmp.newFile(jarFileName);
     try (
         OutputStream stream = new BufferedOutputStream(
-            java.nio.file.Files.newOutputStream(jarFile.toPath()));
+            java.nio.file.Files.newOutputStream(jarFile));
         CustomZipOutputStream out =
              ZipOutputStreams.newOutputStream(
                  stream,

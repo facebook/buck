@@ -36,7 +36,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.Zip;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
@@ -54,7 +54,6 @@ import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -67,7 +66,7 @@ public class BuildInfoRecorderTest {
   public ExpectedException thrown = ExpectedException.none();
 
   @Rule
-  public TemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   private static final BuildTarget BUILD_TARGET = BuildTargetFactory.newInstance("//foo:bar");
 

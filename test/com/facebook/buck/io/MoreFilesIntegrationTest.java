@@ -21,7 +21,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 
@@ -41,14 +41,14 @@ import java.util.List;
 public class MoreFilesIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testCopyTestdataDirectoryWithSymlinks() throws IOException, InterruptedException {
     Platform platform = Platform.detect();
     Assume.assumeTrue(platform == Platform.LINUX || platform == Platform.MACOS);
 
-    Path root = tmp.newFolder().toPath();
+    Path root = tmp.newFolder();
 
     Path srcDir = root.resolve("src");
     Files.createDirectory(srcDir);
@@ -89,7 +89,7 @@ public class MoreFilesIntegrationTest {
 
   @Test
   public void testDiffFileContents() throws IOException {
-    Path inputFile = tmp.newFolder().toPath().resolve("MoreFiles.txt");
+    Path inputFile = tmp.newFolder().resolve("MoreFiles.txt");
     Files.write(
         inputFile,
         Joiner.on("\n").join("AAA", "BBB", "CCC").getBytes(UTF_8));

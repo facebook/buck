@@ -27,8 +27,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.BuckConstant;
@@ -58,7 +58,7 @@ public class AndroidResourceFilterIntegrationTest {
   private static Path pathToAapt;
 
   @Rule
-  public DebuggableTemporaryFolder tmpFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 

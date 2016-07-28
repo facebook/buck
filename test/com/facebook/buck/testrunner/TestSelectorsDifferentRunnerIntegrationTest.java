@@ -22,7 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
@@ -36,7 +36,7 @@ import java.nio.file.Path;
 public class TestSelectorsDifferentRunnerIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void shouldSelectOneTest() throws IOException {

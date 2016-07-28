@@ -19,7 +19,7 @@ package com.facebook.buck.testutil.integration;
 import java.nio.file.Path;
 
 /**
- * Abstraction to unify {@link DebuggableTemporaryFolder} and {@link TemporaryPaths}.
+ * Abstraction to unify {@link TemporaryPaths} and {@link TemporaryPaths}.
  */
 public interface TemporaryRoot {
 

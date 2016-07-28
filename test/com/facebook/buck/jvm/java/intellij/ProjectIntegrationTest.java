@@ -19,12 +19,11 @@ package com.facebook.buck.jvm.java.intellij;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -34,13 +33,15 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 
 public class ProjectIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
@@ -109,17 +110,17 @@ public class ProjectIntegrationTest {
         this, "project_with_root_iml_already_present", temporaryFolder);
     workspace.setUp();
 
-    long lastModified = 0; // We're gonna party like it's 1970!
-    assertTrue((new File(temporaryFolder.getRoot(), "root.iml")).setLastModified(lastModified));
+    FileTime lastModified = FileTime.fromMillis(0); // We're gonna party like it's 1970!
+    Path path = temporaryFolder.getRoot().resolve("root.iml");
+    Files.setLastModifiedTime(path, lastModified);
+    assertEquals(lastModified, Files.getLastModifiedTime(path));
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
         "--deprecated-ij-generation");
     result.assertSuccess("buck project should exit cleanly");
 
-    assertEquals(
-        lastModified,
-        new File(temporaryFolder.getRoot(), "root.iml").lastModified());
+    assertEquals(lastModified, Files.getLastModifiedTime(path));
     workspace.verify();
   }
 

@@ -16,29 +16,32 @@
 
 package com.facebook.buck.d;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.Tool;
-import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.environment.Platform;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+
+import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.Tool;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
+import org.junit.Rule;
+import org.junit.Test;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collection;
 
 /**
  * Tests that the autodetection in DBuckConfig works and that explicitly
@@ -46,36 +49,35 @@ import static org.junit.Assert.assertTrue;
  */
 public class DBuckConfigTest {
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
-  private File makeFakeExecutable(File directory, String baseName) throws IOException {
-    File dmd = new File(
-        directory,
+  private Path makeFakeExecutable(Path directory, String baseName) throws IOException {
+    Path dmd = directory.resolve(
         baseName + (Platform.detect() == Platform.WINDOWS ? ".exe" : ""));
-    dmd.createNewFile();
-    dmd.setExecutable(true);
+    Files.createFile(dmd);
+    MoreFiles.makeExecutable(dmd);
     return dmd;
   }
 
   @Test
   public void testCompilerInPath() throws IOException {
-    File yooserBeen = tmp.newFolder("yooser", "been");
-    File dmd = makeFakeExecutable(yooserBeen, "dmd");
+    Path yooserBeen = tmp.newFolder("yooser", "been");
+    Path dmd = makeFakeExecutable(yooserBeen, "dmd");
     BuckConfig delegate = FakeBuckConfig.builder()
       .setEnvironment(ImmutableMap.of(
-              "PATH", yooserBeen.getCanonicalPath()))
+              "PATH", yooserBeen.toRealPath().toString()))
       .build();
     DBuckConfig dBuckConfig = new DBuckConfig(delegate);
-    assertEquals(dmd.getCanonicalPath(), toolPath(dBuckConfig.getDCompiler()));
+    assertEquals(dmd.toRealPath().toString(), toolPath(dBuckConfig.getDCompiler()));
   }
 
   @Test
   public void testCompilerNotInPath() throws IOException {
-    File yooserBeen = tmp.newFolder("yooser", "been");
-    String userBean = tmp.newFolder("user", "bean").getCanonicalPath();
+    Path yooserBeen = tmp.newFolder("yooser", "been");
+    Path userBean = tmp.newFolder("user", "bean").toRealPath();
     makeFakeExecutable(yooserBeen, "dmd");
     BuckConfig delegate = FakeBuckConfig.builder()
-      .setEnvironment(ImmutableMap.of("PATH", userBean))
+      .setEnvironment(ImmutableMap.of("PATH", userBean.toString()))
       .build();
     DBuckConfig dBuckConfig = new DBuckConfig(delegate);
     String msg = "";
@@ -104,18 +106,18 @@ public class DBuckConfigTest {
 
   @Test
   public void testCompilerOverridden() throws IOException {
-    File yooserBeen = tmp.newFolder("yooser", "been");
+    Path yooserBeen = tmp.newFolder("yooser", "been");
     makeFakeExecutable(yooserBeen, "dmd");
-    File ldc = makeFakeExecutable(yooserBeen, "ldc");
+    Path ldc = makeFakeExecutable(yooserBeen, "ldc");
     BuckConfig delegate = FakeBuckConfig.builder()
       .setEnvironment(ImmutableMap.of(
-              "PATH", yooserBeen.getCanonicalPath()))
+              "PATH", yooserBeen.toRealPath().toString()))
       .setSections(
           "[d]",
-          "compiler=" + ldc.getCanonicalPath())
+          "compiler=" + ldc.toRealPath())
       .build();
     DBuckConfig dBuckConfig = new DBuckConfig(delegate);
-    assertEquals(ldc.getCanonicalPath(), toolPath(dBuckConfig.getDCompiler()));
+    assertEquals(ldc.toRealPath().toString(), toolPath(dBuckConfig.getDCompiler()));
   }
 
   @Test
@@ -133,14 +135,14 @@ public class DBuckConfigTest {
 
   @Test
   public void testDLinkerFlagsOverridden() throws IOException {
-    File yooserBin = tmp.newFolder("yooser", "bin");
-    File yooserLib = tmp.newFolder("yooser", "lib");
+    Path yooserBin = tmp.newFolder("yooser", "bin");
+    Path yooserLib = tmp.newFolder("yooser", "lib");
     makeFakeExecutable(yooserBin, "dmd");
-    File phobos2So = new File(yooserLib, "libphobos2.so");
-    phobos2So.createNewFile();
+    Path phobos2So = yooserLib.resolve("libphobos2.so");
+    Files.createFile(phobos2So);
     BuckConfig delegate = FakeBuckConfig.builder()
       .setEnvironment(ImmutableMap.of(
-              "PATH", yooserBin.getCanonicalPath()))
+              "PATH", yooserBin.toRealPath().toString()))
       .setSections(
           "[d]",
           "linker_flags = -L/opt/doesnotexist/dmd/lib \"-L/path with spaces\"")
@@ -149,23 +151,23 @@ public class DBuckConfigTest {
     ImmutableList<String> linkerFlags = dBuckConfig.getLinkerFlags();
     assertContains(linkerFlags, "-L/opt/doesnotexist/dmd/lib");
     assertContains(linkerFlags, "-L/path with spaces");
-    assertDoesNotContain(linkerFlags, "-L" + yooserLib.getCanonicalPath());
+    assertDoesNotContain(linkerFlags, "-L" + yooserLib.toRealPath());
   }
 
   @Test
   public void testDRuntimeNearCompiler() throws IOException {
-    File yooserBin = tmp.newFolder("yooser", "bin");
-    File yooserLib = tmp.newFolder("yooser", "lib");
+    Path yooserBin = tmp.newFolder("yooser", "bin");
+    Path yooserLib = tmp.newFolder("yooser", "lib");
     makeFakeExecutable(yooserBin, "dmd");
-    File phobos2So = new File(yooserLib, "libphobos2.so");
-    phobos2So.createNewFile();
+    Path phobos2So = yooserLib.resolve("libphobos2.so");
+    Files.createFile(phobos2So);
     BuckConfig delegate = FakeBuckConfig.builder()
       .setEnvironment(ImmutableMap.of(
-              "PATH", yooserBin.getCanonicalPath()))
+              "PATH", yooserBin.toRealPath().toString()))
       .build();
     DBuckConfig dBuckConfig = new DBuckConfig(delegate);
     ImmutableList<String> linkerFlags = dBuckConfig.getLinkerFlags();
-    assertContains(linkerFlags, "-L" + yooserLib.getCanonicalPath());
+    assertContains(linkerFlags, "-L" + yooserLib.toRealPath());
   }
 
   private static <T> void assertContains(Collection<T> haystack, T needle) {

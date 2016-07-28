@@ -31,7 +31,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.UncachedRuleKeyBuilder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -60,10 +60,10 @@ public class ExternalJavacTest extends EasyMockSupport {
       ImmutableSortedSet.of(Paths.get("foobar.java"));
 
   @Rule
-  public DebuggableTemporaryFolder root = new DebuggableTemporaryFolder();
+  public TemporaryPaths root = new TemporaryPaths();
 
   @Rule
-  public DebuggableTemporaryFolder tmpFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmpFolder = new TemporaryPaths();
 
 
   @Test

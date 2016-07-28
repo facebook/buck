@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.testutil.Zip;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Splitter;
@@ -41,7 +41,7 @@ import java.util.Set;
 public class FlavoredTargetsParserIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder tempFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths tempFolder = new TemporaryPaths();
 
   @Test
   public void canBuildAnUnflavoredTarget() throws IOException {

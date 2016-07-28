@@ -24,7 +24,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -40,7 +40,7 @@ import java.io.IOException;
 public class PythonTestIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
   public ProjectWorkspace workspace;
 
   @Before

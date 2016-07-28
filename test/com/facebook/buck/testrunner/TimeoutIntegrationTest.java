@@ -19,21 +19,21 @@ package com.facebook.buck.testrunner;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Files;
 
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -52,7 +52,7 @@ public class TimeoutIntegrationTest {
   private static final String PATH_TO_TIMEOUT_BEHAVIOR_TEST = "TimeoutChangesBehaviorTest.java";
 
   @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void testThatTimeoutsInTestsWorkAsExpected() throws IOException {
@@ -154,9 +154,9 @@ public class TimeoutIntegrationTest {
    */
   private void rewriteFileWithTransform(String path, Function<String, String> transform)
       throws IOException {
-    File javaFile = new File(temporaryFolder.getRoot(), path);
-    List<String> lines = Files.readLines(javaFile, Charsets.UTF_8);
+    Path javaFile = temporaryFolder.getRoot().resolve(path);
+    List<String> lines = Files.readAllLines(javaFile, Charsets.UTF_8);
     String java = Joiner.on("").join(Iterables.transform(lines, transform));
-    Files.write(java, javaFile, Charsets.UTF_8);
+    Files.write(javaFile, java.getBytes(Charsets.UTF_8));
   }
 }

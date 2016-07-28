@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableList;
 
@@ -28,7 +29,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -37,7 +37,7 @@ import java.util.List;
 public class PublisherIntegrationTest {
 
   @Rule
-  public TemporaryFolder temp = new TemporaryFolder();
+  public TemporaryPaths temp = new TemporaryPaths();
 
   private static Path localRepo;
   private TestPublisher publisher;

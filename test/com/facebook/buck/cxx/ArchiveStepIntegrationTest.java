@@ -31,7 +31,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -54,13 +54,13 @@ import java.nio.file.StandardOpenOption;
 public class ArchiveStepIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   @SuppressWarnings("PMD.AvoidUsingOctalValues")
   public void thatGeneratedArchivesAreDeterministic() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
     CxxPlatform platform = DefaultCxxPlatforms.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
@@ -111,7 +111,7 @@ public class ArchiveStepIntegrationTest {
 
   @Test
   public void emptyArchives() throws IOException, InterruptedException {
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
     CxxPlatform platform =
         DefaultCxxPlatforms.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
@@ -149,7 +149,7 @@ public class ArchiveStepIntegrationTest {
   @Test
   public void inputDirs() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
     CxxPlatform platform =
         DefaultCxxPlatforms.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
@@ -193,7 +193,7 @@ public class ArchiveStepIntegrationTest {
   @Test
   public void thinArchives() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
     CxxPlatform platform =
         DefaultCxxPlatforms.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
     assumeTrue(platform.getAr().supportsThinArchives());

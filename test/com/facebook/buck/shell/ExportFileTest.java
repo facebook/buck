@@ -209,7 +209,7 @@ public class ExportFileTest {
   @Test
   public void modifyingTheContentsOfTheFileChangesTheRuleKey() throws Exception {
     Path root = Files.createTempDirectory("root");
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem(root.toFile());
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem(root);
     Path temp = Paths.get("example_file");
 
     FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);

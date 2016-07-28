@@ -19,7 +19,7 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.log.LogFormatter;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
@@ -44,7 +44,7 @@ import java.util.logging.Logger;
 public class DiffRuleKeysScriptIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
   private Logger ruleKeyBuilderLogger;
   private Level previousRuleKeyBuilderLevel;
   private int lastPositionInLog;

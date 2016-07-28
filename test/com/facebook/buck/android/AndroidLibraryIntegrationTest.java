@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -32,7 +32,7 @@ import java.io.IOException;
 public class AndroidLibraryIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmpFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 

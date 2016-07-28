@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.autodeps.DepsForBuildFiles.DependencyType;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
@@ -36,7 +36,7 @@ import java.util.concurrent.Executors;
 public class AutodepsWriterTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmpFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 

@@ -21,7 +21,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -43,7 +43,7 @@ import java.util.Map;
 public class ProgressEstimatorTest {
 
   @Rule
-  public final DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public final TemporaryPaths tmp = new TemporaryPaths();
 
   private static final ObjectMapper MAPPER = ObjectMappers.newDefaultInstance();
 
@@ -249,7 +249,7 @@ public class ProgressEstimatorTest {
   }
 
   private Path getStorageForTest() throws IOException {
-    return tmp.newFile().toPath();
+    return tmp.newFile();
   }
 
   @Test

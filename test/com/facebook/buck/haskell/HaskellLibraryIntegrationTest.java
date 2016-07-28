@@ -20,7 +20,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
@@ -52,7 +52,7 @@ public class HaskellLibraryIntegrationTest {
   private ProjectWorkspace workspace;
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Parameterized.Parameter(value = 0)
   public Linker.LinkableDepType linkStyle;

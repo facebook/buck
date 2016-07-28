@@ -20,7 +20,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
@@ -36,7 +36,7 @@ import java.util.List;
 public class FileSerializationEventBusListenerTest {
 
   @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void shouldSerializeEventsToFile() throws IOException {

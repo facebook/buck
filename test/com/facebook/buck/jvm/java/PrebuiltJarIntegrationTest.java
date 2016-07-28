@@ -26,7 +26,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.hash.HashCode;
@@ -42,7 +42,7 @@ import java.nio.file.Path;
 public class PrebuiltJarIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder temp = new DebuggableTemporaryFolder();
+  public TemporaryPaths temp = new TemporaryPaths();
 
 
   @Test

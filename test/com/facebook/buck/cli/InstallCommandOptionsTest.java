@@ -18,7 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.TargetDeviceOptions;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Joiner;
 
 import static org.junit.Assert.assertEquals;
@@ -37,7 +37,7 @@ import java.io.StringReader;
 public class InstallCommandOptionsTest {
 
   @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   private InstallCommand getCommand(String... args) throws CmdLineException {
     InstallCommand command = new InstallCommand();

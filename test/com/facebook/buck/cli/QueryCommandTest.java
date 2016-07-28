@@ -30,7 +30,7 @@ import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
@@ -68,7 +68,7 @@ public class QueryCommandTest {
   public EasyMockRule rule = new EasyMockRule(this);
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Before
   public void setUp() throws IOException, InterruptedException {

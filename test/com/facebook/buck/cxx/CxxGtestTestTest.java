@@ -34,8 +34,8 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.test.TestResultSummary;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -61,7 +61,7 @@ public class CxxGtestTestTest {
       new TypeReference<List<TestResultSummary>>() {};
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testParseResults() throws Exception {
@@ -82,7 +82,7 @@ public class CxxGtestTestTest {
             "simple_disabled");
 
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);

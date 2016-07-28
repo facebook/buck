@@ -25,7 +25,7 @@ import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.DefaultCellPathResolver;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
@@ -41,7 +41,7 @@ public class GroovyBuckConfigTest {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
   @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void refuseToContinueWhenInsufficientInformationToFindGroovycIsProvided() {
@@ -60,7 +60,7 @@ public class GroovyBuckConfigTest {
 
   @Test
   public void refuseToContinueWhenInformationResultsInANonExistentGroovycPath() {
-    String invalidPath = temporaryFolder.getRoot().getAbsolutePath() + "DoesNotExist";
+    String invalidPath = temporaryFolder.getRoot().toAbsolutePath() + "DoesNotExist";
     Path invalidDir = Paths.get(invalidPath);
     Path invalidGroovyc = invalidDir.resolve(MorePaths.pathWithPlatformSeparators("bin/groovyc"));
     thrown.expectMessage(

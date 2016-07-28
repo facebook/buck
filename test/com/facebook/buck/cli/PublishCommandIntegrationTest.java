@@ -24,7 +24,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.maven.TestPublisher;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.FluentIterable;
@@ -45,7 +45,7 @@ public class PublishCommandIntegrationTest {
   public static final String SHA1 = ".sha1";
   public static final String TARGET = "//:foo";
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   private TestPublisher publisher;
 

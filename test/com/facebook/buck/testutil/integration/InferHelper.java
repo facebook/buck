@@ -66,7 +66,7 @@ public class InferHelper {
 
   public static ProjectWorkspace setupCxxInferWorkspace(
       Object testCase,
-      TemporaryRoot temporaryFolder,
+      TemporaryPaths temporaryFolder,
       Optional<String> rawBlacklistRegex) throws IOException {
     return setupCxxInferWorkspace(
         testCase,

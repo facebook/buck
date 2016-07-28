@@ -117,6 +117,12 @@ public class TemporaryPaths extends ExternalResource implements TemporaryRoot {
     return newFile;
   }
 
+  public Path newExecutableFile(String name) throws IOException {
+    Path newFile = newFile(name);
+    MoreFiles.makeExecutable(newFile);
+    return newFile;
+  }
+
   public Path newFolder(String... name) throws IOException {
     Path toCreate = root;
     for (String segment : name) {

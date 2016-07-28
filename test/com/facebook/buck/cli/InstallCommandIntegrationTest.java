@@ -27,7 +27,7 @@ import static org.hamcrest.Matchers.is;
 
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.FakeAppleDeveloperEnvironment;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -49,7 +49,7 @@ import org.junit.Test;
 @Ignore("Disabled due to timeouts installing into the simulator")
 public class InstallCommandIntegrationTest {
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void appleBundleInstallsInIphoneSimulator() throws IOException {

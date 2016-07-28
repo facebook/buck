@@ -24,7 +24,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.collect.ImmutableSet;
 
@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 
 public class TouchStepTest {
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testGetShortName() {
@@ -49,7 +49,6 @@ public class TouchStepTest {
 
   @Test
   public void testFileGetsCreated() throws IOException, InterruptedException {
-    tmp.create();
     Path path = Paths.get("somefile");
     assertFalse(path.toFile().exists());
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
@@ -64,7 +63,6 @@ public class TouchStepTest {
 
   @Test
   public void testFileLastModifiedTimeUpdated() throws IOException, InterruptedException {
-    tmp.create();
     Path path = Paths.get("somefile");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
         new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1)),

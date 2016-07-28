@@ -70,7 +70,7 @@ import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.ObjectMappers;
@@ -91,6 +91,7 @@ import com.google.common.jimfs.Jimfs;
 import com.google.gson.Gson;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -121,7 +122,8 @@ public class SuperConsoleEventBusListenerTest {
   private static final TestResultSummaryVerbosity silentSummaryVerbosity =
       TestResultSummaryVerbosity.of(false, false);
 
-  private static final DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  @Rule
+  public final TemporaryPaths tmp = new TemporaryPaths();
 
   private FileSystem vfs;
   private Path logPath;
@@ -2151,8 +2153,7 @@ public class SuperConsoleEventBusListenerTest {
   }
 
   private Path getStorageForTest() throws IOException {
-    tmp.create();
-    return tmp.newFile().toPath();
+    return tmp.newFile();
   }
 
   @Test

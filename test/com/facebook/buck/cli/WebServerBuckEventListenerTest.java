@@ -29,7 +29,7 @@ import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.TestRunEvent;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -47,7 +47,7 @@ import java.io.IOException;
  */
 public class WebServerBuckEventListenerTest {
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   @Ignore

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -38,7 +38,7 @@ public class CxxSourceRuleFactoryHelper {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     return CxxSourceRuleFactory.builder()
         .setParams(new FakeBuildRuleParamsBuilder(target)
-                .setProjectFilesystem(new FakeProjectFilesystem(cellRoot.toFile()))
+                .setProjectFilesystem(new FakeProjectFilesystem(cellRoot))
                 .build())
         .setResolver(resolver)
         .setPathResolver(new SourcePathResolver(resolver))
@@ -57,7 +57,7 @@ public class CxxSourceRuleFactoryHelper {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     return CxxSourceRuleFactory.builder()
         .setParams(new FakeBuildRuleParamsBuilder(target)
-            .setProjectFilesystem(new FakeProjectFilesystem(cellRoot.toFile()))
+            .setProjectFilesystem(new FakeProjectFilesystem(cellRoot))
             .build())
         .setResolver(resolver)
         .setPathResolver(new SourcePathResolver(resolver))

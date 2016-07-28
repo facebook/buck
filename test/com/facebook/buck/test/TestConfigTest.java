@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Joiner;
 
 import org.junit.Rule;
@@ -33,7 +33,7 @@ import java.io.StringReader;
 
 public class TestConfigTest {
   @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void testDefaultSummaryVerbosity() throws IOException {

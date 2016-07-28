@@ -17,9 +17,8 @@
 package com.facebook.buck.maven;
 
 import com.facebook.buck.testutil.integration.HttpdForTests;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Optional;
-
-import org.junit.rules.TemporaryFolder;
 
 import java.nio.file.Path;
 
@@ -34,8 +33,8 @@ public class TestPublisher extends Publisher implements AutoCloseable {
   private HttpdForTests httpd;
   private HttpdForTests.DummyPutRequestsHandler putRequestsHandler;
 
-  public static TestPublisher create(TemporaryFolder tmpDir) throws Exception {
-    return create(tmpDir.newFolder().toPath());
+  public static TestPublisher create(TemporaryPaths tmpDir) throws Exception {
+    return create(tmpDir.newFolder());
   }
 
   /**

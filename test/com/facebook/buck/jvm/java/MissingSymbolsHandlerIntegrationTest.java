@@ -35,7 +35,7 @@ import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Architecture;
@@ -54,7 +54,7 @@ import java.nio.file.Paths;
 public class MissingSymbolsHandlerIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void shouldFindNeededDependenciesFromSymbols() throws IOException, InterruptedException {

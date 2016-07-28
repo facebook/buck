@@ -33,7 +33,7 @@ import com.facebook.buck.io.Watchman;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.DelegatingInputStream;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestContext;
@@ -76,7 +76,7 @@ public class DaemonIntegrationTest {
   private ScheduledExecutorService executorService;
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -477,7 +477,7 @@ public class DaemonIntegrationTest {
   @Test
   public void whenBuckConfigChangesParserInvalidated()
       throws IOException, InterruptedException {
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
 
     Object daemon = Main.getDaemon(
         new TestCellBuilder().setBuckConfig(
@@ -537,7 +537,7 @@ public class DaemonIntegrationTest {
   @Test
   public void whenAndroidDirectoryResolverChangesParserInvalidated()
       throws IOException, InterruptedException {
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
 
     Object daemon = Main.getDaemon(
         new TestCellBuilder()

@@ -19,10 +19,10 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
@@ -30,12 +30,12 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Optional;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -46,7 +46,7 @@ public class PrebuiltJarTest {
   private static final Path PATH_TO_JUNIT_JAR = Paths.get("third-party/java/junit/junit-4.11.jar");
 
   @Rule
-  public TemporaryFolder temp = new TemporaryFolder();
+  public TemporaryPaths temp = new TemporaryPaths();
 
   private PrebuiltJar junitJarRule;
   private FakeProjectFilesystem filesystem;

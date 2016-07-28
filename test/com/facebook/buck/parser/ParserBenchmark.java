@@ -25,7 +25,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.caliper.AfterExperiment;
 import com.google.caliper.BeforeExperiment;
@@ -39,6 +39,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.file.Files;
@@ -53,7 +54,8 @@ public class ParserBenchmark {
   @Param({"1", "2", "10"})
   private int threadCount = 1;
 
-  public DebuggableTemporaryFolder tempDir = new DebuggableTemporaryFolder();
+  @Rule
+  public TemporaryPaths tempDir = new TemporaryPaths();
 
   private Parser parser;
   private ProjectFilesystem filesystem;
@@ -69,7 +71,6 @@ public class ParserBenchmark {
 
   @BeforeExperiment
   public void setUpBenchmark() throws Exception {
-    tempDir.create();
     Path root = tempDir.getRootPath();
     Files.createDirectories(root);
     filesystem = new ProjectFilesystem(root);
@@ -127,7 +128,6 @@ public class ParserBenchmark {
   @After
   @AfterExperiment
   public void cleanup() {
-    tempDir.delete();
     executorService.shutdown();
   }
 

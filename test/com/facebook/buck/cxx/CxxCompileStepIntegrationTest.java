@@ -29,7 +29,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -47,10 +47,10 @@ import java.nio.file.Paths;
 public class CxxCompileStepIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   private void assertCompDir(Path compDir, Optional<String> failure) throws Exception {
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
     CxxPlatform platform = DefaultCxxPlatforms.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
 

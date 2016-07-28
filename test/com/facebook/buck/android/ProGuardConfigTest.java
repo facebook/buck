@@ -24,7 +24,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -39,7 +39,7 @@ import java.nio.file.Paths;
 public class ProGuardConfigTest {
 
   @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void proGuardJarOverrideUsedShouldBeRelativeToTheProjectRoot() throws IOException {

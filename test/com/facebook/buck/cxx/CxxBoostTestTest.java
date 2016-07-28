@@ -34,7 +34,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.test.TestResultSummary;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
@@ -61,7 +61,7 @@ public class CxxBoostTestTest {
       new TypeReference<List<TestResultSummary>>() {};
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testParseResults() throws Exception {
@@ -82,7 +82,7 @@ public class CxxBoostTestTest {
     CxxBoostTest test =
         new CxxBoostTest(
             new FakeBuildRuleParamsBuilder(target)
-                .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot().toPath()))
+                .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot()))
                 .build(),
             pathResolver,
             new CxxLink(

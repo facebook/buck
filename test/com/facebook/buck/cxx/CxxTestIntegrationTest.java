@@ -22,7 +22,7 @@ import static org.junit.Assume.assumeThat;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
@@ -38,7 +38,7 @@ import java.io.IOException;
 public class CxxTestIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder temp = new DebuggableTemporaryFolder();
+  public TemporaryPaths temp = new TemporaryPaths();
 
   @Test
   public void spinningTestTimesOutWithGlobalTimeout() throws IOException {

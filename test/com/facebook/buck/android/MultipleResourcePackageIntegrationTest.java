@@ -20,7 +20,7 @@ import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
@@ -34,7 +34,7 @@ import java.nio.file.Path;
 public class MultipleResourcePackageIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmpFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmpFolder = new TemporaryPaths();
   private ProjectWorkspace workspace;
   private ProjectFilesystem filesystem;
 

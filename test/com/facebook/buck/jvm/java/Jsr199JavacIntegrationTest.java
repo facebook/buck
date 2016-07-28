@@ -20,11 +20,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -33,7 +33,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.MockClassLoader;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -42,18 +42,18 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.io.Files;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
@@ -74,19 +74,19 @@ public class Jsr199JavacIntegrationTest {
   public static final ImmutableSortedSet<Path> SOURCE_PATHS =
       ImmutableSortedSet.of(Paths.get("Example.java"));
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   private Path pathToSrcsList;
 
   @Before
   public void setUp() {
-    pathToSrcsList = Paths.get(tmp.getRoot().getPath(), "srcs_list");
+    pathToSrcsList = tmp.getRoot().resolve("srcs_list");
   }
 
   @Test
   public void testGetDescription() throws IOException {
     Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
-    String pathToOutputDir = new File(tmp.getRoot(), "out").getAbsolutePath();
+    String pathToOutputDir = tmp.getRoot().resolve("out").toAbsolutePath().toString();
 
     assertEquals(
         String.format("javac -source %s -target %s -g " +
@@ -131,10 +131,11 @@ public class Jsr199JavacIntegrationTest {
         Optional.<StandardJavaFileManagerFactory>absent());
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
-    File srcsListFile = pathToSrcsList.toFile();
-    assertTrue(srcsListFile.exists());
-    assertTrue(srcsListFile.isFile());
-    assertEquals("Example.java", Files.toString(srcsListFile, Charsets.UTF_8).trim());
+    assertTrue(Files.exists(pathToSrcsList));
+    assertTrue(Files.isRegularFile(pathToSrcsList));
+    assertEquals(
+        "Example.java",
+        new String(Files.readAllBytes(pathToSrcsList), StandardCharsets.UTF_8).trim());
   }
 
   /**
@@ -167,10 +168,11 @@ public class Jsr199JavacIntegrationTest {
         Optional.<StandardJavaFileManagerFactory>absent());
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
-    File srcsListFile = pathToSrcsList.toFile();
-    assertTrue(srcsListFile.exists());
-    assertTrue(srcsListFile.isFile());
-    assertEquals("Example.java", Files.toString(srcsListFile, Charsets.UTF_8).trim());
+    assertTrue(Files.exists(pathToSrcsList));
+    assertTrue(Files.isRegularFile(pathToSrcsList));
+    assertEquals(
+        "Example.java",
+        new String(Files.readAllBytes(pathToSrcsList), StandardCharsets.UTF_8).trim());
   }
 
   public static final class MockJavac implements JavaCompiler {
@@ -271,15 +273,16 @@ public class Jsr199JavacIntegrationTest {
       boolean withSyntaxError,
       Optional<Path> javacJar) throws IOException {
 
-    File exampleJava = tmp.newFile("Example.java");
-    Files.write(Joiner.on('\n').join(
-            "package com.example;",
-            "",
-            "public class Example {" +
-            (withSyntaxError ? "" : "}")
-        ),
+    Path exampleJava = tmp.newFile("Example.java");
+    Files.write(
         exampleJava,
-        Charsets.UTF_8);
+        Joiner.on('\n')
+            .join(
+                "package com.example;",
+                "",
+                "public class Example {" +
+                    (withSyntaxError ? "" : "}"))
+            .getBytes(Charsets.UTF_8));
 
     Path pathToOutputDirectory = Paths.get("out");
     tmp.newFolder(pathToOutputDirectory.toString());

@@ -21,8 +21,8 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
 import org.junit.Rule;
@@ -39,14 +39,13 @@ public class CachedTestRunReportingIntegrationTest {
   private static final Charset CHARSET_FOR_TEST = StandardCharsets.UTF_8;
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   /**
    * Test that we correctly report which test runs are cached.
    */
   @Test
   public void testCachedTestRun() throws IOException {
-    tmp.delete();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "cached_test", tmp);
     workspace.setUp();

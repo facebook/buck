@@ -29,6 +29,7 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.HashingDeterministicJarWriter;
+import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -47,7 +48,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
@@ -66,7 +66,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -188,37 +187,26 @@ public class DistributedBuildFileHashesTest {
   }
 
   private static class ArchiveFilesFixture extends Fixture implements AutoCloseable {
-    private final DebuggableTemporaryFolder firstFolder;
-    private final DebuggableTemporaryFolder secondFolder;
+    private final Path firstFolder;
+    private final Path secondFolder;
     protected Path archivePath;
     protected Path archiveMemberPath;
     protected HashCode archiveMemberHash;
 
     private ArchiveFilesFixture(
-        DebuggableTemporaryFolder firstFolder,
-        DebuggableTemporaryFolder secondFolder) throws Exception {
-      super(new ProjectFilesystem(firstFolder.getRootPath()),
-          new ProjectFilesystem(secondFolder.getRootPath()));
+        Path firstFolder,
+        Path secondFolder) throws Exception {
+      super(
+          new ProjectFilesystem(firstFolder),
+          new ProjectFilesystem(secondFolder));
       this.firstFolder = firstFolder;
       this.secondFolder = secondFolder;
     }
 
     public static ArchiveFilesFixture create() throws Exception {
-      DebuggableTemporaryFolder firstFolder = null;
-      DebuggableTemporaryFolder secondFolder = null;
-      try {
-        firstFolder = new DebuggableTemporaryFolder();
-        firstFolder.create();
-        secondFolder = new DebuggableTemporaryFolder();
-        secondFolder.create();
-        return new ArchiveFilesFixture(firstFolder, secondFolder);
-      } catch (IOException e) {
-        firstFolder.delete();
-        if (secondFolder != null) {
-          secondFolder.delete();
-        }
-        throw e;
-      }
+      return new ArchiveFilesFixture(
+          Files.createTempDirectory("first"),
+          Files.createTempDirectory("second"));
     }
 
     @Override
@@ -251,8 +239,8 @@ public class DistributedBuildFileHashesTest {
 
     @Override
     public void close() throws Exception {
-      firstFolder.delete();
-      secondFolder.delete();
+      MoreFiles.deleteRecursively(firstFolder);
+      MoreFiles.deleteRecursively(secondFolder);
     }
   }
 

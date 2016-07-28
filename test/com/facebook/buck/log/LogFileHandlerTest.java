@@ -17,8 +17,8 @@
 package com.facebook.buck.log;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
 import org.junit.Assert;
@@ -34,7 +34,7 @@ import java.nio.file.Path;
 public class LogFileHandlerTest {
 
   @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   private Path logDir;
 

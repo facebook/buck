@@ -46,7 +46,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -68,7 +68,7 @@ import java.util.Map;
 public class NdkCxxPlatformTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   enum Operation {
     PREPROCESS,
@@ -210,9 +210,8 @@ public class NdkCxxPlatformTest {
       for (String dir : ImmutableList.of("android-ndk-r9c", "android-ndk-r10b")) {
         for (Platform platform :
             ImmutableList.of(Platform.LINUX, Platform.MACOS, Platform.WINDOWS)) {
-          tmp.create();
-          Path root = tmp.newFolder(dir).toPath();
-          FakeProjectFilesystem filesystem = new FakeProjectFilesystem(root.toFile());
+          Path root = tmp.newFolder(dir);
+          FakeProjectFilesystem filesystem = new FakeProjectFilesystem(root);
           MoreFiles.writeLinesToFile(ImmutableList.of("r9c"), root.resolve("RELEASE.TXT"));
           ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> platforms =
               NdkCxxPlatforms.getPlatforms(
@@ -240,7 +239,7 @@ public class NdkCxxPlatformTest {
           linkRukeKeys.put(
               String.format("NdkCxxPlatform(%s, %s)", dir, platform),
               constructLinkRuleKeys(platforms));
-          tmp.delete();
+          MoreFiles.deleteRecursively(root);
         }
       }
 

@@ -21,7 +21,7 @@ import static com.facebook.buck.cxx.DebugSectionProperty.STRINGS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Optional;
@@ -42,7 +42,7 @@ import java.util.Map;
 public class DebugSectionFinderTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   private void assertDebugSections(
       Optional<ImmutableMap<String, ImmutableSet<DebugSectionProperty>>> expected,

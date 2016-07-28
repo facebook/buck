@@ -23,11 +23,10 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-import com.google.common.io.Files;
 
 import org.hamcrest.junit.ExpectedException;
 import org.junit.Rule;
@@ -35,6 +34,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
@@ -42,7 +42,7 @@ import java.nio.file.StandardWatchEventKinds;
 public class WatchedFileHashCacheTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
@@ -96,12 +96,12 @@ public class WatchedFileHashCacheTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRootPath());
     WatchedFileHashCache cache = new WatchedFileHashCache(filesystem);
     tmp.newFolder("foo", "bar");
-    File inputFile = tmp.newFile("foo/bar/baz");
-    Files.write("Hello world".getBytes(Charsets.UTF_8), inputFile);
+    Path inputFile = tmp.newFile("foo/bar/baz");
+    Files.write(inputFile, "Hello world".getBytes(Charsets.UTF_8));
 
     Path dir = Paths.get("foo/bar");
     HashCode dirHash = cache.get(filesystem.resolve(dir));
-    Files.write("Goodbye world".getBytes(Charsets.UTF_8), inputFile);
+    Files.write(inputFile, "Goodbye world".getBytes(Charsets.UTF_8));
     cache.onFileSystemChange(
         createPathEvent(
             dir.resolve("baz"),

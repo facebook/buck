@@ -26,7 +26,7 @@ import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.HashingDeterministicJarWriter;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Optional;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
@@ -51,7 +51,7 @@ import java.util.jar.JarOutputStream;
 public class DefaultFileHashCacheTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Rule
   public ExpectedException expectedException = ExpectedException.none();

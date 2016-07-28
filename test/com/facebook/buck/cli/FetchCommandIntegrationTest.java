@@ -24,7 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -46,7 +46,7 @@ import java.nio.file.Path;
 public class FetchCommandIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder temp = new DebuggableTemporaryFolder();
+  public TemporaryPaths temp = new TemporaryPaths();
 
   private static HttpdForTests httpd;
 

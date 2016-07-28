@@ -21,7 +21,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
@@ -33,7 +33,7 @@ import java.io.IOException;
 public class LoggingIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder temp = new DebuggableTemporaryFolder();
+  public TemporaryPaths temp = new TemporaryPaths();
 
   @Test
   public void logOutputIsOnlyReportedForTestWhichFails() throws IOException {

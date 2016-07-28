@@ -71,7 +71,7 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
@@ -174,7 +174,7 @@ public class CachingBuildEngineTest {
 
   public abstract static class CommonFixture extends EasyMockSupport {
     @Rule
-    public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+    public TemporaryPaths tmp = new TemporaryPaths();
 
     protected InMemoryArtifactCache cache = new InMemoryArtifactCache();
     protected FakeProjectFilesystem filesystem;
@@ -1281,7 +1281,7 @@ public class CachingBuildEngineTest {
 
       // Verify that the artifact is *not* re-cached under the main rule key.
       LazyPath fetchedArtifact = LazyPath.ofInstance(
-          tmp.newFile("fetched_artifact.zip").toPath());
+          tmp.newFile("fetched_artifact.zip"));
       assertThat(
           cache.fetch(ruleKeyBuilderFactory.build(rule), fetchedArtifact).getType(),
           equalTo(CacheResultType.MISS));
@@ -1305,7 +1305,7 @@ public class CachingBuildEngineTest {
               .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
       // Prepopulate the cache with an artifact indexed by the input-based rule key.
-      Path artifact = tmp.newFile("artifact.zip").toPath();
+      Path artifact = tmp.newFile("artifact.zip");
       writeEntriesToZip(
           artifact,
           ImmutableMap.of(
@@ -1352,7 +1352,7 @@ public class CachingBuildEngineTest {
           equalTo(Optional.of(inputRuleKey)));
 
       // Verify that the artifact is re-cached correctly under the main rule key.
-      Path fetchedArtifact = tmp.newFile("fetched_artifact.zip").toPath();
+      Path fetchedArtifact = tmp.newFile("fetched_artifact.zip");
       assertThat(
           cache.fetch(ruleKeyBuilderFactory.build(rule), LazyPath.ofInstance(fetchedArtifact))
               .getType(),
@@ -1544,7 +1544,7 @@ public class CachingBuildEngineTest {
           equalTo(Optional.of(ImmutableList.of(fileToDepFileEntryString(input)))));
 
       // Verify that the dep file rule key and dep file were written to the cached artifact.
-      Path fetchedArtifact = tmp.newFile("fetched_artifact.zip").toPath();
+      Path fetchedArtifact = tmp.newFile("fetched_artifact.zip");
       CacheResult cacheResult =
           cache.fetch(ruleKeyBuilderFactory.build(rule), LazyPath.ofInstance(fetchedArtifact));
       assertThat(
@@ -2078,7 +2078,7 @@ public class CachingBuildEngineTest {
           onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY).get();
 
       // Verify that the manifest written to the cache is correct.
-      Path fetchedManifest = tmp.newFile("manifest").toPath();
+      Path fetchedManifest = tmp.newFile("manifest");
       CacheResult cacheResult =
           cache.fetch(
               cachingBuildEngine.getManifestRuleKey(rule).get(),
@@ -2099,7 +2099,7 @@ public class CachingBuildEngineTest {
                       fileHashCache.get(filesystem.resolve(input))))));
 
       // Verify that the artifact is also cached via the dep file rule key.
-      Path fetchedArtifact = tmp.newFile("artifact").toPath();
+      Path fetchedArtifact = tmp.newFile("artifact");
       cacheResult =
           cache.fetch(
               depFileRuleKey,
@@ -2197,7 +2197,7 @@ public class CachingBuildEngineTest {
           onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY).get();
 
       // Verify that the manifest written to the cache is correct.
-      Path fetchedManifest = tmp.newFile("manifest").toPath();
+      Path fetchedManifest = tmp.newFile("manifest");
       CacheResult cacheResult =
           cache.fetch(
               cachingBuildEngine.getManifestRuleKey(rule).get(),
@@ -2216,7 +2216,7 @@ public class CachingBuildEngineTest {
                   ImmutableMap.of("some/path.h", HashCode.fromInt(12)))));
 
       // Verify that the artifact is also cached via the dep file rule key.
-      Path fetchedArtifact = tmp.newFile("artifact").toPath();
+      Path fetchedArtifact = tmp.newFile("artifact");
       cacheResult =
           cache.fetch(
               depFileRuleKey,
@@ -2316,7 +2316,7 @@ public class CachingBuildEngineTest {
           onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY).get();
 
       // Verify that the manifest is truncated and now only contains the newly written entry.
-      Path fetchedManifest = tmp.newFile("manifest").toPath();
+      Path fetchedManifest = tmp.newFile("manifest");
       CacheResult cacheResult =
           cache.fetch(
               cachingBuildEngine.getManifestRuleKey(rule).get(),
@@ -2415,7 +2415,7 @@ public class CachingBuildEngineTest {
               .addRuleKeys(cachingBuildEngine.getManifestRuleKey(rule).get())
               .build(),
           byteArrayOutputStream.toByteArray());
-      Path artifact = tmp.newFile("artifact.zip").toPath();
+      Path artifact = tmp.newFile("artifact.zip");
       writeEntriesToZip(
           artifact,
           ImmutableMap.of(
@@ -2470,7 +2470,7 @@ public class CachingBuildEngineTest {
       assertThat(abiRuleKey.isPresent(), is(true));
 
       // Verify that the dep file rule key and dep file were written to the cached artifact.
-      Path fetchedArtifact = tmp.newFile("fetched_artifact.zip").toPath();
+      Path fetchedArtifact = tmp.newFile("fetched_artifact.zip");
       CacheResult cacheResult =
           cache.fetch(ruleKeyBuilderFactory.build(rule), LazyPath.ofInstance(fetchedArtifact));
       assertThat(

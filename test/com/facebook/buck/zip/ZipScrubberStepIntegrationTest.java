@@ -22,7 +22,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Charsets;
 
 import org.apache.commons.compress.archivers.zip.ZipUtil;
@@ -42,13 +42,13 @@ import java.util.zip.ZipOutputStream;
 public class ZipScrubberStepIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void modificationTimes() throws Exception {
 
     // Create a dummy ZIP file.
-    Path zip = tmp.newFile("output.zip").toPath();
+    Path zip = tmp.newFile("output.zip");
     try (ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(zip))) {
       ZipEntry entry = new ZipEntry("file1");
       byte[] data = "data1".getBytes(Charsets.UTF_8);

@@ -19,7 +19,7 @@ package com.facebook.buck.rage;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.TriState;
@@ -56,7 +56,7 @@ public class DefectReporterTest {
       UserLocalConfiguration.of(true, ImmutableSet.of(Paths.get(".buckconfig.local")));
 
   @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void testAttachesPaths() throws Exception {

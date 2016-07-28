@@ -24,7 +24,7 @@ import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.HashingDeterministicJarWriter;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
 
@@ -43,10 +43,10 @@ public class StackedFileHashCacheTest {
 
   private static final String SOME_FILE_INSIDE_JAR = "SomeClass.class";
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Rule
-  public DebuggableTemporaryFolder tmp2 = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp2 = new TemporaryPaths();
 
   @Rule
   public ExpectedException expectedException = ExpectedException.none();

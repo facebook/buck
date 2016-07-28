@@ -19,7 +19,7 @@ package com.facebook.buck.event.listener.integration;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.json.HasJsonField;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -79,7 +79,7 @@ public class RemoteLogFactoryIntegrationTest {
     }
   }
   @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   private ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
   private HttpdForTests httpd;

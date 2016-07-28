@@ -25,7 +25,7 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.Zip;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableMap;
 
@@ -40,11 +40,11 @@ import java.nio.file.Paths;
 public class CalculateAbiStepTest {
 
   @Rule
-  public DebuggableTemporaryFolder temp = new DebuggableTemporaryFolder();
+  public TemporaryPaths temp = new TemporaryPaths();
 
   @Test
   public void shouldCalculateAbiFromAStubJar() throws IOException {
-    Path outDir = temp.newFolder().toPath().toAbsolutePath();
+    Path outDir = temp.newFolder().toAbsolutePath();
     ProjectFilesystem filesystem = new ProjectFilesystem(outDir);
 
     Path directory = TestDataHelper.getTestDataDirectory(this);
@@ -76,7 +76,7 @@ public class CalculateAbiStepTest {
 
   @Test
   public void fallsBackToCalculatingAbiFromInputJarIfClassFileIsMalformed() throws IOException {
-    Path outDir = temp.newFolder().toPath().toAbsolutePath();
+    Path outDir = temp.newFolder().toAbsolutePath();
     ProjectFilesystem filesystem = new ProjectFilesystem(outDir);
 
     Path binJar = outDir.resolve("bad.jar");

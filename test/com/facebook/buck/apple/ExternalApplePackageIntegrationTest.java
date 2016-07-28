@@ -19,7 +19,7 @@ import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
@@ -29,7 +29,7 @@ import org.junit.Test;
 
 public class ExternalApplePackageIntegrationTest {
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void usesExternalPackagerAndSetsSdkroot() throws Exception {

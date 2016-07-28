@@ -22,9 +22,9 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,7 +34,6 @@ import com.google.common.base.Joiner;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,10 +48,10 @@ public class BuildKeepGoingIntegrationTest {
   private static final String GENRULE_OUTPUT_PATH =
       MorePaths.pathWithPlatformSeparators("buck-out/gen/rule_with_output/rule_with_output.txt");
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Rule
-  public DebuggableTemporaryFolder tmpFolderForBuildReport = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmpFolderForBuildReport = new TemporaryPaths();
 
   @Test
   public void testKeepGoingWithMultipleSuccessfulTargets() throws IOException {
@@ -116,17 +115,17 @@ public class BuildKeepGoingIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "keep_going", tmp).setUp();
 
-    File buildReport = new File(tmpFolderForBuildReport.getRoot(), "build-report.txt");
+    Path buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");
     workspace.runBuckBuild(
         "--build-report",
-        buildReport.getAbsolutePath(),
+        buildReport.toAbsolutePath().toString(),
         "--keep-going",
         "//:rule_with_output",
         "//:failing_rule")
         .assertFailure();
 
-    assertTrue(buildReport.exists());
-    String buildReportContents = com.google.common.io.Files.toString(buildReport, Charsets.UTF_8);
+    assertTrue(Files.exists(buildReport));
+    String buildReportContents = new String(Files.readAllBytes(buildReport), Charsets.UTF_8);
     ObjectMapper mapper = ObjectMappers.newDefaultInstance();
     String expectedReport = Joiner.on(System.lineSeparator()).join(
         "{",

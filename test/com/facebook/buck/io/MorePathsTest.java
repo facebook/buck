@@ -21,14 +21,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,7 +36,7 @@ import java.nio.file.Paths;
 public class MorePathsTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testGetRelativePath() {
@@ -64,11 +63,11 @@ public class MorePathsTest {
 
   @Test
   public void testFilterForSubpaths() {
-    File root = tmp.getRoot();
+    Path root = tmp.getRoot();
     ImmutableSortedSet<Path> paths = MorePaths.asPaths(ImmutableSet.of(
       ".buckd",
       "foo/bar",
-      root.getAbsolutePath() + "/buck-cache",
+      root.toAbsolutePath() + "/buck-cache",
       Paths.get("/root/not/in/test").toAbsolutePath().toString()));
 
     assertEquals(
@@ -77,7 +76,7 @@ public class MorePathsTest {
             Paths.get(".buckd"),
             Paths.get("foo/bar"),
             Paths.get("buck-cache")),
-        MorePaths.filterForSubpaths(paths, root.toPath()));
+        MorePaths.filterForSubpaths(paths, root));
   }
 
   @Test

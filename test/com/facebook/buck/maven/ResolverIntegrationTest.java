@@ -45,8 +45,8 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.HttpdForTests;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Optional;
@@ -64,7 +64,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -80,7 +79,7 @@ import java.util.concurrent.ExecutionException;
 public class ResolverIntegrationTest {
 
   @Rule
-  public TemporaryFolder temp = new DebuggableTemporaryFolder();
+  public TemporaryPaths temp = new TemporaryPaths();
 
   private static HttpdForTests httpd;
   private static ProjectBuildFileParser buildFileParser;
@@ -145,10 +144,10 @@ public class ResolverIntegrationTest {
 
   @Before
   public void setUpRepos() throws Exception {
-    buckRepoRoot = temp.newFolder().toPath();
+    buckRepoRoot = temp.newFolder();
     thirdPartyRelative = Paths.get("third-party").resolve("java");
     thirdParty = buckRepoRoot.resolve(thirdPartyRelative);
-    localRepo = temp.newFolder().toPath();
+    localRepo = temp.newFolder();
   }
 
   private ArtifactConfig newConfig() {

@@ -29,7 +29,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
@@ -66,7 +66,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   public CxxPreprocessMode mode;
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 

@@ -30,11 +30,11 @@ import com.google.common.hash.HashCode;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -117,15 +117,13 @@ public class ManifestTest {
   public void addEntryWithSourcePathsThatHaveSameRelativePaths() throws IOException {
     RuleKey key = new RuleKey("aa");
 
-    TemporaryFolder tmp1 = new TemporaryFolder();
-    tmp1.create();
-    ProjectFilesystem filesystem1 = new FakeProjectFilesystem(tmp1.getRoot());
+    Path tmp1 = Files.createTempDirectory("tmp1");
+    ProjectFilesystem filesystem1 = new FakeProjectFilesystem(tmp1);
     SourcePath input1 = new PathSourcePath(filesystem1, Paths.get("input.h"));
     HashCode hashCode1 = HashCode.fromInt(1);
 
-    TemporaryFolder tmp2 = new TemporaryFolder();
-    tmp2.create();
-    ProjectFilesystem filesystem2 = new FakeProjectFilesystem(tmp2.getRoot());
+    Path tmp2 = Files.createTempDirectory("tmp2");
+    ProjectFilesystem filesystem2 = new FakeProjectFilesystem(tmp2);
     SourcePath input2 = new PathSourcePath(filesystem2, Paths.get("input.h"));
     HashCode hashCode2 = HashCode.fromInt(1);
 
@@ -197,15 +195,13 @@ public class ManifestTest {
   public void lookupMatchWithSourcePathsThatHaveSameRelativePaths() throws IOException {
     RuleKey key = new RuleKey("aa");
 
-    TemporaryFolder tmp1 = new TemporaryFolder();
-    tmp1.create();
-    ProjectFilesystem filesystem1 = new FakeProjectFilesystem(tmp1.getRoot());
+    Path tmp1 = Files.createTempDirectory("tmp1");
+    ProjectFilesystem filesystem1 = new FakeProjectFilesystem(tmp1);
     SourcePath input1 = new PathSourcePath(filesystem1, Paths.get("input.h"));
     HashCode hashCode1 = HashCode.fromInt(1);
 
-    TemporaryFolder tmp2 = new TemporaryFolder();
-    tmp2.create();
-    ProjectFilesystem filesystem2 = new FakeProjectFilesystem(tmp2.getRoot());
+    Path tmp2 = Files.createTempDirectory("tmp2");
+    ProjectFilesystem filesystem2 = new FakeProjectFilesystem(tmp2);
     SourcePath input2 = new PathSourcePath(filesystem2, Paths.get("input.h"));
     HashCode hashCode2 = HashCode.fromInt(1);
 

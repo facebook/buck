@@ -25,7 +25,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
@@ -45,7 +45,7 @@ import java.util.ArrayList;
 public class ParserConfigTest {
 
   @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();

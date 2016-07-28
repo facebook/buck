@@ -25,7 +25,7 @@ import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
@@ -51,7 +51,7 @@ import java.util.UUID;
 public class WatchmanWatcherIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   private Watchman watchman;
   private EventBus eventBus;

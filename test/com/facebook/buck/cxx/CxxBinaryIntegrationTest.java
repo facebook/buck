@@ -39,7 +39,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.InferHelper;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -77,7 +77,7 @@ import java.util.Set;
 public class CxxBinaryIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testInferCxxBinaryDepsCaching() throws IOException {
@@ -628,7 +628,7 @@ public class CxxBinaryIntegrationTest {
     InferHelper.setupWorkspace(this, rootWorkspacePath, "infertest");
 
     // create infertest/inter-cell/multi-cell/primary sub-workspace as infer-configured one
-    Path primaryRootPath = tmp.newFolder().toPath().toRealPath().normalize();
+    Path primaryRootPath = tmp.newFolder().toRealPath().normalize();
     ProjectWorkspace primary = InferHelper.setupCxxInferWorkspace(
         this,
         InferHelper.createTemporaryRoot(primaryRootPath),
@@ -637,7 +637,7 @@ public class CxxBinaryIntegrationTest {
         Optional.of(rootWorkspacePath.resolve("fake-infer")));
 
     // create infertest/inter-cell/multi-cell/secondary sub-workspace
-    Path secondaryRootPath = tmp.newFolder().toPath().toRealPath().normalize();
+    Path secondaryRootPath = tmp.newFolder().toRealPath().normalize();
     ProjectWorkspace secondary =
         InferHelper.setupWorkspace(
             this,

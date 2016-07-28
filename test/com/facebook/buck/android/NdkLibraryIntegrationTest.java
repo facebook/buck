@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
@@ -32,10 +32,10 @@ import java.nio.file.Paths;
 public class NdkLibraryIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp1 = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp1 = new TemporaryPaths();
 
   @Rule
-  public DebuggableTemporaryFolder tmp2 = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp2 = new TemporaryPaths();
 
   @Test
   public void cxxLibraryDep() throws IOException {
