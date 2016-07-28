@@ -25,7 +25,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -93,15 +92,22 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
       ImmutableSet<SourcePath> depFileInputs = inputs;
 
       if (possibleDepFileSourcePaths.isPresent()) {
+        // possibleDepFileSourcePaths is an ImmutableSortedSet which implements contains() via
+        // binary search rather than via hashing. Thus taking the intersection/difference
+        // is O(n*log(n)). Here, we make a hash-based copy of the set, so that intersection
+        // will be reduced to O(N).
+        ImmutableSet<SourcePath> possibleDepFileSourcePathsUnsorted = ImmutableSet.copyOf(
+            possibleDepFileSourcePaths.get()
+        );
         Sets.SetView<SourcePath> nonDepFileInputs = Sets.difference(
             inputs,
-            possibleDepFileSourcePaths.get());
+            possibleDepFileSourcePathsUnsorted);
 
-        builder.addToRuleKey(ImmutableSet.copyOf(nonDepFileInputs));
+        builder.addToRuleKey(nonDepFileInputs);
 
         depFileInputs = ImmutableSet.copyOf(Sets.intersection(
             inputs,
-            possibleDepFileSourcePaths.get()));
+            possibleDepFileSourcePathsUnsorted));
       }
 
       Optional<RuleKey> ruleKey = builder.build();
@@ -208,7 +214,7 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
       return builder.getIterableInputsSoFar();
     }
 
-    public void addToRuleKey(ImmutableCollection<SourcePath> sourcePaths) throws IOException {
+    public void addToRuleKey(Iterable<SourcePath> sourcePaths) throws IOException {
       for (SourcePath sourcePath : sourcePaths) {
         addToRuleKey(sourcePath);
       }
