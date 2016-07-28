@@ -22,6 +22,7 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -79,7 +80,7 @@ public interface JavaLibrary extends BuildRule, HasClasspathEntries,
    * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
    * compile rules that depend on this rule.
    */
-  public ImmutableSetMultimap<JavaLibrary, Path> getOutputClasspathEntries();
+  public ImmutableSet<Path> getOutputClasspathEntries();
 
   public ImmutableSortedSet<Path> getJavaSrcs();
 

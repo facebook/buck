@@ -387,10 +387,8 @@ public class DefaultJavaLibraryTest {
       }
 
       @Override
-      public ImmutableSetMultimap<JavaLibrary, Path> getOutputClasspathEntries() {
-        return ImmutableSetMultimap.of(
-            (JavaLibrary) this,
-            Paths.get("java/src/com/libone/bar.jar"));
+      public ImmutableSet<Path> getOutputClasspathEntries() {
+        return ImmutableSet.of(Paths.get("java/src/com/libone/bar.jar"));
       }
 
       @Override
@@ -531,40 +529,30 @@ public class DefaultJavaLibraryTest {
     assertEquals(
         "A java_library that depends on //:libone should include only libone.jar in its " +
             "classpath when compiling itself.",
-        ImmutableSetMultimap.of(
-            getJavaLibrary(notIncluded),
+        ImmutableSet.of(
             root.resolve(DefaultJavaLibrary.getOutputJarPath(nonIncludedTarget, filesystem))),
         getJavaLibrary(notIncluded).getOutputClasspathEntries());
 
     assertEquals(
-        ImmutableSetMultimap.of(
-            getJavaLibrary(included),
+        ImmutableSet.of(
             root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem))),
         getJavaLibrary(included).getOutputClasspathEntries());
 
     assertEquals(
-        ImmutableSetMultimap.of(
-            getJavaLibrary(included),
+        ImmutableSet.of(
             root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem)),
-            getJavaLibrary(libraryOne),
             root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget, filesystem)),
-            getJavaLibrary(libraryOne),
             root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem))),
         getJavaLibrary(libraryOne).getOutputClasspathEntries());
 
     assertEquals(
         "//:libtwo exports its deps, so a java_library that depends on //:libtwo should include " +
             "both libone.jar and libtwo.jar in its classpath when compiling itself.",
-        ImmutableSetMultimap.of(
-            getJavaLibrary(libraryOne),
+        ImmutableSet.of(
             root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget, filesystem)),
-            getJavaLibrary(libraryOne),
             root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem)),
-            getJavaLibrary(libraryTwo),
             root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget, filesystem)),
-            getJavaLibrary(libraryTwo),
             root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryTwoTarget, filesystem)),
-            getJavaLibrary(libraryTwo),
             root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem))),
         getJavaLibrary(libraryTwo).getOutputClasspathEntries());
 
@@ -607,8 +595,7 @@ public class DefaultJavaLibraryTest {
     assertEquals(
         "A java_library that depends on //:parent should include only parent.jar in its " +
             "-classpath when compiling itself.",
-        ImmutableSetMultimap.of(
-            getJavaLibrary(parent),
+        ImmutableSet.of(
             root.resolve(DefaultJavaLibrary.getOutputJarPath(parentTarget, filesystem))),
         getJavaLibrary(parent).getOutputClasspathEntries());
   }
