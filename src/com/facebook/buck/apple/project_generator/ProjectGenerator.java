@@ -29,6 +29,7 @@ import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleDebugFormat;
 import com.facebook.buck.apple.AppleDescriptions;
+import com.facebook.buck.apple.AppleHeaderVisibilities;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.AppleResourceDescription;
@@ -1479,12 +1480,12 @@ public class ProjectGenerator {
     createHeaderSymlinkTree(
         sourcePathResolver,
         getPublicCxxHeaders(targetNode),
-        AppleDescriptions.getPathToHeaderSymlinkTree(targetNode,
+        getPathToHeaderSymlinkTree(targetNode,
             HeaderVisibility.PUBLIC));
     createHeaderSymlinkTree(
         sourcePathResolver,
         getPrivateCxxHeaders(targetNode),
-        AppleDescriptions.getPathToHeaderSymlinkTree(targetNode,
+        getPathToHeaderSymlinkTree(targetNode,
             HeaderVisibility.PRIVATE));
 
     if (appleTargetNode.isPresent()) {
@@ -2152,7 +2153,7 @@ public class ProjectGenerator {
   private Path getHeaderSymlinkTreeRelativePath(
       TargetNode<? extends CxxLibraryDescription.Arg> targetNode,
       HeaderVisibility headerVisibility) {
-    Path treeRoot = AppleDescriptions.getPathToHeaderSymlinkTree(
+    Path treeRoot = getPathToHeaderSymlinkTree(
         targetNode,
         headerVisibility);
     Path cellRoot = MorePaths.relativize(
@@ -2162,7 +2163,7 @@ public class ProjectGenerator {
   }
 
   private Path getHeaderMapLocationFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
-    return headerSymlinkTreeRoot.resolve(".tree.hmap");
+    return headerSymlinkTreeRoot.resolve(".hmap");
   }
 
   private Path getHeaderSearchPathFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
@@ -2831,5 +2832,17 @@ public class ProjectGenerator {
       );
     }
     return false;
+  }
+
+  private Path getPathToHeaderSymlinkTree(
+      TargetNode<? extends CxxLibraryDescription.Arg> targetNode,
+      HeaderVisibility headerVisibility) {
+    String hashedPath = BaseEncoding.base64Url().omitPadding().encode(
+      Hashing.sha1().hashString(
+          targetNode.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName(),
+          Charsets.UTF_8).asBytes());
+    return projectFilesystem.getBuckPaths().getGenDir()
+        .resolve("_project")
+        .resolve(hashedPath + AppleHeaderVisibilities.getHeaderSymlinkTreeSuffix(headerVisibility));
   }
 }

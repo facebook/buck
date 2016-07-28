@@ -23,11 +23,9 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
-import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
@@ -94,15 +92,6 @@ public class AppleDescriptions {
 
   /** Utility class: do not instantiate. */
   private AppleDescriptions() {}
-
-  public static Path getPathToHeaderSymlinkTree(
-      TargetNode<? extends CxxLibraryDescription.Arg> targetNode,
-      HeaderVisibility headerVisibility) {
-    return BuildTargets.getGenPath(
-        targetNode.getRuleFactoryParams().getProjectFilesystem(),
-        BuildTarget.of(targetNode.getBuildTarget().getUnflavoredBuildTarget()),
-        "%s" + AppleHeaderVisibilities.getHeaderSymlinkTreeSuffix(headerVisibility));
-  }
 
   public static Path getHeaderPathPrefix(
       AppleNativeTargetDescriptionArg arg,
