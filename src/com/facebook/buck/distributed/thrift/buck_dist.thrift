@@ -160,7 +160,8 @@ enum FrontendRequestType {
   UNKNOWN = 0,
   START_BUILD = 1,
   BUILD_STATUS = 2,
-  LOG = 3,
+  // [3-4] Values reserved for CAS.
+  LOG = 5,
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -169,7 +170,8 @@ struct FrontendRequest {
   1: optional FrontendRequestType type = FrontendRequestType.UNKNOWN;
   2: optional StartBuildRequest startBuild;
   3: optional BuildStatusRequest buildStatus;
-  4: optional LogRequest log;
+  // [4-5] Values reserved for CAS.
+  6: optional LogRequest log;
 
   // [100-199] Values are reserved for the buck cache request types.
 }
