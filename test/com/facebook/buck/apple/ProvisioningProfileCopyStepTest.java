@@ -194,13 +194,15 @@ public class ProvisioningProfileCopyStepTest {
 
     ProvisioningProfileMetadata selectedProfile = step.getSelectedProvisioningProfileFuture().get();
     ImmutableMap<String, NSObject> profileEntitlements = selectedProfile.getEntitlements();
-    assertTrue(profileEntitlements.containsKey("com.apple.security.application-groups"));
+    assertTrue(profileEntitlements.containsKey(
+        "com.apple.developer.icloud-container-development-container-identifiers"));
 
     Optional<String> xcentContents = projectFilesystem.readFileIfItExists(xcentFile);
     assertTrue(xcentContents.isPresent());
     NSDictionary xcentPlist = (NSDictionary)
         PropertyListParser.parse(xcentContents.get().getBytes());
-    assertFalse(xcentPlist.containsKey("com.apple.security.application-groups"));
+    assertFalse(xcentPlist.containsKey(
+        "com.apple.developer.icloud-container-development-container-identifiers"));
     assertEquals(xcentPlist.get("com.apple.developer.team-identifier"),
         profileEntitlements.get("com.apple.developer.team-identifier"));
   }
@@ -222,13 +224,15 @@ public class ProvisioningProfileCopyStepTest {
 
     ProvisioningProfileMetadata selectedProfile = step.getSelectedProvisioningProfileFuture().get();
     ImmutableMap<String, NSObject> profileEntitlements = selectedProfile.getEntitlements();
-    assertTrue(profileEntitlements.containsKey("com.apple.security.application-groups"));
+    assertTrue(profileEntitlements.containsKey(
+        "com.apple.developer.icloud-container-development-container-identifiers"));
 
     Optional<String> xcentContents = projectFilesystem.readFileIfItExists(xcentFile);
     assertTrue(xcentContents.isPresent());
     NSDictionary xcentPlist = (NSDictionary)
         PropertyListParser.parse(xcentContents.get().getBytes());
-    assertFalse(xcentPlist.containsKey("com.apple.security.application-groups"));
+    assertFalse(xcentPlist.containsKey(
+        "com.apple.developer.icloud-container-development-container-identifiers"));
     assertEquals(xcentPlist.get("com.apple.developer.team-identifier"),
         profileEntitlements.get("com.apple.developer.team-identifier"));
   }

@@ -110,9 +110,10 @@ public class ProvisioningProfileMetadataTest {
     ProvisioningProfileMetadata data =
         ProvisioningProfileMetadata.fromProvisioningProfilePath(testFile);
 
-    assertTrue(data.getEntitlements().containsKey("com.apple.security.application-groups"));
+    assertTrue(data.getEntitlements().containsKey(
+        "com.apple.developer.icloud-container-development-container-identifiers"));
     assertFalse(data.getMergeableEntitlements().containsKey(
-        "com.apple.security.application-groups"));
+        "com.apple.developer.icloud-container-development-container-identifiers"));
   }
 
 }
