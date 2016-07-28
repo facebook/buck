@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.intellij;
 
 import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
+import com.facebook.buck.android.AndroidPrebuiltAar;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.DummyRDotJava;
 import com.facebook.buck.cli.BuckConfig;
@@ -105,6 +106,10 @@ public class IjProject {
             BuildRule rule = buildRuleResolver.getRule(targetNode.getBuildTarget());
             if (!(rule instanceof JavaLibrary)) {
               return Optional.absent();
+            }
+            if (rule instanceof AndroidPrebuiltAar) {
+              AndroidPrebuiltAar aarRule = (AndroidPrebuiltAar) rule;
+              return Optional.fromNullable(aarRule.getBinaryJar());
             }
             requiredBuildTargets.add(rule.getBuildTarget());
             return Optional.fromNullable(rule.getPathToOutput());
