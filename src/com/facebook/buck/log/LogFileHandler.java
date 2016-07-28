@@ -56,7 +56,11 @@ public class LogFileHandler extends Handler {
   }
 
   public static int getMaxLogCount() {
-    return (int) getConfig("count", LogConfigSetup.DEFAULT_COUNT);
+    return (int) getConfig("count", LogConfigSetup.DEFAULT_MAX_COUNT);
+  }
+
+  public static int getMinAmountOfLogsToKeep() {
+    return (int) getConfig("min_count", LogConfigSetup.DEFAULT_MIN_COUNT);
   }
 
   private static long getConfig(String suffix, long defaultValue) {
@@ -101,7 +105,14 @@ public class LogFileHandler extends Handler {
     // The streams are controlled globally by the GlobalStateManager.
   }
 
-  public static DirectoryCleaner newCleaner(long maxLogsSizeBytes, int maxLogsDirectories) {
+  public static DirectoryCleaner newCleaner() {
+    return newCleaner(getMaxSizeBytes(), getMaxLogCount(), getMinAmountOfLogsToKeep());
+  }
+
+  public static DirectoryCleaner newCleaner(
+      long maxLogsSizeBytes,
+      int maxLogsDirectories,
+      int minAmountOfLogsToKeep) {
     DirectoryCleanerArgs cleanerArgs = DirectoryCleanerArgs.builder()
         .setPathSelector(
             new DirectoryCleaner.PathSelector() {
@@ -130,6 +141,7 @@ public class LogFileHandler extends Handler {
             })
         .setMaxTotalSizeBytes(maxLogsSizeBytes)
         .setMaxPathCount(maxLogsDirectories)
+        .setMinAmountOfEntriesToKeep(minAmountOfLogsToKeep)
         .build();
 
     DirectoryCleaner cleaner = new DirectoryCleaner(cleanerArgs);

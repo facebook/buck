@@ -38,5 +38,10 @@ abstract class AbstractDirectoryCleanerArgs {
     return Integer.MAX_VALUE;
   }
 
+  @Value.Default
+  public int getMinAmountOfEntriesToKeep() {
+    return 0;
+  }
+
   public abstract Optional<Long> getMaxBytesAfterDeletion();
 }

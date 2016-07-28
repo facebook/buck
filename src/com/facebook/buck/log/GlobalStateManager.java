@@ -44,8 +44,7 @@ public class GlobalStateManager {
 
   private static final GlobalStateManager SINGLETON = new GlobalStateManager();
   private static final String DEFAULT_LOG_FILE_WRITER_KEY = "DEFAULT";
-  private static final DirectoryCleaner LOG_FILE_DIR_CLEANER = LogFileHandler.newCleaner(
-      LogFileHandler.getMaxSizeBytes(), LogFileHandler.getMaxLogCount());
+  private static final DirectoryCleaner LOG_FILE_DIR_CLEANER = LogFileHandler.newCleaner();
 
   // Shared global state.
   private final ConcurrentMap<Long, String> threadIdToCommandId;

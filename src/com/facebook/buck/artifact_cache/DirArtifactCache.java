@@ -330,6 +330,7 @@ public class DirArtifactCache implements ArtifactCache {
             })
         .setMaxTotalSizeBytes(maxCacheSizeBytes.get())
         .setMaxBytesAfterDeletion((long) (maxCacheSizeBytes.get() * MAX_BYTES_TRIM_RATIO))
+        .setMinAmountOfEntriesToKeep(0)
         .build();
 
     return new DirectoryCleaner(cleanerArgs);

@@ -48,23 +48,30 @@ public class LogFileHandlerTest {
   }
 
   @Test
+  public void testCleanWithMinLogCount() throws IOException {
+    Assert.assertEquals(2, countSubDirectories(logDir));
+    LogFileHandler.newCleaner(Long.MAX_VALUE, 1, Integer.MAX_VALUE).clean(logDir);
+    Assert.assertEquals(2, countSubDirectories(logDir));
+  }
+
+  @Test
   public void testCleanByCount() throws IOException {
     Assert.assertEquals(2, countSubDirectories(logDir));
-    LogFileHandler.newCleaner(Long.MAX_VALUE, 1).clean(logDir);
+    LogFileHandler.newCleaner(Long.MAX_VALUE, 1, 0).clean(logDir);
     Assert.assertEquals(1, countSubDirectories(logDir));
   }
 
   @Test
   public void testCleanBySizeBytes() throws IOException {
     Assert.assertEquals(2, countSubDirectories(logDir));
-    LogFileHandler.newCleaner(1, Integer.MAX_VALUE).clean(logDir);
+    LogFileHandler.newCleaner(1, Integer.MAX_VALUE, 0).clean(logDir);
     Assert.assertEquals(0, countSubDirectories(logDir));
   }
 
   @Test
   public void testNothingIsDeletedWhileWithinLimits() throws IOException {
     Assert.assertEquals(2, countSubDirectories(logDir));
-    LogFileHandler.newCleaner(Long.MAX_VALUE, Integer.MAX_VALUE).clean(logDir);
+    LogFileHandler.newCleaner(Long.MAX_VALUE, Integer.MAX_VALUE, 0).clean(logDir);
     Assert.assertEquals(2, countSubDirectories(logDir));
   }
 

@@ -28,10 +28,13 @@ import java.nio.file.Paths;
 @BuckStyleImmutable
 abstract class AbstractLogConfigSetup {
   // Total maximum amount of logs stored.
-  public static final int DEFAULT_COUNT = 25;
+  public static final int DEFAULT_MAX_COUNT = 25;
+
+  // Total minimum amount of logs stored.
+  public static final int DEFAULT_MIN_COUNT = 3;
 
   // Total maximum disk space used for all logs.
-  public static final long DEFAULT_MAX_LOG_SIZE_BYTES = 100 * 1024 * 1024;
+  public static final long DEFAULT_MAX_LOG_SIZE_BYTES = 1024 * 1024 * 1024;
 
   private static final String DEFAULT_LOG_FILE_PREFIX = "buck-";
 
@@ -56,7 +59,7 @@ abstract class AbstractLogConfigSetup {
 
   @Value.Default
   public int getCount() {
-    return DEFAULT_COUNT;
+    return DEFAULT_MAX_COUNT;
   }
 
   @Value.Default
