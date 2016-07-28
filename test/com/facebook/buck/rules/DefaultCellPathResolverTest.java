@@ -19,12 +19,14 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.ConfigBuilder;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 
 import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -79,6 +81,46 @@ public class DefaultCellPathResolverTest {
             ImmutableMap.of(
                 RelativeCellName.ROOT_CELL_NAME, cell1Root,
                 RelativeCellName.of(ImmutableList.of("simple")), cell2Root
+            )
+        ));
+  }
+
+  @Test
+  public void transtiveMappingForSymlinkCycle() throws Exception {
+    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+
+    Path root = vfs.getPath("/opt/local/");
+    Path cell1Root = root.resolve("repo1");
+    Files.createDirectories(cell1Root);
+
+    Path cell2Root = root.resolve("repo2");
+    Files.createDirectories(cell2Root);
+
+    Path symlinkPath = cell2Root.resolve("symlink");
+    Files.createSymbolicLink(symlinkPath, cell2Root);
+
+    DefaultCellPathResolver cellPathResolver = new DefaultCellPathResolver(
+        cell1Root,
+        ConfigBuilder.createFromText(
+            REPOSITORIES_SECTION,
+            " two = ../repo2"));
+
+    Files.write(
+        cell2Root.resolve(".buckconfig"),
+        ImmutableList.of(
+            REPOSITORIES_SECTION,
+            " three = symlink"),
+        StandardCharsets.UTF_8);
+
+
+    assertThat(
+        cellPathResolver.getTransitivePathMapping(),
+        Matchers.equalTo(
+            ImmutableMap.of(
+                RelativeCellName.ROOT_CELL_NAME, cell1Root,
+                RelativeCellName.of(ImmutableList.of("two")), cell2Root
             )
         ));
   }

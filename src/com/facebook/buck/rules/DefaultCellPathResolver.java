@@ -61,7 +61,7 @@ public class DefaultCellPathResolver implements CellPathResolver {
    * @return MultiMap of Path to cell name. The map will contain multiple names for a path if
    *         that cell is reachable through different paths from the current cell.
    */
-  public ImmutableMap<RelativeCellName, Path> getTransitivePathMapping() {
+  public ImmutableMap<RelativeCellName, Path> getTransitivePathMapping() throws IOException {
     ImmutableMap.Builder<RelativeCellName, Path> builder = ImmutableMap.builder();
     builder.put(RelativeCellName.of(ImmutableList.<String>of()), root);
 
@@ -99,10 +99,10 @@ public class DefaultCellPathResolver implements CellPathResolver {
       ImmutableMap.Builder<RelativeCellName, Path> result,
       Set<Path> pathStack,
       RelativeCellName parentCellPath,
-      DefaultCellPathResolver parentStub) {
+      DefaultCellPathResolver parentStub) throws IOException {
     ImmutableMap<String, Path> partialMapping = parentStub.getPartialMapping();
     for (Map.Entry<String, Path> entry : partialMapping.entrySet()) {
-      Path cellRoot = entry.getValue();
+      Path cellRoot = entry.getValue().toRealPath().normalize();
       // Do not recurse into previously visited Cell roots. It's OK for cell references to form
       // cycles as long as the targets don't form a cycle.
       // We intentionally allow for the map to contain entries whose Config objects can't be
