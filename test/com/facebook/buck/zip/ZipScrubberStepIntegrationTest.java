@@ -68,7 +68,7 @@ public class ZipScrubberStepIntegrationTest {
     // Execute the zip scrubber step.
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     ZipScrubberStep step = new ZipScrubberStep(
-        new ProjectFilesystem(tmp.getRootPath()),
+        new ProjectFilesystem(tmp.getRoot()),
         Paths.get("output.zip"));
     assertEquals(0, step.execute(executionContext).getExitCode());
 

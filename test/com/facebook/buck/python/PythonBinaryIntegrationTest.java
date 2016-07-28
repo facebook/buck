@@ -37,8 +37,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Architecture;
@@ -333,15 +333,15 @@ public class PythonBinaryIntegrationTest {
   }
 
   private PythonBuckConfig getPythonBuckConfig() throws IOException {
-    Config rawConfig = Configs.createDefaultConfig(tmp.getRootPath());
+    Config rawConfig = Configs.createDefaultConfig(tmp.getRoot());
     BuckConfig buckConfig =
         new BuckConfig(
             rawConfig,
-            new ProjectFilesystem(tmp.getRootPath()),
+            new ProjectFilesystem(tmp.getRoot()),
             Architecture.detect(),
             Platform.detect(),
             ImmutableMap.copyOf(System.getenv()),
-            new DefaultCellPathResolver(tmp.getRootPath(), rawConfig));
+            new DefaultCellPathResolver(tmp.getRoot(), rawConfig));
     return new PythonBuckConfig(
         buckConfig,
         new ExecutableFinder());

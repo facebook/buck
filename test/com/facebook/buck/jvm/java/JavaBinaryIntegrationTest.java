@@ -93,7 +93,7 @@ public class JavaBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "fat_jar", tmp);
     workspace.setUp();
     Path jar = workspace.buildAndReturnOutput("//:bin-alternate-java");
-    String javaHomeArg = "-Dbuck.fatjar.java.home=" + tmp.getRootPath().toString();
+    String javaHomeArg = "-Dbuck.fatjar.java.home=" + tmp.getRoot().toString();
     ProcessExecutor.Result result = workspace.runJar(jar, ImmutableList.of(javaHomeArg));
     assertEquals("Running java wrapper\nRunning inner jar", result.getStdout().get().trim());
   }

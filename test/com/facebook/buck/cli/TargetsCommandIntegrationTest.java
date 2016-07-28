@@ -187,7 +187,7 @@ public class TargetsCommandIntegrationTest {
     result.assertSuccess();
     assertEquals(
         "//:test " +
-        MorePaths.pathWithPlatformSeparators(tmp.getRootPath().toRealPath()) +
+        MorePaths.pathWithPlatformSeparators(tmp.getRoot().toRealPath()) +
         "\n",
         result.getStdout());
   }
@@ -206,7 +206,7 @@ public class TargetsCommandIntegrationTest {
     result.assertSuccess();
     assertEquals(
         "//:test " +
-        MorePaths.pathWithPlatformSeparators(tmp.getRootPath().toRealPath()) + " " +
+        MorePaths.pathWithPlatformSeparators(tmp.getRoot().toRealPath()) + " " +
         MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output") +
         "\n",
         result.getStdout());
@@ -543,7 +543,7 @@ public class TargetsCommandIntegrationTest {
         "--referenced-file",
         ABSOLUTE_PATH_TO_FILE_OUTSIDE_THE_PROJECT_THAT_EXISTS_ON_THE_FS,
         "libs/guava.jar", // relative path in project
-        tmp.getRootPath().resolve("libs/junit.jar").toString()); // absolute path in project
+        tmp.getRoot().resolve("libs/junit.jar").toString()); // absolute path in project
     result.assertSuccess("Even though one referenced file is outside the project, " +
         "`buck targets` should succeed.");
     assertEquals(
@@ -648,7 +648,7 @@ public class TargetsCommandIntegrationTest {
     assertNotNull(cellPath);
     assertEquals(
       cellPath.asText(),
-      MorePaths.pathWithPlatformSeparators(tmp.getRootPath().toRealPath()));
+      MorePaths.pathWithPlatformSeparators(tmp.getRoot().toRealPath()));
   }
 
   @Test

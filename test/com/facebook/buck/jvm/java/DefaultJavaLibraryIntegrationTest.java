@@ -99,7 +99,7 @@ public class DefaultJavaLibraryIntegrationTest {
   @Before
   public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
-    filesystem = new ProjectFilesystem(tmp.getRootPath());
+    filesystem = new ProjectFilesystem(tmp.getRoot());
   }
 
   @Test

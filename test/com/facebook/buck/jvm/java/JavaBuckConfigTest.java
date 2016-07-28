@@ -60,7 +60,7 @@ public class JavaBuckConfigTest {
 
   @Before
   public void setUpDefaultFilesystem() {
-    defaultFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
+    defaultFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
   }
 
   @Test

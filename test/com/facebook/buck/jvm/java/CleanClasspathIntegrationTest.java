@@ -50,7 +50,7 @@ public class CleanClasspathIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "classpath_corruption_regression", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRootPath());
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
 
     // Build //:example so that content is written to buck-out/gen/.
     BuildTarget target = BuildTargetFactory.newInstance("//:example");

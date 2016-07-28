@@ -29,8 +29,8 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
@@ -97,7 +97,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
         Files.asByteSource(lib.toFile())
             .asCharSource(Charsets.ISO_8859_1)
             .read();
-    assertFalse(lib.toString(), contents.contains(tmp.getRootPath().toString()));
+    assertFalse(lib.toString(), contents.contains(tmp.getRoot().toString()));
   }
 
   @Test
@@ -111,7 +111,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
         Files.asByteSource(lib.toFile())
             .asCharSource(Charsets.ISO_8859_1)
             .read();
-    assertFalse(lib.toString(), contents.contains(tmp.getRootPath().toString()));
+    assertFalse(lib.toString(), contents.contains(tmp.getRoot().toString()));
   }
 
   @Test
@@ -122,14 +122,14 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
     // Setup up a symlink to our working directory.
     Path symlinkedRoot = folder.getRoot().toPath().resolve("symlinked-root");
-    java.nio.file.Files.createSymbolicLink(symlinkedRoot, tmp.getRootPath());
+    java.nio.file.Files.createSymbolicLink(symlinkedRoot, tmp.getRoot());
 
     // Run the build, setting PWD to the above symlink.  Typically, this causes compilers to use
     // the symlinked directory, even though it's not the right project root.
     BuildTarget target = BuildTargetFactory.newInstance("//:simple#default,static");
     workspace
         .runBuckCommandWithEnvironmentOverridesAndContext(
-            tmp.getRootPath(),
+            tmp.getRoot(),
             Optional.<NGContext>absent(),
             ImmutableMap.<String, String>of("PWD", symlinkedRoot.toString()),
             "build",
@@ -142,7 +142,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
         Files.asByteSource(lib.toFile())
             .asCharSource(Charsets.ISO_8859_1)
             .read();
-    assertFalse(lib.toString(), contents.contains(tmp.getRootPath().toString()));
+    assertFalse(lib.toString(), contents.contains(tmp.getRoot().toString()));
     assertFalse(lib.toString(), contents.contains(symlinkedRoot.toString()));
 
     folder.delete();

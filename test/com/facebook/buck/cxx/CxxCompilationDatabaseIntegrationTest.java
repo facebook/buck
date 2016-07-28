@@ -30,8 +30,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.environment.Platform;
@@ -87,7 +87,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    Path rootPath = tmp.getRootPath();
+    Path rootPath = tmp.getRoot();
     assertEquals(
         BuildTargets.getGenPath(filesystem, target, "__%s.json"),
         rootPath.relativize(compilationDatabase));
@@ -155,7 +155,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     BuildTarget target =
         BuildTargetFactory.newInstance("//:library_with_header#default,compilation-database");
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
-    Path rootPath = tmp.getRootPath();
+    Path rootPath = tmp.getRoot();
     assertEquals(
         BuildTargets.getGenPath(filesystem, target, "__%s.json"),
         rootPath.relativize(compilationDatabase));
@@ -220,7 +220,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:test#default,compilation-database");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
-    Path rootPath = tmp.getRootPath();
+    Path rootPath = tmp.getRoot();
     assertEquals(
         BuildTargets.getGenPath(filesystem, target, "__%s.json"),
         rootPath.relativize(compilationDatabase));
@@ -282,7 +282,7 @@ public class CxxCompilationDatabaseIntegrationTest {
         "//:test#default,uber-compilation-database");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
-    Path rootPath = tmp.getRootPath();
+    Path rootPath = tmp.getRoot();
     assertEquals(
         BuildTargets.getGenPath(
             filesystem,
@@ -534,7 +534,7 @@ public class CxxCompilationDatabaseIntegrationTest {
       Map<String, CxxCompilationDatabaseEntry> fileToEntry,
       String fileName,
       List<String> command) throws IOException {
-    String key = tmp.getRootPath().toRealPath().resolve(fileName).toString();
+    String key = tmp.getRoot().toRealPath().resolve(fileName).toString();
     CxxCompilationDatabaseEntry entry = fileToEntry.get(key);
     assertNotNull("There should be an entry for " + key + ".", entry);
     assertEquals(

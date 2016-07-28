@@ -97,7 +97,7 @@ public class DaemonIntegrationTest {
     // this is one of the entries so it doesn't give up.
     tmp.newFolder(".git");
     Watchman watchman = Watchman.build(
-        tmp.getRootPath(), getWatchmanEnv(), new TestConsole(), new FakeClock(0));
+        tmp.getRoot(), getWatchmanEnv(), new TestConsole(), new FakeClock(0));
 
     // We assume watchman has been installed and configured properly on the system, and that setting
     // up the watch is successful.
@@ -242,7 +242,7 @@ public class DaemonIntegrationTest {
               new ByteArrayInputStream("".getBytes("UTF-8")));
           int exitCode = main.runMainWithExitCode(
               new BuildId(),
-              tmp.getRootPath(),
+              tmp.getRoot(),
               Optional.<NGContext>of(new TestContext()),
               ImmutableMap.copyOf(System.getenv()),
               CommandMode.TEST,

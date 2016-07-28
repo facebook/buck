@@ -84,7 +84,7 @@ public class ProvisioningProfileCopyStepTest {
             return FileVisitResult.CONTINUE;
           }
         });
-    tempOutputDir = tmp.getRootPath();
+    tempOutputDir = tmp.getRoot();
     outputFile = tempOutputDir.resolve("embedded.mobileprovision");
     xcentFile = Paths.get("test.xcent");
     executionContext = TestExecutionContext.newInstance();

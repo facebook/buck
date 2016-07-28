@@ -70,7 +70,7 @@ public class OCamlIntegrationTest {
         this, "ocaml", tmp);
     workspace.setUp();
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRootPath());
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
 
     Config rawConfig = Configs.createDefaultConfig(filesystem.getRootPath());
 

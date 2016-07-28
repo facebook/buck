@@ -58,7 +58,7 @@ public class BuiltinApplePackageIntegrationTest {
 
   @Before
   public void setUp() {
-    filesystem = new ProjectFilesystem(tmp.getRootPath());
+    filesystem = new ProjectFilesystem(tmp.getRoot());
   }
 
   private static boolean isDirEmpty(final Path directory) throws IOException {

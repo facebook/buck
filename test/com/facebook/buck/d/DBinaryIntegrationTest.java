@@ -39,7 +39,7 @@ public class DBinaryIntegrationTest {
 
   @Before
   public void setUp() {
-    filesystem = new ProjectFilesystem(tmp.getRootPath());
+    filesystem = new ProjectFilesystem(tmp.getRoot());
   }
 
   @Test

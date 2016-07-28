@@ -62,12 +62,12 @@ public class WatchmanWatcherIntegrationTest {
 
     // Create an empty watchman config file.
     Files.write(
-        tmp.getRootPath().resolve(".watchmanconfig"),
+        tmp.getRoot().resolve(".watchmanconfig"),
         new byte[0]);
 
     watchman =
         Watchman.build(
-            tmp.getRootPath(),
+            tmp.getRoot(),
             ImmutableMap.copyOf(System.getenv()),
             new Console(Verbosity.ALL, System.out, System.err, Ansi.withoutTty()),
             new DefaultClock());
@@ -83,9 +83,9 @@ public class WatchmanWatcherIntegrationTest {
     WatchmanWatcher watcher = createWatchmanWatcher(new PathOrGlobMatcher("**/*.swp"));
 
     // Create a dot-file which should be ignored by the above glob.
-    Path path = tmp.getRootPath().getFileSystem().getPath("foo/bar/.hello.swp");
-    Files.createDirectories(tmp.getRootPath().resolve(path).getParent());
-    Files.write(tmp.getRootPath().resolve(path), new byte[0]);
+    Path path = tmp.getRoot().getFileSystem().getPath("foo/bar/.hello.swp");
+    Files.createDirectories(tmp.getRoot().resolve(path).getParent());
+    Files.write(tmp.getRoot().resolve(path), new byte[0]);
 
     // Verify we don't get an event for the path.
     watcher.postEvents(
@@ -100,9 +100,9 @@ public class WatchmanWatcherIntegrationTest {
     WatchmanWatcher watcher = createWatchmanWatcher(new PathOrGlobMatcher("*.txt"));
 
     // Create a dot-file which should be ignored by the above glob.
-    Path path = tmp.getRootPath().getFileSystem().getPath("foo/bar/hello.txt");
-    Files.createDirectories(tmp.getRootPath().resolve(path).getParent());
-    Files.write(tmp.getRootPath().resolve(path), new byte[0]);
+    Path path = tmp.getRoot().getFileSystem().getPath("foo/bar/hello.txt");
+    Files.createDirectories(tmp.getRoot().resolve(path).getParent());
+    Files.write(tmp.getRoot().resolve(path), new byte[0]);
 
     // Verify we still get an event for the created path.
     watcher.postEvents(
@@ -124,7 +124,7 @@ public class WatchmanWatcherIntegrationTest {
 
     WatchmanWatcher watcher =
         new WatchmanWatcher(
-            tmp.getRootPath().toString(),
+            tmp.getRoot().toString(),
             eventBus,
             ImmutableSet.copyOf(ignorePaths),
             watchman,

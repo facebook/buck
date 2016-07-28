@@ -109,7 +109,7 @@ public class GroovyBuckConfigTest {
   private GroovyBuckConfig createGroovyConfig(
       ImmutableMap<String, String> environment,
       ImmutableMap<String, ImmutableMap<String, String>> rawConfig) {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     Config config = new Config(RawConfig.of(rawConfig));
     BuckConfig buckConfig = new BuckConfig(
         config,

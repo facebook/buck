@@ -81,7 +81,7 @@ public class MorePathsTest {
 
   @Test
   public void testCreateRelativeSymlinkToFilesInRoot() throws IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRootPath());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
     tmp.newFile("biz.txt");
 
     Path pathToDesiredLinkUnderProjectRoot = Paths.get("gamma.txt");
@@ -108,7 +108,7 @@ public class MorePathsTest {
 
   @Test
   public void testCreateRelativeSymlinkToFileInRoot() throws IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRootPath());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
     tmp.newFile("biz.txt");
 
     tmp.newFolder("alpha", "beta");
@@ -136,7 +136,7 @@ public class MorePathsTest {
 
   @Test
   public void testCreateRelativeSymlinkToFilesOfVaryingDepth() throws IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRootPath());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
     tmp.newFolder("foo", "bar", "baz");
     tmp.newFile("foo/bar/baz/biz.txt");
 

@@ -77,7 +77,7 @@ public class JavaLibrarySymbolsFinderTest {
         "java_library_symbols_finder",
         tmp)
         .setUp();
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRootPath());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
 
     ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.<SourcePath>naturalOrder()
         .addAll(
@@ -108,7 +108,7 @@ public class JavaLibrarySymbolsFinderTest {
         "java_library_symbols_finder",
         tmp)
         .setUp();
-    final ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRootPath());
+    final ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
 
     Function<String, SourcePath> convert = new Function<String, SourcePath>() {
       @Override

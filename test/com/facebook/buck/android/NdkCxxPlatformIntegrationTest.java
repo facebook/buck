@@ -175,7 +175,7 @@ public class NdkCxxPlatformIntegrationTest {
             .read();
 
     // Verify that the working directory is sanitized.
-    assertFalse(contents.contains(tmp.getRootPath().toString()));
+    assertFalse(contents.contains(tmp.getRoot().toString()));
 
     // TODO(7534323): We don't currently support fixing up debug paths for the combined flow.
     if (mode != CxxPreprocessMode.COMBINED) {

@@ -63,7 +63,7 @@ public class AppleTestIntegrationTest {
 
   @Before
   public void setUp() {
-    filesystem = new ProjectFilesystem(tmp.getRootPath());
+    filesystem = new ProjectFilesystem(tmp.getRoot());
   }
 
   @Test
@@ -81,7 +81,7 @@ public class AppleTestIntegrationTest {
         buildTarget.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path projectRoot = tmp.getRootPath().toRealPath();
+    Path projectRoot = tmp.getRoot().toRealPath();
 
     Path inputPath = projectRoot.resolve(
         buildTarget.getBasePath());
@@ -110,7 +110,7 @@ public class AppleTestIntegrationTest {
         buildTarget.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path projectRoot = Paths.get(tmp.getRootPath().toFile().getCanonicalPath());
+    Path projectRoot = Paths.get(tmp.getRoot().toFile().getCanonicalPath());
 
     BuildTarget appleTestBundleFlavoredBuildTarget = buildTarget
         .withFlavors(
@@ -144,7 +144,7 @@ public class AppleTestIntegrationTest {
         buildTarget.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path projectRoot = Paths.get(tmp.getRootPath().toFile().getCanonicalPath());
+    Path projectRoot = Paths.get(tmp.getRoot().toFile().getCanonicalPath());
 
     BuildTarget appleTestBundleFlavoredBuildTarget = buildTarget
         .withFlavors(
@@ -232,7 +232,7 @@ public class AppleTestIntegrationTest {
                 .build(),
             "%s"));
 
-    Path projectRoot = Paths.get(tmp.getRootPath().toFile().getCanonicalPath());
+    Path projectRoot = Paths.get(tmp.getRoot().toFile().getCanonicalPath());
     BuildTarget appleTestBundleFlavoredBuildTarget = buildTarget
         .withFlavors(
             ImmutableFlavor.of("apple-test-bundle"),
@@ -444,7 +444,7 @@ public class AppleTestIntegrationTest {
         result.getStderr(),
         containsString("1 Passed   0 Skipped   0 Failed   AppTest"));
 
-    Path appTestDsym = tmp.getRootPath()
+    Path appTestDsym = tmp.getRoot()
         .resolve(filesystem.getBuckPaths().getGenDir())
         .resolve("AppTest#apple-test-bundle,dwarf-and-dsym,no-include-frameworks")
         .resolve("AppTest.xctest.dSYM");
@@ -453,7 +453,7 @@ public class AppleTestIntegrationTest {
         workspace,
         appTestDsym);
 
-    Path hostAppDsym = tmp.getRootPath()
+    Path hostAppDsym = tmp.getRoot()
         .resolve(filesystem.getBuckPaths().getGenDir())
         .resolve("TestHostApp#dwarf-and-dsym,no-include-frameworks")
         .resolve("TestHostApp.app.dSYM");

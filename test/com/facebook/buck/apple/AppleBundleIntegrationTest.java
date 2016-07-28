@@ -69,7 +69,7 @@ public class AppleBundleIntegrationTest {
 
   @Before
   public void setUp() {
-    filesystem = new ProjectFilesystem(tmp.getRootPath());
+    filesystem = new ProjectFilesystem(tmp.getRoot());
   }
 
   private boolean checkCodeSigning(Path absoluteBundlePath)

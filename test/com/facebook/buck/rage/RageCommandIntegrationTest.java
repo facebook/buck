@@ -114,7 +114,7 @@ public class RageCommandIntegrationTest {
       RageConfig config = RageConfig.builder()
           .setReportUploadUri(httpd.getUri("/rage"))
           .build();
-      ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
+      ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
       ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
       DefectReporter reporter = new DefaultDefectReporter(
           filesystem,
@@ -163,7 +163,7 @@ public class RageCommandIntegrationTest {
     RageConfig config = RageConfig.builder()
         .setExtraInfoCommand(ImmutableList.of("python", "extra.py"))
         .build();
-    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
+    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     Console console = new TestConsole();
     CapturingDefectReporter defectReporter = new CapturingDefectReporter();
     AutomatedReport automatedReport = new AutomatedReport(
@@ -205,7 +205,7 @@ public class RageCommandIntegrationTest {
       RageConfig config = RageConfig.builder()
           .setReportUploadUri(httpd.getUri("/rage"))
           .build();
-      ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
+      ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
       ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
       DefectReporter reporter = new DefaultDefectReporter(
           filesystem,

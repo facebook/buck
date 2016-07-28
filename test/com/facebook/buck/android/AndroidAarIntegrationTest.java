@@ -46,7 +46,7 @@ public class AndroidAarIntegrationTest {
   @Before
   public void setUp() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    filesystem = new ProjectFilesystem(tmp.getRootPath());
+    filesystem = new ProjectFilesystem(tmp.getRoot());
   }
 
   @Test
@@ -77,7 +77,7 @@ public class AndroidAarIntegrationTest {
         workspace.getFileContents("res/values/A.xml").trim()
     );
 
-    Path contents = tmp.getRootPath().resolve("aar-contents");
+    Path contents = tmp.getRoot().resolve("aar-contents");
     Unzip.extractZipFile(aar, contents, Unzip.ExistingFileMode.OVERWRITE);
     try (JarFile classes = new JarFile(contents.resolve("classes.jar").toFile())) {
       assertThat(classes.getJarEntry("com/example/HelloWorld.class"), Matchers.notNullValue());

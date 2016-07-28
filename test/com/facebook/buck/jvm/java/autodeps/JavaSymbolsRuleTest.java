@@ -69,7 +69,7 @@ public class JavaSymbolsRuleTest {
         "java_library_symbols_finder",
         tmp)
         .setUp();
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRootPath());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
 
     ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.<SourcePath>naturalOrder()
         .addAll(

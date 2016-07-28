@@ -84,9 +84,17 @@ public class TestDataHelper {
   public static ProjectWorkspace createProjectWorkspaceForScenario(
       Object testCase,
       String scenario,
-      TemporaryRoot temporaryRoot) {
+      TemporaryPaths temporaryRoot) {
     Path templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
-    return new CacheClearingProjectWorkspace(templateDir, temporaryRoot.getRootPath());
+    return new CacheClearingProjectWorkspace(templateDir, temporaryRoot.getRoot());
+  }
+
+  public static ProjectWorkspace createProjectWorkspaceForScenario(
+      Object testCase,
+      String scenario,
+      Path temporaryRoot) {
+    Path templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
+    return new CacheClearingProjectWorkspace(templateDir, temporaryRoot);
   }
 
   private static class CacheClearingProjectWorkspace extends ProjectWorkspace {

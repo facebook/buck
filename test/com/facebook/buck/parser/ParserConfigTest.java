@@ -118,8 +118,8 @@ public class ParserConfigTest {
     temporaryFolder.newFolder("tmp");
     temporaryFolder.newFolder("tmp2");
     ArrayList<String> readOnlyPaths = new ArrayList<String>(2);
-    readOnlyPaths.add(temporaryFolder.getRootPath() + "/tmp");
-    readOnlyPaths.add(temporaryFolder.getRootPath() + "/tmp2");
+    readOnlyPaths.add(temporaryFolder.getRoot() + "/tmp");
+    readOnlyPaths.add(temporaryFolder.getRoot() + "/tmp2");
 
     ParserConfig parserConfig = new ParserConfig(FakeBuckConfig.builder()
         .setSections(
@@ -131,7 +131,7 @@ public class ParserConfigTest {
         parserConfig.getReadOnlyPaths(),
         ImmutableSet.<Path>of(Paths.get(readOnlyPaths.get(0)), Paths.get(readOnlyPaths.get(1))));
 
-    String notExistingDir = temporaryFolder.getRootPath() + "/not/existing/path";
+    String notExistingDir = temporaryFolder.getRoot() + "/not/existing/path";
     parserConfig = new ParserConfig(FakeBuckConfig.builder()
         .setSections("[project]", "read_only_paths = " + notExistingDir)
         .build());

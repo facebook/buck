@@ -35,7 +35,7 @@ public class BuckConfigTestUtils {
       TemporaryPaths temporaryFolder,
       Reader reader)
       throws IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     return createFromReader(
         reader,
         projectFilesystem,

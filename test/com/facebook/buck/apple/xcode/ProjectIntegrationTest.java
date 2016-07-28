@@ -324,9 +324,9 @@ public class ProjectIntegrationTest {
         "//App:TestAppBinary");
     result.assertSuccess();
 
-    String workspacePathString = temporaryFolder.getRootPath().toString();
+    String workspacePathString = temporaryFolder.getRoot().toString();
     workspacePathString += "/App/TestAppBinary.xcworkspace";
-    Path workspacePath = temporaryFolder.getRootPath().resolve(workspacePathString);
+    Path workspacePath = temporaryFolder.getRoot().resolve(workspacePathString);
 
     assertThat(Files.exists(workspacePath), Matchers.equalTo(true));
   }

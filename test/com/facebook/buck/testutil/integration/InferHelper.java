@@ -45,23 +45,9 @@ public class InferHelper {
     ProjectWorkspace projectWorkspace = TestDataHelper.createProjectWorkspaceForScenario(
         testCase,
         scenarioName,
-        new TemporaryRoot() {
-          @Override
-          public Path getRootPath() {
-            return workspaceRoot;
-          }
-        });
+        workspaceRoot);
     projectWorkspace.setUp();
     return projectWorkspace;
-  }
-
-  public static TemporaryRoot createTemporaryRoot(final Path rootPath) {
-    return new TemporaryRoot() {
-      @Override
-      public Path getRootPath() {
-        return rootPath;
-      }
-    };
   }
 
   public static ProjectWorkspace setupCxxInferWorkspace(
@@ -70,7 +56,7 @@ public class InferHelper {
       Optional<String> rawBlacklistRegex) throws IOException {
     return setupCxxInferWorkspace(
         testCase,
-        temporaryFolder,
+        temporaryFolder.getRoot(),
         rawBlacklistRegex,
         "infertest",
         Optional.<Path>absent());
@@ -78,7 +64,7 @@ public class InferHelper {
 
   public static ProjectWorkspace setupCxxInferWorkspace(
       Object testCase,
-      TemporaryRoot temporaryFolder,
+      Path temporaryFolder,
       Optional<String> rawBlacklistRegex,
       String scenarioName,
       Optional<Path> fakeInferRootPathOpt) throws IOException {

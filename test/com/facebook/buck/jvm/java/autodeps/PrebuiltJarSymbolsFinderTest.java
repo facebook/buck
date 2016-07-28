@@ -112,7 +112,7 @@ public class PrebuiltJarSymbolsFinderTest {
   public void contentsOfBinaryJarShouldAffectRuleKey() throws IOException {
     // The path to the JAR file to use as the binaryJar of the PrebuiltJarSymbolsFinder.
     final Path relativePathToJar = Paths.get("common.jar");
-    final Path absolutePathToJar = tmp.getRootPath().resolve(relativePathToJar);
+    final Path absolutePathToJar = tmp.getRoot().resolve(relativePathToJar);
 
     // Mock out calls to a SourcePathResolver so we can create a legitimate
     // DefaultRuleKeyBuilderFactory.
@@ -151,7 +151,7 @@ public class PrebuiltJarSymbolsFinderTest {
               finder,
               /* generatedSymbols */ ImmutableSortedSet.<String>of(),
               ObjectMappers.newDefaultInstance(),
-              new ProjectFilesystem(tmp.getRootPath())
+              new ProjectFilesystem(tmp.getRoot())
           );
         } catch (IOException e) {
           throw new RuntimeException(e);
@@ -199,7 +199,7 @@ public class PrebuiltJarSymbolsFinderTest {
         createFinderForGeneratedJar("//foo:jar_genrule1"),
         /* generatedSymbols */ ImmutableSortedSet.<String>of(),
         ObjectMappers.newDefaultInstance(),
-        new ProjectFilesystem(tmp.getRootPath())
+        new ProjectFilesystem(tmp.getRoot())
     );
 
     RuleKey key1 = new DefaultRuleKeyBuilderFactory(0, fileHashCache, pathResolver).newInstance(
@@ -210,7 +210,7 @@ public class PrebuiltJarSymbolsFinderTest {
         createFinderForGeneratedJar("//foo:jar_genrule2"),
         /* generatedSymbols */ ImmutableSortedSet.<String>of(),
         ObjectMappers.newDefaultInstance(),
-        new ProjectFilesystem(tmp.getRootPath())
+        new ProjectFilesystem(tmp.getRoot())
     );
     RuleKey key2 = new DefaultRuleKeyBuilderFactory(0, fileHashCache, pathResolver).newInstance(
         javaSymbolsRule2).build();
@@ -241,7 +241,7 @@ public class PrebuiltJarSymbolsFinderTest {
       }
     }
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRootPath());
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
     SourcePath sourcePath = new PathSourcePath(filesystem, Paths.get(jarFileName));
     return new PrebuiltJarSymbolsFinder(sourcePath);
   }

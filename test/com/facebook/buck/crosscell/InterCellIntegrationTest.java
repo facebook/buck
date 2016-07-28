@@ -43,7 +43,6 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.testutil.integration.TemporaryRoot;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
@@ -424,16 +423,10 @@ public class InterCellIntegrationTest {
 
   private ProjectWorkspace createWorkspace(String scenarioName) throws IOException {
     final Path tmpSubfolder = tmp.newFolder();
-    TemporaryRoot temporaryRoot = new TemporaryRoot() {
-      @Override
-      public Path getRootPath() {
-        return tmpSubfolder;
-      }
-    };
     ProjectWorkspace projectWorkspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         scenarioName,
-        temporaryRoot);
+        tmpSubfolder);
     projectWorkspace.setUp();
     return projectWorkspace;
   }

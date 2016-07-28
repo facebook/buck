@@ -55,7 +55,7 @@ public class DiffRuleKeysScriptIntegrationTest {
     ruleKeyBuilderLogger = Logger.getLogger(RuleKeyBuilder.class.getName());
     previousRuleKeyBuilderLevel = ruleKeyBuilderLogger.getLevel();
     ruleKeyBuilderLogger.setLevel(Level.FINER);
-    Path fullLogFilePath = tmp.getRootPath().resolve(getLogFilePath());
+    Path fullLogFilePath = tmp.getRoot().resolve(getLogFilePath());
     Files.createDirectories(fullLogFilePath.getParent());
     FileHandler handler = new FileHandler(fullLogFilePath.toString());
     handler.setFormatter(new LogFormatter());
@@ -208,8 +208,8 @@ public class DiffRuleKeysScriptIntegrationTest {
     ProcessExecutor.Result result = workspace.runCommand(
         cmd,
         Paths.get("scripts", "diff_rulekeys.py").toString(),
-        tmp.getRootPath().resolve("buck-0.log").toString(),
-        tmp.getRootPath().resolve("buck-1.log").toString(),
+        tmp.getRoot().resolve("buck-0.log").toString(),
+        tmp.getRoot().resolve("buck-1.log").toString(),
         "//:java_lib_2");
     assertThat(result.getStderr(), Matchers.equalTo(Optional.of("")));
     assertThat(result.getExitCode(), Matchers.is(0));
@@ -229,6 +229,6 @@ public class DiffRuleKeysScriptIntegrationTest {
   }
 
   private Path getLogFilePath() {
-    return tmp.getRootPath().resolve("buck.test.log");
+    return tmp.getRoot().resolve("buck.test.log");
   }
 }

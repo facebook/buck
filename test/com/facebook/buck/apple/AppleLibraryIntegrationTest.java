@@ -334,7 +334,7 @@ public class AppleLibraryIntegrationTest {
         "cxx.cflags=-g");
     result.assertSuccess();
 
-    Path dsymPath = tmp.getRootPath()
+    Path dsymPath = tmp.getRoot()
         .resolve(filesystem.getBuckPaths().getGenDir())
         .resolve("Libraries/TestLibrary/" +
             "TestLibrary#dwarf-and-dsym,framework,include-frameworks,macosx-x86_64/" +
@@ -360,7 +360,7 @@ public class AppleLibraryIntegrationTest {
         "cxx.cflags=-g");
     result.assertSuccess();
 
-    Path output = tmp.getRootPath()
+    Path output = tmp.getRoot()
         .resolve(filesystem.getBuckPaths().getGenDir())
         .resolve("Libraries/TestLibrary/TestLibrary#macosx-x86_64,shared")
         .resolve("libLibraries_TestLibrary_TestLibrary.dylib");
@@ -384,13 +384,13 @@ public class AppleLibraryIntegrationTest {
         "cxx.cflags=-g");
     result.assertSuccess();
 
-    Path output = tmp.getRootPath()
+    Path output = tmp.getRoot()
         .resolve(filesystem.getBuckPaths().getGenDir())
         .resolve("Libraries/TestLibrary/TestLibrary#macosx-x86_64,shared")
         .resolve("libLibraries_TestLibrary_TestLibrary.dylib");
     assertThat(Files.exists(output), is(true));
 
-    Path dsymPath = tmp.getRootPath()
+    Path dsymPath = tmp.getRoot()
         .resolve(filesystem.getBuckPaths().getGenDir())
         .resolve("Libraries/TestLibrary")
         .resolve("TestLibrary#apple-dsym,macosx-x86_64,shared.dSYM");

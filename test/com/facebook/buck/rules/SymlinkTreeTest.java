@@ -360,10 +360,10 @@ public class SymlinkTreeTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
-    tmp.getRootPath().resolve("one").toFile().mkdir();
-    tmp.getRootPath().resolve("two").toFile().mkdir();
-    ProjectFilesystem fsOne = new ProjectFilesystem(tmp.getRootPath().resolve("one"));
-    ProjectFilesystem fsTwo = new ProjectFilesystem(tmp.getRootPath().resolve("two"));
+    tmp.getRoot().resolve("one").toFile().mkdir();
+    tmp.getRoot().resolve("two").toFile().mkdir();
+    ProjectFilesystem fsOne = new ProjectFilesystem(tmp.getRoot().resolve("one"));
+    ProjectFilesystem fsTwo = new ProjectFilesystem(tmp.getRoot().resolve("two"));
 
     ImmutableBiMap<SourcePath, Path> expected = ImmutableBiMap.<SourcePath, Path>of(
         new FakeSourcePath(fsOne, "a/one.a"), Paths.get("a/one.a"),
@@ -384,12 +384,12 @@ public class SymlinkTreeTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
-    tmp.getRootPath().resolve("a-fs").toFile().mkdir();
-    tmp.getRootPath().resolve("b-fs").toFile().mkdir();
-    tmp.getRootPath().resolve("c-fs").toFile().mkdir();
-    ProjectFilesystem fsOne = new ProjectFilesystem(tmp.getRootPath().resolve("a-fs"));
-    ProjectFilesystem fsTwo = new ProjectFilesystem(tmp.getRootPath().resolve("b-fs"));
-    ProjectFilesystem fsThree = new ProjectFilesystem(tmp.getRootPath().resolve("c-fs"));
+    tmp.getRoot().resolve("a-fs").toFile().mkdir();
+    tmp.getRoot().resolve("b-fs").toFile().mkdir();
+    tmp.getRoot().resolve("c-fs").toFile().mkdir();
+    ProjectFilesystem fsOne = new ProjectFilesystem(tmp.getRoot().resolve("a-fs"));
+    ProjectFilesystem fsTwo = new ProjectFilesystem(tmp.getRoot().resolve("b-fs"));
+    ProjectFilesystem fsThree = new ProjectFilesystem(tmp.getRoot().resolve("c-fs"));
 
     ImmutableBiMap<SourcePath, Path> expected = ImmutableBiMap.<SourcePath, Path>builder()
         .put(new FakeSourcePath(fsOne, "a/one.a"), Paths.get("a/one.a"))

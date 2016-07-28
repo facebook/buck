@@ -36,8 +36,8 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.ParameterizedTests;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.ObjectMappers;
@@ -247,15 +247,15 @@ public class LuaBinaryIntegrationTest {
   }
 
   private LuaBuckConfig getLuaBuckConfig() throws IOException {
-    Config rawConfig = Configs.createDefaultConfig(tmp.getRootPath());
+    Config rawConfig = Configs.createDefaultConfig(tmp.getRoot());
     BuckConfig buckConfig =
         new BuckConfig(
             rawConfig,
-            new ProjectFilesystem(tmp.getRootPath()),
+            new ProjectFilesystem(tmp.getRoot()),
             Architecture.detect(),
             Platform.detect(),
             ImmutableMap.<String, String>of(),
-            new DefaultCellPathResolver(tmp.getRootPath(), rawConfig));
+            new DefaultCellPathResolver(tmp.getRoot(), rawConfig));
     return new LuaBuckConfig(
         buckConfig,
         new FakeExecutableFinder(ImmutableList.<Path>of()));

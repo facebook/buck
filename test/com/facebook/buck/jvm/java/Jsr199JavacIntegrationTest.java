@@ -301,6 +301,6 @@ public class Jsr199JavacIntegrationTest {
   }
 
   private ProjectFilesystem createProjectFilesystem() {
-    return new ProjectFilesystem(tmp.getRootPath());
+    return new ProjectFilesystem(tmp.getRoot());
   }
 }

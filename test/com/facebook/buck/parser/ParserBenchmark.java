@@ -71,7 +71,7 @@ public class ParserBenchmark {
 
   @BeforeExperiment
   public void setUpBenchmark() throws Exception {
-    Path root = tempDir.getRootPath();
+    Path root = tempDir.getRoot();
     Files.createDirectories(root);
     filesystem = new ProjectFilesystem(root);
 

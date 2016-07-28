@@ -39,9 +39,9 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.InferHelper;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
@@ -622,7 +622,7 @@ public class CxxBinaryIntegrationTest {
   public void inferShouldBeAbleToUseMultipleXCell() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
-    final Path rootWorkspacePath = tmp.getRootPath();
+    final Path rootWorkspacePath = tmp.getRoot();
 
     // create infertest workspace
     InferHelper.setupWorkspace(this, rootWorkspacePath, "infertest");
@@ -631,7 +631,7 @@ public class CxxBinaryIntegrationTest {
     Path primaryRootPath = tmp.newFolder().toRealPath().normalize();
     ProjectWorkspace primary = InferHelper.setupCxxInferWorkspace(
         this,
-        InferHelper.createTemporaryRoot(primaryRootPath),
+        primaryRootPath,
         Optional.<String>absent(),
         "infertest/inter-cell/multi-cell/primary",
         Optional.of(rootWorkspacePath.resolve("fake-infer")));
@@ -2220,8 +2220,8 @@ public class CxxBinaryIntegrationTest {
         .assertSuccess();
     ImmutableSortedSet<Path> initialObjects =
         findFiles(
-            tmp.getRootPath(),
-            tmp.getRootPath().getFileSystem().getPathMatcher("glob:**/*.o"));
+            tmp.getRoot(),
+            tmp.getRoot().getFileSystem().getPathMatcher("glob:**/*.o"));
     workspace.runBuckCommand("clean");
     workspace.runBuckBuild(
         "-c", "cxx.cache_links=false",
@@ -2234,8 +2234,8 @@ public class CxxBinaryIntegrationTest {
             .toString());
     ImmutableSortedSet<Path> subsequentObjects =
         findFiles(
-            tmp.getRootPath(),
-            tmp.getRootPath().getFileSystem().getPathMatcher("glob:**/*.o"));
+            tmp.getRoot(),
+            tmp.getRoot().getFileSystem().getPathMatcher("glob:**/*.o"));
     assertThat(initialObjects, Matchers.equalTo(subsequentObjects));
   }
 

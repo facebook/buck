@@ -151,8 +151,8 @@ public class ProjectWorkspace {
   /**
    * Creates a new workspace by copying the contents of existingWorkspace to targetFolder when
    * {@link #setUp()} is invoked. In general, prefer
-   * {@link TestDataHelper#createProjectWorkspaceForScenario(Object, String, TemporaryRoot)} to this
-   * method.
+   * {@link TestDataHelper#createProjectWorkspaceForScenario(Object, String, TemporaryPaths)} to
+   * this method.
    * <p>
    * A valid reason to use this API is for performance reasons. Specifically, it may be expensive to
    * put a workspace into a particular state. If you have various scenarios that you want to test
@@ -162,13 +162,13 @@ public class ProjectWorkspace {
    *
    * @param existingWorkspace The directory that contains the template version of the project.
    * @param targetFolder The directory where the clone of the template directory should be
-   *     written. By requiring a {@link TemporaryRoot} rather than a {@link File}, we can ensure
+   *     written. By requiring a {@link TemporaryPaths} rather than a {@link File}, we can ensure
    *     that JUnit will clean up the test correctly.
    */
   public static ProjectWorkspace cloneExistingWorkspaceIntoNewFolder(
       ProjectWorkspace existingWorkspace,
-      TemporaryRoot targetFolder) {
-    return new ProjectWorkspace(existingWorkspace.getDestPath(), targetFolder.getRootPath());
+      TemporaryPaths targetFolder) {
+    return new ProjectWorkspace(existingWorkspace.getDestPath(), targetFolder.getRoot());
   }
 
   /**

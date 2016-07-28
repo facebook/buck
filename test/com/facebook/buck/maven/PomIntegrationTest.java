@@ -68,7 +68,7 @@ public class PomIntegrationTest extends EasyMockSupport {
         "com.example:with-deps:1.0",
         ImmutableSortedSet.of(dep));
 
-    Path pomPath = tmp.getRootPath().resolve("pom.xml");
+    Path pomPath = tmp.getRoot().resolve("pom.xml");
     File pomFile = pomPath.toFile();
     assertFalse(pomFile.exists());
 

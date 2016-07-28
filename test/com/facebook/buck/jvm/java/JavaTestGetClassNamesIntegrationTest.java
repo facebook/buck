@@ -47,7 +47,7 @@ public class JavaTestGetClassNamesIntegrationTest {
         "java_test_get_class_names",
         temporaryFolder);
     workspace.setUp();
-    projectFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
+    projectFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
   }
 
   @Test
