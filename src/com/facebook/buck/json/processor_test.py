@@ -1,4 +1,5 @@
 import __builtin__
+import contextlib
 import os
 import unittest
 import shutil
@@ -31,6 +32,33 @@ def get_includes_from_results(results):
 
 def get_config_from_results(results):
     return extract_from_results('__configs', results)
+
+
+def get_env_from_results(results):
+    return extract_from_results('__env', results)
+
+
+def setenv(varname, value=None):
+    if value is None:
+        os.environ.pop(varname, None)
+    else:
+        os.environ[varname] = value
+
+
+@contextlib.contextmanager
+def with_env(varname, value=None):
+    saved = os.environ.get(varname)
+    setenv(varname, value)
+    try:
+        yield
+    finally:
+        setenv(varname, saved)
+
+
+@contextlib.contextmanager
+def with_envs(envs):
+    with contextlib.nested(*[with_env(n, v) for n, v in envs.iteritems()]):
+        yield
 
 
 class ProjectFile(object):
@@ -507,3 +535,51 @@ class BuckTest(unittest.TestCase):
         self.write_files(include_def, build_file)
         build_file_processor = self.create_build_file_processor()
         build_file_processor.process(build_file.path, set())
+
+    def test_os_getenv(self):
+        """
+        Verify that calling `os.getenv()` records the environment variable.
+        """
+
+        build_file = ProjectFile(
+            path='BUCK',
+            contents=(
+                'import os',
+                'assert os.getenv("TEST1") == "foo"',
+                'assert os.getenv("TEST2") is None',
+                'assert os.getenv("TEST3", "default") == "default"',
+            ))
+        self.write_file(build_file)
+        with with_envs({'TEST1': 'foo', 'TEST2': None, 'TEST3': None}):
+            build_file_processor = self.create_build_file_processor()
+            with build_file_processor.with_env_interceptors():
+                result = build_file_processor.process(build_file.path, set())
+        self.assertEquals(
+            get_env_from_results(result),
+            {'TEST1': "foo", 'TEST2': None, 'TEST3': None})
+
+    def test_os_environ(self):
+        """
+        Verify that accessing environemtn variables via `os.environ` records
+        the environment variables.
+        """
+
+        build_file = ProjectFile(
+            path='BUCK',
+            contents=(
+                'import os',
+                'assert os.environ["TEST1"] == "foo"',
+                'assert os.environ.get("TEST2") is None',
+                'assert os.environ.get("TEST3", "default") == "default"',
+                'assert "TEST4" in os.environ',
+                'assert "TEST5" not in os.environ',
+            ))
+        self.write_file(build_file)
+        build_file_processor = self.create_build_file_processor()
+        with with_envs({'TEST1': 'foo', 'TEST2': None, 'TEST3': None, 'TEST4': '', 'TEST5': None}):
+            build_file_processor = self.create_build_file_processor()
+            with build_file_processor.with_env_interceptors():
+                result = build_file_processor.process(build_file.path, set())
+        self.assertEquals(
+            get_env_from_results(result),
+            {'TEST1': "foo", 'TEST2': None, 'TEST3': None, 'TEST4': '', 'TEST5': None})

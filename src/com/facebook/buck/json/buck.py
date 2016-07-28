@@ -8,6 +8,7 @@
 import __builtin__
 import __future__
 
+import contextlib
 from collections import namedtuple
 from pathlib import Path, PureWindowsPath, PurePath
 from pywatchman import bser
@@ -85,6 +86,7 @@ class BuildFileContext(object):
         self.globals = {}
         self.includes = set()
         self.used_configs = {}
+        self.used_env_vars = {}
         self.project_root = project_root
         self.base_path = base_path
         self.dirname = dirname
@@ -112,6 +114,7 @@ class IncludeContext(object):
         self.globals = {}
         self.includes = set()
         self.used_configs = {}
+        self.used_env_vars = {}
         self.diagnostics = set()
 
 
@@ -534,7 +537,7 @@ class BuildFileProcessor(object):
     def __init__(self, project_root, watchman_watch_root, watchman_project_prefix, build_file_name,
                  allow_empty_globs, ignore_buck_autodeps_files, watchman_client, watchman_error,
                  watchman_glob_stat_results, enable_build_file_sandboxing, implicit_includes=[],
-                 extra_funcs=[], configs={}, ignore_paths=[]):
+                 extra_funcs=[], configs={}, env_vars={}, ignore_paths=[]):
         self._cache = {}
         self._build_env_stack = []
         self._sync_cookie_state = SyncCookieState()
@@ -551,6 +554,7 @@ class BuildFileProcessor(object):
         self._watchman_error = watchman_error
         self._watchman_glob_stat_results = watchman_glob_stat_results
         self._configs = configs
+        self._env_vars = env_vars
         self._ignore_paths = ignore_paths
 
         lazy_functions = {}
@@ -558,6 +562,55 @@ class BuildFileProcessor(object):
             func_with_env = LazyBuildEnvPartial(func)
             lazy_functions[func.__name__] = func_with_env
         self._functions = lazy_functions
+
+    def _wrap_env_var_read(self, read, real):
+        """
+        Return wrapper around function that reads an environment variable so
+        that the read is recorded.
+        """
+
+        @functools.wraps(real)
+        def wrapper(varname, *arg, **kwargs):
+            self._record_env_var(varname, read(varname))
+            return real(varname, *arg, **kwargs)
+
+        # Save the real function for restoration.
+        wrapper._real = real
+
+        return wrapper
+
+    @contextlib.contextmanager
+    def _with_env_interceptor(self, read, obj, attr):
+        """
+        Wrap a function, found at `obj.attr`, that reads an environment
+        variable in a new function which records the env var read.
+        """
+
+        real = getattr(obj, attr)
+        wrapped = self._wrap_env_var_read(read, real)
+        setattr(obj, attr, wrapped)
+        try:
+            yield
+        finally:
+            setattr(obj, attr, real)
+
+    @contextlib.contextmanager
+    def with_env_interceptors(self):
+        """
+        Install environment variable read interceptors into all known ways that
+        a build file can access the environment.
+        """
+
+        # Use a copy of the env to provide a function to get at the low-level
+        # environment.  The wrappers will use this when recording the env var.
+        read = dict(os.environ).get
+
+        # Install interceptors into the main ways a user can read the env.
+        with contextlib.nested(
+                self._with_env_interceptor(read, os.environ, '__contains__'),
+                self._with_env_interceptor(read, os.environ, '__getitem__'),
+                self._with_env_interceptor(read, os.environ, 'get')):
+            yield
 
     def _merge_globals(self, mod, dst):
         """
@@ -629,6 +682,20 @@ class BuildFileProcessor(object):
 
         return value
 
+    def _record_env_var(self, name, value):
+        """
+        Record a read of an environment variable.
+
+        This method is meant to wrap methods in `os.environ` when called from
+        any files or includes that we process.
+        """
+
+        # Grab the current build context from the top of the stack.
+        build_env = self._build_env_stack[-1]
+
+        # Lookup the value and record it in this build file's context.
+        build_env.used_env_vars[name] = value
+
     def _include_defs(self, name, implicit_includes=[]):
         """
         Pull the named include into the current caller's context.
@@ -664,6 +731,9 @@ class BuildFileProcessor(object):
 
         # Pull in any config settings used by the include.
         build_env.used_configs.update(inner_env.used_configs)
+
+        # Pull in any config settings used by the include.
+        build_env.used_env_vars.update(inner_env.used_env_vars)
 
     def _add_build_file_dep(self, name):
         """
@@ -949,6 +1019,9 @@ class BuildFileProcessor(object):
             configs[section][field] = value
         values.append({"__configs": configs})
 
+        # Add in used environment variables as a special meta rule.
+        values.append({"__env": build_env.used_env_vars})
+
         diagnostics.update(build_env.diagnostics)
 
         return values
@@ -1207,14 +1280,17 @@ def main():
         orig_excepthook = sys.excepthook
         sys.excepthook = silent_excepthook
 
-    for build_file in args:
-        process_with_diagnostics(build_file, buildFileProcessor, to_parent,
-                                 should_profile=options.profile)
+    # Process the build files with the env var interceptors installed.
+    with buildFileProcessor.with_env_interceptors():
 
-    # "for ... in sys.stdin" in Python 2.x hangs until stdin is closed.
-    for build_file in iter(sys.stdin.readline, ''):
-        process_with_diagnostics(build_file, buildFileProcessor, to_parent,
-                                 should_profile=options.profile)
+        for build_file in args:
+            process_with_diagnostics(build_file, buildFileProcessor, to_parent,
+                                     should_profile=options.profile)
+
+        # "for ... in sys.stdin" in Python 2.x hangs until stdin is closed.
+        for build_file in iter(sys.stdin.readline, ''):
+            process_with_diagnostics(build_file, buildFileProcessor, to_parent,
+                                     should_profile=options.profile)
 
     if options.quiet:
         sys.excepthook = orig_excepthook

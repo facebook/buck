@@ -346,8 +346,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
       throws BuildFileParseException, InterruptedException {
     List<Map<String, Object>> result = getAllRulesAndMetaRules(buildFile);
 
-    // Strip out the __includes and __configs meta rules, which are the last rules.
-    return Collections.unmodifiableList(result.subList(0, result.size() - 2));
+    // Strip out the __includes, __configs, and __env meta rules, which are the last rules.
+    return Collections.unmodifiableList(result.subList(0, result.size() - 3));
   }
 
   /**

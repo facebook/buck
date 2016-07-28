@@ -82,6 +82,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
    */
   private static final String INCLUDES_META_RULE = "__includes";
   private static final String CONFIGS_META_RULE = "__configs";
+  private static final String ENV_META_RULE = "__env";
 
   private static final String COUNTER_CATEGORY = "buck_parser_state";
   private static final String INVALIDATED_BY_ENV_VARS_COUNTER_NAME = "invalidated_by_env_vars";
@@ -244,7 +245,7 @@ class DaemonicParserState implements ParsePipeline.Cache {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "PMD.EmptyIfStmt"})
   public ImmutableList<Map<String, Object>> putRawNodesIfNotPresentAndStripMetaEntries(
       final Cell cell,
       final Path buildFile,
@@ -288,6 +289,8 @@ class DaemonicParserState implements ParsePipeline.Cache {
                       })));
         }
         configs = builder.build();
+      } else if (rawNode.containsKey(ENV_META_RULE)) {
+        // Skip the env meta rule for now.
       } else {
         withoutMetaIncludesBuilder.add(rawNode);
       }
