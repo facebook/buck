@@ -804,7 +804,9 @@ public class ProjectFilesystem {
       byte[] bytes,
       Path pathRelativeToProjectRoot,
       FileAttribute<?>... attrs) throws IOException {
-    try (OutputStream outputStream = newFileOutputStream(pathRelativeToProjectRoot, attrs)) {
+    // No need to buffer writes when writing a single piece of data.
+    try (OutputStream outputStream =
+             newUnbufferedFileOutputStream(pathRelativeToProjectRoot, attrs)) {
       outputStream.write(bytes);
     }
   }
@@ -814,14 +816,21 @@ public class ProjectFilesystem {
       FileAttribute<?>... attrs)
       throws IOException {
     return new BufferedOutputStream(
-        Channels.newOutputStream(
-            Files.newByteChannel(
-                getPathForRelativePath(pathRelativeToProjectRoot),
-                ImmutableSet.<OpenOption>of(
-                    StandardOpenOption.CREATE,
-                    StandardOpenOption.TRUNCATE_EXISTING,
-                    StandardOpenOption.WRITE),
-                attrs)));
+        newUnbufferedFileOutputStream(pathRelativeToProjectRoot, attrs));
+  }
+
+  public OutputStream newUnbufferedFileOutputStream(
+      Path pathRelativeToProjectRoot,
+      FileAttribute<?>... attrs)
+      throws IOException {
+    return Channels.newOutputStream(
+        Files.newByteChannel(
+            getPathForRelativePath(pathRelativeToProjectRoot),
+            ImmutableSet.<OpenOption>of(
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING,
+                StandardOpenOption.WRITE),
+            attrs));
   }
 
   public <A extends BasicFileAttributes> A readAttributes(
