@@ -41,6 +41,7 @@
     ; Forbid symlinks for source files so Buck doesn't have to dump its
     ; cache every time it encounters one.
     allow_symlinks = forbid
+    enable_build_file_sandboxing = true
 [test]
     ; Maximum timeout of 1 minute per test.
     timeout = 60000
