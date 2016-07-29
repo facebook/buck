@@ -225,13 +225,49 @@ public final class Main {
   // http://wiki.fasterxml.com/JacksonBestPracticesPerformance
   private final ObjectMapper objectMapper;
 
-  // This is a hack to work around a perf issue where generated Xcode IDE files
-  // trip WatchmanWatcher, causing buck project to take a long time to run.
+  // Ignore changes to generated Xcode project files and editors' backup files
+  // so we don't dump buckd caches on every command.
   private static final ImmutableSet<PathOrGlobMatcher> DEFAULT_IGNORE_GLOBS =
       ImmutableSet.of(
-          new PathOrGlobMatcher("*.pbxproj"),
-          new PathOrGlobMatcher("*.xcscheme"),
-          new PathOrGlobMatcher("*.xcworkspacedata"));
+          new PathOrGlobMatcher("**/*.pbxproj"),
+          new PathOrGlobMatcher("**/*.xcscheme"),
+          new PathOrGlobMatcher("**/*.xcworkspacedata"),
+          // Various editors' temporary files
+          new PathOrGlobMatcher("**/*~"),
+          // Emacs
+          new PathOrGlobMatcher("**/#*#"),
+          new PathOrGlobMatcher("**/.#*"),
+          // Vim
+          new PathOrGlobMatcher("**/*.swo"),
+          new PathOrGlobMatcher("**/*.swp"),
+          new PathOrGlobMatcher("**/*.swpx"),
+          new PathOrGlobMatcher("**/*.un~"),
+          new PathOrGlobMatcher("**/.netrhwist"),
+          // Eclipse
+          new PathOrGlobMatcher(".idea"),
+          new PathOrGlobMatcher(".iml"),
+          new PathOrGlobMatcher("**/*.pydevproject"),
+          new PathOrGlobMatcher(".project"),
+          new PathOrGlobMatcher(".metadata"),
+          new PathOrGlobMatcher("**/*.tmp"),
+          new PathOrGlobMatcher("**/*.bak"),
+          new PathOrGlobMatcher("**/*~.nib"),
+          new PathOrGlobMatcher(".classpath"),
+          new PathOrGlobMatcher(".settings"),
+          new PathOrGlobMatcher(".loadpath"),
+          new PathOrGlobMatcher(".externalToolBuilders"),
+          new PathOrGlobMatcher(".cproject"),
+          new PathOrGlobMatcher(".buildpath"),
+          // Mac OS temp files
+          new PathOrGlobMatcher(".DS_Store"),
+          new PathOrGlobMatcher(".AppleDouble"),
+          new PathOrGlobMatcher(".LSOverride"),
+          new PathOrGlobMatcher(".Spotlight-V100"),
+          new PathOrGlobMatcher(".Trashes"),
+          // Windows
+          new PathOrGlobMatcher("$RECYCLE.BIN"),
+          // Sublime
+          new PathOrGlobMatcher(".*.sublime-workspace"));
 
   private static final Logger LOG = Logger.get(Main.class);
 

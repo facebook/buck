@@ -44,6 +44,9 @@ can significantly improve performance and may be necessary to avoid file
 change overflows when buck daemons are being used to build very large projects.
 </p>
 <p>
+By default, Buck daemon processes ignore changes to editor temporary files.
+</p>
+<p>
 To disable the daemon from starting, set the environment variable
 {sp}<code>NO_BUCKD</code> to <code>1</code>.
 </p>
