@@ -49,6 +49,10 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
   private final String buildFileName;
   private final LoadingCache<Path, Boolean> pathExistenceCache;
 
+  /**
+   * Cache for the base path of a given path. This is useful as many files may share common
+   * ancestors before reaching a base path.
+   */
   private final LoadingCache<Path, Optional<Path>> basePathOfAncestorCache = CacheBuilder
       .newBuilder()
       .weakValues()
@@ -132,13 +136,18 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
    */
   @Override
   public Optional<Path> getBasePathOfAncestorTarget(Path filePath) {
-    if (isBasePath(filePath)) {
+    // Since the initial file being passed in tends to be a file instead of a directory, we can skip
+    // this initial check of filePath/BUCK if that's the case.
+    if (!projectFilesystem.isFile(filePath) && isBasePath(filePath)) {
       return Optional.of(filePath);
     }
 
     return basePathOfAncestorCache.getUnchecked(filePath);
   }
 
+  /**
+   * Returns whether the given path is a directory containing a buck file, i.e. a base path.
+   */
   private boolean isBasePath(Path filePath) {
     return pathExistenceCache.getUnchecked(filePath.resolve(buildFileName)) &&
         !isBuckOutput(filePath) &&
