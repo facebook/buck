@@ -156,10 +156,10 @@ public class MissingSymbolsHandler {
           missingSymbolsHandler.printNeededDependencies(
               missingSymbolEvents.get(event.getBuildId()));
         } catch (InterruptedException e) {
-          LOG.error(e, "Missing symbols handler did not complete in time.");
+          LOG.debug(e, "Missing symbols handler did not complete in time.");
         } catch (RuntimeException e) {
           if (e.getCause() instanceof ClosedByInterruptException) {
-            LOG.error(e.getCause(), "Missing symbols handler did not complete in time.");
+            LOG.debug(e.getCause(), "Missing symbols handler did not complete in time.");
           } else {
             throw e;
           }
