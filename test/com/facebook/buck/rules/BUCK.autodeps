@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY a04f22723c09d224784b81059c7c476f1fee75d6 #@#
+#@# GENERATED FILE: DO NOT MODIFY fc0ca9054408b5bfe25b66b6691d30bbf5c1c828 #@#
 {
   "rules" : {
     "deps" : [
@@ -43,6 +43,7 @@
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util:util",
+      "//src/com/facebook/buck/util:watchman",
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/concurrent:concurrent",
       "//src/com/facebook/buck/util/environment:platform",

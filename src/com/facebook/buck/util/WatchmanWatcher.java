@@ -225,7 +225,8 @@ public class WatchmanWatcher {
             "Could get response from Watchman for query %s within %d ms",
             query,
             timeoutMillis);
-        postWatchEvent(createOverflowEvent());
+        postWatchEvent(
+            createOverflowEvent("Query to Watchman timed out after " + timeoutMillis + "ms"));
         return;
       }
 
@@ -238,7 +239,7 @@ public class WatchmanWatcher {
         LOG.error(
             e,
             "Error in Watchman output. Posting an overflow event to flush the caches");
-        postWatchEvent(createOverflowEvent());
+        postWatchEvent(createOverflowEvent("Watchman Error occurred - " + e.getMessage()));
         throw e;
       }
 
@@ -266,7 +267,7 @@ public class WatchmanWatcher {
           case NONE:
             break;
           case POST_OVERFLOW_EVENT:
-            postWatchEvent(createOverflowEvent());
+            postWatchEvent(createOverflowEvent("New Buck instance"));
             break;
         }
         return;
@@ -275,10 +276,9 @@ public class WatchmanWatcher {
       List<Map<String, Object>> files = (List<Map<String, Object>>) response.get("files");
       if (files != null) {
         if (files.size() > overflow) {
-          LOG.warn(
-              "Too many changed files (%d > %d), giving up and posting overflow event.",
-              files.size(), overflow);
-          postWatchEvent(createOverflowEvent());
+          String message = "Too many changed files (" + files.size() + " > " + overflow + ")";
+          LOG.warn(message + ", posting overflow event");
+          postWatchEvent(createOverflowEvent(message));
           return;
         }
 
@@ -286,7 +286,7 @@ public class WatchmanWatcher {
           String fileName = (String) file.get("name");
           if (fileName == null) {
             LOG.warn("Filename missing from Watchman file response %s", file);
-            postWatchEvent(createOverflowEvent());
+            postWatchEvent(createOverflowEvent("Filename missing from Watchman response"));
             return;
           }
           PathEventBuilder builder = new PathEventBuilder();
@@ -305,13 +305,17 @@ public class WatchmanWatcher {
         LOG.debug("Posted %d Watchman events.", files.size());
       }
     } catch (InterruptedException e) {
-      LOG.warn(e, "Interrupted while talking to Watchman");
-      postWatchEvent(createOverflowEvent()); // Events may have been lost, signal overflow.
+      String message = "Watchman communication interrupted";
+      LOG.warn(e, message);
+      // Events may have been lost, signal overflow.
+      postWatchEvent(createOverflowEvent(message));
       Thread.currentThread().interrupt();
       throw e;
     } catch (IOException e) {
-      LOG.error(e, "I/O error talking to Watchman");
-      postWatchEvent(createOverflowEvent()); // Events may have been lost, signal overflow.
+      String message = "I/O error talking to Watchman";
+      LOG.error(e, message);
+      // Events may have been lost, signal overflow.
+      postWatchEvent(createOverflowEvent(message + " - " + e.getMessage()));
       throw e;
     }
   }
@@ -321,7 +325,8 @@ public class WatchmanWatcher {
     fileChangeEventBus.post(event);
   }
 
-  private WatchEvent<Object> createOverflowEvent() {
+  @VisibleForTesting
+  public static WatchEvent<Object> createOverflowEvent(final String reason) {
     return new WatchEvent<Object>() {
 
       @Override
@@ -337,7 +342,7 @@ public class WatchmanWatcher {
       @Override
       @Nullable
       public Object context() {
-        return null;
+        return reason;
       }
 
       @Override

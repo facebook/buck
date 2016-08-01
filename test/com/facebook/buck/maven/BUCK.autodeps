@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 7c0634447d1e9e44ee9039e0157bca43c7edfc0f #@#
+#@# GENERATED FILE: DO NOT MODIFY 72115175b4991432fd6c2c2b12a2116307857512 #@#
 {
   "maven" : {
     "deps" : [
@@ -44,8 +44,7 @@
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/maven:maven",
-      "//test/com/facebook/buck/testutil/integration:integration",
-      "//third-party/java/junit:junit"
+      "//test/com/facebook/buck/testutil/integration:integration"
     ]
   }
 }

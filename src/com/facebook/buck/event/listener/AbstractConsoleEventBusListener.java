@@ -688,9 +688,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   @Subscribe
-  @SuppressWarnings("unused")
   public void watchmanOverflow(WatchmanEvent.Overflow event) {
-    parsingStatus = Optional.of(EMOJI_SLOW + "  (Watchman overflow)");
+    parsingStatus = Optional.of(EMOJI_SLOW + "  (" + event.getReason() + ")");
   }
 
   @Subscribe

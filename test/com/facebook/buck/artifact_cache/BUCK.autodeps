@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY fcff49181051e811201d1aac5f53de107b21e883 #@#
+#@# GENERATED FILE: DO NOT MODIFY 5576f7201fb9ac1248b2cfb48a2624f85fe94c34 #@#
 {
   "artifact_cache" : {
     "deps" : [
@@ -46,7 +46,6 @@
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/rules:rule_key",
-      "//test/com/facebook/buck/testutil/integration:integration",
       "//third-party/java/guava:guava",
       "//third-party/java/jsr:jsr305"
     ]

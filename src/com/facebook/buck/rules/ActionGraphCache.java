@@ -250,7 +250,7 @@ public class ActionGraphCache {
       invalidateCache();
 
       if (event.kind() == StandardWatchEventKinds.OVERFLOW) {
-        watchmanEventsStack.add(WatchmanEvent.overflow());
+        watchmanEventsStack.add(WatchmanEvent.overflow((String) event.context()));
       } else if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
         watchmanEventsStack.add(WatchmanEvent.fileCreation());
       } else if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {

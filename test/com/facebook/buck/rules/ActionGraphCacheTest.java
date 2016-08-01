@@ -33,6 +33,7 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.WatchEventsForTests;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.IncrementingFakeClock;
+import com.facebook.buck.util.WatchmanWatcher;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
 
@@ -194,7 +195,7 @@ public class ActionGraphCacheTest {
     // Fill the cache. An overflow event should invalidate the cache.
     cache.getActionGraph(eventBus, NOT_CHECK_GRAPHS, targetGraph, 0);
     assertFalse(cache.isEmpty());
-    cache.invalidateBasedOn(WatchEventsForTests.createOverflowEvent());
+    cache.invalidateBasedOn(WatchmanWatcher.createOverflowEvent("testing"));
     assertTrue(cache.isEmpty());
 
     // Fill the cache. Add a file and ActionGraphCache should be invalidated.

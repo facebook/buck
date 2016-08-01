@@ -34,8 +34,8 @@ public abstract class WatchmanEvent extends AbstractBuckEvent {
     return eventName;
   }
 
-  public static Overflow overflow() {
-    return new Overflow();
+  public static Overflow overflow(String reason) {
+    return new Overflow(reason);
   }
 
   public static FileCreation fileCreation() {
@@ -47,10 +47,18 @@ public abstract class WatchmanEvent extends AbstractBuckEvent {
   }
 
   public static class Overflow extends WatchmanEvent {
-    public Overflow() {
+    private String reason;
+
+    public Overflow(String reason) {
       super(EventKey.unique(), "WatchmanOverflow");
+      this.reason = reason;
+    }
+
+    public String getReason() {
+      return reason;
     }
   }
+
   public static class FileCreation extends WatchmanEvent {
     public FileCreation() {
       super(EventKey.unique(), "WatchmanFileCreation");
