@@ -132,4 +132,13 @@ public class OCamlLink extends AbstractBuildRule {
   public Path getPathToOutput() {
     return outputRelativePath;
   }
+
+  @Override
+  public boolean isCacheable() {
+    // TODO(10456582): when some libraries are fetched from cache and others are built locally
+    // The digest of the implementations may not match up, and ocaml throws a fit.
+    // In lieu of tracking that down, forcing libraries to not cache will ensure that all libraries
+    // will rely on identical object files.
+    return false;
+  }
 }
