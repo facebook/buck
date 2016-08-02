@@ -31,6 +31,10 @@ public interface NativeLinkable extends HasBuildTarget {
 
   Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform);
 
+  /**
+   * Return input that *dependents* should put on their link line
+   * when linking against this linkable.
+   */
   NativeLinkableInput getNativeLinkableInput(CxxPlatform cxxPlatform, Linker.LinkableDepType type)
       throws NoSuchBuildTargetException;
 
