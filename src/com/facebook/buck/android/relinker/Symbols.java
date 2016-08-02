@@ -17,8 +17,11 @@ package com.facebook.buck.android.relinker;
 
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.util.BgProcessKiller;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.CharStreams;
+import com.google.common.io.LineProcessor;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -26,8 +29,6 @@ import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.facebook.buck.util.BgProcessKiller;
 
 public class Symbols {
   public ImmutableSet<String> undefined;
@@ -47,12 +48,12 @@ public class Symbols {
       Tool objdump,
       SourcePathResolver resolver,
       Path lib) throws IOException, InterruptedException {
-    ImmutableSet.Builder<String> undefined = ImmutableSet.builder();
-    ImmutableSet.Builder<String> global = ImmutableSet.builder();
-    ImmutableSet.Builder<String> all = ImmutableSet.builder();
+    final ImmutableSet.Builder<String> undefined = ImmutableSet.builder();
+    final ImmutableSet.Builder<String> global = ImmutableSet.builder();
+    final ImmutableSet.Builder<String> all = ImmutableSet.builder();
 
     // See `man objdump`.
-    Pattern re = Pattern.compile(
+    final Pattern re = Pattern.compile(
         "\\s*" +
             "(?<address>[0-9a-f]{8})" +
             " " +
@@ -70,9 +71,42 @@ public class Symbols {
             " " +
             "(?<name>[^\\s]*)");
 
+    runObjdump(objdump, resolver, lib, ImmutableList.of("-T"),
+        new LineProcessor<Void>() {
+          @Override
+          public boolean processLine(String line) throws IOException {
+            Matcher m = re.matcher(line);
+            if (!m.matches()) {
+              return true;
+            }
+            String symbol = m.group("name");
+            if ("*UND*".equals(m.group("section"))) {
+              undefined.add(symbol);
+            } else if ("gu!".contains(m.group("global"))) {
+              global.add(symbol);
+            }
+            all.add(symbol);
+            return true;
+          }
+
+          @Override
+          public Void getResult() {
+            return null;
+          }
+        });
+
+    return new Symbols(undefined.build(), global.build(), all.build());
+  }
+
+  private static void runObjdump(
+      Tool objdump,
+      SourcePathResolver resolver,
+      Path lib,
+      ImmutableList<String> flags,
+      LineProcessor<Void> lineProcessor) throws IOException, InterruptedException {
     ImmutableList<String> args = ImmutableList.<String>builder()
         .addAll(objdump.getCommandPrefix(resolver))
-        .add("-T")
+        .addAll(flags)
         .add(lib.toString())
         .build();
 
@@ -80,29 +114,13 @@ public class Symbols {
         BgProcessKiller.startProcess(
             new ProcessBuilder(args)
             .redirectError(ProcessBuilder.Redirect.INHERIT));
-    BufferedReader output = new BufferedReader(new InputStreamReader(p.getInputStream()));
-    String line;
 
-    while ((line = output.readLine()) != null) {
-      Matcher m = re.matcher(line);
-      if (!m.matches()) {
-        continue;
-      }
-      String symbol = m.group("name");
-      if ("*UND*".equals(m.group("section"))) {
-        undefined.add(symbol);
-      } else if ("gu!".contains(m.group("global"))) {
-        global.add(symbol);
-      }
-      all.add(symbol);
-    }
+    BufferedReader output = new BufferedReader(new InputStreamReader(p.getInputStream()));
+    CharStreams.readLines(output, lineProcessor);
     p.waitFor();
 
     if (p.exitValue() != 0) {
       throw new RuntimeException("Objdump exited with value: " + p.exitValue());
     }
-
-    return new Symbols(undefined.build(), global.build(), all.build());
   }
-
 }
