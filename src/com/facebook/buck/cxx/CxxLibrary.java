@@ -125,6 +125,14 @@ public class CxxLibrary
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
+    // Temporary hack (I promise): Treat null as supported.
+    // The proper fix for this will be ready when we move to Java 8.
+    // NativeLinkable.getNativeLinkableDeps will have a zero-argument overload
+    // to get all possible deps on all platforms, then a default implementation
+    // of getNativeLinkableDeps(CxxPlatform) that just delegates to that.
+    if (cxxPlatform == null) {
+      return true;
+    }
     return !supportedPlatformsRegex.isPresent() ||
         supportedPlatformsRegex.get()
             .matcher(cxxPlatform.getFlavor().toString())
