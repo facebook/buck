@@ -119,24 +119,16 @@ public class CxxDescriptionEnhancer {
             params.getBuildTarget(),
             cxxPlatform.getFlavor(),
             headerVisibility);
-    Optional<Path> headerMapLocation = Optional.absent();
-    if (cxxPlatform.getCpp().resolve(resolver).supportsHeaderMaps() &&
-        cxxPlatform.getCxxpp().resolve(resolver).supportsHeaderMaps()) {
-      headerMapLocation =
-          Optional.of(
-              getHeaderMapPath(
-                  params.getProjectFilesystem(),
-                  params.getBuildTarget(),
-                  cxxPlatform.getFlavor(),
-                  headerVisibility));
-    }
+    boolean useHeaderMap = (
+        cxxPlatform.getCpp().resolve(resolver).supportsHeaderMaps() &&
+        cxxPlatform.getCxxpp().resolve(resolver).supportsHeaderMaps());
 
     return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
         pathResolver,
         headerSymlinkTreeTarget,
         params,
         headerSymlinkTreeRoot,
-        headerMapLocation,
+        useHeaderMap,
         headers);
   }
 
@@ -177,6 +169,7 @@ public class CxxDescriptionEnhancer {
    * @return the {@link BuildTarget} to use for the {@link BuildRule} generating the
    *    symlink tree of headers.
    */
+  @VisibleForTesting
   public static BuildTarget createHeaderSymlinkTreeTarget(
       BuildTarget target,
       Flavor platform,
@@ -212,20 +205,6 @@ public class CxxDescriptionEnhancer {
       default:
         throw new RuntimeException("Unexpected value of enum ExportMode");
     }
-  }
-
-  /**
-   * @return the {@link Path} to use for the header map for the given symlink tree.
-   */
-  public static Path getHeaderMapPath(
-      ProjectFilesystem filesystem,
-      BuildTarget target,
-      Flavor platform,
-      HeaderVisibility headerVisibility) {
-    return BuildTargets.getGenPath(
-        filesystem,
-        createHeaderSymlinkTreeTarget(target, platform, headerVisibility),
-        "%s.hmap");
   }
 
   /**

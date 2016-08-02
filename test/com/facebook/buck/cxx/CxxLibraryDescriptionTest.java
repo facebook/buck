@@ -90,17 +90,15 @@ public class CxxLibraryDescriptionTest {
       HeaderVisibility headerVisibility) {
     if (cxxPlatform.getCpp().resolve(resolver).supportsHeaderMaps() &&
         cxxPlatform.getCxxpp().resolve(resolver).supportsHeaderMaps()) {
+      BuildTarget headerMapBuildTarget =
+          CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+              target,
+              cxxPlatform.getFlavor(),
+              headerVisibility);
       return Optional.<SourcePath>of(
           new BuildTargetSourcePath(
-              CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-                  target,
-                  cxxPlatform.getFlavor(),
-                  headerVisibility),
-              CxxDescriptionEnhancer.getHeaderMapPath(
-                  filesystem,
-                  target,
-                  cxxPlatform.getFlavor(),
-                  headerVisibility)));
+              headerMapBuildTarget,
+              HeaderSymlinkTreeWithHeaderMap.getPath(filesystem, headerMapBuildTarget)));
     } else {
       return Optional.absent();
     }

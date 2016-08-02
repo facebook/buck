@@ -101,8 +101,6 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     // The output path used by the buildable for the link tree.
     symlinkTreeRoot = projectFilesystem.resolve(
         BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root"));
-    headerMapPath =
-        BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root.hmap");
 
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule = new HeaderSymlinkTreeWithHeaderMap(
@@ -113,8 +111,9 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
         symlinkTreeRoot,
-        headerMapPath,
         links);
+
+    headerMapPath = symlinkTreeBuildRule.getPathToOutput();
   }
 
   @Test
@@ -176,7 +175,6 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
         symlinkTreeRoot,
-        headerMapPath,
         ImmutableMap.<Path, SourcePath>of(
             Paths.get("different/link"),
             new PathSourcePath(

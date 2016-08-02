@@ -16,7 +16,10 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -24,6 +27,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -41,10 +45,9 @@ public class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
       BuildRuleParams params,
       SourcePathResolver resolver,
       Path root,
-      Path headerMapPath,
       ImmutableMap<Path, SourcePath> links) {
     super(params, resolver, root, links);
-    this.headerMapPath = headerMapPath;
+    this.headerMapPath = getPath(params.getProjectFilesystem(), params.getBuildTarget());
   }
 
   @Override
@@ -86,4 +89,8 @@ public class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
     return Optional.of(getProjectFilesystem().resolve(headerMapPath));
   }
 
+  @VisibleForTesting
+  static Path getPath(ProjectFilesystem filesystem, BuildTarget target) {
+    return BuildTargets.getGenPath(filesystem, target, "%s.hmap");
+  }
 }

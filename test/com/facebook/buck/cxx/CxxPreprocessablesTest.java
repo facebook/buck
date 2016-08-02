@@ -248,7 +248,7 @@ public class CxxPreprocessablesTest {
         target,
         params,
         root,
-        Optional.<Path>absent(),
+        /* useHeaderMap */ false,
         links);
 
     // Verify that the symlink tree has no deps.  This is by design, since setting symlinks can
