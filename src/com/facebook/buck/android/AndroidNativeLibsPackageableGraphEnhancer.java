@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class AndroidNativeLibsPackageableGraphEnhancer {
 
@@ -55,6 +56,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   private final SourcePathResolver pathResolver;
   private final ImmutableSet<NdkCxxPlatforms.TargetCpuType> cpuFilters;
   private final CxxBuckConfig cxxBuckConfig;
+  private final Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap;
   private final RelinkerMode relinkerMode;
 
   /**
@@ -69,6 +71,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ImmutableSet<NdkCxxPlatforms.TargetCpuType> cpuFilters,
       CxxBuckConfig cxxBuckConfig,
+      Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap,
       RelinkerMode relinkerMode) {
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.pathResolver = new SourcePathResolver(ruleResolver);
@@ -77,6 +80,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     this.nativePlatforms = nativePlatforms;
     this.cpuFilters = cpuFilters;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.nativeLibraryMergeMap = nativeLibraryMergeMap;
     this.relinkerMode = relinkerMode;
   }
 
@@ -108,6 +112,24 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
   public Optional<CopyNativeLibraries> getCopyNativeLibraries(
       AndroidPackageableCollection packageableCollection) throws NoSuchBuildTargetException {
+    ImmutableList<NativeLinkable> nativeLinkables =
+        packageableCollection.getNativeLinkables();
+    ImmutableList<NativeLinkable> nativeLinkablesAssets =
+        packageableCollection.getNativeLinkablesAssets();
+
+    if (nativeLibraryMergeMap.isPresent()) {
+      NativeLibraryMergeEnhancementResult enhancement = NativeLibraryMergeEnhancer.enhance(
+          cxxBuckConfig,
+          ruleResolver,
+          pathResolver,
+          buildRuleParams,
+          nativeLibraryMergeMap.get(),
+          nativeLinkables,
+          nativeLinkablesAssets);
+      nativeLinkables = enhancement.getMergedLinkables();
+      nativeLinkablesAssets = enhancement.getMergedLinkablesAssets();
+    }
+
     // Iterate over all the {@link AndroidNativeLinkable}s from the collector and grab the shared
     // libraries for all the {@link TargetCpuType}s that we care about.  We deposit them into a map
     // of CPU type and SONAME to the shared library path, which the {@link CopyNativeLibraries}
@@ -130,12 +152,12 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
       // Populate nativeLinkableLibs and nativeLinkableLibsAssets with the appropriate entries.
       boolean hasNativeLibs = populateMapWithLinkables(
-          packageableCollection.getNativeLinkables(),
+          nativeLinkables,
           nativeLinkableLibsBuilder,
           targetCpuType,
           platform);
       boolean hasNativeLibsAssets = populateMapWithLinkables(
-          packageableCollection.getNativeLinkablesAssets(),
+          nativeLinkablesAssets,
           nativeLinkableLibsAssetsBuilder,
           targetCpuType,
           platform);

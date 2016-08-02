@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -28,13 +27,14 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Function;
@@ -49,7 +49,10 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
@@ -76,6 +79,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             ImmutableMap.<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform>of(),
             ImmutableSet.<NdkCxxPlatforms.TargetCpuType>of(),
             CxxPlatformUtils.DEFAULT_CONFIG,
+            /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
             AndroidBinary.RelinkerMode.DISABLED
         );
 
@@ -151,6 +155,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             nativePlatforms,
             ImmutableSet.of(NdkCxxPlatforms.TargetCpuType.ARMV7),
             CxxPlatformUtils.DEFAULT_CONFIG,
+            /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
             AndroidBinary.RelinkerMode.DISABLED
         );
 

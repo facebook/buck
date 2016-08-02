@@ -31,10 +31,9 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
-import com.facebook.buck.jvm.java.JavaLibrary;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.jvm.core.HasJavaClassHashes;
+import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
@@ -47,6 +46,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -75,7 +75,10 @@ import org.junit.Test;
 
 import java.nio.file.Paths;
 import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class AndroidBinaryGraphEnhancerTest {
 
@@ -146,6 +149,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* trimResourceIds */ false,
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
+        /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
         AndroidBinary.RelinkerMode.DISABLED,
         MoreExecutors.newDirectExecutorService(),
         /* manifestEntries */ ManifestEntries.empty(),
@@ -296,6 +300,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* trimResourceIds */ false,
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
+        /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
         AndroidBinary.RelinkerMode.DISABLED,
         MoreExecutors.newDirectExecutorService(),
         /* manifestEntries */ ManifestEntries.empty(),
@@ -436,6 +441,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* trimResourceIds */ false,
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
+        /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
         AndroidBinary.RelinkerMode.DISABLED,
         MoreExecutors.newDirectExecutorService(),
         /* manifestEntries */ ManifestEntries.empty(),
@@ -492,6 +498,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* trimResourceIds */ false,
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
+        /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
         AndroidBinary.RelinkerMode.DISABLED,
         MoreExecutors.newDirectExecutorService(),
         /* manifestEntries */ ManifestEntries.empty(),
@@ -575,6 +582,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* trimResourceIds */ false,
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
+        /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
         AndroidBinary.RelinkerMode.DISABLED,
         MoreExecutors.newDirectExecutorService(),
         /* manifestEntries */ ManifestEntries.empty(),

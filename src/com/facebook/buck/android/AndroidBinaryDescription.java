@@ -68,6 +68,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -227,6 +228,7 @@ public class AndroidBinaryDescription
         Optional.<Integer>absent(),
         args.trimResourceIds.or(false),
         nativePlatforms,
+        args.nativeLibraryMergeMap,
         args.enableRelinker.or(false) ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
         dxExecutorService,
         args.manifestEntries.get(),
@@ -400,6 +402,7 @@ public class AndroidBinaryDescription
     public Optional<Integer> xzCompressionLevel;
     public Optional<Boolean> packageAssetLibraries;
     public Optional<Boolean> compressAssetLibraries;
+    public Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap;
     public Optional<Boolean> enableRelinker;
     public Optional<ManifestEntries> manifestEntries;
 

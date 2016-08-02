@@ -62,6 +62,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -138,6 +139,7 @@ public class AndroidBinaryGraphEnhancer {
       Optional<Integer> xzCompressionLevel,
       boolean trimResourceIds,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
+      Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap,
       RelinkerMode relinkerMode,
       ListeningExecutorService dxExecutorService,
       ManifestEntries manifestEntries,
@@ -178,6 +180,7 @@ public class AndroidBinaryGraphEnhancer {
             nativePlatforms,
             cpuFilters,
             cxxBuckConfig,
+            nativeLibraryMergeMap,
             relinkerMode);
     this.apkModuleGraph = apkModuleGraph;
   }

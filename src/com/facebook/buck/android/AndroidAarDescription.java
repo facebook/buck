@@ -44,7 +44,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Description for a {@link BuildRule} that generates an {@code .aar} file.
@@ -204,6 +207,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
             nativePlatforms,
             ImmutableSet.<NdkCxxPlatforms.TargetCpuType>of(),
             cxxBuckConfig,
+            /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
             AndroidBinary.RelinkerMode.DISABLED);
     Optional<CopyNativeLibraries> nativeLibrariesOptional =
         packageableGraphEnhancer.getCopyNativeLibraries(packageableCollection);
