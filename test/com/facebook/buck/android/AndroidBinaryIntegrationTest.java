@@ -37,6 +37,7 @@ import com.facebook.buck.rules.DefaultOnDiskBuildInfo;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -338,7 +339,7 @@ public class AndroidBinaryIntegrationTest {
     zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_bar.so");
   }
 
-  private Path unzip(Path tmpDir, Path zipPath, String name) throws IOException {
+  private static Path unzip(Path tmpDir, Path zipPath, String name) throws IOException {
     Path outPath = tmpDir.resolve(zipPath.getFileName());
     try (ZipFile zipFile = new ZipFile(zipPath.toFile())) {
       Files.copy(
@@ -352,63 +353,41 @@ public class AndroidBinaryIntegrationTest {
   @Test
   public void testNativeRelinker() throws IOException, InterruptedException {
     NdkCxxPlatform platform = getNdkCxxPlatform();
-
     SourcePathResolver pathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
+    Path tmpDir = tmpFolder.newFolder("xdso");
+    SymbolGetter syms = new SymbolGetter(tmpDir, platform.getObjdump(), pathResolver);
+    Symbols sym;
 
     Path apkPath = workspace.buildAndReturnOutput("//apps/sample:app_xdso_dce");
 
-    ZipInspector zipInspector = new ZipInspector(apkPath);
-    zipInspector.assertFileExists("lib/x86/libnative_xdsodce_top.so");
-    zipInspector.assertFileExists("lib/x86/libnative_xdsodce_mid.so");
-    zipInspector.assertFileExists("lib/x86/libnative_xdsodce_bot.so");
-
-    Path tmpDir = tmpFolder.newFolder("xdso");
-    Path lib = unzip(
-        tmpDir, apkPath, "lib/x86/libnative_xdsodce_top.so");
-    Symbols sym = Symbols.getSymbols(platform.getObjdump(), pathResolver, lib);
-
+    sym = syms.getSymbols(apkPath, "lib/x86/libnative_xdsodce_top.so");
     assertTrue(sym.global.contains("_Z10JNI_OnLoadii"));
     assertTrue(sym.undefined.contains("_Z10midFromTopi"));
     assertTrue(sym.undefined.contains("_Z10botFromTopi"));
     assertFalse(sym.all.contains("_Z6unusedi"));
 
-    lib = unzip(tmpDir, apkPath, "lib/x86/libnative_xdsodce_mid.so");
-    sym = Symbols.getSymbols(platform.getObjdump(), pathResolver, lib);
-
+    sym = syms.getSymbols(apkPath, "lib/x86/libnative_xdsodce_mid.so");
     assertTrue(sym.global.contains("_Z10midFromTopi"));
     assertTrue(sym.undefined.contains("_Z10botFromMidi"));
     assertFalse(sym.all.contains("_Z6unusedi"));
 
-    lib = unzip(tmpDir, apkPath, "lib/x86/libnative_xdsodce_bot.so");
-    sym = Symbols.getSymbols(platform.getObjdump(), pathResolver, lib);
-
+    sym = syms.getSymbols(apkPath, "lib/x86/libnative_xdsodce_bot.so");
     assertTrue(sym.global.contains("_Z10botFromTopi"));
     assertTrue(sym.global.contains("_Z10botFromMidi"));
     assertFalse(sym.all.contains("_Z6unusedi"));
 
     // Run some verification on the same apk with native_relinker disabled.
     apkPath = workspace.buildAndReturnOutput("//apps/sample:app_no_xdso_dce");
-    zipInspector = new ZipInspector(apkPath);
-    zipInspector.assertFileExists("lib/x86/libnative_xdsodce_top.so");
-    zipInspector.assertFileExists("lib/x86/libnative_xdsodce_mid.so");
-    zipInspector.assertFileExists("lib/x86/libnative_xdsodce_bot.so");
 
-    lib = unzip(
-        tmpDir, apkPath, "lib/x86/libnative_xdsodce_top.so");
-    sym = Symbols.getSymbols(platform.getObjdump(), pathResolver, lib);
-
+    sym = syms.getSymbols(apkPath, "lib/x86/libnative_xdsodce_top.so");
     assertTrue(sym.all.contains("_Z6unusedi"));
 
-    lib = unzip(tmpDir, apkPath, "lib/x86/libnative_xdsodce_mid.so");
-    sym = Symbols.getSymbols(platform.getObjdump(), pathResolver, lib);
-
+    sym = syms.getSymbols(apkPath, "lib/x86/libnative_xdsodce_mid.so");
     assertTrue(sym.all.contains("_Z6unusedi"));
 
-    lib = unzip(tmpDir, apkPath, "lib/x86/libnative_xdsodce_bot.so");
-    sym = Symbols.getSymbols(platform.getObjdump(), pathResolver, lib);
-
+    sym = syms.getSymbols(apkPath, "lib/x86/libnative_xdsodce_bot.so");
     assertTrue(sym.all.contains("_Z6unusedi"));
   }
 
@@ -437,6 +416,24 @@ public class AndroidBinaryIntegrationTest {
         Platform.detect()).values();
     assertFalse(platforms.isEmpty());
     return platforms.iterator().next();
+  }
+
+  private static class SymbolGetter {
+    private final Path tmpDir;
+    private final Tool objdump;
+    private final SourcePathResolver resolver;
+
+    private SymbolGetter(Path tmpDir, Tool objdump, SourcePathResolver resolver) {
+      this.tmpDir = tmpDir;
+      this.objdump = objdump;
+      this.resolver = resolver;
+    }
+
+    Symbols getSymbols(Path apkPath, String libName) throws IOException, InterruptedException {
+      new ZipInspector(apkPath).assertFileExists(libName);
+      Path lib = unzip(tmpDir, apkPath, libName);
+      return Symbols.getSymbols(objdump, resolver, lib);
+    }
   }
 
   @Test
