@@ -60,6 +60,9 @@ public class CxxLinkableEnhancer {
   // Utility class doesn't instantiate.
   private CxxLinkableEnhancer() {}
 
+  /**
+   * @param params base params used to build the rule.  Target and deps will be overridden.
+   */
   public static CxxLink createCxxLinkableBuildRule(
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
@@ -128,6 +131,7 @@ public class CxxLinkableEnhancer {
    * Construct a {@link CxxLink} rule that builds a native linkable from top-level input objects
    * and a dependency tree of {@link NativeLinkable} dependencies.
    *
+   * @param params base params used to build the rule.  Target and deps will be overridden.
    * @param nativeLinkableDeps library dependencies that the linkable links in
    * @param immediateLinkableInput framework and libraries of the linkable itself
    */
