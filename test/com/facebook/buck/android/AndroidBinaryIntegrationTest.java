@@ -351,30 +351,7 @@ public class AndroidBinaryIntegrationTest {
 
   @Test
   public void testNativeRelinker() throws IOException, InterruptedException {
-    // TODO(cjhopman): is this really the simplest way to get the objdump tool?
-    AndroidDirectoryResolver androidResolver = new DefaultAndroidDirectoryResolver(
-        workspace.asCell().getRoot().getFileSystem(),
-        ImmutableMap.copyOf(System.getenv()),
-        Optional.<String>absent(),
-        Optional.<String>absent());
-
-    Optional<Path> ndkPath = androidResolver.getNdkOrAbsent();
-    assertTrue(ndkPath.isPresent());
-
-    ImmutableCollection<NdkCxxPlatform> platforms = NdkCxxPlatforms.getPlatforms(
-        CxxPlatformUtils.DEFAULT_CONFIG,
-        new ProjectFilesystem(ndkPath.get()),
-        NdkCxxPlatformCompiler.builder()
-            .setType(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE)
-            .setVersion(NdkCxxPlatforms.DEFAULT_GCC_VERSION)
-            .setGccVersion(NdkCxxPlatforms.DEFAULT_GCC_VERSION)
-            .build(),
-        NdkCxxPlatforms.DEFAULT_CXX_RUNTIME,
-        NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM,
-        NdkCxxPlatforms.DEFAULT_CPU_ABIS,
-        Platform.detect()).values();
-    assertFalse(platforms.isEmpty());
-    NdkCxxPlatform platform = platforms.iterator().next();
+    NdkCxxPlatform platform = getNdkCxxPlatform();
 
     SourcePathResolver pathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
@@ -435,6 +412,32 @@ public class AndroidBinaryIntegrationTest {
     assertTrue(sym.all.contains("_Z6unusedi"));
   }
 
+  private NdkCxxPlatform getNdkCxxPlatform() throws IOException, InterruptedException {
+    // TODO(cjhopman): is this really the simplest way to get the objdump tool?
+    AndroidDirectoryResolver androidResolver = new DefaultAndroidDirectoryResolver(
+        workspace.asCell().getRoot().getFileSystem(),
+        ImmutableMap.copyOf(System.getenv()),
+        Optional.<String>absent(),
+        Optional.<String>absent());
+
+    Optional<Path> ndkPath = androidResolver.getNdkOrAbsent();
+    assertTrue(ndkPath.isPresent());
+
+    ImmutableCollection<NdkCxxPlatform> platforms = NdkCxxPlatforms.getPlatforms(
+        CxxPlatformUtils.DEFAULT_CONFIG,
+        new ProjectFilesystem(ndkPath.get()),
+        NdkCxxPlatformCompiler.builder()
+            .setType(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE)
+            .setVersion(NdkCxxPlatforms.DEFAULT_GCC_VERSION)
+            .setGccVersion(NdkCxxPlatforms.DEFAULT_GCC_VERSION)
+            .build(),
+        NdkCxxPlatforms.DEFAULT_CXX_RUNTIME,
+        NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM,
+        NdkCxxPlatforms.DEFAULT_CPU_ABIS,
+        Platform.detect()).values();
+    assertFalse(platforms.isEmpty());
+    return platforms.iterator().next();
+  }
 
   @Test
   public void testHeaderOnlyCxxLibrary() throws IOException {
