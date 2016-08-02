@@ -77,7 +77,7 @@ public class CxxPlatformsTest {
           .setSymbolNameTool(new PosixNmSymbolNameTool(new HashedFileTool(Paths.get("borland"))))
           .setAr(new GnuArchiver(new HashedFileTool(Paths.get("borland"))))
           .setRanlib(new HashedFileTool(Paths.get("borland")))
-          .setSharedLibraryExtension(".so")
+          .setSharedLibraryExtension("so")
           .setSharedLibraryVersionedExtensionFormat(".so.%s")
           .setDebugPathSanitizer(CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER)
           .build();
