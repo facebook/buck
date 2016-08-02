@@ -98,6 +98,35 @@ public class Symbols {
     return new Symbols(undefined.build(), global.build(), all.build());
   }
 
+  public static ImmutableSet<String> getDtNeeded(
+      Tool objdump,
+      SourcePathResolver resolver,
+      Path lib) throws IOException, InterruptedException {
+    final ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+
+    final Pattern re = Pattern.compile("^ *NEEDED *(\\S*)$");
+
+    runObjdump(objdump, resolver, lib, ImmutableList.of("-p"),
+        new LineProcessor<Void>() {
+          @Override
+          public boolean processLine(String line) throws IOException {
+            Matcher m = re.matcher(line);
+            if (!m.matches()) {
+              return true;
+            }
+            builder.add(m.group(1));
+            return true;
+          }
+
+          @Override
+          public Void getResult() {
+            return null;
+          }
+        });
+
+    return builder.build();
+  }
+
   private static void runObjdump(
       Tool objdump,
       SourcePathResolver resolver,

@@ -1,0 +1,76 @@
+# Before merging:
+#
+#    A
+#   / \
+#  B   C
+#   \ /
+#    D
+#   / \
+#  E   F
+#
+#
+# After merging:
+#    1(AB)
+#    |\
+#    | C
+#    |/
+#    D
+#    |
+#    2(EF)
+#
+
+cxx_library(
+  name = 'A',
+  srcs = ['A.c'],
+  soname = 'lib1a.so',
+  can_be_asset = True,
+  deps = [
+    ':B',
+    ':C',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+cxx_library(
+  name = 'B',
+  srcs = ['B.c'],
+  soname = 'lib1b.so',
+  can_be_asset = True,
+  deps = [
+    ':D',
+  ],
+)
+
+cxx_library(
+  name = 'C',
+  srcs = ['C.c'],
+  deps = [
+    ':D',
+  ],
+)
+
+cxx_library(
+  name = 'D',
+  srcs = ['D.c'],
+  deps = [
+    ':E',
+    ':F',
+  ],
+)
+
+cxx_library(
+  name = 'E',
+  srcs = ['E.c'],
+  soname = 'lib2e.so',
+  deps = [
+  ],
+)
+
+cxx_library(
+  name = 'F',
+  srcs = ['F.c'],
+  soname = 'lib2f.so',
+  deps = [
+  ],
+)
+

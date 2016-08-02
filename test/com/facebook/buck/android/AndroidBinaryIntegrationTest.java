@@ -351,6 +351,26 @@ public class AndroidBinaryIntegrationTest {
   }
 
   @Test
+  public void testNativeLibraryMerging() throws IOException, InterruptedException {
+    NdkCxxPlatform platform = getNdkCxxPlatform();
+    SourcePathResolver pathResolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
+    Path tmpDir = tmpFolder.newFolder("merging_tmp");
+    SymbolGetter syms = new SymbolGetter(tmpDir, platform.getObjdump(), pathResolver);
+    SymbolsAndDtNeeded info;
+
+    Path apkPath = workspace.buildAndReturnOutput("//apps/sample:app_with_merged_libs");
+
+    info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/libnative_merge_C.so");
+    assertThat(info.symbols.global, Matchers.hasItem("C"));
+    assertThat(info.dtNeeded, Matchers.hasItem("libnative_merge_D.so"));
+
+    info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/libnative_merge_D.so");
+    assertThat(info.symbols.global, Matchers.hasItem("D"));
+  }
+
+  @Test
   public void testNativeRelinker() throws IOException, InterruptedException {
     NdkCxxPlatform platform = getNdkCxxPlatform();
     SourcePathResolver pathResolver = new SourcePathResolver(
@@ -429,10 +449,32 @@ public class AndroidBinaryIntegrationTest {
       this.resolver = resolver;
     }
 
-    Symbols getSymbols(Path apkPath, String libName) throws IOException, InterruptedException {
+    private Path unpack(Path apkPath, String libName) throws IOException {
       new ZipInspector(apkPath).assertFileExists(libName);
-      Path lib = unzip(tmpDir, apkPath, libName);
+      return unzip(tmpDir, apkPath, libName);
+    }
+
+    Symbols getSymbols(Path apkPath, String libName) throws IOException, InterruptedException {
+      Path lib = unpack(apkPath, libName);
       return Symbols.getSymbols(objdump, resolver, lib);
+    }
+
+    SymbolsAndDtNeeded getSymbolsAndDtNeeded(Path apkPath, String libName)
+        throws IOException, InterruptedException {
+      Path lib = unpack(apkPath, libName);
+      Symbols symbols = Symbols.getSymbols(objdump, resolver, lib);
+      ImmutableSet<String> dtNeeded = Symbols.getDtNeeded(objdump, resolver, lib);
+      return new SymbolsAndDtNeeded(symbols, dtNeeded);
+    }
+  }
+
+  private static class SymbolsAndDtNeeded {
+    final Symbols symbols;
+    final ImmutableSet<String> dtNeeded;
+
+    private SymbolsAndDtNeeded(Symbols symbols, ImmutableSet<String> dtNeeded) {
+      this.symbols = symbols;
+      this.dtNeeded = dtNeeded;
     }
   }
 
