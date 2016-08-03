@@ -190,15 +190,25 @@ public class ProjectFilesystem {
         ProjectFilesystemDelegateFactory.newInstance(root));
   }
 
+  /**
+   * For testing purposes, subclasses might want to skip some of the verification done by the
+   * constructor on its arguments.
+   */
+  protected boolean shouldVerifyConstructorArguments() {
+    return true;
+  }
+
   private ProjectFilesystem(
       FileSystem vfs,
       final Path root,
       ImmutableSet<PathOrGlobMatcher> blackListedPaths,
       BuckPaths buckPaths,
       ProjectFilesystemDelegate delegate) {
-    Preconditions.checkArgument(Files.isDirectory(root));
-    Preconditions.checkState(vfs.equals(root.getFileSystem()));
-    Preconditions.checkArgument(root.isAbsolute());
+    if (shouldVerifyConstructorArguments()) {
+      Preconditions.checkArgument(Files.isDirectory(root), "%s must be a directory", root);
+      Preconditions.checkState(vfs.equals(root.getFileSystem()));
+      Preconditions.checkArgument(root.isAbsolute());
+    }
     this.projectRoot = MorePaths.normalize(root);
     this.delegate = delegate;
     this.pathAbsolutifier = new Function<Path, Path>() {
@@ -350,7 +360,7 @@ public class ProjectFilesystem {
     return builder.build();
   }
 
-  public Path getRootPath() {
+  public final Path getRootPath() {
     return projectRoot;
   }
 

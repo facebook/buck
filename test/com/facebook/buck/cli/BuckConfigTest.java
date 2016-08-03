@@ -394,12 +394,8 @@ public class BuckConfigTest {
   }
 
   private BuckConfig createFromText(String... lines) throws IOException {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem() {
-      @Override
-      public Path getRootPath() {
-        return MorePathsForTests.rootRelativePath("project/root");
-      }
-    };
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
+        MorePathsForTests.rootRelativePath("project/root"));
     StringReader reader = new StringReader(Joiner.on('\n').join(lines));
     return BuckConfigTestUtils.createFromReader(
         reader,

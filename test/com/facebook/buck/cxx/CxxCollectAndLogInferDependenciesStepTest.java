@@ -59,21 +59,10 @@ import java.nio.file.Paths;
 
 public class CxxCollectAndLogInferDependenciesStepTest {
 
-  public static ProjectFilesystem createFakeFilesystem(String fakeRoot) {
+  private static ProjectFilesystem createFakeFilesystem(String fakeRoot) {
     final Path fakeRootPath = Paths.get(fakeRoot);
     Preconditions.checkArgument(fakeRootPath.isAbsolute(), "fakeRoot must be an absolute path");
-
-    return new FakeProjectFilesystem() {
-      @Override
-      public Path getRootPath() {
-        return fakeRootPath;
-      }
-
-      @Override
-      public Path resolve(Path relativePath) {
-        return fakeRootPath.resolve(relativePath);
-      }
-    };
+    return new FakeProjectFilesystem(fakeRootPath);
   }
 
   private CxxInferCapture createCaptureRule(

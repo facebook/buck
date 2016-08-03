@@ -24,15 +24,6 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.rules.ActionGraphCache;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
-
-import org.junit.Rule;
-import org.junit.Test;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -40,11 +31,14 @@ import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.ObjectMappers;
@@ -56,8 +50,11 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import org.easymock.EasyMock;
+import org.junit.Rule;
+import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -102,15 +99,8 @@ public class ReplCommandIntegrationTest {
 
   private CommandRunnerParams createCommandRunnerParams(TestConsole console, InputStream stdin)
       throws IOException, InterruptedException {
-    ProjectFilesystem projectFilesystem;
-    projectFilesystem = createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.getRootPath()).andStubReturn(Paths.get("/opt/foo"));
-
-    EasyMock.replay(projectFilesystem);
-
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(Paths.get("/opt/foo"));
     Cell cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
-
-    EasyMock.reset(projectFilesystem);
 
     Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
         AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;

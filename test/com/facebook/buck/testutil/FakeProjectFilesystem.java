@@ -232,10 +232,9 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   public FakeProjectFilesystem() {
-    this(new FakeClock(0), DEFAULT_ROOT, ImmutableSet.<Path>of());
+    this(DEFAULT_ROOT);
   }
 
-  // We accept a File here since that's what's returned by TemporaryFolder.
   public FakeProjectFilesystem(Path root) {
     this(new FakeClock(0), root, ImmutableSet.<Path>of());
   }
@@ -282,6 +281,11 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
 
     // Generally, tests don't care whether files exist.
     ignoreValidityOfPaths = true;
+  }
+
+  @Override
+  protected boolean shouldVerifyConstructorArguments() {
+    return false;
   }
 
   public FakeProjectFilesystem setIgnoreValidityOfPaths(boolean shouldIgnore) {

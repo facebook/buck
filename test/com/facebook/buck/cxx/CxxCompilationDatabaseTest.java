@@ -71,17 +71,7 @@ public class CxxCompilationDatabaseTest {
 
     final String root = "/Users/user/src";
     final Path fakeRoot = Paths.get(root);
-    ProjectFilesystem filesystem = new FakeProjectFilesystem() {
-      @Override
-      public Path getRootPath() {
-        return fakeRoot;
-      }
-
-      @Override
-      public Path resolve(Path relativePath) {
-        return fakeRoot.resolve(relativePath);
-      }
-    };
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(fakeRoot);
 
     BuildRuleParams testBuildRuleParams = new FakeBuildRuleParamsBuilder(testBuildTarget)
         .setProjectFilesystem(filesystem)
