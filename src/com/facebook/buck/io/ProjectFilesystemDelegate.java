@@ -16,9 +16,13 @@
 
 package com.facebook.buck.io;
 
+import java.nio.file.Path;
+
 /**
  * Delegate that a {@link ProjectFilesystem} can use to leverage a specialized implementation of
  * certain filesystem operations, tailored to the underlying filesystem. Use of the delegate is
  * often motivated by performance reasons.
  */
-public interface ProjectFilesystemDelegate {}
+public interface ProjectFilesystemDelegate {
+  Path getPathForRelativePath(Path pathRelativeToProjectRoot);
+}

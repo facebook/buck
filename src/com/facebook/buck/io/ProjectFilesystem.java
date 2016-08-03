@@ -140,7 +140,6 @@ public class ProjectFilesystem {
    */
   private final Supplier<Path> tmpDir;
 
-  @SuppressWarnings("unused")
   private final ProjectFilesystemDelegate delegate;
 
   // Defaults to false, and so paths should be valid.
@@ -404,13 +403,7 @@ public class ProjectFilesystem {
   }
 
   public Path getPathForRelativePath(Path pathRelativeToProjectRoot) {
-    // We often create {@link Path} instances using
-    // {@link java.nio.file.Paths#get(String, String...)}, but there's no guarantee that the
-    // underlying {@link FileSystem} is the default one.
-    if (pathRelativeToProjectRoot.getFileSystem().equals(getRootPath().getFileSystem())) {
-      return getRootPath().resolve(pathRelativeToProjectRoot);
-    }
-    return getRootPath().resolve(pathRelativeToProjectRoot.toString());
+    return delegate.getPathForRelativePath(pathRelativeToProjectRoot);
   }
 
   public Path getPathForRelativePath(String pathRelativeToProjectRoot) {

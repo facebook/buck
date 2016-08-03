@@ -24,10 +24,20 @@ import java.nio.file.Path;
  */
 public final class DefaultProjectFilesystemDelegate implements ProjectFilesystemDelegate {
 
-  @SuppressWarnings("unused")
   private final Path root;
 
   public DefaultProjectFilesystemDelegate(Path root) {
     this.root = root;
+  }
+
+  @Override
+  public Path getPathForRelativePath(Path pathRelativeToProjectRoot) {
+    // We often create {@link Path} instances using
+    // {@link java.nio.file.Paths#get(String, String...)}, but there's no guarantee that the
+    // underlying {@link FileSystem} is the default one.
+    if (pathRelativeToProjectRoot.getFileSystem().equals(root.getFileSystem())) {
+      return root.resolve(pathRelativeToProjectRoot);
+    }
+    return root.resolve(pathRelativeToProjectRoot.toString());
   }
 }
