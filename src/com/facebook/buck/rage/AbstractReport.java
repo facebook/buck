@@ -138,7 +138,9 @@ public abstract class AbstractReport {
     ImmutableSet<Path> knownUserLocalConfigs = ImmutableSet.of(
         Paths.get(BuckConfig.BUCK_CONFIG_OVERRIDE_FILE_NAME),
         LogConfigPaths.LOCAL_PATH,
-        Paths.get(".watchman.local"));
+        Paths.get(".watchman.local"),
+        Paths.get(".buckjavaargs.local"),
+        Paths.get(".bucklogging.local.properties"));
     Set<Path> foundUserlocalConfigs = new HashSet<>();
 
     for (Path localConfig : knownUserLocalConfigs) {
