@@ -16,7 +16,7 @@
 
 package com.facebook.buck.httpserver;
 
-import com.facebook.buck.event.BuckEvent;
+import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
@@ -60,7 +60,7 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
     factory.setCreator(wrapperCreator);
   }
 
-  public void tellClients(BuckEvent event) {
+  public void tellClients(BuckEventExternalInterface event) {
     if (connections.isEmpty()) {
       return;
     }

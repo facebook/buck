@@ -22,6 +22,7 @@ import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
+import com.facebook.buck.event.listener.CacheRateStatsKeeper;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
@@ -38,7 +39,7 @@ import com.google.common.eventbus.Subscribe;
 public class WebServerBuckEventListener implements BuckEventListener {
   private final StreamingWebSocketServlet streamingWebSocketServlet;
 
-  WebServerBuckEventListener(WebServer webServer) {
+  WebServerBuckEventListener(final WebServer webServer) {
     this.streamingWebSocketServlet = webServer.getStreamingWebSocketServlet();
   }
 
@@ -58,6 +59,12 @@ public class WebServerBuckEventListener implements BuckEventListener {
   @Subscribe
   public void buildStarted(BuildEvent.Started started) {
     streamingWebSocketServlet.tellClients(started);
+  }
+
+  @Subscribe
+  public void cacheRateStatsUpdate(
+      CacheRateStatsKeeper.CacheRateStatsUpdateEvent cacheRateStatsUpdate) {
+    streamingWebSocketServlet.tellClients(cacheRateStatsUpdate);
   }
 
   @Subscribe

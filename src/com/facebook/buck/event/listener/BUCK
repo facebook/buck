@@ -1,6 +1,16 @@
+CACHE_RATE_STATS_SRCS = [ 'CacheRateStatsKeeper.java' ]
+java_library(
+  name = 'CacheRateStatsKeeper',
+  srcs = CACHE_RATE_STATS_SRCS,
+  autodeps = True,
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
 java_immutables_library(
   name = 'listener',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java'], excludes=CACHE_RATE_STATS_SRCS),
   immutable_types = [
     'EventPair',
     'ProxyBuckEvent',
@@ -11,6 +21,7 @@ java_immutables_library(
   ],
   autodeps = False,
   deps = [
+      ':CacheRateStatsKeeper',
       "//src-gen:thrift",
       "//src/com/facebook/buck/android:steps",
       "//src/com/facebook/buck/artifact_cache:artifact_cache",

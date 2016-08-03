@@ -139,6 +139,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   protected Optional<ProgressEstimator> progressEstimator = Optional.<ProgressEstimator>absent();
 
+  protected final CacheRateStatsKeeper cacheRateStatsKeeper;
+
   protected final NetworkStatsKeeper networkStatsKeeper;
 
   private volatile double distributedBuildProgress = 0;
@@ -176,6 +178,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     this.installStarted = null;
     this.installFinished = null;
 
+    this.cacheRateStatsKeeper = new CacheRateStatsKeeper();
     this.networkStatsKeeper = new NetworkStatsKeeper();
 
     this.accumulatedTimeTracker = new AccumulatedTimeTracker(executionEnvironment);
@@ -543,11 +546,13 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     if (progressEstimator.isPresent()) {
       progressEstimator.get().setNumberOfRules(calculated.getNumRules());
     }
+    cacheRateStatsKeeper.ruleCountCalculated(calculated);
   }
 
   @Subscribe
   public void ruleCountUpdated(BuildEvent.UnskippedRuleCountUpdated updated) {
     ruleCount = Optional.of(updated.getNumRules());
+    cacheRateStatsKeeper.ruleCountUpdated(updated);
   }
 
   @Subscribe
@@ -583,6 +588,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       numRulesCompleted.getAndIncrement();
     }
     accumulatedTimeTracker.didFinishBuildRule(finished);
+    cacheRateStatsKeeper.buildRuleFinished(finished);
   }
 
   @Subscribe

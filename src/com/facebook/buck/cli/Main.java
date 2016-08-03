@@ -37,6 +37,7 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
+import com.facebook.buck.event.listener.CacheRateStatsListener;
 import com.facebook.buck.event.listener.ChromeTraceBuildListener;
 import com.facebook.buck.event.listener.FileSerializationEventBusListener;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
@@ -1576,6 +1577,7 @@ public final class Main {
     }
 
     eventListenersBuilder.add(new LoadBalancerEventsListener(counterRegistry));
+    eventListenersBuilder.add(new CacheRateStatsListener(buckEventBus));
 
     ImmutableList<BuckEventListener> eventListeners = eventListenersBuilder.build();
 

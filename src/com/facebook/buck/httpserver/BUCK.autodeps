@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY af31503984862d1349c86713eb019cdad0116025 #@#
+#@# GENERATED FILE: DO NOT MODIFY 27960b308a0bc625f1dbd2152437eea998debb9e #@#
 {
   "cache_handler" : {
     "deps" : [
@@ -16,6 +16,7 @@
   "httpserver" : {
     "deps" : [
       "//src/com/facebook/buck/cli:events",
+      "//src/com/facebook/buck/event/listener:CacheRateStatsKeeper",
       "//src/com/facebook/buck/httpserver:cache_handler",
       "//src/com/facebook/buck/httpserver:util",
       "//src/com/facebook/buck/log:api",
@@ -28,6 +29,7 @@
     "exported_deps" : [
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
       "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/event/external:external_lib",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:build_id",
       "//third-party/java/closure-templates:closure-templates",
