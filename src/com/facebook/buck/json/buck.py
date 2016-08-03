@@ -767,12 +767,63 @@ class BuildFileProcessor(object):
         if self._build_env_stack:
             self._update_functions(self._build_env_stack[-1])
 
+    def _block_unsafe_function(self, module, name):
+        # Returns a function that ignores any arguments and raises AttributeError.
+        def func(*args, **kwargs):
+            raise AttributeError(
+                'Using function %s is forbidden in the safe version of ' % name +
+                'module %s. If you really need to use this function read about ' % module +
+                'allow_unsafe_import()'
+            )
+
+        return func
+
+    def _install_whitelisted_parts(self, mod, safe_mod, mod_name, whitelist):
+        """
+        Copy whitelisted globals from a module to its safe version.
+        Functions not on the whitelist are blocked to show a more meaningful error.
+        """
+
+        whitelist_set = set(whitelist)
+        for name in mod.__all__:
+            if name in whitelist_set:
+                safe_mod.__dict__[name] = mod.__dict__[name]
+            elif callable(mod.__dict__[name]):
+                safe_mod.__dict__[name] = self._block_unsafe_function(mod_name, name)
+
+    def _safe_os_module(self):
+        """
+        Returns a safe version of the 'os' module.
+        """
+
+        # Build a new module for the safe version of 'os'.
+        safe_os = imp.new_module('os')
+        safe_os.__dict__['path'] = imp.new_module('path')
+
+        # Safe to use parts of 'os'
+        os_whitelist = ['environ', 'getenv']
+
+        # Safe to use functions in 'os.path'
+        os_path_whitelist = ['basename', 'commonprefix', 'dirname', 'isabs', 'join',
+                             'normcase', 'relpath', 'split', 'splitdrive', 'splitext']
+
+        # Install whitelisted parts of 'os' and 'os.path' modules, block the rest to produce errors
+        # informing about the safe version.
+        self._install_whitelisted_parts(os, safe_os, 'os', os_whitelist)
+        self._install_whitelisted_parts(os.path, safe_os.path, 'os.path', os_path_whitelist)
+
+        return safe_os
+
     def _custom_import(self):
         """
         Returns customised '__import__' function that blocks importing modules.
         """
 
         def _import(name, globals=None, locals=None, fromlist=(), level=0):
+            # return safe version of 'os'
+            if name in ['os', 'os.path']:
+                return self._safe_os_module()
+
             raise ImportError(
                 'Importing module %s is forbidden. ' % name +
                 'If you really need to import this module read about ' +
