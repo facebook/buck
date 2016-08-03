@@ -358,7 +358,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
             Path pathToSecondaryDex = entry.getKey();
             String containedClass = Iterables.get(entry.getValue().getClassNames(), 0);
             containedClass = containedClass.replace('/', '.');
-            String hash = getProjectFilesystem().computeSha1(pathToSecondaryDex);
+            Sha1HashCode hash = getProjectFilesystem().computeSha1(pathToSecondaryDex);
             lines.add(String.format("%s %s %s",
                 pathToSecondaryDex.getFileName(), hash, containedClass));
           }

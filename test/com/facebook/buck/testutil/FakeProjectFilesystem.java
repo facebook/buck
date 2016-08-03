@@ -22,6 +22,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -36,6 +37,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
+import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 import com.google.common.jimfs.Configuration;
@@ -684,13 +686,16 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
    * Does not support symlinks.
    */
   @Override
-  public String computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException {
+  public Sha1HashCode computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException {
     if (!exists(pathRelativeToProjectRootOrJustAbsolute)) {
       throw new FileNotFoundException(pathRelativeToProjectRootOrJustAbsolute.toString());
     }
-    return Hashing.sha1()
-        .hashBytes(getFileBytes(pathRelativeToProjectRootOrJustAbsolute))
-        .toString();
+
+    // Because this class is a fake, the file contents may not be available as a stream, so we load
+    // all of the contents into memory as a byte[] and then hash them.
+    byte[] fileContents = getFileBytes(pathRelativeToProjectRootOrJustAbsolute);
+    HashCode hashCode = Hashing.sha1().newHasher().putBytes(fileContents).hash();
+    return Sha1HashCode.fromHashCode(hashCode);
   }
 
   @Override

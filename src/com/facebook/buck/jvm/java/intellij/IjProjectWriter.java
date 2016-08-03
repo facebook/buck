@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.intellij;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.FluentIterable;
 import com.google.common.hash.Hashing;
@@ -154,8 +155,9 @@ public class IjProjectWriter {
     contents.write(noIndentWriter);
     byte[] renderedContentsBytes = noIndentWriter.toString().getBytes(StandardCharsets.UTF_8);
     if (projectFilesystem.exists(path)) {
-      String fileSha1 = projectFilesystem.computeSha1(path);
-      String contentsSha1 = Hashing.sha1().hashBytes(renderedContentsBytes).toString();
+      Sha1HashCode fileSha1 = projectFilesystem.computeSha1(path);
+      Sha1HashCode contentsSha1 = Sha1HashCode.fromHashCode(Hashing.sha1()
+          .hashBytes(renderedContentsBytes));
       if (fileSha1.equals(contentsSha1)) {
         return;
       }

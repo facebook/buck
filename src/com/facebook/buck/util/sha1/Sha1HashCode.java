@@ -18,8 +18,10 @@ package com.facebook.buck.util.sha1;
 
 import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
+import com.google.common.hash.Hasher;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.regex.Pattern;
 
 /**
@@ -33,9 +35,27 @@ public final class Sha1HashCode {
   private static final Pattern SHA1_PATTERN = Pattern.compile(
       String.format("[a-f0-9]{%d}", NUM_BYTES_IN_HEX_REPRESENTATION));
 
-  public final int firstFourBytes;
-  public final long nextEightBytes;
-  public final long lastEightBytes;
+  /**
+   * Because Guava's AbstractStreamingHasher uses a ByteBuffer with ByteOrder.LITTLE_ENDIAN:
+   *
+   * https://github.com/google/guava/blob/v19.0/guava/src/com/google/common/hash/AbstractStreamingHashFunction.java#L121
+   *
+   * and the contract for ByteBuffer#putInt(int) is:
+   *
+   * "Writes four bytes containing the given int value, in the current byte order, into this buffer
+   * at the given index."
+   *
+   * The primitive int and long fields stored by this class must use the same ByteOrder as Guava's
+   * hashing logic to facilitate the implementation of the {@link #update(Hasher)} method.
+   */
+  private static final ByteOrder BYTE_ORDER_FOR_FIELDS = ByteOrder.LITTLE_ENDIAN;
+
+  // Primitive fields are used for storage so the data is stored with this class instead of on the
+  // heap in a byte[].
+
+  final int firstFourBytes;
+  final long nextEightBytes;
+  final long lastEightBytes;
 
   private Sha1HashCode(int firstFourBytes, long nextEightBytes, long lastEightBytes) {
     this.firstFourBytes = firstFourBytes;
@@ -47,10 +67,8 @@ public final class Sha1HashCode {
    * Clones the specified bytes and uses the clone to create a new {@link Sha1HashCode}.
    */
   public static Sha1HashCode fromBytes(byte[] bytes) {
-    // TODO(bolinfest): Direct bit-shifting manipulations might be more efficient to avoid
-    // allocating a ByteBuffer.
     Preconditions.checkArgument(bytes.length == NUM_BYTES_IN_HASH);
-    ByteBuffer buffer = ByteBuffer.wrap(bytes);
+    ByteBuffer buffer = ByteBuffer.wrap(bytes).order(BYTE_ORDER_FOR_FIELDS);
     return new Sha1HashCode(buffer.getInt(), buffer.getLong(), buffer.getLong());
   }
 
@@ -70,12 +88,46 @@ public final class Sha1HashCode {
   }
 
   /**
+   * Updates the specified {@link Hasher} by putting the 20 bytes of this SHA-1 to it in order.
+   * @return The specified {@link Hasher}.
+   */
+  public Hasher update(Hasher hasher) {
+    hasher.putInt(firstFourBytes);
+    hasher.putLong(nextEightBytes);
+    hasher.putLong(lastEightBytes);
+    return hasher;
+  }
+
+  /**
    * @return the hash as a 40-character string from the alphabet [a-f0-9].
    */
   public String getHash() {
-    return String.format("%08x", firstFourBytes) +
-        String.format("%016x", nextEightBytes) +
-        String.format("%016x", lastEightBytes);
+    int firstFour =
+        ((firstFourBytes & 0x000000FF) << 24) |
+        ((firstFourBytes & 0x0000FF00) << 8) |
+        ((firstFourBytes & 0x00FF0000) >>> 8) |
+        ((firstFourBytes & 0xFF000000) >>> 24);
+    long nextEight =
+        ((nextEightBytes & 0x00000000000000FFL) << 56) |
+        ((nextEightBytes & 0x000000000000FF00L) << 40) |
+        ((nextEightBytes & 0x0000000000FF0000L) << 24) |
+        ((nextEightBytes & 0x00000000FF000000L) << 8) |
+        ((nextEightBytes & 0x000000FF00000000L) >>> 8) |
+        ((nextEightBytes & 0x0000FF0000000000L) >>> 24) |
+        ((nextEightBytes & 0x00FF000000000000L) >>> 40) |
+        ((nextEightBytes & 0xFF00000000000000L) >>> 56);
+    long lastEight =
+        ((lastEightBytes & 0x00000000000000FFL) << 56) |
+        ((lastEightBytes & 0x000000000000FF00L) << 40) |
+        ((lastEightBytes & 0x0000000000FF0000L) << 24) |
+        ((lastEightBytes & 0x00000000FF000000L) << 8) |
+        ((lastEightBytes & 0x000000FF00000000L) >>> 8) |
+        ((lastEightBytes & 0x0000FF0000000000L) >>> 24) |
+        ((lastEightBytes & 0x00FF000000000000L) >>> 40) |
+        ((lastEightBytes & 0xFF00000000000000L) >>> 56);
+    return String.format("%08x", firstFour) +
+        String.format("%016x", nextEight) +
+        String.format("%016x", lastEight);
   }
 
   /** Same as {@link #getHash()}. */

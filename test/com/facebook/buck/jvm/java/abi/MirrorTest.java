@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
@@ -656,7 +657,7 @@ public class MirrorTest {
             )));
 
     new StubJar(jar).writeTo(filesystem, stubJar);
-    String originalHash = filesystem.computeSha1(stubJar);
+    Sha1HashCode originalHash = filesystem.computeSha1(stubJar);
 
     Path jar2 = compileToJar(
         EMPTY_CLASSPATH,
@@ -673,7 +674,7 @@ public class MirrorTest {
             )));
     filesystem.deleteFileAtPath(stubJar);
     new StubJar(jar2).writeTo(filesystem, stubJar);
-    String secondHash = filesystem.computeSha1(stubJar);
+    Sha1HashCode secondHash = filesystem.computeSha1(stubJar);
 
     assertEquals(originalHash, secondHash);
   }

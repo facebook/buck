@@ -49,17 +49,16 @@ public class CalculateAbiStep implements Step {
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) {
-    String fileSha1;
+    Sha1HashCode abiKey;
     try {
       Path out = getPathToHash(context, buildableContext);
 
-      fileSha1 = filesystem.computeSha1(out);
+      abiKey = filesystem.computeSha1(out);
     } catch (IOException e) {
       context.logError(e, "Failed to calculate ABI for %s.", binaryJar);
       return StepExecutionResult.ERROR;
     }
 
-    Sha1HashCode abiKey = Sha1HashCode.of(fileSha1);
     buildableContext.addMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, abiKey.getHash());
 
     return StepExecutionResult.SUCCESS;

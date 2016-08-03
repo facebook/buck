@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY c4623023da070f4c14470387caa09fb168874c0e #@#
+#@# GENERATED FILE: DO NOT MODIFY ce96d6bdc9153c9720bd5c3706acb715791d573f #@#
 {
   "testutil" : {
     "deps" : [
@@ -19,6 +19,7 @@
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/environment:environment",
+      "//src/com/facebook/buck/util/sha1:sha1",
       "//src/com/facebook/buck/zip:stream",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",

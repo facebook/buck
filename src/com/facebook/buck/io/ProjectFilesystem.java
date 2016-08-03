@@ -19,6 +19,7 @@ package com.facebook.buck.io;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
@@ -958,9 +959,8 @@ public class ProjectFilesystem {
     return Files.newInputStream(file);
   }
 
-  // TODO(bolinfest): Change the return type of this method to be Sha1HashCode.
-  public String computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException {
-    return delegate.computeSha1(pathRelativeToProjectRootOrJustAbsolute).toString();
+  public Sha1HashCode computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException {
+    return delegate.computeSha1(pathRelativeToProjectRootOrJustAbsolute);
   }
 
   public String computeSha256(Path pathRelativeToProjectRoot) throws IOException {

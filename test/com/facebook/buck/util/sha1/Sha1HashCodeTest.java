@@ -18,8 +18,12 @@ package com.facebook.buck.util.sha1;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 
 import com.google.common.base.Strings;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 
 import org.junit.Test;
 
@@ -45,6 +49,41 @@ public class Sha1HashCodeTest {
   @Test(expected = IllegalArgumentException.class)
   public void testConstructorParamMustMatchCharSet() {
     Sha1HashCode.of(Strings.repeat("A", 40));
+  }
+
+  @Test
+  public void testUpdate() {
+    Hasher hasher1 = Hashing.sha1().newHasher();
+    Sha1HashCode sha1 = Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c");
+    Hasher hasher2 = sha1.update(hasher1);
+    assertSame(hasher1, hasher2);
+
+    HashCode expectedHash = Hashing.sha1().newHasher()
+        .putBytes(new byte[] {
+            (byte) 0xa0,
+            (byte) 0x02,
+            (byte) 0xb3,
+            (byte) 0x9a,
+            (byte) 0xf2,
+            (byte) 0x04,
+            (byte) 0xcd,
+            (byte) 0xfa,
+            (byte) 0xa5,
+            (byte) 0xfd,
+            (byte) 0xb6,
+            (byte) 0x78,
+            (byte) 0x16,
+            (byte) 0xb1,
+            (byte) 0x38,
+            (byte) 0x67,
+            (byte) 0xc3,
+            (byte) 0x2a,
+            (byte) 0xc5,
+            (byte) 0x2c,
+        })
+        .hash();
+    HashCode observedHash = hasher1.hash();
+    assertEquals(expectedHash, observedHash);
   }
 
   @Test
@@ -88,13 +127,22 @@ public class Sha1HashCodeTest {
       (byte) 0x0c,
     };
     Sha1HashCode hashCodeFromRawBytes = Sha1HashCode.fromBytes(bytes);
-    assertEquals(0xfaceb00c, hashCodeFromRawBytes.firstFourBytes);
-    assertEquals(0xfaceb00cfaceb00cL, hashCodeFromRawBytes.nextEightBytes);
-    assertEquals(0xfaceb00cfaceb00cL, hashCodeFromRawBytes.lastEightBytes);
+    assertEquals(
+        "firstFourBytes should be in reverse order. See Sha1HashCode.BYTE_ORDER_FOR_FIELDS.",
+        0x0cb0cefa,
+        hashCodeFromRawBytes.firstFourBytes);
+    assertEquals(
+        "nextEightBytes should be in reverse order. See Sha1HashCode.BYTE_ORDER_FOR_FIELDS.",
+        0x0cb0cefa0cb0cefaL,
+        hashCodeFromRawBytes.nextEightBytes);
+    assertEquals(
+        "lastEightBytes should be in reverse order. See Sha1HashCode.BYTE_ORDER_FOR_FIELDS.",
+        0x0cb0cefa0cb0cefaL,
+        hashCodeFromRawBytes.lastEightBytes);
 
     Sha1HashCode hashCodeFromString = Sha1HashCode.of(Strings.repeat("faceb00c", 5));
     assertEquals(hashCodeFromString, hashCodeFromRawBytes);
-    assertEquals(0xfaceb00c, hashCodeFromRawBytes.hashCode());
+    assertEquals(0x0cb0cefa, hashCodeFromRawBytes.hashCode());
   }
 
   @Test(expected = IllegalArgumentException.class)

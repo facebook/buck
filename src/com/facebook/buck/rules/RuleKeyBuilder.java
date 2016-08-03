@@ -101,9 +101,7 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
       hasher.putByte(SEPARATOR);
     }
 
-    hasher.putInt(sha1.firstFourBytes);
-    hasher.putLong(sha1.nextEightBytes);
-    hasher.putLong(sha1.lastEightBytes);
+    sha1.update(hasher);
     hasher.putByte(SEPARATOR);
     return this;
   }

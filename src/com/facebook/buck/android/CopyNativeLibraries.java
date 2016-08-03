@@ -38,6 +38,7 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -193,9 +194,9 @@ public class CopyNativeLibraries extends AbstractBuildRule {
             ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
             try {
               for (Path nativeLib : filesystem.getFilesUnderPath(getPathToAllLibsDir())) {
-                String filesha1 = filesystem.computeSha1(nativeLib);
+                Sha1HashCode filesha1 = filesystem.computeSha1(nativeLib);
                 Path relativePath = getPathToAllLibsDir().relativize(nativeLib);
-                metadataLines.add(String.format("%s %s", relativePath.toString(), filesha1));
+                metadataLines.add(String.format("%s %s", relativePath, filesha1));
               }
               filesystem.writeLinesToPath(metadataLines.build(), pathToMetadataTxt);
             } catch (IOException e) {

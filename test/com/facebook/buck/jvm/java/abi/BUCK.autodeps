@@ -1,9 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY e122b5a44aff3880e1c27a31b1f6d20d5b358d5b #@#
+#@# GENERATED FILE: DO NOT MODIFY 70cf8531576e28c9b76175707e27a2b807fd75a6 #@#
 {
   "abi" : {
     "deps" : [
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/java/abi:abi",
+      "//src/com/facebook/buck/util/sha1:sha1",
       "//src/com/facebook/buck/zip:unzip",
       "//test/com/facebook/buck/jvm/java/abi:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",

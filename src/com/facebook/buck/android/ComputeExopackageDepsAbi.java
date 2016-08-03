@@ -242,8 +242,8 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
 
     hasher.putUnencodedChars(relativePath.toString());
     hasher.putByte((byte) 0);
-    String fileSha1 = getProjectFilesystem().computeSha1(absolutePath);
-    hasher.putUnencodedChars(fileSha1);
+    Sha1HashCode fileSha1 = getProjectFilesystem().computeSha1(absolutePath);
+    fileSha1.update(hasher);
     hasher.putByte((byte) 0);
     hasher.putUnencodedChars(role);
     hasher.putByte((byte) 0);
