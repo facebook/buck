@@ -58,6 +58,9 @@ class TrimUberRDotJava extends AbstractBuildRule {
   private static final Pattern R_DOT_JAVA_LINE_PATTERN = Pattern.compile(
       "^ *public static final int(?:\\[\\])? (\\w+)=");
 
+  private static final Pattern R_DOT_JAVA_PACKAGE_NAME_PATTERN = Pattern.compile(
+      "^ *package ([\\w.]+);");
+
   TrimUberRDotJava(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
@@ -176,12 +179,22 @@ class TrimUberRDotJava extends AbstractBuildRule {
       OutputStream output,
       ImmutableSet<String> allReferencedResources)
       throws IOException {
+    String packageName = null;
+    Matcher m;
     for (String line : rDotJavaLines) {
-      Matcher m = R_DOT_JAVA_LINE_PATTERN.matcher(line);
-      // We ignore the containing nested class and just match on the resource name.
+      if (packageName == null) {
+        m = R_DOT_JAVA_PACKAGE_NAME_PATTERN.matcher(line);
+        if (m.find()) {
+          packageName = m.group(1);
+        } else {
+          continue;
+        }
+      }
+      m = R_DOT_JAVA_LINE_PATTERN.matcher(line);
+      // We match on the package name + resource name.
       // This can cause us to keep (for example) R.layout.foo when only R.string.foo
       // is referenced.  That is a very rare case, though, and not worth the complexity to fix.
-      if (m.find() && !allReferencedResources.contains(m.group(1))) {
+      if (m.find() && !allReferencedResources.contains(packageName + "." + m.group(1))) {
         continue;
       }
       output.write(line.getBytes(Charsets.UTF_8));
