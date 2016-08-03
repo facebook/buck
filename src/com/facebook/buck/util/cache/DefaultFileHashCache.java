@@ -32,11 +32,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import com.google.common.io.ByteSource;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
@@ -103,19 +100,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     return HashCodeAndFileType.ofFile(getFileHashCode(path));
   }
 
-  private HashCode getFileHashCode(final Path path) throws IOException {
-    ByteSource source =
-        new ByteSource() {
-          @Override
-          public InputStream openStream() throws IOException {
-            if (!path.isAbsolute()) {
-              return projectFilesystem.newFileInputStream(path);
-            } else {
-              return Files.newInputStream(path);
-            }
-          }
-        };
-    return source.hash(Hashing.sha1());
+  private HashCode getFileHashCode(Path path) throws IOException {
+    return projectFilesystem.computeSha1(path).asHashCode();
   }
 
   private long getPathSize(Path path) throws IOException {

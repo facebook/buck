@@ -87,6 +87,13 @@ public class Sha1HashCodeTest {
   }
 
   @Test
+  public void testAsHashCode() {
+    Sha1HashCode sha1HashCode = Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c");
+    HashCode hashCode = sha1HashCode.asHashCode();
+    assertEquals(sha1HashCode.toString(), hashCode.toString());
+  }
+
+  @Test
   public void testSha1HashCodeSatisfiesEqualsContract() {
     Sha1HashCode hash = Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c");
     assertFalse(hash.equals(null));

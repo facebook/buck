@@ -99,6 +99,17 @@ public final class Sha1HashCode {
   }
 
   /**
+   * <strong>This method should be used sparingly as we are trying to favor {@link Sha1HashCode}
+   * over {@link HashCode}, where appropriate.</strong> Currently, the {@code FileHashCache} API is
+   * written in terms of {@code HashCode}, so conversions are common. As we migrate it to use
+   * {@link Sha1HashCode}, this method should become unnecessary.
+   * @return a {@link HashCode} with an equivalent value
+   */
+  public HashCode asHashCode() {
+    return HashCode.fromString(getHash());
+  }
+
+  /**
    * @return the hash as a 40-character string from the alphabet [a-f0-9].
    */
   public String getHash() {

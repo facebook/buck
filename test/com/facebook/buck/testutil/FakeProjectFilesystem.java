@@ -688,7 +688,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   @Override
   public Sha1HashCode computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException {
     if (!exists(pathRelativeToProjectRootOrJustAbsolute)) {
-      throw new FileNotFoundException(pathRelativeToProjectRootOrJustAbsolute.toString());
+      throw new NoSuchFileException(pathRelativeToProjectRootOrJustAbsolute.toString());
     }
 
     // Because this class is a fake, the file contents may not be available as a stream, so we load
