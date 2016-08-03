@@ -32,6 +32,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 /**
  * Client of Eden's fbthrift API.
  */
@@ -65,6 +67,7 @@ public final class EdenClient {
     return client.listMounts();
   }
 
+  @Nullable
   public EdenMount getMountFor(Path mountPoint) throws EdenError, TException {
     String mountPointStr = mountPoint.toString();
     for (MountInfo info : getMountInfos()) {
@@ -72,6 +75,6 @@ public final class EdenClient {
         return new EdenMount(client, mountPoint);
       }
     }
-    throw new IllegalArgumentException(String.format("No mount matching %s", mountPoint));
+    return null;
   }
 }

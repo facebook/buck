@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY e16415abe2f088d4aa1d64abe3fa19feb7931b7c #@#
+#@# GENERATED FILE: DO NOT MODIFY 408886be4e8db9a7cceedea1349070b21cbf0e85 #@#
 {
   "BuckPaths" : {
     "deps" : [
@@ -23,6 +23,19 @@
       "//src/com/facebook/buck/util/sha1:sha1"
     ]
   },
+  "ProjectFilesystemDelegateFactory" : {
+    "deps" : [
+      "//src/com/facebook/buck/eden:eden",
+      "//src/com/facebook/buck/io:DefaultProjectFilesystemDelegate",
+      "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/util/environment:platform",
+      "//third-party/java/jsr:jsr305"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/io:BuckPaths",
+      "//src/com/facebook/buck/io:ProjectFilesystemDelegate"
+    ]
+  },
   "executable-finder" : {
     "deps" : [
       "//src/com/facebook/buck/log:api",
@@ -37,7 +50,7 @@
   },
   "io" : {
     "deps" : [
-      "//src/com/facebook/buck/io:DefaultProjectFilesystemDelegate",
+      "//src/com/facebook/buck/io:ProjectFilesystemDelegateFactory",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",

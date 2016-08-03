@@ -21,6 +21,7 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import com.facebook.eden.EdenError;
 import com.facebook.eden.EdenService;
@@ -78,11 +79,12 @@ public class EdenClientTest {
     assertEquals(Paths.get("/home/mbolin/src/eden"), mount.getMountPoint());
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void getMountForThrowsWhenMissingMountPoint() throws EdenError, TException {
     replay(thriftClient);
 
     EdenClient client = new EdenClient(thriftClient);
-    client.getMountFor(Paths.get("/home/mbolin/src/other_project"));
+    EdenMount mount = client.getMountFor(Paths.get("/home/mbolin/src/other_project"));
+    assertNull(mount);
   }
 }

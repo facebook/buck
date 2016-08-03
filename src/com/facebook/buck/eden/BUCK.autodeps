@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY d6b95eb85af7d17dccdca4d3b599db272120ade7 #@#
+#@# GENERATED FILE: DO NOT MODIFY 78abb6f776b8236a26a4ba4001caaa0cd281bf52 #@#
 {
   "eden" : {
     "deps" : [
@@ -11,7 +11,8 @@
       "//src/com/facebook/buck/util/sha1:sha1",
       "//third-party/java/eden:eden-thrift-bindings",
       "//third-party/java/eden:java-thrift",
-      "//third-party/java/guava:guava"
+      "//third-party/java/guava:guava",
+      "//third-party/java/jsr:jsr305"
     ]
   }
 }

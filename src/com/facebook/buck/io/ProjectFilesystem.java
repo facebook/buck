@@ -152,8 +152,8 @@ public class ProjectFilesystem {
 
   /**
    * This constructor is restricted to {@code protected} because it is generally best to let
-   * {@link ProjectFilesystemDelegateFactory#newInstance(Path)} create an appropriate delegate.
-   * Currently, the only case in which we need to override this behavior is in unit tests.
+   * {@link ProjectFilesystemDelegateFactory#newInstance(Path, BuckPaths)} create an appropriate
+   * delegate. Currently, the only case in which we need to override this behavior is in unit tests.
    */
   protected ProjectFilesystem(Path root, ProjectFilesystemDelegate delegate) {
     this(
@@ -186,7 +186,7 @@ public class ProjectFilesystem {
         root,
         blackListedPaths,
         buckPaths,
-        ProjectFilesystemDelegateFactory.newInstance(root));
+        ProjectFilesystemDelegateFactory.newInstance(root, buckPaths));
   }
 
   /**

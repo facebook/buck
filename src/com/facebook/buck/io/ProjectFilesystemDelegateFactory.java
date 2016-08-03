@@ -16,7 +16,18 @@
 
 package com.facebook.buck.io;
 
+import com.facebook.buck.eden.EdenClient;
+import com.facebook.buck.eden.EdenMount;
+import com.facebook.buck.eden.EdenProjectFilesystemDelegate;
+import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.environment.Platform;
+import com.facebook.eden.EdenError;
+import com.facebook.thrift.TException;
+
+import java.io.IOException;
 import java.nio.file.Path;
+
+import javax.annotation.Nullable;
 
 /**
  * {@link ProjectFilesystemDelegateFactory} mediates the creation of a
@@ -24,15 +35,46 @@ import java.nio.file.Path;
  */
 public final class ProjectFilesystemDelegateFactory {
 
+  private static final Logger LOG = Logger.get(ProjectFilesystemDelegateFactory.class);
+
   /** Utility class: do not instantiate. */
   private ProjectFilesystemDelegateFactory() {}
 
   /**
    * Must always create a new delegate for the specified {@code root}.
    */
-  public static ProjectFilesystemDelegate newInstance(Path root) {
-    // TODO(bolinfest): Test if root is mounted on EdenFS. If so, return
-    // a custom ProjectFilesystemDelegate that takes advantage of Eden.
-    return new DefaultProjectFilesystemDelegate(root);
+  public static ProjectFilesystemDelegate newInstance(Path root, BuckPaths buckPaths) {
+    EdenClient client = createEdenClientOrSwallowException();
+
+    EdenMount mount = null;
+    if (client != null) {
+      try {
+        mount = client.getMountFor(root);
+      } catch (TException | EdenError e) {
+        // If Eden is running but root is not a mount point, Eden getMountFor() should just return
+        // null rather than throw an error.
+        LOG.error(e, "Failed to find Eden client for %s.", root);
+      }
+    }
+
+    if (mount != null) {
+      return new EdenProjectFilesystemDelegate(mount, buckPaths);
+    } else {
+      return new DefaultProjectFilesystemDelegate(root);
+    }
+  }
+
+  @Nullable
+  private static EdenClient createEdenClientOrSwallowException() {
+    if (Platform.detect() == Platform.WINDOWS) {
+      return null;
+    }
+
+    try {
+      return EdenClient.newInstance();
+    } catch (IOException | TException e) {
+      // Nothing to do: it is very common that there is no EdenClient.
+      return null;
+    }
   }
 }
