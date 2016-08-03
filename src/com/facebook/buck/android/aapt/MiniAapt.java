@@ -100,7 +100,7 @@ public class MiniAapt implements Step {
   private final ProjectFilesystem filesystem;
   private final SourcePath resDirectory;
   private final Path pathToTextSymbolsFile;
-  private final ImmutableSet<Path> pathsToSymblolsOfDeps;
+  private final ImmutableSet<Path> pathsToSymbolsOfDeps;
   private final AaptResourceCollector resourceCollector;
   private final boolean resourceUnion;
 
@@ -109,13 +109,13 @@ public class MiniAapt implements Step {
       ProjectFilesystem filesystem,
       SourcePath resDirectory,
       Path pathToTextSymbolsFile,
-      ImmutableSet<Path> pathsToSymblolsOfDeps) {
+      ImmutableSet<Path> pathsToSymbolsOfDeps) {
     this(
         resolver,
         filesystem,
         resDirectory,
         pathToTextSymbolsFile,
-        pathsToSymblolsOfDeps,
+        pathsToSymbolsOfDeps,
         false);
   }
 
@@ -124,13 +124,13 @@ public class MiniAapt implements Step {
       ProjectFilesystem filesystem,
       SourcePath resDirectory,
       Path pathToTextSymbolsFile,
-      ImmutableSet<Path> pathsToSymblolsOfDeps,
+      ImmutableSet<Path> pathsToSymbolsOfDeps,
       boolean resourceUnion) {
     this.resolver = resolver;
     this.filesystem = filesystem;
     this.resDirectory = resDirectory;
     this.pathToTextSymbolsFile = pathToTextSymbolsFile;
-    this.pathsToSymblolsOfDeps = pathsToSymblolsOfDeps;
+    this.pathsToSymbolsOfDeps = pathsToSymbolsOfDeps;
     this.resourceCollector = new AaptResourceCollector();
     this.resourceUnion = resourceUnion;
   }
@@ -214,7 +214,7 @@ public class MiniAapt implements Step {
    * @throws IOException
    */
   public void resourceUnion() throws IOException {
-    for (Path depRTxt : pathsToSymblolsOfDeps) {
+    for (Path depRTxt : pathsToSymbolsOfDeps) {
       Iterable<String> lines = FluentIterable.from(filesystem.readLines(depRTxt))
           .filter(MoreStrings.NON_EMPTY)
           .toList();
@@ -568,7 +568,7 @@ public class MiniAapt implements Step {
     ImmutableSet.Builder<RDotTxtEntry> unresolved = ImmutableSet.builder();
     ImmutableSet.Builder<RDotTxtEntry> definitionsBuilder = ImmutableSet.builder();
     definitionsBuilder.addAll(resourceCollector.getResources());
-    for (Path depRTxt : pathsToSymblolsOfDeps) {
+    for (Path depRTxt : pathsToSymbolsOfDeps) {
       Iterable<String> lines = FluentIterable.from(filesystem.readLines(depRTxt))
           .filter(MoreStrings.NON_EMPTY)
           .toList();
