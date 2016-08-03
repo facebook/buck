@@ -31,6 +31,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Responsible for gathering logs and other interesting information from buck, driven by user
@@ -61,9 +63,18 @@ public class InteractiveReport extends AbstractReport {
   @Override
   protected ImmutableSet<BuildLogEntry> promptForBuildSelection() throws IOException {
     ImmutableList<BuildLogEntry> buildLogs = buildLogHelper.getBuildLogs();
+
+    // Commands with unknown args and buck rage should be excluded.
+    List<BuildLogEntry> interestingBuildLogs = new ArrayList<>();
+    for (BuildLogEntry entry : buildLogs) {
+      if (entry.getCommandArgs().isPresent() && !entry.getCommandArgs().get().contains("rage")) {
+        interestingBuildLogs.add(entry);
+      }
+    }
+
     return input.selectRange(
         "Which buck invocations would you like to report?",
-        buildLogs,
+        interestingBuildLogs,
         new Function<BuildLogEntry, String>() {
           @Override
           public String apply(BuildLogEntry input) {
@@ -71,9 +82,9 @@ public class InteractiveReport extends AbstractReport {
                 input.getSize(),
                 SizeUnit.BYTES);
             return String.format(
-                "buck [%s] at %s (%.2f %s)",
-                input.getCommandArgs().or("unknown args"),
+                "\t%s\tbuck [%s] (%.2f %s)",
                 input.getLastModifiedTime(),
+                input.getCommandArgs(),
                 humanReadableSize.getFirst(),
                 humanReadableSize.getSecond().getAbbreviation());
           }
