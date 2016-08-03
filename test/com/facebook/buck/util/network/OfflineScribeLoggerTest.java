@@ -19,6 +19,9 @@ package com.facebook.buck.util.network;
 import static com.facebook.buck.util.network.OfflineScribeLogger.LOGFILE_PATTERN;
 import static com.facebook.buck.util.network.OfflineScribeLogger.LOGFILE_PREFIX;
 import static com.facebook.buck.util.network.OfflineScribeLogger.LOGFILE_SUFFIX;
+import static org.hamcrest.Matchers.arrayContainingInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
@@ -28,14 +31,17 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.ObjectArrays;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -46,13 +52,18 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class OfflineScribeLoggerTest {
@@ -84,6 +95,10 @@ public class OfflineScribeLoggerTest {
     // given UTF-8 is used, will be ~ 2 * 1KB) to succeed. We then expect subsequent attempt to
     // store data with 'tooLongLine' (~6KB) to fail. We also expect that logfile created by first
     // fakeLogger ('test1' id) will be removed as otherwise data from last logger would not fit.
+    //
+    // Note that code sending already stored offline logs will be triggered by the first log() as
+    // it succeeds, but further failing log() (and initiating storing) will stop sending. Hence, no
+    // logs will be deleted due to the sending routine.
     FakeFailingOfflineScribeLogger fakeLogger = null;
     for (String id : ids) {
       fakeLogger = new FakeFailingOfflineScribeLogger(
@@ -186,6 +201,92 @@ public class OfflineScribeLoggerTest {
 
     logFile.close();
     assertEquals(2, dataNum);
+  }
+
+  @Test
+  public void sendStoredLogs() throws Exception {
+    final ImmutableList<String> blacklistCategories = ImmutableList.of();
+    final int maxScribeOfflineLogsKB = 2;
+    final ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    final Path logDir = filesystem.getBuckPaths().getOfflineLogDir();
+    final ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
+    final String[] ids = {"test1", "test2", "test3"};
+    final String[] uniqueCategories = {"cat1", "cat2"};
+    final String[] categories = {uniqueCategories[0], uniqueCategories[1], uniqueCategories[0]};
+    final String testCategory = "test_category";
+    final String line = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+    final List<Pair<String, Iterable<String>>> sentData = new ArrayList<>();
+
+    final ScribeLogger succeeddingLogger = new ScribeLogger() {
+      @Override
+      public ListenableFuture<Void> log(String category, Iterable<String> lines) {
+        if (!category.equals(testCategory)) {
+          sentData.add(new Pair<>(category, lines));
+        }
+        return Futures.immediateFuture(null);
+      }
+
+      @Override
+      public void close() throws Exception {
+      }
+    };
+
+    // Create 3 dummy logfiles - each will have 3 categories x 4 lines ~ 0.9KB. Hence, when reading
+    // and sending the logger should stop after 2 of those 3 files (we set the limit to 2KB).
+    filesystem.mkdirs(logDir);
+    for (String id : ids) {
+      File log = filesystem.resolve(logDir.resolve(LOGFILE_PREFIX + id + LOGFILE_SUFFIX)).toFile();
+      BufferedOutputStream logFileStoreStream =
+          new BufferedOutputStream(new FileOutputStream(log));
+      for (String category : categories) {
+        byte[] scribeData = objectMapper
+            .writeValueAsString(
+                ScribeData.builder()
+                    .setCategory(category)
+                    .setLines(ImmutableList.of(line, line, line, line))
+                    .build())
+            .getBytes(Charsets.UTF_8);
+        logFileStoreStream.write(scribeData);
+      }
+      logFileStoreStream.close();
+    }
+
+    // Get the logger and trigger sending with dummy succeeding log().
+    OfflineScribeLogger offlineLogger = new OfflineScribeLogger(
+        succeeddingLogger,
+        blacklistCategories,
+        maxScribeOfflineLogsKB,
+        filesystem,
+        objectMapper,
+        new BuildId("sendingLogger"));
+    offlineLogger.log(testCategory, ImmutableList.of("line1", "line2"));
+    offlineLogger.close();
+
+    //Check read&sent data is as expected - for first category we expect clustered 8 lines from 2x4.
+    assertEquals(4, sentData.size());
+    final String[] expectedCategories =
+        ObjectArrays.concat(uniqueCategories, uniqueCategories, String.class);
+    final String[] seenCategories = new String[sentData.size()];
+    for (int i = 0; i < sentData.size(); i++) {
+      seenCategories[i] = sentData.get(i).getFirst();
+      int expectedCount = (sentData.get(i).getFirst().equals(uniqueCategories[0])) ? 8 : 4;
+      assertThat(sentData.get(i).getSecond(), Matchers.allOf(
+          everyItem(equalTo(line)),
+          IsIterableWithSize.<String>iterableWithSize(expectedCount)
+      ));
+    }
+    assertThat(seenCategories, arrayContainingInAnyOrder(expectedCategories));
+
+    // Check that oldest log was not removed (due to exceeding the byte limit when reading&sending).
+    ImmutableSortedSet<Path> logs =
+        filesystem.getSortedMatchingDirectoryContents(logDir, LOGFILE_PATTERN);
+    Path notRemovedLog = filesystem.resolve(
+        logDir.resolve(LOGFILE_PREFIX + ids[0] + LOGFILE_SUFFIX));
+    assertThat(logs, Matchers.allOf(
+        hasItem(notRemovedLog),
+        IsIterableWithSize.<Path>iterableWithSize(1)
+    ));
+
   }
 
   /**
