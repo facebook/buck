@@ -1,5 +1,13 @@
-#@# GENERATED FILE: DO NOT MODIFY d680806df8e4fc1da73c1d4f71f28975b1dc62f9 #@#
+#@# GENERATED FILE: DO NOT MODIFY ec49d6ff54eeca834d8afd4205c2bb1095715b0d #@#
 {
+  "BuckPaths" : {
+    "deps" : [
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/util/immutables:immutables"
+    ]
+  },
   "executable-finder" : {
     "deps" : [
       "//src/com/facebook/buck/log:api",
@@ -24,6 +32,7 @@
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/config:config",
+      "//src/com/facebook/buck/io:BuckPaths",
       "//src/com/facebook/buck/io:ProjectFilesystemDelegate",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/util/immutables:immutables",

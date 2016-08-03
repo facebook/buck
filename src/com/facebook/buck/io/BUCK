@@ -1,3 +1,16 @@
+BUCK_PATHS_SRCS = [
+  'AbstractBuckPaths.java',
+]
+java_immutables_library(
+  name = 'BuckPaths',
+  srcs = BUCK_PATHS_SRCS,
+  immutable_types = [
+    'BuckPaths',
+  ],
+  autodeps = True,
+  visibility = [ 'PUBLIC' ],
+)
+
 WATCHMAN_SRCS = [
   'Watchman.java',
   'WatchmanClient.java',
@@ -47,6 +60,7 @@ java_library(
 java_immutables_library(
   name = 'io',
   srcs = glob(['*.java'], excludes = (
+    BUCK_PATHS_SRCS +
     FINDER_SRCS +
     PROJECT_FILESYSTEM_DELEGATE_SRCS +
     WATCHMAN_SRCS)
@@ -56,7 +70,6 @@ java_immutables_library(
   ],
   immutable_types = [
     'ArchiveMemberPath',
-    'BuckPaths',
   ],
   autodeps = True,
   visibility = [ 'PUBLIC' ],

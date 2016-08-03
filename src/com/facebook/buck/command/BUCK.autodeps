@@ -1,8 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 7ee6faf675c4645d520b9928230478f7fc06d2cf #@#
+#@# GENERATED FILE: DO NOT MODIFY 9f9406160b333d309732ff43f728a1cefc42537a #@#
 {
   "command" : {
     "deps" : [
       "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/io:BuckPaths",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/model:build_id",
