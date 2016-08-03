@@ -259,6 +259,7 @@ def set_perftest_side(
     with open(buckconfig_path, 'w') as buckconfig:
         buckconfig.write('''[cache]
     %s
+    dir_max_size = 10GB
     dir = buck-cache-%s
     dir_mode = %s
   ''' % ('mode = dir' if dir_cache_only else '', perftest_side, cache_mode))
