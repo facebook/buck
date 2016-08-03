@@ -16,6 +16,9 @@
 
 package com.facebook.buck.io;
 
+import com.facebook.buck.util.sha1.Sha1HashCode;
+
+import java.io.IOException;
 import java.nio.file.Path;
 
 /**
@@ -24,5 +27,8 @@ import java.nio.file.Path;
  * often motivated by performance reasons.
  */
 public interface ProjectFilesystemDelegate {
+
+  Sha1HashCode computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException;
+
   Path getPathForRelativePath(Path pathRelativeToProjectRoot);
 }

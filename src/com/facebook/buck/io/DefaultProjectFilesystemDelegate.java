@@ -16,6 +16,12 @@
 
 package com.facebook.buck.io;
 
+import com.facebook.buck.util.sha1.Sha1HashCode;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
+import com.google.common.io.Files;
+
+import java.io.IOException;
 import java.nio.file.Path;
 
 /**
@@ -28,6 +34,13 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
 
   public DefaultProjectFilesystemDelegate(Path root) {
     this.root = root;
+  }
+
+  @Override
+  public Sha1HashCode computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException {
+    Path fileToHash = getPathForRelativePath(pathRelativeToProjectRootOrJustAbsolute);
+    HashCode hashCode = Files.hash(fileToHash.toFile(), Hashing.sha1());
+    return Sha1HashCode.fromHashCode(hashCode);
   }
 
   @Override

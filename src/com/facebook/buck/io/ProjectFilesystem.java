@@ -958,9 +958,9 @@ public class ProjectFilesystem {
     return Files.newInputStream(file);
   }
 
+  // TODO(bolinfest): Change the return type of this method to be Sha1HashCode.
   public String computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException {
-    Path fileToHash = getPathForRelativePath(pathRelativeToProjectRootOrJustAbsolute);
-    return Hashing.sha1().hashBytes(Files.readAllBytes(fileToHash)).toString();
+    return delegate.computeSha1(pathRelativeToProjectRootOrJustAbsolute).toString();
   }
 
   public String computeSha256(Path pathRelativeToProjectRoot) throws IOException {
