@@ -90,4 +90,18 @@ public class AuditRulesCommandIntegrationTest {
         MoreStringsForTests.equalToIgnoringPlatformNewlines(
             workspace.getFileContents("stdout.genrule.json")));
   }
+
+  @Test
+  public void auditRulesRespectConfigs() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "audit_rules_respect_configs", tmp);
+    workspace.setUp();
+    ProcessResult result1 =
+        workspace.runBuckCommand("audit", "rules", "example/BUCK", "-c", "test.config=bar");
+    result1.assertSuccess();
+    assertThat(
+        result1.getStdout(),
+        MoreStringsForTests.equalToIgnoringPlatformNewlines(
+            workspace.getFileContents("stdout.all")));
+  }
 }

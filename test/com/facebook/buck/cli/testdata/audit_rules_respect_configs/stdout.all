@@ -1,0 +1,19 @@
+# example/BUCK
+
+genrule(
+  name = "example",
+  bash = "bar",
+  cmd = None,
+  cmdExe = None,
+  executable = None,
+  licenses = [
+  ],
+  out = "baz.txt",
+  srcs = [
+  ],
+  tests = [
+  ],
+  visibility = [
+  ],
+)
+
