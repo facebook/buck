@@ -227,7 +227,6 @@ public class AppleCxxPlatforms {
 
     Tool ranlib = VersionedTool.builder()
         .setPath(getToolPath("ranlib", toolSearchPaths, executableFinder))
-        .addExtraArgs("-s")
         .setName("apple-ranlib")
         .setVersion(version)
         .build();

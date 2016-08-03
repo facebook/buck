@@ -16,18 +16,22 @@
 
 package com.facebook.buck.cxx;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKey;
@@ -38,8 +42,11 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Strings;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -87,7 +94,9 @@ public class ArchiveTest {
             params,
             pathResolver,
             DEFAULT_ARCHIVER,
+            ImmutableList.<String>of(),
             DEFAULT_RANLIB,
+            ImmutableList.<String>of(),
             Archive.Contents.NORMAL,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
@@ -99,7 +108,9 @@ public class ArchiveTest {
             params,
             pathResolver,
             new GnuArchiver(new HashedFileTool(Paths.get("different"))),
+            ImmutableList.<String>of(),
             DEFAULT_RANLIB,
+            ImmutableList.<String>of(),
             Archive.Contents.NORMAL,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
@@ -112,7 +123,9 @@ public class ArchiveTest {
             params,
             pathResolver,
             DEFAULT_ARCHIVER,
+            ImmutableList.<String>of(),
             DEFAULT_RANLIB,
+            ImmutableList.<String>of(),
             Archive.Contents.NORMAL,
             Paths.get("different"),
             DEFAULT_INPUTS));
@@ -125,7 +138,9 @@ public class ArchiveTest {
             params,
             pathResolver,
             DEFAULT_ARCHIVER,
+            ImmutableList.<String>of(),
             DEFAULT_RANLIB,
+            ImmutableList.<String>of(),
             Archive.Contents.NORMAL,
             DEFAULT_OUTPUT,
             ImmutableList.<SourcePath>of(new FakeSourcePath("different"))));
@@ -138,11 +153,44 @@ public class ArchiveTest {
             params,
             pathResolver,
             new BsdArchiver(new HashedFileTool(AR)),
+            ImmutableList.<String>of(),
             DEFAULT_RANLIB,
+            ImmutableList.<String>of(),
             Archive.Contents.NORMAL,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
     assertNotEquals(defaultRuleKey, archiverTypeChange);
+  }
+
+  @Test
+  public void flagsArePropagated() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    Archive archive = Archive.from(
+        target,
+        params,
+        new SourcePathResolver(resolver),
+        DEFAULT_ARCHIVER,
+        ImmutableList.of("-foo"),
+        DEFAULT_RANLIB,
+        ImmutableList.of("-bar"),
+        Archive.Contents.NORMAL,
+        DEFAULT_OUTPUT,
+        ImmutableList.<SourcePath>of(new FakeSourcePath("simple.o")));
+
+    ImmutableList<Step> steps =
+        archive.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
+    Step archiveStep = FluentIterable.from(steps).filter(ArchiveStep.class).first().get();
+    assertThat(
+        archiveStep.getDescription(TestExecutionContext.newInstance()),
+        containsString("-foo"));
+
+    Step ranlibStep = FluentIterable.from(steps).filter(RanlibStep.class).first().get();
+    assertThat(
+        ranlibStep.getDescription(TestExecutionContext.newInstance()),
+        containsString("-bar"));
   }
 
   @Test
@@ -169,7 +217,9 @@ public class ArchiveTest {
             params,
             new SourcePathResolver(resolver),
             DEFAULT_ARCHIVER,
+            ImmutableList.<String>of(),
             DEFAULT_RANLIB,
+            ImmutableList.<String>of(),
             Archive.Contents.NORMAL,
             DEFAULT_OUTPUT,
             ImmutableList.<SourcePath>of(
@@ -208,7 +258,9 @@ public class ArchiveTest {
             params,
             pathResolver,
             DEFAULT_ARCHIVER,
+            ImmutableList.<String>of(),
             DEFAULT_RANLIB,
+            ImmutableList.<String>of(),
             Archive.Contents.NORMAL,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS);

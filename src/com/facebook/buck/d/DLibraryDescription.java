@@ -159,8 +159,7 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
         staticTarget,
         params,
         pathResolver,
-        cxxPlatform.getAr(),
-        cxxPlatform.getRanlib(),
+        cxxPlatform,
         cxxBuckConfig.getArchiveContents(),
         staticLibraryPath,
         compiledSources);

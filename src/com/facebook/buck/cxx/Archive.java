@@ -51,7 +51,11 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
   @AddToRuleKey
   private final Archiver archiver;
   @AddToRuleKey
+  private ImmutableList<String> archiverFlags;
+  @AddToRuleKey
   private final Tool ranlib;
+  @AddToRuleKey
+  private ImmutableList<String> ranlibFlags;
   @AddToRuleKey
   private final Contents contents;
   @AddToRuleKey(stringify = true)
@@ -63,7 +67,9 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
       BuildRuleParams params,
       SourcePathResolver resolver,
       Archiver archiver,
+      ImmutableList<String> archiverFlags,
       Tool ranlib,
+      ImmutableList<String> ranlibFlags,
       Contents contents,
       Path output,
       ImmutableList<SourcePath> inputs) {
@@ -73,10 +79,33 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
         "%s: archive tool for this platform does not support thin archives",
         getBuildTarget());
     this.archiver = archiver;
+    this.archiverFlags = archiverFlags;
     this.ranlib = ranlib;
+    this.ranlibFlags = ranlibFlags;
     this.contents = contents;
     this.output = output;
     this.inputs = inputs;
+  }
+
+  public static Archive from(
+      BuildTarget target,
+      BuildRuleParams baseParams,
+      SourcePathResolver resolver,
+      CxxPlatform platform,
+      Contents contents,
+      Path output,
+      ImmutableList<SourcePath> inputs) {
+    return from(
+        target,
+        baseParams,
+        resolver,
+        platform.getAr(),
+        platform.getArflags(),
+        platform.getRanlib(),
+        platform.getRanlibflags(),
+        contents,
+        output,
+        inputs);
   }
 
   /**
@@ -90,7 +119,9 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
       BuildRuleParams baseParams,
       SourcePathResolver resolver,
       Archiver archiver,
+      ImmutableList<String> arFlags,
       Tool ranlib,
+      ImmutableList<String> ranlibFlags,
       Contents contents,
       Path output,
       ImmutableList<SourcePath> inputs) {
@@ -111,7 +142,9 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
         archiveParams,
         resolver,
         archiver,
+        arFlags,
         ranlib,
+        ranlibFlags,
         contents,
         output,
         inputs);
@@ -142,6 +175,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
             getProjectFilesystem(),
             archiver.getEnvironment(getResolver()),
             archiver.getCommandPrefix(getResolver()),
+            archiverFlags,
             contents,
             output,
             FluentIterable.from(inputs)
@@ -151,6 +185,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
             getProjectFilesystem(),
             ranlib.getEnvironment(getResolver()),
             ranlib.getCommandPrefix(getResolver()),
+            ranlibFlags,
             output),
         new FileScrubberStep(getProjectFilesystem(), output, archiver.getScrubbers()));
   }

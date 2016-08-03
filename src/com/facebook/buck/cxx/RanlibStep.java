@@ -29,17 +29,20 @@ public class RanlibStep extends ShellStep {
 
   private final ImmutableMap<String, String> ranlibEnv;
   private final ImmutableList<String> ranlibPrefix;
+  private final ImmutableList<String> ranlibFlags;
   private final Path output;
 
   public RanlibStep(
       ProjectFilesystem filesystem,
       ImmutableMap<String, String> ranlibEnv,
       ImmutableList<String> ranlibPrefix,
+      ImmutableList<String> ranlibFlags,
       Path output) {
     super(filesystem.getRootPath());
     Preconditions.checkArgument(!output.isAbsolute());
     this.ranlibEnv = ranlibEnv;
     this.ranlibPrefix = ranlibPrefix;
+    this.ranlibFlags = ranlibFlags;
     this.output = output;
   }
 
@@ -52,6 +55,7 @@ public class RanlibStep extends ShellStep {
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     return ImmutableList.<String>builder()
         .addAll(ranlibPrefix)
+        .addAll(ranlibFlags)
         .add(output.toString())
         .build();
   }

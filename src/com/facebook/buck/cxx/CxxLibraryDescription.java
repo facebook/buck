@@ -476,8 +476,7 @@ public class CxxLibraryDescription implements
         staticTarget,
         params,
         sourcePathResolver,
-        cxxPlatform.getAr(),
-        cxxPlatform.getRanlib(),
+        cxxPlatform,
         cxxBuckConfig.getArchiveContents(),
         staticLibraryPath,
         ImmutableList.copyOf(objects.values()));

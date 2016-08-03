@@ -47,6 +47,7 @@ public class ArchiveStep implements Step {
   private final ProjectFilesystem filesystem;
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> archiver;
+  private final ImmutableList<String> archiverFlags;
   private final Archive.Contents contents;
   private final Path output;
   private final ImmutableList<Path> inputs;
@@ -55,6 +56,7 @@ public class ArchiveStep implements Step {
       ProjectFilesystem filesystem,
       ImmutableMap<String, String> environment,
       ImmutableList<String> archiver,
+      ImmutableList<String> archiverFlags,
       Archive.Contents contents,
       Path output,
       ImmutableList<Path> inputs) {
@@ -67,6 +69,7 @@ public class ArchiveStep implements Step {
     this.filesystem = filesystem;
     this.environment = environment;
     this.archiver = archiver;
+    this.archiverFlags = archiverFlags;
     this.contents = contents;
     this.output = output;
     this.inputs = inputs;
@@ -135,6 +138,7 @@ public class ArchiveStep implements Step {
       ImmutableList<String> archiveCommandPrefix =
           ImmutableList.<String>builder()
               .addAll(archiver)
+              .addAll(archiverFlags)
               .add(getArchiveOptions())
               .add(output.toString())
               .build();
@@ -151,10 +155,12 @@ public class ArchiveStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    ImmutableList.Builder<String> command = ImmutableList.builder();
-    command.add("ar", getArchiveOptions());
-    command.add(output.toString());
-    command.addAll(Iterables.transform(inputs, Functions.toStringFunction()));
+    ImmutableList.Builder<String> command = ImmutableList.<String>builder()
+        .add("ar")
+        .addAll(archiverFlags)
+        .add(getArchiveOptions())
+        .add(output.toString())
+        .addAll(Iterables.transform(inputs, Functions.toStringFunction()));
     return Joiner.on(' ').join(command.build());
   }
 

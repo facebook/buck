@@ -302,8 +302,7 @@ public class HaskellDescriptionUtils {
                 emptyArchiveTarget,
                 baseParams,
                 pathResolver,
-                cxxPlatform.getAr(),
-                cxxPlatform.getRanlib(),
+                cxxPlatform,
                 Archive.Contents.NORMAL,
                 BuildTargets.getGenPath(
                     baseParams.getProjectFilesystem(),

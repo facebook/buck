@@ -79,6 +79,7 @@ public class ArchiveStepIntegrationTest {
         filesystem,
         archiver.getEnvironment(sourcePathResolver),
         archiver.getCommandPrefix(sourcePathResolver),
+        ImmutableList.<String>of(),
         Archive.Contents.NORMAL,
         output,
         ImmutableList.of(input));
@@ -128,6 +129,7 @@ public class ArchiveStepIntegrationTest {
             filesystem,
             archiver.getEnvironment(sourcePathResolver),
             archiver.getCommandPrefix(sourcePathResolver),
+            ImmutableList.<String>of(),
             Archive.Contents.NORMAL,
             output,
             ImmutableList.<Path>of());
@@ -171,6 +173,7 @@ public class ArchiveStepIntegrationTest {
             filesystem,
             archiver.getEnvironment(sourcePathResolver),
             archiver.getCommandPrefix(sourcePathResolver),
+            ImmutableList.<String>of(),
             Archive.Contents.NORMAL,
             output,
             ImmutableList.of(input.getParent()));
@@ -220,6 +223,7 @@ public class ArchiveStepIntegrationTest {
             filesystem,
             archiver.getEnvironment(sourcePathResolver),
             archiver.getCommandPrefix(sourcePathResolver),
+            ImmutableList.<String>of(),
             Archive.Contents.THIN,
             output,
             ImmutableList.of(input));

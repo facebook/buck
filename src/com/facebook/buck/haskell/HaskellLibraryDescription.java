@@ -139,8 +139,7 @@ public class HaskellLibraryDescription implements
         params.getBuildTarget(),
         params,
         pathResolver,
-        cxxPlatform.getAr(),
-        cxxPlatform.getRanlib(),
+        cxxPlatform,
         cxxBuckConfig.getArchiveContents(),
         CxxDescriptionEnhancer.getStaticLibraryPath(
             params.getProjectFilesystem(),
