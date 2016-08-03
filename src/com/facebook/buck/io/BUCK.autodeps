@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 54245f1fde38b7e9c49133577bb453acbe07e945 #@#
+#@# GENERATED FILE: DO NOT MODIFY e16415abe2f088d4aa1d64abe3fa19feb7931b7c #@#
 {
   "BuckPaths" : {
     "deps" : [
@@ -6,6 +6,15 @@
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/util/immutables:immutables"
+    ]
+  },
+  "DefaultProjectFilesystemDelegate" : {
+    "deps" : [
+      "//third-party/java/guava:guava"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/io:ProjectFilesystemDelegate",
+      "//src/com/facebook/buck/util/sha1:sha1"
     ]
   },
   "ProjectFilesystemDelegate" : {
@@ -28,6 +37,7 @@
   },
   "io" : {
     "deps" : [
+      "//src/com/facebook/buck/io:DefaultProjectFilesystemDelegate",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
@@ -42,7 +52,6 @@
       "//src/com/facebook/buck/io:ProjectFilesystemDelegate",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/util/immutables:immutables",
-      "//src/com/facebook/buck/util/sha1:sha1",
       "//third-party/java/guava:guava",
       "//third-party/java/jsr:jsr305"
     ]

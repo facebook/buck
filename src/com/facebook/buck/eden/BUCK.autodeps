@@ -1,10 +1,13 @@
-#@# GENERATED FILE: DO NOT MODIFY b07505ae9d88198190f732872532f4e16266a032 #@#
+#@# GENERATED FILE: DO NOT MODIFY d6b95eb85af7d17dccdca4d3b599db272120ade7 #@#
 {
   "eden" : {
     "deps" : [
+      "//src/com/facebook/buck/io:DefaultProjectFilesystemDelegate",
       "//src/com/facebook/buck/io/unixsocket:unixsocket"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/io:BuckPaths",
+      "//src/com/facebook/buck/io:ProjectFilesystemDelegate",
       "//src/com/facebook/buck/util/sha1:sha1",
       "//third-party/java/eden:eden-thrift-bindings",
       "//third-party/java/eden:java-thrift",

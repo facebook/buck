@@ -11,6 +11,18 @@ java_immutables_library(
   visibility = [ 'PUBLIC' ],
 )
 
+DEFAULT_FILESYSTEM_DELEGATE_SRCS = [
+  'DefaultProjectFilesystemDelegate.java',
+]
+java_library(
+  name = 'DefaultProjectFilesystemDelegate',
+  srcs = DEFAULT_FILESYSTEM_DELEGATE_SRCS,
+  autodeps = True,
+  visibility = [
+    'PUBLIC',
+  ]
+)
+
 WATCHMAN_SRCS = [
   'Watchman.java',
   'WatchmanClient.java',
@@ -61,6 +73,7 @@ java_immutables_library(
   name = 'io',
   srcs = glob(['*.java'], excludes = (
     BUCK_PATHS_SRCS +
+    DEFAULT_FILESYSTEM_DELEGATE_SRCS +
     FINDER_SRCS +
     PROJECT_FILESYSTEM_DELEGATE_SRCS +
     WATCHMAN_SRCS)

@@ -1,8 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 0dd0b271530e295c7c87f9ab49027edc9b848620 #@#
+#@# GENERATED FILE: DO NOT MODIFY c4623023da070f4c14470387caa09fb168874c0e #@#
 {
   "testutil" : {
     "deps" : [
       "//src/com/facebook/buck/graph:graph",
+      "//src/com/facebook/buck/io:DefaultProjectFilesystemDelegate",
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/util:tristate",
       "//src/com/facebook/buck/util/environment:platform",
