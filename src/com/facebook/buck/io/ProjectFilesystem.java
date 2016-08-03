@@ -358,23 +358,11 @@ public class ProjectFilesystem {
    * @return the specified {@code path} resolved against {@link #getRootPath()} to an absolute path.
    */
   public Path resolve(Path path) {
-    return MorePaths.normalize(resolvePathFromOtherVfs(path).toAbsolutePath());
+    return MorePaths.normalize(getPathForRelativePath(path).toAbsolutePath());
   }
 
   public Path resolve(String path) {
     return MorePaths.normalize(getRootPath().resolve(path).toAbsolutePath());
-  }
-
-  /**
-   * We often create {@link Path} instances using
-   * {@link java.nio.file.Paths#get(String, String...)}, but there's no guarantee that the
-   * underlying {@link FileSystem} is the default one.
-   */
-  protected Path resolvePathFromOtherVfs(Path path) {
-    if (path.getFileSystem().equals(getRootPath().getFileSystem())) {
-      return getRootPath().resolve(path);
-    }
-    return getRootPath().resolve(path.toString());
   }
 
   /**
@@ -405,8 +393,14 @@ public class ProjectFilesystem {
         : getPathForRelativePath(pathRelativeToProjectRoot).toFile();
   }
 
-  public Path getPathForRelativePath(Path pathRelativeToProjectRootOrJustAbsolute) {
-    return resolvePathFromOtherVfs(pathRelativeToProjectRootOrJustAbsolute);
+  public Path getPathForRelativePath(Path pathRelativeToProjectRoot) {
+    // We often create {@link Path} instances using
+    // {@link java.nio.file.Paths#get(String, String...)}, but there's no guarantee that the
+    // underlying {@link FileSystem} is the default one.
+    if (pathRelativeToProjectRoot.getFileSystem().equals(getRootPath().getFileSystem())) {
+      return getRootPath().resolve(pathRelativeToProjectRoot);
+    }
+    return getRootPath().resolve(pathRelativeToProjectRoot.toString());
   }
 
   public Path getPathForRelativePath(String pathRelativeToProjectRoot) {
