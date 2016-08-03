@@ -65,7 +65,7 @@ public class BlockingHttpEndpointTest {
     long durationMillis = TimeUnit.MILLISECONDS.convert(durationNanos, TimeUnit.NANOSECONDS);
     assertThat("Shutdown should not take a long time.",
         durationMillis,
-        lessThanOrEqualTo(timeoutMillis * 3));
+        lessThanOrEqualTo(timeoutMillis * 30));
   }
 
   private static class TestHttpURLConnection extends HttpURLConnection {
