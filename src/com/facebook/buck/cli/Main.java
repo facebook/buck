@@ -35,6 +35,7 @@ import com.facebook.buck.counters.CounterRegistryImpl;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
 import com.facebook.buck.event.listener.ChromeTraceBuildListener;
 import com.facebook.buck.event.listener.FileSerializationEventBusListener;
@@ -992,6 +993,11 @@ public final class Main {
               rootCell.getKnownBuildRuleTypes(),
               clientEnvironment,
               counterRegistry);
+
+          // This needs to be after the registration of the event listener so they can pick it up.
+          if (watchmanFreshInstanceAction == WatchmanWatcher.FreshInstanceAction.NONE) {
+            buildEventBus.post(DaemonEvent.newDaemonInstance());
+          }
 
           VersionControlBuckConfig vcBuckConfig = new VersionControlBuckConfig(buckConfig);
 

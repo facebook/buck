@@ -23,6 +23,11 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.createParsingMessage;
+import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_BUNNY;
+import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_SNAIL;
+import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_WHALE;
+import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.NEW_DAEMON_INSTANCE_MSG;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
@@ -34,18 +39,21 @@ import com.facebook.buck.distributed.DistBuildStatus;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.LogRecord;
+import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.InstallEvent;
+import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
+import com.facebook.buck.event.WatchmanEvent;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.ParseEvent;
-import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -2112,6 +2120,42 @@ public class SuperConsoleEventBusListenerTest {
   }
 
   @Test
+  public void testParsingStatus() {
+    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
+
+    // new daemon instance & action graph cache miss
+    eventBus.post(DaemonEvent.newDaemonInstance());
+    assertEquals(NEW_DAEMON_INSTANCE_MSG, listener.getParsingStatus());
+    eventBus.post(ActionGraphEvent.Cache.miss());
+    assertEquals(NEW_DAEMON_INSTANCE_MSG, listener.getParsingStatus());
+
+    // overflow scenario
+    String overflowMessage = "and if you go chasing rabbits";
+    eventBus.post(WatchmanEvent.overflow(overflowMessage));
+    assertEquals(createParsingMessage(EMOJI_SNAIL, overflowMessage), listener.getParsingStatus());
+
+    // file added scenario
+    eventBus.post(WatchmanEvent.fileCreation());
+    assertEquals(createParsingMessage(EMOJI_SNAIL, "File added"), listener.getParsingStatus());
+
+    // file removed scenario
+    eventBus.post(WatchmanEvent.fileDeletion());
+    assertEquals(createParsingMessage(EMOJI_SNAIL, "File removed"), listener.getParsingStatus());
+
+    // symlink invalidation scenario
+    eventBus.post(ParsingEvent.symlinkInvalidation());
+    assertEquals(
+        createParsingMessage(EMOJI_WHALE, "Symlink caused cache invalidation"),
+        listener.getParsingStatus());
+
+    // action graph cache hit scenario
+    eventBus.post(ActionGraphEvent.Cache.hit());
+    assertEquals(createParsingMessage(EMOJI_BUNNY, ""), listener.getParsingStatus());
+  }
+
+  @Test
   public void testProjectGeneration() {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
@@ -2536,5 +2580,23 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(console, listener, 433L, ImmutableList.of(parsingLine,
         DOWNLOAD_STRING,
         "[+] BUILDING...0.1s"));
+  }
+
+  private SuperConsoleEventBusListener createSuperConsole(Clock clock, BuckEventBus eventBus) {
+    SuperConsoleEventBusListener listener =
+        new SuperConsoleEventBusListener(
+            emptySuperConsoleConfig,
+            new TestConsole(),
+            clock,
+            silentSummaryVerbosity,
+            new DefaultExecutionEnvironment(
+                ImmutableMap.copyOf(System.getenv()),
+                System.getProperties()),
+            Optional.<WebServer>absent(),
+            Locale.US,
+            logPath,
+            timeZone);
+    eventBus.register(listener);
+    return listener;
   }
 }

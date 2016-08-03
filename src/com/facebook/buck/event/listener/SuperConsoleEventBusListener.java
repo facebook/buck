@@ -23,10 +23,14 @@ import com.facebook.buck.distributed.DistBuildStatus;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.LogRecord;
+import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.NetworkEvent;
+import com.facebook.buck.event.ParsingEvent;
+import com.facebook.buck.event.WatchmanEvent;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
@@ -48,6 +52,7 @@ import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -61,6 +66,7 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -93,6 +99,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private static final int EXPECTED_MAXIMUM_RENDERED_LINE_LENGTH = 128;
 
   private static final Logger LOG = Logger.get(SuperConsoleEventBusListener.class);
+
+  @VisibleForTesting
+  static final String EMOJI_BUNNY = "\uD83D\uDC07";
+  @VisibleForTesting
+  static final String EMOJI_SNAIL = "\uD83D\uDC0C";
+  @VisibleForTesting
+  static final String EMOJI_WHALE = "\uD83D\uDC33";
+  @VisibleForTesting
+  static final Optional<String> NEW_DAEMON_INSTANCE_MSG =
+      createParsingMessage(EMOJI_WHALE, "New buck daemon");
 
   private final Locale locale;
   private final Function<Long, String> formatTimeFunction;
@@ -138,6 +154,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private Optional<DistBuildStatus> distBuildStatus;
   private final DateFormat dateFormat;
   private int lastNumLinesPrinted;
+
+  protected Optional<String> parsingStatus = Optional.absent();
 
   public SuperConsoleEventBusListener(
       SuperConsoleConfig config,
@@ -284,7 +302,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
 
     long parseTime = logEventPair("PROCESSING BUCK FILES",
-        /* suffix */ getParsingStatus(),
+        /* suffix */ parsingStatus,
         currentTimeMillis,
         /* offsetMs */ 0L,
         buckFilesProcessing.values(),
@@ -809,6 +827,59 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Subscribe
   public void bytesReceived(NetworkEvent.BytesReceivedEvent bytesReceivedEvent) {
     networkStatsKeeper.bytesReceived(bytesReceivedEvent);
+  }
+
+  @Subscribe
+  @SuppressWarnings("unused")
+  public void actionGraphCacheHit(ActionGraphEvent.Cache.Hit event) {
+    parsingStatus = createParsingMessage(EMOJI_BUNNY, "");
+  }
+
+  @Subscribe
+  public void watchmanOverflow(WatchmanEvent.Overflow event) {
+    parsingStatus = createParsingMessage(EMOJI_SNAIL, event.getReason());
+  }
+
+  @Subscribe
+  @SuppressWarnings("unused")
+  public void watchmanFileCreation(WatchmanEvent.FileCreation event) {
+    parsingStatus = createParsingMessage(EMOJI_SNAIL, "File added");
+  }
+
+  @Subscribe
+  @SuppressWarnings("unused")
+  public void watchmanFileDeletion(WatchmanEvent.FileDeletion event) {
+    parsingStatus = createParsingMessage(EMOJI_SNAIL, "File removed");
+  }
+
+  @Subscribe
+  @SuppressWarnings("unused")
+  public void daemonNewInstance(DaemonEvent.NewDaemonInstance event) {
+    parsingStatus = NEW_DAEMON_INSTANCE_MSG;
+  }
+
+  @Subscribe
+  @SuppressWarnings("unused")
+  public void symlinkInvalidation(ParsingEvent.SymlinkInvalidation event) {
+    parsingStatus = createParsingMessage(EMOJI_WHALE, "Symlink caused cache invalidation");
+  }
+
+  @VisibleForTesting
+  static Optional<String> createParsingMessage(String emoji, String reason) {
+    if (Charset.defaultCharset().equals(Charsets.UTF_8)) {
+      return Optional.of(emoji + "  " + reason);
+    } else {
+      if (emoji.equals(EMOJI_BUNNY)) {
+        return Optional.of("(FAST)");
+      } else {
+        return Optional.of("(SLOW) " + reason);
+      }
+    }
+  }
+
+  @VisibleForTesting
+  Optional<String> getParsingStatus() {
+    return parsingStatus;
   }
 
   @Override

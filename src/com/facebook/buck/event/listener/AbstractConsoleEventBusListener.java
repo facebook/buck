@@ -25,9 +25,7 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.InstallEvent;
-import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
-import com.facebook.buck.event.WatchmanEvent;
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.i18n.NumberFormatter;
 import com.facebook.buck.json.ParseBuckFileEvent;
@@ -75,8 +73,6 @@ import javax.annotation.Nullable;
  * running build to {@code stderr}.
  */
 public abstract class AbstractConsoleEventBusListener implements BuckEventListener, Closeable {
-  private static final String EMOJI_FAST = "\uD83D\uDC07";
-  private static final String EMOJI_SLOW = "\uD83D\uDC0C";
 
   private static final NumberFormatter TIME_FORMATTER = new NumberFormatter(
       new Function<Locale, NumberFormat>() {
@@ -142,8 +138,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected final AtomicInteger numRulesCompleted = new AtomicInteger();
 
   protected Optional<ProgressEstimator> progressEstimator = Optional.<ProgressEstimator>absent();
-
-  protected Optional<String> parsingStatus = Optional.absent();
 
   protected final NetworkStatsKeeper networkStatsKeeper;
 
@@ -437,10 +431,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
   }
 
-  protected Optional<String> getParsingStatus() {
-    return parsingStatus;
-  }
-
   @Subscribe
   public void commandStartedEvent(CommandEvent.Started startedEvent) {
     if (progressEstimator.isPresent()) {
@@ -673,41 +663,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
         distributedBuildProgress = 0;
       }
     }
-  }
-
-  @Subscribe
-  @SuppressWarnings("unused")
-  public void actionGraphCacheHit(ActionGraphEvent.Cache.Hit event) {
-    parsingStatus = Optional.of(EMOJI_FAST);
-  }
-
-  @Subscribe
-  @SuppressWarnings("unused")
-  public void actionGraphCacheMiss(ActionGraphEvent.Cache.Miss event) {
-    parsingStatus = Optional.of(EMOJI_SLOW);
-  }
-
-  @Subscribe
-  public void watchmanOverflow(WatchmanEvent.Overflow event) {
-    parsingStatus = Optional.of(EMOJI_SLOW + "  (" + event.getReason() + ")");
-  }
-
-  @Subscribe
-  @SuppressWarnings("unused")
-  public void watchmanFileCreation(WatchmanEvent.FileCreation event) {
-    parsingStatus = Optional.of(EMOJI_SLOW + "  (File added)");
-  }
-
-  @Subscribe
-  @SuppressWarnings("unused")
-  public void watchmanFileDeletion(WatchmanEvent.FileDeletion event) {
-    parsingStatus = Optional.of(EMOJI_SLOW + "  (File removed)");
-  }
-
-  @Subscribe
-  @SuppressWarnings("unused")
-  public void symlinkInvalidation(ParsingEvent.SymlinkInvalidation event) {
-    parsingStatus = Optional.of(EMOJI_SLOW + "  (Symlink caused cache invalidation)");
   }
 
   protected String renderHttpUploads() {
