@@ -24,10 +24,12 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import org.hamcrest.Matchers;
@@ -40,7 +42,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 
 public class ParserConfigTest {
 
@@ -115,30 +116,34 @@ public class ParserConfigTest {
 
   @Test
   public void shouldGetReadOnlyDirs() throws IOException {
-    temporaryFolder.newFolder("tmp");
-    temporaryFolder.newFolder("tmp2");
-    ArrayList<String> readOnlyPaths = new ArrayList<String>(2);
-    readOnlyPaths.add(temporaryFolder.getRoot() + "/tmp");
-    readOnlyPaths.add(temporaryFolder.getRoot() + "/tmp2");
+    String existingPath1 = "tmp/tmp-file";
+    String existingPath2 = "tmp2/tmp2-file";
+    ImmutableSet<Path> readOnlyPaths = ImmutableSet.<Path>of(
+        Paths.get(existingPath1),
+        Paths.get(existingPath2));
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(readOnlyPaths);
 
     ParserConfig parserConfig = new ParserConfig(FakeBuckConfig.builder()
         .setSections(
             "[project]",
-            "read_only_paths = " + readOnlyPaths.get(0) + "," + readOnlyPaths.get(1))
+            "read_only_paths = " + existingPath1 + "," + existingPath2)
+        .setFilesystem(filesystem)
         .build());
 
+    assertTrue(parserConfig.getReadOnlyPaths().isPresent());
     assertEquals(
-        parserConfig.getReadOnlyPaths(),
-        ImmutableSet.<Path>of(Paths.get(readOnlyPaths.get(0)), Paths.get(readOnlyPaths.get(1))));
+        parserConfig.getReadOnlyPaths().get(),
+        ImmutableList.<Path>of(
+            filesystem.resolve(Paths.get(existingPath1)),
+            filesystem.resolve(Paths.get(existingPath2))));
 
-    String notExistingDir = temporaryFolder.getRoot() + "/not/existing/path";
+    String notExistingDir = "not/existing/path";
     parserConfig = new ParserConfig(FakeBuckConfig.builder()
         .setSections("[project]", "read_only_paths = " + notExistingDir)
+        .setFilesystem(filesystem)
         .build());
 
     thrown.expect(HumanReadableException.class);
-    thrown.expectMessage("Path " + MorePaths.pathWithPlatformSeparators(notExistingDir) +
-        ", specified under read_only_paths does not exist.");
     parserConfig.getReadOnlyPaths();
   }
 

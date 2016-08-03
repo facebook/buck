@@ -217,6 +217,29 @@ public class BuckConfig {
     return config.getOptionalListWithoutComments(section, field, splitChar);
   }
 
+  public Optional<ImmutableList<Path>> getOptionalPathList(
+      String section, String field) {
+    Optional<ImmutableList<String>> rawPaths =
+        config.getOptionalListWithoutComments(section, field);
+
+    if (rawPaths.isPresent()) {
+      ImmutableList<Path> paths =
+          FluentIterable
+              .from(rawPaths.get())
+              .transform(
+                  new Function<String, Path>() {
+                    @Override
+                    public Path apply(String input) {
+                      return convertPath(input, true);
+                    }
+                  })
+              .toList();
+        return Optional.of(paths);
+    }
+
+    return Optional.<ImmutableList<Path>>absent();
+  }
+
   @Nullable
   public String getBuildTargetForAliasAsString(String possiblyFlavoredAlias) {
     Pair<BuildTarget, Integer> buildTargetPoundIdx = getBuildTargetForAlias(possiblyFlavoredAlias);
@@ -875,11 +898,10 @@ public class BuckConfig {
   public Optional<Path> getPath(String sectionName, String name, boolean isCellRootRelative) {
     Optional<String> pathString = getValue(sectionName, name);
     return pathString.isPresent() ?
-        isCellRootRelative ?
-            checkPathExists(
-                pathString.get(),
-                String.format("Overridden %s:%s path not found: ", sectionName, name)) :
-            Optional.of(getPathFromVfs(pathString.get())) :
+        Optional.of(convertPathWithError(
+            pathString.get(),
+            isCellRootRelative,
+            String.format("Overridden %s:%s path not found: ", sectionName, name))) :
         Optional.<Path>absent();
   }
 
@@ -895,6 +917,21 @@ public class BuckConfig {
 
   private Path getPathFromVfs(Path path) {
     return projectFilesystem.getRootPath().getFileSystem().getPath(path.toString());
+  }
+
+  private Path convertPathWithError(String pathString, boolean isCellRootRelative, String error) {
+    return isCellRootRelative ?
+        checkPathExists(
+            pathString,
+            error).get() :
+        getPathFromVfs(pathString);
+  }
+
+  private Path convertPath(String pathString, boolean isCellRootRelative) {
+    return convertPathWithError(
+        pathString,
+        isCellRootRelative,
+        isCellRootRelative ? "Cell-relative path not found: " : "Path not found: ");
   }
 
   public Optional<Path> checkPathExists(String pathString, String errorMsg) {

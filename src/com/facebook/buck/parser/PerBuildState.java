@@ -233,13 +233,13 @@ class PerBuildState implements AutoCloseable {
             newSymlinksEncountered);
       }
 
-      ImmutableSet<Path> readOnlyPaths =
+      Optional<ImmutableList<Path>> readOnlyPaths =
           new ParserConfig(getCell(node.getBuildTarget()).getBuckConfig()).getReadOnlyPaths();
       Cell currentCell = cells.get(node.getBuildTarget().getCellPath());
 
-      if (!readOnlyPaths.isEmpty() && currentCell != null) {
+      if (readOnlyPaths.isPresent() && currentCell != null) {
         Path cellRootPath = currentCell.getFilesystem().getRootPath();
-        for (Path readOnlyPath : readOnlyPaths) {
+        for (Path readOnlyPath : readOnlyPaths.get()) {
           if (buildFile.startsWith(cellRootPath.resolve(readOnlyPath))) {
             LOG.debug(
                 "Target %s is under a symlink (%s). It will be cached because it belongs " +
