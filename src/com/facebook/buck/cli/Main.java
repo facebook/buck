@@ -1000,6 +1000,7 @@ public final class Main {
             buildEventBus.post(DaemonEvent.newDaemonInstance());
           }
 
+
           VersionControlBuckConfig vcBuckConfig = new VersionControlBuckConfig(buckConfig);
 
           if (!command.isReadOnly() && vcBuckConfig.shouldGenerateStatistics()) {
