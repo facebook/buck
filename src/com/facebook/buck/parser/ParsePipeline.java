@@ -157,7 +157,7 @@ public class ParsePipeline implements AutoCloseable {
     if (cachedNode.isPresent()) {
       return cachedNode.get();
     }
-    try {
+    try (SimplePerfEvent.Scope scope = Parser.getTargetNodeEventScope(buckEventBus, buildTarget)) {
       return getTargetNodeJob(cell, buildTarget).get();
     } catch (Exception e) {
       propagateIfInstanceOf(e.getCause(), BuildFileParseException.class);

@@ -271,12 +271,10 @@ public class Parser {
       @Override
       public Iterator<BuildTarget> findChildren(BuildTarget target) {
         TargetNode<?> node;
-        try (SimplePerfEvent.Scope scope = getTargetNodeEventScope(eventBus, target)) {
-          try {
-            node = state.getTargetNode(target);
-          } catch (BuildFileParseException | BuildTargetException e) {
-            throw new RuntimeException(e);
-          }
+        try {
+          node = state.getTargetNode(target);
+        } catch (BuildFileParseException | BuildTargetException e) {
+          throw new RuntimeException(e);
         }
 
         if (ignoreBuckAutodepsFiles) {
@@ -286,17 +284,15 @@ public class Parser {
         Set<BuildTarget> deps = Sets.newHashSet();
         for (BuildTarget dep : node.getDeps()) {
           TargetNode<?> depTargetNode;
-          try (SimplePerfEvent.Scope scope = getTargetNodeEventScope(eventBus, dep)) {
-            try {
-              depTargetNode = state.getTargetNode(dep);
-            } catch (BuildFileParseException | BuildTargetException | HumanReadableException e) {
-              throw new HumanReadableException(
-                  e,
-                  "Couldn't get dependency '%s' of target '%s':\n%s",
-                  dep,
-                  target,
-                  e.getMessage());
-            }
+          try {
+            depTargetNode = state.getTargetNode(dep);
+          } catch (BuildFileParseException | BuildTargetException | HumanReadableException e) {
+            throw new HumanReadableException(
+                e,
+                "Couldn't get dependency '%s' of target '%s':\n%s",
+                dep,
+                target,
+                e.getMessage());
           }
           depTargetNode.checkVisibility(node);
           deps.add(dep);
