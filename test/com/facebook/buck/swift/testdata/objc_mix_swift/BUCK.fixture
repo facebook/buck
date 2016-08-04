@@ -1,0 +1,10 @@
+apple_binary(
+    name = 'DemoMix',
+    srcs = [
+       'greatings.swift',
+       'main.m'
+    ],
+    frameworks = [
+        '$SDKROOT/System/Library/Frameworks/Foundation.framework'
+    ]
+)
