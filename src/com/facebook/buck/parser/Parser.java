@@ -29,8 +29,8 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.model.HasDefaultFlavors;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.HasDefaultFlavors;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
@@ -614,6 +614,15 @@ public class Parser {
     return SimplePerfEvent.scope(
         eventBus,
         PerfEventId.of("GetTargetNode"),
+        "target", buildTarget);
+  }
+
+  static SimplePerfEvent.Scope getTargetGroupEventScope(
+      BuckEventBus eventBus,
+      BuildTarget buildTarget) {
+    return SimplePerfEvent.scope(
+        eventBus,
+        PerfEventId.of("GetTargetGroup"),
         "target", buildTarget);
   }
 

@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.TargetGroup;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.util.Ansi;
@@ -50,6 +51,7 @@ import org.immutables.value.Value;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
@@ -84,9 +86,10 @@ class PerBuildState implements AutoCloseable {
    */
   private final Map<Path, Optional<Path>> symlinkExistenceCache;
 
-  private ProjectBuildFileParserPool projectBuildFileParserPool;
-  private RawNodeParsePipeline rawNodeParsePipeline;
-  private TargetNodeParsePipeline targetNodeParsePipeline;
+  private final ProjectBuildFileParserPool projectBuildFileParserPool;
+  private final RawNodeParsePipeline rawNodeParsePipeline;
+  private final TargetNodeParsePipeline targetNodeParsePipeline;
+  private final TargetGroupParsePipeline targetGroupParsePipeline;
 
   public PerBuildState(
       DaemonicParserState permState,
@@ -147,6 +150,16 @@ class PerBuildState implements AutoCloseable {
         eventBus,
         parserConfig.getEnableParallelParsing() && speculativeParsing.value(),
         rawNodeParsePipeline);
+    this.targetGroupParsePipeline = new TargetGroupParsePipeline(
+        permState.<TargetGroup>getOrCreateNodeCache(TargetGroup.class),
+        DefaultParserTargetGroupFactory.createForParser(
+            eventBus,
+            marshaller),
+        parserConfig.getEnableParallelParsing() ?
+            executorService :
+            MoreExecutors.newDirectExecutorService(),
+        eventBus,
+        rawNodeParsePipeline);
 
     register(rootCell);
   }
@@ -179,6 +192,20 @@ class PerBuildState implements AutoCloseable {
 
     // The raw nodes are just plain JSON blobs, and so we don't need to check for symlinks
     return rawNodeParsePipeline.getAllNodes(cell, buildFile);
+  }
+
+  public ImmutableSet<TargetGroup> getAllGroups() throws BuildFileParseException {
+    ImmutableSet.Builder<TargetGroup> allGroups = ImmutableSet.builder();
+    for (Cell cell : cells.values()) {
+      Path cellRootBuildFile = cell.getRoot().resolve(cell.getBuildFileName());
+      if (Files.exists(cellRootBuildFile)) {
+        allGroups.addAll(
+            targetGroupParsePipeline.getAllNodes(
+                cell,
+                cellRootBuildFile));
+      }
+    }
+    return allGroups.build();
   }
 
   private ProjectBuildFileParser createBuildFileParser(Cell cell, boolean ignoreBuckAutodepsFiles) {

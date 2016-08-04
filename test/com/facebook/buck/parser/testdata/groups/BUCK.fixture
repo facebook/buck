@@ -1,0 +1,3 @@
+java_library(name='node')
+
+target_group(name='group', targets=['//:node'])

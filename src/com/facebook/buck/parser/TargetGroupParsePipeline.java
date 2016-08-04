@@ -18,12 +18,13 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.groups.TargetGroupDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
+import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TargetGroup;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -41,21 +42,18 @@ import javax.annotation.concurrent.ThreadSafe;
  *   (in) BuildTarget -> [getRawNodes] -*> [createTargetNode] -> (out) TargetNode
  * (steps in [] have their output cached, -*> means that this step has parallel fanout).
  *
- * The work is simply dumped onto the executor, the {@link ProjectBuildFileParserPool} is used to
- * constrain the number of concurrent active parsers.
+ * The work is simply dumped onto the executor, the {@link ProjectBuildFileParserPool} is used to constrain
+ * the number of concurrent active parsers.
  * Within a single pipeline instance work is not duplicated (the **JobsCache variables) are used
  * to make sure we don't schedule the same work more than once), however it's possible for multiple
  * read-only commands to duplicate work.
  */
 @ThreadSafe
-public class TargetNodeParsePipeline
-    extends ConvertingPipeline<Map<String, Object>, TargetNode<?>> {
+public class TargetGroupParsePipeline
+    extends ConvertingPipeline<Map<String, Object>, TargetGroup> {
 
-  private static final Logger LOG = Logger.get(TargetNodeParsePipeline.class);
-
-  private final ParserTargetNodeFactory<TargetNode<?>> delegate;
+  private final ParserTargetNodeFactory<TargetGroup> delegate;
   private final BuckEventBus eventBus;
-  private final boolean speculativeDepsTraversal;
   private final RawNodeParsePipeline rawNodeParsePipeline;
 
   /**
@@ -64,20 +62,18 @@ public class TargetNodeParsePipeline
    * @param targetNodeDelegate where to farm out the creation of TargetNodes to
    * @param executorService executor
    * @param eventBus bus to use for parse start/stop events
-   * @param speculativeDepsTraversal whether to automatically schedule parsing of nodes' deps in the
    * @param rawNodeParsePipeline
    */
-  public TargetNodeParsePipeline(
-      Cache<BuildTarget, TargetNode<?>> cache,
-      ParserTargetNodeFactory<TargetNode<?>> targetNodeDelegate,
+  public TargetGroupParsePipeline(
+      Cache<BuildTarget, TargetGroup> cache,
+      ParserTargetNodeFactory<TargetGroup> targetNodeDelegate,
       ListeningExecutorService executorService,
       BuckEventBus eventBus,
-      boolean speculativeDepsTraversal, RawNodeParsePipeline rawNodeParsePipeline) {
+      RawNodeParsePipeline rawNodeParsePipeline) {
     super(executorService, cache);
 
     this.delegate = targetNodeDelegate;
     this.eventBus = eventBus;
-    this.speculativeDepsTraversal = speculativeDepsTraversal;
     this.rawNodeParsePipeline = rawNodeParsePipeline;
   }
 
@@ -88,43 +84,16 @@ public class TargetNodeParsePipeline
   }
 
   @Override
-  protected TargetNode<?> computeNode(
+  protected TargetGroup computeNode(
       final Cell cell,
       final BuildTarget buildTarget,
       final Map<String, Object> rawNode) throws BuildTargetException {
-    try (SimplePerfEvent.Scope scope = Parser.getTargetNodeEventScope(eventBus, buildTarget)) {
-      final TargetNode<?> targetNode = delegate.createTargetNode(
+    try (SimplePerfEvent.Scope scope = Parser.getTargetGroupEventScope(eventBus, buildTarget)) {
+      return delegate.createTargetNode(
           cell,
           cell.getAbsolutePathToBuildFile(buildTarget),
           buildTarget,
           rawNode);
-
-      if (speculativeDepsTraversal) {
-        executorService.submit(new Runnable() {
-          @Override
-          public void run() {
-            for (BuildTarget depTarget : targetNode.getDeps()) {
-              Path depCellPath = depTarget.getCellPath();
-              // TODO(marcinkosiba): Support crossing cell boundary from within the pipeline.
-              // Currently the cell name->Cell object mapping is held by the PerBuildState in a
-              // non-threadsafe way making it inconvenient to access from the pipeline.
-              if (depCellPath.equals(cell.getRoot())) {
-                try {
-                  if (depTarget.isFlavored()) {
-                    getNodeJob(cell, BuildTarget.of(depTarget.getUnflavoredBuildTarget()));
-                  }
-                  getNodeJob(cell, depTarget);
-                } catch (BuildTargetException e) {
-                  // No biggie, we'll hit the error again in the non-speculative path.
-                  LOG.info(e, "Could not schedule speculative parsing for %s", depTarget);
-                }
-              }
-            }
-          }
-        });
-      }
-
-      return targetNode;
     }
   }
 
@@ -144,6 +113,11 @@ public class TargetNodeParsePipeline
 
   @Override
   protected boolean isValid(Map<String, Object> from) {
-    return super.isValid(from) && !TargetGroupParsePipeline.isTargetGroup(from);
+    return super.isValid(from) && isTargetGroup(from);
+  }
+
+  public static boolean isTargetGroup(Map<String, Object> from) {
+    return TargetGroupDescription.TYPE.getName()
+        .equals(from.get(BuckPyFunction.TYPE_PROPERTY_NAME));
   }
 }

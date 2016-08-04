@@ -118,6 +118,7 @@ java_immutables_library(
     'SourcePaths.java',
     'SourceRoot.java',
     'TargetGraph.java',
+    'TargetGroup.java',
     'TargetName.java',
     'TargetNode.java',
     'TargetNodeFactory.java',

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY da7db805f4667913c914c7af3f86924fcca4bc96 #@#
+#@# GENERATED FILE: DO NOT MODIFY bb6e906e5a28d42a11092b3f49b787784b61031c #@#
 {
   "action_graph_cache" : {
     "deps" : [
@@ -179,6 +179,7 @@
       "//src/com/facebook/buck/file:downloader",
       "//src/com/facebook/buck/file:file",
       "//src/com/facebook/buck/go:go",
+      "//src/com/facebook/buck/groups:groups",
       "//src/com/facebook/buck/gwt:gwt",
       "//src/com/facebook/buck/halide:halide",
       "//src/com/facebook/buck/haskell:haskell",

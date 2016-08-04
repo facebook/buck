@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 2108a201d4ce44d5aeb32c09efca87cf30ed584b #@#
+#@# GENERATED FILE: DO NOT MODIFY c094e879dd0ebaf549907e302ea0681311db6c2d #@#
 {
   "config" : {
     "deps" : [ ],
@@ -12,6 +12,7 @@
     "deps" : [
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/graph:graph",
+      "//src/com/facebook/buck/groups:groups",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:io",
