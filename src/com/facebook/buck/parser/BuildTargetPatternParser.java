@@ -69,8 +69,7 @@ public abstract class BuildTargetPatternParser<T> {
             "'%s' must start with '//' or a cell followed by '//'",
             buildTargetPattern));
 
-    if (buildTargetPattern.equals(WILDCARD_BUILD_RULE_SUFFIX) ||
-        buildTargetPattern.endsWith("/" + WILDCARD_BUILD_RULE_SUFFIX)) {
+    if (buildTargetPattern.endsWith("/" + WILDCARD_BUILD_RULE_SUFFIX)) {
       return createWildCardPattern(cellNames, buildTargetPattern);
     }
 
@@ -85,6 +84,11 @@ public abstract class BuildTargetPatternParser<T> {
   private T createWildCardPattern(
       CellPathResolver cellNames,
       String buildTargetPattern) {
+    if (!isWildCardAllowed()) {
+      throw new BuildTargetParseException(
+          String.format("'%s' cannot end with '...'", buildTargetPattern));
+    }
+
     Path cellPath;
     int index = buildTargetPattern.indexOf(BUILD_RULE_PREFIX);
     if (index > 0) {
@@ -94,30 +98,25 @@ public abstract class BuildTargetPatternParser<T> {
       cellPath = cellNames.getCellPath(Optional.<String>absent());
     }
 
-    if (isWildCardAllowed()) {
-      if (buildTargetPattern.contains(BUILD_RULE_SEPARATOR)) {
-        throw new BuildTargetParseException(
-            String.format(
-                "'%s' cannot contain colon", buildTargetPattern));
-      }
-
-      if (!buildTargetPattern.equals(BUILD_RULE_PREFIX + WILDCARD_BUILD_RULE_SUFFIX)) {
-        String basePathWithPrefix = buildTargetPattern.substring(
-            0,
-            buildTargetPattern.length() - WILDCARD_BUILD_RULE_SUFFIX.length() - 1);
-        BuildTargetParser.checkBaseName(basePathWithPrefix, buildTargetPattern);
-      }
-
-      String basePathWithSlash = buildTargetPattern.substring(
-          BUILD_RULE_PREFIX.length(),
-          buildTargetPattern.length() - WILDCARD_BUILD_RULE_SUFFIX.length());
-      // Make sure the basePath comes from the same underlying filesystem.
-      Path basePath = cellPath.getFileSystem().getPath(basePathWithSlash);
-      return createForDescendants(cellPath, basePath);
-    } else {
+    if (buildTargetPattern.contains(BUILD_RULE_SEPARATOR)) {
       throw new BuildTargetParseException(
-          String.format("'%s' cannot end with '...'", buildTargetPattern));
+          String.format(
+              "'%s' cannot contain colon", buildTargetPattern));
     }
+
+    if (!buildTargetPattern.equals(BUILD_RULE_PREFIX + WILDCARD_BUILD_RULE_SUFFIX)) {
+      String basePathWithPrefix = buildTargetPattern.substring(
+          0,
+          buildTargetPattern.length() - WILDCARD_BUILD_RULE_SUFFIX.length() - 1);
+      BuildTargetParser.checkBaseName(basePathWithPrefix, buildTargetPattern);
+    }
+
+    String basePathWithSlash = buildTargetPattern.substring(
+        BUILD_RULE_PREFIX.length(),
+        buildTargetPattern.length() - WILDCARD_BUILD_RULE_SUFFIX.length());
+    // Make sure the basePath comes from the same underlying filesystem.
+    Path basePath = cellPath.getFileSystem().getPath(basePathWithSlash);
+    return createForDescendants(cellPath, basePath);
   }
 
   /**
