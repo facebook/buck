@@ -107,6 +107,9 @@ public class ArtifactCacheBuckConfig {
   private static final String REPOSITORY = "repository";
   private static final String DEFAULT_REPOSITORY = "";
 
+  private static final String SCHEDULE_TYPE = "schedule_type";
+  private static final String DEFAULT_SCHEDULE_TYPE = "none";
+
   public enum LoadBalancingType {
     SINGLE_SERVER,
     CLIENT_SLB,
@@ -123,6 +126,11 @@ public class ArtifactCacheBuckConfig {
   public String getRepository() {
     return buckConfig.getValue(CACHE_SECTION_NAME, REPOSITORY)
         .or(DEFAULT_REPOSITORY);
+  }
+
+  public String getScheduleType() {
+    return buckConfig.getValue(CACHE_SECTION_NAME, SCHEDULE_TYPE)
+        .or(DEFAULT_SCHEDULE_TYPE);
   }
 
   public SlbBuckConfig getSlbConfig() {

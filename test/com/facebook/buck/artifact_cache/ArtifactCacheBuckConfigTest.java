@@ -337,6 +337,19 @@ public class ArtifactCacheBuckConfigTest {
   }
 
   @Test
+  public void testScheduleType() throws IOException {
+    ArtifactCacheBuckConfig config = createFromText(
+        "[cache]",
+        "schedule_type = master");
+
+    assertThat(config.getScheduleType(), Matchers.equalTo("master"));
+
+    ArtifactCacheBuckConfig defaultConfig = createFromText(
+        "[cache]");
+    assertThat(defaultConfig.getScheduleType(), Matchers.equalTo("none"));
+  }
+
+  @Test
   public void errorMessageFormatter() throws IOException {
     final String testText = "this is a test";
     ArtifactCacheBuckConfig config = createFromText(

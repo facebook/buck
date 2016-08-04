@@ -73,6 +73,7 @@ public class AbstractNetworkCacheTest {
         NetworkCacheArgs.builder()
             .setCacheName("AbstractNetworkCacheTest")
             .setRepository("some_repository")
+            .setScheduleType("some_schedule_type")
             .setFetchClient(EasyMock.createMock(HttpService.class))
             .setStoreClient(EasyMock.createMock(HttpService.class))
             .setDoStore(true)

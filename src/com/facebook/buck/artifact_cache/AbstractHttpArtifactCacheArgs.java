@@ -30,6 +30,7 @@ import org.immutables.value.Value;
 interface AbstractNetworkCacheArgs {
   String getCacheName();
   String getRepository();
+  String getScheduleType();
   HttpService getFetchClient();
   HttpService getStoreClient();
   boolean getDoStore();

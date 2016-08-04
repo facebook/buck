@@ -375,6 +375,7 @@ public class ArtifactCaches {
             .setThriftEndpointPath(config.getHybridThriftEndpoint())
             .setCacheName(cacheName)
             .setRepository(config.getRepository())
+            .setScheduleType(config.getScheduleType())
             .setFetchClient(fetchService)
             .setStoreClient(storeService)
             .setDoStore(doStore)

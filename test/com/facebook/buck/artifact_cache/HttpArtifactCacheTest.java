@@ -118,6 +118,7 @@ public class HttpArtifactCacheTest {
     this.argsBuilder = NetworkCacheArgs.builder()
         .setCacheName("http")
         .setRepository("some_repository")
+        .setScheduleType("some_schedule")
         .setFetchClient(fetchService)
         .setStoreClient(storeService)
         .setDoStore(true)

@@ -43,6 +43,7 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
 
   protected final String name;
   protected final String repository;
+  protected final String scheduleType;
   protected final HttpService fetchClient;
   protected final HttpService storeClient;
   private final boolean doStore;
@@ -57,6 +58,7 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
   public AbstractNetworkCache(NetworkCacheArgs args) {
     this.name = args.getCacheName();
     this.repository = args.getRepository();
+    this.scheduleType = args.getScheduleType();
     this.fetchClient = args.getFetchClient();
     this.storeClient = args.getStoreClient();
     this.doStore = args.getDoStore();
