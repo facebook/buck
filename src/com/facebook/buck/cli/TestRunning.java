@@ -52,7 +52,6 @@ import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.result.type.ResultType;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -128,10 +127,6 @@ public class TestRunning {
       BuildEngine buildEngine,
       final StepRunner stepRunner)
       throws IOException, ExecutionException, InterruptedException {
-
-    if (options.isUsingOneTimeOutputDirectories()) {
-      BuckConstant.setOneTimeTestSubdirectory(UUID.randomUUID().toString());
-    }
 
     ImmutableSet<JavaLibrary> rulesUnderTest;
     // If needed, we first run instrumentation on the class files.

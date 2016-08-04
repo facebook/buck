@@ -16,12 +16,8 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Preconditions;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import javax.annotation.Nullable;
 
 public class BuckConstant {
   public static final String BUCK_LOG_FILE_NAME = "buck.log";
@@ -31,11 +27,6 @@ public class BuckConstant {
   private static final Path BUCK_OUTPUT_PATH = Paths.get("buck-out");
   private static final Path CURRENT_VERSION_FILE = getBuckOutputPath().resolve(".currentversion");
 
-  // TODO(bolinfest): The constants GEN_DIR, BIN_DIR, and ANNOTATION_DIR should be
-  // package-private to the com.facebook.buck.rules directory. Currently, they are also used in the
-  // com.facebook.buck.shell package, but these values should be injected into shell commands rather
-  // than hardcoded therein. This ensures that shell commands stay build-rule-agnostic.
-
   private static final Path BUCK_TRACE_DIR = getBuckOutputPath().resolve("log/traces");
   private static final String DEFAULT_CACHE_DIR = getBuckOutputDirectory() + "/cache";
 
@@ -43,23 +34,6 @@ public class BuckConstant {
   private static final Path TRASH_PATH = getBuckOutputPath().resolve(".trash");
 
   private BuckConstant() {}
-
-  /**
-   * An optional path-component for the directory where test-results are written.
-   * <p>
-   * See the --one-time-directory command line option in {@link com.facebook.buck.cli.TestCommand}
-   * where this is used to give each parallel buck processes a unique test-results-directory
-   * thereby stopping the parallel processes from interfering with each others results.
-   * <p>
-   * TODO(#4473736) Create a long-term non-hacky solution to this problem!
-   */
-  @Nullable
-  public static String oneTimeTestSubdirectory = null;
-
-  public static void setOneTimeTestSubdirectory(String oneTimeTestSubdirectory) {
-    Preconditions.checkState(!oneTimeTestSubdirectory.isEmpty(), "cannot be an empty string");
-    BuckConstant.oneTimeTestSubdirectory = oneTimeTestSubdirectory;
-  }
 
   /**
    * The relative path to the directory where Buck will generate its files.

@@ -28,11 +28,6 @@ import org.immutables.value.Value;
 abstract class AbstractTestRunningOptions {
 
   @Value.Default
-  public boolean isUsingOneTimeOutputDirectories() {
-    return false;
-  }
-
-  @Value.Default
   public boolean isCodeCoverageEnabled() {
     return false;
   }

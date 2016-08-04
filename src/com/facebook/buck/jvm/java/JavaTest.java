@@ -50,7 +50,6 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
@@ -380,20 +379,10 @@ public class JavaTest
 
   @Override
   public Path getPathToTestOutputDirectory() {
-    Path path =
-        BuildTargets.getGenPath(
-            getProjectFilesystem(),
-            getBuildTarget(),
-            "__java_test_%s_output__");
-
-    // Putting the one-time test-sub-directory below the usual directory has the nice property that
-    // doing a test run without "--one-time-output" will tidy up all the old one-time directories!
-    String subdir = BuckConstant.oneTimeTestSubdirectory;
-    if (subdir != null && !subdir.isEmpty()) {
-      path = path.resolve(subdir);
-    }
-
-    return path;
+    return BuildTargets.getGenPath(
+        getProjectFilesystem(),
+        getBuildTarget(),
+        "__java_test_%s_output__");
   }
 
   private Path getPathToTmpDirectory() {
@@ -413,10 +402,6 @@ public class JavaTest
               getBuildTarget(),
               "__java_test_%s_tmp__");
       LOG.debug("Using standard test temp dir base %s", base);
-    }
-    String subdir = BuckConstant.oneTimeTestSubdirectory;
-    if (subdir != null && !subdir.isEmpty()) {
-      base = base.resolve(subdir);
     }
     return base;
   }

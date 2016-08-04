@@ -39,7 +39,6 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -427,20 +426,10 @@ public class AppleTest
   @Override
   public Path getPathToTestOutputDirectory() {
     // TODO(bhamiltoncx): Refactor the JavaTest implementation; this is identical.
-    Path path =
-        BuildTargets.getGenPath(
-            getProjectFilesystem(),
-            getBuildTarget(),
-            "__apple_test_%s_output__");
-
-    // Putting the one-time test-sub-directory below the usual directory has the nice property that
-    // doing a test run without "--one-time-output" will tidy up all the old one-time directories!
-    String subdir = BuckConstant.oneTimeTestSubdirectory;
-    if (subdir != null && !subdir.isEmpty()) {
-      path = path.resolve(subdir);
-    }
-
-    return path;
+    return BuildTargets.getGenPath(
+        getProjectFilesystem(),
+        getBuildTarget(),
+        "__apple_test_%s_output__");
   }
 
   @Override

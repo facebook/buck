@@ -39,7 +39,6 @@ public class KnownBuildRuleTypesFactory {
       ProcessExecutor executor,
       AndroidDirectoryResolver directoryResolver,
       Optional<Path> testTempDirOverride) {
-
     this.executor = executor;
     this.directoryResolver = directoryResolver;
     this.testTempDirOverride = testTempDirOverride;

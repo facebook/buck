@@ -138,15 +138,6 @@ public class TestCommand extends BuildCommand {
   private boolean isDryRun;
 
   @Option(
-      name = "--one-time-output",
-      usage =
-          "Put test-results in a unique, one-time output directory.  " +
-          "This allows multiple tests to be run in parallel without interfering with each other, " +
-          "but at the expense of being unable to use cached results.  " +
-          "WARNING: this is experimental, and only works for Java tests!")
-  private boolean isUsingOneTimeOutput;
-
-  @Option(
       name = "--shuffle",
       usage =
           "Randomize the order in which test classes are executed." +
@@ -253,7 +244,6 @@ public class TestCommand extends BuildCommand {
 
   private TestRunningOptions getTestRunningOptions(CommandRunnerParams params) {
     return TestRunningOptions.builder()
-        .setUsingOneTimeOutputDirectories(isUsingOneTimeOutput)
         .setCodeCoverageEnabled(isCodeCoverageEnabled)
         .setRunAllTests(isRunAllTests())
         .setTestSelectorList(testSelectorOptions.getTestSelectorList())
