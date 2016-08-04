@@ -372,7 +372,12 @@ public class BuildInfoRecorder {
       LazyPath outputFile,
       ArtifactCache artifactCache)
       throws InterruptedException {
-    return artifactCache.fetch(ruleKey, outputFile);
+    try {
+      return artifactCache.fetch(ruleKey, outputFile);
+    } catch (Throwable t) {
+      LOG.error(t, "Buck internal error when downloading from the cache, will build locally.");
+      return CacheResult.error("unknown", t.getMessage());
+    }
   }
 
   /**
