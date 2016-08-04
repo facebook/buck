@@ -30,6 +30,7 @@ import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.model.Pair;
@@ -107,9 +108,7 @@ public class PrebuiltAppleFramework
 
     BuildTarget target = params.getBuildTarget();
     this.frameworkName = pathResolver.getAbsolutePath(frameworkPath).getFileName().toString();
-    this.out =
-        getProjectFilesystem().getBuckPaths().getGenDir()
-            .resolve(target.getBasePath()).resolve(target.getShortNameAndFlavorPostfix()).resolve(frameworkName);
+    this.out = BuildTargets.getGenPath(getProjectFilesystem(), target, "%s").resolve(frameworkName);
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {

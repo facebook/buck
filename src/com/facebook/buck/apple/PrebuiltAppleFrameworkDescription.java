@@ -74,10 +74,10 @@ public class PrebuiltAppleFrameworkDescription implements
       A args,
       Class<U> metadataClass) throws NoSuchBuildTargetException {
     if (metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
-      ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
       resolver.requireRule(buildTarget);
-      sourcePaths.add(new BuildTargetSourcePath(buildTarget));
-      return Optional.of(metadataClass.cast(FrameworkDependencies.of(sourcePaths.build())));
+      ImmutableSet<BuildTargetSourcePath> sourcePaths =
+          ImmutableSet.of(new BuildTargetSourcePath(buildTarget));
+      return Optional.of(metadataClass.cast(FrameworkDependencies.of(sourcePaths)));
     }
     return Optional.absent();
   }
