@@ -238,7 +238,9 @@ class memoized(object):
 
 
 @provide_for_build
-def glob(includes, excludes=[], include_dotfiles=False, build_env=None, search_base=None):
+def glob(includes, excludes=None, include_dotfiles=False, build_env=None, search_base=None):
+    if excludes is None:
+        excludes = []
     assert build_env.type == BuildContextType.BUILD_FILE, (
         "Cannot use `glob()` at the top-level of an included file.")
     # Ensure the user passes lists of strings rather than just a string.
@@ -311,8 +313,10 @@ def merge_maps(*header_maps):
     return result
 
 
-def single_subdir_glob(dirpath, glob_pattern, excludes=[], prefix=None, build_env=None,
+def single_subdir_glob(dirpath, glob_pattern, excludes=None, prefix=None, build_env=None,
                        search_base=None):
+    if excludes is None:
+        excludes = []
     results = {}
     files = glob([os.path.join(dirpath, glob_pattern)],
                  excludes=excludes,
@@ -337,7 +341,7 @@ def single_subdir_glob(dirpath, glob_pattern, excludes=[], prefix=None, build_en
 
 
 @provide_for_build
-def subdir_glob(glob_specs, excludes=[], prefix=None, build_env=None, search_base=None):
+def subdir_glob(glob_specs, excludes=None, prefix=None, build_env=None, search_base=None):
     """
     Given a list of tuples, the form of (relative-sub-directory, glob-pattern),
     return a dict of sub-directory relative paths to full paths.  Useful for
@@ -346,6 +350,8 @@ def subdir_glob(glob_specs, excludes=[], prefix=None, build_env=None, search_bas
 
     If prefix is not None, prepends it it to each key in the dictionary.
     """
+    if excludes is None:
+        excludes = []
 
     results = []
 
@@ -536,8 +542,18 @@ class BuildFileProcessor(object):
 
     def __init__(self, project_root, watchman_watch_root, watchman_project_prefix, build_file_name,
                  allow_empty_globs, ignore_buck_autodeps_files, watchman_client, watchman_error,
-                 watchman_glob_stat_results, enable_build_file_sandboxing, implicit_includes=[],
-                 extra_funcs=[], configs={}, env_vars={}, ignore_paths=[]):
+                 watchman_glob_stat_results, enable_build_file_sandboxing, implicit_includes=None,
+                 extra_funcs=None, configs=None, env_vars=None, ignore_paths=None):
+        if implicit_includes is None:
+            implicit_includes = []
+        if extra_funcs is None:
+            extra_funcs = []
+        if configs is None:
+            configs = {}
+        if env_vars is None:
+            env_vars = {}
+        if ignore_paths is None:
+            ignore_paths = []
         self._cache = {}
         self._build_env_stack = []
         self._sync_cookie_state = SyncCookieState()
@@ -696,13 +712,15 @@ class BuildFileProcessor(object):
         # Lookup the value and record it in this build file's context.
         build_env.used_env_vars[name] = value
 
-    def _include_defs(self, name, implicit_includes=[]):
+    def _include_defs(self, name, implicit_includes=None):
         """
         Pull the named include into the current caller's context.
 
         This method is meant to be installed into the globals of any files or
         includes that we process.
         """
+        if implicit_includes is None:
+            implicit_includes = []
 
         # Grab the current build context from the top of the stack.
         build_env = self._build_env_stack[-1]
@@ -863,10 +881,12 @@ class BuildFileProcessor(object):
             # Restore previous '__builtin__.__import__'
             __builtin__.__import__ = previous_import
 
-    def _process(self, build_env, path, implicit_includes=[]):
+    def _process(self, build_env, path, implicit_includes=None):
         """
         Process a build file or include at the given path.
         """
+        if implicit_includes is None:
+            implicit_includes = []
 
         # First check the cache.
         cached = self._cache.get(path)
@@ -929,10 +949,12 @@ class BuildFileProcessor(object):
         self._cache[path] = build_env, module
         return build_env, module
 
-    def _process_include(self, path, implicit_includes=[]):
+    def _process_include(self, path, implicit_includes=None):
         """
         Process the include file at the given path.
         """
+        if implicit_includes is None:
+            implicit_includes = []
 
         build_env = IncludeContext()
         return self._process(
@@ -940,10 +962,12 @@ class BuildFileProcessor(object):
             path,
             implicit_includes=implicit_includes)
 
-    def _process_build_file(self, path, implicit_includes=[]):
+    def _process_build_file(self, path, implicit_includes=None):
         """
         Process the build file at the given path.
         """
+        if implicit_includes is None:
+            implicit_includes = []
 
         # Create the build file context, including the base path and directory
         # name of the given path.
