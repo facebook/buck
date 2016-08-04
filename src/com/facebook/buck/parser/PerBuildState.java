@@ -85,7 +85,8 @@ class PerBuildState implements AutoCloseable {
   private final Map<Path, Optional<Path>> symlinkExistenceCache;
 
   private ProjectBuildFileParserPool projectBuildFileParserPool;
-  private ParsePipeline parsePipeline;
+  private RawNodeParsePipeline rawNodeParsePipeline;
+  private TargetNodeParsePipeline targetNodeParsePipeline;
 
   public PerBuildState(
       DaemonicParserState permState,
@@ -127,8 +128,13 @@ class PerBuildState implements AutoCloseable {
             return createBuildFileParser(input, PerBuildState.this.ignoreBuckAutodepsFiles);
           }
         });
-    this.parsePipeline = new ParsePipeline(
-        permState,
+
+    this.rawNodeParsePipeline = new RawNodeParsePipeline(
+        permState.getRawNodeCache(),
+        projectBuildFileParserPool,
+        executorService);
+    this.targetNodeParsePipeline = new TargetNodeParsePipeline(
+        permState.<TargetNode<?>>getOrCreateNodeCache(TargetNode.class),
         DefaultParserTargetNodeFactory.createForParser(
             eventBus,
             marshaller,
@@ -139,9 +145,8 @@ class PerBuildState implements AutoCloseable {
             executorService :
             MoreExecutors.newDirectExecutorService(),
         eventBus,
-        projectBuildFileParserPool,
-        parserConfig.getEnableParallelParsing() && speculativeParsing.value()
-    );
+        parserConfig.getEnableParallelParsing() && speculativeParsing.value(),
+        rawNodeParsePipeline);
 
     register(rootCell);
   }
@@ -150,30 +155,30 @@ class PerBuildState implements AutoCloseable {
       throws BuildFileParseException, BuildTargetException {
     Cell owningCell = getCell(target);
 
-    return parsePipeline.getTargetNode(owningCell, target);
+    return targetNodeParsePipeline.getNode(owningCell, target);
   }
 
   public ImmutableSet<TargetNode<?>> getAllTargetNodes(Cell cell, Path buildFile)
       throws BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
-    return parsePipeline.getAllTargetNodes(cell, buildFile);
+    return targetNodeParsePipeline.getAllNodes(cell, buildFile);
   }
 
   public ListenableFuture<ImmutableSet<TargetNode<?>>> getAllTargetNodesJob(
       Cell cell,
-      Path buildFile) {
+      Path buildFile) throws BuildTargetException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
-    return parsePipeline.getAllTargetNodesJob(cell, buildFile);
+    return targetNodeParsePipeline.getAllNodesJob(cell, buildFile);
   }
 
-  public ImmutableList<Map<String, Object>> getAllRawNodes(Cell cell, Path buildFile)
+  public ImmutableSet<Map<String, Object>> getAllRawNodes(Cell cell, Path buildFile)
       throws InterruptedException, BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
     // The raw nodes are just plain JSON blobs, and so we don't need to check for symlinks
-    return parsePipeline.getRawNodes(cell, buildFile);
+    return rawNodeParsePipeline.getAllNodes(cell, buildFile);
   }
 
   private ProjectBuildFileParser createBuildFileParser(Cell cell, boolean ignoreBuckAutodepsFiles) {
@@ -312,7 +317,8 @@ class PerBuildState implements AutoCloseable {
   public void close() throws BuildFileParseException {
     stdout.close();
     stderr.close();
-    parsePipeline.close();
+    targetNodeParsePipeline.close();
+    rawNodeParsePipeline.close();
     projectBuildFileParserPool.close();
 
     if (ignoreBuckAutodepsFiles) {

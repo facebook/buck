@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -130,16 +129,9 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
         ImmutableSet.of("//simple:simple"),
         ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(result.getStdout())));
 
-    // Check for a failure case.
-    try {
-      workspace.runBuckCommand("targets", "//simple:.");
-      fail("exepcted to fail");
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getMessage(),
-          Matchers.containsString(
-              "No rule found when resolving target //simple:. in build file //simple/BUCK"));
-    }
+    result = workspace.runBuckCommand("targets", "//simple:.");
+    result.assertFailure(
+        "No rule found when resolving target //simple:. in build file //simple/BUCK");
   }
 
   @Test

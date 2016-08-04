@@ -27,8 +27,8 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
+import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
@@ -72,7 +72,7 @@ import javax.annotation.concurrent.ThreadSafe;
  * {@link #invalidateIfProjectBuildFileParserStateChanged(Cell)} in order to ensure that state is maintained correctly.
  */
 @ThreadSafe
-class DaemonicParserState implements ParsePipeline.Cache {
+class DaemonicParserState {
   private static final Logger LOG = Logger.get(DaemonicParserState.class);
 
   /**
@@ -103,6 +103,158 @@ class DaemonicParserState implements ParsePipeline.Cache {
    */
   static final int DEFAULT_INITIAL_CAPACITY = 16;
   static final float DEFAULT_LOAD_FACTOR = 0.75f;
+  static final int DEFAULT_TYPE_CACHE_COUNT = 4;
+
+  private class DaemonicCache<T> implements Cache<BuildTarget, T> {
+
+    private final Class<T> type;
+
+    private DaemonicCache(Class<T> type) {
+      this.type = type;
+    }
+
+    @Override
+    public Optional<T> lookupComputedNode(Cell cell, BuildTarget target)
+        throws BuildTargetException {
+      invalidateIfProjectBuildFileParserStateChanged(cell);
+      final Path buildFile = cell.getAbsolutePathToBuildFile(target);
+      invalidateIfBuckConfigHasChanged(cell, buildFile);
+
+      Cache<BuildTarget, T> state = getCache(cell);
+      if (state == null) {
+        return Optional.absent();
+      }
+      return state.lookupComputedNode(cell, target);
+    }
+
+    @Override
+    public T putComputedNodeIfNotPresent(Cell cell, BuildTarget target, T targetNode)
+        throws BuildTargetException {
+      invalidateIfProjectBuildFileParserStateChanged(cell);
+      final Path buildFile = cell.getAbsolutePathToBuildFile(target);
+      invalidateIfBuckConfigHasChanged(cell, buildFile);
+
+      return getOrCreateCache(cell).putComputedNodeIfNotPresent(cell, target, targetNode);
+    }
+
+    private @Nullable Cache<BuildTarget, T> getCache(Cell cell) {
+      DaemonicCellState cellState = getCellState(cell);
+      if (cellState == null) {
+        return null;
+      }
+      return cellState.getCache(type);
+    }
+
+    private Cache<BuildTarget, T> getOrCreateCache(Cell cell) {
+      return getOrCreateCellState(cell).getOrCreateCache(type);
+    }
+  }
+
+  private class DaemonicRawCache implements Cache<Path, ImmutableSet<Map<String, Object>>> {
+
+    @Override
+    public Optional<ImmutableSet<Map<String, Object>>> lookupComputedNode(
+        Cell cell,
+        Path buildFile)
+        throws BuildTargetException {
+      Preconditions.checkState(buildFile.isAbsolute());
+      invalidateIfProjectBuildFileParserStateChanged(cell);
+      invalidateIfBuckConfigHasChanged(cell, buildFile);
+
+      DaemonicCellState state = getCellState(cell);
+      if (state == null) {
+        return Optional.absent();
+      }
+      return state.lookupRawNodes(buildFile);
+    }
+
+    /**
+     * Insert item into the cache if it was not already there. The cache will also strip any
+     * meta entries from the raw nodes (these are intended for the cache as they contain information
+     * about what other files to invalidate entries on).
+     *
+     * @param cell cell
+     * @param buildFile build file
+     * @param rawNodes nodes to insert
+     * @return previous nodes for the file if the cache contained it, new ones otherwise.
+     */
+    @SuppressWarnings({"unchecked", "PMD.EmptyIfStmt"})
+    @Override
+    public ImmutableSet<Map<String, Object>> putComputedNodeIfNotPresent(
+        Cell cell,
+        Path buildFile,
+        ImmutableSet<Map<String, Object>> rawNodes)
+        throws BuildTargetException {
+      Preconditions.checkState(buildFile.isAbsolute());
+      // Technically this leads to inconsistent state if the state change happens after rawNodes
+      // were computed, but before we reach the synchronized section here, however that's a problem
+      // we already have, as we don't invalidate any nodes that have been retrieved from the cache
+      // (and so the partially-constructed graph will contain stale nodes if the cache was
+      // invalidated mid-way through the parse).
+      invalidateIfProjectBuildFileParserStateChanged(cell);
+
+      final ImmutableSet.Builder<Map<String, Object>> withoutMetaIncludesBuilder =
+          ImmutableSet.builder();
+      ImmutableSet.Builder<Path> dependentsOfEveryNode = ImmutableSet.builder();
+      ImmutableMap<String, ImmutableMap<String, Optional<String>>> configs =
+          ImmutableMap.of();
+      for (Map<String, Object> rawNode : rawNodes) {
+        if (rawNode.containsKey(INCLUDES_META_RULE)) {
+          for (String path :
+              Preconditions.checkNotNull((List<String>) rawNode.get(INCLUDES_META_RULE))) {
+            dependentsOfEveryNode.add(cell.getFilesystem().resolve(path));
+          }
+        } else if (rawNode.containsKey(CONFIGS_META_RULE)) {
+          ImmutableMap.Builder<String, ImmutableMap<String, Optional<String>>> builder =
+              ImmutableMap.builder();
+          Map<String, Map<String, String>> configsMeta =
+              Preconditions.checkNotNull(
+                  (Map<String, Map<String, String>>) rawNode.get(CONFIGS_META_RULE));
+          for (Map.Entry<String, Map<String, String>> ent : configsMeta.entrySet()) {
+            builder.put(
+                ent.getKey(),
+                ImmutableMap.copyOf(
+                    Maps.transformValues(
+                        ent.getValue(),
+                        new Function<String, Optional<String>>() {
+                          @Override
+                          public Optional<String> apply(@Nullable String input) {
+                            return Optional.fromNullable(input);
+                          }
+                        })));
+          }
+          configs = builder.build();
+        } else if (rawNode.containsKey(ENV_META_RULE)) {
+          // Skip the env meta rule for now.
+        } else {
+          withoutMetaIncludesBuilder.add(rawNode);
+        }
+      }
+      final ImmutableSet<Map<String, Object>> withoutMetaIncludes =
+          withoutMetaIncludesBuilder.build();
+
+      // We also know that the rules all depend on the default includes for the
+      // cell.
+      BuckConfig buckConfig = cell.getBuckConfig();
+      Iterable<String> defaultIncludes = new ParserConfig(buckConfig).getDefaultIncludes();
+      for (String include : defaultIncludes) {
+        // Default includes are given as "//path/to/file". They look like targets
+        // but they are not. However, I bet someone will try and treat it like a
+        // target, so find the owning cell if necessary, and then fully resolve
+        // the path against the owning cell's root.
+        int slashesIndex = include.indexOf("//");
+        Preconditions.checkState(slashesIndex != -1);
+        dependentsOfEveryNode.add(cell.getFilesystem().resolve(include.substring(2)));
+      }
+
+      return getOrCreateCellState(cell).putRawNodesIfNotPresentAndStripMetaEntries(
+          buildFile,
+          withoutMetaIncludes,
+          dependentsOfEveryNode.build(),
+          configs);
+    }
+  }
+
 
   private final TypeCoercerFactory typeCoercerFactory;
   private final TagSetCounter cacheInvalidatedByEnvironmentVariableChangeCounter;
@@ -119,6 +271,10 @@ class DaemonicParserState implements ParsePipeline.Cache {
    */
   @GuardedBy("cellStateLock")
   private final ConcurrentMap<Path, DaemonicCellState> cellPathToDaemonicState;
+
+  @GuardedBy("cellStateLock")
+  private final ConcurrentMap<Class<?>, DaemonicCache<?>> typedNodeCaches;
+  private final DaemonicRawCache rawNodeCache;
 
   private final int parsingThreads;
 
@@ -187,8 +343,15 @@ class DaemonicParserState implements ParsePipeline.Cache {
     this.cachedEnvironment = ImmutableMap.of();
     this.cachedIncludes = new ConcurrentHashMap<>();
     this.cellPathToDaemonicState =
-        new ConcurrentHashMap<Path, DaemonicCellState>(
+        new ConcurrentHashMap<>(
             DEFAULT_INITIAL_CAPACITY,
+            DEFAULT_LOAD_FACTOR,
+            parsingThreads);
+
+    this.rawNodeCache = new DaemonicRawCache();
+    this.typedNodeCaches =
+        new ConcurrentHashMap<>(
+            DEFAULT_TYPE_CACHE_COUNT,
             DEFAULT_LOAD_FACTOR,
             parsingThreads);
 
@@ -204,24 +367,30 @@ class DaemonicParserState implements ParsePipeline.Cache {
     return buildFileTrees;
   }
 
-  @Override
-  public Optional<TargetNode<?>> lookupTargetNode(
-      final Cell cell,
-      final BuildTarget target) throws BuildTargetException {
-    invalidateIfProjectBuildFileParserStateChanged(cell);
-    final Path buildFile = cell.getAbsolutePathToBuildFile(target);
-    invalidateIfBuckConfigHasChanged(cell, buildFile);
-
-    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
-      DaemonicCellState state = cellPathToDaemonicState.get(cell.getRoot());
-      if (state == null) {
-        return Optional.<TargetNode<?>>absent();
+  @SuppressWarnings("unchecked")
+  public <T> Cache<BuildTarget, T> getOrCreateNodeCache(Class<?> cacheType) {
+    try (AutoCloseableLock writeLock = cellStateLock.writeLock()) {
+      DaemonicCache<?> cache = typedNodeCaches.get(cacheType);
+      if (cache == null) {
+        cache = new DaemonicCache<>(cacheType);
+        typedNodeCaches.put(cacheType, cache);
       }
-      return state.lookupTargetNode(target);
+      return (Cache<BuildTarget, T>) cache;
     }
   }
 
+  public Cache<Path, ImmutableSet<Map<String, Object>>> getRawNodeCache() {
+    return rawNodeCache;
+  }
+
+  @Nullable
   private DaemonicCellState getCellState(Cell cell) {
+    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+      return cellPathToDaemonicState.get(cell.getRoot());
+    }
+  }
+
+  private DaemonicCellState getOrCreateCellState(Cell cell) {
     try (AutoCloseableLock writeLock = cellStateLock.writeLock()) {
       DaemonicCellState state = cellPathToDaemonicState.get(cell.getRoot());
       if (state == null) {
@@ -229,110 +398,6 @@ class DaemonicParserState implements ParsePipeline.Cache {
         cellPathToDaemonicState.put(cell.getRoot(), state);
       }
       return state;
-    }
-  }
-
-  @Override
-  public TargetNode<?> putTargetNodeIfNotPresent(
-      final Cell cell,
-      final BuildTarget target,
-      TargetNode<?> targetNode) throws BuildTargetException {
-    invalidateIfProjectBuildFileParserStateChanged(cell);
-    final Path buildFile = cell.getAbsolutePathToBuildFile(target);
-    invalidateIfBuckConfigHasChanged(cell, buildFile);
-
-    return getCellState(cell).putTargetNodeIfNotPresent(target, targetNode);
-  }
-
-  @Override
-  @SuppressWarnings({"unchecked", "PMD.EmptyIfStmt"})
-  public ImmutableList<Map<String, Object>> putRawNodesIfNotPresentAndStripMetaEntries(
-      final Cell cell,
-      final Path buildFile,
-      final ImmutableList<Map<String, Object>> rawNodes) {
-    Preconditions.checkState(buildFile.isAbsolute());
-    // Technically this leads to inconsistent state if the state change happens after rawNodes
-    // were computed, but before we reach the synchronized section here, however that's a problem
-    // we already have, as we don't invalidate any nodes that have been retrieved from the cache
-    // (and so the partially-constructed graph will contain stale nodes if the cash was invalidated
-    // mid-way through the parse).
-    invalidateIfProjectBuildFileParserStateChanged(cell);
-
-    final ImmutableList.Builder<Map<String, Object>> withoutMetaIncludesBuilder =
-        ImmutableList.builder();
-    ImmutableSet.Builder<Path> dependentsOfEveryNode = ImmutableSet.builder();
-    ImmutableMap<String, ImmutableMap<String, Optional<String>>> configs =
-        ImmutableMap.of();
-    for (Map<String, Object> rawNode : rawNodes) {
-      if (rawNode.containsKey(INCLUDES_META_RULE)) {
-        for (String path :
-            Preconditions.checkNotNull((List<String>) rawNode.get(INCLUDES_META_RULE))) {
-          dependentsOfEveryNode.add(cell.getFilesystem().resolve(path));
-        }
-      } else if (rawNode.containsKey(CONFIGS_META_RULE)) {
-        ImmutableMap.Builder<String, ImmutableMap<String, Optional<String>>> builder =
-            ImmutableMap.builder();
-        Map<String, Map<String, String>> configsMeta =
-            Preconditions.checkNotNull(
-                (Map<String, Map<String, String>>) rawNode.get(CONFIGS_META_RULE));
-        for (Map.Entry<String, Map<String, String>> ent : configsMeta.entrySet()) {
-          builder.put(
-              ent.getKey(),
-              ImmutableMap.copyOf(
-                  Maps.transformValues(
-                      ent.getValue(),
-                      new Function<String, Optional<String>>() {
-                        @Override
-                        public Optional<String> apply(@Nullable String input) {
-                          return Optional.fromNullable(input);
-                        }
-                      })));
-        }
-        configs = builder.build();
-      } else if (rawNode.containsKey(ENV_META_RULE)) {
-        // Skip the env meta rule for now.
-      } else {
-        withoutMetaIncludesBuilder.add(rawNode);
-      }
-    }
-    final ImmutableList<Map<String, Object>> withoutMetaIncludes =
-        withoutMetaIncludesBuilder.build();
-
-    // We also know that the rules all depend on the default includes for the
-    // cell.
-    BuckConfig buckConfig = cell.getBuckConfig();
-    Iterable<String> defaultIncludes = new ParserConfig(buckConfig).getDefaultIncludes();
-    for (String include : defaultIncludes) {
-      // Default includes are given as "//path/to/file". They look like targets
-      // but they are not. However, I bet someone will try and treat it like a
-      // target, so find the owning cell if necessary, and then fully resolve
-      // the path against the owning cell's root.
-      int slashesIndex = include.indexOf("//");
-      Preconditions.checkState(slashesIndex != -1);
-      dependentsOfEveryNode.add(cell.getFilesystem().resolve(include.substring(2)));
-    }
-
-    return getCellState(cell).putRawNodesIfNotPresentAndStripMetaEntries(
-        buildFile,
-        withoutMetaIncludes,
-        dependentsOfEveryNode.build(),
-        configs);
-  }
-
-  @Override
-  public Optional<ImmutableList<Map<String, Object>>> lookupRawNodes(
-      final Cell cell,
-      final Path buildFile) {
-    Preconditions.checkState(buildFile.isAbsolute());
-    invalidateIfProjectBuildFileParserStateChanged(cell);
-    invalidateIfBuckConfigHasChanged(cell, buildFile);
-
-    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
-      DaemonicCellState state = cellPathToDaemonicState.get(cell.getRoot());
-      if (state == null) {
-        return Optional.<ImmutableList<Map<String, Object>>>absent();
-      }
-      return state.lookupRawNodes(buildFile);
     }
   }
 

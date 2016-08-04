@@ -18,22 +18,22 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
 import com.google.common.base.Optional;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.annotation.concurrent.GuardedBy;
 
@@ -41,34 +41,64 @@ class DaemonicCellState {
 
   private static final Logger LOG = Logger.get(DaemonicCellState.class);
 
+  private class CacheImpl<T> implements PipelineNodeCache.Cache<BuildTarget, T> {
+
+    @GuardedBy("rawAndComputedNodesLock")
+    public final ConcurrentMapCache<BuildTarget, T> allComputedNodes =
+        new ConcurrentMapCache<>(parsingThreads);
+
+    @Override
+    public Optional<T> lookupComputedNode(
+        Cell cell,
+        BuildTarget target) throws BuildTargetException {
+      try (AutoCloseableLock readLock = rawAndComputedNodesLock.readLock()) {
+        return Optional.fromNullable(allComputedNodes.getIfPresent(target));
+      }
+    }
+
+    @Override
+    public T putComputedNodeIfNotPresent(
+        Cell cell,
+        BuildTarget target,
+        T targetNode) throws BuildTargetException {
+      try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
+        T updatedNode = allComputedNodes.get(target, targetNode);
+        if (updatedNode.equals(targetNode)) {
+          targetsCornucopia.put(target.getUnflavoredBuildTarget(), target);
+        }
+        return updatedNode;
+      }
+    }
+  }
+
   private final Path cellRoot;
   private Cell cell;
 
-  @GuardedBy("nodesAndTargetsLock")
+  @GuardedBy("rawAndComputedNodesLock")
   private final SetMultimap<Path, Path> buildFileDependents;
-  @GuardedBy("nodesAndTargetsLock")
+  @GuardedBy("rawAndComputedNodesLock")
   private final SetMultimap<UnflavoredBuildTarget, BuildTarget> targetsCornucopia;
-  @GuardedBy("nodesAndTargetsLock")
+  @GuardedBy("rawAndComputedNodesLock")
   private final Map<Path, ImmutableMap<String, ImmutableMap<String, Optional<String>>>>
     buildFileConfigs;
-  @GuardedBy("nodesAndTargetsLock")
-  private final ConcurrentMapCache<Path, ImmutableList<Map<String, Object>>> allRawNodes;
-  @GuardedBy("nodesAndTargetsLock")
-  private final ConcurrentMapCache<BuildTarget, TargetNode<?>> allTargetNodes;
+  @GuardedBy("rawAndComputedNodesLock")
+  private final ConcurrentMapCache<Path, ImmutableSet<Map<String, Object>>> allRawNodes;
+  @GuardedBy("rawAndComputedNodesLock")
+  private final ConcurrentMap<Class<?>, CacheImpl<?>> typedNodeCaches;
 
-  private final AutoCloseableReadWriteUpdateLock nodesAndTargetsLock;
+  private final AutoCloseableReadWriteUpdateLock rawAndComputedNodesLock;
+  private final int parsingThreads;
 
   DaemonicCellState(Cell cell, int parsingThreads) {
     this.cell = cell;
+    this.parsingThreads = parsingThreads;
     this.cellRoot = cell.getRoot();
-    this.buildFileDependents = HashMultimap.<Path, Path>create();
-    this.targetsCornucopia = HashMultimap.<UnflavoredBuildTarget, BuildTarget>create();
-    this.buildFileConfigs =
-      new HashMap<Path, ImmutableMap<String, ImmutableMap<String, Optional<String>>>>();
-    this.allRawNodes =
-      new ConcurrentMapCache<Path, ImmutableList<Map<String, Object>>>(parsingThreads);
-    this.allTargetNodes = new ConcurrentMapCache<BuildTarget, TargetNode<?>>(parsingThreads);
-    this.nodesAndTargetsLock = new AutoCloseableReadWriteUpdateLock();
+    this.buildFileDependents = HashMultimap.create();
+    this.targetsCornucopia = HashMultimap.create();
+    this.buildFileConfigs = new HashMap<>();
+    this.allRawNodes = new ConcurrentMapCache<>(parsingThreads);
+    this.typedNodeCaches = Maps.newConcurrentMap();
+    this.rawAndComputedNodesLock = new AutoCloseableReadWriteUpdateLock();
   }
 
   // TODO(mzlee): Only needed for invalidateBasedOn which does not have access to cell metadata
@@ -80,37 +110,40 @@ class DaemonicCellState {
     return cellRoot;
   }
 
-  Optional<TargetNode<?>> lookupTargetNode(BuildTarget target) {
-    try (AutoCloseableLock readLock = nodesAndTargetsLock.readLock()) {
-      return Optional.<TargetNode<?>>fromNullable(allTargetNodes.getIfPresent(target));
+  @SuppressWarnings("unchecked")
+  public <T> CacheImpl<T> getOrCreateCache(Class<T> type) {
+    try (AutoCloseableLock updateLock = rawAndComputedNodesLock.updateLock()) {
+      CacheImpl<?> cache = typedNodeCaches.get(type);
+      if (cache == null) {
+        try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
+          cache = new CacheImpl<>();
+          typedNodeCaches.put(type, cache);
+        }
+      }
+      return (CacheImpl<T>) cache;
     }
   }
 
-  Optional<ImmutableList<Map<String, Object>>> lookupRawNodes(Path buildFile) {
-    try (AutoCloseableLock readLock = nodesAndTargetsLock.readLock()) {
+  @SuppressWarnings("unchecked")
+  public <T> CacheImpl<T> getCache(Class<T> type) {
+    try (AutoCloseableLock readLock = rawAndComputedNodesLock.readLock()) {
+      return (CacheImpl<T>) typedNodeCaches.get(type);
+    }
+  }
+
+  Optional<ImmutableSet<Map<String, Object>>> lookupRawNodes(Path buildFile) {
+    try (AutoCloseableLock readLock = rawAndComputedNodesLock.readLock()) {
       return Optional.fromNullable(allRawNodes.getIfPresent(buildFile));
     }
   }
 
-  TargetNode<?> putTargetNodeIfNotPresent(
-      final BuildTarget target,
-      TargetNode<?> targetNode) {
-    try (AutoCloseableLock writeLock = nodesAndTargetsLock.writeLock()) {
-      TargetNode<?> updatedNode = allTargetNodes.get(target, targetNode);
-      if (updatedNode.equals(targetNode)) {
-        targetsCornucopia.put(target.getUnflavoredBuildTarget(), target);
-      }
-      return updatedNode;
-    }
-  }
-
-  ImmutableList<Map<String, Object>> putRawNodesIfNotPresentAndStripMetaEntries(
+  ImmutableSet<Map<String, Object>> putRawNodesIfNotPresentAndStripMetaEntries(
       final Path buildFile,
-      final ImmutableList<Map<String, Object>> withoutMetaIncludes,
+      final ImmutableSet<Map<String, Object>> withoutMetaIncludes,
       final ImmutableSet<Path> dependentsOfEveryNode,
       ImmutableMap<String, ImmutableMap<String, Optional<String>>> configs) {
-    try (AutoCloseableLock writeLock = nodesAndTargetsLock.writeLock()) {
-      ImmutableList<Map<String, Object>> updated =
+    try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
+      ImmutableSet<Map<String, Object>> updated =
           allRawNodes.get(buildFile, withoutMetaIncludes);
       buildFileConfigs.put(buildFile, configs);
       if (updated == withoutMetaIncludes) {
@@ -125,17 +158,19 @@ class DaemonicCellState {
   }
 
   int invalidatePath(Path path) {
-    try (AutoCloseableLock writeLock = nodesAndTargetsLock.writeLock()) {
+    try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
       int invalidatedRawNodes = 0;
-      List<Map<String, Object>> rawNodes = allRawNodes.getIfPresent(path);
+      ImmutableSet<Map<String, Object>> rawNodes = allRawNodes.getIfPresent(path);
       if (rawNodes != null) {
         // Increment the counter
         invalidatedRawNodes = rawNodes.size();
         for (Map<String, Object> rawNode : rawNodes) {
           UnflavoredBuildTarget target =
-              ParsePipeline.parseBuildTargetFromRawRule(cell.getRoot(), rawNode, path);
+              RawNodeParsePipeline.parseBuildTargetFromRawRule(cell.getRoot(), rawNode, path);
           LOG.debug("Invalidating target for path %s: %s", path, target);
-          allTargetNodes.invalidateAll(targetsCornucopia.get(target));
+          for (CacheImpl<?> cache : typedNodeCaches.values()) {
+            cache.allComputedNodes.invalidateAll(targetsCornucopia.get(target));
+          }
           targetsCornucopia.removeAll(target);
         }
         allRawNodes.invalidate(path);
@@ -158,7 +193,7 @@ class DaemonicCellState {
   }
 
   void invalidateIfBuckConfigHasChanged(Cell cell, Path buildFile) {
-    try (AutoCloseableLock writeLock = nodesAndTargetsLock.writeLock()) {
+    try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
       // TODO(mzlee): Check whether usedConfigs includes the buildFileName
       ImmutableMap<String, ImmutableMap<String, Optional<String>>> usedConfigs =
           buildFileConfigs.get(buildFile);
@@ -181,5 +216,4 @@ class DaemonicCellState {
       }
     }
   }
-
 }

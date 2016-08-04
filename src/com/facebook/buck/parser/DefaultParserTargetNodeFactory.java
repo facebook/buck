@@ -143,7 +143,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
     }
 
     UnflavoredBuildTarget unflavoredBuildTargetFromRawData =
-        ParsePipeline.parseBuildTargetFromRawRule(
+        RawNodeParsePipeline.parseBuildTargetFromRawRule(
             cell.getRoot(),
             rawNode,
             buildFile);

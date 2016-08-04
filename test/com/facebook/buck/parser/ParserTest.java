@@ -95,6 +95,7 @@ import java.nio.file.WatchEvent;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.concurrent.Executors;
 
@@ -1880,7 +1881,10 @@ public class ParserTest {
 
     DaemonicParserState permState = parser.getPermState();
     for (BuildTarget target : buildTargets) {
-      assertTrue(permState.lookupTargetNode(cell, target).isPresent());
+      assertTrue(permState
+          .getOrCreateNodeCache(TargetNode.class)
+          .lookupComputedNode(cell, target)
+          .isPresent());
     }
   }
 
@@ -2350,6 +2354,16 @@ public class ParserTest {
                     ImmutableFlavor.of("macosx-x86_64"),
                     ImmutableFlavor.of("shared"))
                 .build()));
+  }
+
+  @Test
+  public void testGetCacheReturnsSame() throws Exception {
+    assertEquals(
+        parser.getPermState().getOrCreateNodeCache(TargetNode.class),
+        parser.getPermState().getOrCreateNodeCache(TargetNode.class));
+    assertNotEquals(
+        parser.getPermState().getOrCreateNodeCache(TargetNode.class),
+        parser.getPermState().getOrCreateNodeCache(Map.class));
   }
 
   private BuildRuleResolver buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {

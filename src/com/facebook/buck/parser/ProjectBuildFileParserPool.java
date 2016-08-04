@@ -26,7 +26,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
@@ -96,17 +96,17 @@ class ProjectBuildFileParserPool implements AutoCloseable {
    * @return a {@link ListenableFuture} containing the result of the parsing. The future will be
    *         cancelled if the {@link ProjectBuildFileParserPool#close()} method is called.
    */
-  public synchronized ListenableFuture<ImmutableList<Map<String, Object>>> getAllRulesAndMetaRules(
+  public synchronized ListenableFuture<ImmutableSet<Map<String, Object>>> getAllRulesAndMetaRules(
       final Cell cell,
       final Path buildFile,
       final ListeningExecutorService executorService) {
     Preconditions.checkState(!closing.get());
 
-    final ListenableFuture<ImmutableList<Map<String, Object>>> futureWork = Futures.transformAsync(
+    final ListenableFuture<ImmutableSet<Map<String, Object>>> futureWork = Futures.transformAsync(
         initialSchedule(cell),
-        new AsyncFunction<Void, ImmutableList<Map<String, Object>>>() {
+        new AsyncFunction<Void, ImmutableSet<Map<String, Object>>>() {
           @Override
-          public ListenableFuture<ImmutableList<Map<String, Object>>> apply(
+          public ListenableFuture<ImmutableSet<Map<String, Object>>> apply(
               Void input) throws Exception {
             Either<ProjectBuildFileParser, ListenableFuture<Void>> parserRequest =
                 requestParser(cell);
@@ -115,7 +115,7 @@ class ProjectBuildFileParserPool implements AutoCloseable {
               boolean hadErrorDuringParsing = false;
               try {
                 return Futures.immediateFuture(
-                    ImmutableList.copyOf(parser.getAllRulesAndMetaRules(buildFile)));
+                    ImmutableSet.copyOf(parser.getAllRulesAndMetaRules(buildFile)));
               } catch (BuildFileParseException e) {
                 hadErrorDuringParsing = true;
                 throw e;

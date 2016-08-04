@@ -1,0 +1,95 @@
+/*
+ * Copyright 2016-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+package com.facebook.buck.parser;
+
+import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.rules.Cell;
+import com.google.common.base.Optional;
+import com.google.common.util.concurrent.AsyncFunction;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.concurrent.GuardedBy;
+
+class PipelineNodeCache<K, T> {
+  private final Cache<K, T> cache;
+  @GuardedBy("lock")
+  protected final Map<K, ListenableFuture<T>> jobsCache;
+  private final Object lock = new Object();
+
+  public PipelineNodeCache(Cache<K, T> cache) {
+    this.jobsCache = new HashMap<>();
+    this.cache = cache;
+  }
+
+  /**
+   * Helper for de-duping jobs against the cache.
+   *
+   * @param jobSupplier a supplier to use to create the actual job.
+   * @return future describing the job. It can either be an immediate future (result cache hit),
+   *         ongoing job (job cache hit) or a new job (miss).
+   */
+  protected final ListenableFuture<T> getJobWithCacheLookup(
+      final Cell cell,
+      final K key,
+      JobSupplier<T> jobSupplier) throws BuildTargetException {
+    Optional<T> cacheLookupResult = cache.lookupComputedNode(cell, key);
+    if (cacheLookupResult.isPresent()) {
+      return Futures.immediateFuture(cacheLookupResult.get());
+    }
+
+    synchronized (lock) {
+      if (jobsCache.containsKey(key)) {
+        return jobsCache.get(key);
+      }
+      ListenableFuture<T> nodeJob = Futures.transformAsync(
+          jobSupplier.get(),
+          new AsyncFunction<T, T>() {
+            @Override
+            public ListenableFuture<T> apply(T input) throws BuildTargetException {
+              return Futures.immediateFuture(cache.putComputedNodeIfNotPresent(cell, key, input));
+            }
+          });
+      jobsCache.put(key, nodeJob);
+      return nodeJob;
+    }
+  }
+
+  protected interface JobSupplier<V> {
+    ListenableFuture<V> get() throws BuildTargetException;
+  }
+
+  public interface Cache<K, V> {
+    Optional<V> lookupComputedNode(
+        Cell cell,
+        K target) throws BuildTargetException;
+
+    /**
+     * Insert item into the cache if it was not already there.
+     * @param cell cell
+     * @param target target of the node
+     * @param targetNode node to insert
+     * @return previous node for the target if the cache contained it, new one otherwise.
+     */
+    V putComputedNodeIfNotPresent(
+        Cell cell,
+        K target,
+        V targetNode) throws BuildTargetException;
+  }
+}

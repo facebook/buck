@@ -100,7 +100,7 @@ public class Parser {
   }
 
   @VisibleForTesting
-  ImmutableList<Map<String, Object>> getRawTargetNodes(
+  ImmutableSet<Map<String, Object>> getRawTargetNodes(
       BuckEventBus eventBus,
       Cell cell,
       boolean enableProfiling,
@@ -185,7 +185,7 @@ public class Parser {
 
     try {
       Cell owningCell = cell.getCell(targetNode.getBuildTarget());
-      ImmutableList<Map<String, Object>> allRawNodes = getRawTargetNodes(
+      ImmutableSet<Map<String, Object>> allRawNodes = getRawTargetNodes(
           eventBus,
           owningCell,
           enableProfiling,
