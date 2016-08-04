@@ -134,6 +134,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                 Optional.<Path>absent(),
                 Optional.<String>absent(),
                 args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
+                args.env.get(),
                 args.getRunTestSeparately(),
                 args.stdOutLogLevel,
                 args.stdErrLogLevel, testTempDirOverride));
@@ -158,6 +159,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
     public Optional<Level> stdErrLogLevel;
     public Optional<Level> stdOutLogLevel;
     public Optional<Long> testRuleTimeoutMs;
+    public Optional<ImmutableMap<String, String>> env;
 
     public boolean getRunTestSeparately() {
       return runTestSeparately.or(false);

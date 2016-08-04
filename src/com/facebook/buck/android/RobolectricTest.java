@@ -44,6 +44,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -116,6 +117,7 @@ public class RobolectricTest extends JavaTest {
       Optional<String> mavenCoords,
       Optional<DummyRDotJava> optionalDummyRDotJava,
       Optional<Long> testRuleTimeoutMs,
+      ImmutableMap<String, String> env,
       boolean runTestSeparately,
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel,
@@ -141,6 +143,7 @@ public class RobolectricTest extends JavaTest {
         resourcesRoot,
         mavenCoords,
         testRuleTimeoutMs,
+        env,
         runTestSeparately,
         stdOutLogLevel,
         stdErrLogLevel,

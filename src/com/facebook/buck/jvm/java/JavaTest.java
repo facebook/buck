@@ -124,6 +124,9 @@ public class JavaTest
 
   private final Optional<Long> testRuleTimeoutMs;
 
+  @AddToRuleKey
+  private final ImmutableMap<String, String> env;
+
   private final Path pathToTestLogs;
 
   private static final int TEST_CLASSES_SHUFFLE_SEED = 0xFACEB00C;
@@ -159,6 +162,7 @@ public class JavaTest
       Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
       Optional<Long> testRuleTimeoutMs,
+      ImmutableMap<String, String> env,
       boolean runTestSeparately,
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel,
@@ -190,6 +194,7 @@ public class JavaTest
     this.additionalClasspathEntries = addtionalClasspathEntries;
     this.testType = testType;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.env = env;
     this.runTestSeparately = runTestSeparately;
     this.stdOutLogLevel = stdOutLogLevel;
     this.stdErrLogLevel = stdErrLogLevel;
@@ -268,6 +273,7 @@ public class JavaTest
         getProjectFilesystem(),
         nativeLibsEnvironment,
         testRuleTimeoutMs,
+        env,
         javaRuntimeLauncher,
         args);
   }

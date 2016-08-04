@@ -151,6 +151,7 @@ public class JavaTestDescription implements
                 args.resourcesRoot,
                 args.mavenCoords,
                 args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
+                args.env.get(),
                 args.getRunTestSeparately(),
                 args.stdOutLogLevel,
                 args.stdErrLogLevel,
@@ -212,7 +213,7 @@ public class JavaTestDescription implements
     public Optional<Level> stdOutLogLevel;
     public Optional<Boolean> useCxxLibraries;
     public Optional<Long> testRuleTimeoutMs;
-
+    public Optional<ImmutableMap<String, String>> env;
 
     @Override
     public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {

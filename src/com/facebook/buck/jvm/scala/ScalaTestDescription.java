@@ -43,6 +43,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -157,6 +158,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                 args.resourcesRoot,
                 args.mavenCoords,
                 args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
+                args.env.get(),
                 args.runTestSeparately.or(false),
                 args.stdOutLogLevel,
                 args.stdErrLogLevel,
@@ -194,5 +196,6 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
     public Optional<Level> stdOutLogLevel;
     public Optional<Boolean> useCxxLibraries;
     public Optional<Long> testRuleTimeoutMs;
+    public Optional<ImmutableMap<String, String>> env;
   }
 }

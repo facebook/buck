@@ -43,6 +43,7 @@ public class JUnitStep extends ShellStep {
   private final JavaRuntimeLauncher javaRuntimeLauncher;
   private final ImmutableMap<String, String> nativeLibsEnvironment;
   private final Optional<Long> testRuleTimeoutMs;
+  private final ImmutableMap<String, String> env;
   private final JUnitJvmArgs junitJvmArgs;
 
   // Set when the junit command times out.
@@ -52,6 +53,7 @@ public class JUnitStep extends ShellStep {
       ProjectFilesystem filesystem,
       Map<String, String> nativeLibsEnvironment,
       Optional<Long> testRuleTimeoutMs,
+      ImmutableMap<String, String> env,
       JavaRuntimeLauncher javaRuntimeLauncher,
       JUnitJvmArgs junitJvmArgs) {
     super(filesystem.getRootPath());
@@ -59,6 +61,7 @@ public class JUnitStep extends ShellStep {
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.nativeLibsEnvironment = ImmutableMap.copyOf(nativeLibsEnvironment);
     this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.env = env;
     this.junitJvmArgs = junitJvmArgs;
   }
 
@@ -89,6 +92,7 @@ public class JUnitStep extends ShellStep {
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
+    env.putAll(this.env);
     if (junitJvmArgs.getTmpDirectory().isPresent()) {
       env.put("TMP", junitJvmArgs.getTmpDirectory().get().toString());
     }
