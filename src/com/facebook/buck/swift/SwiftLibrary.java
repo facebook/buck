@@ -16,28 +16,36 @@
 
 package com.facebook.buck.swift;
 
+import static com.facebook.buck.swift.SwiftUtil.escapeSwiftModuleName;
+import static com.facebook.buck.swift.SwiftUtil.filterSwiftHeaderName;
+import static com.facebook.buck.swift.SwiftUtil.isSwiftCompanionLibrary;
+
 import com.facebook.buck.apple.AppleCxxPlatform;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
-import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Flavor;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -45,36 +53,64 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 /**
  * An action graph representation of a Swift library from the target graph, providing the
  * various interfaces to make it consumable by C/C native linkable rules.
  */
-public class SwiftLibrary
-    extends NoopBuildRule
+class SwiftLibrary
+    extends AbstractBuildRule
     implements HasRuntimeDeps, NativeLinkable {
 
-  private static final Logger LOG = Logger.get(SwiftLibrary.class);
+  @AddToRuleKey
+  private final Tool swiftCompiler;
 
-  private final BuildRuleResolver ruleResolver;
   private final Iterable<? extends BuildRule> exportedDeps;
   private final ImmutableSet<FrameworkPath> frameworks;
   private final ImmutableSet<FrameworkPath> libraries;
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
 
-  public SwiftLibrary(
+  @AddToRuleKey(stringify = true)
+  private final Path outputPath;
+
+  @AddToRuleKey
+  private final String moduleName;
+
+  @AddToRuleKey
+  private final ImmutableSortedSet<SourcePath> srcs;
+
+  private final Path headerPath;
+  private final Path modulePath;
+  private final Path objectPath;
+  private final boolean isCompanionLibrary;
+
+  SwiftLibrary(
+      Tool swiftCompiler,
       BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       Iterable<? extends BuildRule> exportedDeps,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
-      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain) {
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
+      Path outputPath,
+      String moduleName,
+      Iterable<SourcePath> srcs) {
     super(params, pathResolver);
-    this.ruleResolver = ruleResolver;
+    this.swiftCompiler = swiftCompiler;
     this.exportedDeps = exportedDeps;
     this.frameworks = frameworks;
     this.libraries = libraries;
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
+    this.outputPath = outputPath;
+    this.headerPath = outputPath.resolve(filterSwiftHeaderName(moduleName) + ".h");
+    this.isCompanionLibrary = isSwiftCompanionLibrary(moduleName);
+
+    String escapedModuleName = escapeSwiftModuleName(moduleName);
+    this.moduleName = escapedModuleName;
+    this.modulePath = outputPath.resolve(escapedModuleName + ".swiftmodule");
+    this.objectPath = outputPath.resolve(escapedModuleName + ".o");
+    this.srcs = ImmutableSortedSet.copyOf(srcs);
   }
 
   @Override
@@ -97,9 +133,6 @@ public class SwiftLibrary
   public NativeLinkableInput getNativeLinkableInput(
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) throws NoSuchBuildTargetException {
-    SwiftCompile rule = requireSwiftCompileRule(cxxPlatform.getFlavor());
-    LOG.debug("Required rule: %s", rule);
-
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
 
     // Add linker flags.
@@ -137,8 +170,7 @@ public class SwiftLibrary
       inputBuilder.addAllArgs(
           StringArg.from(
               "-Xlinker",
-              "-force_load_swift_libs",
-              "-lswiftRuntime"));
+              "-force_load_swift_libs"));
     }
     for (Path swiftRuntimePath : swiftRuntimePaths) {
       inputBuilder.addAllArgs(StringArg.from("-L", swiftRuntimePath.toString()));
@@ -148,10 +180,10 @@ public class SwiftLibrary
         .addArgs(
             new SourcePathArg(
                 getResolver(),
-                new BuildTargetSourcePath(rule.getBuildTarget(), rule.getModulePath())),
+                new BuildTargetSourcePath(getBuildTarget(), modulePath)),
             new SourcePathArg(
                 getResolver(),
-                new BuildTargetSourcePath(rule.getBuildTarget(), rule.getObjectPath())));
+                new BuildTargetSourcePath(getBuildTarget(), objectPath)));
     inputBuilder.addAllFrameworks(frameworks);
     inputBuilder.addAllLibraries(libraries);
     return inputBuilder.build();
@@ -163,18 +195,34 @@ public class SwiftLibrary
     return ImmutableMap.of();
   }
 
-  public SwiftCompile requireSwiftCompileRule(Flavor... flavors)
-      throws NoSuchBuildTargetException {
-    BuildTarget requiredBuildTarget =
-        BuildTarget.builder(getBuildTarget())
-            .addFlavors(flavors)
-            .build();
-    BuildRule rule = ruleResolver.requireRule(requiredBuildTarget);
-    if (!(rule instanceof SwiftCompile)) {
-      throw new RuntimeException(
-          String.format("Could not find SwiftCompile with target %s", requiredBuildTarget));
+  private SwiftCompileStep makeCompileStep() {
+    ImmutableList.Builder<String> compilerCommand = ImmutableList.builder();
+    compilerCommand.addAll(swiftCompiler.getCommandPrefix(getResolver()));
+    compilerCommand.add(
+        "-c",
+        "-enable-objc-interop",
+        // TODO(tho@uber.com) Need to find a way to figure out whether a swift library has a main
+        // entry or not, for now, we treat companion swift_library as a library (ignore main entry
+        // if exists)
+        isCompanionLibrary ? "-parse-as-library" : "",
+        "-module-name",
+        moduleName,
+        "-emit-module",
+        "-emit-module-path",
+        modulePath.toString(),
+        "-o",
+        objectPath.toString(),
+        "-emit-objc-header-path",
+        headerPath.toString());
+    for (SourcePath sourcePath : srcs) {
+      compilerCommand.add(getResolver().getRelativePath(sourcePath).toString());
     }
-    return (SwiftCompile) rule;
+
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
+    return new SwiftCompileStep(
+        projectFilesystem.getRootPath(),
+        ImmutableMap.<String, String>of(),
+        compilerCommand.build());
   }
 
   @Override
@@ -194,4 +242,19 @@ public class SwiftLibrary
         .build();
   }
 
+  @Override
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
+    buildableContext.recordArtifact(outputPath);
+    return ImmutableList.of(
+        new MkdirStep(getProjectFilesystem(), outputPath),
+        makeCompileStep());
+  }
+
+  @Nullable
+  @Override
+  public Path getPathToOutput() {
+    return outputPath;
+  }
 }

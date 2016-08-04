@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY f962b815e562c15a2f14c051e7a58c859d00bf50 #@#
+#@# GENERATED FILE: DO NOT MODIFY d06cfd6837536ddc84af5b4cb46a2f38e19ebb1c #@#
 {
   "swift" : {
     "deps" : [
@@ -16,11 +16,11 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",
-      "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/step:step",
       "//third-party/java/guava:guava",
-      "//third-party/java/infer-annotations:infer-annotations"
+      "//third-party/java/infer-annotations:infer-annotations",
+      "//third-party/java/jsr:jsr305"
     ]
   }
 }

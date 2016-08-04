@@ -36,7 +36,7 @@ import java.util.Map;
 /**
  * A step that compiles Swift sources to a single module.
  */
-public class SwiftCompileStep implements Step {
+class SwiftCompileStep implements Step {
 
   private static final Logger LOG = Logger.get(SwiftCompileStep.class);
 
@@ -44,7 +44,7 @@ public class SwiftCompileStep implements Step {
   private final ImmutableMap<String, String> compilerEnvironment;
   private final ImmutableList<String> compilerCommand;
 
-  public SwiftCompileStep(
+  SwiftCompileStep(
       Path compilerCwd,
       Map<String, String> compilerEnvironment,
       Iterable<String> compilerCommand) {

@@ -33,8 +33,12 @@ public class SwiftUtil {
     static final String SWIFT_HEADER_SUFFIX = "-Swift";
   }
 
+  static boolean isSwiftCompanionLibrary(String moduleName) {
+    return moduleName.endsWith(SWIFT_SUFFIX);
+  }
+
   static String filterSwiftHeaderName(String moduleName) {
-    if (moduleName.endsWith(SWIFT_SUFFIX)) {
+    if (isSwiftCompanionLibrary(moduleName)) {
       moduleName = moduleName.substring(0, moduleName.length() - SWIFT_SUFFIX.length());
     }
     return moduleName + SWIFT_HEADER_SUFFIX;
