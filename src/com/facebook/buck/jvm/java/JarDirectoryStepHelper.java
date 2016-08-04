@@ -20,7 +20,7 @@ import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.DirectoryTraversal;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutionContext;
@@ -40,8 +40,13 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Set;
@@ -96,6 +101,7 @@ public class JarDirectoryStepHelper {
             blacklist);
       } else if (Files.isDirectory(file)) {
         addFilesInDirectoryToJar(
+            filesystem,
             file,
             outputFile,
             alreadyAddedEntries,
@@ -299,7 +305,8 @@ public class JarDirectoryStepHelper {
    * @param jar is the file being written.
    */
   private static void addFilesInDirectoryToJar(
-      Path directory,
+      final ProjectFilesystem filesystem,
+      final Path directory,
       CustomZipOutputStream jar,
       final Set<String> alreadyAddedEntries,
       final Iterable<Pattern> blacklist,
@@ -309,52 +316,61 @@ public class JarDirectoryStepHelper {
     // a tree map before writing them out.
     final Map<String, Pair<JarEntry, Optional<Path>>> entries = Maps.newTreeMap();
 
-    new DirectoryTraversal(directory) {
+    filesystem.walkFileTree(
+        directory,
+        EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+        Integer.MAX_VALUE,
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+              throws IOException {
+            String relativePath =
+                MorePaths.pathWithUnixSeparators(MorePaths.relativize(directory, file));
+            // Check if the entry belongs to the blacklist and it should be excluded from the Jar.
+            if (shouldEntryBeRemovedFromJar(eventBus, relativePath, blacklist)) {
+              return FileVisitResult.CONTINUE;
+            }
 
-      @Override
-      public void visit(Path file, String relativePath) {
-        relativePath = relativePath.replace('\\', '/');
+            JarEntry entry = new JarEntry(relativePath);
+            String entryName = entry.getName();
+            // We want deterministic JARs, so avoid mtimes.
+            entry.setTime(ZipConstants.getFakeTime());
 
-        // Check if the entry belongs to the blacklist and it should be excluded from the Jar.
-        if (shouldEntryBeRemovedFromJar(eventBus, relativePath, blacklist)) {
-          return;
-        }
+            // We expect there to be many duplicate entries for things like directories. Creating
+            // those repeatedly would be lame, so don't do that.
+            if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
+              if (!entryName.endsWith("/")) {
+                eventBus.post(ConsoleEvent.create(
+                    determineSeverity(entry),
+                    "Duplicate found when adding directory to jar: %s", relativePath));
+              }
+              return FileVisitResult.CONTINUE;
+            }
 
-        JarEntry entry = new JarEntry(relativePath);
-        String entryName = entry.getName();
-        // We want deterministic JARs, so avoid mtimes.
-        entry.setTime(ZipConstants.getFakeTime());
-
-        // We expect there to be many duplicate entries for things like directories. Creating
-        // those repeatedly would be lame, so don't do that.
-        if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
-          if (!entryName.endsWith("/")) {
-            eventBus.post(ConsoleEvent.create(
-                determineSeverity(entry),
-                "Duplicate found when adding directory to jar: %s", relativePath));
+            entries.put(entry.getName(), new Pair<>(entry, Optional.of(file)));
+            return FileVisitResult.CONTINUE;
           }
-            return;
-        }
 
-        entries.put(entry.getName(), new Pair<>(entry, Optional.of(file)));
-      }
-
-      @Override
-      public void visitDirectory(Path directory, String relativePath) throws IOException {
-        if (relativePath.isEmpty()) {
-          // root of the tree. Skip.
-          return;
-        }
-        String entryName = relativePath.replace('\\', '/') + "/";
-        if (alreadyAddedEntries.contains(entryName)) {
-          return;
-        }
-        JarEntry entry = new JarEntry(entryName);
-        // We want deterministic JARs, so avoid mtimes.
-        entry.setTime(ZipConstants.getFakeTime());
-        entries.put(entry.getName(), new Pair<>(entry, Optional.<Path>absent()));
-      }
-    }.traverse();
+          @Override
+          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+              throws IOException {
+            String relativePath =
+                MorePaths.pathWithUnixSeparators(MorePaths.relativize(directory, dir));
+            if (relativePath.isEmpty()) {
+              // root of the tree. Skip.
+              return FileVisitResult.CONTINUE;
+            }
+            String entryName = relativePath.replace('\\', '/') + "/";
+            if (alreadyAddedEntries.contains(entryName)) {
+              return FileVisitResult.CONTINUE;
+            }
+            JarEntry entry = new JarEntry(entryName);
+            // We want deterministic JARs, so avoid mtimes.
+            entry.setTime(ZipConstants.getFakeTime());
+            entries.put(entry.getName(), new Pair<>(entry, Optional.<Path>absent()));
+            return FileVisitResult.CONTINUE;
+          }
+        });
 
     // Write the entries out using the iteration order of the tree map above.
     for (Pair<JarEntry, Optional<Path>> entry : entries.values()) {

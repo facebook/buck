@@ -573,6 +573,14 @@ public class ProjectFilesystem {
     Files.walkFileTree(root, wrapWithIgnoringFileVisitor(fileVisitor));
   }
 
+  public void walkFileTree(
+      Path root,
+      Set<FileVisitOption> options,
+      int maxDepth,
+      FileVisitor<Path> fileVisitor) throws IOException {
+    Files.walkFileTree(root, options, maxDepth, wrapWithIgnoringFileVisitor(fileVisitor));
+  }
+
   public ImmutableSet<Path> getFilesUnderPath(Path pathRelativeToProjectRoot) throws IOException {
     return getFilesUnderPath(pathRelativeToProjectRoot, Predicates.<Path>alwaysTrue());
   }
