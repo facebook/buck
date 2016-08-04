@@ -210,7 +210,6 @@ public class JavaTestDescription implements
     public Optional<Boolean> runTestSeparately;
     public Optional<Level> stdErrLogLevel;
     public Optional<Level> stdOutLogLevel;
-    public Optional<String> pathToJavaAgent;
     public Optional<Boolean> useCxxLibraries;
     public Optional<Long> testRuleTimeoutMs;
 
