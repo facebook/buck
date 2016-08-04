@@ -53,7 +53,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
@@ -864,19 +863,6 @@ public class BuckConfig {
     return config.getLong("build", "threads")
         .or((long) defaultValue)
         .intValue();
-  }
-
-  /**
-   * @return the number of threads Buck should use for network I/O. If the value is not specified
-   * in buckconfig the value is the number of cores of the machine.
-   */
-  public int getNumThreadsForNetwork() {
-    Optional<Integer> threads = config.getInteger("build", "network_threads");
-    if (threads.isPresent()) {
-      Preconditions.checkState(threads.get() > 0);
-      return threads.get();
-    }
-    return getDefaultMaximumNumberOfThreads();
   }
 
   /**
