@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Throwables;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.AccessDeniedException;
@@ -41,5 +42,11 @@ public class ThrowableConsoleEventTest {
     Throwable throwable = new AccessDeniedException("somefile");
     ThrowableConsoleEvent event = new ThrowableConsoleEvent(throwable, "message");
     assertThat(event.getMessage(), containsString(Throwables.getStackTraceAsString(throwable)));
+  }
+
+  @Test
+  public void throwableMalformedFormatMessage() {
+    ThrowableConsoleEvent event = ThrowableConsoleEvent.create(new Throwable(), "%s %d", "a");
+    assertThat(event.getMessage(), Matchers.stringContainsInOrder("%s %d", "a"));
   }
 }

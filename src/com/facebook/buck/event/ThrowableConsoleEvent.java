@@ -16,8 +16,10 @@
 
 package com.facebook.buck.event;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 
+import java.util.IllegalFormatException;
 import java.util.logging.Level;
 
 /**
@@ -53,6 +55,12 @@ public class ThrowableConsoleEvent extends ConsoleEvent {
   }
 
   public static ThrowableConsoleEvent create(Throwable throwable, String message, Object... args) {
-    return new ThrowableConsoleEvent(throwable, String.format(message, args));
+    String format;
+    try {
+      format = String.format(message, args);
+    } catch (IllegalFormatException e) {
+      format = "Malformed message: '" + message + "' args: [" + Joiner.on(",").join(args) + "]";
+    }
+    return new ThrowableConsoleEvent(throwable, format);
   }
 }
