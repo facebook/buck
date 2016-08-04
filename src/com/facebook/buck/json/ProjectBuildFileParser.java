@@ -16,6 +16,7 @@
 
 package com.facebook.buck.json;
 
+import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_SUFFIX;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.bser.BserDeserializer;
@@ -32,6 +33,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.MoreThrowables;
@@ -637,7 +639,10 @@ public class ProjectBuildFileParser implements AutoCloseable {
           "sys.path.insert(0, \"" +
               Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(pathlibDir)) + "\")\n" +
           "sys.path.insert(0, \"" +
-              Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(watchmanDir)) + "\")\n");
+              Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(watchmanDir)) + "\")\n" +
+          "\n\n" +
+          "SWIFT_SUFFIX='" + SWIFT_SUFFIX + "'\n" +
+          "SWIFT_LIBRARY_TYPE='" + SwiftLibraryDescription.TYPE.getName() + "'\n");
 
       Resources.asCharSource(resource, UTF_8).copyTo(out);
       out.write("\n\n");
