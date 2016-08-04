@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 503a0f0d51f60b424695bef0cf2b36aaea31776f #@#
+#@# GENERATED FILE: DO NOT MODIFY 05f280554bf43d308f03988a66e89ddc9ad8c47f #@#
 {
   "autodeps" : {
     "deps" : [
@@ -69,7 +69,6 @@
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/test/result/type:type",
       "//src/com/facebook/buck/test/selectors:selectors",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/sha1:sha1",

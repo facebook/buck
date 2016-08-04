@@ -1,9 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY b53b29ca0af593930b50542327cf27978eb91c39 #@#
+#@# GENERATED FILE: DO NOT MODIFY 2108a201d4ce44d5aeb32c09efca87cf30ed584b #@#
 {
   "config" : {
-    "deps" : [
-      "//src/com/facebook/buck/util:exceptions"
-    ],
+    "deps" : [ ],
     "exported_deps" : [
       "//src/com/facebook/buck/cli:config",
       "//third-party/java/guava:guava",

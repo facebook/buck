@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY f6931ca12a4b4665c12baf2b5a4b8a26d78ffe15 #@#
+#@# GENERATED FILE: DO NOT MODIFY 005bef31880bd2b01a959e1b246a0271db0898e9 #@#
 {
   "platform" : {
     "deps" : [
@@ -25,7 +25,6 @@
       "//src/com/facebook/buck/model:macros",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/test/result/type:type",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",

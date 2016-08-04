@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 47e6d97201854c32a96051ffc4c92dbfb08d1a1f #@#
+#@# GENERATED FILE: DO NOT MODIFY 72bbe7afa77171dc1db2b3b396bb7238e1afce23 #@#
 {
   "constants" : {
     "deps" : [
@@ -6,8 +6,7 @@
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
-      "//src/com/facebook/buck/util/immutables:immutables",
-      "//third-party/java/jsr:jsr305"
+      "//src/com/facebook/buck/util/immutables:immutables"
     ]
   },
   "escaper" : {
