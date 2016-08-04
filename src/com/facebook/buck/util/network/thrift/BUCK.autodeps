@@ -1,0 +1,14 @@
+#@# GENERATED FILE: DO NOT MODIFY 8f84a5ae91715d081c80d04b08eb90328c97ce21 #@#
+{
+  "thrift" : {
+    "deps" : [
+      "//src/com/facebook/buck/util/concurrent:concurrent"
+    ],
+    "exported_deps" : [
+      "//src-gen:thrift",
+      "//src/com/facebook/buck/event/listener:listener",
+      "//src/com/facebook/buck/slb:slb",
+      "//third-party/java/guava:guava"
+    ]
+  }
+}
