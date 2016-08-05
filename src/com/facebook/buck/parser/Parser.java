@@ -660,24 +660,6 @@ public class Parser {
     return target.withFlavors(defaultFlavors);
   }
 
-  static SimplePerfEvent.Scope getTargetNodeEventScope(
-      BuckEventBus eventBus,
-      BuildTarget buildTarget) {
-    return SimplePerfEvent.scope(
-        eventBus,
-        PerfEventId.of("GetTargetNode"),
-        "target", buildTarget);
-  }
-
-  static SimplePerfEvent.Scope getTargetGroupEventScope(
-      BuckEventBus eventBus,
-      BuildTarget buildTarget) {
-    return SimplePerfEvent.scope(
-        eventBus,
-        PerfEventId.of("GetTargetGroup"),
-        "target", buildTarget);
-  }
-
   @Subscribe
   public void onFileSystemChange(WatchEvent<?> event) throws InterruptedException {
     LOG.debug(

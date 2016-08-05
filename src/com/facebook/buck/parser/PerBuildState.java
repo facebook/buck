@@ -139,7 +139,6 @@ class PerBuildState implements AutoCloseable {
     this.targetNodeParsePipeline = new TargetNodeParsePipeline(
         permState.<TargetNode<?>>getOrCreateNodeCache(TargetNode.class),
         DefaultParserTargetNodeFactory.createForParser(
-            eventBus,
             marshaller,
             permState.getBuildFileTrees(),
             symlinkCheckers,
@@ -152,9 +151,7 @@ class PerBuildState implements AutoCloseable {
         rawNodeParsePipeline);
     this.targetGroupParsePipeline = new TargetGroupParsePipeline(
         permState.<TargetGroup>getOrCreateNodeCache(TargetGroup.class),
-        DefaultParserTargetGroupFactory.createForParser(
-            eventBus,
-            marshaller),
+        new DefaultParserTargetGroupFactory(marshaller),
         parserConfig.getEnableParallelParsing() ?
             executorService :
             MoreExecutors.newDirectExecutorService(),

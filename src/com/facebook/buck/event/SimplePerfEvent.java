@@ -19,13 +19,22 @@ package com.facebook.buck.event;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 import org.immutables.value.Value;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * An implementation of {@link BuckEvent}s used for gathering performance statistics. These are
@@ -245,6 +254,97 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
   }
 
   /**
+   * Like {@link SimplePerfEvent#scope(BuckEventBus, PerfEventId, ImmutableMap)}, but doesn't post
+   * the events if the duration of the scope is below a certain threshold.
+   * NOTE: The events are buffered before being posted. The longer they are buffered, the more
+   * likely any logging code will be confused. Ideally the threshold should not exceed 100ms.
+   *
+   *
+   * @param bus the {@link BuckEventBus} to post update and finished events to.
+   * @param perfEventId identifier of the operation (Upload, CacheFetch, Parse, etc..).
+   * @param info Any additional information to be saved with the event. This will be serialized and
+   *             potentially sent over the wire, so please keep this small.
+   * @param minimumTime the scope must take at least this long for the event to be posted.
+   * @param timeUnit time unit for minimumTime.
+   * @return an AutoCloseable which will send the finished event as soon as control flow exits
+   * the scope.
+   */
+  public static Scope scopeIgnoringShortEvents(
+      BuckEventBus bus,
+      PerfEventId perfEventId,
+      ImmutableMap<String, Object> info,
+      Scope parentScope,
+      long minimumTime,
+      TimeUnit timeUnit) {
+    if (minimumTime == 0) {
+      return scope(bus, perfEventId, info);
+    }
+    StartedImpl started = new StartedImpl(perfEventId, info);
+    bus.timestamp(started);
+    return new MinimumTimePerfEventScope(bus, started, parentScope, timeUnit.toNanos(minimumTime));
+  }
+
+  /**
+   * Convenience wrapper for {@link SimplePerfEvent#scope(BuckEventBus, PerfEventId, ImmutableMap)}.
+   */
+  public static Scope scopeIgnoringShortEvents(
+      BuckEventBus bus,
+      PerfEventId perfEventId,
+      Scope parentScope,
+      long minimumTime,
+      TimeUnit timeUnit) {
+    return scopeIgnoringShortEvents(
+        bus,
+        perfEventId,
+        ImmutableMap.<String, Object>of(),
+        parentScope,
+        minimumTime,
+        timeUnit);
+  }
+
+  /**
+   * Convenience wrapper for {@link SimplePerfEvent#scope(BuckEventBus, PerfEventId, ImmutableMap)}.
+   */
+  public static Scope scopeIgnoringShortEvents(
+      BuckEventBus bus,
+      PerfEventId perfEventId,
+      String k1,
+      Object v1,
+      Scope parentScope,
+      long minimumTime,
+      TimeUnit timeUnit) {
+    return scopeIgnoringShortEvents(
+        bus,
+        perfEventId,
+        ImmutableMap.of(k1, v1),
+        parentScope,
+        minimumTime,
+        timeUnit);
+  }
+
+  /**
+   * Convenience wrapper for {@link SimplePerfEvent#scope(BuckEventBus, PerfEventId, ImmutableMap)}.
+   */
+  public static Scope scopeIgnoringShortEvents(
+      BuckEventBus bus,
+      PerfEventId perfEventId,
+      String k1,
+      Object v1,
+      String k2,
+      Object v2,
+      Scope parentScope,
+      long minimumTime,
+      TimeUnit timeUnit) {
+    return scopeIgnoringShortEvents(
+        bus,
+        perfEventId,
+        ImmutableMap.of(k1, v1, k2, v2),
+        parentScope,
+        minimumTime,
+        timeUnit);
+  }
+
+  /**
    * Represents the scope within which a particular performance operation is taking place.
    */
   public interface Scope extends AutoCloseable {
@@ -273,6 +373,11 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
      *           so please keep this small.
      */
     void appendFinishedInfo(String k1, Object v1);
+
+    /**
+     * Increments a counter that will be appended to the finished event.
+     */
+    void incrementFinishedCounter(String key, long increment);
 
     @Override
     void close();
@@ -363,26 +468,32 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
     }
 
     @Override
+    public void incrementFinishedCounter(String key, long increment) {
+    }
+
+    @Override
     public void close() {
     }
   }
 
   private static class SimplePerfEventScope implements AutoCloseable, Scope {
-    private BuckEventBus bus;
-    private StartedImpl chainablePerfEvent;
-    private ImmutableMap.Builder<String, Object> finishedInfoBuilder;
+    protected BuckEventBus bus;
+    protected StartedImpl started;
+    protected Map<String, AtomicLong> finishedCounters;
+    protected ImmutableMap.Builder<String, Object> finishedInfoBuilder;
 
     public SimplePerfEventScope(
         BuckEventBus bus,
-        StartedImpl chainablePerfEvent) {
+        StartedImpl started) {
       this.bus = bus;
-      this.chainablePerfEvent = chainablePerfEvent;
+      this.started = started;
+      this.finishedCounters = new HashMap<>();
       this.finishedInfoBuilder = ImmutableMap.builder();
     }
 
     @Override
     public void update(ImmutableMap<String, Object> info) {
-      bus.post(new Updated(chainablePerfEvent, info));
+      bus.post(new Updated(started, info));
     }
 
     @Override
@@ -401,8 +512,75 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
     }
 
     @Override
+    public void incrementFinishedCounter(String key, long delta) {
+      AtomicLong count = finishedCounters.get(key);
+      if (count == null) {
+        count = new AtomicLong(0);
+        finishedCounters.put(key, count);
+      }
+      count.addAndGet(delta);
+    }
+
+    protected Finished createFinishedEvent() {
+      finishedInfoBuilder.putAll(
+          Maps.transformValues(
+              finishedCounters,
+              new Function<AtomicLong, Long>() {
+                @Override
+                public Long apply(AtomicLong input) {
+                  return input.get();
+                }
+              }));
+      return new Finished(started, finishedInfoBuilder.build());
+    }
+
+    @Override
     public void close() {
-      bus.post(new Finished(chainablePerfEvent, finishedInfoBuilder.build()));
+      bus.post(createFinishedEvent());
+    }
+  }
+
+  private static class MinimumTimePerfEventScope extends SimplePerfEventScope {
+    private final long minimumDurationNanos;
+    private final Scope parentScope;
+    private final List<AbstractChainablePerfEvent> events;
+
+    public MinimumTimePerfEventScope(
+        BuckEventBus bus,
+        StartedImpl started,
+        Scope parentScope,
+        long minimumDurationNanos) {
+      super(bus, started);
+      this.minimumDurationNanos = minimumDurationNanos;
+      this.parentScope = parentScope;
+      this.events = new ArrayList<>();
+      this.events.add(started);
+    }
+
+    @Override
+    public void update(ImmutableMap<String, Object> info) {
+      Updated event = new Updated(started, info);
+      bus.timestamp(event);
+      events.add(event);
+    }
+
+    @Override
+    public void close() {
+      Finished finished = createFinishedEvent();
+      bus.timestamp(finished);
+      events.add(finished);
+
+      long delta = finished.getNanoTime() - started.getNanoTime();
+      if (delta >= minimumDurationNanos) {
+        for (AbstractChainablePerfEvent event : events) {
+          bus.postWithoutConfiguring(event);
+        }
+      } else {
+        parentScope.incrementFinishedCounter(
+            started.getEventId().getValue() + "_accumulated_duration_ns", delta);
+        parentScope.incrementFinishedCounter(
+            started.getEventId().getValue() + "_accumulated_count", 1);
+      }
     }
   }
 

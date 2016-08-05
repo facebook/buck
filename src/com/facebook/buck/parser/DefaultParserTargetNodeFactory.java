@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.json.JsonObjectHashing;
@@ -39,6 +38,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -59,19 +59,16 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
 
   private static final Logger LOG = Logger.get(DefaultParserTargetNodeFactory.class);
 
-  private final BuckEventBus eventBus;
   private final ConstructorArgMarshaller marshaller;
   private final Optional<LoadingCache<Cell, BuildFileTree>> buildFileTrees;
   private final TargetNodeListener<TargetNode<?>> nodeListener;
   private final TargetNodeFactory targetNodeFactory;
 
   private DefaultParserTargetNodeFactory(
-      BuckEventBus eventBus,
       ConstructorArgMarshaller marshaller,
       Optional<LoadingCache<Cell, BuildFileTree>> buildFileTrees,
       TargetNodeListener<TargetNode<?>> nodeListener,
       TargetNodeFactory targetNodeFactory) {
-    this.eventBus = eventBus;
     this.marshaller = marshaller;
     this.buildFileTrees = buildFileTrees;
     this.nodeListener = nodeListener;
@@ -79,13 +76,11 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
   }
 
   public static ParserTargetNodeFactory<TargetNode<?>> createForParser(
-      BuckEventBus eventBus,
       ConstructorArgMarshaller marshaller,
       LoadingCache<Cell, BuildFileTree> buildFileTrees,
       TargetNodeListener<TargetNode<?>> nodeListener,
       TargetNodeFactory targetNodeFactory) {
     return new DefaultParserTargetNodeFactory(
-        eventBus,
         marshaller,
         Optional.of(buildFileTrees),
         nodeListener,
@@ -93,11 +88,9 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
   }
 
   public static ParserTargetNodeFactory<TargetNode<?>> createForDistributedBuild(
-      BuckEventBus eventBus,
       ConstructorArgMarshaller marshaller,
       TargetNodeFactory targetNodeFactory) {
     return new DefaultParserTargetNodeFactory(
-        eventBus,
         marshaller,
         Optional.<LoadingCache<Cell, BuildFileTree>>absent(),
         new TargetNodeListener<TargetNode<?>>() {
@@ -114,7 +107,8 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
       Cell cell,
       Path buildFile,
       BuildTarget target,
-      Map<String, Object> rawNode) {
+      Map<String, Object> rawNode,
+      Function<PerfEventId, SimplePerfEvent.Scope> perfEventScope) {
     BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(cell, rawNode);
 
     // Because of the way that the parser works, we know this can never return null.
@@ -165,11 +159,8 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
       ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
       ImmutableSet.Builder<VisibilityPattern> visibilityPatterns =
           ImmutableSet.builder();
-      try (SimplePerfEvent.Scope scope = SimplePerfEvent.scope(
-          eventBus,
-          PerfEventId.of("MarshalledConstructorArg"),
-          "target",
-          target)) {
+      try (SimplePerfEvent.Scope scope =
+               perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg"))) {
         marshaller.populate(
             targetCell.getCellRoots(),
             targetCell.getFilesystem(),
@@ -179,11 +170,8 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
             visibilityPatterns,
             rawNode);
       }
-      try (SimplePerfEvent.Scope scope = SimplePerfEvent.scope(
-          eventBus,
-          PerfEventId.of("CreatedTargetNode"),
-          "target",
-          target)) {
+      try (SimplePerfEvent.Scope scope =
+               perfEventScope.apply(PerfEventId.of("CreatedTargetNode"))) {
         Hasher hasher = Hashing.sha1().newHasher();
         hasher.putString(BuckVersion.getVersion(), UTF_8);
         JsonObjectHashing.hashJsonObject(hasher, rawNode);

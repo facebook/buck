@@ -18,7 +18,8 @@ package com.facebook.buck.event;
 
 import static org.junit.Assert.assertThat;
 
-import com.google.common.base.Function;
+import com.facebook.buck.timing.SettableFakeClock;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -27,6 +28,9 @@ import com.google.common.eventbus.Subscribe;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
+
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class SimplePerfEventTest {
 
@@ -41,14 +45,8 @@ public class SimplePerfEventTest {
     assertThat(perfEvent.getEventId(), Matchers.equalTo(id));
     assertThat(perfEvent.getEventType(), Matchers.equalTo(type));
     assertThat(
-        perfEvent.getEventInfo(),
-        Matchers.equalTo(Maps.transformValues(
-                info, new Function<String, Object>() {
-                  @Override
-                  public Object apply(String input) {
-                    return input;
-                  }
-                })));
+        Maps.transformValues(perfEvent.getEventInfo(), Functions.toStringFunction()),
+        Matchers.equalTo((Map<String, String>) info));
   }
 
   @Test
@@ -214,5 +212,73 @@ public class SimplePerfEventTest {
         testEventId,
         SimplePerfEvent.Type.FINISHED,
         ImmutableMap.of("finished", "info"));
+  }
+
+  @Test
+  public void testMinimumTimeScope() throws Exception {
+    PerfEventId ignoredEventId = PerfEventId.of("IgnoreMe");
+    PerfEventId loggedEventId = PerfEventId.of("LogMe");
+    PerfEventId parentId = PerfEventId.of("Parent");
+
+    SimplePerfEventListener listener = new SimplePerfEventListener();
+    SettableFakeClock clock = new SettableFakeClock(0L, 0L);
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance(clock);
+    eventBus.register(listener);
+
+    try (SimplePerfEvent.Scope parent = SimplePerfEvent.scope(eventBus, parentId)) {
+      clock.advanceTimeNanos(10L);
+
+      try (SimplePerfEvent.Scope scope =
+               SimplePerfEvent.scopeIgnoringShortEvents(
+                   eventBus,
+                   ignoredEventId,
+                   parent,
+                   1,
+                   TimeUnit.SECONDS)) {
+        clock.advanceTimeNanos(10L);
+      }
+
+      clock.advanceTimeNanos(10L);
+
+      try (SimplePerfEvent.Scope scope =
+               SimplePerfEvent.scopeIgnoringShortEvents(
+                   eventBus,
+                   loggedEventId,
+                   parent,
+                   1,
+                   TimeUnit.MILLISECONDS)) {
+        clock.advanceTimeNanos(TimeUnit.MILLISECONDS.toNanos(2));
+      }
+    }
+
+    ImmutableList<SimplePerfEvent> perfEvents = listener.getPerfEvents();
+    assertThat(perfEvents, Matchers.hasSize(4));
+
+    assertPerfEvent(
+        perfEvents.get(0),
+        parentId,
+        SimplePerfEvent.Type.STARTED,
+        ImmutableMap.<String, String>of());
+
+    assertPerfEvent(
+        perfEvents.get(1),
+        loggedEventId,
+        SimplePerfEvent.Type.STARTED,
+        ImmutableMap.<String, String>of());
+
+    assertPerfEvent(
+        perfEvents.get(2),
+        loggedEventId,
+        SimplePerfEvent.Type.FINISHED,
+        ImmutableMap.<String, String>of());
+
+    assertPerfEvent(
+        perfEvents.get(3),
+        parentId,
+        SimplePerfEvent.Type.FINISHED,
+        ImmutableMap.of(
+            "IgnoreMe_accumulated_count", "1",
+            "IgnoreMe_accumulated_duration_ns", "10"
+        ));
   }
 }

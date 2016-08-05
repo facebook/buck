@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.groups.TargetGroupDescription;
 import com.facebook.buck.model.BuildTarget;
@@ -25,12 +26,14 @@ import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGroup;
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -88,12 +91,28 @@ public class TargetGroupParsePipeline
       final Cell cell,
       final BuildTarget buildTarget,
       final Map<String, Object> rawNode) throws BuildTargetException {
-    try (SimplePerfEvent.Scope scope = Parser.getTargetGroupEventScope(eventBus, buildTarget)) {
+    try (final SimplePerfEvent.Scope scope = SimplePerfEvent.scope(
+        eventBus,
+        PerfEventId.of("GetTargetGroup"),
+        "target", buildTarget)) {
+      Function<PerfEventId, SimplePerfEvent.Scope> perfEventScopeFunction =
+          new Function<PerfEventId, SimplePerfEvent.Scope>() {
+            @Override
+            public SimplePerfEvent.Scope apply(PerfEventId perfEventId) {
+              return SimplePerfEvent.scopeIgnoringShortEvents(
+                  eventBus,
+                  perfEventId,
+                  scope,
+                  getMinimumPerfEventTimeMs(),
+                  TimeUnit.MILLISECONDS);
+            }
+          };
       return delegate.createTargetNode(
           cell,
           cell.getAbsolutePathToBuildFile(buildTarget),
           buildTarget,
-          rawNode);
+          rawNode,
+          perfEventScopeFunction);
     }
   }
 

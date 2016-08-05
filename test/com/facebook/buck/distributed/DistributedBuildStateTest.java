@@ -301,7 +301,6 @@ public class DistributedBuildStateTest {
         new DistributedBuildTypeCoercerFactory(objectMapper);
     ParserTargetNodeFactory<TargetNode<?>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
-            eventBus,
             new ConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory));
 

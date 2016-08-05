@@ -467,7 +467,6 @@ public class ParsePipelineTest {
       this.targetNodeParsePipeline = new TargetNodeParsePipeline(
           this.targetNodeParsePipelineCache,
           DefaultParserTargetNodeFactory.createForParser(
-              eventBus,
               constructorArgMarshaller,
               buildFileTrees,
               nodeListener,
@@ -478,9 +477,7 @@ public class ParsePipelineTest {
           this.rawNodeParsePipeline);
       this.targetGroupParsePipeline = new TargetGroupParsePipeline(
           this.targetGroupParsePipelineCache,
-          DefaultParserTargetGroupFactory.createForParser(
-              this.eventBus,
-              constructorArgMarshaller),
+          new DefaultParserTargetGroupFactory(constructorArgMarshaller),
           executorService,
           this.eventBus,
           this.rawNodeParsePipeline);

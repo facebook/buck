@@ -19,6 +19,9 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuildTarget;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetGraph;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetNode;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.PerfEventId;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -141,7 +144,13 @@ public class DistributedBuildTargetGraphCodec {
           cell,
           buildFilePath,
           target,
-          rawNode);
+          rawNode,
+          new Function<PerfEventId, SimplePerfEvent.Scope>() {
+            @Override
+            public SimplePerfEvent.Scope apply(PerfEventId input) {
+              return SimplePerfEvent.scope(Optional.<BuckEventBus>absent(), input);
+            }
+          });
       targetNodeIndexBuilder.put(targetNode.getBuildTarget(), targetNode);
     }
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex = targetNodeIndexBuilder.build();

@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.groups.TargetGroupDescription;
@@ -37,6 +36,7 @@ import com.facebook.buck.rules.TargetGroup;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -52,22 +52,10 @@ import java.util.Map;
  */
 public class DefaultParserTargetGroupFactory implements ParserTargetNodeFactory<TargetGroup> {
 
-  private final BuckEventBus eventBus;
   private final ConstructorArgMarshaller marshaller;
 
-  private DefaultParserTargetGroupFactory(
-      BuckEventBus eventBus,
-      ConstructorArgMarshaller marshaller) {
-    this.eventBus = eventBus;
+  public DefaultParserTargetGroupFactory(ConstructorArgMarshaller marshaller) {
     this.marshaller = marshaller;
-  }
-
-  public static ParserTargetNodeFactory<TargetGroup> createForParser(
-      BuckEventBus eventBus,
-      ConstructorArgMarshaller marshaller) {
-    return new DefaultParserTargetGroupFactory(
-        eventBus,
-        marshaller);
   }
 
   @Override
@@ -75,7 +63,8 @@ public class DefaultParserTargetGroupFactory implements ParserTargetNodeFactory<
       Cell cell,
       Path buildFile,
       BuildTarget target,
-      Map<String, Object> rawNode) {
+      Map<String, Object> rawNode,
+      Function<PerfEventId, SimplePerfEvent.Scope> perfEventScope) {
     Preconditions.checkArgument(!target.isFlavored());
 
     UnflavoredBuildTarget unflavoredBuildTarget = target.withoutCell().getUnflavoredBuildTarget();
@@ -108,11 +97,8 @@ public class DefaultParserTargetGroupFactory implements ParserTargetNodeFactory<
       ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
       ImmutableSet.Builder<VisibilityPattern> visibilityPatterns =
           ImmutableSet.builder();
-      try (SimplePerfEvent.Scope scope = SimplePerfEvent.scope(
-          eventBus,
-          PerfEventId.of("MarshalledConstructorArg"),
-          "target",
-          target)) {
+      try (SimplePerfEvent.Scope scope =
+               perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg"))) {
         marshaller.populate(
             targetCell.getCellRoots(),
             targetCell.getFilesystem(),
@@ -122,11 +108,8 @@ public class DefaultParserTargetGroupFactory implements ParserTargetNodeFactory<
             visibilityPatterns,
             rawNode);
       }
-      try (SimplePerfEvent.Scope scope = SimplePerfEvent.scope(
-          eventBus,
-          PerfEventId.of("CreatedTargetNode"),
-          "target",
-          target)) {
+      try (SimplePerfEvent.Scope scope =
+               perfEventScope.apply(PerfEventId.of("CreatedTargetNode"))) {
         Hasher hasher = Hashing.sha1().newHasher();
         hasher.putString(BuckVersion.getVersion(), UTF_8);
         JsonObjectHashing.hashJsonObject(hasher, rawNode);

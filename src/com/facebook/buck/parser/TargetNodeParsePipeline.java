@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -24,12 +25,14 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetNode;
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -57,6 +60,7 @@ public class TargetNodeParsePipeline
   private final BuckEventBus eventBus;
   private final boolean speculativeDepsTraversal;
   private final RawNodeParsePipeline rawNodeParsePipeline;
+  private final SimplePerfEvent.Scope targetNodePipelineLifetimeEventScope;
 
   /**
    * Create new pipeline for parsing Buck files.
@@ -79,6 +83,8 @@ public class TargetNodeParsePipeline
     this.eventBus = eventBus;
     this.speculativeDepsTraversal = speculativeDepsTraversal;
     this.rawNodeParsePipeline = rawNodeParsePipeline;
+    this.targetNodePipelineLifetimeEventScope =
+        SimplePerfEvent.scope(eventBus, PerfEventId.of("target_node_parse_pipeline"));
   }
 
   @Override
@@ -92,12 +98,31 @@ public class TargetNodeParsePipeline
       final Cell cell,
       final BuildTarget buildTarget,
       final Map<String, Object> rawNode) throws BuildTargetException {
-    try (SimplePerfEvent.Scope scope = Parser.getTargetNodeEventScope(eventBus, buildTarget)) {
+    try (final SimplePerfEvent.Scope scope = SimplePerfEvent.scopeIgnoringShortEvents(
+        eventBus,
+        PerfEventId.of("GetTargetNode"),
+        "target", buildTarget,
+        targetNodePipelineLifetimeEventScope,
+        getMinimumPerfEventTimeMs(),
+        TimeUnit.MILLISECONDS)) {
+      Function<PerfEventId, SimplePerfEvent.Scope> perfEventScopeFunction =
+          new Function<PerfEventId, SimplePerfEvent.Scope>() {
+            @Override
+            public SimplePerfEvent.Scope apply(PerfEventId perfEventId) {
+              return SimplePerfEvent.scopeIgnoringShortEvents(
+                  eventBus,
+                  perfEventId,
+                  scope,
+                  getMinimumPerfEventTimeMs(),
+                  TimeUnit.MILLISECONDS);
+            }
+          };
       final TargetNode<?> targetNode = delegate.createTargetNode(
           cell,
           cell.getAbsolutePathToBuildFile(buildTarget),
           buildTarget,
-          rawNode);
+          rawNode,
+          perfEventScopeFunction);
 
       if (speculativeDepsTraversal) {
         executorService.submit(new Runnable() {
@@ -145,5 +170,11 @@ public class TargetNodeParsePipeline
   @Override
   protected boolean isValid(Map<String, Object> from) {
     return super.isValid(from) && !TargetGroupParsePipeline.isTargetGroup(from);
+  }
+
+  @Override
+  public void close() {
+    targetNodePipelineLifetimeEventScope.close();
+    super.close();
   }
 }
