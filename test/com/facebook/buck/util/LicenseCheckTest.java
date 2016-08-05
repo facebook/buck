@@ -15,11 +15,9 @@
  */
 package com.facebook.buck.util;
 
-import static com.facebook.buck.io.MorePaths.pathWithPlatformSeparators;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.io.DirectoryTraversal;
 import com.facebook.buck.io.MorePaths;
 import com.google.common.collect.ImmutableSet;
 
@@ -27,32 +25,35 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Set;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.regex.Pattern;
 
 public class LicenseCheckTest {
 
   // Files where we're okay with the license not being the normal Facebook apache one. We also
   // exclude all files under "test/**/testdata/"
-  private static final Set<String> NON_APACHE_LICENSE_WHITELIST = ImmutableSet.of(
+  private static final ImmutableSet<Path> NON_APACHE_LICENSE_WHITELIST = ImmutableSet.of(
       // Because it's not originally our code.
-      pathWithPlatformSeparators("com/facebook/buck/jvm/java/coverage/ReportGenerator.java"),
-      pathWithPlatformSeparators("com/facebook/buck/util/WindowsCreateProcessEscape.java"),
-      pathWithPlatformSeparators("com/facebook/buck/util/WindowsCreateProcessEscapeTest.java"));
+      Paths.get("src/com/facebook/buck/jvm/java/coverage/ReportGenerator.java"),
+      Paths.get("src/com/facebook/buck/util/WindowsCreateProcessEscape.java"),
+      Paths.get(
+          "test/com/facebook/buck/util/WindowsCreateProcessEscapeTest.java"));
 
-  private static final String NON_APACHE_LICENSE_WHITELIST_DIR =
-      pathWithPlatformSeparators("com/facebook/buck/cli/quickstart/android/");
+  private static final ImmutableSet<Path> NON_APACHE_LICENSE_DIRS_WHITELIST = ImmutableSet.of(
+      Paths.get("src/com/facebook/buck/cli/quickstart/android/"));
 
   @Test
   public void ensureAllSrcFilesHaveTheApacheLicense() throws IOException {
-    new JavaCopyrightTraversal(Paths.get("src"), false).traverse();
-    new JavaCopyrightTraversal(Paths.get("test"), true).traverse();
+    Files.walkFileTree(Paths.get("src"), new JavaCopyrightVisitor(false));
+    Files.walkFileTree(Paths.get("test"), new JavaCopyrightVisitor(true));
   }
 
-  private static class JavaCopyrightTraversal extends DirectoryTraversal {
+  private static class JavaCopyrightVisitor extends SimpleFileVisitor<Path> {
 
     private static final Pattern LICENSE_FRAGMENT = Pattern.compile(
         // TODO(shs96c): This is very lame.
@@ -67,37 +68,42 @@ public class LicenseCheckTest {
 
     private final boolean ignoreTestData;
 
-    public JavaCopyrightTraversal(Path root, boolean ignoreTestData) {
-      super(root);
+    public JavaCopyrightVisitor(boolean ignoreTestData) {
       this.ignoreTestData = ignoreTestData;
     }
 
     @Override
-    public void visit(Path file, String relativePath) {
+    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
       if (!"java".equals(MorePaths.getFileExtension(file)) ||
           // Ignore dangling symlinks.
           !Files.exists(file) ||
-          NON_APACHE_LICENSE_WHITELIST.contains(relativePath) ||
-          relativePath.startsWith(NON_APACHE_LICENSE_WHITELIST_DIR)) {
-        return;
-      }
-
-      if (ignoreTestData) {
-        for (Path path : file) {
-           if (TEST_DATA.equals(path)) {
-             return;
-           }
-        }
+          NON_APACHE_LICENSE_WHITELIST.contains(file)) {
+        return FileVisitResult.CONTINUE;
       }
 
       try {
         String asString = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
 
-        assertTrue("Check license of: " + relativePath,
+        assertTrue("Check license of: " + file,
             LICENSE_FRAGMENT.matcher(asString).matches());
       } catch (IOException e) {
-        fail("Unable to read: " + relativePath);
+        fail("Unable to read: " + file);
       }
+      return FileVisitResult.CONTINUE;
     }
+
+    @Override
+    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+        throws IOException {
+      if (ignoreTestData && TEST_DATA.equals(dir.getFileName())) {
+        return FileVisitResult.SKIP_SUBTREE;
+      }
+      if (NON_APACHE_LICENSE_DIRS_WHITELIST.contains(dir)) {
+        return FileVisitResult.SKIP_SUBTREE;
+      }
+      return FileVisitResult.CONTINUE;
+    }
+
   }
+
 }
