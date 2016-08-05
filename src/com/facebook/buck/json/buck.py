@@ -578,6 +578,8 @@ class BuildFileProcessor(object):
             func_with_env = LazyBuildEnvPartial(func)
             lazy_functions[func.__name__] = func_with_env
         self._functions = lazy_functions
+        self._safe_os_module = self._create_safe_os_module()
+        self._custom_import = self._create_custom_import()
 
     def _wrap_env_var_read(self, read, real):
         """
@@ -809,7 +811,7 @@ class BuildFileProcessor(object):
             elif callable(mod.__dict__[name]):
                 safe_mod.__dict__[name] = self._block_unsafe_function(mod_name, name)
 
-    def _safe_os_module(self):
+    def _create_safe_os_module(self):
         """
         Returns a safe version of the 'os' module.
         """
@@ -832,7 +834,7 @@ class BuildFileProcessor(object):
 
         return safe_os
 
-    def _custom_import(self):
+    def _create_custom_import(self):
         """
         Returns customised '__import__' function that blocks importing modules.
         """
@@ -840,7 +842,7 @@ class BuildFileProcessor(object):
         def _import(name, globals=None, locals=None, fromlist=(), level=0):
             # return safe version of 'os'
             if name in ['os', 'os.path']:
-                return self._safe_os_module()
+                return self._safe_os_module
 
             raise ImportError(
                 'Importing module %s is forbidden. ' % name +
@@ -873,7 +875,7 @@ class BuildFileProcessor(object):
         if allow or not self._enable_build_file_sandboxing:
             __builtin__.__import__ = ORIGINAL_IMPORT
         else:
-            __builtin__.__import__ = self._custom_import()
+            __builtin__.__import__ = self._custom_import
 
         try:
             yield
