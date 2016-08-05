@@ -64,7 +64,7 @@ public class EstimateLinearAllocStepTest {
     tmp.newFile(pathWithPlatformSeparators("dir/com/example/not_a_class.png"));
     tmp.newFile(pathWithPlatformSeparators("dir/com/example/subpackage/Baz.class"));
 
-    ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
     ExecutionContext context = TestExecutionContext.newInstance();
 
     Path pathToJarOrClassesDirectory = Paths.get(name);
@@ -120,7 +120,8 @@ public class EstimateLinearAllocStepTest {
 
     @Override
     public int getEstimate(FileLike fileLike) throws IOException {
-      return Preconditions.checkNotNull(relativePathToCostMap.get(fileLike.getRelativePath()));
+      return Preconditions.checkNotNull(
+          relativePathToCostMap.get(pathWithPlatformSeparators(fileLike.getRelativePath())));
     }
   }
 }

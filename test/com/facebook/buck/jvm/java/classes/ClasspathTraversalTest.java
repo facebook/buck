@@ -38,7 +38,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -48,40 +47,42 @@ public class ClasspathTraversalTest {
   @Rule
   public TemporaryFolder tempDir = new TemporaryFolder();
 
-  private static Map<FileLike, String> traverse(Collection<File> files) throws IOException {
+  private Map<FileLike, String> traverse(Collection<File> files) throws IOException {
     Collection<Path> paths = FluentIterable.from(files)
-        .transform(new Function<File, Path>() {
-      @Override
-      public Path apply(File file) {
-        return file.toPath();
-      }
-    }).toList();
+        .transform(
+            new Function<File, Path>() {
+              @Override
+              public Path apply(File file) {
+                return file.toPath();
+              }
+            })
+        .toList();
     final ImmutableMap.Builder<FileLike, String> completeList = ImmutableMap.builder();
     ClasspathTraverser traverser = new DefaultClasspathTraverser();
-    ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
-    traverser.traverse(new ClasspathTraversal(paths,
-                           filesystem) {
-      @Override
-      public void visit(FileLike fileLike) {
-        String contents;
-        try {
-          contents = new FileLikeCharSource(fileLike).read();
-        } catch (IOException e) {
-          throw Throwables.propagate(e);
-        }
-        completeList.put(fileLike, contents);
-      }
-    });
+    ProjectFilesystem filesystem = new ProjectFilesystem(tempDir.getRoot().toPath());
+    traverser.traverse(
+        new ClasspathTraversal(paths, filesystem) {
+          @Override
+          public void visit(FileLike fileLike) {
+            String contents;
+            try {
+              contents = new FileLikeCharSource(fileLike).read();
+            } catch (IOException e) {
+              throw Throwables.propagate(e);
+            }
+            completeList.put(fileLike, contents);
+          }
+        });
     return completeList.build();
   }
 
-  private static void verifyFileLike(int expectedFiles, File... paths) throws IOException {
+  private void verifyFileLike(int expectedFiles, File... paths) throws IOException {
     int fileLikeCount = 0;
     for (Map.Entry<FileLike, String> entry : traverse(Lists.newArrayList(paths)).entrySet()) {
       assertEquals(
           "Relative file-like path mismatch",
-          entry.getValue(),
-          entry.getKey().getRelativePath());
+          MorePaths.pathWithPlatformSeparators(entry.getValue()),
+          MorePaths.pathWithPlatformSeparators(entry.getKey().getRelativePath()));
       fileLikeCount++;
     }
     assertEquals(expectedFiles, fileLikeCount);

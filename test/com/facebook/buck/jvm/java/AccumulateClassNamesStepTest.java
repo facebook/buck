@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -112,9 +113,15 @@ public class AccumulateClassNamesStepTest {
     assertEquals(
         "Verify that the contents are sorted alphabetically and ignore non-.class files.",
         Joiner.on('\n').join(
-            Paths.get("com/example/Bar") + separator + SHA1_FOR_EMPTY_STRING,
-            Paths.get("com/example/Foo") + separator + SHA1_FOR_EMPTY_STRING,
-            Paths.get("com/example/subpackage/Baz") + separator + SHA1_FOR_EMPTY_STRING) + '\n',
+            MorePaths.pathWithUnixSeparators(Paths.get("com/example/Bar")) +
+                separator +
+                SHA1_FOR_EMPTY_STRING,
+            MorePaths.pathWithUnixSeparators(Paths.get("com/example/Foo")) +
+                separator +
+                SHA1_FOR_EMPTY_STRING,
+            MorePaths.pathWithUnixSeparators(Paths.get("com/example/subpackage/Baz")) +
+                separator +
+                SHA1_FOR_EMPTY_STRING) + '\n',
         contents);
   }
 }
