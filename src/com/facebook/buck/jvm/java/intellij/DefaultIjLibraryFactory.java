@@ -166,6 +166,17 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
     public void apply(
         TargetNode<AndroidPrebuiltAarDescription.Arg> targetNode, IjLibrary.Builder library) {
       library.setBinaryJar(libraryFactoryResolver.getPathIfJavaLibrary(targetNode));
+
+      AndroidPrebuiltAarDescription.Arg arg = targetNode.getConstructorArg();
+      library.setSourceJar(
+          arg.sourceJar.transform(
+              new Function<SourcePath, Path>() {
+                @Override
+                public Path apply(SourcePath input) {
+                  return libraryFactoryResolver.getPath(input);
+                }
+              }));
+      library.setJavadocUrl(arg.javadocUrl);
     }
   }
 

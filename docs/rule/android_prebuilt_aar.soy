@@ -42,6 +42,25 @@ official Android documentation</a> for details about the <code>.aar</code> forma
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'source_jar' /}
+  {param default : 'None' /}
+  {param desc}
+  Path to a JAR file that contains the <code>.java</code> files to create
+  the <code>.class</code> in the <code>aar</code>. This is frequently
+  provided for debugging purposes.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'javadoc_url' /}
+  {param default : 'None' /}
+  {param desc}
+  URL to the Javadoc for the <code>.class</code> files in the
+  {sp}<code>aar</code>.
+  {/param}
+{/call}
+
 {/param} // close args
 
 {param examples}
@@ -50,6 +69,8 @@ official Android documentation</a> for details about the <code>.aar</code> forma
 android_prebuilt_aar(
   name = 'play-services',
   aar = 'play-services-4.0.30.aar',
+  source_jar = 'play-services-4.0.30-sources.jar',
+  javadoc_url = 'file:///opt/android-sdk/extras/google/google_play_services/docs/reference',
 )
 
 android_library(

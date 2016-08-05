@@ -20,6 +20,8 @@ import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SourcePath;
+import com.google.common.base.Optional;
 
 import java.nio.file.Path;
 
@@ -36,6 +38,16 @@ public class AndroidPrebuiltAarBuilder
 
  public AndroidPrebuiltAarBuilder setBinaryAar(Path binaryAar) {
   arg.aar = new FakeSourcePath(binaryAar.toString());
+  return this;
+ }
+
+ public AndroidPrebuiltAarBuilder setSourcesJar(Path sourcesJar) {
+  arg.sourceJar = Optional.<SourcePath>of(new FakeSourcePath(sourcesJar.toString()));
+  return this;
+ }
+
+ public AndroidPrebuiltAarBuilder setJavadocUrl(String javadocUrl) {
+  arg.javadocUrl = Optional.of(javadocUrl);
   return this;
  }
 }
