@@ -51,7 +51,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -108,8 +107,7 @@ public class ThriftLibraryIntegrationTest {
         CellConfig.of(),
         new KnownBuildRuleTypesFactory(
             new ProcessExecutor(new TestConsole()),
-            new FakeAndroidDirectoryResolver(),
-            Optional.<Path>absent()),
+            new FakeAndroidDirectoryResolver()),
         new FakeAndroidDirectoryResolver(),
         new DefaultClock(),
         new WatchmanDiagnosticCache());

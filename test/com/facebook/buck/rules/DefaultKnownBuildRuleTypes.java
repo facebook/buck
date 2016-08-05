@@ -24,13 +24,11 @@ import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -98,8 +96,7 @@ public class DefaultKnownBuildRuleTypes {
                 .put(XCODE_SELECT_PARAMS, XCODE_SELECT_PROCESS)
                 .putAll(getPythonProcessMap(paths))
                 .build()),
-        new FakeAndroidDirectoryResolver(),
-        Optional.<Path>absent());
+        new FakeAndroidDirectoryResolver());
   }
 
 }

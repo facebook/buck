@@ -228,13 +228,11 @@ public class KnownBuildRuleTypes {
   public static KnownBuildRuleTypes createInstance(
       BuckConfig config,
       ProcessExecutor processExecutor,
-      AndroidDirectoryResolver androidDirectoryResolver,
-      Optional<Path> testTempDirOverride) throws InterruptedException, IOException {
+      AndroidDirectoryResolver androidDirectoryResolver) throws InterruptedException, IOException {
     return createBuilder(
         config,
         processExecutor,
-        androidDirectoryResolver,
-        testTempDirOverride).build();
+        androidDirectoryResolver).build();
   }
 
   private static ImmutableList<AppleCxxPlatform> buildAppleCxxPlatforms(
@@ -291,8 +289,7 @@ public class KnownBuildRuleTypes {
   static Builder createBuilder(
       BuckConfig config,
       ProcessExecutor processExecutor,
-      AndroidDirectoryResolver androidDirectoryResolver,
-      Optional<Path> testTempDirOverride) throws InterruptedException, IOException {
+      AndroidDirectoryResolver androidDirectoryResolver) throws InterruptedException, IOException {
 
     Platform platform = Platform.detect();
 
@@ -647,9 +644,7 @@ public class KnownBuildRuleTypes {
             groovyBuckConfig,
             defaultJavaOptions,
             defaultJavacOptions,
-            defaultTestRuleTimeoutMs,
-            testTempDirOverride
-        )
+            defaultTestRuleTimeoutMs)
     );
     builder.register(new GwtBinaryDescription(defaultJavaOptions));
     builder.register(
@@ -669,8 +664,7 @@ public class KnownBuildRuleTypes {
             defaultJavaOptions,
             defaultJavacOptions,
             defaultTestRuleTimeoutMs,
-            defaultCxxPlatform,
-            testTempDirOverride));
+            defaultCxxPlatform));
     builder.register(new KeystoreDescription());
     builder.register(
         new LuaBinaryDescription(
@@ -707,8 +701,7 @@ public class KnownBuildRuleTypes {
             defaultJavaOptions,
             defaultJavacOptions,
             defaultTestRuleTimeoutMs,
-            defaultCxxPlatform,
-            testTempDirOverride));
+            defaultCxxPlatform));
     builder.register(new RustBinaryDescription(rustBuckConfig));
     builder.register(new RustLibraryDescription(rustBuckConfig));
     builder.register(new ScalaLibraryDescription(scalaConfig));
@@ -716,8 +709,7 @@ public class KnownBuildRuleTypes {
         scalaConfig,
         defaultJavaOptions,
         defaultTestRuleTimeoutMs,
-        defaultCxxPlatform,
-        testTempDirOverride));
+        defaultCxxPlatform));
     builder.register(new ShBinaryDescription());
     builder.register(new ShTestDescription(defaultTestRuleTimeoutMs));
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(config);

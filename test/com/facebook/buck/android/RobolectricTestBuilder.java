@@ -36,8 +36,7 @@ public class RobolectricTestBuilder
             DEFAULT_JAVA_OPTIONS,
             ANDROID_JAVAC_OPTIONS,
             /* testRuleTimeoutMs */ Optional.<Long>absent(),
-            null,
-            Optional.<Path>absent()),
+            null),
         target);
   }
 

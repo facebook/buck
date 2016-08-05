@@ -603,8 +603,7 @@ public class ProjectWorkspace {
         CellConfig.of(),
         new KnownBuildRuleTypesFactory(
             new ProcessExecutor(console),
-            directoryResolver,
-            Optional.<Path>absent()),
+            directoryResolver),
         directoryResolver,
         new DefaultClock(),
         new WatchmanDiagnosticCache());

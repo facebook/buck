@@ -65,13 +65,11 @@ public class JUnitStepTest {
         modulePath);
 
     Path directoryForTestResults = Paths.get("buck-out/gen/theresults/");
-    Path directoryForTemp = Paths.get("buck-out/gen/thetmp/");
     Path testRunnerClasspath = Paths.get("build/classes/junit");
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path classpathFile = filesystem.resolve("foo");
 
       JUnitJvmArgs args = JUnitJvmArgs.builder()
-        .setTmpDirectory(directoryForTemp)
         .setBuildId(pretendBuildId)
         .setBuckModuleBaseSourceCodePath(modulePath)
         .setClasspathFile(classpathFile)
@@ -101,7 +99,6 @@ public class JUnitStepTest {
     MoreAsserts.assertListEquals(
         ImmutableList.of(
             "/foo/bar/custom/java",
-            "-Djava.io.tmpdir=" + filesystem.resolve(directoryForTemp),
             "-Dbuck.testrunner_classes=" + testRunnerClasspath,
             buildIdArg,
             modulePathArg,
@@ -128,13 +125,11 @@ public class JUnitStepTest {
     Path modulePath = Paths.get("module/submodule");
 
     Path directoryForTestResults = Paths.get("buck-out/gen/theresults/");
-    Path directoryForTemp = Paths.get("buck-out/gen/thetmp/");
     Path testRunnerClasspath = Paths.get("build/classes/junit");
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path classpathFile = filesystem.resolve("foo");
 
     JUnitJvmArgs args = JUnitJvmArgs.builder()
-        .setTmpDirectory(directoryForTemp)
         .setBuildId(pretendBuildId)
         .setBuckModuleBaseSourceCodePath(modulePath)
         .setClasspathFile(classpathFile)
@@ -177,14 +172,12 @@ public class JUnitStepTest {
         modulePath);
 
     Path directoryForTestResults = Paths.get("buck-out/gen/theresults/");
-    Path directoryForTemp = Paths.get("buck-out/gen/thetmp/");
     Path testRunnerClasspath = Paths.get("build/classes/junit");
 
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path classpathFile = filesystem.resolve("foo");
 
     JUnitJvmArgs args = JUnitJvmArgs.builder()
-        .setTmpDirectory(directoryForTemp)
         .setClasspathFile(classpathFile)
         .setBuildId(pretendBuildId)
         .setBuckModuleBaseSourceCodePath(modulePath)
@@ -214,7 +207,6 @@ public class JUnitStepTest {
     MoreAsserts.assertListEquals(
         ImmutableList.of(
             "/foo/bar/custom/java",
-            "-Djava.io.tmpdir=" + filesystem.resolve(directoryForTemp),
             "-Dbuck.testrunner_classes=" + testRunnerClasspath,
             buildIdArg,
             modulePathArg,

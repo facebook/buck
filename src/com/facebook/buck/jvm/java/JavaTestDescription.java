@@ -62,19 +62,16 @@ public class JavaTestDescription implements
   private final JavacOptions templateJavacOptions;
   private final Optional<Long> defaultTestRuleTimeoutMs;
   private final CxxPlatform cxxPlatform;
-  private final Optional<Path> testTempDirOverride;
 
   public JavaTestDescription(
       JavaOptions javaOptions,
       JavacOptions templateOptions,
       Optional<Long> defaultTestRuleTimeoutMs,
-      CxxPlatform cxxPlatform,
-      Optional<Path> testTempDirOverride) {
+      CxxPlatform cxxPlatform) {
     this.javaOptions = javaOptions;
     this.templateJavacOptions = templateOptions;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatform = cxxPlatform;
-    this.testTempDirOverride = testTempDirOverride;
   }
 
   @Override
@@ -154,8 +151,7 @@ public class JavaTestDescription implements
                 args.env.get(),
                 args.getRunTestSeparately(),
                 args.stdOutLogLevel,
-                args.stdErrLogLevel,
-                testTempDirOverride));
+                args.stdErrLogLevel));
 
     resolver.addToIndex(
         CalculateAbi.of(

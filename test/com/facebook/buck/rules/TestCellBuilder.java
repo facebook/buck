@@ -98,8 +98,7 @@ public class TestCellBuilder {
 
     KnownBuildRuleTypesFactory typesFactory = new KnownBuildRuleTypesFactory(
         executor,
-        androidDirectoryResolver,
-        Optional.<Path>absent());
+        androidDirectoryResolver);
 
     if (parserFactory == null) {
       return Cell.createCell(

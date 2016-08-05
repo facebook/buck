@@ -60,19 +60,16 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
   private final JavaOptions javaOptions;
   private final Optional<Long> defaultTestRuleTimeoutMs;
   private final CxxPlatform cxxPlatform;
-  private final Optional<Path> testTempDirOverride;
 
   public ScalaTestDescription(
       ScalaBuckConfig config,
       JavaOptions javaOptions,
       Optional<Long> defaultTestRuleTimeoutMs,
-      CxxPlatform cxxPlatform,
-      Optional<Path> testTempDirOverride) {
+      CxxPlatform cxxPlatform) {
     this.config = config;
     this.javaOptions = javaOptions;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatform = cxxPlatform;
-    this.testTempDirOverride = testTempDirOverride;
   }
 
   @Override
@@ -161,8 +158,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                 args.env.get(),
                 args.runTestSeparately.or(false),
                 args.stdOutLogLevel,
-                args.stdErrLogLevel,
-                testTempDirOverride));
+                args.stdErrLogLevel));
 
     resolver.addToIndex(
         CalculateAbi.of(

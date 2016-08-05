@@ -120,8 +120,7 @@ public class RobolectricTest extends JavaTest {
       ImmutableMap<String, String> env,
       boolean runTestSeparately,
       Optional<Level> stdOutLogLevel,
-      Optional<Level> stdErrLogLevel,
-      Optional<Path> testTempDirOverride) {
+      Optional<Level> stdErrLogLevel) {
     super(
         buildRuleParams,
         resolver,
@@ -146,8 +145,7 @@ public class RobolectricTest extends JavaTest {
         env,
         runTestSeparately,
         stdOutLogLevel,
-        stdErrLogLevel,
-        testTempDirOverride);
+        stdErrLogLevel);
     this.optionalDummyRDotJava = optionalDummyRDotJava;
   }
 

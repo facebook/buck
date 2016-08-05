@@ -54,7 +54,6 @@ import com.facebook.buck.io.AsynchronousDirectoryContentsCleaner;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.io.TempDirectoryCreator;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -782,15 +781,6 @@ public final class Main {
 
       ProcessExecutor processExecutor = new ProcessExecutor(console);
 
-      Optional<Path> testTempDirOverride = getTestTempDirOverride(
-          buckConfig,
-          clientEnvironment,
-          "buck-" + buildId.toString());
-      if (testTempDirOverride.isPresent()) {
-        // We'll create this directory a little later using TempDirectoryCreator.
-        LOG.debug("Using test temp dir override %s", testTempDirOverride.get());
-      }
-
       Clock clock;
       if (BUCKD_LAUNCH_TIME_NANOS.isPresent()) {
         long nanosEpoch = Long.parseLong(BUCKD_LAUNCH_TIME_NANOS.get(), 10);
@@ -821,8 +811,7 @@ public final class Main {
 
         KnownBuildRuleTypesFactory factory = new KnownBuildRuleTypesFactory(
             processExecutor,
-            androidDirectoryResolver,
-            testTempDirOverride);
+            androidDirectoryResolver);
 
         WatchmanDiagnosticCache watchmanDiagnosticCache = new WatchmanDiagnosticCache();
 
@@ -945,8 +934,6 @@ public final class Main {
                      webServer,
                      locale,
                      filesystem.getBuckPaths().getLogDir().resolve("test.log"));
-             TempDirectoryCreator tempDirectoryCreator =
-                 new TempDirectoryCreator(testTempDirOverride);
              AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
              BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
              // NOTE: This will only run during the lifetime of the process and will flush on close.
@@ -1188,24 +1175,6 @@ public final class Main {
         stdErr.println("Ignoring non-fatal error!  The stack trace is below:");
         e.printStackTrace(stdErr);
       }
-    }
-  }
-
-  private static Optional<Path> getTestTempDirOverride(
-      BuckConfig config,
-      ImmutableMap<String, String> clientEnvironment,
-      String tmpDirName) {
-    Optional<ImmutableList<String>> testTempDirEnvVars = config.getTestTempDirEnvVars();
-    if (!testTempDirEnvVars.isPresent()) {
-      return Optional.absent();
-    } else {
-      for (String envVar : testTempDirEnvVars.get()) {
-        String val = clientEnvironment.get(envVar);
-        if (val != null) {
-          return Optional.of(Paths.get(val).resolve(tmpDirName));
-        }
-      }
-      return Optional.of(Paths.get("/tmp").resolve(tmpDirName));
     }
   }
 

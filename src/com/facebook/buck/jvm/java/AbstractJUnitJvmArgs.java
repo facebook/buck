@@ -16,23 +16,20 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.jvm.java.runner.FileClassPathRunner;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.runner.FileClassPathRunner;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.test.selectors.TestSelectorList;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.Verbosity;
-
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
-import java.io.File;
-
-import java.nio.file.Path;
-
-import java.util.logging.Level;
-
 import org.immutables.value.Value;
+
+import java.io.File;
+import java.nio.file.Path;
+import java.util.logging.Level;
 
 /**
  * Holds and formats the arguments and system properties that should be passed to
@@ -50,11 +47,6 @@ abstract class AbstractJUnitJvmArgs {
    * @return Directory to use to write test results to.
    */
   abstract Optional<Path> getDirectoryForTestResults();
-
-  /**
-   * @return Temporary directory to use when running tests.
-   */
-  abstract Optional<Path> getTmpDirectory();
 
   /**
    * @return Path to newline-separated file containing classpath entries with which to run
@@ -159,14 +151,7 @@ abstract class AbstractJUnitJvmArgs {
       ProjectFilesystem filesystem,
       Verbosity verbosity,
       long defaultTestTimeoutMillis) {
-    if (getTmpDirectory().isPresent()) {
-      args.add(
-          String.format(
-              "-Djava.io.tmpdir=%s",
-              filesystem.resolve(getTmpDirectory().get())));
-    }
-
-    // NOTE(agallagher): These propbably don't belong here, but buck integration tests need
+    // NOTE(agallagher): These probably don't belong here, but buck integration tests need
     // to find the test runner classes, so propagate these down via the relevant properties.
     args.add(String.format("-Dbuck.testrunner_classes=%s", getTestRunnerClasspath()));
 

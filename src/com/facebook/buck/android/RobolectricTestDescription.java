@@ -55,19 +55,16 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
   private final JavacOptions templateOptions;
   private final Optional<Long> defaultTestRuleTimeoutMs;
   private final CxxPlatform cxxPlatform;
-  private final Optional<Path> testTempDirOverride;
 
   public RobolectricTestDescription(
       JavaOptions javaOptions,
       JavacOptions templateOptions,
       Optional<Long> defaultTestRuleTimeoutMs,
-      CxxPlatform cxxPlatform,
-      Optional<Path> testTempDirOverride) {
+      CxxPlatform cxxPlatform) {
     this.javaOptions = javaOptions;
     this.templateOptions = templateOptions;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatform = cxxPlatform;
-    this.testTempDirOverride = testTempDirOverride;
   }
 
   @Override
@@ -170,8 +167,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                 args.env.get(),
                 args.getRunTestSeparately(),
                 args.stdOutLogLevel,
-                args.stdErrLogLevel,
-                testTempDirOverride));
+                args.stdErrLogLevel));
 
     resolver.addToIndex(
         CalculateAbi.of(

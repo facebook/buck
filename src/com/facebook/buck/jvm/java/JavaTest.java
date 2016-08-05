@@ -139,8 +139,6 @@ public class JavaTest
   @AddToRuleKey
   private final boolean runTestSeparately;
 
-  private final Optional<Path> testTempDirOverride;
-
   public JavaTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
@@ -165,8 +163,7 @@ public class JavaTest
       ImmutableMap<String, String> env,
       boolean runTestSeparately,
       Optional<Level> stdOutLogLevel,
-      Optional<Level> stdErrLogLevel,
-      Optional<Path> testTempDirOverride) {
+      Optional<Level> stdErrLogLevel) {
     super(
         params,
         resolver,
@@ -198,7 +195,6 @@ public class JavaTest
     this.runTestSeparately = runTestSeparately;
     this.stdOutLogLevel = stdOutLogLevel;
     this.stdErrLogLevel = stdErrLogLevel;
-    this.testTempDirOverride = testTempDirOverride;
     this.pathToTestLogs = getPathToTestOutputDirectory().resolve("logs.txt");
   }
 
@@ -235,7 +231,6 @@ public class JavaTest
       ExecutionContext executionContext,
       TestRunningOptions options,
       Optional<Path> outDir,
-      Optional<Path> tempDir,
       Optional<Path> robolectricLogPath) {
 
     Set<String> testClassNames = getClassNamesForSources();
@@ -252,7 +247,6 @@ public class JavaTest
     JUnitJvmArgs args = JUnitJvmArgs.builder()
         .setTestType(testType)
         .setDirectoryForTestResults(outDir)
-        .setTmpDirectory(tempDir)
         .setClasspathFile(getClassPathFile())
         .setTestRunnerClasspath(TESTRUNNER_CLASSES)
         .setCodeCoverageEnabled(executionContext.isCodeCoverageEnabled())
@@ -299,15 +293,12 @@ public class JavaTest
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     Path pathToTestOutput = getPathToTestOutputDirectory();
-    Path tmpDirectory = getPathToTmpDirectory();
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToTestOutput));
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), tmpDirectory));
     junit =
         getJUnitStep(
             executionContext,
             options,
             Optional.of(pathToTestOutput),
-            Optional.of(tmpDirectory),
             Optional.of(pathToTestLogs));
     steps.add(junit);
     return steps.build();
@@ -389,27 +380,6 @@ public class JavaTest
         getProjectFilesystem(),
         getBuildTarget(),
         "__java_test_%s_output__");
-  }
-
-  private Path getPathToTmpDirectory() {
-    Path base;
-    if (testTempDirOverride.isPresent()) {
-      base = testTempDirOverride.get()
-          .resolve(getBuildTarget().getBasePath())
-          .resolve(
-              String.format(
-                  "__java_test_%s_tmp__",
-                  getBuildTarget().getShortNameAndFlavorPostfix()));
-      LOG.debug("Using overridden test temp dir base %s", base);
-    } else {
-      base =
-          BuildTargets.getScratchPath(
-              getProjectFilesystem(),
-              getBuildTarget(),
-              "__java_test_%s_tmp__");
-      LOG.debug("Using standard test temp dir base %s", base);
-    }
-    return base;
   }
 
   /**
@@ -638,7 +608,6 @@ public class JavaTest
         getJUnitStep(
             executionContext,
             options,
-            Optional.<Path>absent(),
             Optional.<Path>absent(),
             Optional.<Path>absent());
     return ExternalTestRunnerTestSpec.builder()

@@ -93,9 +93,6 @@ public class JUnitStep extends ShellStep {
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     env.putAll(this.env);
-    if (junitJvmArgs.getTmpDirectory().isPresent()) {
-      env.put("TMP", junitJvmArgs.getTmpDirectory().get().toString());
-    }
     env.putAll(nativeLibsEnvironment);
     return env.build();
   }

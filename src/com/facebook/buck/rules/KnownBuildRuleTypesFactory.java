@@ -20,10 +20,8 @@ package com.facebook.buck.rules;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.util.ProcessExecutor;
-import com.google.common.base.Optional;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 /**
  * Contain items used to construct a {@link KnownBuildRuleTypes} that are shared between all
@@ -33,23 +31,19 @@ public class KnownBuildRuleTypesFactory {
 
   private final ProcessExecutor executor;
   private final AndroidDirectoryResolver directoryResolver;
-  private final Optional<Path> testTempDirOverride;
 
   public KnownBuildRuleTypesFactory(
       ProcessExecutor executor,
-      AndroidDirectoryResolver directoryResolver,
-      Optional<Path> testTempDirOverride) {
+      AndroidDirectoryResolver directoryResolver) {
     this.executor = executor;
     this.directoryResolver = directoryResolver;
-    this.testTempDirOverride = testTempDirOverride;
   }
 
   public KnownBuildRuleTypes create(BuckConfig config) throws IOException, InterruptedException {
     return KnownBuildRuleTypes.createInstance(
         config,
         executor,
-        directoryResolver,
-        testTempDirOverride);
+        directoryResolver);
   }
 
 }

@@ -172,8 +172,7 @@ public class KnownBuildRuleTypesTest {
     KnownBuildRuleTypes configuredBuildRuleTypes = KnownBuildRuleTypes.createBuilder(
         buckConfig,
         processExecutor,
-        new FakeAndroidDirectoryResolver(),
-        Optional.<Path>absent())
+        new FakeAndroidDirectoryResolver())
         .build();
     DefaultJavaLibrary configuredRule = createJavaLibrary(configuredBuildRuleTypes);
 
@@ -237,8 +236,7 @@ public class KnownBuildRuleTypesTest {
     KnownBuildRuleTypes knownBuildRuleTypes1 = KnownBuildRuleTypes.createInstance(
         FakeBuckConfig.builder().build(),
         createExecutor(),
-        new FakeAndroidDirectoryResolver(),
-        Optional.<Path>absent());
+        new FakeAndroidDirectoryResolver());
 
     final Path javac = temporaryFolder.newExecutableFile();
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
@@ -250,8 +248,7 @@ public class KnownBuildRuleTypesTest {
     KnownBuildRuleTypes knownBuildRuleTypes2 = KnownBuildRuleTypes.createInstance(
         buckConfig,
         processExecutor,
-        new FakeAndroidDirectoryResolver(),
-        Optional.<Path>absent());
+        new FakeAndroidDirectoryResolver());
 
     assertNotEquals(knownBuildRuleTypes1, knownBuildRuleTypes2);
   }
@@ -266,8 +263,7 @@ public class KnownBuildRuleTypesTest {
     KnownBuildRuleTypes.createBuilder(
         buckConfig,
         createExecutor(),
-        new FakeAndroidDirectoryResolver(),
-        Optional.<Path>absent()).build();
+        new FakeAndroidDirectoryResolver()).build();
   }
 
   private ProcessExecutor createExecutor() throws IOException {
