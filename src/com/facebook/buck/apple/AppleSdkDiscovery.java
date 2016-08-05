@@ -26,6 +26,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.VersionStringComparator;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -44,6 +45,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -86,7 +88,8 @@ public class AppleSdkDiscovery {
   public static ImmutableMap<AppleSdk, AppleSdkPaths> discoverAppleSdkPaths(
       Optional<Path> developerDir,
       ImmutableList<Path> extraDirs,
-      ImmutableMap<String, AppleToolchain> xcodeToolchains)
+      ImmutableMap<String, AppleToolchain> xcodeToolchains,
+      AppleConfig appleConfig)
       throws IOException {
     Optional<AppleToolchain> defaultToolchain =
         Optional.fromNullable(xcodeToolchains.get(DEFAULT_TOOLCHAIN_ID));
@@ -138,7 +141,8 @@ public class AppleSdkDiscovery {
               }
 
               AppleSdk.Builder sdkBuilder = AppleSdk.builder();
-              if (buildSdkFromPath(sdkDir, sdkBuilder, xcodeToolchains, defaultToolchain)) {
+              if (buildSdkFromPath(
+                      sdkDir, sdkBuilder, xcodeToolchains, defaultToolchain, appleConfig)) {
                 AppleSdk sdk = sdkBuilder.build();
                 LOG.debug("Found SDK %s", sdk);
 
@@ -190,7 +194,8 @@ public class AppleSdkDiscovery {
         Path sdkDir,
         AppleSdk.Builder sdkBuilder,
         ImmutableMap<String, AppleToolchain> xcodeToolchains,
-        Optional<AppleToolchain> defaultToolchain) throws IOException {
+        Optional<AppleToolchain> defaultToolchain,
+        AppleConfig appleConfig) throws IOException {
     try (InputStream sdkSettingsPlist = Files.newInputStream(sdkDir.resolve("SDKSettings.plist"));
          BufferedInputStream bufferedSdkSettingsPlist = new BufferedInputStream(sdkSettingsPlist)) {
       NSDictionary sdkSettings;
@@ -206,11 +211,28 @@ public class AppleSdkDiscovery {
       String version = sdkSettings.objectForKey("Version").toString();
       NSDictionary defaultProperties = (NSDictionary) sdkSettings.objectForKey("DefaultProperties");
 
+      Optional<ImmutableList<String>> toolchains =
+          appleConfig.getToolchainsOverrideForSDKName(name);
       boolean foundToolchain = false;
-      NSArray toolchains = (NSArray) sdkSettings.objectForKey("Toolchains");
-      if (toolchains != null) {
-        for (NSObject toolchainIdObject : toolchains.getArray()) {
-          String toolchainId = toolchainIdObject.toString();
+      if (!toolchains.isPresent()) {
+        NSArray settingsToolchains = (NSArray) sdkSettings.objectForKey("Toolchains");
+        if (settingsToolchains != null) {
+          toolchains = Optional.of(
+              FluentIterable
+                  .from(Arrays.asList(settingsToolchains.getArray()))
+                  .transform(
+                      new Function<NSObject, String>() {
+                        @Override
+                        public String apply(NSObject input) {
+                          return input.toString();
+                        }
+                      })
+                  .toList());
+          }
+      }
+
+      if (toolchains.isPresent()) {
+        for (String toolchainId : toolchains.get()) {
           AppleToolchain toolchain = xcodeToolchains.get(toolchainId);
           if (toolchain != null) {
             foundToolchain = true;

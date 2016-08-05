@@ -104,6 +104,14 @@
 {/template}
 
 /***/
+{template .apple_toolchains_override}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: '*_toolchains_override' /}
+{/call}
+{/template}
+
+/***/
 {template .build_depfiles}
 {call .entry_link}
   {param section: 'build' /}

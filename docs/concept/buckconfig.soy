@@ -451,6 +451,19 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: '*_toolchains_override' /}
+  {param description}
+    Specify a comma-delimited custom list of toolchains to use when building with a particular SDK.
+
+    This is the Buck equivalent of the <code>TOOLCHAINS</code> environment variable
+    when building with Xcode.
+
+    If omitted, this will revert to the built-in behavior.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'build' /}
   {param description}

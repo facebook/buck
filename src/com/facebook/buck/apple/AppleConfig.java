@@ -138,7 +138,8 @@ public class AppleConfig {
       return AppleSdkDiscovery.discoverAppleSdkPaths(
           appleDeveloperDirectory,
           getExtraPlatformPaths(),
-          toolchains);
+          toolchains,
+          this);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -376,6 +377,12 @@ public class AppleConfig {
     } else {
       return Optional.of(ApplePackageConfig.of(command, extension));
     }
+  }
+
+  public Optional<ImmutableList<String>> getToolchainsOverrideForSDKName(String name) {
+    return delegate.getOptionalListWithoutComments(
+        "apple",
+        name + "_toolchains_override");
   }
 
   @Value.Immutable

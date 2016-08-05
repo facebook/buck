@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -74,7 +75,8 @@ public class AppleSdkDiscoveryTest {
     ImmutableMap<AppleSdk, AppleSdkPaths> sdks = AppleSdkDiscovery.discoverAppleSdkPaths(
         Optional.of(path),
         ImmutableList.<Path>of(),
-        toolchains);
+        toolchains,
+        new FakeAppleConfig());
 
     assertEquals(0, sdks.size());
   }
@@ -125,7 +127,8 @@ public class AppleSdkDiscoveryTest {
         AppleSdkDiscovery.discoverAppleSdkPaths(
             Optional.of(path),
             ImmutableList.of(root),
-            toolchains),
+            toolchains,
+            new FakeAppleConfig()),
         equalTo(expected));
   }
 
@@ -170,7 +173,8 @@ public class AppleSdkDiscoveryTest {
         AppleSdkDiscovery.discoverAppleSdkPaths(
             Optional.of(root),
             ImmutableList.of(path),
-            toolchains),
+            toolchains,
+            new FakeAppleConfig()),
         equalTo(expected));
   }
 
@@ -190,7 +194,8 @@ public class AppleSdkDiscoveryTest {
     ImmutableMap<AppleSdk, AppleSdkPaths> sdks = AppleSdkDiscovery.discoverAppleSdkPaths(
         Optional.of(root),
         ImmutableList.<Path>of(),
-        toolchains);
+        toolchains,
+        new FakeAppleConfig());
 
     assertEquals(2, sdks.size());
   }
@@ -213,7 +218,8 @@ public class AppleSdkDiscoveryTest {
     ImmutableMap<AppleSdk, AppleSdkPaths> sdks = AppleSdkDiscovery.discoverAppleSdkPaths(
         Optional.of(root),
         ImmutableList.<Path>of(),
-        toolchains);
+        toolchains,
+        new FakeAppleConfig());
 
     assertEquals(0, sdks.size());
   }
@@ -374,7 +380,8 @@ public class AppleSdkDiscoveryTest {
         AppleSdkDiscovery.discoverAppleSdkPaths(
             Optional.of(root),
             ImmutableList.<Path>of(),
-            toolchains),
+            toolchains,
+            new FakeAppleConfig()),
         equalTo(expected));
   }
 
@@ -393,7 +400,8 @@ public class AppleSdkDiscoveryTest {
         AppleSdkDiscovery.discoverAppleSdkPaths(
             Optional.of(root),
             ImmutableList.<Path>of(),
-            toolchains).entrySet(),
+            toolchains,
+            new FakeAppleConfig()).entrySet(),
         empty());
   }
 
@@ -512,7 +520,8 @@ public class AppleSdkDiscoveryTest {
         AppleSdkDiscovery.discoverAppleSdkPaths(
             Optional.of(root),
             ImmutableList.<Path>of(),
-            toolchains),
+            toolchains,
+            new FakeAppleConfig()),
         equalTo(expected));
   }
 
@@ -561,7 +570,8 @@ public class AppleSdkDiscoveryTest {
         AppleSdkDiscovery.discoverAppleSdkPaths(
             Optional.of(root),
             ImmutableList.of(root),
-            toolchains),
+            toolchains,
+            new FakeAppleConfig()),
         equalTo(expected));
   }
 
@@ -591,7 +601,8 @@ public class AppleSdkDiscoveryTest {
     ImmutableMap<AppleSdk, AppleSdkPaths> actual = AppleSdkDiscovery.discoverAppleSdkPaths(
         Optional.of(root),
         ImmutableList.of(root),
-        toolchains);
+        toolchains,
+        new FakeAppleConfig());
 
     // if both symlinks were to be visited, exception would have been thrown during discovery
     assertThat(actual.size(), is(2));
@@ -618,9 +629,82 @@ public class AppleSdkDiscoveryTest {
     ImmutableMap<AppleSdk, AppleSdkPaths> actual = AppleSdkDiscovery.discoverAppleSdkPaths(
         Optional.of(root),
         ImmutableList.of(root),
-        toolchains);
+        toolchains,
+        new FakeAppleConfig());
 
     assertThat(actual.size(), is(0));
+  }
+
+  @Test
+  public void overrideToolchains() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "sdk-discovery-minimal",
+        temp);
+    workspace.setUp();
+    Path root = workspace.getPath("");
+
+    String toolchainName1 = "toolchainoverride.1";
+    String toolchainPath1 = "Toolchains/" + toolchainName1;
+    AppleToolchain overrideToolchain1 = AppleToolchain.builder()
+        .setIdentifier(toolchainName1)
+        .setPath(root.resolve(toolchainPath1))
+        .setVersion("1")
+        .build();
+
+    String toolchainName2 = "toolchainoverride.2";
+    String toolchainPath2 = "Toolchains/" + toolchainName2;
+    AppleToolchain overrideToolchain2 = AppleToolchain.builder()
+        .setIdentifier(toolchainName2)
+        .setPath(root.resolve(toolchainPath2))
+        .setVersion("1")
+        .build();
+
+    ImmutableMap<String, AppleToolchain> allToolchains = ImmutableMap.of(
+        "com.apple.dt.toolchain.XcodeDefault",
+        getDefaultToolchain(root),
+        toolchainName1,
+        overrideToolchain1,
+        toolchainName2,
+        overrideToolchain2);
+
+    AppleSdk macosx109Sdk =
+        AppleSdk.builder()
+            .setName("macosx10.9")
+            .setVersion("10.9")
+            .setApplePlatform(ApplePlatform.MACOSX)
+            .addArchitectures("i386", "x86_64")
+            .addAllToolchains(ImmutableList.of(overrideToolchain1, overrideToolchain2))
+            .build();
+    AppleSdkPaths macosx109Paths =
+        AppleSdkPaths.builder()
+            .setDeveloperPath(root)
+            .addToolchainPaths(root.resolve(toolchainPath1), root.resolve(toolchainPath2))
+            .setPlatformPath(root.resolve("Platforms/MacOSX.platform"))
+            .setSdkPath(root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
+            .build();
+
+    ImmutableMap<AppleSdk, AppleSdkPaths> expected =
+        ImmutableMap.<AppleSdk, AppleSdkPaths>builder()
+            .put(macosx109Sdk, macosx109Paths)
+            .put(macosx109Sdk.withName("macosx"), macosx109Paths)
+            .build();
+
+    AppleConfig fakeAppleConfig = new AppleConfig(
+        FakeBuckConfig.builder()
+            .setSections(
+                "[apple]",
+                "  macosx10.9_toolchains_override = " + toolchainName1 + "," + toolchainName2,
+                "  macosx_toolchains_override = " + toolchainName1 + "," + toolchainName2)
+            .build());
+
+    assertThat(
+        AppleSdkDiscovery.discoverAppleSdkPaths(
+            Optional.of(root),
+            ImmutableList.of(root),
+            allToolchains,
+            fakeAppleConfig),
+        equalTo(expected));
   }
 
   private void createSymLinkIosSdks(Path root, String version) throws IOException {

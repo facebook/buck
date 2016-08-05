@@ -263,7 +263,8 @@ public class KnownBuildRuleTypes {
     ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths = AppleSdkDiscovery.discoverAppleSdkPaths(
         appleDeveloperDirectory,
         extraPlatformPaths,
-        toolchains);
+        toolchains,
+        appleConfig);
 
     for (Map.Entry<AppleSdk, AppleSdkPaths> entry : sdkPaths.entrySet()) {
       AppleSdk sdk = entry.getKey();
