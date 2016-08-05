@@ -27,6 +27,7 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGroup;
 import com.facebook.buck.rules.TargetNode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -155,6 +156,7 @@ public class DistributedBuildTargetGraphCodec {
       }
     }
 
-    return new TargetGraph(mutableTargetGraph, targetNodeIndex);
+    // TODO(csarbora): make this work with TargetGroups
+    return new TargetGraph(mutableTargetGraph, targetNodeIndex, ImmutableSet.<TargetGroup>of());
   }
 }

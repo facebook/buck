@@ -19,8 +19,10 @@ package com.facebook.buck.parser;
 import static com.facebook.buck.parser.ParserConfig.DEFAULT_BUILD_FILE_NAME;
 import static com.facebook.buck.testutil.WatchEventsForTests.createPathEvent;
 import static com.google.common.base.Charsets.UTF_8;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -51,12 +53,14 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGroup;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.testutil.WatchEventsForTests;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
@@ -79,6 +83,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import org.hamcrest.Matchers;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -2364,6 +2369,67 @@ public class ParserTest {
     assertNotEquals(
         parser.getPermState().getOrCreateNodeCache(TargetNode.class),
         parser.getPermState().getOrCreateNodeCache(Map.class));
+  }
+
+  @Test
+  public void groupsAreExpanded() throws Exception {
+    Path buckFile = cellRoot.resolve("BUCK");
+    Files.createDirectories(buckFile.getParent());
+    Path groupsData = TestDataHelper.getTestDataScenario(this, "groups");
+    Files.copy(groupsData.resolve("BUCK.fixture"), buckFile);
+
+    BuildTarget fooTarget = BuildTargetFactory.newInstance(cellRoot, "//:foo");
+    BuildTarget barTarget = BuildTargetFactory.newInstance(cellRoot, "//:bar");
+
+    TargetGraph targetGraph = parser.buildTargetGraph(
+        eventBus,
+        cell,
+        false,
+        executorService,
+        ImmutableSet.of(barTarget));
+
+    assertThat(targetGraph.getGroups().size(), is(2));
+    for (TargetGroup group : targetGraph.getGroups()) {
+      assertThat(group.containsTarget(fooTarget), is(true));
+    }
+  }
+
+  @Test
+  public void testVisibilityGetsChecked() throws Exception {
+    Path visibilityData = TestDataHelper.getTestDataScenario(this, "visibility");
+    Path visibilityBuckFile = cellRoot.resolve("BUCK");
+    Path visibilitySubBuckFile = cellRoot.resolve("sub/BUCK");
+    Files.createDirectories(visibilityBuckFile.getParent());
+    Files.createDirectories(visibilitySubBuckFile.getParent());
+    Files.copy(visibilityData.resolve("BUCK.fixture"), visibilityBuckFile);
+    Files.copy(visibilityData.resolve("sub/BUCK.fixture"), visibilitySubBuckFile);
+
+    parser.buildTargetGraph(
+        eventBus,
+        cell,
+        false,
+        executorService,
+        ImmutableSet.of(BuildTargetFactory.newInstance(cellRoot, "//:should_pass")));
+    parser.buildTargetGraph(
+        eventBus,
+        cell,
+        false,
+        executorService,
+        ImmutableSet.of(BuildTargetFactory.newInstance(cellRoot, "//:should_pass2")));
+    try {
+      parser.buildTargetGraph(
+          eventBus,
+          cell,
+          false,
+          executorService,
+          ImmutableSet.of(BuildTargetFactory.newInstance(cellRoot, "//:should_fail")));
+      Assert.fail("did not expect to succeed parsing");
+    } catch (Exception e) {
+      assertThat(e, instanceOf(HumanReadableException.class));
+      assertThat(
+          e.getMessage(),
+          containsString("//:should_fail depends on //sub:sub, which is not visible"));
+    }
   }
 
   private BuildRuleResolver buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {

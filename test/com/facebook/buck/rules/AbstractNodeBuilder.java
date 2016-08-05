@@ -45,6 +45,8 @@ import javax.annotation.Nullable;
 public abstract class AbstractNodeBuilder<A> {
   private static final DefaultTypeCoercerFactory TYPE_COERCER_FACTORY =
       new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance());
+  private static final VisibilityPatternParser VISIBILITY_PATTERN_PARSER =
+      new VisibilityPatternParser();
 
   protected final Description<A> description;
   protected final BuildRuleFactoryParams factoryParams;
@@ -131,7 +133,7 @@ public abstract class AbstractNodeBuilder<A> {
           arg,
           factoryParams,
           getDepsFromArg(),
-          ImmutableSet.<VisibilityPattern>of(),
+          ImmutableSet.of(VISIBILITY_PATTERN_PARSER.parse(null, "PUBLIC")),
           cellRoots);
     } catch (NoSuchBuildTargetException e) {
       throw Throwables.propagate(e);

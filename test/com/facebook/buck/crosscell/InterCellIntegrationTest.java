@@ -330,7 +330,7 @@ public class InterCellIntegrationTest {
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory(
         ObjectMappers.newDefaultInstance());
     Parser parser = new Parser(
-        new ParserConfig(cells.getFirst().asCell().getBuckConfig()),
+        new ParserConfig(primary.asCell().getBuckConfig()),
         coercerFactory,
         new ConstructorArgMarshaller(coercerFactory));
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();

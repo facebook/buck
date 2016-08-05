@@ -132,7 +132,8 @@ public class DefaultParserTargetGroupFactory implements ParserTargetNodeFactory<
         JsonObjectHashing.hashJsonObject(hasher, rawNode);
         TargetGroup node = new TargetGroup(
             constructorArg.targets,
-            constructorArg.restrictOutboundVisibility);
+            constructorArg.restrictOutboundVisibility,
+            factoryParams.target);
         return node;
       }
     } catch (NoSuchBuildTargetException e) {

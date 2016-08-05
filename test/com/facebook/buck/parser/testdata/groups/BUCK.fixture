@@ -1,3 +1,21 @@
-java_library(name='node')
+# these are intentionally ordered depender -> dependency
 
-target_group(name='group', targets=['//:node'])
+java_library(
+    name = 'bar',
+    deps = [ '//:foo' ]
+)
+
+target_group(
+    name = "group_two",
+    targets = [
+        '//:bar',
+        '//:group_one'
+    ]
+)
+
+java_library(name='foo')
+
+target_group(
+    name = 'group_one',
+    targets = [ '//:foo' ]
+)

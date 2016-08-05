@@ -40,15 +40,29 @@ import javax.annotation.Nullable;
 public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
   public static final TargetGraph EMPTY = new TargetGraph(
       new MutableDirectedGraph<TargetNode<?>>(),
-      ImmutableMap.<BuildTarget, TargetNode<?>>of());
+      ImmutableMap.<BuildTarget, TargetNode<?>>of(),
+      ImmutableSet.<TargetGroup>of());
 
   private final ImmutableMap<BuildTarget, TargetNode<?>> targetsToNodes;
+  private final ImmutableSet<TargetGroup> groups;
 
   public TargetGraph(
       MutableDirectedGraph<TargetNode<?>> graph,
-      ImmutableMap<BuildTarget, TargetNode<?>> index) {
+      ImmutableMap<BuildTarget, TargetNode<?>> index,
+      ImmutableSet<TargetGroup> groups) {
     super(graph);
     this.targetsToNodes = index;
+    this.groups = groups;
+
+    verifyVisibilityIntegrity();
+  }
+
+  private void verifyVisibilityIntegrity() {
+    for (TargetNode<?> node : getNodes()) {
+      for (TargetNode<?> dep : getOutgoingNodesFor(node)) {
+        dep.checkVisibility(node);
+      }
+    }
   }
 
   @Nullable
@@ -94,6 +108,10 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
             return get(input);
           }
         });
+  }
+
+  public ImmutableSet<TargetGroup> getGroups() {
+    return groups;
   }
 
   @Override
@@ -143,7 +161,7 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
       }
     }.start();
 
-    return new TargetGraph(subgraph, ImmutableMap.copyOf(index));
+    return new TargetGraph(subgraph, ImmutableMap.copyOf(index), groups);
   }
 
   @SuppressWarnings("serial")

@@ -16,17 +16,26 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasBuildTarget;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
-public class TargetGroup {
+public class TargetGroup implements Iterable<BuildTarget>, HasBuildTarget {
 
   private final ImmutableSet<BuildTarget> targets;
   private final boolean restrictOutboundVisibility;
 
-  public TargetGroup(Set<BuildTarget> targets, Optional<Boolean> restrictOutboundVisibility) {
+  private final BuildTarget buildTarget;
+
+  public TargetGroup(
+      Set<BuildTarget> targets,
+      Optional<Boolean> restrictOutboundVisibility,
+      BuildTarget buildTarget) {
+    this.buildTarget = buildTarget;
     this.targets = ImmutableSet.copyOf(targets);
     this.restrictOutboundVisibility = restrictOutboundVisibility.or(false);
   }
@@ -37,5 +46,30 @@ public class TargetGroup {
 
   public boolean restrictsOutboundVisibility() {
     return restrictOutboundVisibility;
+  }
+
+  @Override
+  public Iterator<BuildTarget> iterator() {
+    return targets.iterator();
+  }
+
+  @Override
+  public BuildTarget getBuildTarget() {
+    return buildTarget;
+  }
+
+  public TargetGroup withReplacedTargets(Map<BuildTarget, Iterable<BuildTarget>> replacements) {
+    ImmutableSet.Builder<BuildTarget> newTargets = ImmutableSet.builder();
+    for (BuildTarget existingTarget : targets) {
+      if (replacements.containsKey(existingTarget)) {
+        newTargets.addAll(replacements.get(existingTarget));
+      } else {
+        newTargets.add(existingTarget);
+      }
+    }
+    return new TargetGroup(
+        newTargets.build(),
+        Optional.of(restrictOutboundVisibility),
+        buildTarget);
   }
 }

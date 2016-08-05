@@ -301,7 +301,7 @@ public class ParsePipelineTest {
       expectedException.expect(NoSuchBuildTargetException.class);
       fixture.getTargetNodeParsePipeline().getNode(
           cell,
-          BuildTargetFactory.newInstance(cell.getFilesystem(), "//:group"));
+          BuildTargetFactory.newInstance(cell.getFilesystem(), "//:group_one"));
     }
   }
 
@@ -313,7 +313,7 @@ public class ParsePipelineTest {
       expectedException.expect(NoSuchBuildTargetException.class);
       fixture.getTargetGroupParsePipeline().getNode(
           cell,
-          BuildTargetFactory.newInstance(cell.getFilesystem(), "//:node"));
+          BuildTargetFactory.newInstance(cell.getFilesystem(), "//:foo"));
     }
   }
 
@@ -324,11 +324,11 @@ public class ParsePipelineTest {
 
       TargetGroup group = fixture.getTargetGroupParsePipeline().getNode(
           cell,
-          BuildTargetFactory.newInstance(cell.getFilesystem(), "//:group"));
+          BuildTargetFactory.newInstance(cell.getFilesystem(), "//:group_one"));
 
       TargetNode<?> node = fixture.getTargetNodeParsePipeline().getNode(
           cell,
-          BuildTargetFactory.newInstance(cell.getFilesystem(), "//:node"));
+          BuildTargetFactory.newInstance(cell.getFilesystem(), "//:foo"));
 
       assertThat(group.containsTarget(node.getBuildTarget()), is(true));
     }
