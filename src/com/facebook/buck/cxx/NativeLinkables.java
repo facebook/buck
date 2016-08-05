@@ -85,6 +85,9 @@ public class NativeLinkables {
    *
    * Traversal proceeds depending on whether each dependency is to be statically or dynamically
    * linked.
+   *
+   * @param linkStyle how dependencies should be linked, if their preferred_linkage is
+   *                  {@code NativeLinkable.Linkage.ANY}.
    */
   public static ImmutableMap<BuildTarget, NativeLinkable> getNativeLinkables(
       final CxxPlatform cxxPlatform,
@@ -108,9 +111,21 @@ public class NativeLinkables {
             Iterable<? extends NativeLinkable> nativeLinkableDeps =
                 nativeLinkable.getNativeLinkableExportedDeps(cxxPlatform);
 
+            boolean shouldTraverse = true;
+            switch (nativeLinkable.getPreferredLinkage(cxxPlatform)) {
+              case ANY:
+                shouldTraverse = linkStyle != Linker.LinkableDepType.SHARED;
+                break;
+              case SHARED:
+                shouldTraverse = false;
+                break;
+              case STATIC:
+                shouldTraverse = true;
+                break;
+            }
+
             // If we're linking this dependency statically, we also need to traverse its deps.
-            if (linkStyle != Linker.LinkableDepType.SHARED ||
-                nativeLinkable.getPreferredLinkage(cxxPlatform) == NativeLinkable.Linkage.STATIC) {
+            if (shouldTraverse) {
               nativeLinkableDeps =
                   Iterables.concat(
                       nativeLinkableDeps,
