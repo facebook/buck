@@ -1326,7 +1326,7 @@ def main():
                 for field, value in contents.iteritems():
                     configs[(section, field)] = value
 
-    ignore_paths = None
+    ignore_paths = []
     if options.ignore_paths is not None:
         with open(options.ignore_paths, 'rb') as f:
             ignore_paths = [make_glob(i) for i in bser.loads(f.read())]
