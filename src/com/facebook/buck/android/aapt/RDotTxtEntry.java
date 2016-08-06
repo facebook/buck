@@ -216,10 +216,24 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
       return 0;
     }
 
-    return ComparisonChain.start()
-        .compare(this.type, that.type)
-        .compare(this.name, that.name)
-        .result();
+    ComparisonChain comparisonChain = ComparisonChain.start().compare(this.type, that.type);
+
+    String [] thisNameParts = this.name.split("_");
+    String [] thatNameParts = that.name.split("_");
+
+    int index = 0;
+    while (index < thisNameParts.length && index < thatNameParts.length) {
+      comparisonChain = comparisonChain.compare(thisNameParts[index], thatNameParts[index]);
+      index++;
+    }
+
+    if (index < thisNameParts.length) {
+      comparisonChain = comparisonChain.compare(thisNameParts[index], "");
+    } else if (index < thatNameParts.length) {
+      comparisonChain = comparisonChain.compare("", thatNameParts[index]);
+    }
+
+    return comparisonChain.result();
   }
 
   @Override
