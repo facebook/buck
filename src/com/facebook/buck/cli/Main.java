@@ -442,7 +442,7 @@ public final class Main {
         WatchmanWatcher watchmanWatcher,
         WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction,
         WatchmanDiagnosticCache watchmanDiagnosticCache)
-      throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
 
       // Synchronize on parser object so that all outstanding watch events are processed
       // as a single, atomic Parser cache update and are not interleaved with Parser cache
@@ -598,8 +598,8 @@ public final class Main {
     // after our initial query.
     WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction =
         daemon == null
-          ? WatchmanWatcher.FreshInstanceAction.NONE
-          : WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT;
+            ? WatchmanWatcher.FreshInstanceAction.NONE
+            : WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT;
 
     // Get the client environment, either from this process or from the Nailgun context.
     ImmutableMap<String, String> clientEnvironment = getClientEnvironment(context);
@@ -643,7 +643,7 @@ public final class Main {
   /**
    * @param buildId an identifier for this command execution.
    * @param context an optional NGContext that is present if running inside a Nailgun server.
-   * @param args command line arguments
+   * @param args    command line arguments
    * @return an exit code or {@code null} if this is a process that should not exit
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
@@ -892,7 +892,8 @@ public final class Main {
         ListeningExecutorService httpWriteExecutorService =
             getHttpWriteExecutorService(cacheBuckConfig);
         ScheduledExecutorService counterAggregatorExecutor =
-            MostExecutors.newSingleThreadScheduledExecutor("CounterAggregatorThread");
+            Executors.newSingleThreadScheduledExecutor(new CommandThreadFactory(
+                "CounterAggregatorThread"));
         VersionControlStatsGenerator vcStatsGenerator;
 
         // Eventually, we'll want to get allow websocket and/or nailgun clients to specify locale
@@ -1371,7 +1372,7 @@ public final class Main {
       WatchmanWatcher watchmanWatcher,
       WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction,
       WatchmanDiagnosticCache watchmanDiagnosticCache)
-    throws IOException, InterruptedException {
+      throws IOException, InterruptedException {
     // Wire up daemon to new client and get cached Parser.
     Daemon daemonForParser = getDaemon(cell, objectMapper);
     daemonForParser.watchClient(context.get());

@@ -36,6 +36,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
+import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.HasBuildTarget;
@@ -507,7 +508,8 @@ public class BuildCommand extends AbstractCommand {
     DistBuildConfig config = new DistBuildConfig(params.getBuckConfig());
     ClientSideSlb slb = config.getFrontendConfig().createHttpClientSideSlb(
         params.getClock(),
-        params.getBuckEventBus());
+        params.getBuckEventBus(),
+        new CommandThreadFactory("BuildCommand.HttpLoadBalancer"));
     OkHttpClient client = config.createOkHttpClient();
 
     try (HttpService httpService = new LoadBalancedService(slb, client, params.getBuckEventBus());

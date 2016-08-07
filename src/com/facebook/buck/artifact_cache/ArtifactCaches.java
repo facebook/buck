@@ -18,6 +18,7 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.NetworkEvent.BytesReceivedEvent;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.HttpLoadBalancer;
 import com.facebook.buck.slb.HttpService;
@@ -341,7 +342,8 @@ public class ArtifactCaches {
       case CLIENT_SLB:
         HttpLoadBalancer clientSideSlb = config.getSlbConfig().createHttpClientSideSlb(
             new DefaultClock(),
-            buckEventBus);
+            buckEventBus,
+            new CommandThreadFactory("ArtifactCaches.HttpLoadBalancer"));
         fetchService =
             new RetryingHttpService(
                 buckEventBus,

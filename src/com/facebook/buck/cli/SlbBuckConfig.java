@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.ClientSideSlbConfig;
 import com.facebook.buck.timing.Clock;
@@ -65,9 +66,12 @@ public class SlbBuckConfig {
     return builder.build();
   }
 
-  public ClientSideSlb createHttpClientSideSlb(Clock clock, BuckEventBus eventBus) {
+  public ClientSideSlb createHttpClientSideSlb(
+      Clock clock,
+      BuckEventBus eventBus,
+      CommandThreadFactory threadFactory) {
     ClientSideSlbConfig.Builder configBuilder = ClientSideSlbConfig.builder()
-        .setSchedulerService(Executors.newScheduledThreadPool(1))
+        .setSchedulerService(Executors.newSingleThreadScheduledExecutor(threadFactory))
         .setClock(clock)
         .setServerPool(getServerPool())
         .setEventBus(eventBus);
