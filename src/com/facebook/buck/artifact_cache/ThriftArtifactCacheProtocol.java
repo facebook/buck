@@ -101,7 +101,7 @@ public class ThriftArtifactCacheProtocol {
 
       Preconditions.checkArgument(
           payloadByteSources.length == this.payloads.size(),
-          "Number of payloadStreams provided [%d] does not match number of payloads " +
+          "Number of payloadStreams provided [%s] does not match number of payloads " +
               "in the thriftData [%d].",
           payloadByteSources.length,
           payloads.size());
@@ -174,7 +174,7 @@ public class ThriftArtifactCacheProtocol {
     public ReadPayloadInfo readPayload(OutputStream outStream) throws IOException {
       Preconditions.checkState(
           nextPayloadToBeRead < thriftData.getPayloadsSize(),
-          "Trying to download payload index=[%d] but the thriftData only contains [%d] payloads.",
+          "Trying to download payload index=[%s] but the thriftData only contains [%s] payloads.",
           nextPayloadToBeRead,
           thriftData.getPayloadsSize());
 

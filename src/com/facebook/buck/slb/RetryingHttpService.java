@@ -46,7 +46,7 @@ public class RetryingHttpService implements HttpService {
       int maxNumberOfRetries) {
     Preconditions.checkArgument(
         maxNumberOfRetries >= 0,
-        "The max number of retries needs to be non-negative instead of: %d",
+        "The max number of retries needs to be non-negative instead of: %s",
         maxNumberOfRetries);
     this.decoratedService = decoratedService;
     this.maxNumberOfAttempts = maxNumberOfRetries + 1;

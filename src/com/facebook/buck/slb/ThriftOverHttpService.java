@@ -83,7 +83,7 @@ public class ThriftOverHttpService
       if (response.code() != 200) {
         throw new ThriftServiceException(
             String.format(
-                "HTTP response returned unexpected status code [%d] from URL [%s].",
+                "HTTP response returned unexpected status code [%s] from URL [%s].",
                 response.code(),
                 response.requestUrl()));
       }

@@ -38,7 +38,7 @@ public class ServerHealthState {
   public ServerHealthState(URI server, int maxSamplesStored) {
     Preconditions.checkArgument(
         maxSamplesStored > 0,
-        "The maximum number of samples stored must be positive instead of [%d].",
+        "The maximum number of samples stored must be positive instead of [%s].",
         maxSamplesStored);
     this.maxSamplesStored = maxSamplesStored;
     this.server = server;
