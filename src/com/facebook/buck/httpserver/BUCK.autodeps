@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 27960b308a0bc625f1dbd2152437eea998debb9e #@#
+#@# GENERATED FILE: DO NOT MODIFY 94b35cbd449fcb08994b67ce4ec0f31bcadef466 #@#
 {
   "cache_handler" : {
     "deps" : [
@@ -22,7 +22,6 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/parser:parser",
       "//src/com/facebook/buck/rules:rules",
-      "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
       "//third-party/java/gson:gson"
     ],

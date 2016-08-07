@@ -20,6 +20,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.httpserver.TracesHelper.TraceAttributes;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.InvocationInfo;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.timing.SettableFakeClock;
@@ -27,11 +30,12 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
 public class TracesHelperTest {
@@ -42,18 +46,18 @@ public class TracesHelperTest {
         new FakeClock(TimeUnit.MILLISECONDS.toNanos(1000L)));
     projectFilesystem.writeContentsToPath(
         "[" +
-          "{\n" +
+            "{\n" +
             "\"cat\" : \"buck\",\n" +
             "\"pid\" : 0,\n" +
             "\"ts\" : 0,\n" +
             "\"ph\" : \"M\",\n" +
             "\"args\" : {\n" +
-              "\"name\" : \"buck\"\n" +
+            "\"name\" : \"buck\"\n" +
             "},\n" +
             "\"name\" : \"process_name\",\n" +
             "\"tid\" : 0\n" +
-          "}," +
-          "{" +
+            "}," +
+            "{" +
             "\"cat\":\"buck\"," +
             "\"name\":\"build\"," +
             "\"ph\":\"B\"," +
@@ -61,9 +65,9 @@ public class TracesHelperTest {
             "\"tid\":1," +
             "\"ts\":5621911884918," +
             "\"args\":{\"command_args\":\"buck\"}" +
-          "}" +
-        "]",
-        BuckConstant.getBuckTraceDir().resolve("build.a.trace"));
+            "}" +
+            "]",
+        projectFilesystem.getBuckPaths().getBuckOut().resolve("build.a.trace"));
 
     TracesHelper helper = new TracesHelper(projectFilesystem);
     TraceAttributes traceAttributes = helper.getTraceAttributesFor("a");
@@ -84,15 +88,15 @@ public class TracesHelperTest {
         new FakeClock(TimeUnit.MILLISECONDS.toNanos(2000L)));
     projectFilesystem.writeContentsToPath(
         "[" +
-          "{" +
+            "{" +
             "\"cat\":\"buck\"," +
             "\"ph\":\"B\"," +
             "\"pid\":0," +
             "\"tid\":1," +
             "\"ts\":5621911884918," +
             "\"args\":{\"command_args\":\"buck\"}" +
-          "}" +
-        "]",
+            "}" +
+            "]",
         BuckConstant.getBuckTraceDir().resolve("build.b.trace"));
 
     TracesHelper helper = new TracesHelper(projectFilesystem);
@@ -111,14 +115,14 @@ public class TracesHelperTest {
         new FakeClock(TimeUnit.MILLISECONDS.toNanos(2000L)));
     projectFilesystem.writeContentsToPath(
         "[" +
-          "{" +
+            "{" +
             "\"cat\":\"buck\"," +
             "\"ph\":\"B\"," +
             "\"pid\":0," +
             "\"tid\":1," +
             "\"ts\":5621911884918" +
-          "}" +
-        "]",
+            "}" +
+            "]",
         BuckConstant.getBuckTraceDir().resolve("build.c.trace"));
 
     TracesHelper helper = new TracesHelper(projectFilesystem);
@@ -149,7 +153,7 @@ public class TracesHelperTest {
 
     TracesHelper helper = new TracesHelper(projectFilesystem);
     assertEquals(
-        ImmutableSet.of(
+        ImmutableList.of(
             BuckConstant.getBuckTraceDir().resolve("build.5.trace"),
             BuckConstant.getBuckTraceDir().resolve("build.4.trace"),
             BuckConstant.getBuckTraceDir().resolve("build.3b.trace"),
@@ -175,5 +179,41 @@ public class TracesHelperTest {
     projectFilesystem.mkdirs(BuckConstant.getBuckTraceDir());
     TracesHelper helper = new TracesHelper(projectFilesystem);
     helper.getTraceAttributesFor("nonexistent");
+  }
+
+  @Test
+  public void testFindingTracesInNewPerCommandDirectories() throws IOException {
+    SettableFakeClock clock = new SettableFakeClock(0L, 0L);
+    FakeProjectFilesystem fs = new FakeProjectFilesystem(clock);
+    fs.touch(getNewTraceFilePath(fs, "build", "1", 1));
+    fs.touch(getNewTraceFilePath(fs, "audit", "4", 4));
+    fs.touch(getNewTraceFilePath(fs, "query", "2", 2));
+    fs.touch(getNewTraceFilePath(fs, "targets", "5", 5));
+    fs.touch(getNewTraceFilePath(fs, "test", "3", 3));
+    fs.touch(getNewTraceFilePath(fs, "test", "3b", 3));
+
+    TracesHelper helper = new TracesHelper(fs);
+    assertEquals(
+        ImmutableList.of(
+            fs.getBuckPaths().getLogDir().resolve("1970-01-01_00h00m05s_targets_5/build.5.trace"),
+            fs.getBuckPaths().getLogDir().resolve("1970-01-01_00h00m04s_audit_4/build.4.trace"),
+            fs.getBuckPaths().getLogDir().resolve("1970-01-01_00h00m03s_test_3b/build.3b.trace"),
+            fs.getBuckPaths().getLogDir().resolve("1970-01-01_00h00m03s_test_3/build.3.trace"),
+            fs.getBuckPaths().getLogDir().resolve("1970-01-01_00h00m02s_query_2/build.2.trace"),
+            fs.getBuckPaths().getLogDir().resolve("1970-01-01_00h00m01s_build_1/build.1.trace")),
+        helper.listTraceFilesByLastModified());
+  }
+
+  public Path getNewTraceFilePath(
+      ProjectFilesystem fs,
+      String commandName,
+      String buildId,
+      int seconds) {
+    InvocationInfo info = InvocationInfo.of(
+        new BuildId(buildId),
+        commandName,
+        fs.getBuckPaths().getLogDir())
+        .withTimestampMillis(TimeUnit.SECONDS.toMillis(seconds));
+    return info.getLogDirectoryPath().resolve("build." + buildId + ".trace");
   }
 }

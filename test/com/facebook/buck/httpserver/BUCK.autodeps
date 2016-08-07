@@ -1,10 +1,12 @@
-#@# GENERATED FILE: DO NOT MODIFY be7bb25deccf9ec2d54ac1926f36799ad78eac5b #@#
+#@# GENERATED FILE: DO NOT MODIFY 7639db21397448cfaabe1ff22d9894bcfc7aa2a5 #@#
 {
   "httpserver" : {
     "deps" : [
       "//src/com/facebook/buck/httpserver:httpserver",
       "//src/com/facebook/buck/httpserver:util",
       "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/log:log",
+      "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:object_mapper",

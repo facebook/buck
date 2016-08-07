@@ -18,11 +18,13 @@ package com.facebook.buck.httpserver;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -32,11 +34,20 @@ import com.google.gson.stream.JsonToken;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 /**
  * Utility to help with reading data from build trace files.
@@ -44,6 +55,8 @@ import java.util.Date;
 public class TracesHelper {
 
   private static final Logger logger = Logger.get(TracesHelper.class);
+
+  private static final Pattern TRACES_FILE_PATTERN = Pattern.compile("build.*.trace$");
 
   private final ProjectFilesystem projectFilesystem;
 
@@ -172,23 +185,66 @@ public class TracesHelper {
   }
 
   Collection<Path> listTraceFilesByLastModified() throws IOException {
-    return projectFilesystem.getSortedMatchingDirectoryContents(
-        BuckConstant.getBuckTraceDir(),
-        "build.*.trace");
+    final List<Path> allTraces = Lists.newArrayList();
+
+    projectFilesystem.walkFileTree(
+        projectFilesystem.getBuckPaths().getBuckOut(),
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(
+              Path file, BasicFileAttributes attrs) throws IOException {
+            Matcher matcher = TRACES_FILE_PATTERN.matcher(file.getFileName().toString());
+            if (matcher.matches()) {
+              allTraces.add(file);
+            }
+
+            return super.visitFile(file, attrs);
+          }
+        });
+
+    // Sort by:
+    // 1. Reverse chronological order.
+    // 2. Alphabetical order.
+    Collections.sort(allTraces, new Comparator<Path>() {
+      @Override
+      public int compare(Path path1, Path path2) {
+        int result = 0;
+        try {
+          result = Long.compare(
+              projectFilesystem.getLastModifiedTime(path2),
+              projectFilesystem.getLastModifiedTime(path1));
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+
+        if (result == 0) {
+          return path2.toString().compareTo(path1.toString());
+        } else {
+          return result;
+        }
+      }
+    });
+
+    return allTraces;
   }
 
   /**
    * Returns a collection of paths containing traces for the specified build ID.
-   *
+   * <p>
    * A given build might have more than one trace file (for example,
    * the buck.py launcher has its own trace file).
    */
-  private Collection<Path> getPathsToTraces(String id) throws IOException {
+  private Collection<Path> getPathsToTraces(final String id) throws IOException {
     Preconditions.checkArgument(TracesHandlerDelegate.TRACE_ID_PATTERN.matcher(id).matches());
 
-    Collection<Path> traces = projectFilesystem.getSortedMatchingDirectoryContents(
-        BuckConstant.getBuckTraceDir(),
-        "*" + id + "*.trace");
+    Collection<Path> traces = FluentIterable.from(listTraceFilesByLastModified())
+        .filter(new Predicate<Path>() {
+          @Override
+          public boolean apply(Path input) {
+            return input.getFileName().toString().contains(id);
+          }
+        })
+        .toList();
 
     if (traces.isEmpty()) {
       throw new HumanReadableException("Could not find a build trace with id %s.", id);

@@ -452,8 +452,8 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
-  public void walkFileTree(Path root, FileVisitor<Path> fileVisitor) throws IOException {
-    throw new UnsupportedOperationException();
+  public void walkFileTree(Path searchRoot, FileVisitor<Path> fileVisitor) throws IOException {
+    walkRelativeFileTree(searchRoot, fileVisitor);
   }
 
   @Override
