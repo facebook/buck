@@ -28,7 +28,7 @@ import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.NetworkEvent;
 import com.facebook.buck.event.ParsingEvent;
-import com.facebook.buck.event.WatchmanEvent;
+import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
@@ -799,19 +799,19 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   }
 
   @Subscribe
-  public void watchmanOverflow(WatchmanEvent.Overflow event) {
+  public void watchmanOverflow(WatchmanStatusEvent.Overflow event) {
     parsingStatus = createParsingMessage(EMOJI_SNAIL, event.getReason());
   }
 
   @Subscribe
   @SuppressWarnings("unused")
-  public void watchmanFileCreation(WatchmanEvent.FileCreation event) {
+  public void watchmanFileCreation(WatchmanStatusEvent.FileCreation event) {
     parsingStatus = createParsingMessage(EMOJI_SNAIL, "File added");
   }
 
   @Subscribe
   @SuppressWarnings("unused")
-  public void watchmanFileDeletion(WatchmanEvent.FileDeletion event) {
+  public void watchmanFileDeletion(WatchmanStatusEvent.FileDeletion event) {
     parsingStatus = createParsingMessage(EMOJI_SNAIL, "File removed");
   }
 

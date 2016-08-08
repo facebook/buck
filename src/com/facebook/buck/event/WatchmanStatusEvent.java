@@ -16,10 +16,10 @@
 
 package com.facebook.buck.event;
 
-public abstract class WatchmanEvent extends AbstractBuckEvent {
+public abstract class WatchmanStatusEvent extends AbstractBuckEvent {
   private final String eventName;
 
-  public WatchmanEvent(EventKey eventKey, String eventName) {
+  public WatchmanStatusEvent(EventKey eventKey, String eventName) {
     super(eventKey);
     this.eventName = eventName;
   }
@@ -46,7 +46,7 @@ public abstract class WatchmanEvent extends AbstractBuckEvent {
     return new FileDeletion();
   }
 
-  public static class Overflow extends WatchmanEvent {
+  public static class Overflow extends WatchmanStatusEvent {
     private String reason;
 
     public Overflow(String reason) {
@@ -59,13 +59,13 @@ public abstract class WatchmanEvent extends AbstractBuckEvent {
     }
   }
 
-  public static class FileCreation extends WatchmanEvent {
+  public static class FileCreation extends WatchmanStatusEvent {
     public FileCreation() {
       super(EventKey.unique(), "WatchmanFileCreation");
     }
   }
 
-  public static class FileDeletion extends WatchmanEvent {
+  public static class FileDeletion extends WatchmanStatusEvent {
     public FileDeletion() {
       super(EventKey.unique(), "WatchmanFileDeletion");
     }

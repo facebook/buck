@@ -48,7 +48,7 @@ import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
-import com.facebook.buck.event.WatchmanEvent;
+import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.model.BuildTarget;
@@ -2039,15 +2039,15 @@ public class SuperConsoleEventBusListenerTest {
 
     // overflow scenario
     String overflowMessage = "and if you go chasing rabbits";
-    eventBus.post(WatchmanEvent.overflow(overflowMessage));
+    eventBus.post(WatchmanStatusEvent.overflow(overflowMessage));
     assertEquals(createParsingMessage(EMOJI_SNAIL, overflowMessage), listener.getParsingStatus());
 
     // file added scenario
-    eventBus.post(WatchmanEvent.fileCreation());
+    eventBus.post(WatchmanStatusEvent.fileCreation());
     assertEquals(createParsingMessage(EMOJI_SNAIL, "File added"), listener.getParsingStatus());
 
     // file removed scenario
-    eventBus.post(WatchmanEvent.fileDeletion());
+    eventBus.post(WatchmanStatusEvent.fileDeletion());
     assertEquals(createParsingMessage(EMOJI_SNAIL, "File removed"), listener.getParsingStatus());
 
     // symlink invalidation scenario
