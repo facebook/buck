@@ -27,6 +27,7 @@ import com.facebook.buck.config.Configs;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
+import com.facebook.buck.cxx.NativeLinkStrategy;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -72,14 +73,18 @@ public class LuaBinaryIntegrationTest {
   private Path lua;
   private boolean luaDevel;
 
-  @Parameterized.Parameters(name = "{0}")
+  @Parameterized.Parameters(name = "{0} {1}")
   public static Collection<Object[]> data() {
     return ParameterizedTests.getPermutations(
-        Arrays.asList(LuaBinaryDescription.StarterType.values()));
+        Arrays.asList(LuaBinaryDescription.StarterType.values()),
+        Arrays.asList(NativeLinkStrategy.values()));
   }
 
   @Parameterized.Parameter
   public LuaBinaryDescription.StarterType starterType;
+
+  @Parameterized.Parameter(value = 1)
+  public NativeLinkStrategy nativeLinkStrategy;
 
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
@@ -132,10 +137,12 @@ public class LuaBinaryIntegrationTest {
         Joiner.on(System.lineSeparator()).join(
             ImmutableList.of(
                 "[lua]",
-                "  starter_type = " + starterType.toString().toLowerCase())),
+                "  starter_type = " + starterType.toString().toLowerCase(),
+                "  native_link_strategy = " + nativeLinkStrategy.toString().toLowerCase())),
         ".buckconfig");
     LuaBuckConfig config = getLuaBuckConfig();
     assertThat(config.getStarterType(), Matchers.equalTo(Optional.of(starterType)));
+    assertThat(config.getNativeLinkStrategy(), Matchers.equalTo(nativeLinkStrategy));
   }
 
   @Test

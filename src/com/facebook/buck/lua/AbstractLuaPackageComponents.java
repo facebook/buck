@@ -16,6 +16,7 @@
 
 package com.facebook.buck.lua;
 
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -85,6 +86,23 @@ abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
         .addAll(getPythonModules().values())
         .addAll(getNativeLibraries().values())
         .build();
+  }
+
+  /**
+   * @return whether any components may be prebuilt native libraries.
+   */
+  public boolean hasNativeCode(CxxPlatform cxxPlatform) {
+    for (String module : getModules().keySet()) {
+      if (module.endsWith(cxxPlatform.getSharedLibraryExtension())) {
+        return true;
+      }
+    }
+    for (String module : getPythonModules().keySet()) {
+      if (module.endsWith(cxxPlatform.getSharedLibraryExtension())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public static Builder builder() {

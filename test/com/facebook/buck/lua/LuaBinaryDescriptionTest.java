@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxTestBuilder;
+import com.facebook.buck.cxx.NativeLinkStrategy;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasBuildTarget;
@@ -48,10 +49,12 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -305,6 +308,142 @@ public class LuaBinaryDescriptionTest {
             .transform(HasBuildTarget.TO_TARGET)
             .toSet(),
         Matchers.hasItem(PythonBinaryDescription.getEmptyInitTarget(luaBinary.getBuildTarget())));
+  }
+
+  @Test
+  public void transitiveNativeDepsUsingMergedNativeLinkStrategy() throws Exception {
+    CxxLibraryBuilder transitiveCxxDepBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_dep"))
+            .setSrcs(
+                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("transitive_dep.c"))));
+    CxxLibraryBuilder cxxDepBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("dep.c"))))
+            .setDeps(ImmutableSortedSet.of(transitiveCxxDepBuilder.getTarget()));
+    CxxLibraryBuilder cxxBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:cxx"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("cxx.c"))))
+            .setDeps(ImmutableSortedSet.of(cxxDepBuilder.getTarget()));
+
+    LuaBinaryBuilder binaryBuilder =
+        new LuaBinaryBuilder(
+            BuildTargetFactory.newInstance("//:bin"),
+            FakeLuaConfig.DEFAULT.withNativeLinkStrategy(NativeLinkStrategy.MERGED));
+    binaryBuilder.setMainModule("main");
+    binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
+
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(
+                transitiveCxxDepBuilder.build(),
+                cxxDepBuilder.build(),
+                cxxBuilder.build(),
+                binaryBuilder.build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
+    transitiveCxxDepBuilder.build(resolver);
+    cxxDepBuilder.build(resolver);
+    cxxBuilder.build(resolver);
+    LuaBinary binary = (LuaBinary) binaryBuilder.build(resolver);
+    assertThat(
+        Iterables.transform(
+            binary.getComponents().getNativeLibraries().keySet(),
+            Functions.toStringFunction()),
+        Matchers.containsInAnyOrder("libomnibus.so", "libcxx.so"));
+  }
+
+  @Test
+  public void transitiveNativeDepsUsingSeparateNativeLinkStrategy() throws Exception {
+    CxxLibraryBuilder transitiveCxxDepBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_dep"))
+            .setSrcs(
+                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("transitive_dep.c"))));
+    CxxLibraryBuilder cxxDepBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("dep.c"))))
+            .setDeps(ImmutableSortedSet.of(transitiveCxxDepBuilder.getTarget()));
+    CxxLibraryBuilder cxxBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:cxx"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("cxx.c"))))
+            .setDeps(ImmutableSortedSet.of(cxxDepBuilder.getTarget()));
+
+    LuaBinaryBuilder binaryBuilder =
+        new LuaBinaryBuilder(
+            BuildTargetFactory.newInstance("//:bin"),
+            FakeLuaConfig.DEFAULT.withNativeLinkStrategy(NativeLinkStrategy.SEPARATE));
+    binaryBuilder.setMainModule("main");
+    binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
+
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(
+                transitiveCxxDepBuilder.build(),
+                cxxDepBuilder.build(),
+                cxxBuilder.build(),
+                binaryBuilder.build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
+    transitiveCxxDepBuilder.build(resolver);
+    cxxDepBuilder.build(resolver);
+    cxxBuilder.build(resolver);
+    LuaBinary binary = (LuaBinary) binaryBuilder.build(resolver);
+    assertThat(
+        Iterables.transform(
+            binary.getComponents().getNativeLibraries().keySet(),
+            Functions.toStringFunction()),
+        Matchers.containsInAnyOrder("libtransitive_dep.so", "libdep.so", "libcxx.so"));
+  }
+
+  @Test
+  public void transitiveDepsOfNativeStarterDepsAreExcludedFromMergedNativeLinkStrategy()
+      throws Exception {
+    CxxLibraryBuilder transitiveCxxDepBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_dep"))
+            .setSrcs(
+                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("transitive_dep.c"))));
+    CxxLibraryBuilder cxxDepBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("dep.c"))))
+            .setDeps(ImmutableSortedSet.of(transitiveCxxDepBuilder.getTarget()));
+    CxxLibraryBuilder cxxBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:cxx"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("cxx.c"))))
+            .setDeps(ImmutableSortedSet.of(cxxDepBuilder.getTarget()));
+    CxxLibraryBuilder nativeStarterCxxBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:native_starter"))
+            .setSrcs(
+                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("native_starter.c"))))
+            .setDeps(ImmutableSortedSet.of(transitiveCxxDepBuilder.getTarget()));
+
+    LuaBinaryBuilder binaryBuilder =
+        new LuaBinaryBuilder(
+            BuildTargetFactory.newInstance("//:bin"),
+            FakeLuaConfig.DEFAULT.withNativeLinkStrategy(NativeLinkStrategy.MERGED));
+    binaryBuilder.setMainModule("main");
+    binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
+    binaryBuilder.setNativeStarterLibrary(nativeStarterCxxBuilder.getTarget());
+
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(
+                transitiveCxxDepBuilder.build(),
+                cxxDepBuilder.build(),
+                cxxBuilder.build(),
+                nativeStarterCxxBuilder.build(),
+                binaryBuilder.build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
+    transitiveCxxDepBuilder.build(resolver);
+    cxxDepBuilder.build(resolver);
+    cxxBuilder.build(resolver);
+    nativeStarterCxxBuilder.build(resolver);
+    LuaBinary binary = (LuaBinary) binaryBuilder.build(resolver);
+    assertThat(
+        Iterables.transform(
+            binary.getComponents().getNativeLibraries().keySet(),
+            Functions.toStringFunction()),
+        Matchers.containsInAnyOrder(
+            "libomnibus.so",
+            "libcxx.so",
+            "libnative_starter.so",
+            "libtransitive_dep.so"));
   }
 
 }

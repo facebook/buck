@@ -18,6 +18,7 @@ package com.facebook.buck.lua;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.AbstractCxxLibrary;
+import com.facebook.buck.cxx.NativeLinkStrategy;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
@@ -129,6 +130,12 @@ public class LuaBuckConfig implements LuaConfig {
   @Override
   public boolean shouldCacheBinaries() {
     return delegate.getBooleanValue(SECTION, "cache_binaries", true);
+  }
+
+  @Override
+  public NativeLinkStrategy getNativeLinkStrategy() {
+    return delegate.getEnum(SECTION, "native_link_strategy", NativeLinkStrategy.class)
+        .or(NativeLinkStrategy.SEPARATE);
   }
 
 }

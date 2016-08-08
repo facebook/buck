@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 8be61a3593d4e4064ba65becdfe9662536fe8ae4 #@#
+#@# GENERATED FILE: DO NOT MODIFY 8f3356bf20abdca5d2173de18d2a6c77d9dcb1bf #@#
 {
   "lua" : {
     "deps" : [
@@ -44,6 +44,7 @@
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/lua:lua",
       "//src/com/facebook/buck/model:model",

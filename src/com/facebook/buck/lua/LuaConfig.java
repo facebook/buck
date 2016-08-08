@@ -17,6 +17,7 @@
 package com.facebook.buck.lua;
 
 import com.facebook.buck.cxx.AbstractCxxLibrary;
+import com.facebook.buck.cxx.NativeLinkStrategy;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Tool;
@@ -46,6 +47,11 @@ public interface LuaConfig {
    * @return whether to cache Lua executable packages.
    */
   boolean shouldCacheBinaries();
+
+  /**
+   * @return the native link strategy to use for binaries.
+   */
+  NativeLinkStrategy getNativeLinkStrategy();
 
   enum PackageStyle {
 

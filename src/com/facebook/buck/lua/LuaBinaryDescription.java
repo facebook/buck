@@ -19,8 +19,16 @@ package com.facebook.buck.lua;
 import com.facebook.buck.cxx.AbstractCxxLibrary;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.NativeLinkStrategy;
+import com.facebook.buck.cxx.NativeLinkTarget;
+import com.facebook.buck.cxx.NativeLinkTargetMode;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkables;
+import com.facebook.buck.cxx.Omnibus;
+import com.facebook.buck.cxx.OmnibusLibraries;
+import com.facebook.buck.cxx.OmnibusLibrary;
+import com.facebook.buck.cxx.OmnibusRoot;
+import com.facebook.buck.cxx.OmnibusRoots;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -61,8 +69,10 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -242,8 +252,16 @@ public class LuaBinaryDescription implements
       throws NoSuchBuildTargetException {
 
     final LuaPackageComponents.Builder builder = LuaPackageComponents.builder();
+    final OmnibusRoots.Builder omnibusRoots =
+        OmnibusRoots.builder(
+            cxxPlatform,
+            // For now, we exclude the native starter from omnibus linking.
+            FluentIterable.from(getNativeStarterDeps(ruleResolver, nativeStarterLibrary))
+                .transform(HasBuildTarget.TO_TARGET)
+                .toSet());
 
-    final Map<BuildTarget, NativeLinkable> nativeLinkables = new LinkedHashMap<>();
+    final Map<BuildTarget, NativeLinkable> nativeLinkableRoots = new LinkedHashMap<>();
+    final Map<BuildTarget, CxxLuaExtension> luaExtensions = new LinkedHashMap<>();
     final Map<BuildTarget, CxxPythonExtension> pythonExtensions = new LinkedHashMap<>();
 
     // Walk the deps to find all Lua packageables and native linkables.
@@ -254,10 +272,23 @@ public class LuaBinaryDescription implements
         ImmutableSet<BuildRule> deps = empty;
         if (rule instanceof LuaPackageable) {
           LuaPackageable packageable = (LuaPackageable) rule;
-          LuaPackageComponents.addComponents(builder, packageable.getLuaPackageComponents());
+          LuaPackageComponents components = packageable.getLuaPackageComponents();
+          LuaPackageComponents.addComponents(builder, components);
+          if (components.hasNativeCode(cxxPlatform)) {
+            for (BuildRule dep : rule.getDeps()) {
+              if (dep instanceof NativeLinkable) {
+                NativeLinkable linkable = (NativeLinkable) dep;
+                nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
+                omnibusRoots.addExcludedRoot(linkable);
+              }
+            }
+          }
           deps = rule.getDeps();
         } else if (rule instanceof CxxPythonExtension) {
+          CxxPythonExtension extension = (CxxPythonExtension) rule;
+          NativeLinkTarget target = extension.getNativeLinkTarget(pythonPlatform);
           pythonExtensions.put(rule.getBuildTarget(), (CxxPythonExtension) rule);
+          omnibusRoots.addIncludedRoot(target);
         } else if (rule instanceof PythonPackagable) {
           PythonPackagable packageable = (PythonPackagable) rule;
           PythonPackageComponents components =
@@ -270,50 +301,125 @@ public class LuaBinaryDescription implements
               MoreMaps.transformKeys(
                   components.getNativeLibraries(),
                   Functions.toStringFunction()));
+          if (components.hasNativeCode(cxxPlatform)) {
+            for (BuildRule dep : rule.getDeps()) {
+              if (dep instanceof NativeLinkable) {
+                NativeLinkable linkable = (NativeLinkable) dep;
+                nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
+                omnibusRoots.addExcludedRoot(linkable);
+              }
+            }
+          }
           deps = rule.getDeps();
         } else if (rule instanceof CxxLuaExtension) {
           CxxLuaExtension extension = (CxxLuaExtension) rule;
-          builder.putModules(extension.getModule(cxxPlatform), extension.getExtension(cxxPlatform));
-          nativeLinkables.putAll(
-              Maps.uniqueIndex(
-                  extension.getNativeLinkTargetDeps(cxxPlatform),
-                  HasBuildTarget.TO_TARGET));
+          luaExtensions.put(extension.getBuildTarget(), extension);
+          omnibusRoots.addIncludedRoot(extension);
         } else if (rule instanceof NativeLinkable) {
           NativeLinkable linkable = (NativeLinkable) rule;
-          nativeLinkables.put(linkable.getBuildTarget(), linkable);
+          nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
+          omnibusRoots.addPotentialRoot(rule);
         }
         return deps;
       }
     }.start();
 
-    // For regular linking, add all extensions via the package components interface and their
-    // python-platform specific deps to the native linkables.
-    for (Map.Entry<BuildTarget, CxxPythonExtension> entry : pythonExtensions.entrySet()) {
-      PythonPackageComponents components =
-          entry.getValue().getPythonPackageComponents(pythonPlatform, cxxPlatform);
-      builder.putAllPythonModules(
-          MoreMaps.transformKeys(
-              components.getModules(),
-              Functions.toStringFunction()));
-      builder.putAllNativeLibraries(
-          MoreMaps.transformKeys(
-              components.getNativeLibraries(),
-              Functions.toStringFunction()));
-      nativeLinkables.putAll(
-          Maps.uniqueIndex(
-              entry.getValue().getNativeLinkTarget(pythonPlatform)
-                  .getNativeLinkTargetDeps(cxxPlatform),
-              HasBuildTarget.TO_TARGET));
-    }
+    if (luaConfig.getNativeLinkStrategy() == NativeLinkStrategy.MERGED) {
+      OmnibusRoots roots = omnibusRoots.build();
+      OmnibusLibraries libraries =
+          Omnibus.getSharedLibraries(
+              baseParams,
+              ruleResolver,
+              pathResolver,
+              cxxBuckConfig,
+              cxxPlatform,
+              ImmutableList.<com.facebook.buck.rules.args.Arg>of(),
+              roots.getIncludedRoots().values(),
+              roots.getExcludedRoots().values());
 
-    // Add shared libraries from all native linkables.
-    for (NativeLinkable nativeLinkable :
-         NativeLinkables.getTransitiveNativeLinkables(
-             cxxPlatform,
-             nativeLinkables.values()).values()) {
-      NativeLinkable.Linkage linkage = nativeLinkable.getPreferredLinkage(cxxPlatform);
-      if (linkage != NativeLinkable.Linkage.STATIC) {
-        builder.putAllNativeLibraries(nativeLinkable.getSharedLibraries(cxxPlatform));
+      // Add all the roots from the omnibus link.  If it's an extension, add it as a module.
+      for (Map.Entry<BuildTarget, OmnibusRoot> root : libraries.getRoots().entrySet()) {
+
+        // If it's a Lua extension add it as a module.
+        CxxLuaExtension luaExtension = luaExtensions.get(root.getKey());
+        if (luaExtension != null) {
+          builder.putModules(luaExtension.getModule(cxxPlatform), root.getValue().getPath());
+          continue;
+        }
+
+        // If it's a Python extension, add it as a python module.
+        CxxPythonExtension pythonExtension = pythonExtensions.get(root.getKey());
+        if (pythonExtension != null) {
+          builder.putPythonModules(
+              pythonExtension.getModule().toString(),
+              root.getValue().getPath());
+          continue;
+        }
+
+        // Otherwise, add it as a native library.
+        NativeLinkTarget target =
+            Preconditions.checkNotNull(
+                roots.getIncludedRoots().get(root.getKey()),
+                "%s: linked unexpected omnibus root: %s",
+                baseParams.getBuildTarget(),
+                root.getKey());
+        NativeLinkTargetMode mode = target.getNativeLinkTargetMode(cxxPlatform);
+        String soname =
+            Preconditions.checkNotNull(
+                mode.getLibraryName().orNull(),
+                "%s: omnibus library for %s was built without soname",
+                baseParams.getBuildTarget(),
+                root.getKey());
+        builder.putNativeLibraries(soname, root.getValue().getPath());
+      }
+
+      // Add all remaining libraries as native libraries.
+      for (OmnibusLibrary library : libraries.getLibraries()) {
+        builder.putNativeLibraries(library.getSoname(), library.getPath());
+      }
+
+    } else {
+
+      // For regular linking, add all Lua extensions as modules and their deps as native linkable
+      // roots.
+      for (Map.Entry<BuildTarget, CxxLuaExtension> entry : luaExtensions.entrySet()) {
+        CxxLuaExtension extension = entry.getValue();
+        builder.putModules(extension.getModule(cxxPlatform), extension.getExtension(cxxPlatform));
+        nativeLinkableRoots.putAll(
+            Maps.uniqueIndex(
+                extension.getNativeLinkTargetDeps(cxxPlatform),
+                HasBuildTarget.TO_TARGET));
+      }
+
+      // For regular linking, add all extensions via the package components interface and their
+      // python-platform specific deps to the native linkables.
+      for (Map.Entry<BuildTarget, CxxPythonExtension> entry : pythonExtensions.entrySet()) {
+        PythonPackageComponents components =
+            entry.getValue().getPythonPackageComponents(pythonPlatform, cxxPlatform);
+        builder.putAllPythonModules(
+            MoreMaps.transformKeys(
+                components.getModules(),
+                Functions.toStringFunction()));
+        builder.putAllNativeLibraries(
+            MoreMaps.transformKeys(
+                components.getNativeLibraries(),
+                Functions.toStringFunction()));
+        nativeLinkableRoots.putAll(
+            Maps.uniqueIndex(
+                entry.getValue().getNativeLinkTarget(pythonPlatform)
+                    .getNativeLinkTargetDeps(cxxPlatform),
+                HasBuildTarget.TO_TARGET));
+      }
+
+      // Add shared libraries from all native linkables.
+      for (NativeLinkable nativeLinkable :
+          NativeLinkables.getTransitiveNativeLinkables(
+              cxxPlatform,
+              nativeLinkableRoots.values()).values()) {
+        NativeLinkable.Linkage linkage = nativeLinkable.getPreferredLinkage(cxxPlatform);
+        if (linkage != NativeLinkable.Linkage.STATIC) {
+          builder.putAllNativeLibraries(nativeLinkable.getSharedLibraries(cxxPlatform));
+        }
       }
     }
 

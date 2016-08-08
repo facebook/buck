@@ -16,6 +16,7 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -81,6 +82,18 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
         sink.setReflectively(part.getKey() + ":" + name, part.getValue().get(name));
       }
     }
+  }
+
+  /**
+   * @return whether there are any native libraries included in these components.
+   */
+  public boolean hasNativeCode(CxxPlatform cxxPlatform) {
+    for (Path module : getModules().keySet()) {
+      if (module.toString().endsWith(cxxPlatform.getSharedLibraryExtension())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public static PythonPackageComponents of() {

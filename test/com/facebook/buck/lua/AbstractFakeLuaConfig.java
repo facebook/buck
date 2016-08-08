@@ -17,6 +17,7 @@
 package com.facebook.buck.lua;
 
 import com.facebook.buck.cxx.AbstractCxxLibrary;
+import com.facebook.buck.cxx.NativeLinkStrategy;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -83,6 +84,12 @@ abstract class AbstractFakeLuaConfig implements LuaConfig {
   @Value.Default
   public boolean shouldCacheBinaries() {
     return true;
+  }
+
+  @Override
+  @Value.Default
+  public NativeLinkStrategy getNativeLinkStrategy() {
+    return NativeLinkStrategy.SEPARATE;
   }
 
 }

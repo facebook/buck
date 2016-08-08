@@ -64,4 +64,9 @@ public class LuaBinaryBuilder extends AbstractNodeBuilder<LuaBinaryDescription.A
     return this;
   }
 
+  public LuaBinaryBuilder setNativeStarterLibrary(BuildTarget target) {
+    arg.nativeStarterLibrary = Optional.of(target);
+    return this;
+  }
+
 }

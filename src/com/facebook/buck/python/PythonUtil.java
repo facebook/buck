@@ -122,17 +122,6 @@ public class PythonUtil {
         .build();
   }
 
-  private static boolean hasNativeCode(
-      CxxPlatform cxxPlatform,
-      PythonPackageComponents components) {
-    for (Path module : components.getModules().keySet()) {
-      if (module.toString().endsWith(cxxPlatform.getSharedLibraryExtension())) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   public static PythonPackageComponents getAllComponents(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -175,7 +164,7 @@ public class PythonUtil {
           PythonPackageComponents comps =
               packagable.getPythonPackageComponents(pythonPlatform, cxxPlatform);
           allComponents.addComponent(comps, rule.getBuildTarget());
-          if (hasNativeCode(cxxPlatform, comps)) {
+          if (comps.hasNativeCode(cxxPlatform)) {
             for (BuildRule dep : rule.getDeps()) {
               if (dep instanceof NativeLinkable) {
                 NativeLinkable linkable = (NativeLinkable) dep;
