@@ -17,7 +17,8 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.query.QueryException;
+import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -59,10 +60,21 @@ public class AuditOwnerCommand extends AbstractCommand {
           QueryCommand.buildAuditOwnerQueryExpression(getArguments(), shouldGenerateJsonOutput())));
     }
 
-    BuckQueryEnvironment env = new BuckQueryEnvironment(params, getEnableParserProfiling());
-    try (CommandThreadManager pool = new CommandThreadManager(
-        "Audit",
-        getConcurrencyLimit(params.getBuckConfig()))) {
+    try (CommandThreadManager pool =
+             new CommandThreadManager(
+                 "Audit",
+                 getConcurrencyLimit(params.getBuckConfig()));
+         PerBuildState parserState =
+             new PerBuildState(
+                 params.getParser(),
+                 params.getBuckEventBus(),
+                 pool.getExecutor(),
+                 params.getCell(),
+                 getEnableParserProfiling(),
+                 SpeculativeParsing.of(true),
+                 /* ignoreBuckAutodepsFiles */ false)) {
+      BuckQueryEnvironment env =
+          new BuckQueryEnvironment(params, parserState, getEnableParserProfiling());
       return QueryCommand.runMultipleQuery(
           params,
           env,
@@ -70,7 +82,7 @@ public class AuditOwnerCommand extends AbstractCommand {
           "owner('%s')",
           getArguments(),
           shouldGenerateJsonOutput());
-    } catch (QueryException e) {
+    } catch (Exception e) {
       if (e.getCause() instanceof InterruptedException) {
         throw (InterruptedException) e.getCause();
       }

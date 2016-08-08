@@ -19,21 +19,24 @@ package com.facebook.buck.cli;
 import static com.facebook.buck.cli.ReplCommand.isNashornAvailable;
 import static com.facebook.buck.cli.ReplCommand.runInterpreter;
 import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
-import static org.easymock.EasyMock.createMock;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
@@ -104,14 +107,22 @@ public class ReplCommandIntegrationTest {
 
     Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
         AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
+    TypeCoercerFactory typeCoercerFactory =
+        new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance());
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    Parser parser =
+        new Parser(
+            new ParserConfig(buckConfig),
+            typeCoercerFactory,
+            new ConstructorArgMarshaller(typeCoercerFactory));
     return new CommandRunnerParams(
         console,
         stdin,
         cell,
         androidPlatformTargetSupplier,
-        createMock(ArtifactCache.class),
+        new NoopArtifactCache(),
         BuckEventBusFactory.newInstance(),
-        createMock(Parser.class),
+        parser,
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()),
         new FakeJavaPackageFinder(),

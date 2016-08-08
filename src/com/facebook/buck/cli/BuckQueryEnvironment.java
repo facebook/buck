@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryEnvironment;
 import com.facebook.buck.query.QueryException;
@@ -65,6 +66,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   private static final Logger LOG = Logger.get(BuckQueryEnvironment.class);
 
   private final CommandRunnerParams params;
+  private final PerBuildState parserState;
+
   private Map<Cell, BuildFileTree> buildFileTrees =  new HashMap<>();
   private TargetGraph graph = TargetGraph.EMPTY;
 
@@ -73,13 +76,12 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   private Map<BuildTarget, QueryTarget> buildTargetToQueryTarget = new HashMap<>();
 
-  private boolean enableProfiling;
-
   public BuckQueryEnvironment(
       CommandRunnerParams params,
+      PerBuildState parserState,
       boolean enableProfiling) {
     this.params = params;
-    this.enableProfiling = enableProfiling;
+    this.parserState = parserState;
     this.buildFileTrees.put(
         params.getCell(),
         new FilesystemBackedBuildFileTree(
@@ -147,12 +149,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     try {
       executor = com.google.common.util.concurrent.MoreExecutors.listeningDecorator(
           MostExecutors.newSingleThreadExecutor("buck query.getNode"));
-      return params.getParser().getTargetNode(
-          params.getBuckEventBus(),
-          params.getCell(),
-          enableProfiling,
-          executor,
-          ((QueryBuildTarget) target).getBuildTarget());
+      return parserState.getTargetNode(((QueryBuildTarget) target).getBuildTarget());
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new QueryException("Error getting target node for %s\n%s", target, e.getMessage());
     } finally {
@@ -232,16 +229,10 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     return getTargetsFromBuildTargetsContainer(graph.getSubgraph(nodes).getNodes());
   }
 
-  private void buildGraphForBuildTargets(
-      Set<BuildTarget> targets,
-      ListeningExecutorService executor) throws QueryException, InterruptedException {
+  private void buildGraphForBuildTargets(Set<BuildTarget> targets)
+      throws QueryException, InterruptedException {
     try {
-      graph = params.getParser().buildTargetGraph(
-          params.getBuckEventBus(),
-          params.getCell(),
-          enableProfiling,
-          executor,
-          targets);
+      graph = parserState.buildTargetGraph(targets);
     } catch (BuildFileParseException | BuildTargetException | IOException e) {
       throw new QueryException("Error in building dependency graph");
     }
@@ -251,7 +242,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   public void buildTransitiveClosure(
       Set<QueryTarget> targets,
       int maxDepth,
-      ListeningExecutorService executor) throws QueryException, InterruptedException {
+      ListeningExecutorService executor)
+      throws QueryException, InterruptedException {
     // Filter QueryTargets that are build targets and not yet present in the build target graph.
     Set<BuildTarget> graphTargets = getTargetsFromNodes(graph.getNodes());
     Set<BuildTarget> newBuildTargets = new HashSet<>();
@@ -264,7 +256,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       }
     }
     if (!newBuildTargets.isEmpty()) {
-      buildGraphForBuildTargets(Sets.union(newBuildTargets, graphTargets), executor);
+      buildGraphForBuildTargets(Sets.union(newBuildTargets, graphTargets));
       for (BuildTarget buildTarget : getTargetsFromNodes(graph.getNodes())) {
         if (!buildTargetToQueryTarget.containsKey(buildTarget)) {
           buildTargetToQueryTarget.put(buildTarget, QueryBuildTarget.of(buildTarget));

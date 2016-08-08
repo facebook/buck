@@ -52,14 +52,14 @@ public interface QueryEnvironment {
   /**
    * Type of an argument of a user-defined query function.
    */
-  public enum ArgumentType {
-    EXPRESSION, WORD, INTEGER;
+  enum ArgumentType {
+    EXPRESSION, WORD, INTEGER,
   }
 
   /**
    * Value of an argument of a user-defined query function.
    */
-  public static class Argument {
+  class Argument {
 
     private final ArgumentType type;
 
@@ -148,7 +148,7 @@ public interface QueryEnvironment {
   /**
    * A user-defined query function.
    */
-  public interface QueryFunction {
+  interface QueryFunction {
     /**
      * Name of the function as it appears in the query language.
      */
@@ -249,7 +249,7 @@ public interface QueryEnvironment {
   Iterable<QueryFunction> getFunctions();
 
   /** List of the default query functions. */
-  public static final List<QueryFunction> DEFAULT_QUERY_FUNCTIONS =
+  List<QueryFunction> DEFAULT_QUERY_FUNCTIONS =
       ImmutableList.of(
           new AllPathsFunction(),
           new AttrFilterFunction(),

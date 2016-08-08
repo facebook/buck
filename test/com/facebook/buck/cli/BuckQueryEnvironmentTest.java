@@ -27,6 +27,8 @@ import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryTarget;
@@ -62,6 +64,7 @@ public class BuckQueryEnvironmentTest {
   private BuckQueryEnvironment buckQueryEnvironment;
   private Path cellRoot;
   private ListeningExecutorService executor;
+  private PerBuildState parserState;
 
   private QueryTarget createQueryBuildTarget(String baseName, String shortName) {
     return QueryBuildTarget.of(BuildTarget.builder(cellRoot, baseName, shortName).build());
@@ -91,14 +94,25 @@ public class BuckQueryEnvironmentTest {
         new FakeJavaPackageFinder(),
         ObjectMappers.newDefaultInstance(),
         Optional.<WebServer>absent());
+    parserState =
+        new PerBuildState(
+            params.getParser(),
+            params.getBuckEventBus(),
+            executor,
+            params.getCell(),
+            /* enableProfiling */ false,
+            SpeculativeParsing.of(true),
+            /* ignoreBuckAutodepsFiles */ false);
 
-    buckQueryEnvironment = new BuckQueryEnvironment(params, /* enableProfiling */ false);
+    buckQueryEnvironment =
+        new BuckQueryEnvironment(params, parserState, /* enableProfiling */ false);
     cellRoot = workspace.getDestPath();
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
   }
 
   @After
-  public void cleanUp() {
+  public void cleanUp() throws Exception {
+    parserState.close();
     executor.shutdown();
   }
 

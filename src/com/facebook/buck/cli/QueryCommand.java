@@ -20,6 +20,8 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.Dot;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
@@ -109,13 +111,22 @@ public class QueryCommand extends AbstractCommand {
       return 1;
     }
 
-    BuckQueryEnvironment env = new BuckQueryEnvironment(params, getEnableParserProfiling());
-    try (CommandThreadManager pool = new CommandThreadManager(
-        "Query",
-        getConcurrencyLimit(params.getBuckConfig()))) {
+    try (CommandThreadManager pool =
+             new CommandThreadManager("Query", getConcurrencyLimit(params.getBuckConfig()));
+         PerBuildState parserState =
+             new PerBuildState(
+                 params.getParser(),
+                 params.getBuckEventBus(),
+                 pool.getExecutor(),
+                 params.getCell(),
+                 getEnableParserProfiling(),
+                 SpeculativeParsing.of(true),
+                 /* ignoreBuckAutodepsFiles */ false)) {
+      BuckQueryEnvironment env =
+          new BuckQueryEnvironment(params, parserState, getEnableParserProfiling());
       ListeningExecutorService executor = pool.getExecutor();
       return formatAndRunQuery(params, env, executor);
-    } catch (QueryException e) {
+    } catch (Exception e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;

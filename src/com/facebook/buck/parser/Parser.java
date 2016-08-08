@@ -101,6 +101,14 @@ public class Parser {
     this.marshaller = marshaller;
   }
 
+  protected DaemonicParserState getPermState() {
+    return permState;
+  }
+
+  protected ConstructorArgMarshaller getMarshaller() {
+    return marshaller;
+  }
+
   @VisibleForTesting
   ImmutableSet<Map<String, Object>> getRawTargetNodes(
       BuckEventBus eventBus,
@@ -114,8 +122,7 @@ public class Parser {
     try (
         PerBuildState state =
             new PerBuildState(
-                permState,
-                marshaller,
+                this,
                 eventBus,
                 executor,
                 cell,
@@ -143,8 +150,7 @@ public class Parser {
         buildFile);
 
     try (PerBuildState state = new PerBuildState(
-        permState,
-        marshaller,
+        this,
         eventBus,
         executor,
         cell,
@@ -165,8 +171,7 @@ public class Parser {
     try (
         PerBuildState state =
             new PerBuildState(
-                permState,
-                marshaller,
+                this,
                 eventBus,
                 executor,
                 cell,
@@ -236,8 +241,7 @@ public class Parser {
 
     try (final PerBuildState state =
              new PerBuildState(
-                 permState,
-                 marshaller,
+                 this,
                  eventBus,
                  executor,
                  rootCell,
@@ -252,7 +256,7 @@ public class Parser {
     }
   }
 
-  private TargetGraph buildTargetGraph(
+  protected TargetGraph buildTargetGraph(
       final PerBuildState state,
       final BuckEventBus eventBus,
       final Iterable<BuildTarget> toExplore,
@@ -430,8 +434,7 @@ public class Parser {
 
     try (PerBuildState state =
              new PerBuildState(
-                 permState,
-                 marshaller,
+                 this,
                  eventBus,
                  executor,
                  rootCell,
@@ -474,8 +477,7 @@ public class Parser {
 
     try (PerBuildState state =
             new PerBuildState(
-                permState,
-                marshaller,
+                this,
                 eventBus,
                 executor,
                 rootCell,
@@ -683,8 +685,4 @@ public class Parser {
     return permState.getCounters();
   }
 
-  @VisibleForTesting
-  DaemonicParserState getPermState() {
-    return permState;
-  }
 }

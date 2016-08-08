@@ -17,6 +17,9 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.json.BuildFileParseException;
+import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 
 import java.io.BufferedReader;
@@ -43,44 +46,58 @@ public class ReplCommand extends AbstractCommand {
     return runInterpreter(params);
   }
 
-  public static int runInterpreter(CommandRunnerParams params) throws IOException {
+  public static int runInterpreter(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     if (!isNashornAvailable()) {
       params.getBuckEventBus().post(ConsoleEvent.severe("This feature requires Nashorn " +
           "JavaScript engine. This comes bundled with Java 8."));
       return 0;
     }
 
-    ScriptEngine engine = initializeEngine(params);
-    BufferedReader bufferRead = new BufferedReader(new InputStreamReader(params.getStdIn()));
-    String line;
-    boolean eof = false;
-
-    while (!eof) {
-      params.getConsole().getStdOut().print("buck $ ");
-
-      try {
-        if ((line = bufferRead.readLine()) != null) {
-          engine.eval(line);
-        } else {
-          eof = true;
-          break;
+    try (CommandThreadManager queryPool =
+             new CommandThreadManager("Query", new ConcurrencyLimit(1, Float.POSITIVE_INFINITY));
+         PerBuildState parserState =
+             new PerBuildState(
+                 params.getParser(),
+                 params.getBuckEventBus(),
+                 queryPool.getExecutor(),
+                 params.getCell(),
+                 /* enableProfiling */ false,
+                 SpeculativeParsing.of(true),
+                 /* ignoreBuckAutodepsFiles */ false)) {
+      ScriptEngine engine = initializeEngine(params, queryPool, parserState);
+      BufferedReader bufferRead = new BufferedReader(new InputStreamReader(params.getStdIn()));
+      String line;
+      while (true) {
+        params.getConsole().getStdOut().print("buck $ ");
+        try {
+          if ((line = bufferRead.readLine()) != null) {
+            engine.eval(line);
+          } else {
+            break;
+          }
+        } catch (ScriptException e) {
+          if (!e.getMessage().contains(EXIT_MESSAGE)) {
+            params.getConsole().getStdOut().println("Script error: " + e.getMessage());
+          } else {
+            break;
+          }
+        } catch (Exception e) {
+          params.getConsole().getStdOut().println(e.getMessage());
         }
-      } catch (ScriptException e) {
-        if (!e.getMessage().contains(EXIT_MESSAGE)) {
-          params.getConsole().getStdOut().println("Script error: " + e.getMessage());
-        } else {
-          break;
-        }
-      } catch (Exception e) {
-        params.getConsole().getStdOut().println(e.getMessage());
       }
-    }
 
-    bufferRead.close();
+      bufferRead.close();
+    } catch (BuildFileParseException e) {
+      params.getConsole().getStdOut().println("Repl failed: " + e.getMessage());
+    }
     return 0;
   }
 
-  private static ScriptEngine initializeEngine(CommandRunnerParams params) {
+  private static ScriptEngine initializeEngine(
+      CommandRunnerParams params,
+      CommandThreadManager queryPool,
+      PerBuildState parserState) {
     ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
     final Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
 
@@ -106,10 +123,7 @@ public class ReplCommand extends AbstractCommand {
         "\"); }";
 
     // Enable query functionality.
-    BuckQueryEnvironment queryEnv = new BuckQueryEnvironment(params, false);
-    CommandThreadManager queryPool = new CommandThreadManager(
-        "Query",
-        new ConcurrencyLimit(1, Float.POSITIVE_INFINITY));
+    BuckQueryEnvironment queryEnv = new BuckQueryEnvironment(params, parserState, false);
 
     bindings.put("BUCK_params", params);
     bindings.put("BUCK_queryEnv", queryEnv);
@@ -122,7 +136,6 @@ public class ReplCommand extends AbstractCommand {
 
     String printQueryMethod = "function printQuery(queryResult) {" +
         "com.facebook.buck.cli.CommandHelper.printToConsole(BUCK_params, x); }";
-
     try {
       engine.eval(quitExitMethod + helpMethod + queryMethod + printQueryMethod);
     } catch (ScriptException e) {

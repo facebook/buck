@@ -26,7 +26,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGroup;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
@@ -40,6 +40,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
@@ -59,11 +60,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-class PerBuildState implements AutoCloseable {
+public class PerBuildState implements AutoCloseable {
   private static final Logger LOG = Logger.get(PerBuildState.class);
 
-  private final DaemonicParserState permState;
-  private final ConstructorArgMarshaller marshaller;
+  private final Parser parser;
   private final BuckEventBus eventBus;
   private final boolean enableProfiling;
   private final boolean ignoreBuckAutodepsFiles;
@@ -92,16 +92,15 @@ class PerBuildState implements AutoCloseable {
   private final TargetGroupParsePipeline targetGroupParsePipeline;
 
   public PerBuildState(
-      DaemonicParserState permState,
-      ConstructorArgMarshaller marshaller,
+      Parser parser,
       BuckEventBus eventBus,
       ListeningExecutorService executorService,
       Cell rootCell,
       boolean enableProfiling,
       SpeculativeParsing speculativeParsing,
       boolean ignoreBuckAutodepsFiles) {
-    this.permState = permState;
-    this.marshaller = marshaller;
+
+    this.parser = parser;
     this.eventBus = eventBus;
     this.enableProfiling = enableProfiling;
     this.ignoreBuckAutodepsFiles = ignoreBuckAutodepsFiles;
@@ -133,16 +132,16 @@ class PerBuildState implements AutoCloseable {
         });
 
     this.rawNodeParsePipeline = new RawNodeParsePipeline(
-        permState.getRawNodeCache(),
+        parser.getPermState().getRawNodeCache(),
         projectBuildFileParserPool,
         executorService);
     this.targetNodeParsePipeline = new TargetNodeParsePipeline(
-        permState.<TargetNode<?>>getOrCreateNodeCache(TargetNode.class),
+        parser.getPermState().<TargetNode<?>>getOrCreateNodeCache(TargetNode.class),
         DefaultParserTargetNodeFactory.createForParser(
-            marshaller,
-            permState.getBuildFileTrees(),
+            parser.getMarshaller(),
+            parser.getPermState().getBuildFileTrees(),
             symlinkCheckers,
-            new TargetNodeFactory(permState.getTypeCoercerFactory())),
+            new TargetNodeFactory(parser.getPermState().getTypeCoercerFactory())),
         parserConfig.getEnableParallelParsing() ?
             executorService :
             MoreExecutors.newDirectExecutorService(),
@@ -150,8 +149,8 @@ class PerBuildState implements AutoCloseable {
         parserConfig.getEnableParallelParsing() && speculativeParsing.value(),
         rawNodeParsePipeline);
     this.targetGroupParsePipeline = new TargetGroupParsePipeline(
-        permState.<TargetGroup>getOrCreateNodeCache(TargetGroup.class),
-        new DefaultParserTargetGroupFactory(marshaller),
+        parser.getPermState().<TargetGroup>getOrCreateNodeCache(TargetGroup.class),
+        new DefaultParserTargetGroupFactory(parser.getMarshaller()),
         parserConfig.getEnableParallelParsing() ?
             executorService :
             MoreExecutors.newDirectExecutorService(),
@@ -207,7 +206,7 @@ class PerBuildState implements AutoCloseable {
 
   private ProjectBuildFileParser createBuildFileParser(Cell cell, boolean ignoreBuckAutodepsFiles) {
     ProjectBuildFileParser parser = cell.createBuildFileParser(
-        marshaller,
+        this.parser.getMarshaller(),
         console,
         eventBus,
         ignoreBuckAutodepsFiles);
@@ -337,6 +336,18 @@ class PerBuildState implements AutoCloseable {
     return newSymlinksEncountered;
   }
 
+  public TargetGraph buildTargetGraph(Iterable<BuildTarget> toExplore)
+      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
+    if (Iterables.isEmpty(toExplore)) {
+      return TargetGraph.EMPTY;
+    }
+    return parser.buildTargetGraph(
+        this,
+        eventBus,
+        toExplore,
+        ignoreBuckAutodepsFiles);
+  }
+
   @Override
   public void close() throws BuildFileParseException {
     stdout.close();
@@ -347,7 +358,7 @@ class PerBuildState implements AutoCloseable {
 
     if (ignoreBuckAutodepsFiles) {
       LOG.debug("Invalidating all caches because buck autodeps ran.");
-      permState.invalidateAllCaches();
+      parser.getPermState().invalidateAllCaches();
       return;
     }
 
@@ -359,7 +370,7 @@ class PerBuildState implements AutoCloseable {
     Set<Path> buildInputPathsUnderSymlinkCopy = new HashSet<>(buildInputPathsUnderSymlink);
     buildInputPathsUnderSymlink.clear();
     for (Path buildFilePath : buildInputPathsUnderSymlinkCopy) {
-      permState.invalidatePath(buildFilePath);
+      parser.getPermState().invalidatePath(buildFilePath);
     }
   }
 
