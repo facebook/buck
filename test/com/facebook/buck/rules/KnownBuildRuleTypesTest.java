@@ -266,6 +266,22 @@ public class KnownBuildRuleTypesTest {
         new FakeAndroidDirectoryResolver()).build();
   }
 
+  @Test
+  public void canOverrideMultipleHostPlatforms() throws Exception {
+    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
+        "cxx#linux-x86_64", ImmutableMap.of("cache_links", "true"),
+        "cxx#macosx-x86_64", ImmutableMap.of("cache_links", "true"),
+        "cxx#windows-x86_64", ImmutableMap.of("cache_links", "true"));
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+
+    // It should be legal to override multiple host platforms even though
+    // only one will be practically used in a build.
+    KnownBuildRuleTypes.createBuilder(
+        buckConfig,
+        createExecutor(),
+        new FakeAndroidDirectoryResolver()).build();
+  }
+
   private ProcessExecutor createExecutor() throws IOException {
     Path javac = temporaryFolder.newExecutableFile();
     return createExecutor(javac.toString(), "");

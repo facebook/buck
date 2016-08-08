@@ -381,11 +381,16 @@ public class KnownBuildRuleTypes {
     // Add platforms for each cxx flavor obtained from the buck config files
     // from sections of the form cxx#{flavor name}.
     // These platforms are overrides for existing system platforms.
+    ImmutableList<ImmutableFlavor> possibleHostFlavors = CxxPlatforms.getAllPossibleHostFlavors();
     HashMap<Flavor, CxxPlatform> cxxOverridePlatformsMap =
         new HashMap<Flavor, CxxPlatform>(cxxSystemPlatformsMap);
     ImmutableSet<Flavor> cxxFlavors = CxxBuckConfig.getCxxFlavors(config);
     for (Flavor flavor: cxxFlavors) {
       if (!cxxSystemPlatformsMap.containsKey(flavor)) {
+        if (possibleHostFlavors.contains(flavor)) {
+            // If a flavor is for an alternate host, it's safe to skip.
+            continue;
+        }
         throw new HumanReadableException(
             "Could not find platform for which overrides were specified: " + flavor);
       }

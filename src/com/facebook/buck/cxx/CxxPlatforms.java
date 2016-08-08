@@ -170,25 +170,28 @@ public class CxxPlatforms {
     };
   }
 
-  private static ImmutableFlavor getHostFlavorFromPlatform(Platform platform) {
+  private static ImmutableMap<String, ImmutableFlavor> getHostFlavorMap() {
     // TODO(Coneko): base the host flavor on architecture, too.
-    switch (platform) {
-      case LINUX:
-        return ImmutableFlavor.of("linux-x86_64");
-      case MACOS:
-        return ImmutableFlavor.of("macosx-x86_64");
-      case WINDOWS:
-        return ImmutableFlavor.of("windows-x86_64");
-      case FREEBSD:
-        return ImmutableFlavor.of("freebsd-x86_64");
-      case UNKNOWN:
-      default:
-        throw new HumanReadableException("Unable to determine the host platform.");
-    }
+    return ImmutableMap.<String, ImmutableFlavor>builder()
+       .put(Platform.LINUX.getAutoconfName(), ImmutableFlavor.of("linux-x86_64"))
+       .put(Platform.MACOS.getAutoconfName(), ImmutableFlavor.of("macosx-x86_64"))
+       .put(Platform.WINDOWS.getAutoconfName(), ImmutableFlavor.of("windows-x86_64"))
+       .put(Platform.FREEBSD.getAutoconfName(), ImmutableFlavor.of("freebsd-x86_64"))
+       .build();
+  }
+
+  public static ImmutableList<ImmutableFlavor> getAllPossibleHostFlavors() {
+    return getHostFlavorMap().values().asList();
   }
 
   public static ImmutableFlavor getHostFlavor() {
-    return getHostFlavorFromPlatform(Platform.detect());
+    String platformName = Platform.detect().getAutoconfName();
+    ImmutableFlavor hostFlavor = getHostFlavorMap().get(platformName);
+
+    if (hostFlavor == null) {
+      throw new HumanReadableException("Unable to determine the host platform.");
+    }
+    return hostFlavor;
   }
 
   public static void addToolFlagsFromConfig(
