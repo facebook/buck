@@ -85,17 +85,17 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
     this.minimumTwoLevelStoredArtifactSize = minimumTwoLevelStoredArtifactSize;
     this.maximumTwoLevelStoredArtifactSize = maximumTwoLevelStoredArtifactSize;
 
-    Path scratchDir = projectFilesystem.getBuckPaths().getScratchDir();
+    Path tmpDir = projectFilesystem.getBuckPaths().getTmpDir();
     try {
-      projectFilesystem.mkdirs(scratchDir);
+      projectFilesystem.mkdirs(tmpDir);
       this.emptyFilePath = projectFilesystem.resolve(
           projectFilesystem.createTempFile(
-              scratchDir,
+              tmpDir,
               ".buckcache",
               ".empty"));
     } catch (IOException e) {
       throw new HumanReadableException(
-          "Could not create file in " + projectFilesystem.resolve(scratchDir));
+          "Could not create file in " + projectFilesystem.resolve(tmpDir));
     }
 
     secondLevelCacheHitTypes = new TagSetCounter(

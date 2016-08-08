@@ -751,7 +751,10 @@ public final class Main {
 
         Optional<String> currentVersion =
             filesystem.readFileIfItExists(BuckConstant.getCurrentVersionFile());
-        if (!currentVersion.isPresent() || !currentVersion.get().equals(BuckVersion.getVersion())) {
+        if (!currentVersion.isPresent() ||
+            !currentVersion.get().equals(BuckVersion.getVersion()) ||
+            (filesystem.isSymLink(filesystem.getBuckPaths().getGenDir()) ^
+                buckConfig.getBuckOutCompatLink())) {
           // Migrate any version-dependent directories (which might be
           // huge) to a trash directory so we can delete it
           // asynchronously after the command is done.

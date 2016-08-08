@@ -86,4 +86,20 @@ public class ConfiguredBuckOutIntegrationTest {
         Matchers.equalTo(workspace.getDestPath().getFileSystem().getPath("../something/gen")));
   }
 
+  @Test
+  public void verifyTogglingConfiguredBuckOut() throws IOException {
+    assumeThat(Platform.detect(), Matchers.not(Matchers.is(Platform.WINDOWS)));
+    workspace.runBuckBuild(
+        "-c", "project.buck_out=something",
+        "-c", "project.buck_out_compat_link=true",
+        "//:dummy")
+        .assertSuccess();
+    workspace.runBuckBuild("//:dummy").assertSuccess();
+    workspace.runBuckBuild(
+        "-c", "project.buck_out=something",
+        "-c", "project.buck_out_compat_link=true",
+        "//:dummy")
+        .assertSuccess();
+  }
+
 }

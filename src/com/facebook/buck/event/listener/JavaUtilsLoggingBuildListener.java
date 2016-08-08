@@ -44,13 +44,17 @@ public class JavaUtilsLoggingBuildListener implements BuckEventListener {
   private static final Level LEVEL = Level.INFO;
 
   public static void ensureLogFileIsWritten(ProjectFilesystem filesystem) {
-    try {
-      filesystem.mkdirs(filesystem.getBuckPaths().getScratchDir());
-    } catch (IOException e) {
-      throw new HumanReadableException(
-          e,
-          "Unable to create output directory: %s",
-          filesystem.getBuckPaths().getScratchDir());
+    if (!filesystem.exists(filesystem.getBuckPaths().getScratchDir())) {
+      try {
+        filesystem.mkdirs(filesystem.getBuckPaths().getScratchDir());
+      } catch (IOException e) {
+        throw new HumanReadableException(
+            e,
+            "Unable to create output directory: %s: %s: %s",
+            filesystem.getBuckPaths().getScratchDir(),
+            e.getClass(),
+            e.getMessage());
+      }
     }
 
     try {
