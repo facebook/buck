@@ -1,7 +1,7 @@
 apple_binary(
     name = 'DemoMix',
     srcs = [
-       'greatings.swift',
+       'greetings.swift',
        'main.m'
     ],
     frameworks = [

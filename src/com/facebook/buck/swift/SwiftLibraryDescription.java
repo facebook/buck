@@ -91,14 +91,14 @@ public class SwiftLibraryDescription implements
         cxxPlatformFlavorDomain,
         defaultCxxPlatform,
         appleCxxPlatformFlavorDomain,
-        params.getBuildTarget(),
+        buildTarget,
         Optional.<MultiarchFileInfo>absent());
     Optional<Tool> swiftCompiler = appleCxxPlatform.getSwift();
     if (!swiftCompiler.isPresent()) {
       throw new HumanReadableException("Platform %s is missing swift compiler", appleCxxPlatform);
     }
 
-    CxxPlatform cxxPlatform = cxxPlatformFlavorDomain.getValue(params.getBuildTarget())
+    CxxPlatform cxxPlatform = cxxPlatformFlavorDomain.getValue(buildTarget)
         .or(defaultCxxPlatform);
 
     // Otherwise, we return the generic placeholder of this library.
@@ -110,8 +110,9 @@ public class SwiftLibraryDescription implements
         args.frameworks.get(),
         args.libraries.get(),
         appleCxxPlatformFlavorDomain,
-        BuildTargets.getGenPath(params.getProjectFilesystem(),
-            params.getBuildTarget().withFlavors(cxxPlatform.getFlavor()), "%s"),
+        BuildTargets.getGenPath(
+            params.getProjectFilesystem(),
+            buildTarget.withFlavors(cxxPlatform.getFlavor()), "%s"),
         args.moduleName.or(buildTarget.getShortName()),
         args.srcs.get());
   }

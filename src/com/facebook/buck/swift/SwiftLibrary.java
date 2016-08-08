@@ -16,9 +16,9 @@
 
 package com.facebook.buck.swift;
 
-import static com.facebook.buck.swift.SwiftUtil.escapeSwiftModuleName;
 import static com.facebook.buck.swift.SwiftUtil.filterSwiftHeaderName;
 import static com.facebook.buck.swift.SwiftUtil.isSwiftCompanionLibrary;
+import static com.facebook.buck.swift.SwiftUtil.normalizeSwiftModuleName;
 
 import com.facebook.buck.apple.AppleCxxPlatform;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -106,7 +106,7 @@ class SwiftLibrary
     this.headerPath = outputPath.resolve(filterSwiftHeaderName(moduleName) + ".h");
     this.isCompanionLibrary = isSwiftCompanionLibrary(moduleName);
 
-    String escapedModuleName = escapeSwiftModuleName(moduleName);
+    String escapedModuleName = normalizeSwiftModuleName(moduleName);
     this.moduleName = escapedModuleName;
     this.modulePath = outputPath.resolve(escapedModuleName + ".swiftmodule");
     this.objectPath = outputPath.resolve(escapedModuleName + ".o");

@@ -44,7 +44,7 @@ public class SwiftUtil {
     return moduleName + SWIFT_HEADER_SUFFIX;
   }
 
-  static String escapeSwiftModuleName(String moduleName) {
+  static String normalizeSwiftModuleName(String moduleName) {
     return moduleName.replaceAll("[^A-Za-z0-9]", "_");
   }
 }
