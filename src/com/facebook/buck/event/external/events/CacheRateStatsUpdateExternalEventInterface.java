@@ -33,12 +33,12 @@ public interface CacheRateStatsUpdateExternalEventInterface extends BuckEventExt
   int getCacheErrorCount();
 
   /**
-   * @return cache miss rate, as displayed on the buck console.
+   * @return cache miss rate, in percent, as displayed on the buck console.
    */
   double getCacheMissRate();
 
   /**
-   * @return cache error rate, as displayed on the buck console.
+   * @return cache error rate, in percent, as displayed on the buck console.
    */
   double getCacheErrorRate();
 

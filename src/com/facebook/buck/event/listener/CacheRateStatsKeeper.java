@@ -24,7 +24,6 @@ import com.facebook.buck.event.external.events.CacheRateStatsUpdateExternalEvent
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleStatus;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 
@@ -52,25 +51,26 @@ public class CacheRateStatsKeeper {
   protected volatile Optional<Integer> ruleCount = Optional.absent();
 
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
-    if (finished.getStatus() == BuildRuleStatus.SUCCESS) {
-      CacheResult cacheResult = finished.getCacheResult();
-      switch (cacheResult.getType()) {
-        case MISS:
-          cacheMisses.incrementAndGet();
-          break;
-        case ERROR:
-          cacheErrors.incrementAndGet();
-          break;
-        case HIT:
-          cacheHits.incrementAndGet();
-          break;
-        case IGNORED:
-        case LOCAL_KEY_UNCHANGED_HIT:
-          break;
-      }
-      if (cacheResult.getType() != CacheResultType.LOCAL_KEY_UNCHANGED_HIT) {
-        updated.incrementAndGet();
-      }
+    if (finished.getStatus() != BuildRuleStatus.SUCCESS) {
+      return;
+    }
+    CacheResult cacheResult = finished.getCacheResult();
+    switch (cacheResult.getType()) {
+      case MISS:
+        cacheMisses.incrementAndGet();
+        break;
+      case ERROR:
+        cacheErrors.incrementAndGet();
+        break;
+      case HIT:
+        cacheHits.incrementAndGet();
+        break;
+      case IGNORED:
+      case LOCAL_KEY_UNCHANGED_HIT:
+        break;
+    }
+    if (cacheResult.getType() != CacheResultType.LOCAL_KEY_UNCHANGED_HIT) {
+      updated.incrementAndGet();
     }
   }
 
@@ -87,7 +87,7 @@ public class CacheRateStatsKeeper {
         cacheMisses.get(),
         cacheErrors.get(),
         cacheHits.get(),
-        ruleCount.get(),
+        ruleCount.or(0),
         updated.get());
   }
 
@@ -126,11 +126,6 @@ public class CacheRateStatsKeeper {
           .add("cacheErrorRate", getCacheErrorRate())
           .add("cacheHitCount", cacheHitCount)
           .toString();
-    }
-
-    @JsonIgnore
-    public int getRulesWithUpdatedKeysCount() {
-      return updated;
     }
 
     @Override

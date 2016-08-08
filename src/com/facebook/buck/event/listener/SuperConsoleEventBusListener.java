@@ -325,7 +325,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         columns.add(String.format(
             locale,
             "%d UPDATED",
-            cacheRateStats.getRulesWithUpdatedKeysCount()));
+            cacheRateStats.getUpdatedRulesCount()));
         if (ruleCount.or(0) > 0) {
           columns.add(
               String.format(
