@@ -27,9 +27,9 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
@@ -48,6 +48,7 @@ import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -650,6 +651,32 @@ public class TargetsCommandIntegrationTest {
       cellPath.asText(),
       MorePaths.pathWithPlatformSeparators(tmp.getRoot().toRealPath()));
   }
+
+  @Test
+  public void testJsonOutputWithShowFullOutput() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "output_path", tmp);
+    workspace.setUp();
+    ProcessResult result = workspace.runBuckCommand(
+        "targets", "--json", "--show-full-output", "//:test");
+    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
+
+    // Parse the observed JSON.
+    JsonNode observed = objectMapper.readTree(
+        objectMapper.getFactory().createParser(result.getStdout())
+    );
+    assertTrue(observed.isArray());
+    JsonNode targetNode = observed.get(0);
+    assertTrue(targetNode.isObject());
+    JsonNode cellPath = targetNode.get("buck.outputPath");
+    assertNotNull(cellPath);
+
+    Path expectedPath = tmp.getRoot().resolve("buck-out/gen/test/test-output");
+    String expectedRootPath = MorePaths.pathWithPlatformSeparators(expectedPath);
+
+    assertEquals(expectedRootPath, cellPath.asText());
+  }
+
 
   @Test
   public void testShowAllTargets() throws IOException {

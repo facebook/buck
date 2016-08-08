@@ -146,8 +146,13 @@ public class TargetsCommand extends AbstractCommand {
   @Option(name = "--show-output",
       aliases = {"--show_output"},
       usage = "Print the path to the output, relative to the cell path, for each rule after the " +
-          "rule name. Use '--show-cell-path' to obtain the full absolute path.")
+          "rule name. Use '--show-full-output' to obtain the full absolute path.")
   private boolean isShowOutput;
+
+  @Option(name = "--show-full-output",
+      aliases = {"--show_full_output"},
+      usage = "Print the absolute path to the output, for each rule after the rule name.")
+  private boolean isShowFullOutput;
 
   @Option(name = "--show-rulekey",
       aliases = {"--show_rulekey"},
@@ -229,6 +234,11 @@ public class TargetsCommand extends AbstractCommand {
   /** @return {@code true} if {@code --show-output} was specified. */
   public boolean isShowOutput() {
     return isShowOutput;
+  }
+
+  /** @return {@code true} if {@code --show-output} was specified. */
+  public boolean isShowFullOutput() {
+    return isShowFullOutput;
   }
 
   /** @return {@code true} if {@code --show-rulekey} was specified. */
@@ -313,7 +323,8 @@ public class TargetsCommand extends AbstractCommand {
       return 1;
     }
 
-    if (isShowCellPath() || isShowOutput() || isShowRuleKey() || isShowTargetHash()) {
+    if (isShowCellPath() || isShowOutput() || isShowFullOutput() || isShowRuleKey() ||
+        isShowTargetHash()) {
       ImmutableMap<BuildTarget, ShowOptions> showRulesResult;
       TargetGraphAndBuildTargets targetGraphAndBuildTargetsForShowRules =
           buildTargetGraphAndTargetsForShowRules(params, executor, buildRuleTypes);
@@ -804,7 +815,7 @@ public class TargetsCommand extends AbstractCommand {
     Optional<ActionGraph> actionGraph = Optional.absent();
     Optional<BuildRuleResolver> buildRuleResolver = Optional.absent();
     Optional<DefaultRuleKeyBuilderFactory> ruleKeyBuilderFactory = Optional.absent();
-    if (isShowRuleKey() || isShowOutput()) {
+    if (isShowRuleKey() || isShowOutput() || isShowFullOutput()) {
       ActionGraphAndResolver result = Preconditions.checkNotNull(
           ActionGraphCache.getFreshActionGraph(
               params.getBuckEventBus(),
@@ -829,8 +840,8 @@ public class TargetsCommand extends AbstractCommand {
         if (isShowRuleKey()) {
           showOptionsBuilder.setRuleKey(ruleKeyBuilderFactory.get().build(rule).toString());
         }
-        if (isShowOutput()) {
-          Optional<Path> outputPath = getUserFacingOutputPath(rule);
+        if (isShowOutput() || isShowFullOutput()) {
+          Optional<Path> outputPath = getUserFacingOutputPath(rule, isShowFullOutput());
           if (outputPath.isPresent()) {
             showOptionsBuilder.setOutputPath(outputPath.get().toString());
           }
@@ -845,8 +856,13 @@ public class TargetsCommand extends AbstractCommand {
     return builder.build();
   }
 
-  public static Optional<Path> getUserFacingOutputPath(BuildRule rule) {
-    return Optional.fromNullable(rule.getPathToOutput());
+  static Optional<Path> getUserFacingOutputPath(final BuildRule rule, boolean absolute) {
+    Optional<Path> outputPathOptional = Optional.fromNullable(rule.getPathToOutput());
+    if (absolute) {
+      return outputPathOptional.transform(rule.getProjectFilesystem().getAbsolutifier());
+    } else {
+      return outputPathOptional;
+    }
   }
 
   private TargetGraphAndTargetNodes computeTargetsAndGraphToShowTargetHash(

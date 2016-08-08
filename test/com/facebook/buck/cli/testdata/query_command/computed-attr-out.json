@@ -1,0 +1,8 @@
+{
+  "//example:four": {
+    "buck.cell_path": "%1$s"
+  },
+  "//example:one": {
+    "buck.cell_path": "%1$s"
+  }
+}

@@ -127,6 +127,7 @@ public class BuildCommand extends AbstractCommand {
   private static final String SHALLOW_LONG_ARG = "--shallow";
   private static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
   private static final String SHOW_OUTPUT_LONG_ARG = "--show-output";
+  private static final String SHOW_FULL_OUTPUT_LONG_ARG = "--show-full-output";
   private static final String SHOW_RULEKEY_LONG_ARG = "--show-rulekey";
   private static final String DISTRIBUTED_LONG_ARG = "--distributed";
   private static final String DISTRIBUTED_STATE_DUMP_LONG_ARG = "--distributed-state-dump";
@@ -182,8 +183,13 @@ public class BuildCommand extends AbstractCommand {
 
   @Option(
       name = SHOW_OUTPUT_LONG_ARG,
-      usage = "Print the absolute path to the output for each of the built rules.")
+      usage = "Print the path to the output for each of the built rules relative to the cell.")
   private boolean showOutput;
+
+  @Option(
+      name = SHOW_FULL_OUTPUT_LONG_ARG,
+      usage = "Print the absolute path to the output for each of the built rules.")
+  private boolean showFullOutput;
 
   @Option(
       name = SHOW_RULEKEY_LONG_ARG,
@@ -380,7 +386,7 @@ public class BuildCommand extends AbstractCommand {
         ActionGraphAndResolver actionGraphAndResolver =
             createActionGraphAndResolver(params, executorService);
         exitCode = executeLocalBuild(params, actionGraphAndResolver, executorService);
-        if (exitCode == 0 && (showOutput || showRuleKey)) {
+        if (exitCode == 0 && (showOutput || showFullOutput || showRuleKey)) {
           showOutputs(params, actionGraphAndResolver);
         }
       }
@@ -537,12 +543,14 @@ public class BuildCommand extends AbstractCommand {
     for (BuildTarget buildTarget : buildTargets) {
       try {
         BuildRule rule = actionGraphAndResolver.getResolver().requireRule(buildTarget);
-        Optional<Path> outputPath = TargetsCommand.getUserFacingOutputPath(rule);
+        Optional<Path> outputPath = TargetsCommand.getUserFacingOutputPath(rule, showFullOutput);
         params.getConsole().getStdOut().printf(
             "%s%s%s\n",
             rule.getFullyQualifiedName(),
             showRuleKey ? " " + ruleKeyBuilderFactory.get().build(rule).toString() : "",
-            showOutput ? " " + outputPath.transform(Functions.toStringFunction()).or("") : "");
+            showOutput || showFullOutput ?
+                " " + outputPath.transform(Functions.toStringFunction()).or("")
+                : "");
       } catch (NoSuchBuildTargetException e) {
         throw new HumanReadableException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
       }

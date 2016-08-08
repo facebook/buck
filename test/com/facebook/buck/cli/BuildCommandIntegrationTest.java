@@ -19,8 +19,8 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
 import org.hamcrest.Matchers;
@@ -28,6 +28,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,6 +58,22 @@ public class BuildCommandIntegrationTest {
         "//:bar");
     runBuckResult.assertSuccess();
     assertThat(runBuckResult.getStdout(), Matchers.containsString("//:bar buck-out"));
+  }
+
+  @Test
+  public void showFullOutput() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "just_build", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult runBuckResult = workspace.runBuckBuild(
+        "--show-full-output",
+        "//:bar");
+    runBuckResult.assertSuccess();
+    Path expectedRootDirectory = tmp.getRoot();
+    String expectedOutputDirectory = expectedRootDirectory.resolve("buck-out/").toString();
+    String stdout = runBuckResult.getStdout();
+    assertThat(stdout, Matchers.containsString("//:bar "));
+    assertThat(stdout, Matchers.containsString(expectedOutputDirectory));
   }
 
   @Test
