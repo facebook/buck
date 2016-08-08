@@ -38,20 +38,10 @@
       .*\.swp$, \
       ^#.*#$, .*~$, \
       .*___jb_bak___$, .*___jb_old___$,
-    ; Forbid symlinks for source files so Buck doesn't have to dump its
+    ; Forbid symlinks for source files so Buck does not have to dump its
     ; cache every time it encounters one.
     allow_symlinks = forbid
     enable_build_file_sandboxing = true
 [test]
     ; Maximum timeout of 1 minute per test.
     timeout = 60000
-# MOE:begin_strip
-[artillery]
-    ; section specific to artillery instrumentation
-    ; enable/disable tracing
-    tracing = true
-    ; filter out undesired events by class regexps
-    ; event_class_filters = .*SimplePerfEvent, .*StepEvent
-    event_class_filters = AnnotationProcessingEvent
-    ;
-# MOE:end_strip
