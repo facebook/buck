@@ -82,6 +82,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     thriftRuleKey.setHashString(ruleKey.getHashCode().toString());
     fetchRequest.setRuleKey(thriftRuleKey);
     fetchRequest.setRepository(repository);
+    fetchRequest.setScheduleType(scheduleType);
 
     BuckCacheRequest cacheRequest = new BuckCacheRequest();
     cacheRequest.setType(BuckCacheRequestType.FETCH);

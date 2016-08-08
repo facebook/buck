@@ -43,6 +43,7 @@ struct BuckCacheStoreResponse {
 struct BuckCacheFetchRequest {
   1: optional RuleKey ruleKey;
   2: optional string repository;
+  3: optional string scheduleType;
 }
 
 struct BuckCacheFetchResponse {
