@@ -884,9 +884,7 @@ public final class Main {
 
         FileHashCache fileHashCache = new StackedFileHashCache(allCaches.build());
 
-        Optional<WebServer> webServer = getWebServerIfDaemon(
-            context,
-            rootCell);
+        Optional<WebServer> webServer = getWebServerIfDaemon(context, rootCell);
 
         TestConfig testConfig = new TestConfig(buckConfig);
         ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig);
@@ -1021,7 +1019,7 @@ public final class Main {
           // Create or get Parser and invalidate cached command parameters.
           Parser parser = null;
 
-          if (isDaemon && watchman != Watchman.NULL_WATCHMAN) {
+          if (isDaemon) {
             try {
               Daemon daemon = getDaemon(rootCell, objectMapper);
               WatchmanWatcher watchmanWatcher = new WatchmanWatcher(
