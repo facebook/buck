@@ -852,4 +852,36 @@ public class PythonBinaryDescriptionTest {
             "libtransitive_dep.so"));
   }
 
+  @Test
+  public void pexBuilderAddedToParseTimeDeps() {
+    final BuildTarget pexBuilder = BuildTargetFactory.newInstance("//:pex_builder");
+    PythonBuckConfig config =
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+          @Override
+          public Optional<BuildTarget> getPexExecutorTarget() {
+            return Optional.of(pexBuilder);
+          }
+        };
+
+    PythonBinaryBuilder inplaceBinary =
+        new PythonBinaryBuilder(
+            BuildTargetFactory.newInstance("//:bin"),
+            config,
+            PythonTestUtils.PYTHON_PLATFORMS,
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            CxxPlatformUtils.DEFAULT_PLATFORMS)
+        .setPackageStyle(PythonBuckConfig.PackageStyle.INPLACE);
+    assertThat(inplaceBinary.findImplicitDeps(), Matchers.not(Matchers.hasItem(pexBuilder)));
+
+    PythonBinaryBuilder standaloneBinary =
+        new PythonBinaryBuilder(
+            BuildTargetFactory.newInstance("//:bin"),
+            config,
+            PythonTestUtils.PYTHON_PLATFORMS,
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            CxxPlatformUtils.DEFAULT_PLATFORMS)
+        .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE);
+    assertThat(standaloneBinary.findImplicitDeps(), Matchers.hasItem(pexBuilder));
+  }
+
 }

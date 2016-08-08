@@ -390,7 +390,8 @@ public class PythonTestDescription implements
     targets.addAll(
         cxxPlatforms.getValue(buildTarget).or(defaultCxxPlatform).getLd().getParseTimeDeps());
 
-    if (pythonBuckConfig.getPackageStyle() == PythonBuckConfig.PackageStyle.STANDALONE) {
+    if (constructorArg.packageStyle.or(pythonBuckConfig.getPackageStyle()) ==
+        PythonBuckConfig.PackageStyle.STANDALONE) {
       targets.addAll(pythonBuckConfig.getPexTarget().asSet());
       targets.addAll(pythonBuckConfig.getPexExecutorTarget().asSet());
     }
