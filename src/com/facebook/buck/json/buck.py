@@ -836,13 +836,26 @@ class BuildFileProcessor(object):
 
     def _create_custom_import(self):
         """
-        Returns customised '__import__' function that blocks importing modules.
+        Returns customised '__import__' function that blocks importing modules that are not
+        whitelisted or don't have safe versions.
         """
 
-        def _import(name, globals=None, locals=None, fromlist=(), level=0):
+        import_whitelist = set(['copy', 're', 'functools', 'itertools', 'json', 'hashlib',
+                                'types', 'string', 'ast', '__future__', 'collections',
+                                'operator', 'fnmatch'])
+
+        def _import(name, globals=None, locals=None, fromlist=(), level=-1):
             # return safe version of 'os'
             if name in ['os', 'os.path']:
+                # Return only a safe 'path' module for 'os.path' if 'fromlist' is non-empty,
+                # which is how '__import__' works. That allows 'from os.path import join' to work.
+                if name == 'os.path' and fromlist:
+                    return self._safe_os_module.path
+
                 return self._safe_os_module
+
+            if name in import_whitelist:
+                return ORIGINAL_IMPORT(name, globals, locals, fromlist, level)
 
             raise ImportError(
                 'Importing module %s is forbidden. ' % name +

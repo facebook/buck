@@ -463,6 +463,22 @@ class BuckTest(unittest.TestCase):
             build_file_processor.process,
             build_file.path, set())
 
+    def test_import_whitelist(self):
+        """
+        Verify that whitelisted modules can be imported with sandboxing enabled.
+        """
+        self.enable_build_file_sandboxing = True
+        build_file = ProjectFile(
+            path='BUCK',
+            contents=(
+                'import json',
+                'import functools',
+                'import re',
+            ))
+        self.write_files(build_file)
+        build_file_processor = self.create_build_file_processor()
+        build_file_processor.process(build_file.path, set())
+
     def test_allow_unsafe_import_allows_to_import(self):
         """
         Verify that `allow_unsafe_import()` allows to import specified modules
@@ -587,6 +603,7 @@ class BuckTest(unittest.TestCase):
     def test_safe_os_module_allows_safe_functions(self):
         """
         Test that 'import os.path' allows access to safe 'os' functions
+        and also 'from os.path import *' works.
         """
 
         self.enable_build_file_sandboxing = True
@@ -594,7 +611,9 @@ class BuckTest(unittest.TestCase):
             path='BUCK',
             contents=(
                 'import os.path',
+                'from os.path import *',
                 'assert(os.path.split("a/b/c") == ("a/b", "c"))',
+                'assert(split("a/b/c") == ("a/b", "c"))',
                 'assert os.environ["TEST1"] == "foo"',
             ))
         self.write_files(build_file)
