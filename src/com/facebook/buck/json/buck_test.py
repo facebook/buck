@@ -1,6 +1,7 @@
 from buck import format_watchman_query_params, glob_internal, LazyBuildEnvPartial
 from buck import subdir_glob, flatten_dicts, BuildFileContext
 from pathlib import Path, PurePosixPath, PureWindowsPath
+import itertools
 import os
 import shutil
 import tempfile
@@ -414,6 +415,51 @@ class TestBuck(unittest.TestCase):
                 },
                 override2
         )
+
+
+class TestMemoized(unittest.TestCase):
+    def _makeone(self, func, *args, **kwargs):
+        from buck import memoized
+        return memoized(*args, **kwargs)(func)
+
+    def test_cache_none(self):
+        decorated = self._makeone(
+            lambda _retval=iter([None, 'foo']): next(_retval))
+        uncached = decorated()
+        cached = decorated()
+        self.assertEqual(uncached, cached)
+        self.assertTrue(cached is None)
+
+    def test_no_deepcopy(self):
+        decorated = self._makeone(
+            lambda: [],
+            deepcopy=False,
+        )
+        initial = decorated()
+        cached = decorated()
+        self.assertTrue(initial is cached)
+
+    def test_deepcopy(self):
+        decorated = self._makeone(
+            lambda: [{}],
+        )
+        initial = decorated()
+        cached = decorated()
+        self.assertTrue(initial is not cached)
+        initial[0]['foo'] = 'bar'
+        self.assertTrue(cached[0] == {})
+
+    def test_cachekey(self):
+        decorated = self._makeone(
+            # note that in Python 2 without hash randomisation, 'bar' and 'baz' will collide in
+            # a small dictionary, as their hash keys differ by 8.
+            lambda foo, bar='baz', baz='bar', _retval=itertools.count(): next(_retval)
+        )
+        initial = decorated(42, baz='spam', bar='eggs')
+        cached = decorated(42, bar='eggs', baz='spam')
+        different_keyword_values = decorated(42, bar='eric', baz='idle')
+        self.assertEqual(initial, cached)
+        self.assertNotEqual(initial, different_keyword_values)
 
 
 if __name__ == '__main__':

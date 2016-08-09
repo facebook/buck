@@ -207,34 +207,38 @@ def add_rule(rule, build_env):
     build_env.rules[rule_name] = rule
 
 
-class memoized(object):
+def memoized(deepcopy=True):
     '''Decorator. Caches a function's return value each time it is called.
     If called later with the same arguments, the cached value is returned
     (not reevaluated).
 
     Makes a defensive copy of the cached value each time it's returned,
-    so callers mutating the result do not poison the cache.
+    so callers mutating the result do not poison the cache, unless
+    deepcopy is set to False.
+
     '''
-    def __init__(self, func):
-        self.func = func
-        self.cache = {}
+    def decorator(func):
+        cache = {}
 
-    def __call__(self, *args):
-        args_key = repr(args)
-        value = self.cache.get(args_key)
-        if value is None:
-            value = self.func(*args)
-            self.cache[args_key] = value
-        # Return a copy to ensure callers mutating the result don't poison the cache.
-        return copy.deepcopy(value)
+        @functools.wraps(func)
+        def wrapped(*args, **kwargs):
+            # poor-man's cache key; the keyword args are sorted to avoid dictionary ordering
+            # issues (insertion and deletion order matters). Nested dictionaries will still cause
+            # cache misses.
+            args_key = repr(args) + repr(sorted(kwargs.items()))
+            _sentinel = object()
+            value = cache.get(args_key, _sentinel)
+            if value is _sentinel:
+                value = func(*args, **kwargs)
+                cache[args_key] = value
+            # Return a copy to ensure callers mutating the result don't poison the cache.
+            if deepcopy:
+                value = copy.deepcopy(value)
+            return value
 
-    def __repr__(self):
-        '''Return the function's docstring.'''
-        return self.func.__doc__
+        return wrapped
 
-    def __get__(self, obj, objtype):
-        '''Support instance methods.'''
-        return functools.partial(self.__call__, obj)
+    return decorator
 
 
 @provide_for_build
@@ -393,7 +397,7 @@ def format_watchman_query_params(includes, excludes, include_dotfiles, relative_
     }
 
 
-@memoized
+@memoized()
 def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watch_root,
                   watchman_project_prefix, sync_cookie_state, watchman_client, diagnostics,
                   watchman_glob_stat_results):
