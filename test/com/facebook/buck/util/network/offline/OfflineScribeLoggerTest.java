@@ -14,11 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.util.network;
+package com.facebook.buck.util.network.offline;
 
-import static com.facebook.buck.util.network.OfflineScribeLogger.LOGFILE_PATTERN;
-import static com.facebook.buck.util.network.OfflineScribeLogger.LOGFILE_PREFIX;
-import static com.facebook.buck.util.network.OfflineScribeLogger.LOGFILE_SUFFIX;
+import static com.facebook.buck.util.network.offline.OfflineScribeLogger.LOGFILE_PATTERN;
+import static com.facebook.buck.util.network.offline.OfflineScribeLogger.LOGFILE_PREFIX;
+import static com.facebook.buck.util.network.offline.OfflineScribeLogger.LOGFILE_SUFFIX;
 import static org.hamcrest.Matchers.arrayContainingInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.everyItem;
@@ -34,6 +34,8 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.network.FakeFailingScribeLogger;
+import com.facebook.buck.util.network.ScribeLogger;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;

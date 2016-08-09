@@ -1,0 +1,19 @@
+#@# GENERATED FILE: DO NOT MODIFY 8f2a13a3abde654502bbae86dd7e42afec380677 #@#
+{
+  "offline" : {
+    "deps" : [
+      "//src/com/facebook/buck/log:api",
+      "//third-party/java/immutables:processor",
+      "//third-party/java/jackson:jackson-core",
+      "//third-party/java/jsr:jsr305"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/event/listener:listener",
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/model:build_id",
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jackson:jackson-databind"
+    ]
+  }
+}

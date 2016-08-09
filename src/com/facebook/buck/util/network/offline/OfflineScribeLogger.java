@@ -14,11 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.util.network;
+package com.facebook.buck.util.network.offline;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.util.network.ScribeLogger;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;

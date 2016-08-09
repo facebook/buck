@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY a53a5196254b7343c85b3ce04b1491383043e702 #@#
+#@# GENERATED FILE: DO NOT MODIFY 3c133093310f0ff8fb360b7285e4136656a808b1 #@#
 {
   "FakeBuckConfig" : {
     "deps" : [
@@ -37,6 +37,7 @@
       "//src/com/facebook/buck/maven:util",
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/parser:config",
       "//src/com/facebook/buck/parser:parser",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/query:query",
@@ -47,6 +48,7 @@
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules:types",
       "//src/com/facebook/buck/rules/coercer:coercer",
+      "//src/com/facebook/buck/rules/coercer:types",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/test:test",
       "//src/com/facebook/buck/test/result/type:type",

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util.network;
+package com.facebook.buck.util.network.offline;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

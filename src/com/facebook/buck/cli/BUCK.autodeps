@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 5d267e255a9068578fcd87b225e27113867d090a #@#
+#@# GENERATED FILE: DO NOT MODIFY 3cdcea41423c61151a0b0e2683fa7637cd90a474 #@#
 {
   "cli" : {
     "deps" : [
@@ -58,6 +58,7 @@
       "//src/com/facebook/buck/util:watchman",
       "//src/com/facebook/buck/util/environment:env-filter",
       "//src/com/facebook/buck/util/network:network",
+      "//src/com/facebook/buck/util/network/offline:offline",
       "//src/com/facebook/buck/util/shutdown:shutdown",
       "//src/com/facebook/buck/util/versioncontrol:impl",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",

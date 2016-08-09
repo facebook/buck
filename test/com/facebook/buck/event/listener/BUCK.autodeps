@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY e4df6f4accd8a539007812e415b34f21ccb42e48 #@#
+#@# GENERATED FILE: DO NOT MODIFY 2923d737ce05c18405b16b4cb62bd532a062ba12 #@#
 {
   "listener" : {
     "deps" : [
@@ -38,6 +38,7 @@
       "//src/com/facebook/buck/util/environment:environment",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/util/network:network",
+      "//src/com/facebook/buck/util/network/offline:offline",
       "//src/com/facebook/buck/util/unit:unit",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
