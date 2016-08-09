@@ -18,6 +18,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -33,6 +35,8 @@ import org.immutables.value.Value;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -74,8 +78,12 @@ class NativeLibraryMergeEnhancer {
             allLinkables,
             linkableAssetSet);
 
+    Iterable<MergedNativeLibraryConstituents> orderedConstituents = getOrderedMergedConstituents(
+        buildRuleParams,
+        linkableMembership);
 
-    linkableMembership.getClass();
+
+    orderedConstituents.getClass();
 
 
     return NativeLibraryMergeEnhancementResult.builder()
@@ -161,6 +169,70 @@ class NativeLibraryMergeEnhancer {
     }
     return linkableMembership;
   }
+
+  /**
+   * Topo-sort the constituents objects so we can process deps first.
+   */
+  private static Iterable<MergedNativeLibraryConstituents> getOrderedMergedConstituents(
+      BuildRuleParams buildRuleParams,
+      final Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership) {
+
+    // Merged libs that are not depended on by any other merged lib
+    // will be the roots of our traversal.
+    // Start with all merged libs as possible roots.
+    HashSet<MergedNativeLibraryConstituents> possibleRoots =
+        new HashSet<>(linkableMembership.values());
+
+    for (Map.Entry<NativeLinkable, MergedNativeLibraryConstituents> entry :
+        linkableMembership.entrySet()) {
+      for (NativeLinkable constituentLinkable : entry.getValue().getLinkables()) {
+        // For each dep of each constituent of each merged lib...
+        for (NativeLinkable dep : constituentLinkable.getNativeLinkableDeps(null)) {
+          // If that dep is in a different merged lib, the latter is not a root.
+          MergedNativeLibraryConstituents mergedDep = linkableMembership.get(dep);
+          if (mergedDep != entry.getValue()) {
+            possibleRoots.remove(mergedDep);
+          }
+        }
+      }
+    }
+
+    Iterable<MergedNativeLibraryConstituents> ordered;
+    try {
+      ordered = new AcyclicDepthFirstPostOrderTraversal<>(
+          new GraphTraversable<MergedNativeLibraryConstituents>() {
+            @Override
+            public Iterator<MergedNativeLibraryConstituents> findChildren(
+                MergedNativeLibraryConstituents node) {
+              ImmutableSet.Builder<MergedNativeLibraryConstituents> depBuilder =
+                  ImmutableSet.builder();
+              for (NativeLinkable linkable : node.getLinkables()) {
+                // Ideally, we would sort the deps to get consistent traversal order,
+                // but in practice they are already SortedSets, so it's not necessary.
+                for (NativeLinkable dep : Iterables.concat(
+                    linkable.getNativeLinkableDeps(null),
+                    linkable.getNativeLinkableExportedDeps(null))) {
+                  MergedNativeLibraryConstituents mappedDep =
+                      linkableMembership.get(dep);
+                  // Merging can result in a native library "depending on itself",
+                  // which is a cycle.  Just drop these unnecessary deps.
+                  if (mappedDep != node) {
+                    depBuilder.add(mappedDep);
+                  }
+                }
+              }
+              return depBuilder.build().iterator();
+            }
+          }).traverse(possibleRoots);
+    } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
+      throw new RuntimeException(
+          "Dependency cycle detected when merging native libs for " +
+              buildRuleParams.getBuildTarget(),
+          e);
+    }
+    return ordered;
+  }
+
 
   /**
    * Data object for internal use, representing the source libraries getting merged together

@@ -395,6 +395,14 @@ public class AndroidBinaryIntegrationTest {
 //    } catch (RuntimeException e) {
 //      assertThat(e.getMessage(), Matchers.containsString("already a library name"));
 //    }
+
+    try {
+      workspace.runBuckBuild("//apps/sample:app_with_circular_merged_libs");
+      Assert.fail("No exception from trying circular merged dep.");
+    } catch (RuntimeException e) {
+      assertThat(e.getMessage(), Matchers.containsString("Dependency cycle"));
+      assertThat(e.getCause().getMessage(), Matchers.containsString("Cycle found:"));
+    }
   }
 
 
