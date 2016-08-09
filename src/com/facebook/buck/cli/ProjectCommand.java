@@ -109,7 +109,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
 
@@ -517,8 +516,6 @@ public class ProjectCommand extends BuildCommand {
             // unreachable
             throw new IllegalStateException("'ide' should always be of type 'INTELLIJ' or 'XCODE'");
         }
-      } catch (ExecutionException e) {
-        throw new HumanReadableException("Failed to generate project", e);
       } finally {
         params.getBuckEventBus().post(ProjectGenerationEvent.finished());
       }
@@ -873,7 +870,7 @@ public class ProjectCommand extends BuildCommand {
       final CommandRunnerParams params,
       final TargetGraphAndTargets targetGraphAndTargets,
       ImmutableSet<BuildTarget> passedInTargetsSet)
-      throws IOException, InterruptedException, ExecutionException {
+      throws IOException, InterruptedException {
     int exitCode = 0;
     AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
     ImmutableSet<ProjectGenerator.Option> options = buildWorkspaceGeneratorOptions(
@@ -926,7 +923,7 @@ public class ProjectCommand extends BuildCommand {
       boolean combinedProject,
       boolean buildWithBuck,
       boolean combineTestBundles)
-      throws IOException, InterruptedException, ExecutionException {
+      throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> targets;
     if (passedInTargetsSet.isEmpty()) {
       targets = FluentIterable

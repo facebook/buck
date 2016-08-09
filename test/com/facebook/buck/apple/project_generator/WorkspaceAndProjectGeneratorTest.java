@@ -105,7 +105,6 @@ import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class WorkspaceAndProjectGeneratorTest {
@@ -245,7 +244,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void workspaceAndProjectsShouldDiscoverDependenciesAndTests()
-      throws IOException, ExecutionException, InterruptedException {
+      throws IOException, InterruptedException {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         rootCell,
         targetGraph,
@@ -320,7 +319,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void combinedProjectShouldDiscoverDependenciesAndTests()
-      throws IOException, ExecutionException, InterruptedException {
+      throws IOException, InterruptedException {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         rootCell,
         targetGraph,
@@ -380,7 +379,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void workspaceAndProjectsWithoutTests()
-      throws IOException, ExecutionException, InterruptedException {
+      throws IOException, InterruptedException {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         rootCell,
         targetGraph,
@@ -445,7 +444,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void workspaceAndProjectsWithoutDependenciesTests()
-      throws IOException, ExecutionException, InterruptedException {
+      throws IOException, InterruptedException {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         rootCell,
         targetGraph,
@@ -497,7 +496,7 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void requiredBuildTargets() throws IOException, ExecutionException, InterruptedException {
+  public void requiredBuildTargets() throws IOException, InterruptedException {
     BuildTarget genruleTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "gen").build();
     TargetNode<GenruleDescription.Arg> genrule  = GenruleBuilder
         .newGenruleBuilder(genruleTarget)
@@ -554,7 +553,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void requiredBuildTargetsForCombinedProject()
-      throws IOException, ExecutionException, InterruptedException {
+      throws IOException, InterruptedException {
     BuildTarget genruleTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "gen").build();
     TargetNode<GenruleDescription.Arg> genrule  = GenruleBuilder
         .newGenruleBuilder(genruleTarget)
@@ -610,7 +609,7 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void buildWithBuck() throws IOException, ExecutionException, InterruptedException {
+  public void buildWithBuck() throws IOException, InterruptedException {
     Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
         Paths.get("buck"),
         ImmutableMap.<String, String>of());
@@ -677,7 +676,7 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void buildWithBuckFocused() throws IOException, ExecutionException, InterruptedException {
+  public void buildWithBuckFocused() throws IOException, InterruptedException {
     final String fooLib = "//foo:lib";
     Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
         Paths.get("buck"),
@@ -726,7 +725,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void buildWithBuckFocusedFailsIfTargetDoesNotExist()
-      throws IOException, ExecutionException, InterruptedException {
+      throws IOException, InterruptedException {
     final String fooLib = "//NOT:EXISTING_TARGET";
     Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
         Paths.get("buck"),
@@ -760,22 +759,17 @@ public class WorkspaceAndProjectGeneratorTest {
       generator.generateWorkspaceAndDependentProjects(
           projectGenerators,
           MoreExecutors.newDirectExecutorService());
-    } catch (ExecutionException e) {
-      assertThat(e.getCause(), instanceOf(IllegalArgumentException.class));
-      checkExceptionSaysTargetNotFound(fooLib, (IllegalArgumentException) e.getCause());
+    } catch (IllegalArgumentException e) {
+      assertThat(
+          e.getMessage(),
+          Matchers.equalTo("Cannot find build target " + fooLib + " in target graph"));
       return;
     }
     fail("Project generation should fail because there is no " + fooLib + " target in the graph!");
   }
 
-  private void checkExceptionSaysTargetNotFound(String fooLib, IllegalArgumentException e) {
-    assertThat(
-        e.getMessage(),
-        Matchers.equalTo("Cannot find build target " + fooLib + " in target graph"));
-  }
-
   @Test
-  public void combinedTestBundle() throws IOException, ExecutionException, InterruptedException {
+  public void combinedTestBundle() throws IOException, InterruptedException {
     TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
         .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//foo", "combinableTest1").build())
         .setInfoPlist(new FakeSourcePath("Info.plist"))
@@ -1184,7 +1178,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void targetsForWorkspaceWithExtraSchemes()
-      throws IOException, ExecutionException, InterruptedException {
+      throws IOException, InterruptedException {
     setUpWorkspaceWithSchemeAndProjects();
 
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
@@ -1318,7 +1312,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void targetsForWorkspaceWithExtraTargets()
-      throws IOException, ExecutionException, InterruptedException {
+      throws IOException, InterruptedException {
     BuildTarget fooLibTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "FooLib").build();
     TargetNode<AppleLibraryDescription.Arg> fooLib = AppleLibraryBuilder
         .createBuilder(fooLibTarget)
@@ -1427,7 +1421,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void enablingParallelizeBuild()
-      throws IOException, ExecutionException, InterruptedException {
+      throws IOException, InterruptedException {
     BuildTarget fooLibTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "FooLib").build();
     TargetNode<AppleLibraryDescription.Arg> fooLib = AppleLibraryBuilder
         .createBuilder(fooLibTarget)
@@ -1487,7 +1481,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void customRunnableSettings()
-      throws IOException, ExecutionException, InterruptedException {
+      throws IOException, InterruptedException {
     BuildTarget fooLibTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "FooLib").build();
     TargetNode<AppleLibraryDescription.Arg> fooLib = AppleLibraryBuilder
         .createBuilder(fooLibTarget)

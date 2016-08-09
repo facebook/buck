@@ -31,7 +31,6 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
-// import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -52,6 +51,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -78,6 +78,8 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
+
+// import com.facebook.buck.io.ProjectFilesystem;
 
 public class WorkspaceAndProjectGenerator {
   private static final Logger LOG = Logger.get(WorkspaceAndProjectGenerator.class);
@@ -195,7 +197,7 @@ public class WorkspaceAndProjectGenerator {
   public Path generateWorkspaceAndDependentProjects(
       Map<Path, ProjectGenerator> projectGenerators,
       ListeningExecutorService listeningExecutorService)
-      throws IOException, ExecutionException, InterruptedException {
+      throws IOException, InterruptedException {
     LOG.debug("Generating workspace for target %s", workspaceBuildTarget);
 
     String workspaceName = XcodeWorkspaceConfigDescription.getWorkspaceNameFromArg(
@@ -307,7 +309,7 @@ public class WorkspaceAndProjectGenerator {
       ImmutableMultimap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder,
       ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder,
       Optional<BuildTarget> targetToBuildWithBuck)
-      throws IOException, ExecutionException, InterruptedException {
+      throws IOException, InterruptedException {
     if (combinedProject) {
       return generateCombinedProject(
           workspaceName,
@@ -374,7 +376,7 @@ public class WorkspaceAndProjectGenerator {
       ImmutableMultimap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder,
       ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder,
       final Optional<BuildTarget> targetToBuildWithBuck)
-      throws IOException, ExecutionException, InterruptedException {
+      throws IOException, InterruptedException {
     ImmutableMultimap.Builder<Cell, BuildTarget> projectCellToBuildTargetsBuilder =
         ImmutableMultimap.builder();
     for (TargetNode<?> targetNode : projectGraph.getNodes()) {
@@ -444,7 +446,14 @@ public class WorkspaceAndProjectGenerator {
       );
     }
 
-    List<GenerationResult> generationResults = Futures.allAsList(projectGeneratorFutures).get();
+    List<GenerationResult> generationResults;
+    try {
+      generationResults = Futures.allAsList(projectGeneratorFutures).get();
+    } catch (ExecutionException e) {
+      Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
+      Throwables.propagateIfPossible(e.getCause());
+      throw new IllegalStateException("Unexpected exception: ", e);
+    }
     for (GenerationResult result : generationResults) {
       workspaceGenerator.addFilePath(result.getProjectPath());
       processGenerationResult(

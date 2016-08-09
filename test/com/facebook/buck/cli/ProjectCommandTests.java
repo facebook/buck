@@ -42,7 +42,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 public class ProjectCommandTests {
   // Utility class, do not instantiate.
@@ -103,7 +102,7 @@ public class ProjectCommandTests {
       boolean isBuildWithBuck,
       boolean isCombinedProjects,
       boolean isCombinesTestBundles)
-      throws IOException, InterruptedException, ExecutionException {
+      throws IOException, InterruptedException {
     TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
         targetGraph,
         ProjectCommand.Ide.XCODE,
