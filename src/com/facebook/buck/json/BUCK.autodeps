@@ -1,10 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 13c0f26ce1096f1395b2dcbddad7504f059b5c23 #@#
+#@# GENERATED FILE: DO NOT MODIFY ec0aff29ea734dbeac8bb5e9ce9b4e58a6d48c34 #@#
 {
   "json" : {
     "deps" : [
       "//src/com/facebook/buck/bser:bser",
       "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/swift:swift",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/concurrent:concurrent",

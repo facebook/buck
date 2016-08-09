@@ -100,6 +100,7 @@ java_immutables_library(
     'ImplicitFlavorsInferringDescription.java',
     'ImplicitInputsInferringDescription.java',
     'MetadataProvidingDescription.java',
+    'MixedWithSwift.java',
     'NonHashableSourcePathContainer.java',
     'NullRuleKeyLogger.java',
     'OnDiskBuildInfo.java',

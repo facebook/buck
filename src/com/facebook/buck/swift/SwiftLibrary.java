@@ -16,16 +16,24 @@
 
 package com.facebook.buck.swift;
 
-import static com.facebook.buck.swift.SwiftUtil.filterSwiftHeaderName;
 import static com.facebook.buck.swift.SwiftUtil.isSwiftCompanionLibrary;
 import static com.facebook.buck.swift.SwiftUtil.normalizeSwiftModuleName;
+import static com.facebook.buck.swift.SwiftUtil.toSwiftHeaderName;
 
 import com.facebook.buck.apple.AppleCxxPlatform;
+import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPreprocessables;
+import com.facebook.buck.cxx.CxxPreprocessorDep;
+import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.HeaderSymlinkTree;
+import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.cxx.ImmutableCxxPreprocessorInputCacheKey;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -44,6 +52,8 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.google.common.base.Optional;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -61,7 +71,13 @@ import javax.annotation.Nullable;
  */
 class SwiftLibrary
     extends AbstractBuildRule
-    implements HasRuntimeDeps, NativeLinkable {
+    implements HasRuntimeDeps, NativeLinkable, CxxPreprocessorDep {
+
+  private final LoadingCache<
+      CxxPreprocessables.CxxPreprocessorInputCacheKey,
+      ImmutableMap<BuildTarget, CxxPreprocessorInput>
+      > transitiveCxxPreprocessorInputCache =
+      CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
   @AddToRuleKey
   private final Tool swiftCompiler;
@@ -103,7 +119,7 @@ class SwiftLibrary
     this.libraries = libraries;
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
     this.outputPath = outputPath;
-    this.headerPath = outputPath.resolve(filterSwiftHeaderName(moduleName) + ".h");
+    this.headerPath = outputPath.resolve(toSwiftHeaderName(moduleName) + ".h");
     this.isCompanionLibrary = isSwiftCompanionLibrary(moduleName);
 
     String escapedModuleName = normalizeSwiftModuleName(moduleName);
@@ -256,5 +272,36 @@ class SwiftLibrary
   @Override
   public Path getPathToOutput() {
     return outputPath;
+  }
+
+  @Override
+  public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+    return FluentIterable.from(getDeps())
+        .filter(CxxPreprocessorDep.class);
+  }
+
+  @Override
+  public Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(
+      CxxPlatform cxxPlatform) {
+    return null;
+  }
+
+  @Override
+  public CxxPreprocessorInput getCxxPreprocessorInput(
+      CxxPlatform cxxPlatform,
+      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
+    return CxxPreprocessorInput.builder()
+        .addIncludes(CxxHeadersDir.of(
+            CxxPreprocessables.IncludeType.LOCAL,
+            new BuildTargetSourcePath(getBuildTarget())))
+        .build();
+  }
+
+  @Override
+  public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+      CxxPlatform cxxPlatform,
+      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
+    return transitiveCxxPreprocessorInputCache.getUnchecked(
+        ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
   }
 }

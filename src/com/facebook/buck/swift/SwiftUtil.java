@@ -16,9 +16,6 @@
 
 package com.facebook.buck.swift;
 
-import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_HEADER_SUFFIX;
-import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_SUFFIX;
-
 public class SwiftUtil {
 
   /** Utility class: do not instantiate. */
@@ -29,19 +26,20 @@ public class SwiftUtil {
     /** Utility class: do not instantiate. */
     private Constants() { }
 
-    public static final String SWIFT_SUFFIX = "~Swift";
+    static final String SWIFT_SUFFIX = "~Swift";
     static final String SWIFT_HEADER_SUFFIX = "-Swift";
+    public static final String SWIFT_EXTENSION = ".swift";
   }
 
   static boolean isSwiftCompanionLibrary(String moduleName) {
-    return moduleName.endsWith(SWIFT_SUFFIX);
+    return moduleName.endsWith(Constants.SWIFT_SUFFIX);
   }
 
-  static String filterSwiftHeaderName(String moduleName) {
+  static String toSwiftHeaderName(String moduleName) {
     if (isSwiftCompanionLibrary(moduleName)) {
-      moduleName = moduleName.substring(0, moduleName.length() - SWIFT_SUFFIX.length());
+      moduleName = moduleName.substring(0, moduleName.length() - Constants.SWIFT_SUFFIX.length());
     }
-    return moduleName + SWIFT_HEADER_SUFFIX;
+    return moduleName + Constants.SWIFT_HEADER_SUFFIX;
   }
 
   static String normalizeSwiftModuleName(String moduleName) {

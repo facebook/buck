@@ -16,8 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_SUFFIX;
-
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -69,7 +67,6 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 import java.nio.file.Path;
@@ -388,19 +385,6 @@ public class CxxDescriptionEnhancer {
     for (HeaderSymlinkTree headerSymlinkTree : headerSymlinkTrees) {
       allIncludes.add(
           CxxSymlinkTreeHeaders.from(headerSymlinkTree, CxxPreprocessables.IncludeType.LOCAL));
-    }
-    BuildRule companionSwiftBuildRule = Iterables.getFirst(Iterables.filter(
-        params.getDeclaredDeps().get(), new Predicate<BuildRule>() {
-          @Override
-          public boolean apply(BuildRule input) {
-            return input.getFullyQualifiedName().endsWith(SWIFT_SUFFIX);
-          }
-        }), null);
-    if (companionSwiftBuildRule != null) {
-      CxxHeadersDir generatedHeaderDir = CxxHeadersDir.of(
-          CxxPreprocessables.IncludeType.LOCAL,
-          new BuildTargetSourcePath(companionSwiftBuildRule.getBuildTarget()));
-      allIncludes.add(generatedHeaderDir);
     }
 
     CxxPreprocessorInput localPreprocessorInput =
