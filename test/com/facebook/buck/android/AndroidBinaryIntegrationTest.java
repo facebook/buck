@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -361,14 +362,42 @@ public class AndroidBinaryIntegrationTest {
     SymbolGetter syms = new SymbolGetter(tmpDir, platform.getObjdump(), pathResolver);
     SymbolsAndDtNeeded info;
 
+    workspace.replaceFileContents(
+        ".buckconfig",
+        "#cpu_abis",
+        "cpu_abis = x86");
     Path apkPath = workspace.buildAndReturnOutput("//apps/sample:app_with_merged_libs");
+
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1a.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1b.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib2e.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib2f.so");
+
+    info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1.so");
+    assertThat(info.symbols.global, Matchers.hasItem("A"));
+    assertThat(info.symbols.global, Matchers.hasItem("B"));
+    assertThat(info.dtNeeded, Matchers.hasItem("libnative_merge_C.so"));
+    assertThat(info.dtNeeded, Matchers.hasItem("libnative_merge_D.so"));
+    assertThat(info.dtNeeded, not(Matchers.hasItem("libnative_merge_B.so")));
 
     info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/libnative_merge_C.so");
     assertThat(info.symbols.global, Matchers.hasItem("C"));
+    assertThat(info.symbols.global, Matchers.hasItem("static_func_C"));
     assertThat(info.dtNeeded, Matchers.hasItem("libnative_merge_D.so"));
+    assertThat(info.dtNeeded, Matchers.hasItem("libprebuilt_for_C.so"));
 
     info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/libnative_merge_D.so");
     assertThat(info.symbols.global, Matchers.hasItem("D"));
+    assertThat(info.dtNeeded, Matchers.hasItem("lib2.so"));
+    assertThat(info.dtNeeded, not(Matchers.hasItem("libnative_merge_E.so")));
+    assertThat(info.dtNeeded, not(Matchers.hasItem("libnative_merge_F.so")));
+
+    info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib2.so");
+    assertThat(info.symbols.global, Matchers.hasItem("E"));
+    assertThat(info.symbols.global, Matchers.hasItem("F"));
+    assertThat(info.symbols.global, Matchers.hasItem("static_func_F"));
+    assertThat(info.dtNeeded, Matchers.hasItem("libprebuilt_for_F.so"));
   }
 
   @Test

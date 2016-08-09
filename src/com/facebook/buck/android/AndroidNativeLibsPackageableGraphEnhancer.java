@@ -117,7 +117,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     ImmutableList<NativeLinkable> nativeLinkablesAssets =
         packageableCollection.getNativeLinkablesAssets();
 
-    if (nativeLibraryMergeMap.isPresent()) {
+    if (nativeLibraryMergeMap.isPresent() && !nativeLibraryMergeMap.get().isEmpty()) {
       NativeLibraryMergeEnhancementResult enhancement = NativeLibraryMergeEnhancer.enhance(
           cxxBuckConfig,
           ruleResolver,

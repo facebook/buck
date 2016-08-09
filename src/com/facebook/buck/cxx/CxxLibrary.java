@@ -367,4 +367,7 @@ public class CxxLibrary
         .build();
   }
 
+  public Iterable<Arg> getExportedLinkerFlags(CxxPlatform cxxPlatform) {
+    return exportedLinkerFlags.apply(cxxPlatform);
+  }
 }

@@ -461,4 +461,7 @@ public class PrebuiltCxxLibrary
         });
   }
 
+  public ImmutableList<String> getExportedLinkerFlags(CxxPlatform cxxPlatform) {
+    return exportedLinkerFlags.apply(cxxPlatform);
+  }
 }
