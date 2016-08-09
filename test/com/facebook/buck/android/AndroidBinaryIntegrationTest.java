@@ -56,6 +56,7 @@ import com.google.common.hash.Hashing;
 import org.apache.commons.compress.archivers.zip.ZipUtil;
 import org.hamcrest.Matchers;
 import org.hamcrest.collection.IsIn;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -369,6 +370,33 @@ public class AndroidBinaryIntegrationTest {
     info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/libnative_merge_D.so");
     assertThat(info.symbols.global, Matchers.hasItem("D"));
   }
+
+  @Test
+  public void testNativeLibraryMergeErrors() throws IOException, InterruptedException {
+    try {
+      workspace.runBuckBuild("//apps/sample:app_with_merge_lib_into_two_targets");
+      Assert.fail("No exception from trying to merge lib into two targets.");
+    } catch (RuntimeException e) {
+      assertThat(e.getMessage(), Matchers.containsString("into both"));
+    }
+
+    try {
+      workspace.runBuckBuild("//apps/sample:app_with_cross_asset_merged_libs");
+      Assert.fail("No exception from trying to merge between asset and non-asset.");
+    } catch (RuntimeException e) {
+      assertThat(e.getMessage(), Matchers.containsString("contains both asset and non-asset"));
+    }
+
+    // An older version of the code made this illegal.
+    // Keep the test around in case we want to restore this behavior.
+//    try {
+//      workspace.runBuckBuild("//apps/sample:app_with_merge_into_existing_lib");
+//      Assert.fail("No exception from trying to merge into existing name.");
+//    } catch (RuntimeException e) {
+//      assertThat(e.getMessage(), Matchers.containsString("already a library name"));
+//    }
+  }
+
 
   @Test
   public void testNativeRelinker() throws IOException, InterruptedException {
