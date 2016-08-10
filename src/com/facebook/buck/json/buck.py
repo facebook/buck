@@ -582,7 +582,8 @@ class BuildFileProcessor(object):
             func_with_env = LazyBuildEnvPartial(func)
             lazy_functions[func.__name__] = func_with_env
         self._functions = lazy_functions
-        self._safe_os_module = self._create_safe_os_module()
+        self._safe_modules_config = self._create_safe_modules_config()
+        self._safe_modules = {}
         self._custom_import = self._create_custom_import()
 
     def _wrap_env_var_read(self, read, real):
@@ -802,77 +803,104 @@ class BuildFileProcessor(object):
 
         return func
 
-    def _install_whitelisted_parts(self, mod, safe_mod, mod_name, whitelist):
+    def _install_whitelisted_parts(self, mod, safe_mod, whitelist):
         """
         Copy whitelisted globals from a module to its safe version.
         Functions not on the whitelist are blocked to show a more meaningful error.
         """
 
+        mod_name = safe_mod.__name__
         whitelist_set = set(whitelist)
         for name in mod.__all__:
             if name in whitelist_set:
-                safe_mod.__dict__[name] = mod.__dict__[name]
+                # Check if a safe version is defined in case it's a submodule.
+                # If it's not defined the original submodule will be copied.
+                submodule_name = mod_name + '.' + name
+                if submodule_name in self._safe_modules_config:
+                    # Get a safe version of the submodule
+                    safe_mod.__dict__[name] = self._get_safe_module(submodule_name)
+                else:
+                    safe_mod.__dict__[name] = mod.__dict__[name]
             elif callable(mod.__dict__[name]):
                 safe_mod.__dict__[name] = self._block_unsafe_function(mod_name, name)
 
-    def _create_safe_os_module(self):
+    def _create_safe_modules_config(self):
         """
-        Returns a safe version of the 'os' module.
+        Safe modules configurations. Stores whitelisted parts for specified module.
+        Supports submodules, e.g. for a safe version of module 'foo' with submodule 'bar'
+        specify {'foo': ['bar', 'fun1', 'fun2'], 'foo.bar': ['fun3', fun4']}
+        """
+        config = {
+            'os': ['environ', 'getenv', 'path', 'sep', 'pathsep', 'linesep'],
+            'os.path': ['basename', 'commonprefix', 'dirname', 'isabs', 'join', 'normcase',
+                        'relpath', 'split', 'splitdrive', 'splitext', 'sep', 'pathsep'],
+            'pipes': ['quote'],
+        }
+        return config
+
+    def _get_safe_module(self, name):
+        """
+        Returns a safe version of the module.
         """
 
-        # Build a new module for the safe version of 'os'.
-        safe_os = imp.new_module('os')
-        safe_os.__dict__['path'] = imp.new_module('path')
+        assert name in self._safe_modules_config, (
+            "Safe version of module %s is not configured." % name)
 
-        # Safe to use parts of 'os'
-        os_whitelist = ['environ', 'getenv']
+        # Return the safe version of the module if already created
+        if name in self._safe_modules:
+            return self._safe_modules[name]
 
-        # Safe to use functions in 'os.path'
-        os_path_whitelist = ['basename', 'commonprefix', 'dirname', 'isabs', 'join',
-                             'normcase', 'relpath', 'split', 'splitdrive', 'splitext']
+        # Build a new module for the safe version, non-empty 'fromlist' prevents
+        # returning top-level package (e.g. 'os' would be returned for 'os.path' without it)
+        mod = ORIGINAL_IMPORT(name, fromlist=[''])
+        safe_mod = imp.new_module(name)
 
-        # Install whitelisted parts of 'os' and 'os.path' modules, block the rest to produce errors
+        # Install whitelisted parts of the module, block the rest to produce errors
         # informing about the safe version.
-        self._install_whitelisted_parts(os, safe_os, 'os', os_whitelist)
-        self._install_whitelisted_parts(os.path, safe_os.path, 'os.path', os_path_whitelist)
+        self._install_whitelisted_parts(mod, safe_mod, self._safe_modules_config[name])
 
-        return safe_os
+        # Store the safe version of the module
+        self._safe_modules[name] = safe_mod
+
+        return safe_mod
 
     def _create_custom_import(self):
         """
-        Returns customised '__import__' function that blocks importing modules that are not
-        whitelisted or don't have safe versions.
+        Returns customised '__import__' function.
         """
 
         import_whitelist = set(['copy', 're', 'functools', 'itertools', 'json', 'hashlib',
                                 'types', 'string', 'ast', '__future__', 'collections',
-                                'operator', 'fnmatch'])
+                                'operator', 'fnmatch', 'copy_reg'])
 
         def _import(name, globals=None, locals=None, fromlist=(), level=-1):
-            # return safe version of 'os'
-            if name in ['os', 'os.path']:
-                # Return only a safe 'path' module for 'os.path' if 'fromlist' is non-empty,
-                # which is how '__import__' works. That allows 'from os.path import join' to work.
-                if name == 'os.path' and fromlist:
-                    return self._safe_os_module.path
+            """
+            Custom '__import__' function.
+            Returns safe version of a module if configured in '_safe_modules_config'.
+            Returns standard module if the module is whitelisted.
+            Blocks importing other modules.
+            """
 
-                return self._safe_os_module
+            if not fromlist:
+                # Return the top-level package if 'fromlist' is empty (e.g. 'os' for 'os.path'),
+                # which is how '__import__' works.
+                name = name.split('.')[0]
+
+            # Return safe version of the module if possible
+            if name in self._safe_modules_config:
+                return self._get_safe_module(name)
 
             if name in import_whitelist:
-                return ORIGINAL_IMPORT(name, globals, locals, fromlist, level)
+                # Importing a module may cause more '__import__' calls if the module uses other
+                # modules. Such calls should not be blocked if the top-level import was allowed.
+                with self._allow_unsafe_import():
+                    return ORIGINAL_IMPORT(name, globals, locals, fromlist, level)
 
             raise ImportError(
                 'Importing module %s is forbidden. ' % name +
                 'If you really need to import this module read about ' +
                 'allow_unsafe_import() function'
             )
-            # TODO(mlowicki): this looks like a good place for implementing things like global
-            # whitelist or wrapping imported modules.
-            # Importing a module may cause more '__import__' calls if the module uses other
-            # modules. Such calls should not be blocked if the top-level import was allowed.
-            # Restoring original '__import__' may be used to avoid that:
-            # with allow_unsafe_import(build_env=build_env):
-            #     return ORIGINAL_IMPORT(name, globals, locals, fromlist, level)
 
         return _import
 
