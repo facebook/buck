@@ -122,33 +122,6 @@ class DebugWipeFinder(object):
         return DebugWipeLoader(fullname, pypath)
 
 
-class CoverageToggleFinder(object):
-    """
-    A crude way to avoid the overhead of imports not monitored for coverage.
-    May clobber global statement coverage
-    """
-    def __init__(self, matcher, cov):
-        self.matcher = matcher
-        self.cov = cov
-
-    def find_module(self, fullname, path=None):
-        _, _, basename = fullname.rpartition('.')
-        try:
-            fd, pypath, (_, _, kind) = imp.find_module(basename, path)
-        except Exception:
-            return None
-
-        if hasattr(fd, 'close'):
-            fd.close()
-        if kind != imp.PY_SOURCE:
-            return None
-        if self.matcher.include(pypath):
-            self.cov.start()
-        else:
-            self.cov.stop()
-        return None
-
-
 def optimize_for_coverage(cov, include_patterns, omit_patterns):
     """
     We get better performance if we zero out debug information for files which
@@ -157,8 +130,6 @@ def optimize_for_coverage(cov, include_patterns, omit_patterns):
     matcher = PathMatcher(include_patterns, omit_patterns)
     if SourceFileLoader and platform.python_implementation() == 'CPython':
         sys.meta_path.insert(0, DebugWipeFinder(matcher))
-    else:
-        sys.meta_path.append(CoverageToggleFinder(matcher, cov))
 
 
 class TeeStream(object):
