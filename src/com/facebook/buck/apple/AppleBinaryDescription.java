@@ -46,7 +46,9 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -396,13 +398,36 @@ public class AppleBinaryDescription implements
       BuildRuleResolver resolver,
       A args,
       Class<U> metadataClass) throws NoSuchBuildTargetException {
-    CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
-    AppleDescriptions.populateCxxBinaryDescriptionArg(
-        new SourcePathResolver(resolver),
-        delegateArg,
-        args,
-        buildTarget);
-    return delegate.createMetadata(buildTarget, resolver, delegateArg, metadataClass);
+    if (!metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
+      CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
+      AppleDescriptions.populateCxxBinaryDescriptionArg(
+          new SourcePathResolver(resolver),
+          delegateArg,
+          args,
+          buildTarget);
+      return delegate.createMetadata(buildTarget, resolver, delegateArg, metadataClass);
+    }
+
+    Optional<Flavor> cxxPlatformFlavor = delegate.getCxxPlatforms().getFlavor(buildTarget);
+    Preconditions.checkState(
+        cxxPlatformFlavor.isPresent(),
+        "Could not find cxx platform in:\n%s",
+        Joiner.on(", ").join(buildTarget.getFlavors()));
+    ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
+    for (BuildTarget dep : args.deps.get()) {
+      Optional<FrameworkDependencies> frameworks =
+          resolver.requireMetadata(
+              BuildTarget.builder(dep)
+                  .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                  .addFlavors(cxxPlatformFlavor.get())
+                  .build(),
+              FrameworkDependencies.class);
+      if (frameworks.isPresent()) {
+        sourcePaths.addAll(frameworks.get().getSourcePaths());
+      }
+    }
+
+    return Optional.of(metadataClass.cast(FrameworkDependencies.of(sourcePaths.build())));
   }
 
   @Override

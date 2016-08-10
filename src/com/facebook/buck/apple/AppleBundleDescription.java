@@ -110,6 +110,9 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       if (AppleDebugFormat.FLAVOR_DOMAIN.getFlavors().contains(flavor)) {
         continue;
       }
+      if (AppleDescriptions.INCLUDE_FRAMEWORKS.getFlavors().contains(flavor)) {
+        continue;
+      }
       flavorBuilder.add(flavor);
     }
     return appleBinaryDescription.hasFlavors(flavorBuilder.build());
