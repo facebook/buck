@@ -54,6 +54,7 @@ import com.facebook.buck.apple.AppleToolchain;
 import com.facebook.buck.apple.AppleToolchainDiscovery;
 import com.facebook.buck.apple.CodeSignIdentityStore;
 import com.facebook.buck.apple.CoreDataModelDescription;
+import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.ProvisioningProfileStore;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
@@ -517,6 +518,9 @@ public class KnownBuildRuleTypes {
             provisioningProfileStore,
             appleConfig.getDefaultDebugInfoFormatForLibraries());
     builder.register(appleLibraryDescription);
+    PrebuiltAppleFrameworkDescription appleFrameworkDescription =
+        new PrebuiltAppleFrameworkDescription();
+    builder.register(appleFrameworkDescription);
 
     AppleBinaryDescription appleBinaryDescription =
         new AppleBinaryDescription(

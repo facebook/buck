@@ -1,0 +1,16 @@
+apple_binary(
+    name = 'TestApp',
+    srcs = ['main.m'],
+    deps = ['//prebuilt:BuckTest'],
+    frameworks = ['$SDKROOT/System/Library/Frameworks/Foundation.framework'],
+    visibility = ['PUBLIC'],
+)
+
+apple_bundle(
+    name = 'TestAppBundle',
+    binary = ':TestApp',
+    product_name = 'TestAppBundle',
+    extension = 'app',
+    info_plist = 'Info.plist',
+    deps = [':TestApp'],
+)

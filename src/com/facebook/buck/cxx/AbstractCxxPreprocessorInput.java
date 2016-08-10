@@ -23,6 +23,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
@@ -100,6 +101,17 @@ abstract class AbstractCxxPreprocessorInput {
       builder.addAll(cxxHeaders.getDeps(pathResolver));
     }
     builder.addAll(ruleResolver.getAllRules(getRules()));
+
+    for (FrameworkPath frameworkPath : getFrameworks()) {
+      if (frameworkPath.getSourcePath().isPresent()) {
+        Optional<BuildRule> frameworkRule =
+            pathResolver.getRule(frameworkPath.getSourcePath().get());
+        if (frameworkRule.isPresent()) {
+          builder.add(frameworkRule.get());
+        }
+      }
+    }
+
     return builder.build();
   }
 
