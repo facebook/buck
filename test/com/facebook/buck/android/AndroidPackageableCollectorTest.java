@@ -132,12 +132,13 @@ public class AndroidPackageableCollectorTest {
     // Verify that the correct transitive dependencies are found.
     AndroidPackageableCollection packageableCollection =
         binaryRule.getAndroidPackageableCollection();
+
+    ;
     assertEquals(
         "Because guava was passed to no_dx, it should not be in the classpathEntriesToDex list",
         ImmutableSet.of(
-            BuildTargets.getGenPath(projectFilesystem, jsr305Target, "%s.jar"),
-            BuildTargets.getGenPath(projectFilesystem, libraryRuleTarget, "lib__%s__output/")
-                .resolve(libraryRuleTarget.getShortNameAndFlavorPostfix() + ".jar")),
+            ruleResolver.getRule(jsr305Target).getPathToOutput(),
+            ruleResolver.getRule(libraryRuleTarget).getPathToOutput()),
         FluentIterable.from(packageableCollection.getClasspathEntriesToDex())
             .transform(pathResolver.deprecatedPathFunction())
             .toSet());
@@ -150,7 +151,7 @@ public class AndroidPackageableCollectorTest {
             "longer. Specifically, this was observed to take over one second longer to load " +
             "the resource in fb4a. Because the resource was loaded on startup, this introduced a " +
             "substantial regression in the startup time for the fb4a app.",
-        ImmutableSet.of(BuildTargets.getGenPath(projectFilesystem, jsr305Target, "%s.jar")),
+        ImmutableSet.of(ruleResolver.getRule(jsr305Target).getPathToOutput()),
         FluentIterable.from(packageableCollection.getPathsToThirdPartyJars())
             .transform(pathResolver.deprecatedPathFunction())
             .toSet());
