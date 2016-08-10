@@ -16,6 +16,10 @@
 
 package com.facebook.buck.util.network.offline;
 
+import com.facebook.buck.counters.Counter;
+import com.facebook.buck.counters.CounterRegistry;
+import com.facebook.buck.counters.IntegerCounter;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
@@ -25,6 +29,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -67,6 +73,7 @@ public class OfflineScribeLogger extends ScribeLogger {
   // Timeout used when submitting data read from offline logs.
   private static final int LOG_TIMEOUT = 10;
   private static final TimeUnit LOG_TIMEOUT_UNIT = TimeUnit.SECONDS;
+  private static final String COUNTERS_CATEGORY = "buck_offline_logs_stats";
 
   private final ScribeLogger scribeLogger;
   private final ImmutableList<String> blacklistCategories;
@@ -83,6 +90,9 @@ public class OfflineScribeLogger extends ScribeLogger {
   private final Path logDir;
   private final Path newLogPath;
   private final AtomicBoolean startedSendingStored;
+  private final IntegerCounter totalLinesResent;
+  private final IntegerCounter totalBytesResent;
+  private final IntegerCounter logfilesResent;
 
   public OfflineScribeLogger(
       ScribeLogger scribeLogger,
@@ -90,12 +100,14 @@ public class OfflineScribeLogger extends ScribeLogger {
       int maxScribeOfflineLogsKB,
       ProjectFilesystem projectFilesystem,
       ObjectMapper objectMapper,
+      BuckEventBus buckEventBus,
       BuildId buildId) {
     Preconditions.checkNotNull(scribeLogger);
     Preconditions.checkNotNull(blacklistCategories);
     Preconditions.checkArgument(maxScribeOfflineLogsKB > 0);
     Preconditions.checkNotNull(projectFilesystem);
     Preconditions.checkNotNull(objectMapper);
+    Preconditions.checkNotNull(buckEventBus);
     Preconditions.checkNotNull(buildId);
 
     this.scribeLogger = scribeLogger;
@@ -114,6 +126,20 @@ public class OfflineScribeLogger extends ScribeLogger {
         projectFilesystem.resolve(logDir.resolve(LOGFILE_PREFIX + buildId + LOGFILE_SUFFIX));
 
     this.startedSendingStored = new AtomicBoolean(false);
+    this.totalLinesResent = new IntegerCounter(
+        COUNTERS_CATEGORY,
+        "total_lines_resent",
+        ImmutableMap.<String, String>of());
+    this.totalBytesResent = new IntegerCounter(
+        COUNTERS_CATEGORY,
+        "total_bytes_resent",
+        ImmutableMap.<String, String>of());
+    this.logfilesResent = new IntegerCounter(
+        COUNTERS_CATEGORY,
+        "logfiles_resent",
+        ImmutableMap.<String, String>of());
+    buckEventBus.post(new CounterRegistry.AsyncCounterRegistrationEvent(
+        ImmutableSet.<Counter>of(totalLinesResent, totalBytesResent, logfilesResent)));
   }
 
   @Override
@@ -135,7 +161,7 @@ public class OfflineScribeLogger extends ScribeLogger {
             startedStoring = true;
 
             if (!blacklistCategories.contains(category)) {
-              LOG.verbose("Storing Scribe lines from category: %s.", category);
+              LOG.verbose(t, "Storing Scribe lines from category: %s.", category);
 
               // Get data to store.
               byte[] scribeData;
@@ -260,8 +286,9 @@ public class OfflineScribeLogger extends ScribeLogger {
 
       // Get iterator.
       Iterator<ScribeData> it = null;
+      File logFile = null;
       try {
-        File logFile = logPath.toFile();
+        logFile = logPath.toFile();
         totalBytesToSend += logFile.length();
         if (totalBytesToSend > maxScribeOfflineLogsBytes) {
           LOG.warn("Total size of offline logs exceeds the limit. Ceasing to send them to Scribe.");
@@ -274,10 +301,12 @@ public class OfflineScribeLogger extends ScribeLogger {
             new JsonFactory().createParser(logFileStream),
             ScribeData.class);
       } catch (Exception e) {
-        LOG.error(e, "Failed to initiate reading from: %s.", logPath);
+        LOG.error(e, "Failed to initiate reading from: %s. File may be corrupted.", logPath);
+        continue;
       }
 
       // Read and submit.
+      int scribeLinesInFile = 0;
       List<ListenableFuture<Void>> logFutures = new LinkedList<>();
       Map<String, CategoryData> logReadData = new HashMap<>();
       try {
@@ -303,6 +332,7 @@ public class OfflineScribeLogger extends ScribeLogger {
           // Add new data to the cluster for the category.
           for (String line : newData.getLines()) {
             categoryData.addLine(line);
+            scribeLinesInFile++;
           }
         }
 
@@ -342,6 +372,9 @@ public class OfflineScribeLogger extends ScribeLogger {
       // Confirm data was successfully sent and remove logfile.
       try {
         Futures.allAsList(logFutures).get(LOG_TIMEOUT, LOG_TIMEOUT_UNIT);
+        totalBytesResent.inc(logFile.length());
+        totalLinesResent.inc(scribeLinesInFile);
+        logfilesResent.inc();
         try {
           filesystem.deleteFileAtPathIfExists(logPath);
         } catch (Exception e) {
