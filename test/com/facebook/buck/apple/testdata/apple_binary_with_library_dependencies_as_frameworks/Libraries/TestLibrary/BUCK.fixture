@@ -3,6 +3,6 @@ apple_library(
   info_plist = 'Info.plist',
   exported_headers = ['TestClass.h'],
   srcs = ['TestClass.m'],
-  linker_flags = ['-lobjc'],
   deps = ['//Libraries/TestLibraryDep:TestLibraryDep#framework'],
+  visibility = ['PUBLIC']
 )

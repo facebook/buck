@@ -22,8 +22,13 @@ import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.facebook.buck.cxx.BuildRuleWithBinary;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.HeaderSymlinkTree;
 import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.NativeTestable;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.file.WriteFile;
@@ -36,14 +41,19 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -73,6 +83,7 @@ import com.google.common.util.concurrent.Futures;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -83,10 +94,11 @@ import java.util.Set;
  */
 public class AppleBundle
     extends AbstractBuildRule
-    implements NativeTestable, BuildRuleWithBinary, HasRuntimeDeps {
+    implements CxxPreprocessorDep, NativeLinkable, NativeTestable, BuildRuleWithBinary, HasRuntimeDeps {
 
   private static final Logger LOG = Logger.get(AppleBundle.class);
   private static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
+  private final BuildRuleResolver ruleResolver;
 
   @AddToRuleKey
   private final String extension;
@@ -102,6 +114,9 @@ public class AppleBundle
 
   @AddToRuleKey
   private final Optional<BuildRule> binary;
+
+  @AddToRuleKey
+  private final Optional<HeaderSymlinkTree> headers;
 
   @AddToRuleKey
   private final Optional<AppleDsym> appleDsym;
@@ -166,11 +181,13 @@ public class AppleBundle
   AppleBundle(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      BuildRuleResolver ruleResolver,
       Either<AppleBundleExtension, String> extension,
       Optional<String> productName,
       SourcePath infoPlist,
       Map<String, String> infoPlistSubstitutions,
       Optional<BuildRule> binary,
+      Optional<HeaderSymlinkTree> headers,
       Optional<AppleDsym> appleDsym,
       AppleBundleDestinations destinations,
       AppleBundleResources resources,
@@ -182,6 +199,7 @@ public class AppleBundle
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore) {
     super(params, resolver);
+    this.ruleResolver = ruleResolver;
     this.extension = extension.isLeft() ?
         extension.getLeft().toFileExtension() :
         extension.getRight();
@@ -189,6 +207,7 @@ public class AppleBundle
     this.infoPlist = infoPlist;
     this.infoPlistSubstitutions = ImmutableMap.copyOf(infoPlistSubstitutions);
     this.binary = binary;
+    this.headers = headers;
     this.appleDsym = appleDsym;
     this.destinations = destinations;
     this.resources = resources;
@@ -289,6 +308,12 @@ public class AppleBundle
             .contains(AppleBinaryDescription.LEGACY_WATCH_FLAVOR);
   }
 
+  private boolean isFrameworkBundle() {
+    // TODO: if binary is compiled with framework flavor check here.
+    return extension.equals(AppleBundleExtension.FRAMEWORK.toFileExtension()) &&
+        binary.isPresent();
+  }
+
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
@@ -355,6 +380,11 @@ public class AppleBundle
       appendCopyDsymStep(stepsBuilder, buildableContext);
     }
 
+    if (isFrameworkBundle()) {
+      appendCopyHeadersStep(stepsBuilder);
+    }
+
+    Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
     if (
         !Iterables.isEmpty(
             Iterables.concat(
@@ -518,6 +548,27 @@ public class AppleBundle
     buildableContext.recordArtifact(getPathToOutput());
 
     return stepsBuilder.build();
+  }
+
+  private void appendCopyHeadersStep(ImmutableList.Builder<Step> stepsBuilder) {
+    Preconditions.checkArgument(isFrameworkBundle());
+    Preconditions.checkArgument(headers.isPresent());
+
+    Path headersFolder = bundleRoot.resolve(this.destinations.getHeadersPath());
+    stepsBuilder.add(
+        new MakeCleanDirectoryStep(
+            getProjectFilesystem(),
+            headersFolder));
+
+    for (SourcePath header : headers.get().getLinks().values()) {
+      Path headerPath = getResolver().getAbsolutePath(header);
+      //TODO: this doesn't work if the framework has subfolders for headers
+      stepsBuilder.add(
+          CopyStep.forFile(
+              getProjectFilesystem(),
+              headerPath,
+              headersFolder.resolve(headerPath.getFileName())));
+    }
   }
 
   private void appendCopyBinarySteps(ImmutableList.Builder<Step> stepsBuilder) {
@@ -853,6 +904,16 @@ public class AppleBundle
   }
 
   @Override
+  public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+    return ImmutableSet.of();
+  }
+
+  @Override
+  public Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(CxxPlatform cxxPlatform) {
+    return Optional.absent();
+  }
+
+  @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
@@ -863,8 +924,24 @@ public class AppleBundle
             cxxPlatform,
             headerVisibility);
       }
+      if (isFrameworkBundle() && headerVisibility == HeaderVisibility.PUBLIC) {
+        CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
+        ruleResolver.requireRule(this.getBuildTarget());
+        builder.addFrameworks(
+            FrameworkPath.ofSourcePath(new BuildTargetSourcePath(this.getBuildTarget()))
+        );
+        return builder.build();
+      }
     }
     return CxxPreprocessorInput.EMPTY;
+  }
+
+  @Override
+  public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+      CxxPlatform cxxPlatform,
+      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
+    // We're a bundle, no transitive stuff goes trough
+    return ImmutableMap.of(getBuildTarget(), getCxxPreprocessorInput(cxxPlatform, headerVisibility));
   }
 
   private boolean adHocCodeSignIsSufficient() {
@@ -894,5 +971,47 @@ public class AppleBundle
       }
     }
     return ImmutableSortedSet.of();
+  }
+
+
+  @Override
+  public Iterable<? extends NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+    return ImmutableSet.of();
+  }
+
+  @Override
+  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+    return ImmutableSet.of();
+  }
+
+  @Override
+  public NativeLinkableInput getNativeLinkableInput(
+      CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+    ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
+    linkerArgsBuilder.addAll(StringArg.from(
+        "-rpath",
+        "@loader_path/Frameworks",
+        "-rpath",
+        "@executable_path/Frameworks"
+    ));
+
+    ImmutableSet.Builder<FrameworkPath> frameworkPaths = ImmutableSet.builder();
+    frameworkPaths.add(FrameworkPath.ofSourcePath(new BuildTargetSourcePath(this.getBuildTarget())));
+
+    return NativeLinkableInput.of(
+        linkerArgsBuilder.build(),
+        frameworkPaths.build(),
+        Collections.<FrameworkPath>emptySet()
+    );
+  }
+
+  @Override
+  public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+    return Linkage.SHARED;
+  }
+
+  @Override
+  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+    return ImmutableMap.of();
   }
 }

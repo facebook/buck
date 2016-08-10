@@ -1,0 +1,14 @@
+apple_binary(
+  name = 'TestApp',
+  srcs = ['main.m'],
+  deps = ['//libraries/TestLibrary:TestLibrary'],
+  frameworks = ['$SDKROOT/System/Library/Frameworks/Foundation.framework'],
+)
+
+apple_bundle(
+  name = 'TestAppBundle',
+  info_plist = 'Info.plist',
+  binary = ':TestApp',
+  extension = 'app',
+  deps = [':TestApp'],
+)

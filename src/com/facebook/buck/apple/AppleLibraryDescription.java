@@ -208,6 +208,12 @@ public class AppleLibraryDescription implements
           params.getBuildTarget().withAppendedFlavors(debugFormat.getFlavor()));
     }
 
+    if (!args.soname.isPresent()) {
+      String productName = AppleBundle.getBinaryName(params.getBuildTarget(), args.productName);
+      args.soname = Optional.of(
+          String.format("%s.framework/%s", productName, productName));
+    }
+    args.soname = args.soname.or(args.productName);
     return AppleDescriptions.createAppleBundle(
         delegate.getCxxPlatforms(),
         defaultCxxPlatform,
@@ -219,7 +225,7 @@ public class AppleLibraryDescription implements
         provisioningProfileStore,
         params.getBuildTarget(),
         Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK),
-        Optional.<String>absent(),
+        args.productName,
         args.infoPlist.get(),
         args.infoPlistSubstitutions,
         args.deps.get(),
@@ -400,8 +406,7 @@ public class AppleLibraryDescription implements
       BuildRuleResolver resolver,
       A args,
       Class<U> metadataClass) throws NoSuchBuildTargetException {
-    if (!metadataClass.isAssignableFrom(FrameworkDependencies.class) ||
-        !buildTarget.getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
+    if (!metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
       CxxLibraryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
       AppleDescriptions.populateCxxLibraryDescriptionArg(
           new SourcePathResolver(resolver),
@@ -420,7 +425,8 @@ public class AppleLibraryDescription implements
       Optional<FrameworkDependencies> frameworks =
           resolver.requireMetadata(
               BuildTarget.builder(dep)
-                  .addFlavors(AppleDescriptions.FRAMEWORK_FLAVOR)
+                  // Do not want to autoconvert everything to framework
+                  //.addFlavors(AppleDescriptions.FRAMEWORK_FLAVOR)
                   .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                   .addFlavors(cxxPlatformFlavor.get())
                   .build(),
@@ -431,8 +437,14 @@ public class AppleLibraryDescription implements
     }
     // Not all parts of Buck use require yet, so require the rule here so it's available in the
     // resolver for the parts that don't.
-    resolver.requireRule(buildTarget);
-    sourcePaths.add(new BuildTargetSourcePath(buildTarget));
+
+    // Previously also had, but I need framework info to pass through non frameworks
+    // only add self if a framework
+    if (buildTarget.getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
+      resolver.requireRule(buildTarget);
+      sourcePaths.add(new BuildTargetSourcePath(buildTarget));
+
+    }
     return Optional.of(metadataClass.cast(FrameworkDependencies.of(sourcePaths.build())));
   }
 
@@ -473,6 +485,7 @@ public class AppleLibraryDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends AppleNativeTargetDescriptionArg {
+    public Optional<String> productName;
     public Optional<SourcePath> infoPlist;
     public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
   }

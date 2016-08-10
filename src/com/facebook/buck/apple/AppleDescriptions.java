@@ -25,6 +25,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
+import com.facebook.buck.cxx.HeaderSymlinkTree;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.io.MorePaths;
@@ -545,7 +546,8 @@ public class AppleDescriptions {
         Optional<FrameworkDependencies> frameworkDependencies =
             resolver.requireMetadata(
                 BuildTarget.builder(dep)
-                    .addFlavors(FRAMEWORK_FLAVOR)
+                    //this seems wrong
+                    //.addFlavors(FRAMEWORK_FLAVOR)
                     .addFlavors(NO_INCLUDE_FRAMEWORKS_FLAVOR)
                     .addFlavors(appleCxxPlatform.getCxxPlatform().getFlavor())
                     .build(),
@@ -641,14 +643,28 @@ public class AppleDescriptions {
         params.getDeps(),
         destinations);
 
+    Optional<HeaderSymlinkTree> headers = Optional.absent();
+    BuildRule headersRule =
+        resolver.requireRule(
+            BuildTarget.builder(flavoredBinaryRule.getBuildTarget().getUnflavoredBuildTarget())
+                .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
+                .addFlavors(appleCxxPlatform.getCxxPlatform().getFlavor())
+                .build());
+
+    if (headersRule instanceof HeaderSymlinkTree) {
+      headers = Optional.of((HeaderSymlinkTree) headersRule);
+    }
+
     return new AppleBundle(
         bundleParamsWithFlavoredBinaryDep,
         sourcePathResolver,
+        resolver,
         extension,
         productName,
         infoPlist,
         infoPlistSubstitutions.get(),
         Optional.of(getBinaryFromBuildRuleWithBinary(flavoredBinaryRule)),
+        headers,
         appleDsym,
         destinations,
         collectedResources,

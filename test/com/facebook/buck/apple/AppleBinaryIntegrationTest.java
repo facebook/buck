@@ -905,6 +905,22 @@ public class AppleBinaryIntegrationTest {
         equalTo("Hello"));
   }
 
+  @Test
+  public void testBinaryWithFrameworks() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_binary_with_library_dependencies_as_frameworks", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//TestApp:TestAppBundle#include-frameworks");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build", target.getFullyQualifiedName());
+    result.assertSuccess();
+
+
+
+  }
+
   private static void assertIsSymbolicLink(
       Path link,
       Path target) throws IOException {
