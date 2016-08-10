@@ -104,6 +104,7 @@ public class DBinaryDescription implements
             cxxBuckConfig,
             /* compilerFlags */ ImmutableList.<String>of(),
             args.srcs,
+            args.linkerFlags.or(ImmutableList.<String>of()),
             DIncludes.builder()
                 .setLinkTree(new BuildTargetSourcePath(sourceTree.getBuildTarget()))
                 .addAllSources(args.srcs.getPaths())
@@ -140,6 +141,7 @@ public class DBinaryDescription implements
   public static class Arg extends AbstractDescriptionArg {
     public SourceList srcs;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableList<String>> linkerFlags;
   }
 
 }

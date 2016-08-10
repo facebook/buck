@@ -23,3 +23,13 @@
   {/param}
 {/call}
 {/template}
+
+{template .linker_flags_arg}
+{call buck.arg}
+  {param name : 'linker_flags' /}
+  {param desc}
+  The list of flags to be passed to the linker.
+  Each element should be a string specifying a linker flag (e.g. <code>'--as-needed'</code>).
+  {/param}
+{/call}
+{/template}

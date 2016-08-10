@@ -122,6 +122,7 @@ abstract class DDescriptionUtils {
       CxxBuckConfig cxxBuckConfig,
       ImmutableList<String> compilerFlags,
       SourceList sources,
+      ImmutableList<String> linkerFlags,
       DIncludes includes)
       throws NoSuchBuildTargetException {
 
@@ -162,6 +163,7 @@ abstract class DDescriptionUtils {
         ImmutableSet.<BuildTarget>of(),
         NativeLinkableInput.builder()
             .addAllArgs(StringArg.from(dBuckConfig.getLinkerFlags()))
+            .addAllArgs(StringArg.from(linkerFlags))
             .addAllArgs(SourcePathArg.from(sourcePathResolver, sourcePaths))
             .build());
   }

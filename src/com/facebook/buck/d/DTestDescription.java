@@ -109,6 +109,7 @@ public class DTestDescription implements
             cxxBuckConfig,
             ImmutableList.of("-unittest"),
             args.srcs,
+            args.linkerFlags.or(ImmutableList.<String>of()),
             DIncludes.builder()
                 .setLinkTree(new BuildTargetSourcePath(sourceTree.getBuildTarget()))
                 .addAllSources(args.srcs.getPaths())
@@ -141,5 +142,6 @@ public class DTestDescription implements
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
     public Optional<Long> testRuleTimeoutMs;
     public ImmutableSortedSet<BuildTarget> deps;
+    public Optional<ImmutableList<String>> linkerFlags;
   }
 }
