@@ -58,7 +58,6 @@ public class SwiftDescriptions {
       FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms) {
     BuildTarget parentTarget = parentParams.getBuildTarget();
     BuildTarget swiftCompanionTarget = parentTarget.withAppendedFlavors(SWIFT_FLAVOR);
-    BuildRuleParams params = parentParams.copyWithBuildTarget(swiftCompanionTarget);
 
     // check the cache
     Optional<BuildRule> rule = buildRuleResolver.getRuleOptional(swiftCompanionTarget);
@@ -85,13 +84,14 @@ public class SwiftDescriptions {
         cxxPlatformFlavorDomain,
         defaultCxxPlatform,
         platformFlavorsToAppleCxxPlatforms,
-        params.getBuildTarget(),
+        swiftCompanionTarget,
         Optional.<MultiarchFileInfo>absent());
     Optional<Tool> swiftCompiler = appleCxxPlatform.getSwift();
     if (!swiftCompiler.isPresent()) {
       throw new HumanReadableException("Platform %s is missing swift compiler", appleCxxPlatform);
     }
 
+    BuildRuleParams params = parentParams.copyWithBuildTarget(swiftCompanionTarget);
     return Optional.<BuildRule>of(new SwiftLibrary(
         swiftCompiler.get(),
         params,
