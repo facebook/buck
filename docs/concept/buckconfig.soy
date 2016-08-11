@@ -1951,6 +1951,21 @@ your <code>.buckjavaargs</code> file</a>:
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'project' /}
+  {param name: 'enable_build_file_sandboxing' /}
+  {param example_value: 'true' /}
+  {param description}
+    When set to <code>true</code> (the default is <code>false</code>), Buck will put restrictions
+    on importing arbitrary Python modules in {call buck.build_file /}s to make it harder to
+    accidentally violate assumptions about determinism of BUCK files and build rules. It will be
+    possible to import only some whitelisted or sanitized modules, unrestricted import
+    behavior can be restored in a context by using
+    <a href="{ROOT}function/allow_unsafe_import.html"> <code>allow_unsafe_import()</code> </a>
+    function.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'python' /}
   {param description}

@@ -1,0 +1,60 @@
+{namespace buck.allow_unsafe_import}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'allow_unsafe_import()' /}
+    {param prettify: true /}
+    {param description}
+      When build file sandboxing is enabled, allow_unsafe_import() function may be used to
+      create a context that lifts the module importing restrictions.
+    {/param}
+    {param content}
+
+{call buck.function}
+{param status: 'FROZEN' /}
+{param overview}
+When <a href="{ROOT}function/allow_unsafe_import.html">build file sandboxing</a> is
+enabled, <code>allow_unsafe_import()</code> function may be used to create a context that lifts the
+restrictions on module importing.
+
+<h3>Whitelist and safe versions</h3>
+Some modules can be imported in a normal way because they were whitelisted or a safe version was
+configured.
+
+<table summary="Whitelist and safe versions"><tr>
+<td><b>Whitelist</b></td><td>copy, re, functools, itertools, json, hashlib, types, string, ast,
+__future__, collections, operator, fnmatch</td>
+</tr><tr>
+<td><b>Safe versions</b></td><td>os, os.path, pipes</td>
+</tr></table>
+
+
+{/param}
+
+{param args}
+
+{call buck.functionArg}
+  {param desc}
+  No arguments.
+  {/param}
+{/call}
+
+{/param}
+
+{param examples}
+
+Buck has no way to know if the results of uncontrolled file system or network access change,
+and will not reevaluate the build file if that happens.
+{literal}<pre class="prettyprint lang-py">
+with allow_unsafe_import():
+    from os.path import isfile
+    import httplib
+</pre>{/literal}
+
+{/param}
+
+{/call} // buck.function
+    {/param} // content
+  {/call}
+{/template}

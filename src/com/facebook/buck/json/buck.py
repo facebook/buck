@@ -798,7 +798,8 @@ class BuildFileProcessor(object):
             raise AttributeError(
                 'Using function %s is forbidden in the safe version of ' % name +
                 'module %s. If you really need to use this function read about ' % module +
-                'allow_unsafe_import()'
+                'allow_unsafe_import() that is documented at ' +
+                'https://buckbuild.com/function/allow_unsafe_import.html'
             )
 
         return func
@@ -899,7 +900,8 @@ class BuildFileProcessor(object):
             raise ImportError(
                 'Importing module %s is forbidden. ' % name +
                 'If you really need to import this module read about ' +
-                'allow_unsafe_import() function'
+                'allow_unsafe_import() function that is documented at ' +
+                'https://buckbuild.com/function/allow_unsafe_import.html'
             )
 
         return _import
