@@ -16,6 +16,9 @@
 
 package com.facebook.buck.swift;
 
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
+
 public class SwiftUtil {
 
   /** Utility class: do not instantiate. */
@@ -26,6 +29,7 @@ public class SwiftUtil {
     /** Utility class: do not instantiate. */
     private Constants() { }
 
+    static final Flavor SWIFT_FLAVOR = ImmutableFlavor.of("swift");
     static final String SWIFT_SUFFIX = "~Swift";
     static final String SWIFT_HEADER_SUFFIX = "-Swift";
     public static final String SWIFT_EXTENSION = ".swift";

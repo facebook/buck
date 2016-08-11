@@ -17,6 +17,7 @@
 package com.facebook.buck.swift;
 
 import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_EXTENSION;
+import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_FLAVOR;
 
 import com.facebook.buck.apple.AppleCxxPlatform;
 import com.facebook.buck.apple.ApplePlatforms;
@@ -25,7 +26,6 @@ import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -39,6 +39,8 @@ import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.regex.Pattern;
 
 public class SwiftDescriptions {
   /**
@@ -55,12 +57,7 @@ public class SwiftDescriptions {
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms) {
     BuildTarget parentTarget = parentParams.getBuildTarget();
-    CxxPlatform cxxPlatform = cxxPlatformFlavorDomain.getValue(parentTarget)
-        .or(defaultCxxPlatform);
-    // TODO(tho@uber.com) support version in swift flavor.
-    BuildTarget swiftCompanionTarget = parentTarget.withFlavors(
-        cxxPlatform.getFlavor(),
-        Optional.of("Swift").transform(Flavor.TO_FLAVOR).get());
+    BuildTarget swiftCompanionTarget = parentTarget.withAppendedFlavors(SWIFT_FLAVOR);
     BuildRuleParams params = parentParams.copyWithBuildTarget(swiftCompanionTarget);
 
     // check the cache
@@ -105,8 +102,10 @@ public class SwiftDescriptions {
         platformFlavorsToAppleCxxPlatforms,
         BuildTargets.getGenPath(
             params.getProjectFilesystem(),
-            swiftCompanionTarget.withAppendedFlavors(cxxPlatform.getFlavor()), "%s"),
+            swiftCompanionTarget, "%s"),
         swiftCompanionTarget.getShortName(),
-        swiftSrcs));
+        swiftSrcs,
+        Optional.of(true),
+        Optional.<Pattern>absent()));
   }
 }

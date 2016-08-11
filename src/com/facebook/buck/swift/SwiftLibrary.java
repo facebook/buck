@@ -62,6 +62,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -96,6 +97,9 @@ class SwiftLibrary
   @AddToRuleKey
   private final ImmutableSortedSet<SourcePath> srcs;
 
+  private final boolean enableObjcInterop;
+  private final Optional<Pattern> supportedPlatformsRegex;
+
   private final Path headerPath;
   private final Path modulePath;
   private final Path objectPath;
@@ -111,7 +115,9 @@ class SwiftLibrary
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
       Path outputPath,
       String moduleName,
-      Iterable<SourcePath> srcs) {
+      Iterable<SourcePath> srcs,
+      Optional<Boolean> enableObjcInterop,
+      Optional<Pattern> supportedPlatformsRegex) {
     super(params, pathResolver);
     this.swiftCompiler = swiftCompiler;
     this.exportedDeps = exportedDeps;
@@ -119,6 +125,8 @@ class SwiftLibrary
     this.libraries = libraries;
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
     this.outputPath = outputPath;
+    this.enableObjcInterop = enableObjcInterop.or(true);
+    this.supportedPlatformsRegex = supportedPlatformsRegex;
     this.headerPath = outputPath.resolve(toSwiftHeaderName(moduleName) + ".h");
     this.isCompanionLibrary = isSwiftCompanionLibrary(moduleName);
 
@@ -127,6 +135,13 @@ class SwiftLibrary
     this.modulePath = outputPath.resolve(escapedModuleName + ".swiftmodule");
     this.objectPath = outputPath.resolve(escapedModuleName + ".o");
     this.srcs = ImmutableSortedSet.copyOf(srcs);
+  }
+
+  private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
+    return !supportedPlatformsRegex.isPresent() ||
+        supportedPlatformsRegex.get()
+            .matcher(cxxPlatform.getFlavor().toString())
+            .find();
   }
 
   @Override
@@ -141,6 +156,9 @@ class SwiftLibrary
 
   @Override
   public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+    if (!isPlatformSupported(cxxPlatform)) {
+      return ImmutableList.of();
+    }
     return FluentIterable.from(exportedDeps)
         .filter(NativeLinkable.class);
   }
@@ -216,7 +234,7 @@ class SwiftLibrary
     compilerCommand.addAll(swiftCompiler.getCommandPrefix(getResolver()));
     compilerCommand.add(
         "-c",
-        "-enable-objc-interop",
+        enableObjcInterop ? "-enable-objc-interop" : "",
         // TODO(tho@uber.com) Need to find a way to figure out whether a swift library has a main
         // entry or not, for now, we treat companion swift_library as a library (ignore main entry
         // if exists)
@@ -283,7 +301,7 @@ class SwiftLibrary
   @Override
   public Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(
       CxxPlatform cxxPlatform) {
-    return null;
+    return Optional.absent();
   }
 
   @Override

@@ -44,6 +44,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.util.regex.Pattern;
+
 public class SwiftLibraryDescription implements
     Description<SwiftLibraryDescription.Arg>,
     Flavored {
@@ -114,7 +116,9 @@ public class SwiftLibraryDescription implements
             params.getProjectFilesystem(),
             buildTarget.withFlavors(cxxPlatform.getFlavor()), "%s"),
         args.moduleName.or(buildTarget.getShortName()),
-        args.srcs.get());
+        args.srcs.get(),
+        args.enableObjcInterop,
+        args.supportedPlatformsRegex);
   }
 
   @SuppressFieldNotInitialized
@@ -125,6 +129,7 @@ public class SwiftLibraryDescription implements
     public Optional<ImmutableSortedSet<FrameworkPath>> frameworks;
     public Optional<ImmutableSortedSet<FrameworkPath>> libraries;
     public Optional<Boolean> enableObjcInterop;
+    public Optional<Pattern> supportedPlatformsRegex;
   }
 
 }
