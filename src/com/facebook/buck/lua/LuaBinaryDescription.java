@@ -95,6 +95,7 @@ public class LuaBinaryDescription implements
     ImplicitDepsInferringDescription<LuaBinaryDescription.Arg> {
 
   private static final BuildRuleType TYPE = BuildRuleType.of("lua_binary");
+  private static final Flavor BINARY_FLAVOR = ImmutableFlavor.of("binary");
 
   private final LuaConfig luaConfig;
   private final CxxBuckConfig cxxBuckConfig;
@@ -192,6 +193,7 @@ public class LuaBinaryDescription implements
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
+      BuildTarget target,
       Path output,
       StarterType starterType,
       Optional<BuildTarget> nativeStarterLibrary,
@@ -213,6 +215,7 @@ public class LuaBinaryDescription implements
             pathResolver,
             luaConfig,
             cxxPlatform,
+            target,
             output,
             mainModule,
             relativeModulesDir,
@@ -225,6 +228,7 @@ public class LuaBinaryDescription implements
             luaConfig,
             cxxBuckConfig,
             cxxPlatform,
+            target,
             output,
             mainModule,
             nativeStarterLibrary,
@@ -476,6 +480,10 @@ public class LuaBinaryDescription implements
             ruleResolver,
             pathResolver,
             cxxPlatform,
+            baseParams.getBuildTarget().withAppendedFlavors(
+                packageStyle == LuaConfig.PackageStyle.STANDALONE ?
+                    ImmutableFlavor.of("starter") :
+                    BINARY_FLAVOR),
             packageStyle == LuaConfig.PackageStyle.STANDALONE ?
                 output.resolveSibling(output.getFileName() + "-starter") :
                 output,
@@ -694,7 +702,7 @@ public class LuaBinaryDescription implements
         resolver.addToIndex(
             new LuaStandaloneBinary(
                 params.copyWithChanges(
-                    params.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("binary")),
+                    params.getBuildTarget().withAppendedFlavors(BINARY_FLAVOR),
                     Suppliers.ofInstance(
                         ImmutableSortedSet.<BuildRule>naturalOrder()
                             .addAll(pathResolver.filterBuildRuleInputs(starter))

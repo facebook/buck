@@ -57,6 +57,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
   abstract SourcePathResolver getPathResolver();
   abstract LuaConfig getLuaConfig();
   abstract CxxPlatform getCxxPlatform();
+  abstract BuildTarget getTarget();
   abstract Path getOutput();
   abstract String getMainModule();
   abstract Optional<Path> getRelativeModulesDir();
@@ -90,16 +91,12 @@ abstract class AbstractLuaScriptStarter implements Starter {
                 "%s/starter.lua.in"),
             /* executable */ false));
 
-    BuildTarget target =
-        BuildTarget.builder(getBaseParams().getBuildTarget())
-            .addFlavors(ImmutableFlavor.of("pure-starter"))
-            .build();
     final Tool lua = getLuaConfig().getLua(getRuleResolver());
     getRuleResolver().addToIndex(
         WriteStringTemplateRule.from(
             getBaseParams(),
             getPathResolver(),
-            target,
+            getTarget(),
             getOutput(),
             new BuildTargetSourcePath(templateTarget),
             ImmutableMap.of(
@@ -119,7 +116,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
                 Escaper.escapeAsPythonString(getCxxPlatform().getSharedLibraryExtension())),
             /* executable */ true));
 
-    return new BuildTargetSourcePath(target);
+    return new BuildTargetSourcePath(getTarget());
   }
 
 }

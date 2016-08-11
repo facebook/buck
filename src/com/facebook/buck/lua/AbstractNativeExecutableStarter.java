@@ -80,6 +80,7 @@ abstract class AbstractNativeExecutableStarter implements Starter {
   abstract LuaConfig getLuaConfig();
   abstract CxxBuckConfig getCxxBuckConfig();
   abstract CxxPlatform getCxxPlatform();
+  abstract BuildTarget getTarget();
   abstract Path getOutput();
   abstract String getMainModule();
   abstract Optional<BuildTarget> getNativeStarterLibrary();
@@ -179,10 +180,6 @@ abstract class AbstractNativeExecutableStarter implements Starter {
 
   @Override
   public SourcePath build() throws NoSuchBuildTargetException {
-    BuildTarget target =
-        BuildTarget.builder(getBaseParams().getBuildTarget())
-            .addFlavors(ImmutableFlavor.of("native-starter"))
-            .build();
     Iterable<? extends AbstractCxxLibrary> nativeStarterDeps = getNativeStarterDeps();
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
         CxxSourceRuleFactory.requirePreprocessAndCompileRules(
@@ -214,7 +211,7 @@ abstract class AbstractNativeExecutableStarter implements Starter {
             getBaseParams(),
             getRuleResolver(),
             getPathResolver(),
-            target,
+            getTarget(),
             Linker.LinkType.EXECUTABLE,
             Optional.<String>absent(),
             getOutput(),
@@ -236,7 +233,7 @@ abstract class AbstractNativeExecutableStarter implements Starter {
                         ImmutableList.<com.facebook.buck.rules.args.Arg>of())
                 .addAllArgs(SourcePathArg.from(getPathResolver(), objects.values()))
                 .build()));
-    return new BuildTargetSourcePath(target);
+    return new BuildTargetSourcePath(getTarget());
   }
 
 }

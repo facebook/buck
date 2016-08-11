@@ -17,6 +17,7 @@
 package com.facebook.buck.lua;
 
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -251,6 +252,45 @@ public class LuaBinaryIntegrationTest {
     assertThat(
         components.get("modules").keySet(),
         Matchers.equalTo(ImmutableSet.of("simple.lua")));
+  }
+
+  @Test
+  @SuppressWarnings("PMD.UseAssertEqualsInsteadOfAssertTrue")
+  public void switchingBetweenPacakgedFormats() throws Exception {
+
+    // Run an inital build using the standalone packaging style.
+    String standaloneFirst =
+        workspace.getFileContents(
+            workspace.buildAndReturnOutput(
+                "-c", "lua.package_style=standalone",
+                "-c", "lua.packager=//:packager",
+                "//:simple"));
+
+    // Now rebuild with just changing to an in-place packaging style.
+    String inplaceFirst =
+        workspace.getFileContents(
+            workspace.buildAndReturnOutput(
+                "-c", "lua.package_style=inplace",
+                "//:simple"));
+
+    // Now rebuild again, switching back to standalone, and verify the output matches the original
+    // build's output.
+    String standaloneSecond =
+        workspace.getFileContents(
+            workspace.buildAndReturnOutput(
+                "-c", "lua.package_style=standalone",
+                "-c", "lua.packager=//:packager",
+                "//:simple"));
+    assertTrue(standaloneFirst.equals(standaloneSecond));
+
+    // Now rebuild again, switching back to in-place, and verify the output matches the original
+    // build's output.
+    String inplaceSecond =
+        workspace.getFileContents(
+            workspace.buildAndReturnOutput(
+                "-c", "lua.package_style=inplace",
+                "//:simple"));
+    assertTrue(inplaceFirst.equals(inplaceSecond));
   }
 
   private LuaBuckConfig getLuaBuckConfig() throws IOException {
