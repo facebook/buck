@@ -1,3 +1,4 @@
+import errno
 import contextlib
 import os
 import json
@@ -25,7 +26,15 @@ def closable_named_temporary_file(*args, **kwargs):
         with fp:
             yield fp
     finally:
-        os.remove(fp.name)
+        try:
+            os.remove(fp.name)
+        except OSError as e:
+            # It's possible this fails because of a race with another buck
+            # instance has removed the entire resource_path, so ignore
+            # 'file not found' errors.
+            if e.errno != errno.ENOENT:
+                raise
+
 
 
 class BuckPackage(BuckTool):
