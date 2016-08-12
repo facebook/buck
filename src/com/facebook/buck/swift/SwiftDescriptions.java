@@ -24,6 +24,7 @@ import com.facebook.buck.apple.ApplePlatforms;
 import com.facebook.buck.apple.MultiarchFileInfo;
 import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.FlavorDomain;
@@ -35,7 +36,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -69,9 +69,11 @@ public class SwiftDescriptions {
       return Optional.absent();
     }
 
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
     ImmutableSortedSet.Builder<SourcePath> swiftSrcsBuilder = ImmutableSortedSet.naturalOrder();
     for (SourceWithFlags source : args.srcs.get()) {
-      if (MoreStrings.endsWithIgnoreCase(source.getSourcePath().toString(), SWIFT_EXTENSION)) {
+      if (MorePaths.getFileExtension(sourcePathResolver.getAbsolutePath(source.getSourcePath()))
+          .equalsIgnoreCase(SWIFT_EXTENSION)) {
         swiftSrcsBuilder.add(source.getSourcePath());
       }
     }
@@ -95,7 +97,7 @@ public class SwiftDescriptions {
     return Optional.<BuildRule>of(new SwiftLibrary(
         swiftCompiler.get(),
         params,
-        new SourcePathResolver(buildRuleResolver),
+        sourcePathResolver,
         ImmutableList.<BuildRule>of(),
         args.frameworks.get(),
         args.libraries.get(),

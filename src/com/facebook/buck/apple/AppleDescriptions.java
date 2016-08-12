@@ -27,6 +27,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.StripStyle;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
@@ -47,7 +48,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -214,7 +214,8 @@ public class AppleDescriptions {
     if (arg.srcs.isPresent()) {
       ImmutableSortedSet.Builder<SourceWithFlags> nonSwiftSrcs = ImmutableSortedSet.naturalOrder();
       for (SourceWithFlags src: arg.srcs.get()) {
-        if (!MoreStrings.endsWithIgnoreCase(src.getSourcePath().toString(), SWIFT_EXTENSION)) {
+        if (!MorePaths.getFileExtension(resolver.getAbsolutePath(src.getSourcePath()))
+            .equalsIgnoreCase(SWIFT_EXTENSION)) {
           nonSwiftSrcs.add(src);
         }
       }

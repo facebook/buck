@@ -62,7 +62,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -110,7 +109,7 @@ class SwiftLibrary
   SwiftLibrary(
       Tool swiftCompiler,
       BuildRuleParams params,
-      SourcePathResolver pathResolver,
+      final SourcePathResolver pathResolver,
       Iterable<? extends BuildRule> exportedDeps,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
@@ -139,8 +138,8 @@ class SwiftLibrary
     this.hasMainEntry = FluentIterable.from(srcs).firstMatch(new Predicate<SourcePath>() {
       @Override
       public boolean apply(SourcePath input) {
-        String fileNameFromPath = Paths.get(input.toString()).getFileName().toString();
-        return SWIFT_MAIN_FILENAME.equalsIgnoreCase(fileNameFromPath);
+        return SWIFT_MAIN_FILENAME.equalsIgnoreCase(
+            getResolver().getAbsolutePath(input).getFileName().toString());
       }
     }).isPresent();
   }

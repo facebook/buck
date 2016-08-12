@@ -32,7 +32,7 @@ public class SwiftUtil {
     static final Flavor SWIFT_FLAVOR = ImmutableFlavor.of("swift");
     static final String SWIFT_HEADER_SUFFIX = "-Swift";
     static final String SWIFT_MAIN_FILENAME = "main.swift";
-    public static final String SWIFT_EXTENSION = ".swift";
+    public static final String SWIFT_EXTENSION = "swift";
   }
 
   static String toSwiftHeaderName(String moduleName) {
