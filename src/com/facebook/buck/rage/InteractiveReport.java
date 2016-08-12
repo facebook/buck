@@ -32,6 +32,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -71,6 +73,14 @@ public class InteractiveReport extends AbstractReport {
         interestingBuildLogs.add(entry);
       }
     }
+
+    // Sort the interesting builds based on time, reverse order so the most recent is first.
+    Collections.sort(interestingBuildLogs, new Comparator<BuildLogEntry>() {
+      @Override
+      public int compare(BuildLogEntry o1, BuildLogEntry o2) {
+        return -o1.getLastModifiedTime().compareTo(o2.getLastModifiedTime());
+      }
+    });
 
     return input.selectRange(
         "Which buck invocations would you like to report?",
