@@ -16,7 +16,7 @@
 
 package com.facebook.buck.swift;
 
-import static com.facebook.buck.swift.SwiftUtil.isSwiftCompanionLibrary;
+import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_MAIN_FILENAME;
 import static com.facebook.buck.swift.SwiftUtil.normalizeSwiftModuleName;
 import static com.facebook.buck.swift.SwiftUtil.toSwiftHeaderName;
 
@@ -53,6 +53,7 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -61,6 +62,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -103,7 +105,7 @@ class SwiftLibrary
   private final Path headerPath;
   private final Path modulePath;
   private final Path objectPath;
-  private final boolean isCompanionLibrary;
+  private final boolean hasMainEntry;
 
   SwiftLibrary(
       Tool swiftCompiler,
@@ -128,13 +130,19 @@ class SwiftLibrary
     this.enableObjcInterop = enableObjcInterop.or(true);
     this.supportedPlatformsRegex = supportedPlatformsRegex;
     this.headerPath = outputPath.resolve(toSwiftHeaderName(moduleName) + ".h");
-    this.isCompanionLibrary = isSwiftCompanionLibrary(moduleName);
 
     String escapedModuleName = normalizeSwiftModuleName(moduleName);
     this.moduleName = escapedModuleName;
     this.modulePath = outputPath.resolve(escapedModuleName + ".swiftmodule");
     this.objectPath = outputPath.resolve(escapedModuleName + ".o");
     this.srcs = ImmutableSortedSet.copyOf(srcs);
+    this.hasMainEntry = FluentIterable.from(srcs).firstMatch(new Predicate<SourcePath>() {
+      @Override
+      public boolean apply(SourcePath input) {
+        String fileNameFromPath = Paths.get(input.toString()).getFileName().toString();
+        return SWIFT_MAIN_FILENAME.equalsIgnoreCase(fileNameFromPath);
+      }
+    }).isPresent();
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
@@ -235,10 +243,7 @@ class SwiftLibrary
     compilerCommand.add(
         "-c",
         enableObjcInterop ? "-enable-objc-interop" : "",
-        // TODO(tho@uber.com) Need to find a way to figure out whether a swift library has a main
-        // entry or not, for now, we treat companion swift_library as a library (ignore main entry
-        // if exists)
-        isCompanionLibrary ? "-parse-as-library" : "",
+        hasMainEntry ? "" : "-parse-as-library",
         "-module-name",
         moduleName,
         "-emit-module",

@@ -38,6 +38,7 @@ public class SwiftOSXBinaryIntegrationTest {
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
 
+  @Ignore("t10220393")
   @Test
   public void swiftHelloWorldRunsAndPrintsMessageOnOSX() throws IOException {
     assumeThat(
@@ -78,7 +79,7 @@ public class SwiftOSXBinaryIntegrationTest {
         runResult.getStdout(),
         equalTo("Hello, \uD83C\uDF0E!\n"));
 
-    workspace.replaceFileContents("hello.swift", "Hello", "Goodbye");
+    workspace.replaceFileContents("main.swift", "Hello", "Goodbye");
 
     ProjectWorkspace.ProcessResult secondRunResult = workspace.runBuckCommand(
         "run",

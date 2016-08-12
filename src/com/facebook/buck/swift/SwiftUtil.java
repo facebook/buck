@@ -30,19 +30,12 @@ public class SwiftUtil {
     private Constants() { }
 
     static final Flavor SWIFT_FLAVOR = ImmutableFlavor.of("swift");
-    static final String SWIFT_SUFFIX = "~Swift";
     static final String SWIFT_HEADER_SUFFIX = "-Swift";
+    static final String SWIFT_MAIN_FILENAME = "main.swift";
     public static final String SWIFT_EXTENSION = ".swift";
   }
 
-  static boolean isSwiftCompanionLibrary(String moduleName) {
-    return moduleName.endsWith(Constants.SWIFT_SUFFIX);
-  }
-
   static String toSwiftHeaderName(String moduleName) {
-    if (isSwiftCompanionLibrary(moduleName)) {
-      moduleName = moduleName.substring(0, moduleName.length() - Constants.SWIFT_SUFFIX.length());
-    }
     return moduleName + Constants.SWIFT_HEADER_SUFFIX;
   }
 
