@@ -37,6 +37,7 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
+import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.event.listener.CacheRateStatsListener;
 import com.facebook.buck.event.listener.ChromeTraceBuildListener;
 import com.facebook.buck.event.listener.FileSerializationEventBusListener;
@@ -306,6 +307,7 @@ public final class Main {
     private final Optional<WebServer> webServer;
     private final UUID watchmanQueryUUID;
     private final ActionGraphCache actionGraphCache;
+    private final BroadcastEventListener broadcastEventListener;
 
     public Daemon(
         Cell cell,
@@ -320,7 +322,8 @@ public final class Main {
               cell.getFilesystem().getBuckPaths().getBuckOut());
       this.fileEventBus = new EventBus("file-change-events");
 
-      actionGraphCache = new ActionGraphCache();
+      this.broadcastEventListener = new BroadcastEventListener();
+      this.actionGraphCache = new ActionGraphCache(broadcastEventListener);
 
       TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(objectMapper);
       this.parser = new Parser(
@@ -400,6 +403,10 @@ public final class Main {
 
     private ActionGraphCache getActionGraphCache() {
       return actionGraphCache;
+    }
+
+    private BroadcastEventListener getBroadcastEventListener() {
+      return broadcastEventListener;
     }
 
     private FileHashCache getFileHashCache() {
@@ -545,6 +552,17 @@ public final class Main {
       }
     }
     return daemon;
+  }
+
+  private static BroadcastEventListener getBroadcastEventListener(
+      boolean isDaemon,
+      Cell rootCell,
+      ObjectMapper objectMapper)
+      throws IOException, InterruptedException {
+    if (isDaemon) {
+      return getDaemon(rootCell, objectMapper).getBroadcastEventListener();
+    }
+    return new BroadcastEventListener();
   }
 
   private static boolean shouldReuseWebServer(Cell newCell) {
@@ -914,6 +932,11 @@ public final class Main {
                     "Project",
                     buckConfig.getNumThreads())));
 
+        // Create and register the event buses that should listen to broadcast events.
+        // If the build doesn't have a daemon create a new instance.
+        BroadcastEventListener broadcastEventListener =
+            getBroadcastEventListener(isDaemon, rootCell, objectMapper);
+
         // The order of resources in the try-with-resources block is important: the BuckEventBus
         // must be the last resource, so that it is closed first and can deliver its queued events
         // to the other resources before they are closed.
@@ -938,6 +961,9 @@ public final class Main {
                      filesystem.getBuckPaths().getLogDir().resolve("test.log"));
              AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
              BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
+              BroadcastEventListener.BroadcastEventBusClosable broadcastEventBusClosable =
+                 broadcastEventListener.addEventBus(buildEventBus);
+
              // NOTE: This will only run during the lifetime of the process and will flush on close.
              CounterRegistry counterRegistry = new CounterRegistryImpl(
                  counterAggregatorExecutor,
@@ -1018,6 +1044,7 @@ public final class Main {
 
           // Create or get Parser and invalidate cached command parameters.
           Parser parser = null;
+          ActionGraphCache actionGraphCache = null;
 
           if (isDaemon) {
             try {
@@ -1039,12 +1066,17 @@ public final class Main {
                   watchmanWatcher,
                   watchmanFreshInstanceAction,
                   watchmanDiagnosticCache);
+              actionGraphCache = daemon.getActionGraphCache();
             } catch (WatchmanWatcherException | IOException e) {
               buildEventBus.post(
                   ConsoleEvent.warning(
                       "Watchman threw an exception while parsing file changes.\n%s",
                       e.getMessage()));
             }
+          }
+
+          if (actionGraphCache == null) {
+            actionGraphCache = new ActionGraphCache(broadcastEventListener);
           }
 
           if (parser == null) {
@@ -1054,8 +1086,6 @@ public final class Main {
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory));
           }
-
-          ActionGraphCache actionGraphCache = getActionGraphCacheFromDaemon(context, rootCell);
 
           // Because the Parser is potentially constructed before the CounterRegistry,
           // we need to manually register its counters after it's created.
@@ -1407,16 +1437,6 @@ public final class Main {
       return daemon.getWebServer();
     }
     return Optional.absent();
-  }
-
-  private ActionGraphCache getActionGraphCacheFromDaemon(
-      Optional<NGContext> context,
-      Cell cell)
-      throws IOException, InterruptedException {
-    if (context.isPresent()) {
-      return getDaemon(cell, objectMapper).getActionGraphCache();
-    }
-    return new ActionGraphCache();
   }
 
   private void loadListenersFromBuckConfig(

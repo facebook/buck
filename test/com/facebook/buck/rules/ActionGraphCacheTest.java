@@ -25,6 +25,7 @@ import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -61,6 +62,7 @@ public class ActionGraphCacheTest {
   private TargetNode<?> nodeB;
   private TargetGraph targetGraph;
   private BuckEventBus eventBus;
+  private BroadcastEventListener broadcastEventListener;
   private BlockingQueue<BuckEvent> trackedEvents = new LinkedBlockingQueue<>();
 
   @Rule
@@ -82,6 +84,8 @@ public class ActionGraphCacheTest {
 
     eventBus = BuckEventBusFactory.newInstance(
         new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1)));
+    broadcastEventListener = new BroadcastEventListener();
+    broadcastEventListener.addEventBus(eventBus);
 
     eventBus.register(new Object() {
      @Subscribe
@@ -98,7 +102,7 @@ public class ActionGraphCacheTest {
 
   @Test
   public void hitOnCache() throws InterruptedException {
-    ActionGraphCache cache = new ActionGraphCache();
+    ActionGraphCache cache = new ActionGraphCache(broadcastEventListener);
 
     ActionGraphAndResolver resultRun1 =
         cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph, 0);
@@ -125,7 +129,7 @@ public class ActionGraphCacheTest {
 
   @Test
   public void missOnCache() {
-    ActionGraphCache cache = new ActionGraphCache();
+    ActionGraphCache cache = new ActionGraphCache(broadcastEventListener);
     ActionGraphAndResolver resultRun1 =
         cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph, 0);
     // Each time you call it for a different TargetGraph so all calls should be misses.
@@ -189,7 +193,7 @@ public class ActionGraphCacheTest {
 
   @Test
   public void cacheInvalidationBasedOnEvents() throws IOException, InterruptedException {
-    ActionGraphCache cache = new ActionGraphCache();
+    ActionGraphCache cache = new ActionGraphCache(broadcastEventListener);
     Path file = tmpFilePath.newFile("foo.txt");
 
     // Fill the cache. An overflow event should invalidate the cache.

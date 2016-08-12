@@ -21,6 +21,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
+import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
@@ -36,7 +37,6 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
@@ -50,10 +50,10 @@ public class ActionGraphCache {
 
   @Nullable
   private Pair<TargetGraph, ActionGraphAndResolver> lastActionGraph;
-  private Stack<WatchmanStatusEvent> watchmanStatusEventsStack;
+  private BroadcastEventListener broadcastEventListener;
 
-  public ActionGraphCache() {
-    watchmanStatusEventsStack = new Stack<WatchmanStatusEvent>();
+  public ActionGraphCache(BroadcastEventListener broadcastEventListener) {
+    this.broadcastEventListener = broadcastEventListener;
   }
 
   /**
@@ -94,10 +94,6 @@ public class ActionGraphCache {
       }
     } finally {
       eventBus.post(ActionGraphEvent.finished(started));
-
-      while (!watchmanStatusEventsStack.isEmpty()) {
-        eventBus.post(watchmanStatusEventsStack.pop());
-      }
     }
     return lastActionGraph.getSecond();
   }
@@ -250,11 +246,11 @@ public class ActionGraphCache {
       invalidateCache();
 
       if (event.kind() == StandardWatchEventKinds.OVERFLOW) {
-        watchmanStatusEventsStack.add(WatchmanStatusEvent.overflow((String) event.context()));
+        broadcastEventListener.broadcast(WatchmanStatusEvent.overflow((String) event.context()));
       } else if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
-        watchmanStatusEventsStack.add(WatchmanStatusEvent.fileCreation());
+        broadcastEventListener.broadcast(WatchmanStatusEvent.fileCreation());
       } else if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
-        watchmanStatusEventsStack.add(WatchmanStatusEvent.fileDeletion());
+        broadcastEventListener.broadcast(WatchmanStatusEvent.fileDeletion());
       }
     }
   }

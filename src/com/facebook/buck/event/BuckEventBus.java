@@ -170,5 +170,4 @@ public class BuckEventBus implements Closeable {
   public void timestamp(BuckEvent event) {
     event.configure(clock.currentTimeMillis(), clock.nanoTime(), threadIdSupplier.get(), buildId);
   }
-
 }

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event;
 
-public abstract class WatchmanStatusEvent extends AbstractBuckEvent {
+public abstract class WatchmanStatusEvent extends AbstractBuckEvent implements BroadcastEvent {
   private final String eventName;
 
   public WatchmanStatusEvent(EventKey eventKey, String eventName) {

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 3c133093310f0ff8fb360b7285e4136656a808b1 #@#
+#@# GENERATED FILE: DO NOT MODIFY de03aa613e923274f2a204972dd6feeb4b95364d #@#
 {
   "FakeBuckConfig" : {
     "deps" : [
@@ -25,6 +25,7 @@
       "//src/com/facebook/buck/cli:events",
       "//src/com/facebook/buck/command:command",
       "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/event/listener:listener",
       "//src/com/facebook/buck/httpserver:httpserver",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/io:watchman",
@@ -111,6 +112,7 @@
     "deps" : [
       "//src/com/facebook/buck/android:rules",
       "//src/com/facebook/buck/config:config",
+      "//src/com/facebook/buck/event/listener:listener",
       "//src/com/facebook/buck/parser:config",
       "//src/com/facebook/buck/parser:parser",
       "//src/com/facebook/buck/rules:action_graph_cache",

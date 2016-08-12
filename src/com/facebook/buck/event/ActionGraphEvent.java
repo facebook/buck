@@ -96,7 +96,7 @@ public abstract class ActionGraphEvent
     }
   }
 
-  public static class Cache extends ActionGraphEvent {
+  public static class Cache extends ActionGraphEvent implements BroadcastEvent {
     private final String eventName;
 
     public Cache(String eventName) {

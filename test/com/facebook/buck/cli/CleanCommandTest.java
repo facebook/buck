@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
@@ -131,7 +132,7 @@ public class CleanCommandTest extends EasyMockSupport {
         new NullFileHashCache(),
         new HashMap<ExecutionContext.ExecutorPool, ListeningExecutorService>(),
         CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION,
-        new ActionGraphCache());
+        new ActionGraphCache(new BroadcastEventListener()));
   }
 
 }

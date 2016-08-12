@@ -23,6 +23,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
@@ -110,7 +111,7 @@ public class CommandRunnerParamsForTesting {
             ExecutionContext.ExecutorPool.PROJECT,
             MoreExecutors.newDirectExecutorService()),
         BUILD_ENVIRONMENT_DESCRIPTION,
-        new ActionGraphCache());
+        new ActionGraphCache(new BroadcastEventListener()));
   }
 
   public static Builder builder() {

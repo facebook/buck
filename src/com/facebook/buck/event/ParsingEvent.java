@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event;
 
-public class ParsingEvent extends AbstractBuckEvent {
+public class ParsingEvent extends AbstractBuckEvent implements BroadcastEvent {
   private final String eventName;
 
   public ParsingEvent(EventKey eventKey, String eventName) {
