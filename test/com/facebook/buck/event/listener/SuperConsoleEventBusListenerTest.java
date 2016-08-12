@@ -2056,6 +2056,12 @@ public class SuperConsoleEventBusListenerTest {
         createParsingMessage(EMOJI_WHALE, "Symlink caused cache invalidation"),
         listener.getParsingStatus());
 
+    // environmental change scenario
+    eventBus.post(ParsingEvent.environmentalChange("WHITE_RABBIT=1"));
+    assertEquals(
+        createParsingMessage(EMOJI_SNAIL, "Environment variable changes: WHITE_RABBIT=1"),
+        listener.getParsingStatus());
+
     // action graph cache hit scenario
     eventBus.post(ActionGraphEvent.Cache.hit());
     assertEquals(createParsingMessage(EMOJI_BUNNY, ""), listener.getParsingStatus());

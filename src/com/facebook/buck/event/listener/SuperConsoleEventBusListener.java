@@ -827,6 +827,12 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     parsingStatus = createParsingMessage(EMOJI_WHALE, "Symlink caused cache invalidation");
   }
 
+  @Subscribe
+  public void envVariableChange(ParsingEvent.EnvVariableChange event) {
+    parsingStatus = createParsingMessage(EMOJI_SNAIL, "Environment variable changes: " +
+        event.getDiff());
+  }
+
   @VisibleForTesting
   static Optional<String> createParsingMessage(String emoji, String reason) {
     if (Charset.defaultCharset().equals(Charsets.UTF_8)) {
