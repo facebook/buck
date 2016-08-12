@@ -59,7 +59,7 @@ import javax.annotation.Nullable;
 class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
 
   @AddToRuleKey
-  private final ImmutableList<SourcePath> symbolsNeededPaths;
+  private final ImmutableSortedSet<SourcePath> symbolsNeededPaths;
   @AddToRuleKey
   private final NdkCxxPlatforms.TargetCpuType cpuType;
   @AddToRuleKey
@@ -79,7 +79,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
   public RelinkerRule(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
-      ImmutableList<SourcePath> symbolsNeededPaths,
+      ImmutableSortedSet<SourcePath> symbolsNeededPaths,
       NdkCxxPlatforms.TargetCpuType cpuType,
       Tool objdump,
       CxxBuckConfig cxxBuckConfig,

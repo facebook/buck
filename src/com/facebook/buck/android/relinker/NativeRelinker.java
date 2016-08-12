@@ -40,6 +40,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -242,7 +243,7 @@ public class NativeRelinker {
     return new RelinkerRule(
         relinkerParams,
         resolver,
-        ImmutableList.copyOf(Lists.transform(relinkerDeps, getSymbolsNeeded)),
+        ImmutableSortedSet.copyOf(Lists.transform(relinkerDeps, getSymbolsNeeded)),
         cpuType,
         nativePlatforms.get(cpuType).getObjdump(),
         cxxBuckConfig,
