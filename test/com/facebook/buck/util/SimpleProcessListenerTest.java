@@ -16,10 +16,10 @@
 
 package com.facebook.buck.util;
 
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 
 import java.nio.CharBuffer;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Tests for {@link SimpleProcessListener}.
@@ -48,7 +47,7 @@ public class SimpleProcessListenerTest {
     ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(
         params,
         listener);
-    int returnCode = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
+    int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, equalTo(0));
     assertThat(listener.getStdout(), equalTo(String.format("Hello%n")));
     assertThat(listener.getStderr(), is(emptyString()));
@@ -71,7 +70,7 @@ public class SimpleProcessListenerTest {
         params,
         listener);
     process.wantWrite();
-    int returnCode = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
+    int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, equalTo(0));
     assertThat(listener.getStdout(), equalTo(String.format("Meow%n")));
     assertThat(listener.getStderr(), is(emptyString()));
@@ -99,7 +98,7 @@ public class SimpleProcessListenerTest {
         params,
         listener);
     process.wantWrite();
-    int returnCode = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
+    int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, equalTo(0));
     assertThat(listener.getStdout(), equalTo(String.format("MeowWow")));
     assertThat(listener.getStderr(), is(emptyString()));

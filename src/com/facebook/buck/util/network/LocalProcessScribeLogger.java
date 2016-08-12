@@ -99,7 +99,7 @@ public class LocalProcessScribeLogger extends ScribeLogger {
           TimeUnit.MILLISECONDS);
     } finally {
       processExecutor.destroyProcess(process, true);
-      processExecutor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.DAYS);
+      processExecutor.waitForProcess(process);
     }
 
     if (exitCode != 0) {

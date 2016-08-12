@@ -75,7 +75,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
@@ -345,10 +344,10 @@ public class TestCommand extends BuildCommand {
     ListeningProcessExecutor.LaunchedProcess process =
         processExecutor.launchProcess(processExecutorParams, processListener);
     try {
-      return processExecutor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.DAYS);
+      return processExecutor.waitForProcess(process);
     } finally {
       processExecutor.destroyProcess(process, /* force */ false);
-      processExecutor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.DAYS);
+      processExecutor.waitForProcess(process);
     }
   }
 

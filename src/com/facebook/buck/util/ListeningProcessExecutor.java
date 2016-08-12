@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
+
 /**
  * Replacement for {@link ProcessBuilder} which provides an
  * asynchronous callback interface to notify the caller on a
@@ -163,9 +165,11 @@ public class ListeningProcessExecutor {
 
   private static class LaunchedProcessImpl implements LaunchedProcess {
     public final NuProcess nuProcess;
+    public final ProcessExecutorParams params;
 
-    public LaunchedProcessImpl(NuProcess nuProcess) {
+    public LaunchedProcessImpl(NuProcess nuProcess, ProcessExecutorParams params) {
       this.nuProcess = nuProcess;
+      this.params = params;
     }
 
     @Override
@@ -195,20 +199,24 @@ public class ListeningProcessExecutor {
   }
 
   private static class ListeningProcessHandler extends NuAbstractProcessHandler {
+    private final ProcessExecutorParams params;
     private final ProcessListener listener;
+    @Nullable
     public LaunchedProcessImpl process;
 
-    public ListeningProcessHandler(ProcessListener listener) {
+    public ListeningProcessHandler(ProcessListener listener, ProcessExecutorParams params) {
       this.listener = listener;
+      this.params = params;
     }
 
     @Override
     public void onPreStart(NuProcess process) {
-      this.process = new LaunchedProcessImpl(process);
+      this.process = new LaunchedProcessImpl(process, params);
     }
 
     @Override
     public void onStart(NuProcess process) {
+      Preconditions.checkNotNull(this.process);
       Preconditions.checkState(this.process.nuProcess == process);
       listener.onStart(this.process);
     }
@@ -242,7 +250,7 @@ public class ListeningProcessExecutor {
     throws IOException {
     LOG.debug("Launching process with params %s", params);
 
-    ListeningProcessHandler processHandler = new ListeningProcessHandler(listener);
+    ListeningProcessHandler processHandler = new ListeningProcessHandler(listener, params);
 
     // Unlike with Java's ProcessBuilder, we don't need special param escaping for Win32 platforms.
     NuProcessBuilder processBuilder = new NuProcessBuilder(processHandler, params.getCommand());
@@ -269,8 +277,8 @@ public class ListeningProcessExecutor {
    * Blocks the calling thread until either the process exits or the timeout expires,
    * whichever is first.
    *
-   * @return {@code Integer.MIN_VALUE} if the timeout expired, or the exit code
-   * of the process otherwise.
+   * @return {@code Integer.MIN_VALUE} if the timeout expired or the process failed to start,
+   * or the exit code of the process otherwise.
    */
   public int waitForProcess(LaunchedProcess process, long timeout, TimeUnit timeUnit)
     throws InterruptedException {
@@ -279,6 +287,27 @@ public class ListeningProcessExecutor {
     LaunchedProcessImpl processImpl = (LaunchedProcessImpl) process;
     int exitCode = processImpl.nuProcess.waitFor(timeout, timeUnit);
     LOG.debug("Wait for process returned %d", exitCode);
+    return exitCode;
+  }
+
+  /**
+   * Blocks the calling thread until the process exits.
+   *
+   * @return the exit code of the process.
+   * @throws IOException if the process failed to start.
+   */
+  public int waitForProcess(LaunchedProcess process)
+      throws InterruptedException, IOException {
+    long infiniteWait = 0;
+    int exitCode = waitForProcess(process, infiniteWait, TimeUnit.SECONDS);
+    if (exitCode == Integer.MIN_VALUE) {
+      // Specifying 0 for timeout guarantees that the wait will not time out. This way we know that
+      // an exit code equal to Integer.MIN_VALUE must mean that the process failed to start.
+      Preconditions.checkArgument(process instanceof LaunchedProcessImpl);
+      LaunchedProcessImpl processImpl = (LaunchedProcessImpl) process;
+      throw new IOException(
+          String.format("Failed to start process %s", processImpl.params.getCommand()));
+    }
     return exitCode;
   }
 

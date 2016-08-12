@@ -49,7 +49,7 @@ public class FakeListeningProcessExecutorTest {
     ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(
         params,
         listener);
-    int returnCode = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
+    int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, equalTo(0));
     assertThat(listener.capturedStdout.toString("UTF-8"), equalTo("Hello\n"));
     assertThat(listener.capturedStderr.toString("UTF-8"), is(emptyString()));
@@ -71,7 +71,7 @@ public class FakeListeningProcessExecutorTest {
         params,
         listener);
     process.wantWrite();
-    int returnCode = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
+    int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, equalTo(0));
     assertThat(listener.capturedStdout.toString("UTF-8"), equalTo("Meow\n"));
     assertThat(listener.capturedStderr.toString("UTF-8"), is(emptyString()));
@@ -89,7 +89,7 @@ public class FakeListeningProcessExecutorTest {
     ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(
         params,
         listener);
-    int returnCode = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
+    int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, not(equalTo(0)));
     assertThat(listener.capturedStdout.toString("UTF-8"), is(emptyString()));
     assertThat(listener.capturedStderr.toString("UTF-8"), is(emptyString()));

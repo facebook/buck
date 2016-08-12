@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.concurrent.TimeUnit;
 
 /**
  * A step that invokes Apple's tool to scan the binary and copy any needed Swift standard libraries.
@@ -88,7 +87,7 @@ class SwiftStdlibStep implements Step {
     try {
       LOG.debug("%s", command);
       ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);
-      int result = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
+      int result = executor.waitForProcess(process);
       if (result != 0) {
         LOG.error("Error running %s: %s", getDescription(context), listener.getStderr());
         return StepExecutionResult.of(result);

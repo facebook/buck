@@ -29,8 +29,6 @@ import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.concurrent.TimeUnit;
-
 import java.util.Map;
 
 /**
@@ -76,7 +74,7 @@ public class SwiftCompileStep implements Step {
     try {
       LOG.debug("%s", compilerCommand);
       ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);
-      int result = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
+      int result = executor.waitForProcess(process);
       if (result != 0) {
         LOG.error("Error running %s: %s", getDescription(context), listener.getStderr());
       }

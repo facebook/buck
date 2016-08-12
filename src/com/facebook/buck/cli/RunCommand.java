@@ -43,7 +43,6 @@ import org.kohsuke.args4j.Option;
 import java.io.IOException;
 import java.nio.channels.Channels;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class RunCommand extends AbstractCommand {
 
@@ -169,10 +168,10 @@ public class RunCommand extends AbstractCommand {
     ListeningProcessExecutor.LaunchedProcess process =
         processExecutor.launchProcess(processExecutorParams, processListener);
     try {
-      return processExecutor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.DAYS);
+      return processExecutor.waitForProcess(process);
     } finally {
       processExecutor.destroyProcess(process, /* force */ false);
-      processExecutor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.DAYS);
+      processExecutor.waitForProcess(process);
     }
   }
 

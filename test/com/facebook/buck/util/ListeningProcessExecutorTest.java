@@ -27,9 +27,11 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.ProcessListeners.CapturingListener;
 import com.facebook.buck.util.ProcessListeners.StdinWritingListener;
 
+import org.hamcrest.junit.ExpectedException;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,6 +46,9 @@ public class ListeningProcessExecutorTest {
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
 
+  @Rule
+  public ExpectedException exception = ExpectedException.none();
+
   @Test
   public void echoTextReceivedOnStdout() throws Exception {
     ListeningProcessExecutor executor = new ListeningProcessExecutor();
@@ -57,7 +62,7 @@ public class ListeningProcessExecutorTest {
     ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(
         params,
         listener);
-    int returnCode = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
+    int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, equalTo(0));
     assertThat(listener.capturedStdout.toString("UTF-8"), equalTo(String.format("Hello%n")));
     assertThat(listener.capturedStderr.toString("UTF-8"), is(emptyString()));
@@ -81,7 +86,7 @@ public class ListeningProcessExecutorTest {
     ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(
         paramsBuilder.build(),
         listener);
-    int returnCode = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
+    int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, equalTo(0));
     assertThat(listener.capturedStdout.toString("UTF-8"), equalTo(fileContents));
     assertThat(listener.capturedStderr.toString("UTF-8"), is(emptyString()));
@@ -104,7 +109,7 @@ public class ListeningProcessExecutorTest {
         params,
         listener);
     process.wantWrite();
-    int returnCode = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
+    int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, equalTo(0));
     assertThat(listener.capturedStdout.toString("UTF-8"), equalTo(String.format("Meow%n")));
     assertThat(listener.capturedStderr.toString("UTF-8"), is(emptyString()));
@@ -137,7 +142,7 @@ public class ListeningProcessExecutorTest {
         params,
         listener);
     process.wantWrite();
-    int returnCode = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
+    int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, equalTo(0));
     assertThat(listener.capturedStdout.toString("UTF-8"), equalTo(longString));
     assertThat(listener.capturedStderr.toString("UTF-8"), is(emptyString()));
@@ -156,14 +161,14 @@ public class ListeningProcessExecutorTest {
     ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(
         params,
         listener);
-    int returnCode = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
+    int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, not(equalTo(0)));
     assertThat(listener.capturedStdout.toString("UTF-8"), is(emptyString()));
     assertThat(listener.capturedStderr.toString("UTF-8"), is(emptyString()));
   }
 
   @Test
-  public void nonExistentBinaryExitCodeNotZero() throws Exception {
+  public void nonExistentBinaryExitCodeNotZeroOnLimitedWait() throws Exception {
     ListeningProcessExecutor executor = new ListeningProcessExecutor();
     CapturingListener listener = new CapturingListener();
     ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(
@@ -173,6 +178,20 @@ public class ListeningProcessExecutorTest {
     assertThat(returnCode, not(equalTo(0)));
     assertThat(listener.capturedStdout.toString("UTF-8"), is(emptyString()));
     assertThat(listener.capturedStderr.toString("UTF-8"), is(emptyString()));
+  }
+
+  @Test
+  public void nonExistentBinaryThrowsExceptionOnInfiniteWait() throws Exception {
+    ListeningProcessExecutor executor = new ListeningProcessExecutor();
+    CapturingListener listener = new CapturingListener();
+    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(
+        ProcessExecutorParams.ofCommand("this-better-not-be-a-process-on-your-system-for-real"),
+        listener);
+
+    exception.expect(IOException.class);
+    exception.expectMessage(
+        "Failed to start process [this-better-not-be-a-process-on-your-system-for-real]");
+    executor.waitForProcess(process);
   }
 
   @Test
@@ -193,7 +212,7 @@ public class ListeningProcessExecutorTest {
     assertThat(listener.capturedStdout.toString("UTF-8"), is(emptyString()));
     assertThat(listener.capturedStderr.toString("UTF-8"), is(emptyString()));
     executor.destroyProcess(process, /* force */ true);
-    executor.waitForProcess(process, 0, TimeUnit.MILLISECONDS);
+    executor.waitForProcess(process);
   }
 
   @Test
@@ -209,7 +228,7 @@ public class ListeningProcessExecutorTest {
     params = params.withEnvironment(new HashMap<String, String>());
     ListeningProcessExecutor.LaunchedProcess process =
         executor.launchProcess(params, listener);
-    int returnCode = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
+    int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, equalTo(0));
     assertThat(listener.capturedStdout.toString("UTF-8"), is(emptyString()));
     assertThat(listener.capturedStderr.toString("UTF-8"), is(emptyString()));

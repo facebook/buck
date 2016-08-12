@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 9c2aead9d704532741a7018327437c2f735f7b3b #@#
+#@# GENERATED FILE: DO NOT MODIFY 009201938877526b2a058ce43306f5775a2e89a2 #@#
 {
   "testutil" : {
     "deps" : [
@@ -36,6 +36,7 @@
       "//test/com/facebook/buck/util:testutil",
       "//third-party/java/easymock:easymock",
       "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:hamcrest-junit",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/ini4j:ini4j",
       "//third-party/java/junit:junit"
