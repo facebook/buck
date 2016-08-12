@@ -53,6 +53,8 @@ class KeyValueDiff(object):
     ORDER_ONLY = "Only order of entries differs: [{left}] vs [{right}]."
     ORDER_ONLY_REMAINING = ("Only order of remaining entries differs: " +
                             "[{left}] vs [{right}].")
+    ORDER_REPS_REMAINING = ("Order and repetition count of remaining " +
+                            "entries differs: [{left}] vs [{right}].")
     ORDER_AND_CASE_ONLY = ("Only order and letter casing (Upper Case vs " +
                            "lower case) of entries differs:")
 
@@ -111,8 +113,10 @@ class KeyValueDiff(object):
         for l, r in map(None, left_common, right_common):
             if l == r:
                 continue
-            left_not_in_order.append(l)
-            right_not_in_order.append(r)
+            if l is not None:
+                left_not_in_order.append(l)
+            if r is not None:
+                right_not_in_order.append(r)
 
         self._interesting_paths.update(
                 filter(None,
@@ -122,7 +126,10 @@ class KeyValueDiff(object):
         result = [self._left_format % v for v in sorted(left_only)]
         result.extend([self._right_format % v for v in sorted(right_only)])
         if len(left_not_in_order) > 0:
-            result.append(KeyValueDiff.ORDER_ONLY_REMAINING.format(
+            format_string = KeyValueDiff.ORDER_REPS_REMAINING
+            if len(left_not_in_order) == len(right_not_in_order):
+                format_string = KeyValueDiff.ORDER_ONLY_REMAINING
+            result.append(format_string.format(
                 left=', '.join(left_not_in_order),
                 right=', '.join(right_not_in_order)))
 

@@ -39,6 +39,18 @@ class TestRuleKeyDiff(unittest.TestCase):
                  '+[d]',
                  'Only order of remaining entries differs: [b, c] vs [c, b].'])
 
+    def test_key_value_diff_with_common_elements_repetitions(self):
+        list_diff = KeyValueDiff()
+        l = ['a', 'b', 'b', 'c']
+        r = ['c', 'b', 'b', 'b']
+        for l, r in map(None, l, r):
+            list_diff.append(l, r)
+        self.assertEqual(
+                list_diff.diff(),
+                ['-[a]',
+                 'Order and repetition count of remaining entries differs: ' +
+                 '[b, c] vs [c, b, b].'])
+
     def test_key_value_diff_sort(self):
         list_diff = KeyValueDiff()
         list_diff.append('1', '2')
