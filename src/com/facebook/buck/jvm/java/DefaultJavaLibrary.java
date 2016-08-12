@@ -290,7 +290,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         Suppliers.memoize(new Supplier<ImmutableSet<Path>>() {
           @Override
           public ImmutableSet<Path> get() {
-            return JavaLibraryClasspathProvider.getOutputClasspathEntries(
+            return JavaLibraryClasspathProvider.getOutputClasspathJars(
                 DefaultJavaLibrary.this,
                 getResolver(),
                 sourcePathForOutputJar());

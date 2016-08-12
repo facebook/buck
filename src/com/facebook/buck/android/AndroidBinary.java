@@ -23,9 +23,9 @@ import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AccumulateClassNamesStep;
-import com.facebook.buck.jvm.java.Classpaths;
 import com.facebook.buck.jvm.java.HasClasspathEntries;
 import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
@@ -873,7 +873,8 @@ public class AndroidBinary
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
     final ImmutableSetMultimap<JavaLibrary, Path> classpathEntriesMap =
-        Classpaths.getClasspathEntries(ImmutableSet.<BuildRule>copyOf(rulesToExcludeFromDex));
+        JavaLibraryClasspathProvider.getClasspathEntries(
+            ImmutableSet.<BuildRule>copyOf(rulesToExcludeFromDex));
     ImmutableSet.Builder<Path> additionalLibraryJarsForProguardBuilder = ImmutableSet.builder();
 
     for (JavaLibrary buildRule : rulesToExcludeFromDex) {
@@ -1201,13 +1202,13 @@ public class AndroidBinary
   @Override
   public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
     // This is used primarily for buck audit classpath.
-    return Classpaths.getClasspathEntries(ImmutableSet.copyOf(
+    return JavaLibraryClasspathProvider.getClasspathEntries(ImmutableSet.copyOf(
         getResolver().filterBuildRuleInputs(enhancementResult.getClasspathEntriesToDex())));
   }
 
   @Override
   public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
-    return Classpaths.getClasspathDeps(ImmutableSet.copyOf(
+    return JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.copyOf(
         getResolver().filterBuildRuleInputs(enhancementResult.getClasspathEntriesToDex())));
   }
 

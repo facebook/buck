@@ -102,7 +102,7 @@ public class JavaBinaryDescription implements
 
     // Construct the build rule to build the binary JAR.
     ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries =
-        Classpaths.getClasspathEntries(binaryParams.getDeps());
+        JavaLibraryClasspathProvider.getClasspathEntries(binaryParams.getDeps());
     BuildRule rule = new JavaBinary(
         binaryParams.appendExtraDeps(transitiveClasspathEntries.keys()),
         pathResolver,

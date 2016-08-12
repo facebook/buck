@@ -100,7 +100,6 @@ java_library(
   srcs = [
     'BuiltInJavac.java',
     'CalculateAbi.java',
-    'Classpaths.java',
     'DefaultJavaLibrary.java',
     'DefaultSuggestBuildRules.java',
     'GwtModule.java',
