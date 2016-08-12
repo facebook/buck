@@ -46,6 +46,12 @@ abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
   @Value.Parameter
   public abstract Path getWatchAppPath();
 
+  @Value.Parameter
+  public abstract Path getHeadersPath();
+
+  @Value.Parameter
+  public abstract Path getModulesPath();
+
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink
@@ -54,7 +60,9 @@ abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
         .setReflectively("executables_path", getExecutablesPath().toString())
         .setReflectively("frameworks_path", getFrameworksPath().toString())
         .setReflectively("plugins_path", getPlugInsPath().toString())
-        .setReflectively("watch_app_path", getWatchAppPath().toString());
+        .setReflectively("watch_app_path", getWatchAppPath().toString())
+        .setReflectively("headers_path", getHeadersPath().toString())
+        .setReflectively("modules_path", getModulesPath().toString());
   }
 
   private static final Path OSX_CONTENTS_PATH = Paths.get("Contents");
@@ -66,6 +74,21 @@ abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
           .setFrameworksPath(OSX_CONTENTS_PATH.resolve("Frameworks"))
           .setPlugInsPath(OSX_CONTENTS_PATH.resolve("PlugIns"))
           .setWatchAppPath(OSX_CONTENTS_PATH)
+          .setHeadersPath(OSX_CONTENTS_PATH)
+          .setModulesPath(OSX_CONTENTS_PATH)
+          .build();
+
+  private static final Path OSX_FRAMEWORK_CONTENTS_PATH = Paths.get("");
+  public static final AppleBundleDestinations OSX_FRAMEWORK_DESTINATIONS =
+      AppleBundleDestinations.builder()
+          .setMetadataPath(OSX_FRAMEWORK_CONTENTS_PATH.resolve("Resources"))
+          .setResourcesPath(OSX_FRAMEWORK_CONTENTS_PATH.resolve("Resources"))
+          .setExecutablesPath(OSX_FRAMEWORK_CONTENTS_PATH)
+          .setFrameworksPath(OSX_FRAMEWORK_CONTENTS_PATH.resolve("Frameworks"))
+          .setPlugInsPath(OSX_FRAMEWORK_CONTENTS_PATH)
+          .setWatchAppPath(OSX_FRAMEWORK_CONTENTS_PATH)
+          .setHeadersPath(OSX_FRAMEWORK_CONTENTS_PATH.resolve("Headers"))
+          .setModulesPath(OSX_FRAMEWORK_CONTENTS_PATH.resolve("Modules"))
           .build();
 
   private static final Path IOS_CONTENTS_PATH = Paths.get("");
@@ -77,13 +100,37 @@ abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
           .setFrameworksPath(IOS_CONTENTS_PATH.resolve("Frameworks"))
           .setPlugInsPath(IOS_CONTENTS_PATH.resolve("PlugIns"))
           .setWatchAppPath(IOS_CONTENTS_PATH.resolve("Watch"))
+          .setHeadersPath(IOS_CONTENTS_PATH)
+          .setModulesPath(IOS_CONTENTS_PATH)
           .build();
+
+  private static final Path IOS_FRAMEWORK_CONTENTS_PATH = Paths.get("");
+  public static final AppleBundleDestinations IOS_FRAMEWORK_DESTINATIONS =
+      AppleBundleDestinations.builder()
+          .setMetadataPath(IOS_FRAMEWORK_CONTENTS_PATH)
+          .setResourcesPath(IOS_FRAMEWORK_CONTENTS_PATH)
+          .setExecutablesPath(IOS_FRAMEWORK_CONTENTS_PATH)
+          .setFrameworksPath(IOS_FRAMEWORK_CONTENTS_PATH.resolve("Frameworks"))
+          .setPlugInsPath(IOS_FRAMEWORK_CONTENTS_PATH)
+          .setWatchAppPath(IOS_FRAMEWORK_CONTENTS_PATH)
+          .setHeadersPath(IOS_FRAMEWORK_CONTENTS_PATH.resolve("Headers"))
+          .setModulesPath(IOS_FRAMEWORK_CONTENTS_PATH.resolve("Modules"))
+          .build();
+
 
   public static AppleBundleDestinations platformDestinations(ApplePlatform platform) {
     if (platform.getName().contains("osx")) {
       return AppleBundleDestinations.OSX_DESTINATIONS;
     } else {
       return AppleBundleDestinations.IOS_DESTINATIONS;
+    }
+  }
+
+  public static AppleBundleDestinations platformFrameworkDestinations(ApplePlatform platform) {
+    if (platform.getName().contains("osx")) {
+      return AppleBundleDestinations.OSX_FRAMEWORK_DESTINATIONS;
+    } else {
+      return AppleBundleDestinations.IOS_FRAMEWORK_DESTINATIONS;
     }
   }
 }
