@@ -70,8 +70,8 @@ public abstract class AbstractReport {
   public final DefectSubmitResult collectAndSubmitResult()
       throws IOException, InterruptedException {
 
-    Optional<UserReport> userReport = getUserReport();
     ImmutableSet<BuildLogEntry> highlightedBuilds = promptForBuildSelection();
+    Optional<UserReport> userReport = getUserReport();
     Optional<SourceControlInfo> sourceControlInfo = getSourceControlInfo();
 
     ImmutableSet<Path> extraInfoPaths = ImmutableSet.of();

@@ -94,7 +94,7 @@ public class InteractiveReport extends AbstractReport {
             return String.format(
                 "\t%s\tbuck [%s] (%.2f %s)",
                 input.getLastModifiedTime(),
-                input.getCommandArgs(),
+                input.getCommandArgs().or("unknown command"),
                 humanReadableSize.getFirst(),
                 humanReadableSize.getSecond().getAbbreviation());
           }

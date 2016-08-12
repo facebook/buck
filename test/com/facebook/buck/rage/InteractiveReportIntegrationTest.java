@@ -64,7 +64,7 @@ public class InteractiveReportIntegrationTest {
       }
     };
     ByteArrayInputStream inputStream =
-        new ByteArrayInputStream("report text\n0,1\n".getBytes("UTF-8"));
+        new ByteArrayInputStream("0,1\nreport text\n".getBytes("UTF-8"));
     InteractiveReport interactiveReport =
         new InteractiveReport(
             defectReporter,
