@@ -488,9 +488,15 @@ public class AppleDescriptions {
         params.getBuildTarget(),
         MultiarchFileInfos.create(appleCxxPlatforms, params.getBuildTarget()));
 
-    AppleBundleDestinations destinations =
-        AppleBundleDestinations.platformDestinations(
-            appleCxxPlatform.getAppleSdk().getApplePlatform());
+    AppleBundleDestinations destinations = null;
+
+    if (extension.isLeft() && extension.getLeft().equals(AppleBundleExtension.FRAMEWORK)) {
+      destinations = AppleBundleDestinations.platformFrameworkDestinations(
+          appleCxxPlatform.getAppleSdk().getApplePlatform());
+    } else {
+      destinations = AppleBundleDestinations.platformDestinations(
+                        appleCxxPlatform.getAppleSdk().getApplePlatform());
+    }
 
     AppleBundleResources collectedResources = AppleResources.collectResourceDirsAndFiles(
         targetGraph,

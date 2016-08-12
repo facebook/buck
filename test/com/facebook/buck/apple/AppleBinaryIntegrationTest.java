@@ -268,7 +268,7 @@ public class AppleBinaryIntegrationTest {
         containsString("executable"));
     Path frameworkBundlePath = bundlePath.resolve("Contents/Frameworks/TestLibrary.framework");
     assertThat(Files.exists(frameworkBundlePath), is(true));
-    Path frameworkBinaryPath = frameworkBundlePath.resolve("Contents/MacOS/TestLibrary");
+    Path frameworkBinaryPath = frameworkBundlePath.resolve("TestLibrary");
     assertThat(Files.exists(frameworkBinaryPath), is(true));
     assertThat(
         workspace.runCommand("file", frameworkBinaryPath.toString()).getStdout().get(),

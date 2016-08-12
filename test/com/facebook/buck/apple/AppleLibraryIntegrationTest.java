@@ -270,8 +270,44 @@ public class AppleLibraryIntegrationTest {
                 "%s")
             .resolve("TestLibrary.framework"));
     assertThat(Files.exists(frameworkPath), is(true));
-    assertThat(Files.exists(frameworkPath.resolve("Contents/Info.plist")), is(true));
-    Path libraryPath = frameworkPath.resolve("Contents/MacOS/TestLibrary");
+    assertThat(Files.exists(frameworkPath.resolve("Resources/Info.plist")), is(true));
+    Path libraryPath = frameworkPath.resolve("TestLibrary");
+    assertThat(Files.exists(libraryPath), is(true));
+    assertThat(
+        workspace.runCommand("file", libraryPath.toString()).getStdout().get(),
+        containsString("dynamically linked shared library"));
+  }
+
+  @Test
+  public void testAppleLibraryBuildsFrameworkIOS() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(
+        AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_builds_something", tmp);
+    workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibrary:TestLibrary#framework,iphonesimulator-x86_64,no-debug");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path frameworkPath = workspace.getPath(
+        BuildTargets
+            .getGenPath(
+                filesystem,
+                BuildTarget.builder(target)
+                    .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
+                    .build(),
+                "%s")
+            .resolve("TestLibrary.framework"));
+    assertThat(Files.exists(frameworkPath), is(true));
+    assertThat(Files.exists(frameworkPath.resolve("Info.plist")), is(true));
+    Path libraryPath = frameworkPath.resolve("TestLibrary");
     assertThat(Files.exists(libraryPath), is(true));
     assertThat(
         workspace.runCommand("file", libraryPath.toString()).getStdout().get(),
@@ -304,7 +340,7 @@ public class AppleLibraryIntegrationTest {
                     .build(),
                 "%s")
             .resolve("TestLibrary.framework"));
-    Path libraryPath = frameworkPath.resolve("Contents/MacOS/TestLibrary");
+    Path libraryPath = frameworkPath.resolve("TestLibrary");
     assertThat(Files.exists(libraryPath), is(true));
     ProcessExecutor.Result lipoVerifyResult =
         workspace.runCommand("lipo", libraryPath.toString(), "-verify_arch", "i386", "x86_64");
@@ -426,17 +462,17 @@ public class AppleLibraryIntegrationTest {
                 "%s")
             .resolve("TestLibrary.framework"));
     assertThat(Files.exists(frameworkPath), is(true));
-    Path frameworksPath = frameworkPath.resolve("Contents/Frameworks");
+    Path frameworksPath = frameworkPath.resolve("Frameworks");
     assertThat(Files.exists(frameworksPath), is(true));
     Path depPath =
-        frameworksPath.resolve("TestLibraryDep.framework/Contents/MacOS/TestLibraryDep");
+        frameworksPath.resolve("TestLibraryDep.framework/TestLibraryDep");
     assertThat(Files.exists(depPath), is(true));
     assertThat(
         workspace.runCommand("file", depPath.toString()).getStdout().get(),
         containsString("dynamically linked shared library"));
     Path transitiveDepPath =
         frameworksPath.resolve(
-            "TestLibraryTransitiveDep.framework/Contents/MacOS/TestLibraryTransitiveDep");
+            "TestLibraryTransitiveDep.framework/TestLibraryTransitiveDep");
     assertThat(Files.exists(transitiveDepPath), is(true));
     assertThat(
         workspace.runCommand("file", transitiveDepPath.toString()).getStdout().get(),
@@ -471,10 +507,10 @@ public class AppleLibraryIntegrationTest {
                 "%s")
             .resolve("TestLibrary.framework"));
     assertThat(Files.exists(frameworkPath), is(true));
-    Path frameworksPath = frameworkPath.resolve("Contents/Frameworks");
+    Path frameworksPath = frameworkPath.resolve("Frameworks");
     assertThat(Files.exists(frameworksPath), is(true));
     Path depFrameworksPath =
-        frameworksPath.resolve("TestLibraryDep.framework/Contents/Frameworks");
+        frameworksPath.resolve("TestLibraryDep.framework/Frameworks");
     assertThat(Files.exists(depFrameworksPath), is(false));
   }
 
@@ -499,8 +535,8 @@ public class AppleLibraryIntegrationTest {
     Path frameworkPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s")
         .resolve("TestLibrary.framework"));
     assertThat(Files.exists(frameworkPath), is(true));
-    assertThat(Files.exists(frameworkPath.resolve("Contents/Info.plist")), is(true));
-    Path libraryPath = frameworkPath.resolve("Contents/MacOS/TestLibrary");
+    assertThat(Files.exists(frameworkPath.resolve("Resources/Info.plist")), is(true));
+    Path libraryPath = frameworkPath.resolve("TestLibrary");
     assertThat(Files.exists(libraryPath), is(true));
     assertThat(
         workspace.runCommand("file", libraryPath.toString()).getStdout().get(),
