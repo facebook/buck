@@ -8,9 +8,19 @@ java_library(
   ],
 )
 
+BROADCAST_EVENT_LISTENER_SCRS = ['BroadcastEventListener.java']
+java_library(
+    name = 'BroadcastEventListener',
+    srcs = BROADCAST_EVENT_LISTENER_SCRS,
+    autodeps = True,
+    visibility = [
+      'PUBLIC',
+    ],
+)
+
 java_immutables_library(
   name = 'listener',
-  srcs = glob(['*.java'], excludes=CACHE_RATE_STATS_SRCS),
+  srcs = glob(['*.java'], excludes=CACHE_RATE_STATS_SRCS + BROADCAST_EVENT_LISTENER_SCRS),
   immutable_types = [
     'EventPair',
     'ProxyBuckEvent',

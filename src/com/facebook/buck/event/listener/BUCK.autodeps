@@ -1,5 +1,11 @@
-#@# GENERATED FILE: DO NOT MODIFY e8b2417ca9bedab7789e4a4878394044041cd872 #@#
+#@# GENERATED FILE: DO NOT MODIFY 8962731751ed95c1b6ef3a4f7b64326442ae312d #@#
 {
+  "BroadcastEventListener" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/event:event"
+    ]
+  },
   "CacheRateStatsKeeper" : {
     "deps" : [
       "//src/com/facebook/buck/artifact_cache:artifact_cache",

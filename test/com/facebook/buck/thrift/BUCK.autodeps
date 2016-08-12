@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY e0ed931d213c9350c60abb5055d6f0d83448217a #@#
+#@# GENERATED FILE: DO NOT MODIFY 10a924e442aca13f99682c68f60fb6a52c2e27e1 #@#
 {
   "thrift" : {
     "deps" : [
@@ -7,6 +7,7 @@
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/event/listener:BroadcastEventListener",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/io:watchman",

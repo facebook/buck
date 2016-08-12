@@ -20,6 +20,7 @@ package com.facebook.buck.crosscell;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -71,6 +72,7 @@ public class IntraCellIntegrationTest {
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory(
         ObjectMappers.newDefaultInstance());
     Parser parser = new Parser(
+        new BroadcastEventListener(),
         new ParserConfig(cell.getBuckConfig()),
         coercerFactory,
         new ConstructorArgMarshaller(coercerFactory));

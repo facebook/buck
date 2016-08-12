@@ -28,6 +28,10 @@ public class ParsingEvent extends AbstractBuckEvent implements BroadcastEvent {
     return new SymlinkInvalidation();
   }
 
+  public static EnvVariableChange environmentalChange(String diff) {
+    return new EnvVariableChange(diff);
+  }
+
   @Override
   protected String getValueString() {
     return eventName;
@@ -41,6 +45,19 @@ public class ParsingEvent extends AbstractBuckEvent implements BroadcastEvent {
   public static class SymlinkInvalidation extends ParsingEvent {
     public SymlinkInvalidation() {
       super(EventKey.unique(), "SymlinkInvalidation");
+    }
+  }
+
+  public static class EnvVariableChange extends ParsingEvent {
+    private final String diff;
+
+    public EnvVariableChange(String diff) {
+      super(EventKey.unique(), "EnvVariableChange");
+      this.diff = diff;
+    }
+
+    public String getDiff() {
+      return diff;
     }
   }
 }

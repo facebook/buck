@@ -36,6 +36,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
+import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
@@ -204,7 +205,10 @@ public class ParserTest {
 
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
         ObjectMappers.newDefaultInstance());
+    BroadcastEventListener broadcastEventListener = new BroadcastEventListener();
+    broadcastEventListener.addEventBus(eventBus);
     parser = new Parser(
+        broadcastEventListener,
         new ParserConfig(cell.getBuckConfig()),
         typeCoercerFactory,
         new ConstructorArgMarshaller(typeCoercerFactory));
@@ -1480,6 +1484,7 @@ public class ParserTest {
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
         ObjectMappers.newDefaultInstance());
     parser = new Parser(
+        new BroadcastEventListener(),
         new ParserConfig(cell.getBuckConfig()),
         typeCoercerFactory,
         new ConstructorArgMarshaller(typeCoercerFactory));
@@ -1599,6 +1604,7 @@ public class ParserTest {
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
         ObjectMappers.newDefaultInstance());
     parser = new Parser(
+        new BroadcastEventListener(),
         new ParserConfig(cell.getBuckConfig()),
         typeCoercerFactory,
         new ConstructorArgMarshaller(typeCoercerFactory));

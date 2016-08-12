@@ -327,6 +327,7 @@ public final class Main {
 
       TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(objectMapper);
       this.parser = new Parser(
+          this.broadcastEventListener,
           new ParserConfig(cell.getBuckConfig()),
           typeCoercerFactory,
           new ConstructorArgMarshaller(typeCoercerFactory));
@@ -961,7 +962,7 @@ public final class Main {
                      filesystem.getBuckPaths().getLogDir().resolve("test.log"));
              AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
              BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
-              BroadcastEventListener.BroadcastEventBusClosable broadcastEventBusClosable =
+             BroadcastEventListener.BroadcastEventBusClosable broadcastEventBusClosable =
                  broadcastEventListener.addEventBus(buildEventBus);
 
              // NOTE: This will only run during the lifetime of the process and will flush on close.
@@ -1082,6 +1083,7 @@ public final class Main {
           if (parser == null) {
             TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(objectMapper);
             parser = new Parser(
+                broadcastEventListener,
                 new ParserConfig(rootCell.getBuckConfig()),
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory));

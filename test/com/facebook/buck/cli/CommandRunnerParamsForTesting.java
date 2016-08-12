@@ -96,6 +96,7 @@ public class CommandRunnerParamsForTesting {
         artifactCache,
         eventBus,
         new Parser(
+            new BroadcastEventListener(),
             new ParserConfig(cell.getBuckConfig()),
             typeCoercerFactory, new ConstructorArgMarshaller(typeCoercerFactory)),
         platform,

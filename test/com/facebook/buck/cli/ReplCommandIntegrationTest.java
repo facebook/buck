@@ -113,6 +113,7 @@ public class ReplCommandIntegrationTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     Parser parser =
         new Parser(
+            new BroadcastEventListener(),
             new ParserConfig(buckConfig),
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory));

@@ -24,6 +24,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
@@ -95,6 +96,7 @@ public class ThriftLibraryIntegrationTest {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
         ObjectMappers.newDefaultInstance());
     Parser parser = new Parser(
+        new BroadcastEventListener(),
         new ParserConfig(config),
         typeCoercerFactory,
         new ConstructorArgMarshaller(typeCoercerFactory));

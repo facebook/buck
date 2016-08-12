@@ -1,9 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY 0626f57d8d8d4143012d8b83cecc8e5ae9c1e569 #@#
+#@# GENERATED FILE: DO NOT MODIFY 1c97e531e7ee90a1b9419de02c1b0a9a61ff4099 #@#
 {
   "benchmark_correctness" : {
     "deps" : [
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/event/listener:BroadcastEventListener",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/parser:config",
       "//src/com/facebook/buck/parser:parser",
@@ -25,6 +26,7 @@
     "deps" : [
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/event/listener:BroadcastEventListener",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/parser:config",
       "//src/com/facebook/buck/parser:parser",
@@ -61,6 +63,7 @@
     "deps" : [
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/event/listener:BroadcastEventListener",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/json:json",
       "//src/com/facebook/buck/jvm/java:support",

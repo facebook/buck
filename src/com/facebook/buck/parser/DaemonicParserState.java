@@ -20,6 +20,8 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.counters.Counter;
 import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.counters.TagSetCounter;
+import com.facebook.buck.event.ParsingEvent;
+import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.WatchEvents;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
@@ -64,7 +66,6 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.ThreadSafe;
-
 
 /**
  * Persistent parsing data, that can exist between invocations of the {@link Parser}. All public
@@ -299,7 +300,10 @@ class DaemonicParserState {
   private final AutoCloseableReadWriteUpdateLock cachedStateLock;
   private final AutoCloseableReadWriteUpdateLock cellStateLock;
 
+  private BroadcastEventListener broadcastEventListener;
+
   public DaemonicParserState(
+      BroadcastEventListener broadcastEventListener,
       TypeCoercerFactory typeCoercerFactory,
       int parsingThreads) {
     this.parsingThreads = parsingThreads;
@@ -357,6 +361,7 @@ class DaemonicParserState {
 
     this.cachedStateLock = new AutoCloseableReadWriteUpdateLock();
     this.cellStateLock = new AutoCloseableReadWriteUpdateLock();
+    this.broadcastEventListener = broadcastEventListener;
   }
 
   TypeCoercerFactory getTypeCoercerFactory() {
@@ -605,6 +610,8 @@ class DaemonicParserState {
           environmentChanges.addAll(diff.entriesOnlyOnRight().keySet());
           environmentChanges.addAll(diff.entriesDiffering().keySet());
           cacheInvalidatedByEnvironmentVariableChangeCounter.addAll(environmentChanges);
+          broadcastEventListener.broadcast(ParsingEvent.environmentalChange(
+              environmentChanges.toString()));
         }
         if (invalidatedByDefaultIncludesChange) {
           LOG.warn(

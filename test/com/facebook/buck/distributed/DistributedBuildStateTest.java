@@ -24,6 +24,7 @@ import com.facebook.buck.config.ConfigBuilder;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -144,6 +145,7 @@ public class DistributedBuildStateTest {
     ConstructorArgMarshaller constructorArgMarshaller =
         new ConstructorArgMarshaller(typeCoercerFactory);
     Parser parser = new Parser(
+        new BroadcastEventListener(),
         new ParserConfig(buckConfig),
         typeCoercerFactory,
         constructorArgMarshaller);

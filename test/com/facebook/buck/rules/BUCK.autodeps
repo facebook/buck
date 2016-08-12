@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY aae79785ed4e6ad81a5591da72293bf2cafe2a73 #@#
+#@# GENERATED FILE: DO NOT MODIFY 5599c954bf82c1c3237edde2efd05031407643f9 #@#
 {
   "rules" : {
     "deps" : [
@@ -9,7 +9,7 @@
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/event:event",
-      "//src/com/facebook/buck/event/listener:listener",
+      "//src/com/facebook/buck/event/listener:BroadcastEventListener",
       "//src/com/facebook/buck/file:rules",
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/io:io",

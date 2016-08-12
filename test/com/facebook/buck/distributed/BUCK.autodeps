@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 0de07d20cdbbefb199318ebf45113726b574a1ad #@#
+#@# GENERATED FILE: DO NOT MODIFY c80c373ad565dc5985ce966cc30f662df65093ee #@#
 {
   "distributed" : {
     "deps" : [
@@ -7,6 +7,7 @@
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/distributed:distributed",
       "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/event/listener:BroadcastEventListener",
       "//src/com/facebook/buck/hashing:hashing",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/json:json",
