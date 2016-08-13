@@ -40,9 +40,11 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
+import com.facebook.buck.rules.MixedWithSwift;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.swift.SwiftDescriptions;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
@@ -68,7 +70,8 @@ public class AppleBinaryDescription implements
     Flavored,
     ImplicitDepsInferringDescription<AppleBinaryDescription.Arg>,
     ImplicitFlavorsInferringDescription,
-    MetadataProvidingDescription<AppleBinaryDescription.Arg> {
+    MetadataProvidingDescription<AppleBinaryDescription.Arg>,
+    MixedWithSwift<AppleBinaryDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_binary");
   public static final Flavor APP_FLAVOR = ImmutableFlavor.of("app");
@@ -468,6 +471,20 @@ public class AppleBinaryDescription implements
           constructorArg.linkerFlags.get(),
           constructorArg.platformLinkerFlags.get().getValues());
     }
+  }
+
+  @Override
+  public Optional<BuildRule> generateSwiftBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver buildRuleResolver,
+      Arg args) {
+    return SwiftDescriptions.generateCompanionSwiftBuildRule(
+        params,
+        buildRuleResolver,
+        args,
+        delegate.getDefaultCxxPlatform(),
+        delegate.getCxxPlatforms(),
+        platformFlavorsToAppleCxxPlatforms);
   }
 
   @SuppressFieldNotInitialized

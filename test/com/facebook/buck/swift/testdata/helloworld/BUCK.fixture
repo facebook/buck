@@ -1,6 +1,6 @@
 swift_library(
   name = 'hello',
-  srcs = ['hello.swift'],
+  srcs = ['main.swift'],
 )
 
 apple_binary(

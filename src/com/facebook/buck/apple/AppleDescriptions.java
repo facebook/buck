@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_EXTENSION;
+
 import com.facebook.buck.cxx.BuildRuleWithBinary;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxConstructorArg;
@@ -25,6 +27,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.StripStyle;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
@@ -39,6 +42,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.Tool;
@@ -207,7 +211,19 @@ public class AppleDescriptions {
                     arg))
             .build();
 
-    output.srcs = arg.srcs;
+    if (arg.srcs.isPresent()) {
+      ImmutableSortedSet.Builder<SourceWithFlags> nonSwiftSrcs = ImmutableSortedSet.naturalOrder();
+      for (SourceWithFlags src: arg.srcs.get()) {
+        if (!MorePaths.getFileExtension(resolver.getAbsolutePath(src.getSourcePath()))
+            .equalsIgnoreCase(SWIFT_EXTENSION)) {
+          nonSwiftSrcs.add(src);
+        }
+      }
+      output.srcs = Optional.of(nonSwiftSrcs.build());
+    } else {
+      output.srcs = Optional.absent();
+    }
+
     output.platformSrcs = arg.platformSrcs;
     output.headers = Optional.of(SourceList.ofNamedSources(headerMap));
     output.platformHeaders = arg.platformHeaders;

@@ -17,9 +17,11 @@
 package com.facebook.buck.swift;
 
 import com.facebook.buck.apple.AppleCxxPlatform;
+import com.facebook.buck.apple.ApplePlatforms;
+import com.facebook.buck.apple.MultiarchFileInfo;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
@@ -33,20 +35,20 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.util.Map;
+import java.util.regex.Pattern;
 
 public class SwiftLibraryDescription implements
     Description<SwiftLibraryDescription.Arg>,
     Flavored {
-  private static final Logger LOG = Logger.get(SwiftLibraryDescription.class);
-
   public static final BuildRuleType TYPE = BuildRuleType.of("swift_library");
 
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
@@ -86,37 +88,37 @@ public class SwiftLibraryDescription implements
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     BuildTarget buildTarget = params.getBuildTarget();
-    Optional<Map.Entry<Flavor, CxxPlatform>> platform = cxxPlatformFlavorDomain.getFlavorAndValue(
-        buildTarget);
-    // If we *are* building a specific type of this lib, call into the type specific
-    // rule builder methods.
-    if (platform.isPresent()) {
-      LOG.debug("Build target %s, platform %s", buildTarget, platform);
-      return SwiftDescriptions.createSwiftModule(
-          cxxPlatformFlavorDomain,
-          defaultCxxPlatform,
-          appleCxxPlatformFlavorDomain,
-          targetGraph,
-          params,
-          resolver,
-          platform.get().getValue(),
-          args.moduleName.or(buildTarget.getShortName()),
-          args.srcs.get(),
-          args.compilerFlags.get(),
-          args.frameworks.get(),
-          args.libraries.get(),
-          args.enableObjcInterop.or(true));
+
+    AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
+        cxxPlatformFlavorDomain,
+        defaultCxxPlatform,
+        appleCxxPlatformFlavorDomain,
+        buildTarget,
+        Optional.<MultiarchFileInfo>absent());
+    Optional<Tool> swiftCompiler = appleCxxPlatform.getSwift();
+    if (!swiftCompiler.isPresent()) {
+      throw new HumanReadableException("Platform %s is missing swift compiler", appleCxxPlatform);
     }
+
+    CxxPlatform cxxPlatform = cxxPlatformFlavorDomain.getValue(buildTarget)
+        .or(defaultCxxPlatform);
 
     // Otherwise, we return the generic placeholder of this library.
     return new SwiftLibrary(
+        swiftCompiler.get(),
         params,
-        resolver,
         new SourcePathResolver(resolver),
         ImmutableList.<BuildRule>of(),
         args.frameworks.get(),
         args.libraries.get(),
-        appleCxxPlatformFlavorDomain);
+        appleCxxPlatformFlavorDomain,
+        BuildTargets.getGenPath(
+            params.getProjectFilesystem(),
+            buildTarget.withFlavors(cxxPlatform.getFlavor()), "%s"),
+        args.moduleName.or(buildTarget.getShortName()),
+        args.srcs.get(),
+        args.enableObjcInterop,
+        args.supportedPlatformsRegex);
   }
 
   @SuppressFieldNotInitialized
@@ -127,6 +129,7 @@ public class SwiftLibraryDescription implements
     public Optional<ImmutableSortedSet<FrameworkPath>> frameworks;
     public Optional<ImmutableSortedSet<FrameworkPath>> libraries;
     public Optional<Boolean> enableObjcInterop;
+    public Optional<Pattern> supportedPlatformsRegex;
   }
 
 }

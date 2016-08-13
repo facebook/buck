@@ -42,9 +42,11 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
+import com.facebook.buck.rules.MixedWithSwift;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.swift.SwiftDescriptions;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Joiner;
@@ -66,7 +68,8 @@ public class AppleLibraryDescription implements
     Flavored,
     ImplicitDepsInferringDescription<AppleLibraryDescription.Arg>,
     ImplicitFlavorsInferringDescription,
-    MetadataProvidingDescription<AppleLibraryDescription.Arg> {
+    MetadataProvidingDescription<AppleLibraryDescription.Arg>,
+    MixedWithSwift<AppleLibraryDescription.Arg> {
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_library");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
@@ -434,6 +437,20 @@ public class AppleLibraryDescription implements
         buildTarget,
         cellRoots,
         (AppleNativeTargetDescriptionArg) constructorArg);
+  }
+
+  @Override
+  public Optional<BuildRule> generateSwiftBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      Arg args) {
+    return SwiftDescriptions.generateCompanionSwiftBuildRule(
+        params,
+        ruleResolver,
+        args,
+        delegate.getDefaultCxxPlatform(),
+        delegate.getCxxPlatforms(),
+        appleCxxPlatformFlavorDomain);
   }
 
   public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(

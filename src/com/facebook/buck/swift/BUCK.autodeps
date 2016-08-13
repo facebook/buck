@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY f962b815e562c15a2f14c051e7a58c859d00bf50 #@#
+#@# GENERATED FILE: DO NOT MODIFY 2879bcdcd0d822c9ddb133dceff9af8ae05b5df6 #@#
 {
   "swift" : {
     "deps" : [
@@ -13,14 +13,15 @@
     "exported_deps" : [
       "//src/com/facebook/buck/apple:platform",
       "//src/com/facebook/buck/cxx:platform",
+      "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",
-      "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/step:step",
       "//third-party/java/guava:guava",
-      "//third-party/java/infer-annotations:infer-annotations"
+      "//third-party/java/infer-annotations:infer-annotations",
+      "//third-party/java/jsr:jsr305"
     ]
   }
 }

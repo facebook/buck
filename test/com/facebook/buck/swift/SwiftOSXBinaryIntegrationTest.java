@@ -18,22 +18,20 @@ package com.facebook.buck.swift;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.ApplePlatform;
-
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
-import java.io.IOException;
-
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.io.IOException;
 
 public class SwiftOSXBinaryIntegrationTest {
 
@@ -81,7 +79,7 @@ public class SwiftOSXBinaryIntegrationTest {
         runResult.getStdout(),
         equalTo("Hello, \uD83C\uDF0E!\n"));
 
-    workspace.replaceFileContents("hello.swift", "Hello", "Goodbye");
+    workspace.replaceFileContents("main.swift", "Hello", "Goodbye");
 
     ProjectWorkspace.ProcessResult secondRunResult = workspace.runBuckCommand(
         "run",
@@ -90,5 +88,22 @@ public class SwiftOSXBinaryIntegrationTest {
     assertThat(
         secondRunResult.getStdout(),
         equalTo("Goodbye, \uD83C\uDF0E!\n"));
+  }
+
+  @Test
+  public void objcMixedSwiftRunsAndPrintsMessageOnOSX() throws IOException {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX),
+        is(true));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "objc_mix_swift", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand(
+        "run", ":DemoMix#macosx-x86_64");
+    runResult.assertSuccess();
+    assertThat(
+        runResult.getStdout(),
+        equalTo("Hello Swift\n"));
   }
 }
