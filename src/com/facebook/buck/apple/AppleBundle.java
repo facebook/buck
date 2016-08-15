@@ -86,6 +86,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -562,15 +563,14 @@ public class AppleBundle
         new MakeCleanDirectoryStep(
             getProjectFilesystem(),
             headersFolder));
-
-    for (SourcePath header : headers.get().getLinks().values()) {
-      Path headerPath = getResolver().getAbsolutePath(header);
-      //TODO: this doesn't work if the framework has subfolders for headers
+    for (Entry<Path, SourcePath> entry : headers.get().getLinks().entrySet()) {
+      Path destinationPath = entry.getKey().subpath(1, entry.getKey().getNameCount());
+      Path headerPath = getResolver().getAbsolutePath(entry.getValue());
       stepsBuilder.add(
           CopyStep.forFile(
               getProjectFilesystem(),
               headerPath,
-              headersFolder.resolve(headerPath.getFileName())));
+              headersFolder.resolve(destinationPath)));
     }
   }
 

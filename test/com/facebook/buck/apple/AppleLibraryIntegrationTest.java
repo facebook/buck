@@ -37,6 +37,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -544,6 +545,50 @@ public class AppleLibraryIntegrationTest {
     Path frameworksPath = frameworkPath.resolve("Contents/Frameworks");
     assertThat(Files.exists(frameworksPath), is(false));
   }
+
+  @Test
+  public void testFrameworkWithFrameworkDependency() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_binary_with_library_dependencies_as_frameworks", tmp);
+    workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibraryDep:TestLibraryDep#dwarf-and-dsym,framework,macosx-x86_64,include-frameworks");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build", target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path testBinaryPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))
+        .resolve("TestLibraryDep.framework/TestLibraryDep");
+    assertTrue(Files.exists(testBinaryPath));
+
+    ProcessExecutor.Result nmResult = workspace.runCommand(
+        "nm", testBinaryPath.toString());
+    assertEquals(0, nmResult.getExitCode());
+    Assert.assertThat(
+        nmResult.getStdout().or(""),
+        containsString("U _zero"));
+
+    ProcessExecutor.Result otoolResult = workspace.runCommand(
+        "otool", "-L", testBinaryPath.toString());
+    assertEquals(0, otoolResult.getExitCode());
+    Assert.assertThat(
+        otoolResult.getStdout().or(""),
+        containsString("@rpath/TestLibraryTransitiveDep.framework/TestLibraryTransitiveDep"));
+
+    ProcessExecutor.Result otoolLoadResult = workspace.runCommand(
+        "otool", "-l", testBinaryPath.toString());
+    assertEquals(0, otoolLoadResult.getExitCode());
+    Assert.assertThat(
+        otoolLoadResult.getStdout().or(""),
+        containsString("@loader_path/Frameworks"));
+    Assert.assertThat(
+        otoolLoadResult.getStdout().or(""),
+        containsString("@executable_path/Frameworks"));
+  }
+
 
   @Test
   public void testAppleLibraryExportedHeaderSymlinkTree() throws IOException {
