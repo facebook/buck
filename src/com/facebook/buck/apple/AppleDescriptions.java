@@ -68,6 +68,8 @@ import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -174,18 +176,37 @@ public class AppleDescriptions {
     }
   }
 
+  /**
+   * Convert {@link SourcePath} to a mapping of {@code include path -> file path}.
+   * <p/>
+   * {@code include path} is the path that can be referenced in {@code #include} directives.
+   * {@code file path} is the actual path to the file on disk.
+   *
+   * @throws HumanReadableException when two {@code SourcePath} yields the same IncludePath.
+   */
   @VisibleForTesting
   static ImmutableSortedMap<String, SourcePath> convertToFlatCxxHeaders(
       Path headerPathPrefix,
       Function<SourcePath, Path> sourcePathResolver,
       Set<SourcePath> headerPaths) {
-    ImmutableSortedMap.Builder<String, SourcePath> cxxHeaders = ImmutableSortedMap.naturalOrder();
+    Map<String, SourcePath> includeToFile = new HashMap<>(headerPaths.size());
     for (SourcePath headerPath : headerPaths) {
       Path fileName = sourcePathResolver.apply(headerPath).getFileName();
       String key = headerPathPrefix.resolve(fileName).toString();
-      cxxHeaders.put(key, headerPath);
+      if (includeToFile.containsKey(key)) {
+        throw new HumanReadableException(
+            "The same include path maps to multiple files:\n" +
+                "  Include path: %s\n" +
+                "  Conflicting files:\n" +
+                "    %s\n" +
+                "    %s",
+            key,
+            headerPath,
+            includeToFile.get(key));
+      }
+      includeToFile.put(key, headerPath);
     }
-    return cxxHeaders.build();
+    return ImmutableSortedMap.copyOf(includeToFile);
   }
 
   public static void populateCxxConstructorArg(
