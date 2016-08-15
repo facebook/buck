@@ -105,6 +105,7 @@ public class AppleCxxPlatformsTest {
       Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/nm"),
       Paths.get("usr/bin/actool"),
       Paths.get("usr/bin/ibtool"),
+      Paths.get("usr/bin/install_name_tool"),
       Paths.get("usr/bin/momc"),
       Paths.get("usr/bin/lldb"),
       Paths.get("usr/bin/xctest"));
@@ -184,6 +185,9 @@ public class AppleCxxPlatformsTest {
     assertEquals(
         ImmutableList.of("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
         appleCxxPlatform.getDsymutil().getCommandPrefix(resolver));
+    assertEquals(
+        ImmutableList.of("Toolchains/XcodeDefault.xctoolchain/usr/bin/install_name_tool"),
+        appleCxxPlatform.getInstallNameTool().getCommandPrefix(resolver));
     assertEquals(
         ImmutableList.of("Toolchains/XcodeDefault.xctoolchain/usr/bin/codesign_allocate"),
         appleCxxPlatform.getCodesignAllocate().get().getCommandPrefix(resolver));
@@ -289,6 +293,9 @@ public class AppleCxxPlatformsTest {
     assertEquals(
         ImmutableList.of("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
         appleCxxPlatform.getDsymutil().getCommandPrefix(resolver));
+    assertEquals(
+        ImmutableList.of("Toolchains/XcodeDefault.xctoolchain/usr/bin/install_name_tool"),
+        appleCxxPlatform.getInstallNameTool().getCommandPrefix(resolver));
 
     assertEquals(
         ImmutableList.of("usr/bin/xctest"),
@@ -388,6 +395,9 @@ public class AppleCxxPlatformsTest {
     assertEquals(
         ImmutableList.of("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
         appleCxxPlatform.getDsymutil().getCommandPrefix(resolver));
+    assertEquals(
+        ImmutableList.of("Toolchains/XcodeDefault.xctoolchain/usr/bin/install_name_tool"),
+        appleCxxPlatform.getInstallNameTool().getCommandPrefix(resolver));
 
     assertEquals(
         ImmutableList.of("usr/bin/xctest"),

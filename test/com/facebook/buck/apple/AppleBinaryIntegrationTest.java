@@ -912,12 +912,22 @@ public class AppleBinaryIntegrationTest {
         this, "apple_binary_with_library_dependencies_as_frameworks", tmp);
     workspace.setUp();
 
-    BuildTarget target = BuildTargetFactory.newInstance("//TestApp:TestAppBundle#include-frameworks");
+    BuildTarget target = BuildTargetFactory.newInstance(
+        "//TestApp:TestAppBundle#dwarf-and-dsym,include-frameworks");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build", target.getFullyQualifiedName());
     result.assertSuccess();
 
+    Path testBinaryPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))
+        .resolve("TestAppBundle.app/Contents/MacOS/TestAppBundle");
+    assertTrue(Files.exists(testBinaryPath));
 
+    ProcessExecutor.Result otoolResult = workspace.runCommand(
+        testBinaryPath.toString());
+    assertEquals(0, otoolResult.getExitCode());
+    Assert.assertThat(
+        otoolResult.getStderr().or(""),
+        containsString("Check for (41)"));
 
   }
 

@@ -52,7 +52,6 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -137,6 +136,9 @@ public class AppleBundle
   private final Tool momc;
 
   @AddToRuleKey
+  private final Tool installNameTool;
+
+  @AddToRuleKey
   private final ImmutableSortedSet<BuildTarget> tests;
 
   @AddToRuleKey
@@ -215,6 +217,7 @@ public class AppleBundle
     this.frameworks = frameworks;
     this.ibtool = appleCxxPlatform.getIbtool();
     this.momc = appleCxxPlatform.getMomc();
+    this.installNameTool = appleCxxPlatform.getInstallNameTool();
     this.assetCatalog = assetCatalog;
     this.binaryName = getBinaryName(getBuildTarget(), this.productName);
     this.bundleRoot =
@@ -578,6 +581,7 @@ public class AppleBundle
     Preconditions.checkNotNull(binaryOutputPath);
 
     copyBinaryIntoBundle(stepsBuilder, binaryOutputPath);
+    binaryAddRPaths(stepsBuilder);
     copyAnotherCopyOfWatchKitStub(stepsBuilder, binaryOutputPath);
   }
 
@@ -593,6 +597,22 @@ public class AppleBundle
             getProjectFilesystem(),
             binaryOutputPath,
             bundleBinaryPath));
+  }
+
+  private void binaryAddRPaths(
+      ImmutableList.Builder<Step> stepsBuilder) {
+    String relativeFrameworksPath =
+        destinations.getExecutablesPath().relativize(destinations.getFrameworksPath()).toString();
+    stepsBuilder.add(new InstallNameToolStep(getProjectFilesystem(),
+        installNameTool.getEnvironment(getResolver()),
+        installNameTool.getCommandPrefix(getResolver()),
+        ImmutableList.<String>of("-add_rpath", "@loader_path/" + relativeFrameworksPath),
+        bundleBinaryPath));
+    stepsBuilder.add(new InstallNameToolStep(getProjectFilesystem(),
+        installNameTool.getEnvironment(getResolver()),
+        installNameTool.getCommandPrefix(getResolver()),
+        ImmutableList.<String>of("-add_rpath", "@executable_path/" + relativeFrameworksPath),
+        bundleBinaryPath));
   }
 
   private void copyAnotherCopyOfWatchKitStub(
@@ -987,20 +1007,11 @@ public class AppleBundle
   @Override
   public NativeLinkableInput getNativeLinkableInput(
       CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
-    ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
-    linkerArgsBuilder.addAll(StringArg.from(
-        "-rpath",
-        "@loader_path/Frameworks",
-        "-rpath",
-        "@executable_path/Frameworks"
-    ));
-
-    ImmutableSet.Builder<FrameworkPath> frameworkPaths = ImmutableSet.builder();
-    frameworkPaths.add(FrameworkPath.ofSourcePath(new BuildTargetSourcePath(this.getBuildTarget())));
-
     return NativeLinkableInput.of(
-        linkerArgsBuilder.build(),
-        frameworkPaths.build(),
+        Collections.<Arg>emptyList(),
+        ImmutableSet.of(
+            FrameworkPath.ofSourcePath(new BuildTargetSourcePath(this.getBuildTarget()))
+        ),
         Collections.<FrameworkPath>emptySet()
     );
   }

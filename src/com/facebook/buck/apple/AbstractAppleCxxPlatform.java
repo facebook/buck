@@ -60,6 +60,7 @@ abstract class AbstractAppleCxxPlatform implements FlavorConvertible {
   public abstract Tool getXctest();
   public abstract Tool getDsymutil();
   public abstract Tool getLipo();
+  public abstract Tool getInstallNameTool();
   public abstract Optional<Path> getStubBinary();
   public abstract Tool getLldb();
   public abstract Optional<Tool> getCodesignAllocate();

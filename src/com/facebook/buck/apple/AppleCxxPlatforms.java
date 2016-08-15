@@ -280,6 +280,11 @@ public class AppleCxxPlatforms {
         "lldb",
         version);
 
+    Tool installNameTool = VersionedTool.of(
+        getToolPath("install_name_tool", toolSearchPaths, executableFinder),
+        "install_name_tool",
+        version);
+
     Optional<Path> stubBinaryPath = targetSdk.getApplePlatform().getStubBinaryPath().transform(
         new Function<Path, Path>() {
           @Override
@@ -432,6 +437,7 @@ public class AppleCxxPlatforms {
         .setLipo(lipo)
         .setStubBinary(stubBinaryPath)
         .setLldb(lldb)
+        .setInstallNameTool(installNameTool)
         .setCodesignAllocate(
             getOptionalTool("codesign_allocate", toolSearchPaths, executableFinder, version));
 
