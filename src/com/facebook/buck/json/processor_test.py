@@ -4,8 +4,6 @@ import os
 import unittest
 import shutil
 import tempfile
-import sys
-import StringIO
 
 from .buck import BuildFileProcessor, Diagnostic, add_rule
 
@@ -600,10 +598,10 @@ class BuckTest(unittest.TestCase):
             get_env_from_results(result),
             {'TEST1': "foo", 'TEST2': None, 'TEST3': None, 'TEST4': '', 'TEST5': None})
 
-    def test_safe_os_module_allows_safe_functions(self):
+    def test_safe_modules_allow_safe_functions(self):
         """
-        Test that 'import os.path' allows access to safe 'os' functions
-        and also 'from os.path import *' works.
+        Test that 'import os.path' allows access to safe 'os' functions,
+        'import pipes' allows 'quote' and also that 'from os.path import *' works.
         """
 
         self.enable_build_file_sandboxing = True
@@ -612,19 +610,20 @@ class BuckTest(unittest.TestCase):
             contents=(
                 'import os.path',
                 'from os.path import *',
+                'import pipes',
                 'assert(os.path.split("a/b/c") == ("a/b", "c"))',
                 'assert(split("a/b/c") == ("a/b", "c"))',
                 'assert os.environ["TEST1"] == "foo"',
+                'assert pipes.quote("foo; bar") == "\'foo; bar\'"'
             ))
         self.write_files(build_file)
-        # 'os.path.exists' should raise AttributeError
         with with_envs({'TEST1': 'foo'}):
             build_file_processor = self.create_build_file_processor()
             build_file_processor.process(build_file.path, set())
 
-    def test_safe_os_module_blocks_unsafe_functions(self):
+    def test_safe_modules_block_unsafe_functions(self):
         """
-        Test that after 'import os.path' returns a safe version of 'os' module
+        Test that after 'import os.path' unsafe functions raise errors
         """
 
         self.enable_build_file_sandboxing = True
@@ -635,8 +634,8 @@ class BuckTest(unittest.TestCase):
                 'os.path.exists("a/b")',
             ))
         self.write_files(build_file)
-        # 'os.path.exists()' should raise AttributeError
         build_file_processor = self.create_build_file_processor()
+        # 'os.path.exists()' should raise AttributeError
         self.assertRaises(
             AttributeError,
             build_file_processor.process,

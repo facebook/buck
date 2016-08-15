@@ -812,7 +812,7 @@ class BuildFileProcessor(object):
 
         mod_name = safe_mod.__name__
         whitelist_set = set(whitelist)
-        for name in mod.__all__:
+        for name in mod.__dict__:
             if name in whitelist_set:
                 # Check if a safe version is defined in case it's a submodule.
                 # If it's not defined the original submodule will be copied.
@@ -851,9 +851,12 @@ class BuildFileProcessor(object):
         if name in self._safe_modules:
             return self._safe_modules[name]
 
-        # Build a new module for the safe version, non-empty 'fromlist' prevents
-        # returning top-level package (e.g. 'os' would be returned for 'os.path' without it)
-        mod = ORIGINAL_IMPORT(name, fromlist=[''])
+        # Get the normal module, non-empty 'fromlist' prevents returning top-level package
+        # (e.g. 'os' would be returned for 'os.path' without it)
+        with self._allow_unsafe_import():
+            mod = ORIGINAL_IMPORT(name, fromlist=[''])
+
+        # Build a new module for the safe version
         safe_mod = imp.new_module(name)
 
         # Install whitelisted parts of the module, block the rest to produce errors
