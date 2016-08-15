@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -353,6 +354,11 @@ public class CxxLibrary
   @Override
   public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform) {
     return linkTargetInput.apply(cxxPlatform);
+  }
+
+  @Override
+  public Optional<Path> getNativeLinkTargetOutputPath(CxxPlatform cxxPlatform) {
+    return Optional.absent();
   }
 
   @Override

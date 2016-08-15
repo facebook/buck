@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -457,6 +458,10 @@ public class PrebuiltCxxLibrary
                             getResolver(),
                             getStaticPicLibrary(cxxPlatform).get())))
                 .build();
+          }
+          @Override
+          public Optional<Path> getNativeLinkTargetOutputPath(CxxPlatform cxxPlatform) {
+            return Optional.absent();
           }
         });
   }

@@ -49,6 +49,7 @@ import com.google.common.collect.Sets;
 
 import org.immutables.value.Value;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -336,6 +337,7 @@ public class Omnibus {
     // Create the root library rule using the arguments assembled above.
     BuildTarget rootTarget = getRootTarget(params.getBuildTarget(), root.getBuildTarget());
     NativeLinkTargetMode rootTargetMode = root.getNativeLinkTargetMode(cxxPlatform);
+    Optional<Path> output = root.getNativeLinkTargetOutputPath(cxxPlatform);
     CxxLink rootLinkRule;
     switch (rootTargetMode.getType()) {
 
@@ -350,13 +352,14 @@ public class Omnibus {
                 ruleResolver,
                 pathResolver,
                 rootTarget,
-                BuildTargets.getGenPath(params.getProjectFilesystem(), rootTarget, "%s")
-                    .resolve(
-                        rootSoname.or(
-                            String.format(
-                                "%s.%s",
-                                rootTarget.getShortName(),
-                                cxxPlatform.getSharedLibraryExtension()))),
+                output.or(
+                    BuildTargets.getGenPath(params.getProjectFilesystem(), rootTarget, "%s")
+                        .resolve(
+                            rootSoname.or(
+                                String.format(
+                                    "%s.%s",
+                                    rootTarget.getShortName(),
+                                    cxxPlatform.getSharedLibraryExtension())))),
                 rootSoname,
                 argsBuilder.build());
        break;
@@ -372,8 +375,9 @@ public class Omnibus {
                 ruleResolver,
                 pathResolver,
                 rootTarget,
-                BuildTargets.getGenPath(params.getProjectFilesystem(), rootTarget, "%s")
-                    .resolve(rootTarget.getShortName()),
+                output.or(
+                    BuildTargets.getGenPath(params.getProjectFilesystem(), rootTarget, "%s")
+                        .resolve(rootTarget.getShortName())),
                 argsBuilder.build(),
                 Linker.LinkableDepType.SHARED,
                 Optional.<Linker.CxxRuntimeType>absent());

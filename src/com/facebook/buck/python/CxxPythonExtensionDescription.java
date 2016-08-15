@@ -407,6 +407,11 @@ public class CxxPythonExtensionDescription implements
                 .build();
           }
 
+          @Override
+          public Optional<Path> getNativeLinkTargetOutputPath(CxxPlatform cxxPlatform) {
+            return Optional.absent();
+          }
+
         };
       }
 

@@ -31,6 +31,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -38,6 +39,7 @@ import com.google.common.collect.Iterables;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
+import java.nio.file.Path;
 import java.util.Map;
 
 public class OmnibusTest {
@@ -579,6 +581,11 @@ public class OmnibusTest {
       return NativeLinkableInput.builder()
           .addArgs(new StringArg(getBuildTarget().toString()))
           .build();
+    }
+
+    @Override
+    public Optional<Path> getNativeLinkTargetOutputPath(CxxPlatform cxxPlatform) {
+      return Optional.absent();
     }
 
   }

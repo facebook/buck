@@ -298,6 +298,11 @@ public class CxxLuaExtensionDescription implements
             .build();
       }
 
+      @Override
+      public Optional<Path> getNativeLinkTargetOutputPath(CxxPlatform cxxPlatform) {
+        return Optional.absent();
+      }
+
     };
   }
 
