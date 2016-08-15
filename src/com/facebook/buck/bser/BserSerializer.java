@@ -29,6 +29,7 @@ import static com.facebook.buck.bser.BserConstants.BSER_STRING;
 import static com.facebook.buck.bser.BserConstants.BSER_TRUE;
 
 import com.google.common.io.BaseEncoding;
+import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -41,7 +42,6 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -152,13 +152,13 @@ public class BserSerializer {
         buffer = appendRecursive(buffer, entry.getValue(), utf8Encoder);
       }
     } else if (value instanceof Iterable<?>) {
-      List<Object> list = (List<Object>) value;
-      int listLen = list.size();
-      BserIntegralEncodedSize encodedSize = getEncodedSize(listLen);
+      Iterable<Object> iterable = (Iterable<Object>) value;
+      int len = Iterables.size(iterable);
+      BserIntegralEncodedSize encodedSize = getEncodedSize(len);
       buffer = increaseBufferCapacityIfNeeded(buffer, 2 + encodedSize.size);
       buffer.put(BSER_ARRAY);
-      buffer = appendLongWithSize(buffer, listLen, encodedSize);
-      for (Object obj : list) {
+      buffer = appendLongWithSize(buffer, len, encodedSize);
+      for (Object obj : iterable) {
         buffer = appendRecursive(buffer, obj, utf8Encoder);
       }
     } else {

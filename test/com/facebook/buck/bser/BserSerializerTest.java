@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThat;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
 
 import java.io.ByteArrayOutputStream;
@@ -139,6 +140,18 @@ public class BserSerializerTest {
   public void serializeArrayOfInt8() throws IOException {
     assertEncodingMatches(
         ImmutableList.of((byte) 0x23, (byte) 0x42, (byte) 0xF0),
+        EXPECTED_INT8_ARRAY);
+  }
+
+  @Test
+  public void serializeEmptySet() throws IOException {
+    assertEncodingMatches(ImmutableSet.of(), EXPECTED_EMPTY_ARRAY);
+  }
+
+  @Test
+  public void serializeSetOfInt8() throws IOException {
+    assertEncodingMatches(
+        ImmutableSet.of((byte) 0x23, (byte) 0x42, (byte) 0xF0),
         EXPECTED_INT8_ARRAY);
   }
 
