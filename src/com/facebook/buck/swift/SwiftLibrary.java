@@ -16,6 +16,7 @@
 
 package com.facebook.buck.swift;
 
+import static com.facebook.buck.cxx.CxxPreprocessables.IncludeType.LOCAL;
 import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_MAIN_FILENAME;
 import static com.facebook.buck.swift.SwiftUtil.normalizeSwiftModuleName;
 import static com.facebook.buck.swift.SwiftUtil.toSwiftHeaderName;
@@ -46,12 +47,15 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.MoreIterables;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.cache.LoadingCache;
@@ -60,6 +64,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.util.Set;
@@ -256,6 +261,19 @@ class SwiftLibrary
       compilerCommand.add(getResolver().getRelativePath(sourcePath).toString());
     }
 
+    compilerCommand.addAll(MoreIterables.zipAndConcat(
+        Iterables.cycle(LOCAL.getFlag()),
+        FluentIterable.from(getDeps())
+            .filter(SwiftLibrary.class)
+            .transform(SourcePaths.getToBuildTargetSourcePath())
+            .transform(new Function<SourcePath, String>() {
+              @Nullable
+              @Override
+              public String apply(SourcePath input) {
+                return getResolver().getAbsolutePath(input).toString();
+              }
+            })));
+
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return new SwiftCompileStep(
         projectFilesystem.getRootPath(),
@@ -314,7 +332,7 @@ class SwiftLibrary
       HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
     return CxxPreprocessorInput.builder()
         .addIncludes(CxxHeadersDir.of(
-            CxxPreprocessables.IncludeType.LOCAL,
+            LOCAL,
             new BuildTargetSourcePath(getBuildTarget())))
         .build();
   }
