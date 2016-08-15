@@ -328,7 +328,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
-  public boolean exists(Path path) {
+  public boolean exists(Path path, LinkOption... options) {
     return isFile(path) || isDirectory(path);
   }
 

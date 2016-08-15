@@ -102,4 +102,25 @@ public class ConfiguredBuckOutIntegrationTest {
         .assertSuccess();
   }
 
+  @Test
+  public void verifyNoopBuildWithCompatSymlink() throws IOException {
+    assumeThat(Platform.detect(), Matchers.not(Matchers.is(Platform.WINDOWS)));
+
+    // Do an initial build.
+    workspace.runBuckBuild(
+        "-c", "project.buck_out=something",
+        "-c", "project.buck_out_compat_link=true",
+        "//:dummy")
+        .assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:dummy");
+
+    // Run another build immediately after and verify everything was up to date.
+    workspace.runBuckBuild(
+        "-c", "project.buck_out=something",
+        "-c", "project.buck_out_compat_link=true",
+        "//:dummy")
+        .assertSuccess();
+    workspace.getBuildLog().assertTargetHadMatchingRuleKey("//:dummy");
+  }
+
 }

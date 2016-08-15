@@ -455,8 +455,8 @@ public class ProjectFilesystem {
     return file;
   }
 
-  public boolean exists(Path pathRelativeToProjectRoot) {
-    return Files.exists(getPathForRelativePath(pathRelativeToProjectRoot));
+  public boolean exists(Path pathRelativeToProjectRoot, LinkOption... options) {
+    return Files.exists(getPathForRelativePath(pathRelativeToProjectRoot), options);
   }
 
   public long getFileSize(Path pathRelativeToProjectRoot) throws IOException {

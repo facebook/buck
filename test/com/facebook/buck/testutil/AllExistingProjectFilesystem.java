@@ -16,12 +16,14 @@
 
 package com.facebook.buck.testutil;
 
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 
 public class AllExistingProjectFilesystem extends FakeProjectFilesystem {
 
   @Override
-  public boolean exists(Path path) {
+  public boolean exists(Path path, LinkOption... options) {
     return true;
   }
+
 }

@@ -52,6 +52,7 @@ import com.facebook.buck.event.listener.SuperConsoleConfig;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.AsynchronousDirectoryContentsCleaner;
+import com.facebook.buck.io.BuckPaths;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -152,6 +153,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.FileSystems;
+import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -770,10 +772,13 @@ public final class Main {
 
         Optional<String> currentVersion =
             filesystem.readFileIfItExists(BuckConstant.getCurrentVersionFile());
+        BuckPaths unconfiguredPaths =
+            filesystem.getBuckPaths().withConfiguredBuckOut(filesystem.getBuckPaths().getBuckOut());
         if (!currentVersion.isPresent() ||
             !currentVersion.get().equals(BuckVersion.getVersion()) ||
-            (filesystem.isSymLink(filesystem.getBuckPaths().getGenDir()) ^
-                buckConfig.getBuckOutCompatLink())) {
+            (filesystem.exists(unconfiguredPaths.getGenDir(), LinkOption.NOFOLLOW_LINKS) &&
+                (filesystem.isSymLink(unconfiguredPaths.getGenDir()) ^
+                    buckConfig.getBuckOutCompatLink()))) {
           // Migrate any version-dependent directories (which might be
           // huge) to a trash directory so we can delete it
           // asynchronously after the command is done.
