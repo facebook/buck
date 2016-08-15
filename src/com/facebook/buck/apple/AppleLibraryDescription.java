@@ -425,8 +425,6 @@ public class AppleLibraryDescription implements
       Optional<FrameworkDependencies> frameworks =
           resolver.requireMetadata(
               BuildTarget.builder(dep)
-                  // Do not want to autoconvert everything to framework
-                  //.addFlavors(AppleDescriptions.FRAMEWORK_FLAVOR)
                   .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                   .addFlavors(cxxPlatformFlavor.get())
                   .build(),
@@ -435,12 +433,10 @@ public class AppleLibraryDescription implements
         sourcePaths.addAll(frameworks.get().getSourcePaths());
       }
     }
-    // Not all parts of Buck use require yet, so require the rule here so it's available in the
-    // resolver for the parts that don't.
 
-    // Previously also had, but I need framework info to pass through non frameworks
-    // only add self if a framework
     if (buildTarget.getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
+      // Not all parts of Buck use require yet, so require the rule here so it's available in the
+      // resolver for the parts that don't.
       resolver.requireRule(buildTarget);
       sourcePaths.add(new BuildTargetSourcePath(buildTarget));
 

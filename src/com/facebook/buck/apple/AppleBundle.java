@@ -313,7 +313,6 @@ public class AppleBundle
   }
 
   private boolean isFrameworkBundle() {
-    // TODO: if binary is compiled with framework flavor check here.
     return extension.equals(AppleBundleExtension.FRAMEWORK.toFileExtension()) &&
         binary.isPresent();
   }
@@ -960,7 +959,6 @@ public class AppleBundle
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
-    // We're a bundle, no transitive stuff goes trough
     return ImmutableMap.of(getBuildTarget(), getCxxPreprocessorInput(cxxPlatform, headerVisibility));
   }
 
@@ -1010,8 +1008,7 @@ public class AppleBundle
     return NativeLinkableInput.of(
         Collections.<Arg>emptyList(),
         ImmutableSet.of(
-            FrameworkPath.ofSourcePath(new BuildTargetSourcePath(this.getBuildTarget()))
-        ),
+            FrameworkPath.ofSourcePath(new BuildTargetSourcePath(this.getBuildTarget()))),
         Collections.<FrameworkPath>emptySet()
     );
   }
