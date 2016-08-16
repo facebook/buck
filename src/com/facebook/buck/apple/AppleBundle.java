@@ -600,18 +600,34 @@ public class AppleBundle
 
   private void binaryAddRPaths(
       ImmutableList.Builder<Step> stepsBuilder) {
-    String relativeFrameworksPath =
+    final String relativeFrameworksPath =
         destinations.getExecutablesPath().relativize(destinations.getFrameworksPath()).toString();
-    stepsBuilder.add(new InstallNameToolStep(getProjectFilesystem(),
-        installNameTool.getEnvironment(getResolver()),
-        installNameTool.getCommandPrefix(getResolver()),
-        ImmutableList.<String>of("-add_rpath", "@loader_path/" + relativeFrameworksPath),
-        bundleBinaryPath));
-    stepsBuilder.add(new InstallNameToolStep(getProjectFilesystem(),
-        installNameTool.getEnvironment(getResolver()),
-        installNameTool.getCommandPrefix(getResolver()),
-        ImmutableList.<String>of("-add_rpath", "@executable_path/" + relativeFrameworksPath),
-        bundleBinaryPath));
+    for (final String rpathPrefix : ImmutableList.of("@loader_path/", "@executable_path/")) {
+      stepsBuilder.add(
+          new ShellStep(getProjectFilesystem().getRootPath()) {
+            @Override
+            protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+              ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
+
+              commandBuilder.addAll(installNameTool.getCommandPrefix(getResolver()));
+              commandBuilder.add("-add_rpath");
+              commandBuilder.add(rpathPrefix + relativeFrameworksPath);
+              commandBuilder.add(
+                  getProjectFilesystem().resolve(bundleBinaryPath).toString());
+              return commandBuilder.build();
+            }
+
+            @Override
+            public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+              return installNameTool.getEnvironment(getResolver());
+            }
+
+            @Override
+            public String getShortName() {
+              return "install_name_tool";
+            }
+          });
+    }
   }
 
   private void copyAnotherCopyOfWatchKitStub(
