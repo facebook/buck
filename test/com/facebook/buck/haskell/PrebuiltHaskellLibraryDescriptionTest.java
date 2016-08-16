@@ -52,6 +52,8 @@ public class PrebuiltHaskellLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PrebuiltHaskellLibrary library =
         (PrebuiltHaskellLibrary) new PrebuiltHaskellLibraryBuilder(target)
+            .setVersion("1.0.0")
+            .setDb(new FakeSourcePath("package.conf.d"))
             .setStaticLibs(ImmutableList.of(lib))
             .build(resolver);
     NativeLinkableInput input =
@@ -73,6 +75,8 @@ public class PrebuiltHaskellLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PrebuiltHaskellLibrary library =
         (PrebuiltHaskellLibrary) new PrebuiltHaskellLibraryBuilder(target)
+            .setVersion("1.0.0")
+            .setDb(new FakeSourcePath("package.conf.d"))
             .setSharedLibs(ImmutableMap.of("libfoo.so", lib))
             .build(resolver);
     NativeLinkableInput input =
@@ -87,41 +91,65 @@ public class PrebuiltHaskellLibraryDescriptionTest {
   }
 
   @Test
-  public void staticInterfaces() throws Exception {
+  public void interfaces() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePath interfaces = new FakeSourcePath("interfaces");
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PrebuiltHaskellLibrary library =
         (PrebuiltHaskellLibrary) new PrebuiltHaskellLibraryBuilder(target)
-            .setStaticInterfaces(interfaces)
+            .setVersion("1.0.0")
+            .setDb(new FakeSourcePath("package.conf.d"))
+            .setImportDirs(ImmutableList.of(interfaces))
             .build(resolver);
     HaskellCompileInput input =
         library.getCompileInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.STATIC);
     assertThat(
-        input.getIncludes(),
+        input.getPackages().get(0).getInterfaces(),
         Matchers.contains(interfaces));
   }
 
   @Test
-  public void sharedInterfaces() throws Exception {
+  public void packageDb() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePath interfaces = new FakeSourcePath("interfaces");
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    SourcePath db = new FakeSourcePath("package.conf.d");
     PrebuiltHaskellLibrary library =
         (PrebuiltHaskellLibrary) new PrebuiltHaskellLibraryBuilder(target)
-            .setSharedInterfaces(interfaces)
+            .setVersion("1.0.0")
+            .setDb(db)
             .build(resolver);
     HaskellCompileInput input =
         library.getCompileInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            Linker.LinkableDepType.SHARED);
+            Linker.LinkableDepType.STATIC);
     assertThat(
-        input.getIncludes(),
-        Matchers.contains(interfaces));
+        input.getPackages().get(0).getPackageDb(),
+        Matchers.equalTo(db));
+  }
+
+  @Test
+  public void packageInfo() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    PrebuiltHaskellLibrary library =
+        (PrebuiltHaskellLibrary) new PrebuiltHaskellLibraryBuilder(target)
+            .setVersion("1.0.0")
+            .setDb(new FakeSourcePath("package.conf.d"))
+            .setId("id")
+            .build(resolver);
+    HaskellCompileInput input =
+        library.getCompileInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            Linker.LinkableDepType.STATIC);
+    assertThat(
+        input.getPackages().get(0).getInfo(),
+        Matchers.equalTo(
+            HaskellPackageInfo.of("rule", "1.0.0", "id")));
   }
 
   @Test
@@ -132,6 +160,8 @@ public class PrebuiltHaskellLibraryDescriptionTest {
     String flag = "-exported-linker-flags";
     PrebuiltHaskellLibrary library =
         (PrebuiltHaskellLibrary) new PrebuiltHaskellLibraryBuilder(target)
+            .setVersion("1.0.0")
+            .setDb(new FakeSourcePath("package.conf.d"))
             .setExportedLinkerFlags(ImmutableList.of(flag))
             .build(resolver);
     NativeLinkableInput staticInput =
@@ -158,6 +188,8 @@ public class PrebuiltHaskellLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PrebuiltHaskellLibrary library =
         (PrebuiltHaskellLibrary) new PrebuiltHaskellLibraryBuilder(target)
+            .setVersion("1.0.0")
+            .setDb(new FakeSourcePath("package.conf.d"))
             .setExportedCompilerFlags(ImmutableList.of(flag))
             .build(resolver);
     HaskellCompileInput staticInput =
@@ -185,7 +217,9 @@ public class PrebuiltHaskellLibraryDescriptionTest {
     PathSourcePath path = new FakeSourcePath("include_dir");
     PrebuiltHaskellLibrary library =
         (PrebuiltHaskellLibrary) new PrebuiltHaskellLibraryBuilder(target)
-            .setStaticInterfaces(interfaces)
+            .setVersion("1.0.0")
+            .setDb(new FakeSourcePath("package.conf.d"))
+            .setImportDirs(ImmutableList.of(interfaces))
             .setCxxHeaderDirs(ImmutableSortedSet.<SourcePath>of(path))
             .build(resolver);
     assertThat(
