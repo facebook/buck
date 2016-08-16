@@ -16,7 +16,6 @@
 
 package com.facebook.buck.lua;
 
-import com.facebook.buck.cxx.AbstractCxxLibrary;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.NativeLinkStrategy;
@@ -72,7 +71,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -172,22 +170,6 @@ public class LuaBinaryDescription implements
             luaConfig.getLuaCxxLibraryTarget().asSet());
   }
 
-  private Iterable<? extends AbstractCxxLibrary> getNativeStarterDeps(
-      BuildRuleResolver ruleResolver,
-      Optional<BuildTarget> nativeStarterLibrary) {
-    return ImmutableList.of(
-        nativeStarterLibrary.isPresent() ?
-            ruleResolver.getRuleWithType(
-                nativeStarterLibrary.get(),
-                AbstractCxxLibrary.class) :
-            luaConfig.getLuaCxxLibrary(ruleResolver));
-  }
-
-  private StarterType getStarterType(LuaPackageComponents components) {
-    return luaConfig.getStarterType()
-        .or(components.getNativeLibraries().isEmpty() ? StarterType.PURE : StarterType.NATIVE);
-  }
-
   private Starter getStarter(
       BuildRuleParams baseParams,
       BuildRuleResolver ruleResolver,
@@ -243,6 +225,79 @@ public class LuaBinaryDescription implements
             luaConfig.getStarterType()));
   }
 
+  private StarterType getStarterType(boolean mayHaveNativeCode) {
+    return luaConfig.getStarterType().or(mayHaveNativeCode ? StarterType.NATIVE : StarterType.PURE);
+  }
+
+  /**
+   * @return the {@link Starter} used to build the Lua binary entry point.
+   */
+  private Starter createStarter(
+      BuildRuleParams baseParams,
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      final CxxPlatform cxxPlatform,
+      Optional<BuildTarget> nativeStarterLibrary,
+      String mainModule,
+      LuaConfig.PackageStyle packageStyle,
+      boolean mayHaveNativeCode)
+      throws NoSuchBuildTargetException {
+
+    Path output = getOutputPath(baseParams.getBuildTarget(), baseParams.getProjectFilesystem());
+    StarterType starterType = getStarterType(mayHaveNativeCode);
+
+    // The relative paths from the starter to the various components.
+    Optional<Path> relativeModulesDir = Optional.absent();
+    Optional<Path> relativePythonModulesDir = Optional.absent();
+    Optional<Path> relativeNativeLibsDir = Optional.absent();
+
+    // For in-place binaries, set the relative paths to the symlink trees holding the components.
+    if (packageStyle == LuaConfig.PackageStyle.INPLACE) {
+      relativeModulesDir =
+          Optional.of(
+              output.getParent().relativize(
+                  getModulesSymlinkTreeRoot(
+                      baseParams.getBuildTarget(),
+                      baseParams.getProjectFilesystem())));
+      relativePythonModulesDir =
+          Optional.of(
+              output.getParent().relativize(
+                  getPythonModulesSymlinkTreeRoot(
+                      baseParams.getBuildTarget(),
+                      baseParams.getProjectFilesystem())));
+
+      // We only need to setup a native lib link tree if we're using a native starter.
+      if (starterType == StarterType.NATIVE) {
+        relativeNativeLibsDir =
+            Optional.of(
+                output.getParent().relativize(
+                    getNativeLibsSymlinkTreeRoot(
+                        baseParams.getBuildTarget(),
+                        baseParams.getProjectFilesystem())));
+      }
+    }
+
+    // Build the starter.
+    return getStarter(
+        baseParams,
+        ruleResolver,
+        pathResolver,
+        cxxPlatform,
+        baseParams.getBuildTarget().withAppendedFlavors(
+            packageStyle == LuaConfig.PackageStyle.STANDALONE ?
+                ImmutableFlavor.of("starter") :
+                BINARY_FLAVOR),
+        packageStyle == LuaConfig.PackageStyle.STANDALONE ?
+            output.resolveSibling(output.getFileName() + "-starter") :
+            output,
+        starterType,
+        nativeStarterLibrary,
+        mainModule,
+        relativeModulesDir,
+        relativePythonModulesDir,
+        relativeNativeLibsDir);
+  }
+
   private LuaBinaryPackageComponents getPackageComponentsFromDeps(
       BuildRuleParams baseParams,
       BuildRuleResolver ruleResolver,
@@ -257,12 +312,7 @@ public class LuaBinaryDescription implements
 
     final LuaPackageComponents.Builder builder = LuaPackageComponents.builder();
     final OmnibusRoots.Builder omnibusRoots =
-        OmnibusRoots.builder(
-            cxxPlatform,
-            // For now, we exclude the native starter from omnibus linking.
-            FluentIterable.from(getNativeStarterDeps(ruleResolver, nativeStarterLibrary))
-                .transform(HasBuildTarget.TO_TARGET)
-                .toSet());
+        OmnibusRoots.builder(cxxPlatform, ImmutableSet.<BuildTarget>of());
 
     final Map<BuildTarget, NativeLinkable> nativeLinkableRoots = new LinkedHashMap<>();
     final Map<BuildTarget, CxxLuaExtension> luaExtensions = new LinkedHashMap<>();
@@ -328,7 +378,28 @@ public class LuaBinaryDescription implements
       }
     }.start();
 
+    // Build the starter.
+    Starter starter =
+        createStarter(
+            baseParams,
+            ruleResolver,
+            pathResolver,
+            cxxPlatform,
+            nativeStarterLibrary,
+            mainModule,
+            packageStyle,
+            !nativeLinkableRoots.isEmpty() || !omnibusRoots.isEmpty());
+    SourcePath starterPath = null;
+
     if (luaConfig.getNativeLinkStrategy() == NativeLinkStrategy.MERGED) {
+
+      // If we're using a native starter, include it in omnibus linking.
+      if (starter instanceof NativeExecutableStarter) {
+        NativeExecutableStarter nativeStarter = (NativeExecutableStarter) starter;
+        omnibusRoots.addIncludedRoot(nativeStarter);
+      }
+
+      // Build the omnibus libraries.
       OmnibusRoots roots = omnibusRoots.build();
       OmnibusLibraries libraries =
           Omnibus.getSharedLibraries(
@@ -357,6 +428,12 @@ public class LuaBinaryDescription implements
           builder.putPythonModules(
               pythonExtension.getModule().toString(),
               root.getValue().getPath());
+          continue;
+        }
+
+        // A root named after the top-level target is our native starter.
+        if (root.getKey().equals(baseParams.getBuildTarget())) {
+          starterPath = root.getValue().getPath();
           continue;
         }
 
@@ -425,99 +502,16 @@ public class LuaBinaryDescription implements
           builder.putAllNativeLibraries(nativeLinkable.getSharedLibraries(cxxPlatform));
         }
       }
+
     }
 
-    Path output = getOutputPath(baseParams.getBuildTarget(), baseParams.getProjectFilesystem());
-    LuaPackageComponents components = builder.build();
-    StarterType starterType = getStarterType(components);
-
-    // For native starter types, add in the native linkable deps for the native starter library.
-    if (starterType == StarterType.NATIVE) {
-      components =
-          addNativeDeps(
-              components,
-              cxxPlatform,
-              getNativeStarterDeps(ruleResolver, nativeStarterLibrary));
+    // If an explicit starter path override hasn't been set (e.g. from omnibus linking), default to
+    // building one directly from the starter.
+    if (starterPath == null) {
+      starterPath = starter.build();
     }
 
-    // The relative paths from the starter to the various components.
-    Optional<Path> relativeModulesDir = Optional.absent();
-    Optional<Path> relativePythonModulesDir = Optional.absent();
-    Optional<Path> relativeNativeLibsDir = Optional.absent();
-
-    // For in-place binaries, set the relative paths to the symlink trees holding the components.
-    if (packageStyle == LuaConfig.PackageStyle.INPLACE) {
-      if (!components.getModules().isEmpty()) {
-        relativeModulesDir =
-            Optional.of(
-                output.getParent().relativize(
-                    getModulesSymlinkTreeRoot(
-                        baseParams.getBuildTarget(),
-                        baseParams.getProjectFilesystem())));
-      }
-      if (!components.getNativeLibraries().isEmpty()) {
-        relativeNativeLibsDir =
-            Optional.of(
-                output.getParent().relativize(
-                    getNativeLibsSymlinkTreeRoot(
-                        baseParams.getBuildTarget(),
-                        baseParams.getProjectFilesystem())));
-      }
-      if (!components.getPythonModules().isEmpty()) {
-        relativePythonModulesDir =
-            Optional.of(
-                output.getParent().relativize(
-                    getPythonModulesSymlinkTreeRoot(
-                        baseParams.getBuildTarget(),
-                        baseParams.getProjectFilesystem())));
-      }
-    }
-
-    // Build the starter.
-    Starter starter =
-        getStarter(
-            baseParams,
-            ruleResolver,
-            pathResolver,
-            cxxPlatform,
-            baseParams.getBuildTarget().withAppendedFlavors(
-                packageStyle == LuaConfig.PackageStyle.STANDALONE ?
-                    ImmutableFlavor.of("starter") :
-                    BINARY_FLAVOR),
-            packageStyle == LuaConfig.PackageStyle.STANDALONE ?
-                output.resolveSibling(output.getFileName() + "-starter") :
-                output,
-            starterType,
-            nativeStarterLibrary,
-            mainModule,
-            relativeModulesDir,
-            relativePythonModulesDir,
-            relativeNativeLibsDir);
-
-    return LuaBinaryPackageComponents.of(starter.build(), components);
-  }
-
-  private LuaPackageComponents addNativeDeps(
-      LuaPackageComponents components,
-      CxxPlatform cxxPlatform,
-      Iterable<? extends NativeLinkable> nativeDeps)
-      throws NoSuchBuildTargetException {
-
-    Map<String, SourcePath> nativeLibs = Maps.newLinkedHashMap();
-    nativeLibs.putAll(components.getNativeLibraries());
-
-    // Add shared libraries from all native linkables.
-    for (NativeLinkable nativeLinkable :
-         NativeLinkables.getTransitiveNativeLinkables(
-             cxxPlatform,
-             nativeDeps).values()) {
-      NativeLinkable.Linkage linkage = nativeLinkable.getPreferredLinkage(cxxPlatform);
-      if (linkage != NativeLinkable.Linkage.STATIC) {
-        nativeLibs.putAll(nativeLinkable.getSharedLibraries(cxxPlatform));
-      }
-    }
-
-    return components.withNativeLibraries(nativeLibs);
+    return LuaBinaryPackageComponents.of(starterPath, builder.build());
   }
 
   private SymlinkTree createSymlinkTree(
@@ -786,7 +780,7 @@ public class LuaBinaryDescription implements
             args.nativeStarterLibrary.or(luaConfig.getNativeStarterLibrary()),
             args.mainModule,
             args.packageStyle.or(luaConfig.getPackageStyle()),
-            params.getDeps());
+            params.getDeclaredDeps().get());
     Tool binary =
         getBinary(
             params,

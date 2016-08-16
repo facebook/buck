@@ -29,6 +29,9 @@ import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.Linkers;
+import com.facebook.buck.cxx.NativeLinkTarget;
+import com.facebook.buck.cxx.NativeLinkTargetMode;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.BuildTarget;
@@ -69,7 +72,7 @@ import java.nio.file.Path;
  */
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractNativeExecutableStarter implements Starter {
+abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTarget {
 
   private static final String NATIVE_STARTER_CXX_SOURCE =
       "com/facebook/buck/lua/native-starter.cpp.in";
@@ -97,54 +100,57 @@ abstract class AbstractNativeExecutableStarter implements Starter {
   }
 
   private CxxSource getNativeStarterCxxSource() {
-    BuildTarget templateTarget =
-        BuildTarget.builder(getBaseParams().getBuildTarget())
-            .addFlavors(ImmutableFlavor.of("native-starter-cxx-source-template"))
-            .build();
-    getRuleResolver().addToIndex(
-        new WriteFile(
-            getBaseParams().copyWithChanges(
-                templateTarget,
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
-            getPathResolver(),
-            getNativeStarterCxxSourceTemplate(),
-            BuildTargets.getGenPath(
-                getBaseParams().getProjectFilesystem(),
-                templateTarget,
-                "%s/native-starter.cpp.in"),
-            /* executable */ false));
-
     BuildTarget target =
         BuildTarget.builder(getBaseParams().getBuildTarget())
             .addFlavors(ImmutableFlavor.of("native-starter-cxx-source"))
             .build();
-    Path output =
-        BuildTargets.getGenPath(
-            getBaseParams().getProjectFilesystem(),
-            target,
-            "%s/native-starter.cpp");
-    getRuleResolver().addToIndex(
-        WriteStringTemplateRule.from(
-            getBaseParams(),
-            getPathResolver(),
-            target,
-            output,
-            new BuildTargetSourcePath(templateTarget),
-            ImmutableMap.of(
-                "MAIN_MODULE",
-                Escaper.escapeAsPythonString(getMainModule()),
-                "MODULES_DIR",
-                getRelativeModulesDir().isPresent() ?
-                    Escaper.escapeAsPythonString(getRelativeModulesDir().get().toString()) :
-                    "NULL",
-                "PY_MODULES_DIR",
-                getRelativePythonModulesDir().isPresent() ?
-                    Escaper.escapeAsPythonString(getRelativePythonModulesDir().get().toString()) :
-                    "NULL",
-                "EXT_SUFFIX",
-                Escaper.escapeAsPythonString(getCxxPlatform().getSharedLibraryExtension())),
+    if (!getRuleResolver().getRuleOptional(target).isPresent()) {
+
+      BuildTarget templateTarget =
+          BuildTarget.builder(getBaseParams().getBuildTarget())
+              .addFlavors(ImmutableFlavor.of("native-starter-cxx-source-template"))
+              .build();
+      getRuleResolver().addToIndex(
+          new WriteFile(
+              getBaseParams().copyWithChanges(
+                  templateTarget,
+                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+              getPathResolver(),
+              getNativeStarterCxxSourceTemplate(),
+              BuildTargets.getGenPath(
+                  getBaseParams().getProjectFilesystem(),
+                  templateTarget,
+                  "%s/native-starter.cpp.in"),
             /* executable */ false));
+
+      Path output =
+          BuildTargets.getGenPath(
+              getBaseParams().getProjectFilesystem(),
+              target,
+              "%s/native-starter.cpp");
+      getRuleResolver().addToIndex(
+          WriteStringTemplateRule.from(
+              getBaseParams(),
+              getPathResolver(),
+              target,
+              output,
+              new BuildTargetSourcePath(templateTarget),
+              ImmutableMap.of(
+                  "MAIN_MODULE",
+                  Escaper.escapeAsPythonString(getMainModule()),
+                  "MODULES_DIR",
+                  getRelativeModulesDir().isPresent() ?
+                      Escaper.escapeAsPythonString(getRelativeModulesDir().get().toString()) :
+                      "NULL",
+                  "PY_MODULES_DIR",
+                  getRelativePythonModulesDir().isPresent() ?
+                      Escaper.escapeAsPythonString(getRelativePythonModulesDir().get().toString()) :
+                      "NULL",
+                  "EXT_SUFFIX",
+                  Escaper.escapeAsPythonString(getCxxPlatform().getSharedLibraryExtension())),
+            /* executable */ false));
+    }
 
     return CxxSource.of(
         CxxSource.Type.CXX,
@@ -178,8 +184,7 @@ abstract class AbstractNativeExecutableStarter implements Starter {
             getLuaConfig().getLuaCxxLibrary(getRuleResolver()));
   }
 
-  @Override
-  public SourcePath build() throws NoSuchBuildTargetException {
+  private NativeLinkableInput getNativeLinkableInput() throws NoSuchBuildTargetException {
     Iterable<? extends AbstractCxxLibrary> nativeStarterDeps = getNativeStarterDeps();
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
         CxxSourceRuleFactory.requirePreprocessAndCompileRules(
@@ -204,6 +209,23 @@ abstract class AbstractNativeExecutableStarter implements Starter {
             getCxxBuckConfig().getPreprocessMode(),
             ImmutableMap.of("native-starter.cpp", getNativeStarterCxxSource()),
             CxxSourceRuleFactory.PicType.PDC);
+    return NativeLinkableInput.builder()
+        .addAllArgs(
+            getRelativeNativeLibsDir().isPresent() ?
+                StringArg.from(
+                    Linkers.iXlinker(
+                        "-rpath",
+                        String.format(
+                            "%s/%s",
+                            getCxxPlatform().getLd().resolve(getRuleResolver()).origin(),
+                            getRelativeNativeLibsDir().get().toString()))) :
+                ImmutableList.<com.facebook.buck.rules.args.Arg>of())
+        .addAllArgs(SourcePathArg.from(getPathResolver(), objects.values()))
+        .build();
+  }
+
+  @Override
+  public SourcePath build() throws NoSuchBuildTargetException {
     getRuleResolver().addToIndex(
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             getCxxBuckConfig(),
@@ -216,24 +238,38 @@ abstract class AbstractNativeExecutableStarter implements Starter {
             Optional.<String>absent(),
             getOutput(),
             Linker.LinkableDepType.SHARED,
-            nativeStarterDeps,
+            getNativeStarterDeps(),
             Optional.<Linker.CxxRuntimeType>absent(),
             Optional.<SourcePath>absent(),
             ImmutableSet.<BuildTarget>of(),
-            NativeLinkableInput.builder()
-                .addAllArgs(
-                    getRelativeNativeLibsDir().isPresent() ?
-                        StringArg.from(
-                            Linkers.iXlinker(
-                                "-rpath",
-                                String.format(
-                                    "%s/%s",
-                                    getCxxPlatform().getLd().resolve(getRuleResolver()).origin(),
-                                    getRelativeNativeLibsDir().get().toString()))) :
-                        ImmutableList.<com.facebook.buck.rules.args.Arg>of())
-                .addAllArgs(SourcePathArg.from(getPathResolver(), objects.values()))
-                .build()));
+            getNativeLinkableInput()));
     return new BuildTargetSourcePath(getTarget());
+  }
+
+  @Override
+  public BuildTarget getBuildTarget() {
+    return getBaseParams().getBuildTarget();
+  }
+
+  @Override
+  public NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform) {
+    return NativeLinkTargetMode.executable();
+  }
+
+  @Override
+  public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(CxxPlatform cxxPlatform) {
+    return getNativeStarterDeps();
+  }
+
+  @Override
+  public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform)
+      throws NoSuchBuildTargetException {
+    return getNativeLinkableInput();
+  }
+
+  @Override
+  public Optional<Path> getNativeLinkTargetOutputPath(CxxPlatform cxxPlatform) {
+    return Optional.of(getOutput());
   }
 
 }

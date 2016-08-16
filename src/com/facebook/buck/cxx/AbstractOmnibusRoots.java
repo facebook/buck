@@ -133,6 +133,10 @@ abstract class AbstractOmnibusRoots {
           Maps.filterKeys(includedRoots, Predicates.not(Predicates.in(excluded))));
     }
 
+    public boolean isEmpty() {
+      return includedRoots.isEmpty() && excludedRoots.isEmpty();
+    }
+
     public OmnibusRoots build() {
       ImmutableMap<BuildTarget, NativeLinkable> excluded = buildExcluded();
       ImmutableMap<BuildTarget, NativeLinkTarget> included = buildIncluded(excluded.keySet());

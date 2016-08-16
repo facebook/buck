@@ -393,7 +393,7 @@ public class LuaBinaryDescriptionTest {
   }
 
   @Test
-  public void transitiveDepsOfNativeStarterDepsAreExcludedFromMergedNativeLinkStrategy()
+  public void transitiveDepsOfNativeStarterDepsAreIncludedInMergedNativeLinkStrategy()
       throws Exception {
     CxxLibraryBuilder transitiveCxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_dep"))
@@ -439,11 +439,7 @@ public class LuaBinaryDescriptionTest {
         Iterables.transform(
             binary.getComponents().getNativeLibraries().keySet(),
             Functions.toStringFunction()),
-        Matchers.containsInAnyOrder(
-            "libomnibus.so",
-            "libcxx.so",
-            "libnative_starter.so",
-            "libtransitive_dep.so"));
+        Matchers.containsInAnyOrder("libomnibus.so", "libcxx.so"));
   }
 
 }
