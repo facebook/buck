@@ -30,9 +30,9 @@ import com.google.common.collect.Maps;
 import org.immutables.value.Value;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -479,7 +479,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
   private static class SimplePerfEventScope implements AutoCloseable, Scope {
     protected BuckEventBus bus;
     protected StartedImpl started;
-    protected Map<String, AtomicLong> finishedCounters;
+    protected ConcurrentMap<String, AtomicLong> finishedCounters;
     protected ImmutableMap.Builder<String, Object> finishedInfoBuilder;
 
     public SimplePerfEventScope(
@@ -487,7 +487,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
         StartedImpl started) {
       this.bus = bus;
       this.started = started;
-      this.finishedCounters = new HashMap<>();
+      this.finishedCounters = new ConcurrentHashMap<>();
       this.finishedInfoBuilder = ImmutableMap.builder();
     }
 
@@ -515,8 +515,8 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
     public void incrementFinishedCounter(String key, long delta) {
       AtomicLong count = finishedCounters.get(key);
       if (count == null) {
-        count = new AtomicLong(0);
-        finishedCounters.put(key, count);
+        finishedCounters.putIfAbsent(key, new AtomicLong(0));
+        count = finishedCounters.get(key);
       }
       count.addAndGet(delta);
     }
