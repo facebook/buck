@@ -51,6 +51,11 @@ struct ScribeData {
   2: optional list<string> lines;
 }
 
+struct FileInfo {
+  1: optional string contentHash;
+  2: optional binary content;
+}
+
 ##############################################################################
 ## Buck client build state
 ##############################################################################
@@ -126,8 +131,16 @@ struct BuildJobState {
 ## Request/Response structs
 ##############################################################################
 
+struct CreateBuildRequest {
+  1: optional i64 createTimestampMillis;
+}
+
+struct CreateBuildResponse {
+  1: optional BuildJob buildJob;
+}
+
 struct StartBuildRequest {
-  1: optional i64 startTimestampMillis;
+  1: optional BuildId buildId;
 }
 
 struct StartBuildResponse {
@@ -152,6 +165,42 @@ struct LogRequest {
   2: optional ScribeData scribeData;
 }
 
+struct CASContainsRequest {
+  1: optional list<string> contentSha1s;
+}
+
+struct CASContainsResponse {
+  1: optional list<bool> exists;
+}
+
+struct StoreLocalChangesRequest {
+  1: optional BuildId buildId;
+  2: optional list<FileInfo> files;
+}
+
+struct FetchSourceFilesRequest {
+  1: optional BuildId buildId;
+  2: optional list<string> contentHashes;
+}
+
+struct FetchSourceFilesResponse {
+  1: optional list<FileInfo> files;
+}
+
+struct StoreBuildGraphRequest {
+  1: optional BuildId buildId;
+  2: optional binary buildGraph;
+}
+
+struct FetchBuildGraphRequest {
+  1: optional BuildId buildId;
+}
+
+struct FetchBuildGraphResponse {
+  1: optional BuildId buildId;
+  2: optional binary buildGraph;
+}
+
 ##############################################################################
 ## Top-Level Buck-Frontend HTTP body thrift Request/Response format
 ##############################################################################
@@ -162,6 +211,12 @@ enum FrontendRequestType {
   BUILD_STATUS = 2,
   // [3-4] Values reserved for CAS.
   LOG = 5,
+  CAS_CONTAINS = 6,
+  CREATE_BUILD = 7,
+  STORE_LOCAL_CHANGES = 8,
+  FETCH_SRC_FILES = 9,
+  STORE_BUILD_GRAPH = 10,
+  FETCH_BUILD_GRAPH = 11,
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -172,6 +227,12 @@ struct FrontendRequest {
   3: optional BuildStatusRequest buildStatus;
   // [4-5] Values reserved for CAS.
   6: optional LogRequest log;
+  7: optional CASContainsRequest casContainsRequest;
+  8: optional CreateBuildRequest createBuildRequest;
+  9: optional StoreLocalChangesRequest storeLocalChangesRequest;
+  10: optional FetchSourceFilesRequest fetchSourceFilesRequest;
+  11: optional StoreBuildGraphRequest storeBuildGraphRequest;
+  12: optional FetchBuildGraphRequest fetchBuildGraphRequest;
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -183,6 +244,11 @@ struct FrontendResponse {
   10: optional FrontendRequestType type = FrontendRequestType.UNKNOWN;
   11: optional StartBuildResponse startBuild;
   12: optional BuildStatusResponse buildStatus;
+  // [13-14] Values reserved for CAS.
+  15: optional CASContainsResponse casContainsResponse;
+  16: optional CreateBuildResponse createBuildResponse;
+  17: optional FetchSourceFilesResponse fetchSourceFilesResponse;
+  18: optional FetchBuildGraphResponse fetchBuildGraphResponse;
 
   // [100-199] Values are reserved for the buck cache request types.
 }

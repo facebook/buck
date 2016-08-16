@@ -15,7 +15,13 @@ public enum FrontendRequestType implements org.apache.thrift.TEnum {
   UNKNOWN(0),
   START_BUILD(1),
   BUILD_STATUS(2),
-  LOG(5);
+  LOG(5),
+  CAS_CONTAINS(6),
+  CREATE_BUILD(7),
+  STORE_LOCAL_CHANGES(8),
+  FETCH_SRC_FILES(9),
+  STORE_BUILD_GRAPH(10),
+  FETCH_BUILD_GRAPH(11);
 
   private final int value;
 
@@ -44,6 +50,18 @@ public enum FrontendRequestType implements org.apache.thrift.TEnum {
         return BUILD_STATUS;
       case 5:
         return LOG;
+      case 6:
+        return CAS_CONTAINS;
+      case 7:
+        return CREATE_BUILD;
+      case 8:
+        return STORE_LOCAL_CHANGES;
+      case 9:
+        return FETCH_SRC_FILES;
+      case 10:
+        return STORE_BUILD_GRAPH;
+      case 11:
+        return FETCH_BUILD_GRAPH;
       default:
         return null;
     }

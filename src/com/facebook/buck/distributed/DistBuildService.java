@@ -20,6 +20,7 @@ import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.BuildStatusRequest;
+import com.facebook.buck.distributed.thrift.CreateBuildRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
@@ -59,18 +60,32 @@ public class DistBuildService {
 
   public void submitJob() throws IOException {
 
-    // Tell server to start build and get the build id.
-    StartBuildRequest startTimeRequest = new StartBuildRequest();
-    startTimeRequest.setStartTimestampMillis(System.currentTimeMillis());
+    // Tell server to create the build and get the build id.
+    CreateBuildRequest createTimeRequest = new CreateBuildRequest();
+    createTimeRequest.setCreateTimestampMillis(System.currentTimeMillis());
     FrontendRequest request = new FrontendRequest();
-    request.setType(FrontendRequestType.START_BUILD);
-    request.setStartBuild(startTimeRequest);
+    request.setType(FrontendRequestType.CREATE_BUILD);
+    request.setCreateBuildRequest(createTimeRequest);
     FrontendResponse response = new FrontendResponse();
     service.makeRequest(request, response);
-    Preconditions.checkState(response.getType().equals(FrontendRequestType.START_BUILD));
-    BuildJob job = response.getStartBuild().getBuildJob();
+    Preconditions.checkState(response.getType().equals(FrontendRequestType.CREATE_BUILD));
+    BuildJob job = response.getCreateBuildResponse().getBuildJob();
     final BuildId id = job.getBuildId();
-    LOG.info("Submitted job. Build id = " + id.getId());
+    LOG.info("Created job. Build id = " + id.getId());
+    logDebugInfo(job);
+
+    // Start the build
+    StartBuildRequest startRequest = new StartBuildRequest();
+    startRequest.setBuildId(id);
+    request.clear();
+    request.setType(FrontendRequestType.START_BUILD);
+    request.setStartBuild(startRequest);
+    response.clear();
+    service.makeRequest(request, response);
+    Preconditions.checkState(response.getType().equals(FrontendRequestType.START_BUILD));
+    job = response.getStartBuild().getBuildJob();
+    Preconditions.checkState(job.getBuildId().equals(id));
+    LOG.info("Started job. Build status: " + job.getStatus().toString());
     logDebugInfo(job);
 
     // Create the poll for buildStatus request.
