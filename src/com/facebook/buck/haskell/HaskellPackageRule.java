@@ -158,11 +158,13 @@ public class HaskellPackageRule extends AbstractBuildRule {
     for (SourcePath library : libraries) {
       Path relLibPath =
           pkgRoot.resolve(packageDb.getParent().relativize(getResolver().getRelativePath(library)));
-      libDirs.add('"' + relLibPath.toString() + '"');
+      libDirs.add('"' + relLibPath.getParent().toString() + '"');
       libs.add(MorePaths.stripPathPrefixAndExtension(relLibPath.getFileName(), "lib"));
     }
     entries.put("library-dirs", Joiner.on(", ").join(libDirs));
-    entries.put("hs-libraries", Joiner.on(", ").join(libs));
+    // Use extra libraries here, so GHC won't try to find libraries with any extra suffices
+    // (e.g. lib<name>-ghc7.10.3.dylib).
+    entries.put("extra-libraries", Joiner.on(", ").join(libs));
 
     entries.put("depends", Joiner.on(", ").join(depPackages.keySet()));
 

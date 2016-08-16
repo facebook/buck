@@ -76,7 +76,7 @@ public class HaskellDescriptionUtils {
       SourcePathResolver pathResolver,
       final CxxPlatform cxxPlatform,
       HaskellConfig haskellConfig,
-      final CxxSourceRuleFactory.PicType picType,
+      final Linker.LinkableDepType depType,
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
       ImmutableList<String> flags,
@@ -98,7 +98,7 @@ public class HaskellDescriptionUtils {
         if (rule instanceof HaskellCompileDep) {
           deps = rule.getDeps();
           HaskellCompileInput compileInput =
-              ((HaskellCompileDep) rule).getCompileInput(cxxPlatform, picType);
+              ((HaskellCompileDep) rule).getCompileInput(cxxPlatform, depType);
           depFlags.put(rule.getBuildTarget(), compileInput.getFlags());
           depIncludes.put(rule.getBuildTarget(), compileInput.getIncludes());
 
@@ -153,7 +153,9 @@ public class HaskellDescriptionUtils {
         compileFlags,
         ppFlags,
         cxxPlatform,
-        picType,
+        depType == Linker.LinkableDepType.STATIC ?
+            CxxSourceRuleFactory.PicType.PDC :
+            CxxSourceRuleFactory.PicType.PIC,
         main,
         packageInfo,
         includes,
@@ -165,11 +167,10 @@ public class HaskellDescriptionUtils {
   protected static BuildTarget getCompileBuildTarget(
       BuildTarget target,
       CxxPlatform cxxPlatform,
-      CxxSourceRuleFactory.PicType picType) {
+      Linker.LinkableDepType depType) {
     return target.withFlavors(
-            cxxPlatform.getFlavor(),
-            ImmutableFlavor.of(
-                "objects" + (picType == CxxSourceRuleFactory.PicType.PIC ? "-pic" : "")));
+        cxxPlatform.getFlavor(),
+        ImmutableFlavor.of("objects-" + depType.toString().toLowerCase().replace('_', '-')));
   }
 
   public static HaskellCompileRule requireCompileRule(
@@ -178,14 +179,14 @@ public class HaskellDescriptionUtils {
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       HaskellConfig haskellConfig,
-      CxxSourceRuleFactory.PicType picType,
+      Linker.LinkableDepType depType,
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
       ImmutableList<String> flags,
       HaskellSources srcs)
       throws NoSuchBuildTargetException {
 
-    BuildTarget target = getCompileBuildTarget(params.getBuildTarget(), cxxPlatform, picType);
+    BuildTarget target = getCompileBuildTarget(params.getBuildTarget(), cxxPlatform, depType);
 
     // If this rule has already been generated, return it.
     Optional<HaskellCompileRule> existing =
@@ -202,7 +203,7 @@ public class HaskellDescriptionUtils {
             pathResolver,
             cxxPlatform,
             haskellConfig,
-            picType,
+            depType,
             main,
             packageInfo,
             flags,
@@ -287,7 +288,7 @@ public class HaskellDescriptionUtils {
                 pathResolver,
                 cxxPlatform,
                 haskellConfig,
-                CxxSourceRuleFactory.PicType.PIC,
+                depType,
                 Optional.<String>absent(),
                 Optional.<HaskellPackageInfo>absent(),
                 ImmutableList.<String>of(),
