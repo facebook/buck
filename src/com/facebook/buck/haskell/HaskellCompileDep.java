@@ -17,7 +17,7 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.CxxSourceRuleFactory;
+import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 
 /**
@@ -30,7 +30,7 @@ public interface HaskellCompileDep {
    */
   HaskellCompileInput getCompileInput(
       CxxPlatform cxxPlatform,
-      CxxSourceRuleFactory.PicType picType)
+      Linker.LinkableDepType depType)
       throws NoSuchBuildTargetException;
 
 }

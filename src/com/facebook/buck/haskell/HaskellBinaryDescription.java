@@ -18,7 +18,6 @@ package com.facebook.buck.haskell;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.Linkers;
 import com.facebook.buck.cxx.NativeLinkable;
@@ -170,9 +169,7 @@ public class HaskellBinaryDescription implements
                 pathResolver,
                 cxxPlatform,
                 haskellConfig,
-                depType == Linker.LinkableDepType.STATIC ?
-                    CxxSourceRuleFactory.PicType.PDC :
-                    CxxSourceRuleFactory.PicType.PIC,
+                depType,
                 args.main,
                 Optional.<HaskellPackageInfo>absent(),
                 args.compilerFlags.or(ImmutableList.<String>of()),

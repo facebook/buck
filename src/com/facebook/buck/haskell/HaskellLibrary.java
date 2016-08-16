@@ -18,7 +18,6 @@ package com.facebook.buck.haskell;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
@@ -85,12 +84,14 @@ public class HaskellLibrary extends NoopBuildRule implements HaskellCompileDep, 
     throw new AssertionError();
   }
 
-  private HaskellLibraryDescription.Type getPackageType(CxxSourceRuleFactory.PicType picType) {
-    switch (picType) {
-      case PIC:
-        return HaskellLibraryDescription.Type.PACKAGE_DYNAMIC;
-      case PDC:
-        return HaskellLibraryDescription.Type.PACKAGE;
+  private HaskellLibraryDescription.Type getPackageType(Linker.LinkableDepType depType) {
+    switch (depType) {
+      case SHARED:
+        return HaskellLibraryDescription.Type.PACKAGE_SHARED;
+      case STATIC:
+        return HaskellLibraryDescription.Type.PACKAGE_STATIC;
+      case STATIC_PIC:
+        return HaskellLibraryDescription.Type.PACKAGE_STATIC_PIC;
     }
     throw new AssertionError();
   }
@@ -135,19 +136,19 @@ public class HaskellLibrary extends NoopBuildRule implements HaskellCompileDep, 
   @VisibleForTesting
   protected HaskellPackageRule requirePackageRule(
       CxxPlatform cxxPlatform,
-      CxxSourceRuleFactory.PicType picType)
+      Linker.LinkableDepType depType)
       throws NoSuchBuildTargetException {
     return (HaskellPackageRule) requireBuildRule(
         cxxPlatform.getFlavor(),
-        getPackageType(picType).getFlavor());
+        getPackageType(depType).getFlavor());
   }
 
   @Override
   public HaskellCompileInput getCompileInput(
       CxxPlatform cxxPlatform,
-      CxxSourceRuleFactory.PicType picType)
+      Linker.LinkableDepType depType)
       throws NoSuchBuildTargetException {
-    HaskellPackageRule rule = requirePackageRule(cxxPlatform, picType);
+    HaskellPackageRule rule = requirePackageRule(cxxPlatform, depType);
     return HaskellCompileInput.builder()
         .addPackages(rule.getPackage())
         .build();
