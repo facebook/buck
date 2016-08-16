@@ -84,10 +84,24 @@ public class PrebuiltHaskellLibraryDescription
           throws NoSuchBuildTargetException {
         return HaskellCompileInput.builder()
             .addAllFlags(args.exportedCompilerFlags.or(ImmutableList.<String>of()))
-            .addAllIncludes(
-                depType == Linker.LinkableDepType.STATIC ?
-                    args.staticInterfaces.asSet() :
-                    args.sharedInterfaces.asSet())
+            .addPackages(
+                HaskellPackage.builder()
+                    .setInfo(
+                        HaskellPackageInfo.of(
+                            getBuildTarget().getShortName(),
+                            args.version,
+                            args.id.or(
+                                String.format(
+                                    "%s-%s",
+                                    getBuildTarget().getShortName(),
+                                    args.version))))
+                    .setPackageDb(args.db)
+                    .addAllInterfaces(args.importDirs.or(ImmutableList.<SourcePath>of()))
+                    .addAllLibraries(
+                        depType == Linker.LinkableDepType.SHARED ?
+                            args.sharedLibs.or(ImmutableMap.<String, SourcePath>of()).values() :
+                            args.staticLibs.or(ImmutableList.<SourcePath>of()))
+                    .build())
             .build();
       }
 
@@ -169,14 +183,16 @@ public class PrebuiltHaskellLibraryDescription
 
   @SuppressFieldNotInitialized
   public class Arg {
-    public Optional<SourcePath> staticInterfaces;
-    public Optional<SourcePath> sharedInterfaces;
+    public String version;
+    public Optional<String> id;
+    public SourcePath db;
+    public Optional<ImmutableList<SourcePath>> importDirs;
     public Optional<ImmutableList<SourcePath>> staticLibs;
     public Optional<ImmutableMap<String, SourcePath>> sharedLibs;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<ImmutableList<String>> exportedLinkerFlags;
     public Optional<ImmutableList<String>> exportedCompilerFlags;
     public Optional<ImmutableSortedSet<SourcePath>> cxxHeaderDirs;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 
 }
