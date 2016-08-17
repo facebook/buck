@@ -208,12 +208,6 @@ public class AppleLibraryDescription implements
           params.getBuildTarget().withAppendedFlavors(debugFormat.getFlavor()));
     }
 
-    if (!args.soname.isPresent()) {
-      String productName = AppleBundle.getBinaryName(params.getBuildTarget(), args.productName);
-      args.soname = Optional.of(
-          String.format("%s.framework/%s", productName, productName));
-    }
-    args.soname = args.soname.or(args.productName);
     return AppleDescriptions.createAppleBundle(
         delegate.getCxxPlatforms(),
         defaultCxxPlatform,

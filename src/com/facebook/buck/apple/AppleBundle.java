@@ -94,7 +94,8 @@ import java.util.Set;
  */
 public class AppleBundle
     extends AbstractBuildRule
-    implements CxxPreprocessorDep, NativeLinkable, NativeTestable, BuildRuleWithBinary, HasRuntimeDeps {
+    implements CxxPreprocessorDep, NativeLinkable, NativeTestable, BuildRuleWithBinary,
+    HasRuntimeDeps {
 
   private static final Logger LOG = Logger.get(AppleBundle.class);
   private static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
@@ -580,7 +581,9 @@ public class AppleBundle
     Preconditions.checkNotNull(binaryOutputPath);
 
     copyBinaryIntoBundle(stepsBuilder, binaryOutputPath);
-    binaryAddRPaths(stepsBuilder);
+    if (!frameworks.isEmpty()) {
+      binaryFrameworkRPaths(stepsBuilder);
+    }
     copyAnotherCopyOfWatchKitStub(stepsBuilder, binaryOutputPath);
   }
 
@@ -598,7 +601,7 @@ public class AppleBundle
             bundleBinaryPath));
   }
 
-  private void binaryAddRPaths(
+  private void binaryFrameworkRPaths(
       ImmutableList.Builder<Step> stepsBuilder) {
     final String relativeFrameworksPath =
         destinations.getExecutablesPath().relativize(destinations.getFrameworksPath()).toString();
@@ -628,6 +631,31 @@ public class AppleBundle
             }
           });
     }
+
+    stepsBuilder.add(
+        new ShellStep(getProjectFilesystem().getRootPath()) {
+          @Override
+          protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+            ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
+
+            commandBuilder.addAll(installNameTool.getCommandPrefix(getResolver()));
+            commandBuilder.add("-id");
+            commandBuilder.add(String.format("@rpath/%s.framework/%s", binaryName, binaryName));
+            commandBuilder.add(
+                getProjectFilesystem().resolve(bundleBinaryPath).toString());
+            return commandBuilder.build();
+          }
+
+          @Override
+          public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+            return installNameTool.getEnvironment(getResolver());
+          }
+
+          @Override
+          public String getShortName() {
+            return "install_name_tool";
+          }
+        });
   }
 
   private void copyAnotherCopyOfWatchKitStub(
@@ -975,7 +1003,12 @@ public class AppleBundle
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
-    return ImmutableMap.of(getBuildTarget(), getCxxPreprocessorInput(cxxPlatform, headerVisibility));
+    if (isFrameworkBundle()) {
+      return ImmutableMap.of(
+          getBuildTarget(),
+          getCxxPreprocessorInput(cxxPlatform, headerVisibility));
+    }
+    return ImmutableMap.of();
   }
 
   private boolean adHocCodeSignIsSufficient() {
@@ -1035,7 +1068,8 @@ public class AppleBundle
   }
 
   @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
+      throws NoSuchBuildTargetException {
     return ImmutableMap.of();
   }
 }

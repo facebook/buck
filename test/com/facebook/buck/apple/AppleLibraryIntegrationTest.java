@@ -555,7 +555,8 @@ public class AppleLibraryIntegrationTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = BuildTargetFactory.newInstance(
-        "//Libraries/TestLibraryDep:TestLibraryDep#dwarf-and-dsym,framework,macosx-x86_64,include-frameworks");
+        "//Libraries/TestLibraryDep:TestLibraryDep#dwarf-and-dsym,framework" +
+        ",macosx-x86_64,include-frameworks");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build", target.getFullyQualifiedName());
     result.assertSuccess();
@@ -563,6 +564,12 @@ public class AppleLibraryIntegrationTest {
     Path testBinaryPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))
         .resolve("TestLibraryDep.framework/TestLibraryDep");
     assertTrue(Files.exists(testBinaryPath));
+    ProcessExecutor.Result libraryInstallNameTool = workspace.runCommand(
+        "otool", "-D", testBinaryPath.toString());
+    assertEquals(0, libraryInstallNameTool.getExitCode());
+    Assert.assertThat(
+        libraryInstallNameTool.getStdout().or(""),
+        containsString("@rpath/TestLibraryDep.framework/TestLibraryDep"));
 
     ProcessExecutor.Result nmResult = workspace.runCommand(
         "nm", testBinaryPath.toString());

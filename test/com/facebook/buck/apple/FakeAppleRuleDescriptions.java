@@ -101,6 +101,7 @@ public class FakeAppleRuleDescriptions {
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/swift"),
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-stdlib-tool"),
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/nm"),
+          Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/install_name_tool"),
           Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"),
           Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"),
           Paths.get("usr/bin/actool"),

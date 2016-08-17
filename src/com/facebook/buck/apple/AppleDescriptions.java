@@ -643,16 +643,19 @@ public class AppleDescriptions {
         params.getDeps(),
         destinations);
 
-    Optional<HeaderSymlinkTree> headers = Optional.absent();
-    BuildRule headersRule =
-        resolver.requireRule(
-            BuildTarget.builder(flavoredBinaryRule.getBuildTarget().getUnflavoredBuildTarget())
-                .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
-                .addFlavors(appleCxxPlatform.getCxxPlatform().getFlavor())
-                .build());
 
-    if (headersRule instanceof HeaderSymlinkTree) {
-      headers = Optional.of((HeaderSymlinkTree) headersRule);
+    Optional<HeaderSymlinkTree> headers = Optional.absent();
+    if (extension.isLeft() && extension.getLeft().equals(AppleBundleExtension.FRAMEWORK)) {
+      BuildRule headersRule =
+          resolver.requireRule(
+              BuildTarget.builder(flavoredBinaryRule.getBuildTarget().getUnflavoredBuildTarget())
+                  .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
+                  .addFlavors(appleCxxPlatform.getCxxPlatform().getFlavor())
+                  .build());
+
+      if (headersRule instanceof HeaderSymlinkTree) {
+        headers = Optional.of((HeaderSymlinkTree) headersRule);
+      }
     }
 
     return new AppleBundle(
