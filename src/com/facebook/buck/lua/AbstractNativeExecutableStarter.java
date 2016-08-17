@@ -175,7 +175,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
     return inputs.build();
   }
 
-  private Iterable<? extends AbstractCxxLibrary> getNativeStarterDeps() {
+  public Iterable<? extends AbstractCxxLibrary> getNativeStarterDeps() {
     return ImmutableList.of(
         getNativeStarterLibrary().isPresent() ?
             getRuleResolver().getRuleWithType(

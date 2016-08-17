@@ -472,6 +472,15 @@ public class LuaBinaryDescription implements
                 HasBuildTarget.TO_TARGET));
       }
 
+      // Add in native executable deps.
+      if (starter instanceof NativeExecutableStarter) {
+        NativeExecutableStarter executableStarter = (NativeExecutableStarter) starter;
+        nativeLinkableRoots.putAll(
+            Maps.uniqueIndex(
+                executableStarter.getNativeStarterDeps(),
+                HasBuildTarget.TO_TARGET));
+      }
+
       // For regular linking, add all extensions via the package components interface and their
       // python-platform specific deps to the native linkables.
       for (Map.Entry<BuildTarget, CxxPythonExtension> entry : pythonExtensions.entrySet()) {
