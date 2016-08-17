@@ -7,6 +7,7 @@
 [alias]
     buck = //programs:buck
     buck-android-support = //src/com/facebook/buck/android/support:buck-android-support
+    eden = //test/com/facebook/buck/eden/cli:cli_bin
     hmaptool = //src/com/facebook/buck/apple/clang:hmaptool
     maven-importer = //src/com/facebook/buck/maven:resolver
 [autodeps]

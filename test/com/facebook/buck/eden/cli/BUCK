@@ -1,0 +1,9 @@
+standard_java_library()
+
+java_binary(
+  name = 'cli_bin',
+  main_class = 'com.facebook.buck.eden.cli.Main',
+  deps = [
+    ':cli',
+  ],
+)

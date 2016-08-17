@@ -1,0 +1,14 @@
+#@# GENERATED FILE: DO NOT MODIFY 479d48bb20adfbb9a3b287cf3b571858d303f1de #@#
+{
+  "cli" : {
+    "deps" : [
+      "//src/com/facebook/buck/eden:eden",
+      "//src/com/facebook/buck/util/sha1:sha1",
+      "//third-party/java/guava:guava"
+    ],
+    "exported_deps" : [
+      "//third-party/java/args4j:args4j",
+      "//third-party/java/infer-annotations:infer-annotations"
+    ]
+  }
+}
