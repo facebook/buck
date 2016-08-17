@@ -33,23 +33,13 @@ public class PrebuiltHaskellLibraryBuilder
         target);
   }
 
-  public PrebuiltHaskellLibraryBuilder setVersion(String version) {
-    arg.version = version;
+  public PrebuiltHaskellLibraryBuilder setStaticInterfaces(SourcePath interfaces) {
+    arg.staticInterfaces = Optional.of(interfaces);
     return this;
   }
 
-  public PrebuiltHaskellLibraryBuilder setId(String id) {
-    arg.id = Optional.of(id);
-    return this;
-  }
-
-  public PrebuiltHaskellLibraryBuilder setDb(SourcePath path) {
-    arg.db = path;
-    return this;
-  }
-
-  public PrebuiltHaskellLibraryBuilder setImportDirs(ImmutableList<SourcePath> interfaces) {
-    arg.importDirs = Optional.of(interfaces);
+  public PrebuiltHaskellLibraryBuilder setSharedInterfaces(SourcePath interfaces) {
+    arg.sharedInterfaces = Optional.of(interfaces);
     return this;
   }
 
