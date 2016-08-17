@@ -1,9 +1,5 @@
-# ProjectBuildFileParser adds:
-#
-# from __future__ import with_statement
-# import sys
-# sys.path.insert(0, "/path/to/build/pywatchman")
-# sys.path.insert(0, "/path/to/pathlib")
+
+from __future__ import with_statement
 
 import __builtin__
 import __future__

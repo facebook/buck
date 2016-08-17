@@ -16,23 +16,18 @@
 
 package com.facebook.buck.json;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import com.facebook.buck.bser.BserDeserializer;
 import com.facebook.buck.bser.BserSerializer;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.WatchmanDiagnostic;
 import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.ProcessExecutor;
@@ -41,8 +36,6 @@ import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.AssertScopeExclusiveAccess;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -50,7 +43,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Resources;
 
 import org.immutables.value.Value;
 
@@ -60,11 +52,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -79,24 +68,11 @@ import javax.annotation.Nullable;
  */
 public class ProjectBuildFileParser implements AutoCloseable {
 
-  /** Path to the buck.py script that is used to evaluate a build file. */
-  private static final String BUCK_PY_RESOURCE = "com/facebook/buck/json/buck.py";
-
-  private static final Path PATH_TO_PATHLIB_PY = Paths.get(
-      System.getProperty(
-          "buck.path_to_pathlib_py",
-          "third-party/py/pathlib/pathlib.py"));
-
-  private static final Path PATH_TO_PYWATCHMAN = Paths.get(
-      System.getProperty(
-          "buck.path_to_pywatchman",
-          "third-party/py/pywatchman"));
-
   private static final Logger LOG = Logger.get(ProjectBuildFileParser.class);
 
   private final ImmutableMap<String, String> environment;
 
-  private Optional<Path> pathToBuckPy;
+  @Nullable private BuckPythonProgram buckPythonProgram;
   private Supplier<Path> rawConfigJson;
   private Supplier<Path> ignorePathsJson;
 
@@ -123,13 +99,13 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
   protected ProjectBuildFileParser(
       final ProjectBuildFileParserOptions options,
-      ConstructorArgMarshaller marshaller,
+      final ConstructorArgMarshaller marshaller,
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus,
       ProcessExecutor processExecutor,
       boolean ignoreBuckAutodepsFiles,
       WatchmanDiagnosticCache watchmanDiagnosticCache) {
-    this.pathToBuckPy = Optional.absent();
+    this.buckPythonProgram = null;
     this.options = options;
     this.marshaller = marshaller;
     this.environment = environment;
@@ -587,8 +563,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
         try {
           synchronized (this) {
-            if (pathToBuckPy.isPresent()) {
-              Files.delete(pathToBuckPy.get());
+            if (buckPythonProgram != null) {
+              buckPythonProgram.close();
             }
           }
         } catch (IOException e) {
@@ -606,61 +582,12 @@ public class ProjectBuildFileParser implements AutoCloseable {
     }
   }
 
-  private Path getPathToBuckPy(ImmutableSet<Description<?>> descriptions) throws IOException {
-    generatePathToBuckPy(descriptions);
-    return pathToBuckPy.get();
-  }
-
-  private synchronized void generatePathToBuckPy(ImmutableSet<Description<?>> descriptions)
+  private synchronized Path getPathToBuckPy(ImmutableSet<Description<?>> descriptions)
       throws IOException {
-    if (pathToBuckPy.isPresent()) {
-      return;
+    if (buckPythonProgram == null) {
+      buckPythonProgram = BuckPythonProgram.newInstance(marshaller, descriptions);
     }
-
-    LOG.debug("Creating temporary buck.py instance...");
-    // We currently create a temporary buck.py per instance of this class, rather than a single one
-    // for the life of this buck invocation. We do this since this is generated in parallel we end
-    // up with strange InterruptedExceptions being thrown.
-    // TODO(shs96c): This would be the ideal thing to do.
-    //    Path buckDotPy =
-    //        projectRoot.toPath().resolve(BuckConstant.BIN_DIR).resolve("generated-buck.py");
-    Path buckDotPy = Files.createTempFile("buck", ".py");
-    Files.createDirectories(buckDotPy.getParent());
-
-    try (Writer out = Files.newBufferedWriter(buckDotPy, UTF_8)) {
-      URL resource = Resources.getResource(BUCK_PY_RESOURCE);
-      String pathlibDir = PATH_TO_PATHLIB_PY.getParent().toString();
-      String watchmanDir = PATH_TO_PYWATCHMAN.toString();
-      out.write(
-          "from __future__ import with_statement\n" +
-          "import sys\n" +
-          "sys.path.insert(0, \"" +
-              Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(pathlibDir)) + "\")\n" +
-          "sys.path.insert(0, \"" +
-              Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(watchmanDir)) + "\")\n");
-
-      Resources.asCharSource(resource, UTF_8).copyTo(out);
-      out.write("\n\n");
-
-      BuckPyFunction function = new BuckPyFunction(marshaller);
-      for (Description<?> description : descriptions) {
-        out.write(function.toPythonFunction(
-            description.getBuildRuleType(),
-            description.createUnpopulatedConstructorArg()));
-        out.write('\n');
-      }
-
-      out.write(Joiner.on("\n").join(
-          "if __name__ == '__main__':",
-          "  try:",
-          "    main()",
-          "  except KeyboardInterrupt:",
-          "    print >> sys.stderr, 'Killed by User'",
-          ""));
-    }
-    Path normalizedBuckDotPyPath = buckDotPy.normalize();
-    pathToBuckPy = Optional.of(normalizedBuckDotPyPath);
-    LOG.debug("Created temporary buck.py instance at %s.", normalizedBuckDotPyPath);
+    return buckPythonProgram.getExecutablePath();
   }
 
   @Value.Immutable
