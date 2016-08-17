@@ -115,8 +115,19 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
 
   public static boolean needsCodeSign(String name) {
     return name.startsWith(IPHONEOS.getName()) ||
-      name.startsWith(WATCHOS.getName()) ||
-      name.startsWith(APPLETVOS.getName());
+        name.startsWith(IPHONESIMULATOR.getName()) ||
+        name.startsWith(WATCHOS.getName()) ||
+        name.startsWith(WATCHSIMULATOR.getName()) ||
+        name.startsWith(APPLETVOS.getName()) ||
+        name.startsWith(APPLETVSIMULATOR.getName()) ||
+        name.startsWith(MACOSX.getName());
+  }
+
+  public static boolean adHocCodeSignIsSufficient(String name) {
+    return name.startsWith(IPHONESIMULATOR.getName()) ||
+        name.startsWith(WATCHSIMULATOR.getName()) ||
+        name.startsWith(APPLETVSIMULATOR.getName()) ||
+        name.startsWith(MACOSX.getName());
   }
 
   public static boolean needsInstallHelper(String name) {

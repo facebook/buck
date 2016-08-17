@@ -116,7 +116,7 @@ public class AppleBundleIntegrationTest {
             .resolve(target.getShortName() + ".app"));
     assertTrue(Files.exists(appPath.resolve(target.getShortName())));
 
-    assertFalse(checkCodeSigning(appPath));
+    assertTrue(checkCodeSigning(appPath));
 
     // Non-Swift target shouldn't include Frameworks/
     assertFalse(Files.exists(appPath.resolve("Frameworks")));

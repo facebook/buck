@@ -39,7 +39,7 @@ class CodeSignStep implements Step {
   private final Path workingDirectory;
   private final SourcePathResolver resolver;
   private final Path pathToSign;
-  private final Path pathToSigningEntitlements;
+  private final Optional<Path> pathToSigningEntitlements;
   private final Supplier<CodeSignIdentity> codeSignIdentitySupplier;
   private final Optional<Tool> codesignAllocatePath;
 
@@ -47,7 +47,7 @@ class CodeSignStep implements Step {
       Path workingDirectory,
       SourcePathResolver resolver,
       Path pathToSign,
-      Path pathToSigningEntitlements,
+      Optional<Path> pathToSigningEntitlements,
       Supplier<CodeSignIdentity> codeSignIdentitySupplier,
       Optional<Tool> codesignAllocatePath) {
     this.workingDirectory = workingDirectory;
@@ -66,15 +66,18 @@ class CodeSignStep implements Step {
       paramsBuilder.setEnvironment(
           ImmutableMap.of("CODESIGN_ALLOCATE", Joiner.on(" ").join(commandPrefix)));
     }
+    ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
+    commandBuilder.add(
+        "codesign",
+        "--force",
+        "--sign", getIdentityArg(codeSignIdentitySupplier.get()));
+    if (pathToSigningEntitlements.isPresent()) {
+      commandBuilder.add("--entitlements", pathToSigningEntitlements.get().toString());
+    }
+    commandBuilder.add(pathToSign.toString());
     ProcessExecutorParams processExecutorParams =
         paramsBuilder
-            .setCommand(
-                ImmutableList.of(
-                    "codesign",
-                    "--force",
-                    "--sign", getIdentityArg(codeSignIdentitySupplier.get()),
-                    "--entitlements", pathToSigningEntitlements.toString(),
-                    pathToSign.toString()))
+            .setCommand(commandBuilder.build())
             .setDirectory(workingDirectory.toFile())
             .build();
     // Must specify that stdout is expected or else output may be wrapped in Ansi escape chars.
