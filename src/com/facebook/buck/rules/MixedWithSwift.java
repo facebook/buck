@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.google.common.base.Optional;
 
 /**
@@ -27,5 +28,5 @@ public interface MixedWithSwift<T> {
   Optional<BuildRule> generateSwiftBuildRule(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      T constructorArg);
+      T constructorArg) throws NoSuchBuildTargetException;
 }

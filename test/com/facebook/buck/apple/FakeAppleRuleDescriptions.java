@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.InferBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
@@ -94,6 +95,7 @@ public class FakeAppleRuleDescriptions {
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"),
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib"),
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"),
+          Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/swift"),
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/nm"),
           Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"),
           Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"),
@@ -232,4 +234,10 @@ public class FakeAppleRuleDescriptions {
           Suppliers.ofInstance(Optional.<Path>absent()),
           AppleDebugFormat.NONE,
           DEFAULT_TIMEOUT);
+
+  public static final SwiftLibraryDescription SWIFT_LIBRARY_DESCRIPTION =
+      new SwiftLibraryDescription(
+          DEFAULT_APPLE_FLAVOR_DOMAIN,
+          DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
+          DEFAULT_IPHONEOS_X86_64_PLATFORM.getCxxPlatform());
 }

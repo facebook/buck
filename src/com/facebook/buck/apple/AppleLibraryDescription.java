@@ -443,7 +443,7 @@ public class AppleLibraryDescription implements
   public Optional<BuildRule> generateSwiftBuildRule(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      Arg args) {
+      Arg args) throws NoSuchBuildTargetException {
     return SwiftDescriptions.generateCompanionSwiftBuildRule(
         params,
         ruleResolver,

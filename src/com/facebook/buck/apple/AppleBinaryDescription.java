@@ -477,7 +477,7 @@ public class AppleBinaryDescription implements
   public Optional<BuildRule> generateSwiftBuildRule(
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      Arg args) {
+      Arg args) throws NoSuchBuildTargetException {
     return SwiftDescriptions.generateCompanionSwiftBuildRule(
         params,
         buildRuleResolver,

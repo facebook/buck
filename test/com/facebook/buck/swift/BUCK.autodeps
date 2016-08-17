@@ -1,13 +1,23 @@
-#@# GENERATED FILE: DO NOT MODIFY 1415e540600bb023264da7d2a8d623c91d151159 #@#
+#@# GENERATED FILE: DO NOT MODIFY 0fb5db72a6d93ecb9313d319d9ebe108efdc7258 #@#
 {
   "swift" : {
     "deps" : [
       "//src/com/facebook/buck/apple:platform",
       "//src/com/facebook/buck/apple:rules",
+      "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules/coercer:coercer",
+      "//src/com/facebook/buck/swift:swift",
+      "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/apple:testutil",
+      "//test/com/facebook/buck/cxx:testutil",
+      "//test/com/facebook/buck/model:testutil",
+      "//test/com/facebook/buck/rules:testutil",
+      "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/junit:junit"
     ],

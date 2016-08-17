@@ -24,10 +24,13 @@ import com.facebook.buck.apple.ApplePlatforms;
 import com.facebook.buck.apple.MultiarchFileInfo;
 import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPreprocessables;
+import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -40,6 +43,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.util.Collection;
 import java.util.regex.Pattern;
 
 public class SwiftDescriptions {
@@ -55,7 +59,8 @@ public class SwiftDescriptions {
       T args,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms) {
+      FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms)
+      throws NoSuchBuildTargetException {
     BuildTarget parentTarget = parentParams.getBuildTarget();
     BuildTarget swiftCompanionTarget = parentTarget.withAppendedFlavors(SWIFT_FLAVOR);
 
@@ -93,6 +98,12 @@ public class SwiftDescriptions {
       throw new HumanReadableException("Platform %s is missing swift compiler", appleCxxPlatform);
     }
 
+    CxxPlatform cxxPlatform = cxxPlatformFlavorDomain.getValue(swiftCompanionTarget)
+        .or(defaultCxxPlatform);
+
+    Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, parentParams.getDeps());
+
     BuildRuleParams params = parentParams.copyWithBuildTarget(swiftCompanionTarget);
     return Optional.<BuildRule>of(new SwiftLibrary(
         swiftCompiler.get(),
@@ -102,6 +113,7 @@ public class SwiftDescriptions {
         args.frameworks.get(),
         args.libraries.get(),
         platformFlavorsToAppleCxxPlatforms,
+        cxxPreprocessorInputs,
         BuildTargets.getGenPath(
             params.getProjectFilesystem(),
             swiftCompanionTarget, "%s"),

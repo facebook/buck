@@ -20,6 +20,8 @@ import com.facebook.buck.apple.AppleCxxPlatform;
 import com.facebook.buck.apple.ApplePlatforms;
 import com.facebook.buck.apple.MultiarchFileInfo;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPreprocessables;
+import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -44,6 +46,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.util.Collection;
 import java.util.regex.Pattern;
 
 public class SwiftLibraryDescription implements
@@ -103,6 +106,10 @@ public class SwiftLibraryDescription implements
     CxxPlatform cxxPlatform = cxxPlatformFlavorDomain.getValue(buildTarget)
         .or(defaultCxxPlatform);
 
+    Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, params.getDeps());
+
+
     // Otherwise, we return the generic placeholder of this library.
     return new SwiftLibrary(
         swiftCompiler.get(),
@@ -112,6 +119,7 @@ public class SwiftLibraryDescription implements
         args.frameworks.get(),
         args.libraries.get(),
         appleCxxPlatformFlavorDomain,
+        cxxPreprocessorInputs,
         BuildTargets.getGenPath(
             params.getProjectFilesystem(),
             buildTarget.withFlavors(cxxPlatform.getFlavor()), "%s"),
