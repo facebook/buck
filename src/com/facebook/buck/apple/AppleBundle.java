@@ -214,7 +214,7 @@ public class AppleBundle
     bundleBinaryPath = bundleRoot.resolve(binaryPath);
     hasBinary = binary.isPresent() && binary.get().getPathToOutput() != null;
 
-    if (needCodeSign() && !adHocCodeSignIsSufficient()) {
+    if (needCodeSign()) {
       this.provisioningProfileStore = provisioningProfileStore;
       this.codeSignIdentityStore = codeSignIdentityStore;
     } else {
@@ -412,83 +412,68 @@ public class AppleBundle
     }
 
     if (needCodeSign()) {
-      Optional<Path> signingEntitlementsTempPath;
-      Supplier<CodeSignIdentity> codeSignIdentitySupplier;
-
-      if (adHocCodeSignIsSufficient()) {
-        signingEntitlementsTempPath = Optional.absent();
-        codeSignIdentitySupplier = new Supplier<CodeSignIdentity>() {
-          @Override
-          public CodeSignIdentity get() {
-            return CodeSignIdentity.AD_HOC;
-          }
-        };
-      } else {
-        // Copy the .mobileprovision file if the platform requires it, and sign the executable.
-        Optional<Path> entitlementsPlist = Optional.absent();
-        final Path srcRoot = getProjectFilesystem().getRootPath().resolve(
-            getBuildTarget().getBasePath());
-        Optional<String> entitlementsPlistString =
-            InfoPlistSubstitution.getVariableExpansionForPlatform(
-                CODE_SIGN_ENTITLEMENTS,
-                platformName,
-                withDefaults(
-                    infoPlistSubstitutions,
-                    ImmutableMap.of(
-                        "SOURCE_ROOT", srcRoot.toString(),
-                        "SRCROOT", srcRoot.toString()
-                    )));
-        if (entitlementsPlistString.isPresent()) {
-          entitlementsPlist = Optional.of(
-              srcRoot.resolve(Paths.get(entitlementsPlistString.get())));
-        }
-
-        signingEntitlementsTempPath = Optional.of(
-            BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.xcent"));
-
-        final ProvisioningProfileCopyStep provisioningProfileCopyStep =
-            new ProvisioningProfileCopyStep(
-                getProjectFilesystem(),
-                infoPlistOutputPath,
-                Optional.<String>absent(),  // Provisioning profile UUID -- find automatically.
-                entitlementsPlist,
-                provisioningProfileStore,
-                resourcesDestinationPath.resolve("embedded.mobileprovision"),
-                signingEntitlementsTempPath.get(),
-                codeSignIdentityStore);
-        stepsBuilder.add(provisioningProfileCopyStep);
-
-        codeSignIdentitySupplier = new Supplier<CodeSignIdentity>() {
-          @Override
-          public CodeSignIdentity get() {
-            // Using getUnchecked here because the previous step should already throw if exception
-            // occurred, and this supplier would never be evaluated.
-            ProvisioningProfileMetadata selectedProfile = Futures.getUnchecked(
-                provisioningProfileCopyStep.getSelectedProvisioningProfileFuture());
-            ImmutableSet<HashCode> fingerprints =
-                selectedProfile.getDeveloperCertificateFingerprints();
-            if (fingerprints.isEmpty()) {
-              // No constraints, pick an arbitrary identity.
-              // If no identities are available, use an ad-hoc identity.
-              return Iterables.getFirst(
-                  codeSignIdentityStore.getIdentities(),
-                  CodeSignIdentity.AD_HOC);
-            }
-            for (CodeSignIdentity identity : codeSignIdentityStore.getIdentities()) {
-              if (identity.getFingerprint().isPresent() &&
-                  fingerprints.contains(identity.getFingerprint().get())) {
-                return identity;
-              }
-            }
-            throw new HumanReadableException(
-                "No code sign identity available for provisioning profile: %s\n" +
-                    "Profile requires an identity with one of the following SHA1 fingerprints " +
-                    "available in your keychain: \n  %s",
-                selectedProfile.getProfilePath(),
-                Joiner.on("\n  ").join(fingerprints));
-          }
-        };
+      // Copy the .mobileprovision file if the platform requires it, and sign the executable.
+      Optional<Path> entitlementsPlist = Optional.absent();
+      final Path srcRoot = getProjectFilesystem().getRootPath().resolve(
+          getBuildTarget().getBasePath());
+      Optional<String> entitlementsPlistString =
+          InfoPlistSubstitution.getVariableExpansionForPlatform(
+              CODE_SIGN_ENTITLEMENTS,
+              platformName,
+              withDefaults(
+                  infoPlistSubstitutions,
+                  ImmutableMap.of(
+                      "SOURCE_ROOT", srcRoot.toString(),
+                      "SRCROOT", srcRoot.toString()
+                  )));
+      if (entitlementsPlistString.isPresent()) {
+        entitlementsPlist = Optional.of(srcRoot.resolve(Paths.get(entitlementsPlistString.get())));
       }
+
+      final Path signingEntitlementsTempPath =
+          BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.xcent");
+
+      final ProvisioningProfileCopyStep provisioningProfileCopyStep =
+          new ProvisioningProfileCopyStep(
+              getProjectFilesystem(),
+              infoPlistOutputPath,
+              Optional.<String>absent(),  // Provisioning profile UUID -- find automatically.
+              entitlementsPlist,
+              provisioningProfileStore,
+              resourcesDestinationPath.resolve("embedded.mobileprovision"),
+              signingEntitlementsTempPath,
+              codeSignIdentityStore);
+      stepsBuilder.add(provisioningProfileCopyStep);
+
+      Supplier<CodeSignIdentity> codeSignIdentitySupplier = new Supplier<CodeSignIdentity>() {
+        @Override
+        public CodeSignIdentity get() {
+          // Using getUnchecked here because the previous step should already throw if exception
+          // occurred, and this supplier would never be evaluated.
+          ProvisioningProfileMetadata selectedProfile = Futures.getUnchecked(
+              provisioningProfileCopyStep.getSelectedProvisioningProfileFuture());
+          ImmutableSet<HashCode> fingerprints =
+              selectedProfile.getDeveloperCertificateFingerprints();
+          if (fingerprints.isEmpty()) {
+            // No constraints, pick an arbitrary identity.
+            // If no identities are available, use an ad-hoc identity.
+            return
+                Iterables.getFirst(codeSignIdentityStore.getIdentities(), CodeSignIdentity.AD_HOC);
+          }
+          for (CodeSignIdentity identity : codeSignIdentityStore.getIdentities()) {
+            if (identity.getFingerprint().isPresent() &&
+                fingerprints.contains(identity.getFingerprint().get())) {
+              return identity;
+            }
+          }
+          throw new HumanReadableException(
+              "No code sign identity available for provisioning profile: %s\n" +
+                  "Profile requires an identity with one of the following SHA1 fingerprints " +
+                  "available in your keychain: \n  %s",
+              selectedProfile.getProfilePath(),
+              Joiner.on("\n  ").join(fingerprints));
+        }
+      };
 
       addSwiftStdlibStepIfNeeded(Optional.of(codeSignIdentitySupplier), stepsBuilder);
 
@@ -496,7 +481,7 @@ public class AppleBundle
           new CodeSignStep(
               getProjectFilesystem().getRootPath(),
               getResolver(),
-              bundleRoot,
+              resourcesDestinationPath,
               signingEntitlementsTempPath,
               codeSignIdentitySupplier,
               codesignAllocatePath));
@@ -857,12 +842,8 @@ public class AppleBundle
     return CxxPreprocessorInput.EMPTY;
   }
 
-  private boolean adHocCodeSignIsSufficient() {
-    return !ApplePlatform.needsCodeSign(platformName);
-  }
-
   private boolean needCodeSign() {
-    return binary.isPresent();
+    return binary.isPresent() && ApplePlatform.needsCodeSign(this.platformName);
   }
 
   @Override
