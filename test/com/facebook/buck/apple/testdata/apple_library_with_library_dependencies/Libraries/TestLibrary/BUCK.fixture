@@ -4,5 +4,5 @@ apple_library(
   exported_headers = ['TestClass.h'],
   srcs = ['TestClass.m'],
   linker_flags = ['-lobjc'],
-  deps = ['//Libraries/TestLibraryDep:TestLibraryDep#framework'],
+  deps = ['//Libraries/TestLibraryDep:TestLibraryDep'],
 )

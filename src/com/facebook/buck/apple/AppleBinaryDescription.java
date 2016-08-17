@@ -438,6 +438,7 @@ public class AppleBinaryDescription implements
       Optional<FrameworkDependencies> frameworks =
           resolver.requireMetadata(
               BuildTarget.builder(dep)
+                  .addFlavors(AppleDescriptions.FRAMEWORK_FLAVOR)
                   .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                   .addFlavors(cxxPlatformFlavor.get())
                   .build(),

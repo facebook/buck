@@ -24,6 +24,7 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.model.BuildTarget;
@@ -419,6 +420,7 @@ public class AppleLibraryDescription implements
       Optional<FrameworkDependencies> frameworks =
           resolver.requireMetadata(
               BuildTarget.builder(dep)
+                  .addFlavors(AppleDescriptions.FRAMEWORK_FLAVOR)
                   .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                   .addFlavors(cxxPlatformFlavor.get())
                   .build(),
@@ -428,7 +430,8 @@ public class AppleLibraryDescription implements
       }
     }
 
-    if (buildTarget.getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
+    if (buildTarget.getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR) &&
+        args.preferredLinkage.or(NativeLinkable.Linkage.ANY) != NativeLinkable.Linkage.STATIC) {
       // Not all parts of Buck use require yet, so require the rule here so it's available in the
       // resolver for the parts that don't.
       resolver.requireRule(buildTarget);

@@ -547,7 +547,7 @@ public class AppleDescriptions {
             resolver.requireMetadata(
                 BuildTarget.builder(dep)
                     //this seems wrong
-                    //.addFlavors(FRAMEWORK_FLAVOR)
+                    .addFlavors(FRAMEWORK_FLAVOR)
                     .addFlavors(NO_INCLUDE_FRAMEWORKS_FLAVOR)
                     .addFlavors(appleCxxPlatform.getCxxPlatform().getFlavor())
                     .build(),
