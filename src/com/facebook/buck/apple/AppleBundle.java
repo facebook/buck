@@ -62,6 +62,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.step.fs.StringTemplateStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.swift.SwiftPlatform;
 import com.facebook.buck.util.HumanReadableException;
@@ -77,7 +78,10 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
+import com.google.common.io.Resources;
 import com.google.common.util.concurrent.Futures;
+
+import org.stringtemplate.v4.ST;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -100,6 +104,13 @@ public class AppleBundle
   private static final Logger LOG = Logger.get(AppleBundle.class);
   private static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
   private final BuildRuleResolver ruleResolver;
+
+  private static final String MODULEMAP_TEMPLATE = "modulemap.st";
+  private static final String UMBRELLA_HEADER_TEMPLATE = "umbrella_header.st";
+  private static final Path MODULEMAP_TEMPLATE_PATH = Paths.get(
+      Resources.getResource(AppleBundle.class, MODULEMAP_TEMPLATE).getPath());
+  private static final Path UMBRELLA_HEADER_TEMPLATE_PATH = Paths.get(
+      Resources.getResource(AppleBundle.class, UMBRELLA_HEADER_TEMPLATE).getPath());
 
   @AddToRuleKey
   private final String extension;
@@ -558,7 +569,7 @@ public class AppleBundle
     Preconditions.checkArgument(isFrameworkBundle());
     Preconditions.checkArgument(headers.isPresent());
 
-    Path headersFolder = bundleRoot.resolve(this.destinations.getHeadersPath());
+    final Path headersFolder = bundleRoot.resolve(this.destinations.getHeadersPath());
     stepsBuilder.add(
         new MakeCleanDirectoryStep(
             getProjectFilesystem(),
@@ -572,6 +583,36 @@ public class AppleBundle
               headerPath,
               headersFolder.resolve(destinationPath)));
     }
+
+    final String umbrellaHeaderName = binaryName + "-umbrella.h";
+    stepsBuilder.add(new StringTemplateStep(
+        UMBRELLA_HEADER_TEMPLATE_PATH,
+        getProjectFilesystem(),
+        headersFolder.resolve(umbrellaHeaderName),
+        new Function<ST, ST>() {
+          @Override
+          public ST apply(ST input) {
+            return input
+                .add("framework_name", binaryName)
+                .add("exported_headers", headers.get().getLinks().keySet());
+          }
+        }));
+
+    Path moduleFolder = bundleRoot.resolve(this.destinations.getModulesPath());
+    stepsBuilder.add(
+        new MakeCleanDirectoryStep(getProjectFilesystem(), moduleFolder),
+        new StringTemplateStep(
+            MODULEMAP_TEMPLATE_PATH,
+            getProjectFilesystem(),
+            moduleFolder.resolve("module.modulemap"),
+            new Function<ST, ST>() {
+              @Override
+              public ST apply(ST input) {
+                return input
+                    .add("framework_name", binaryName)
+                    .add("umbrella_header", umbrellaHeaderName);
+              }
+            }));
   }
 
   private void appendCopyBinarySteps(ImmutableList.Builder<Step> stepsBuilder) {
