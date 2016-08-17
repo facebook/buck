@@ -22,6 +22,7 @@ import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkableInput;
@@ -99,7 +100,7 @@ public class PrebuiltHaskellLibraryDescriptionTest {
     HaskellCompileInput input =
         library.getCompileInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            Linker.LinkableDepType.STATIC);
+            CxxSourceRuleFactory.PicType.PDC);
     assertThat(
         input.getIncludes(),
         Matchers.contains(interfaces));
@@ -118,7 +119,7 @@ public class PrebuiltHaskellLibraryDescriptionTest {
     HaskellCompileInput input =
         library.getCompileInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            Linker.LinkableDepType.SHARED);
+            CxxSourceRuleFactory.PicType.PIC);
     assertThat(
         input.getIncludes(),
         Matchers.contains(interfaces));
@@ -163,14 +164,14 @@ public class PrebuiltHaskellLibraryDescriptionTest {
     HaskellCompileInput staticInput =
         library.getCompileInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            Linker.LinkableDepType.STATIC);
+            CxxSourceRuleFactory.PicType.PDC);
     assertThat(
         staticInput.getFlags(),
         Matchers.contains(flag));
     HaskellCompileInput sharedInput =
         library.getCompileInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            Linker.LinkableDepType.STATIC_PIC);
+            CxxSourceRuleFactory.PicType.PIC);
     assertThat(
         sharedInput.getFlags(),
         Matchers.contains(flag));

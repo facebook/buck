@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.HeaderSymlinkTree;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.ImmutableCxxPreprocessorInputCacheKey;
@@ -80,12 +81,11 @@ public class PrebuiltHaskellLibraryDescription
       @Override
       public HaskellCompileInput getCompileInput(
           CxxPlatform cxxPlatform,
-          Linker.LinkableDepType depType)
-          throws NoSuchBuildTargetException {
+          CxxSourceRuleFactory.PicType picType) throws NoSuchBuildTargetException {
         return HaskellCompileInput.builder()
             .addAllFlags(args.exportedCompilerFlags.or(ImmutableList.<String>of()))
             .addAllIncludes(
-                depType == Linker.LinkableDepType.STATIC ?
+                picType == CxxSourceRuleFactory.PicType.PDC ?
                     args.staticInterfaces.asSet() :
                     args.sharedInterfaces.asSet())
             .build();

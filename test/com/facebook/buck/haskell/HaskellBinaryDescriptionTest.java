@@ -19,7 +19,7 @@ package com.facebook.buck.haskell;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cxx.CxxPlatformUtils;
-import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -48,7 +48,7 @@ public class HaskellBinaryDescriptionTest {
         HaskellDescriptionUtils.getCompileBuildTarget(
             target,
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            Linker.LinkableDepType.STATIC);
+            CxxSourceRuleFactory.PicType.PDC);
     HaskellCompileRule rule = resolver.getRuleWithType(compileTarget, HaskellCompileRule.class);
     assertThat(rule.getFlags(), Matchers.hasItem(flag));
   }
