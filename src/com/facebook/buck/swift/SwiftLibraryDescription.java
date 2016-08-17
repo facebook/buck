@@ -130,6 +130,7 @@ public class SwiftLibraryDescription implements
     public Optional<ImmutableSortedSet<FrameworkPath>> libraries;
     public Optional<Boolean> enableObjcInterop;
     public Optional<Pattern> supportedPlatformsRegex;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 
 }
