@@ -105,7 +105,7 @@ public class RuleKeyLoggerListenerTest {
                 "//downtheline"))
         .build(), null);
     BuildRuleKeys keys = BuildRuleKeys.of(new RuleKey("1a1a1a"));
-    return BuildRuleEvent.finished(rule, keys, null, null, null, null, null);
+    return BuildRuleEvent.finished(rule, keys, null, null, null, null, null, null, null);
   }
 
   private HttpArtifactCacheEvent.Finished createArtifactCacheEvent(CacheResultType type) {

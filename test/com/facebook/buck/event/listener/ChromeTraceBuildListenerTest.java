@@ -297,6 +297,8 @@ public class ChromeTraceBuildListenerTest {
             CacheResult.miss(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
             Optional.<HashCode>absent(),
+            Optional.<Long>absent(),
+            Optional.<Integer>absent(),
             Optional.<Long>absent()));
 
     try (TraceEventLogger ignored = TraceEventLogger.start(

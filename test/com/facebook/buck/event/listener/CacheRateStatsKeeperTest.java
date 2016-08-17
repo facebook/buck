@@ -51,13 +51,15 @@ public class CacheRateStatsKeeperTest {
 
   BuildRuleEvent.Finished finishedEvent(CacheResult cacheResult) {
     return BuildRuleEvent.finished(
-            EasyMock.createMock(BuildRule.class),
-            BuildRuleKeys.of(new RuleKey("aa")),
-            BuildRuleStatus.SUCCESS,
-            cacheResult,
-            Optional.<BuildRuleSuccessType>absent(),
-            Optional.<HashCode>absent(),
-            Optional.<Long>absent());
+        EasyMock.createMock(BuildRule.class),
+        BuildRuleKeys.of(new RuleKey("aa")),
+        BuildRuleStatus.SUCCESS,
+        cacheResult,
+        Optional.<BuildRuleSuccessType>absent(),
+        Optional.<HashCode>absent(),
+        Optional.<Long>absent(),
+        Optional.<Integer>absent(),
+        Optional.<Long>absent());
   }
 
   @Test

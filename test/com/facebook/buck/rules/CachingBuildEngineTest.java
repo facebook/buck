@@ -55,6 +55,7 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.InputCountingRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.shell.Genrule;
@@ -170,6 +171,11 @@ public class CachingBuildEngineTest {
           0,
           new NullFileHashCache(),
           DEFAULT_SOURCE_PATH_RESOLVER);
+  private static final InputCountingRuleKeyBuilderFactory NOOP_INPUT_COUNTING_RULE_KEY_FACTORY =
+      new InputCountingRuleKeyBuilderFactory(
+          0,
+          new NullFileHashCache(),
+          DEFAULT_SOURCE_PATH_RESOLVER);
   private static final ObjectMapper MAPPER = ObjectMappers.newDefaultInstance();
 
   public abstract static class CommonFixture extends EasyMockSupport {
@@ -184,6 +190,7 @@ public class CachingBuildEngineTest {
     protected SourcePathResolver pathResolver;
     protected DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory;
     protected InputBasedRuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory;
+    protected InputCountingRuleKeyBuilderFactory inputCountingRuleKeyBuilderFactory;
 
     @Before
     public void setUp() {
@@ -203,6 +210,8 @@ public class CachingBuildEngineTest {
           fileHashCache,
           pathResolver,
           NO_INPUT_FILE_SIZE_LIMIT);
+      inputCountingRuleKeyBuilderFactory =
+          new InputCountingRuleKeyBuilderFactory(0, fileHashCache, pathResolver);
     }
 
 
@@ -309,6 +318,8 @@ public class CachingBuildEngineTest {
                   CacheResult.miss(),
                   Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                   Optional.<HashCode>absent(),
+                  Optional.<Long>absent(),
+                  Optional.<Integer>absent(),
                   Optional.<Long>absent())));
     }
 
@@ -372,6 +383,8 @@ public class CachingBuildEngineTest {
                   CacheResult.miss(),
                   Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                   Optional.<HashCode>absent(),
+                  Optional.<Long>absent(),
+                  Optional.<Integer>absent(),
                   Optional.<Long>absent())));
     }
 
@@ -569,6 +582,8 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.<HashCode>absent(),
+                  Optional.<Long>absent(),
+                  Optional.<Integer>absent(),
                   Optional.<Long>absent())));
     }
 
@@ -636,6 +651,8 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.<HashCode>absent(),
+                  Optional.<Long>absent(),
+                  Optional.<Integer>absent(),
                   Optional.<Long>absent())));
       assertThat(
           events,
@@ -648,6 +665,8 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.<HashCode>absent(),
+                  Optional.<Long>absent(),
+                  Optional.<Integer>absent(),
                   Optional.<Long>absent())));
     }
 
@@ -736,6 +755,8 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.<HashCode>absent(),
+                  Optional.<Long>absent(),
+                  Optional.<Integer>absent(),
                   Optional.<Long>absent())));
       assertThat(
           events,
@@ -748,6 +769,8 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.<HashCode>absent(),
+                  Optional.<Long>absent(),
+                  Optional.<Integer>absent(),
                   Optional.<Long>absent())));
       assertThat(
           events,
@@ -760,6 +783,8 @@ public class CachingBuildEngineTest {
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                   Optional.<HashCode>absent(),
+                  Optional.<Long>absent(),
+                  Optional.<Integer>absent(),
                   Optional.<Long>absent())));
     }
 
@@ -1214,7 +1239,8 @@ public class CachingBuildEngineTest {
                           rule.getBuildTarget(),
                           Optional.of(inputRuleKey))),
                       NOOP_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
+                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
 
       // Run the build.
@@ -1266,7 +1292,8 @@ public class CachingBuildEngineTest {
                       new FakeInputBasedRuleKeyBuilderFactory(
                           ImmutableMap.of(rule.getBuildTarget(), Optional.of(inputRuleKey))),
                       NOOP_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
+                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
 
       // Run the build.
@@ -1335,7 +1362,8 @@ public class CachingBuildEngineTest {
                       new FakeInputBasedRuleKeyBuilderFactory(
                           ImmutableMap.of(rule.getBuildTarget(), Optional.of(inputRuleKey))),
                       NOOP_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
+                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
 
       // Run the build.
@@ -1422,7 +1450,8 @@ public class CachingBuildEngineTest {
                       new FakeInputBasedRuleKeyBuilderFactory(
                           ImmutableMap.of(rule.getBuildTarget(), Optional.<RuleKey>absent())),
                       NOOP_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
+                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
 
       // Run the build.
@@ -1992,7 +2021,8 @@ public class CachingBuildEngineTest {
                       ruleKeyBuilderFactory,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       NOOP_RULE_KEY_FACTORY,
-                      depFileFactory)))
+                      depFileFactory,
+                      inputCountingRuleKeyBuilderFactory)))
           .build();
     }
   }
@@ -2064,7 +2094,8 @@ public class CachingBuildEngineTest {
                           ruleKeyBuilderFactory,
                           inputBasedRuleKeyBuilderFactory,
                           ruleKeyBuilderFactory,
-                          depFilefactory)))
+                          depFilefactory,
+                          inputCountingRuleKeyBuilderFactory)))
               .build();
 
       // Run the build.
@@ -2168,7 +2199,8 @@ public class CachingBuildEngineTest {
                           ruleKeyBuilderFactory,
                           inputBasedRuleKeyBuilderFactory,
                           ruleKeyBuilderFactory,
-                          depFilefactory)))
+                          depFilefactory,
+                          inputCountingRuleKeyBuilderFactory)))
               .build();
 
       // Seed the cache with an existing manifest with a dummy entry.
@@ -2286,7 +2318,8 @@ public class CachingBuildEngineTest {
                           ruleKeyBuilderFactory,
                           inputBasedRuleKeyBuilderFactory,
                           ruleKeyBuilderFactory,
-                          depFilefactory)))
+                          depFilefactory,
+                          inputCountingRuleKeyBuilderFactory)))
               .build();
 
       // Seed the cache with an existing manifest with a dummy entry so that it's already at the max
@@ -2394,7 +2427,8 @@ public class CachingBuildEngineTest {
                           ruleKeyBuilderFactory,
                           inputBasedRuleKeyBuilderFactory,
                           ruleKeyBuilderFactory,
-                          depFilefactory)))
+                          depFilefactory,
+                          NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
               .build();
 
       // Seed the cache with the manifest and a referenced artifact.
@@ -2458,7 +2492,8 @@ public class CachingBuildEngineTest {
                           fileHashCache,
                           pathResolver,
                           ruleKeyBuilderFactory),
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
+                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
 
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -2501,7 +2536,8 @@ public class CachingBuildEngineTest {
                       ruleKeyBuilderFactory,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       abiRuleKeyBuilderFactory,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
+                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
 
       // Prepopulate the dep file rule key and dep file.
@@ -2541,7 +2577,8 @@ public class CachingBuildEngineTest {
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       abiRuleKeyBuilderFactory,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
+                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
 
       // Prepopulate the dep file rule key and dep file.
@@ -2584,7 +2621,8 @@ public class CachingBuildEngineTest {
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       NOOP_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
+                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
       BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
       assertEquals(
@@ -2660,7 +2698,8 @@ public class CachingBuildEngineTest {
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       NOOP_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
+                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
       ListenableFuture<BuildResult> result1 = cachingBuildEngine.build(buildContext, rule1);
       rule1.waitForStart();
@@ -2764,7 +2803,8 @@ public class CachingBuildEngineTest {
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       NOOP_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
+                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
 
       // The BuildContext that will be used by the rule's build() method.
@@ -2817,7 +2857,8 @@ public class CachingBuildEngineTest {
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       NOOP_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
+                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
 
       // The BuildContext that will be used by the rule's build() method.
@@ -2869,7 +2910,8 @@ public class CachingBuildEngineTest {
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
                       NOOP_RULE_KEY_FACTORY,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY)))
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
+                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
 
       // The BuildContext that will be used by the rule's build() method.

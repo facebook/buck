@@ -38,6 +38,7 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.InputCountingRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -79,6 +80,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -811,6 +813,8 @@ public class CachingBuildEngine implements BuildEngine {
                 // Unblock dependents.
                 result.set(input);
 
+                Optional<Integer> inputsCount = Optional.absent();
+                Optional<Long> inputsSize = Optional.absent();
                 if (input.getStatus() == BuildRuleStatus.SUCCESS) {
                   BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
                   successType = Optional.of(success);
@@ -832,16 +836,41 @@ public class CachingBuildEngine implements BuildEngine {
                   }
 
                   // Calculate the hash of outputs that were built locally and are cacheable.
-                  if (success == BuildRuleSuccessType.BUILT_LOCALLY &&
-                      shouldUploadToCache(rule, outputSize.get())) {
+                  if (success == BuildRuleSuccessType.BUILT_LOCALLY) {
                     try {
-                      outputHash = Optional.of(buildInfoRecorder.getOutputHash(fileHashCache));
-                    } catch (IOException e) {
-                      context.getEventBus().post(
-                          ThrowableConsoleEvent.create(
-                              e,
-                              "Error getting output hash for %s.",
-                              rule));
+                      InputCountingRuleKeyBuilderFactory.Result inputs =
+                          keyFactories.inputCountingRuleKeyBuilderFactory.build(rule);
+                      inputsCount = Optional.of(inputs.getInputsCount());
+                      inputsSize = Optional.of(inputs.getInputsSize());
+                    } catch (UncheckedExecutionException e) {
+                      Exception ex = e;
+                      while (!(ex.getCause() instanceof
+                          InputCountingRuleKeyBuilderFactory.WrappedIoException)) {
+                        if (!(ex.getCause() instanceof Exception)) {
+                          throw e;
+                        }
+                        ex = (Exception) ex.getCause();
+                      }
+                      LOG.warn(
+                          ex.getCause(),
+                          "Failed to count inputs for rule: '%s'.",
+                          rule.getFullyQualifiedName());
+                    } catch (InputCountingRuleKeyBuilderFactory.WrappedIoException e) {
+                      LOG.warn(
+                          e,
+                          "Failed to count inputs for rule: '%s'.",
+                          rule.getFullyQualifiedName());
+                    }
+                    if (shouldUploadToCache(rule, outputSize.get())) {
+                      try {
+                        outputHash = Optional.of(buildInfoRecorder.getOutputHash(fileHashCache));
+                      } catch (IOException e) {
+                        context.getEventBus().post(
+                            ThrowableConsoleEvent.create(
+                                e,
+                                "Error getting output hash for %s.",
+                                rule));
+                      }
                     }
                   }
                 }
@@ -861,7 +890,9 @@ public class CachingBuildEngine implements BuildEngine {
                         input.getCacheResult(),
                         successType,
                         outputHash,
-                        outputSize));
+                        outputSize,
+                        inputsCount,
+                        inputsSize));
               }
 
               @Override
@@ -1688,6 +1719,7 @@ public class CachingBuildEngine implements BuildEngine {
     public final RuleKeyBuilderFactory<Optional<RuleKey>> inputBasedRuleKeyBuilderFactory;
     public final RuleKeyBuilderFactory<RuleKey> abiRuleKeyBuilderFactory;
     public final DependencyFileRuleKeyBuilderFactory depFileRuleKeyBuilderFactory;
+    public final InputCountingRuleKeyBuilderFactory inputCountingRuleKeyBuilderFactory;
 
     public static RuleKeyFactories build(
         int seed,
@@ -1715,6 +1747,10 @@ public class CachingBuildEngine implements BuildEngine {
           new DefaultDependencyFileRuleKeyBuilderFactory(
               seed,
               fileHashCache,
+              pathResolver),
+          new InputCountingRuleKeyBuilderFactory(
+              seed,
+              fileHashCache,
               pathResolver));
     }
 
@@ -1723,11 +1759,13 @@ public class CachingBuildEngine implements BuildEngine {
         RuleKeyBuilderFactory<RuleKey> defaultRuleKeyBuilderFactory,
         RuleKeyBuilderFactory<Optional<RuleKey>> inputBasedRuleKeyBuilderFactory,
         RuleKeyBuilderFactory<RuleKey> abiRuleKeyBuilderFactory,
-        DependencyFileRuleKeyBuilderFactory depFileRuleKeyBuilderFactory) {
+        DependencyFileRuleKeyBuilderFactory depFileRuleKeyBuilderFactory,
+        InputCountingRuleKeyBuilderFactory inputCountingRuleKeyBuilderFactory) {
       this.defaultRuleKeyBuilderFactory = defaultRuleKeyBuilderFactory;
       this.inputBasedRuleKeyBuilderFactory = inputBasedRuleKeyBuilderFactory;
       this.abiRuleKeyBuilderFactory = abiRuleKeyBuilderFactory;
       this.depFileRuleKeyBuilderFactory = depFileRuleKeyBuilderFactory;
+      this.inputCountingRuleKeyBuilderFactory = inputCountingRuleKeyBuilderFactory;
     }
   }
 }
