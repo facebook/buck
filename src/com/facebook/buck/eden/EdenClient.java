@@ -35,12 +35,15 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * Client of Eden's fbthrift API.
+ * Client of Eden's fbthrift API. Note that there should be at most one Eden client per machine,
+ * though it may have zero or more mount points.
  */
 public final class EdenClient {
-
   private final EdenService.Client client;
 
+  /**
+   * @param client through which Eden Thrift API calls should be made.
+   */
   @VisibleForTesting
   EdenClient(EdenService.Client client) {
     this.client = client;
@@ -67,12 +70,17 @@ public final class EdenClient {
     return client.listMounts();
   }
 
+  /**
+   * @return an Eden mount point if {@code projectRoot} is backed by Eden or {@code null}.
+   */
   @Nullable
-  public EdenMount getMountFor(Path mountPoint) throws EdenError, TException {
-    String mountPointStr = mountPoint.toString();
+  public EdenMount getMountFor(Path projectRoot) throws EdenError, TException {
     for (MountInfo info : getMountInfos()) {
-      if (mountPointStr.equals(info.mountPoint)) {
-        return new EdenMount(client, mountPoint);
+      // Note that we cannot use Paths.get() here because that will break unit tests where we mix
+      // java.nio.file.Path and Jimfs Path objects.
+      Path mountPoint = projectRoot.getFileSystem().getPath(info.mountPoint);
+      if (projectRoot.startsWith(mountPoint)) {
+        return new EdenMount(client, mountPoint, projectRoot);
       }
     }
     return null;

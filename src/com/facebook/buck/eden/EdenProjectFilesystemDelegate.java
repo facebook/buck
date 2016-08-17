@@ -16,12 +16,12 @@
 
 package com.facebook.buck.eden;
 
-import com.facebook.buck.io.BuckPaths;
 import com.facebook.buck.io.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.ProjectFilesystemDelegate;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.EdenError;
 import com.facebook.thrift.TException;
+import com.google.common.base.Optional;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -29,29 +29,25 @@ import java.nio.file.Path;
 public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDelegate {
 
   private final EdenMount mount;
-  private final BuckPaths buckPaths;
   private final DefaultProjectFilesystemDelegate delegate;
 
-  public EdenProjectFilesystemDelegate(EdenMount mount, BuckPaths buckPaths) {
+  public EdenProjectFilesystemDelegate(EdenMount mount) {
     this.mount = mount;
-    this.buckPaths = buckPaths;
-    this.delegate = new DefaultProjectFilesystemDelegate(mount.getMountPoint());
+    this.delegate = new DefaultProjectFilesystemDelegate(mount.getProjectRoot());
   }
 
   @Override
   public Sha1HashCode computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException {
     Path fileToHash = getPathForRelativePath(pathRelativeToProjectRootOrJustAbsolute);
 
-    if (fileToHash.startsWith(mount.getMountPoint())) {
-      Path entry = mount.getMountPoint().relativize(fileToHash);
-      // TODO(bolinfest): Generalize this to check if entry is under any of the Eden client's bind
-      // mounts rather than hardcoding a test for buck-out/.
-      if (!entry.startsWith(buckPaths.getBuckOut())) {
-        try {
-          return mount.getSha1(entry);
-        } catch (TException | EdenError e) {
-          throw new IOException(e);
-        }
+    Optional<Path> entry = mount.getPathRelativeToProjectRoot(fileToHash);
+    // TODO(t12516031): Generalize this to check if entry is under any of the Eden client's bind
+    // mounts rather than hardcoding a test for buck-out/.
+    if (entry.isPresent() && !entry.get().toString().contains("buck-out")) {
+      try {
+        return mount.getSha1(entry.get());
+      } catch (TException | EdenError e) {
+        throw new IOException(e);
       }
     }
 

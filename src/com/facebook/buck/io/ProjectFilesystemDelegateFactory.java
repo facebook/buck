@@ -43,7 +43,7 @@ public final class ProjectFilesystemDelegateFactory {
   /**
    * Must always create a new delegate for the specified {@code root}.
    */
-  public static ProjectFilesystemDelegate newInstance(Path root, BuckPaths buckPaths) {
+  public static ProjectFilesystemDelegate newInstance(Path root) {
     EdenClient client = createEdenClientOrSwallowException();
 
     EdenMount mount = null;
@@ -58,7 +58,7 @@ public final class ProjectFilesystemDelegateFactory {
     }
 
     if (mount != null) {
-      return new EdenProjectFilesystemDelegate(mount, buckPaths);
+      return new EdenProjectFilesystemDelegate(mount);
     } else {
       return new DefaultProjectFilesystemDelegate(root);
     }

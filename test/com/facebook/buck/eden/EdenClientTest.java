@@ -22,6 +22,7 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNotNull;
 
 import com.facebook.eden.EdenError;
 import com.facebook.eden.EdenService;
@@ -44,6 +45,8 @@ public class EdenClientTest {
 
   private EdenService.Client thriftClient;
   private List<MountInfo> mountInfos;
+  private FileSystem fs;
+  private EdenClient client;
 
   @Before
   public void setUp() throws EdenError, TException {
@@ -52,6 +55,10 @@ public class EdenClientTest {
       new MountInfo("/home/mbolin/src/buck", /* edenClientPath */ ""),
       new MountInfo("/home/mbolin/src/eden", /* edenClientPath */ ""));
     expect(thriftClient.listMounts()).andReturn(mountInfos);
+    replay(thriftClient);
+
+    fs = Jimfs.newFileSystem(Configuration.unix());
+    client = new EdenClient(thriftClient);
   }
 
   @After
@@ -61,29 +68,29 @@ public class EdenClientTest {
 
   @Test
   public void getMountInfosDelegatesToThriftClient() throws EdenError, TException {
-    replay(thriftClient);
-
-    EdenClient client = new EdenClient(thriftClient);
     assertEquals(mountInfos, client.getMountInfos());
   }
 
   @Test
-  public void getMountForReturnsMatchingMountInfo() throws EdenError, TException {
-    replay(thriftClient);
-
-    EdenClient client = new EdenClient(thriftClient);
-    FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
-    Path eden = fs.getPath("/home/mbolin/src/eden");
-
-    EdenMount mount = client.getMountFor(eden);
-    assertEquals(Paths.get("/home/mbolin/src/eden"), mount.getMountPoint());
+  public void getMountForMatchesProjectRootEqualToMount() throws EdenError, TException {
+    Path projectRoot = fs.getPath("/home/mbolin/src/eden");
+    EdenMount mount = client.getMountFor(projectRoot);
+    assertNotNull("Should find mount for path.", mount);
+    assertEquals(fs.getPath("/home/mbolin/src/eden"), mount.getProjectRoot());
+    assertEquals(fs.getPath(""), mount.getPrefix());
   }
 
   @Test
-  public void getMountForThrowsWhenMissingMountPoint() throws EdenError, TException {
-    replay(thriftClient);
+  public void getMountForMatchesProjectRootUnderMount() throws EdenError, TException {
+    Path projectRoot = fs.getPath("/home/mbolin/src/eden/deep/project");
+    EdenMount mount = client.getMountFor(projectRoot);
+    assertNotNull("Should find mount for path.", mount);
+    assertEquals(fs.getPath("/home/mbolin/src/eden/deep/project"), mount.getProjectRoot());
+    assertEquals(fs.getPath("deep/project"), mount.getPrefix());
+  }
 
-    EdenClient client = new EdenClient(thriftClient);
+  @Test
+  public void getMountForReturnsNullWhenMissingMountPoint() throws EdenError, TException {
     EdenMount mount = client.getMountFor(Paths.get("/home/mbolin/src/other_project"));
     assertNull(mount);
   }

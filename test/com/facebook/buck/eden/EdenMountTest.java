@@ -21,6 +21,7 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.EdenError;
@@ -47,15 +48,16 @@ public class EdenMountTest {
     EdenService.Client thriftClient = createMock(EdenService.Client.class);
     expect(thriftClient.listMounts()).andReturn(mountInfos);
 
-    Path entry = Paths.get("LICENSE");
+    FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
+    Path entry = fs.getPath("LICENSE");
     HashCode hash = HashCode.fromString("2b8b815229aa8a61e483fb4ba0588b8b6c491890");
     expect(thriftClient.getSHA1("/home/mbolin/src/buck", "LICENSE")).andReturn(hash.asBytes());
     replay(thriftClient);
 
     EdenClient client = new EdenClient(thriftClient);
-    FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
     Path pathToBuck = fs.getPath("/home/mbolin/src/buck");
     EdenMount mount = client.getMountFor(pathToBuck);
+    assertNotNull("Should find mount for path.", mount);
     assertEquals(Sha1HashCode.fromHashCode(hash), mount.getSha1(entry));
     verify(thriftClient);
   }
@@ -66,8 +68,8 @@ public class EdenMountTest {
     Path mountPoint = Paths.get("/home/mbolin/src/buck");
     replay(thriftClient);
 
-    EdenMount mount = new EdenMount(thriftClient, mountPoint);
-    assertEquals(mountPoint, mount.getMountPoint());
+    EdenMount mount = new EdenMount(thriftClient, mountPoint, mountPoint);
+    assertEquals(mountPoint, mount.getProjectRoot());
 
     verify(thriftClient);
   }
@@ -78,8 +80,8 @@ public class EdenMountTest {
     Path mountPoint = Paths.get("/home/mbolin/src/buck");
     replay(thriftClient);
 
-    EdenMount mount = new EdenMount(thriftClient, mountPoint);
-    assertEquals(String.format("EdenMount{mountPoint=%s}", mountPoint), mount.toString());
+    EdenMount mount = new EdenMount(thriftClient, mountPoint, mountPoint);
+    assertEquals(String.format("EdenMount{mountPoint=%s, prefix=}", mountPoint), mount.toString());
 
     verify(thriftClient);
   }
