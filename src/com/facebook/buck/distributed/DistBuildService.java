@@ -79,11 +79,11 @@ public class DistBuildService {
     startRequest.setBuildId(id);
     request.clear();
     request.setType(FrontendRequestType.START_BUILD);
-    request.setStartBuild(startRequest);
+    request.setStartBuildRequest(startRequest);
     response.clear();
     service.makeRequest(request, response);
     Preconditions.checkState(response.getType().equals(FrontendRequestType.START_BUILD));
-    job = response.getStartBuild().getBuildJob();
+    job = response.getStartBuildResponse().getBuildJob();
     Preconditions.checkState(job.getBuildId().equals(id));
     LOG.info("Started job. Build status: " + job.getStatus().toString());
     logDebugInfo(job);
@@ -93,7 +93,7 @@ public class DistBuildService {
     statusRequest.setBuildId(id);
     request.clear();
     request.setType(FrontendRequestType.BUILD_STATUS);
-    request.setBuildStatus(statusRequest);
+    request.setBuildStatusRequest(statusRequest);
     Stopwatch stopwatch = Stopwatch.createStarted();
 
     // Keep polling until the build is complete or failed.
@@ -101,7 +101,7 @@ public class DistBuildService {
       response.clear();
       service.makeRequest(request, response);
       Preconditions.checkState(response.getType().equals(FrontendRequestType.BUILD_STATUS));
-      job = response.getBuildStatus().getBuildJob();
+      job = response.getBuildStatusResponse().getBuildJob();
       Preconditions.checkState(job.getBuildId().equals(id));
       LOG.info("Got build status: " + job.getStatus().toString());
 

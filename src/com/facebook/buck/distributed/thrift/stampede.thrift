@@ -10,8 +10,8 @@
 # Whenever you change this file please run the following command to refresh the java source code:
 # $ thrift --gen java  -out src-gen/ src/com/facebook/buck/distributed/thrift/buck_dist.thrift
 
-namespace cpp buck.common
 namespace java com.facebook.buck.distributed.thrift
+
 
 ##############################################################################
 ## DataTypes
@@ -46,9 +46,20 @@ enum BuildStatus {
   FAILED = 4,
 }
 
+struct BuildJob {
+  1: optional BuildId buildId;
+  2: optional DebugInfo debug;
+  3: optional BuildStatus status = BuildStatus.UNKNOWN;
+}
+
 struct ScribeData {
   1: optional string category;
   2: optional list<string> lines;
+}
+
+enum LogRequestType {
+  UNKNOWN = 0,
+  SCRIBE_DATA = 1,
 }
 
 struct FileInfo {
@@ -56,76 +67,6 @@ struct FileInfo {
   2: optional binary content;
 }
 
-##############################################################################
-## Buck client build state
-##############################################################################
-
-struct BuildJob {
-  1: optional BuildId buildId;
-  2: optional DebugInfo debug;
-  3: optional BuildStatus status = BuildStatus.UNKNOWN;
-}
-
-# Thrift doesn't universally guarantee map ordering. Using list of tuples.
-struct OrderedStringMapEntry {
-  1: string key;
-  2: string value;
-}
-
-struct BuildJobStateBuckConfig {
-  1: optional map<string, string> userEnvironment;
-  2: optional map<string, list<OrderedStringMapEntry>> rawBuckConfig;
-  3: optional string architecture;
-  4: optional string platform;
-}
-
-struct PathWithUnixSeparators {
-  1: string path;
-}
-
-struct BuildJobStateBuildTarget {
-  1: optional string cellName;
-  2: string baseName;
-  3: string shortName;
-  4: set<string> flavors;
-}
-
-struct BuildJobStateFileHashEntry {
-  1: optional PathWithUnixSeparators path;
-  2: optional string archiveMemberPath; // Only present if this is a path to an archive member.
-  3: optional string hashCode; // The SHA1 hash of the content.
-  4: optional bool isDirectory;
-  // The paths to source files are relative, the paths to tools, SDKs, etc.. are absolute.
-  5: optional bool pathIsAbsolute;
-  6: optional binary contents;
-}
-
-struct BuildJobStateFileHashes {
-  1: optional i32 cellIndex;
-  2: optional list<BuildJobStateFileHashEntry> entries;
-}
-
-struct BuildJobStateTargetNode {
-  1: optional i32 cellIndex;
-  2: optional string rawNode;
-  3: optional BuildJobStateBuildTarget buildTarget;
-}
-
-struct BuildJobStateCell {
-  // This is just so we can generate a user-friendly path, we should not rely on this being unique.
-  1: optional string nameHint;
-  2: optional BuildJobStateBuckConfig config;
-}
-
-struct BuildJobStateTargetGraph {
-  1: optional list<BuildJobStateTargetNode> nodes;
-}
-
-struct BuildJobState {
-  1: optional map<i32, BuildJobStateCell> cells;
-  2: optional list<BuildJobStateFileHashes> fileHashes;
-  3: optional BuildJobStateTargetGraph targetGraph;
-}
 
 ##############################################################################
 ## Request/Response structs
@@ -139,6 +80,7 @@ struct CreateBuildResponse {
   1: optional BuildJob buildJob;
 }
 
+# Request for the servers to start a distributed build.
 struct StartBuildRequest {
   1: optional BuildId buildId;
 }
@@ -155,16 +97,6 @@ struct BuildStatusResponse {
   1: optional BuildJob buildJob;
 }
 
-enum LogRequestType {
-  UNKNOWN = 0,
-  SCRIBE_DATA = 1,
-}
-
-struct LogRequest {
-  1: optional LogRequestType type = LogRequestType.UNKNOWN;
-  2: optional ScribeData scribeData;
-}
-
 struct CASContainsRequest {
   1: optional list<string> contentSha1s;
 }
@@ -173,20 +105,26 @@ struct CASContainsResponse {
   1: optional list<bool> exists;
 }
 
-struct StoreLocalChangesRequest {
-  1: optional BuildId buildId;
-  2: optional list<FileInfo> files;
+struct LogRequest {
+  1: optional LogRequestType type = LogRequestType.UNKNOWN;
+  2: optional ScribeData scribeData;
 }
 
+# Used to store local changed source files into stampede.
+struct StoreLocalChangesRequest {
+  1: optional list<FileInfo> files;
+}
+
+# This is able to fetch both source control and local changed source files.
 struct FetchSourceFilesRequest {
-  1: optional BuildId buildId;
-  2: optional list<string> contentHashes;
+  1: optional list<string> contentHashes;
 }
 
 struct FetchSourceFilesResponse {
   1: optional list<FileInfo> files;
 }
 
+# Used to store the buildGraph and other related information to the build.
 struct StoreBuildGraphRequest {
   1: optional BuildId buildId;
   2: optional binary buildGraph;
@@ -197,9 +135,9 @@ struct FetchBuildGraphRequest {
 }
 
 struct FetchBuildGraphResponse {
-  1: optional BuildId buildId;
-  2: optional binary buildGraph;
+  1: optional binary buildGraph;
 }
+
 
 ##############################################################################
 ## Top-Level Buck-Frontend HTTP body thrift Request/Response format
@@ -223,16 +161,17 @@ enum FrontendRequestType {
 
 struct FrontendRequest {
   1: optional FrontendRequestType type = FrontendRequestType.UNKNOWN;
-  2: optional StartBuildRequest startBuild;
-  3: optional BuildStatusRequest buildStatus;
-  // [4-5] Values reserved for CAS.
-  6: optional LogRequest log;
+  2: optional StartBuildRequest startBuildRequest;
+  3: optional BuildStatusRequest buildStatusRequest;
+  6: optional LogRequest logRequest;
   7: optional CASContainsRequest casContainsRequest;
   8: optional CreateBuildRequest createBuildRequest;
   9: optional StoreLocalChangesRequest storeLocalChangesRequest;
   10: optional FetchSourceFilesRequest fetchSourceFilesRequest;
   11: optional StoreBuildGraphRequest storeBuildGraphRequest;
   12: optional FetchBuildGraphRequest fetchBuildGraphRequest;
+
+  // Next Free ID: 13
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -242,13 +181,14 @@ struct FrontendResponse {
   2: optional string errorMessage;
 
   10: optional FrontendRequestType type = FrontendRequestType.UNKNOWN;
-  11: optional StartBuildResponse startBuild;
-  12: optional BuildStatusResponse buildStatus;
-  // [13-14] Values reserved for CAS.
+  11: optional StartBuildResponse startBuildResponse;
+  12: optional BuildStatusResponse buildStatusResponse;
   15: optional CASContainsResponse casContainsResponse;
   16: optional CreateBuildResponse createBuildResponse;
   17: optional FetchSourceFilesResponse fetchSourceFilesResponse;
   18: optional FetchBuildGraphResponse fetchBuildGraphResponse;
+
+  // Next Free ID: 19
 
   // [100-199] Values are reserved for the buck cache request types.
 }

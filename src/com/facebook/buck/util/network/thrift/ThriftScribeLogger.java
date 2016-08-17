@@ -81,7 +81,7 @@ public class ThriftScribeLogger extends ScribeLogger {
     // Wrap in high-level request & response.
     FrontendRequest request = new FrontendRequest();
     request.setType(FrontendRequestType.LOG);
-    request.setLog(logRequest);
+    request.setLogRequest(logRequest);
     FrontendResponse response = new FrontendResponse();
 
     thriftService.makeRequest(request, response);

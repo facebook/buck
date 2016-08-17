@@ -97,9 +97,9 @@ public class ThriftScribeLoggerTest {
 
     // Test request outside as otherwise an assertion could fail silently.
     assertEquals(request.getType(), FrontendRequestType.LOG);
-    assertEquals(request.getLog().getType(), LogRequestType.SCRIBE_DATA);
-    assertEquals(request.getLog().getScribeData().getCategory(), CATEGORY);
-    assertThat(request.getLog().getScribeData().getLines(), Matchers.allOf(
+    assertEquals(request.getLogRequest().getType(), LogRequestType.SCRIBE_DATA);
+    assertEquals(request.getLogRequest().getScribeData().getCategory(), CATEGORY);
+    assertThat(request.getLogRequest().getScribeData().getLines(), Matchers.allOf(
         hasItem(LINES.get(0)),
         hasItem(LINES.get(1)),
         IsIterableWithSize.<String>iterableWithSize(2)
