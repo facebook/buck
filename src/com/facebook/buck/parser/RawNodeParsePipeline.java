@@ -130,6 +130,7 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
                 cell.getBuildFileName(),
                 "Defined in file: " + cell.getAbsolutePathToBuildFile(buildTarget));
           }
-        });
+        },
+        executorService);
   }
 }

@@ -86,7 +86,8 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
 
             return Futures.allAsList(allNodeJobs.build());
           }
-        }
+        },
+        executorService
     );
     return Futures.transform(
         allNodesListJob,
@@ -95,7 +96,8 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
           public ImmutableSet<T> apply(List<T> input) {
             return ImmutableSet.copyOf(input);
           }
-        }
+        },
+        executorService
     );
   }
 
