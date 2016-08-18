@@ -16,6 +16,7 @@
 
 package com.facebook.buck.swift;
 
+import static com.facebook.buck.cxx.CxxPreprocessables.IncludeType.LOCAL;
 import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_MAIN_FILENAME;
 import static com.facebook.buck.swift.SwiftUtil.normalizeSwiftModuleName;
 import static com.facebook.buck.swift.SwiftUtil.toSwiftHeaderName;
@@ -47,6 +48,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -279,6 +281,19 @@ public class SwiftLibrary
       compilerCommand.add(getResolver().getRelativePath(sourcePath).toString());
     }
 
+    compilerCommand.addAll(MoreIterables.zipAndConcat(
+        Iterables.cycle(LOCAL.getFlag()),
+        FluentIterable.from(getDeps())
+            .filter(SwiftLibrary.class)
+            .transform(SourcePaths.getToBuildTargetSourcePath())
+            .transform(new Function<SourcePath, String>() {
+              @Nullable
+              @Override
+              public String apply(SourcePath input) {
+                return getResolver().getAbsolutePath(input).toString();
+              }
+            })));
+
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return new SwiftCompileStep(
         projectFilesystem.getRootPath(),
@@ -337,7 +352,7 @@ public class SwiftLibrary
       HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
     return CxxPreprocessorInput.builder()
         .addIncludes(CxxHeadersDir.of(
-            CxxPreprocessables.IncludeType.LOCAL,
+            LOCAL,
             new BuildTargetSourcePath(getBuildTarget())))
         .build();
   }

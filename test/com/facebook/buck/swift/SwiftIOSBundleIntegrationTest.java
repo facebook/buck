@@ -76,4 +76,37 @@ public class SwiftIOSBundleIntegrationTest {
             .resolve(target.getShortName() + ".app"));
     assertTrue(Files.exists(appPath.resolve(target.getShortName())));
   }
+
+  @Test
+  public void swiftWithSwiftDependenciesBuildsSomething() throws Exception {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR),
+        is(true));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "swift_on_swift",
+        tmp);
+    workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+
+    BuildTarget target = workspace.newBuildTarget("//:parent");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    target = workspace.newBuildTarget("//:libparent");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    target = workspace.newBuildTarget("//:ios-sos#iphonesimulator-x86_64,no-debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path appPath = workspace.getPath(
+        BuildTargets
+            .getGenPath(
+                filesystem,
+                BuildTarget.builder(target)
+                    .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                    .build(),
+                "%s")
+            .resolve(target.getShortName() + ".app"));
+    assertTrue(Files.exists(appPath.resolve(target.getShortName())));
+  }
 }

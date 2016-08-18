@@ -1,0 +1,51 @@
+swift_library(
+    name = 'dep1',
+    srcs = [ 'dep1/dep1.swift' ]
+)
+
+apple_binary(
+    name = 'parent',
+    srcs = [ 'parent/main.swift' ],
+    deps = [ ':dep1' ]
+)
+
+swift_library(
+    name = 'libparent',
+    srcs = [ 'libparent/libparent.swift' ],
+    deps = [ ':dep1' ]
+)
+
+apple_bundle(
+    name='sos',
+    binary=':parent',
+    extension='app',
+    info_plist='parent/Info.plist',
+    info_plist_substitutions={
+        'PRODUCT_BUNDLE_IDENTIFIER': 'com.example.test1'
+    }
+)
+
+swift_library(
+    name = 'iosdep1',
+    srcs = [ 'iosdep1/iosdep1.swift' ]
+)
+
+apple_binary(
+    name = 'ios-parent',
+    srcs = [ 'ios-parent/AppDelegate.swift' ],
+    deps = [ ':iosdep1#iphonesimulator-x86_64' ], # TODO remove flavor
+    frameworks = [
+        '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+    ]
+)
+
+apple_bundle(
+    name='ios-sos',
+    binary=':ios-parent',
+    extension='app',
+    info_plist='ios-parent/Info.plist',
+    info_plist_substitutions={
+        'PRODUCT_BUNDLE_IDENTIFIER': 'com.example.iostest1'
+    }
+)
