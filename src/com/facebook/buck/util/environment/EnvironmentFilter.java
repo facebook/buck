@@ -36,6 +36,8 @@ public class EnvironmentFilter {
       "Apple_PubSub_Socket_Render", // OS X pubsub control variable.
       "BUCK_BUILD_ID",    // Build ID passed in from Python.
       "BUCK_CLASSPATH",   // Main classpath; set in Python
+      "CHGHG",            // Mercurial
+      "CHGTIMEOUT",       // Mercurial
       "CLASSPATH",        // Bootstrap classpath; set in Python.
       "COLORFGBG",
       "CMD_DURATION",      // Added to environment by 'fish' shell.
@@ -48,6 +50,7 @@ public class EnvironmentFilter {
       "GOROOT",
       "HG",               // Mercurial
       "HGNODE",           // Mercurial
+      "HG_NODE",          // Mercurial
       "HISTSIZE",       // Bash history configuration.
       "HISTCONTROL",      // Bash history configuration.
       "ITERM_SESSION_ID", // Added by iTerm on OS X.
@@ -75,6 +78,7 @@ public class EnvironmentFilter {
       "SHELL",
       "SHLVL",            // Shell nestedness level; set by bash.
       "SSH_AGENT_PID",    // SSH session management variable.
+      "SSH_ASKPASS",      // Same.
       "SSH_AUTH_SOCK",    // Same.
       "SSH_CLIENT",       // Same.
       "SSH_CONNECTION",   // Same.
@@ -105,7 +109,8 @@ public class EnvironmentFilter {
 
   // Ignore environment variables whose names start with this string.
   private static final ImmutableSet<String> ENV_PREFIXES_TO_IGNORE = ImmutableSet.of(
-      "JAVA_MAIN_CLASS_"
+      "JAVA_MAIN_CLASS_",
+      "SCM_"             // Source control, e.g. SCM_WORKER_EXE
   );
 
   public static final Predicate<String> NOT_IGNORED_ENV_PREDICATE =

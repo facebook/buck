@@ -120,13 +120,6 @@ class BuckTool(object):
         env['CLASSPATH'] = str(self._get_bootstrap_classpath())
         env['BUCK_CLASSPATH'] = str(self._get_java_classpath())
         env['BUCK_TTY'] = str(int(sys.stdin.isatty()))
-        # Buck overwrites these variables for a few purposes.
-        # Pass them through with their original values for
-        # tests that need them.
-        for f in ('TEMPDIR', 'TEMP', 'TMPDIR', 'TMP'):
-            orig_value = env.get(f)
-            if orig_value is not None:
-                env['BUCK_ORIG_' + f] = orig_value
         return env
 
     def launch_buck(self, build_id):
