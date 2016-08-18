@@ -72,7 +72,7 @@
 	<classpathentry kind="lib" path="third-party/java/plexus/plexus-component-annotations-1.5.5.jar"/>
 	<classpathentry kind="lib" path="third-party/java/plexus/plexus-interpolation-1.21.jar"/>
 	<classpathentry kind="lib" path="third-party/java/plexus/plexus-utils-3.0.20.jar"/>
-	<classpathentry kind="lib" path="third-party/java/jimfs/jimfs-1.0.jar"/>
+	<classpathentry kind="lib" path="third-party/java/jimfs/jimfs-1.1.jar"/>
 	<classpathentry kind="lib" path="third-party/java/thrift/libthrift-0.9.3.jar"/>
 	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.core.contenttype_3.5.100.v20160418-1621.jar"/>
 	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.core.jobs_3.8.0.v20160319-0610.jar"/>

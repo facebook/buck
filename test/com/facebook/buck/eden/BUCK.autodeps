@@ -1,8 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY 7e5dda0762b6748889052edabcb8704c8d927ad7 #@#
+#@# GENERATED FILE: DO NOT MODIFY 1fbf085dc07ff4bc46608ff8ca4e84a6f2b47543 #@#
 {
   "eden" : {
     "deps" : [
       "//src/com/facebook/buck/eden:eden",
+      "//src/com/facebook/buck/io:DefaultProjectFilesystemDelegate",
+      "//src/com/facebook/buck/io:ProjectFilesystemDelegate",
       "//src/com/facebook/buck/util/sha1:sha1",
       "//third-party/java/easymock:easymock",
       "//third-party/java/guava:guava",

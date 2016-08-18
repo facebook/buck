@@ -21,7 +21,9 @@ import com.facebook.buck.io.ProjectFilesystemDelegate;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -29,29 +31,53 @@ import java.nio.file.Path;
 public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDelegate {
 
   private final EdenMount mount;
-  private final DefaultProjectFilesystemDelegate delegate;
+
+  /** Delegate to forward requests to for files that are outside of the {@link #mount}. */
+  private final ProjectFilesystemDelegate delegate;
 
   public EdenProjectFilesystemDelegate(EdenMount mount) {
+    this(mount, new DefaultProjectFilesystemDelegate(mount.getProjectRoot()));
+  }
+
+  @VisibleForTesting
+  EdenProjectFilesystemDelegate(EdenMount mount, ProjectFilesystemDelegate delegate) {
     this.mount = mount;
-    this.delegate = new DefaultProjectFilesystemDelegate(mount.getProjectRoot());
+    this.delegate = delegate;
   }
 
   @Override
   public Sha1HashCode computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException {
     Path fileToHash = getPathForRelativePath(pathRelativeToProjectRootOrJustAbsolute);
+    return computeSha1(fileToHash, /* retryWithRealPathIfEdenError */ true);
+  }
 
-    Optional<Path> entry = mount.getPathRelativeToProjectRoot(fileToHash);
+  private Sha1HashCode computeSha1(Path path, boolean retryWithRealPathIfEdenError)
+      throws IOException {
+    Preconditions.checkArgument(path.isAbsolute());
+    Optional<Path> entry = mount.getPathRelativeToProjectRoot(path);
+
     // TODO(t12516031): Generalize this to check if entry is under any of the Eden client's bind
     // mounts rather than hardcoding a test for buck-out/.
     if (entry.isPresent() && !entry.get().toString().contains("buck-out")) {
       try {
         return mount.getSha1(entry.get());
-      } catch (TException | EdenError e) {
+      } catch (TException e) {
+        throw new IOException(e);
+      } catch (EdenError e) {
+        if (retryWithRealPathIfEdenError) {
+          // It's possible that an EdenError was thrown because entry.get() was a path to a symlink,
+          // which is not supported by Eden's getSha1() API. Try again if the real path is different
+          // from the original path.
+          Path realPath = path.toRealPath();
+          if (!realPath.equals(path)) {
+            return computeSha1(realPath, /* retryWithRealPathIfEdenError */ false);
+          }
+        }
         throw new IOException(e);
       }
     }
 
-    return delegate.computeSha1(pathRelativeToProjectRootOrJustAbsolute);
+    return delegate.computeSha1(path);
   }
 
   @Override

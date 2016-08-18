@@ -34,7 +34,7 @@ import java.util.List;
  * Utility to make requests to the Eden thrift API for an (Eden mount point, Buck project root)
  * pair. The Buck project root must be contained by the Eden mount point.
  */
-public final class EdenMount {
+public class EdenMount {
   private final EdenService.Client client;
 
   /** Value of the mountPoint argument to use when communicating with Eden via the Thrift API. */
