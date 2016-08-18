@@ -75,7 +75,6 @@ public class LogConfig {
     // Bug JDK-6244047: The default FileHandler does not handle the directory not existing,
     // so we have to create it before any log statements actually run.
     Files.createDirectories(logConfigSetup.getLogDir());
-    Files.createDirectories(logConfigSetup.getOfflineLogDir());
 
     if (logConfigSetup.getRotateLog()) {
       try {

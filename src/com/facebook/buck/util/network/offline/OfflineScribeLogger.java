@@ -193,7 +193,9 @@ public class OfflineScribeLogger extends ScribeLogger {
 
     synchronized (this) {
       try {
-        deleteOldLogsIfNeeded(maxScribeOfflineLogsBytes - bytesStoredSoFar);
+        if (filesystem.isDirectory(logDir)) {
+          deleteOldLogsIfNeeded(maxScribeOfflineLogsBytes - bytesStoredSoFar);
+        }
       } catch (Exception e) {
         LOG.error(e, "Failed to cleanup logs.");
       }

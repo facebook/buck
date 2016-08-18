@@ -43,14 +43,10 @@ abstract class AbstractLogConfigSetup {
   public static final LogConfigSetup DEFAULT_SETUP =
       LogConfigSetup.builder()
           .setLogDir(Paths.get(BuckConstant.getBuckOutputDirectory(), "log"))
-          .setOfflineLogDir(Paths.get(BuckConstant.getBuckOutputDirectory(), "log", "offline"))
           .build();
 
   @Value.Parameter
   public abstract Path getLogDir();
-
-  @Value.Parameter
-  public abstract Path getOfflineLogDir();
 
   @Value.Default
   public boolean getRotateLog() {
