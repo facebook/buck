@@ -17,14 +17,18 @@
 package com.facebook.buck.eden;
 
 import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.facebook.eden.EdenError;
-import com.facebook.eden.EdenService;
+import com.facebook.eden.thrift.EdenError;
+import com.facebook.eden.thrift.EdenService;
+import com.facebook.eden.thrift.SHA1Result;
 import com.facebook.thrift.TException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  * Utility to make requests to the Eden thrift API for an (Eden mount point, Buck project root)
@@ -76,8 +80,14 @@ public final class EdenMount {
    * @param entry is a path that is relative to {@link #getProjectRoot()}.
    */
   public Sha1HashCode getSha1(Path entry) throws EdenError, TException {
-    byte[] bytes = client.getSHA1(mountPoint, normalizePathArg(entry));
-    return Sha1HashCode.fromBytes(bytes);
+    List<SHA1Result> results = client.getSHA1(mountPoint, ImmutableList.of(normalizePathArg(
+        entry)));
+    SHA1Result result = Iterables.getOnlyElement(results);
+    if (result.getSetField() == SHA1Result.SHA1) {
+      return Sha1HashCode.fromBytes(result.getSha1());
+    } else {
+      throw result.getError();
+    }
   }
 
   /**

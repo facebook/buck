@@ -21,7 +21,7 @@ import com.facebook.buck.eden.EdenMount;
 import com.facebook.buck.eden.EdenProjectFilesystemDelegate;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.eden.EdenError;
+import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
 
 import java.io.IOException;

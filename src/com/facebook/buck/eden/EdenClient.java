@@ -17,9 +17,9 @@
 package com.facebook.buck.eden;
 
 import com.facebook.buck.io.unixsocket.UnixDomainSocket;
-import com.facebook.eden.EdenError;
-import com.facebook.eden.EdenService;
-import com.facebook.eden.MountInfo;
+import com.facebook.eden.thrift.EdenError;
+import com.facebook.eden.thrift.EdenService;
+import com.facebook.eden.thrift.MountInfo;
 import com.facebook.thrift.TException;
 import com.facebook.thrift.protocol.TBinaryProtocol;
 import com.facebook.thrift.protocol.TProtocol;

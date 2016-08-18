@@ -17,7 +17,7 @@
 package com.facebook.buck.eden.cli;
 
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.facebook.eden.EdenError;
+import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
 import com.google.common.base.Preconditions;
 

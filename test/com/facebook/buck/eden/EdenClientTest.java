@@ -24,9 +24,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
 
-import com.facebook.eden.EdenError;
-import com.facebook.eden.EdenService;
-import com.facebook.eden.MountInfo;
+import com.facebook.eden.thrift.EdenError;
+import com.facebook.eden.thrift.EdenService;
+import com.facebook.eden.thrift.MountInfo;
 import com.facebook.thrift.TException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.jimfs.Configuration;

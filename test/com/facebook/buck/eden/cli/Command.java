@@ -16,7 +16,7 @@
 
 package com.facebook.buck.eden.cli;
 
-import com.facebook.eden.EdenError;
+import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
 
 import java.io.IOException;

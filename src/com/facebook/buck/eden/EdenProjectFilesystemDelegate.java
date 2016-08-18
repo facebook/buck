@@ -19,7 +19,7 @@ package com.facebook.buck.eden;
 import com.facebook.buck.io.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.ProjectFilesystemDelegate;
 import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.facebook.eden.EdenError;
+import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
 import com.google.common.base.Optional;
 

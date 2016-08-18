@@ -19,7 +19,7 @@ package com.facebook.buck.eden.cli;
 import com.facebook.buck.eden.EdenClient;
 import com.facebook.buck.eden.EdenMount;
 import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.facebook.eden.EdenError;
+import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
 
 import org.kohsuke.args4j.Argument;
