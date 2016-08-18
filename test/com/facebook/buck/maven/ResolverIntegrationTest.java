@@ -125,6 +125,7 @@ public class ResolverIntegrationTest {
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
             .setDescriptions(descriptions)
             .setEnableBuildFileSandboxing(parserConfig.getEnableBuildFileSandboxing())
+            .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
             .build());
     buildFileParser = parserFactory.createParser(
         new ConstructorArgMarshaller(new DefaultTypeCoercerFactory(

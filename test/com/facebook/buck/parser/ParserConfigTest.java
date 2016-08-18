@@ -171,4 +171,22 @@ public class ParserConfigTest {
             reader));
     assertFalse(config.getEnableBuildFileSandboxing());
   }
+
+  @Test
+  public void testGetBuildFileImportWhitelist() throws IOException {
+    assertTrue(
+        new ParserConfig(FakeBuckConfig.builder().build())
+            .getBuildFileImportWhitelist()
+            .isEmpty());
+
+    Reader reader = new StringReader(
+        Joiner.on('\n').join(
+            "[project]",
+            "build_file_import_whitelist = os, foo"));
+    ParserConfig config = new ParserConfig(
+        BuckConfigTestUtils.createWithDefaultFilesystem(
+            temporaryFolder,
+            reader));
+    assertEquals(ImmutableList.<String>of("os", "foo"), config.getBuildFileImportWhitelist());
+  }
 }

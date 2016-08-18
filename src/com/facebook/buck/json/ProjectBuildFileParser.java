@@ -292,6 +292,12 @@ public class ProjectBuildFileParser implements AutoCloseable {
       argBuilder.add("--enable_build_file_sandboxing");
     }
 
+    // Add the --build_file_import_whitelist flags.
+    for (String module : options.getBuildFileImportWhitelist()) {
+      argBuilder.add("--build_file_import_whitelist");
+      argBuilder.add(module);
+    }
+
     argBuilder.add("--project_root", options.getProjectRoot().toAbsolutePath().toString());
     argBuilder.add("--build_file_name", options.getBuildFileName());
 

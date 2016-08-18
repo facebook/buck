@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -173,6 +174,10 @@ public class ParserConfig {
 
   public boolean getEnableBuildFileSandboxing() {
     return delegate.getBooleanValue("project", "enable_build_file_sandboxing", false);
+  }
+
+  public List<String> getBuildFileImportWhitelist() {
+    return delegate.getListWithoutComments("project", "build_file_import_whitelist");
   }
 
 }

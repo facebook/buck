@@ -58,4 +58,5 @@ abstract class AbstractProjectBuildFileParserOptions {
 
   abstract Optional<Long> getWatchmanQueryTimeoutMs();
   abstract boolean getEnableBuildFileSandboxing();
+  abstract List<String> getBuildFileImportWhitelist();
 }

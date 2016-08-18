@@ -465,6 +465,7 @@ public class ProjectBuildFileParserTest {
                 .setDefaultIncludes(ImmutableSet.of("//java/com/facebook/defaultIncludeFile"))
                 .setDescriptions(buildRuleTypes.getAllDescriptions())
                 .setEnableBuildFileSandboxing(false)
+                .setBuildFileImportWhitelist(ImmutableList.<String>of())
                 .build(),
             new ConstructorArgMarshaller(new DefaultTypeCoercerFactory(
                 ObjectMappers.newDefaultInstance())),

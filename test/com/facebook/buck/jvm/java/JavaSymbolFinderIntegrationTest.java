@@ -98,6 +98,7 @@ public class JavaSymbolFinderIntegrationTest {
                 .setDefaultIncludes(parserConfig.getDefaultIncludes())
                 .setDescriptions(allDescriptions)
                 .setEnableBuildFileSandboxing(parserConfig.getEnableBuildFileSandboxing())
+                .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
                 .build());
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
     JavaSymbolFinder finder = new JavaSymbolFinder(

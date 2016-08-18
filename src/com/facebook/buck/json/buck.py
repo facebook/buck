@@ -542,8 +542,11 @@ class BuildFileProcessor(object):
 
     def __init__(self, project_root, watchman_watch_root, watchman_project_prefix, build_file_name,
                  allow_empty_globs, ignore_buck_autodeps_files, watchman_client, watchman_error,
-                 watchman_glob_stat_results, enable_build_file_sandboxing, implicit_includes=None,
-                 extra_funcs=None, configs=None, env_vars=None, ignore_paths=None):
+                 watchman_glob_stat_results, enable_build_file_sandboxing,
+                 project_import_whitelist=None, implicit_includes=None, extra_funcs=None,
+                 configs=None, env_vars=None, ignore_paths=None):
+        if project_import_whitelist is None:
+            project_import_whitelist = []
         if implicit_includes is None:
             implicit_includes = []
         if extra_funcs is None:
@@ -581,6 +584,7 @@ class BuildFileProcessor(object):
         self._safe_modules_config = self._create_safe_modules_config()
         self._safe_modules = {}
         self._custom_import = self._create_custom_import()
+        self._import_whitelist = self._create_import_whitelist(project_import_whitelist)
 
     def _wrap_env_var_read(self, read, real):
         """
@@ -864,14 +868,22 @@ class BuildFileProcessor(object):
 
         return safe_mod
 
+    def _create_import_whitelist(self, project_import_whitelist):
+        """
+        Creates import whitelist by joining the global whitelist with the project specific one
+        defined in '.buckconfig'.
+        """
+
+        global_whitelist = ['copy', 're', 'functools', 'itertools', 'json', 'hashlib',
+                            'types', 'string', 'ast', '__future__', 'collections',
+                            'operator', 'fnmatch', 'copy_reg']
+
+        return set(global_whitelist + project_import_whitelist)
+
     def _create_custom_import(self):
         """
         Returns customised '__import__' function.
         """
-
-        import_whitelist = set(['copy', 're', 'functools', 'itertools', 'json', 'hashlib',
-                                'types', 'string', 'ast', '__future__', 'collections',
-                                'operator', 'fnmatch', 'copy_reg'])
 
         def _import(name, globals=None, locals=None, fromlist=(), level=-1):
             """
@@ -886,15 +898,15 @@ class BuildFileProcessor(object):
                 # which is how '__import__' works.
                 name = name.split('.')[0]
 
-            # Return safe version of the module if possible
-            if name in self._safe_modules_config:
-                return self._get_safe_module(name)
-
-            if name in import_whitelist:
+            if name in self._import_whitelist:
                 # Importing a module may cause more '__import__' calls if the module uses other
                 # modules. Such calls should not be blocked if the top-level import was allowed.
                 with self._allow_unsafe_import():
                     return ORIGINAL_IMPORT(name, globals, locals, fromlist, level)
+
+            # Return safe version of the module if possible
+            if name in self._safe_modules_config:
+                return self._get_safe_module(name)
 
             raise ImportError(
                 'Importing module %s is forbidden. ' % name +
@@ -1336,6 +1348,10 @@ def main():
         '--enable_build_file_sandboxing',
         action='store_true',
         help='Limits abilities of buck files')
+    parser.add_option(
+        '--build_file_import_whitelist',
+        action='append',
+        dest='build_file_import_whitelist')
     (options, args) = parser.parse_args()
 
     # Even though project_root is absolute path, it may not be concise. For
@@ -1388,6 +1404,7 @@ def main():
         watchman_error,
         options.watchman_glob_stat_results,
         options.enable_build_file_sandboxing,
+        project_import_whitelist=options.build_file_import_whitelist or [],
         implicit_includes=options.include or [],
         configs=configs,
         ignore_paths=ignore_paths)

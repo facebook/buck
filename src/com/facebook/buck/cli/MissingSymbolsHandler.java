@@ -92,6 +92,7 @@ public class MissingSymbolsHandler {
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
             .setDescriptions(descriptions)
             .setEnableBuildFileSandboxing(parserConfig.getEnableBuildFileSandboxing())
+            .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
             .build());
     JavaSymbolFinder javaSymbolFinder = new JavaSymbolFinder(
         projectFilesystem,

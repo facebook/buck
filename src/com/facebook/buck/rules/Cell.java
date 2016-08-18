@@ -408,6 +408,7 @@ public class Cell {
             .setWatchmanQueryTimeoutMs(parserConfig.getWatchmanQueryTimeoutMs())
             .setRawConfig(getBuckConfig().getRawConfigForParser())
             .setEnableBuildFileSandboxing(parserConfig.getEnableBuildFileSandboxing())
+            .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
             .build());
   }
 

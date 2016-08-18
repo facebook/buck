@@ -78,6 +78,7 @@ class BuckTest(unittest.TestCase):
         self.watchman_client = None
         self.watchman_error = None
         self.enable_build_file_sandboxing = False
+        self.project_import_whitelist = None
 
     def tearDown(self):
         shutil.rmtree(self.project_root, True)
@@ -102,6 +103,7 @@ class BuckTest(unittest.TestCase):
             self.watchman_error,
             False,              # watchman_glob_stat_results
             self.enable_build_file_sandboxing,
+            self.project_import_whitelist,
             includes,
             **kwargs)
 
@@ -463,15 +465,19 @@ class BuckTest(unittest.TestCase):
 
     def test_import_whitelist(self):
         """
-        Verify that whitelisted modules can be imported with sandboxing enabled.
+        Verify that modules whitelisted globally or in configs can be imported
+        with sandboxing enabled.
         """
         self.enable_build_file_sandboxing = True
+        self.project_import_whitelist = ['sys', 'subprocess']
         build_file = ProjectFile(
             path='BUCK',
             contents=(
                 'import json',
                 'import functools',
                 'import re',
+                'import sys',
+                'import subprocess',
             ))
         self.write_files(build_file)
         build_file_processor = self.create_build_file_processor()
