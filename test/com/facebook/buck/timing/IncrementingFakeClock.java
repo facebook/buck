@@ -28,7 +28,6 @@ public class IncrementingFakeClock implements Clock {
   private AtomicLong counter;
   private final long increment;
 
-
   public IncrementingFakeClock() {
     this(1);
   }
@@ -48,5 +47,10 @@ public class IncrementingFakeClock implements Clock {
   @Override
   public long nanoTime() {
     return counter.addAndGet(increment);
+  }
+
+  @Override
+  public long threadUserNanoTime(long threadId) {
+    return -1L;
   }
 }

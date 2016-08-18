@@ -23,12 +23,19 @@ import com.google.common.annotations.VisibleForTesting;
 
 public interface BuckEvent extends BuckEventExternalInterface {
   @VisibleForTesting
-  void configure(long timestamp, long nanoTime, long threadId, BuildId buildId);
+  void configure(
+      long timestamp,
+      long nanoTime,
+      long threadUserNanoTime,
+      long threadId,
+      BuildId buildId);
 
   @JsonIgnore
   boolean isConfigured();
 
   long getNanoTime();
+
+  long getThreadUserNanoTime();
 
   String toLogMessage();
 

@@ -68,12 +68,12 @@ public class HttpArtifactCacheEventListenerTest {
 
     HttpArtifactCacheEvent.Started startedEvent = HttpArtifactCacheEvent.newFetchStartedEvent(
         ImmutableSet.<RuleKey>of());
-    startedEvent.configure(-1, -1, -1, null);
+    startedEvent.configure(-1, -1, -1, -1, null);
     Finished event = HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
         .setFetchResult(CacheResult.hit("http"))
         .setErrorMessage(errorMsg)
         .build();
-    event.configure(-1, -1, -1, BUILD_ID);
+    event.configure(-1, -1, -1, -1, BUILD_ID);
     listener.onHttpArtifactCacheEvent(event);
     listener.outputTrace(BUILD_ID);
     EasyMock.verify(logger);

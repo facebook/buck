@@ -37,4 +37,9 @@ public class FakeClock implements Clock {
   public long nanoTime() {
     return nanoTime;
   }
+
+  @Override
+  public long threadUserNanoTime(long threadId) {
+    return -1;
+  }
 }

@@ -105,7 +105,12 @@ public class BuckEventBus implements Closeable {
    * Post event to the EventBus using the timestamp given by atTime.
    */
   public void post(BuckEvent event, BuckEvent atTime) {
-    event.configure(atTime.getTimestamp(), atTime.getNanoTime(), threadIdSupplier.get(), buildId);
+    event.configure(
+        atTime.getTimestamp(),
+        atTime.getNanoTime(),
+        atTime.getThreadUserNanoTime(),
+        threadIdSupplier.get(),
+        buildId);
     dispatch(event);
   }
 
@@ -168,6 +173,12 @@ public class BuckEventBus implements Closeable {
    * pass its timestamp on to another posted event.
    */
   public void timestamp(BuckEvent event) {
-    event.configure(clock.currentTimeMillis(), clock.nanoTime(), threadIdSupplier.get(), buildId);
+    Long threadId = threadIdSupplier.get();
+    event.configure(
+        clock.currentTimeMillis(),
+        clock.nanoTime(),
+        clock.threadUserNanoTime(threadId),
+        threadId,
+        buildId);
   }
 }

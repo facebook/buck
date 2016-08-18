@@ -192,9 +192,10 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
     public void configure(
         long timestampMillis,
         long nanoTime,
+        long userThreadNanoTime,
         long threadId,
         BuildId buildId) {
-      super.configure(timestampMillis, nanoTime, threadId, buildId);
+      super.configure(timestampMillis, nanoTime, userThreadNanoTime, threadId, buildId);
       requestDurationMillis = timestampMillis - startedEvent.getTimestamp();
     }
 

@@ -41,11 +41,6 @@ import com.google.common.collect.Sets;
 import com.google.common.io.ByteSource;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import okhttp3.MediaType;
-import okhttp3.Protocol;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
@@ -64,6 +59,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import okhttp3.MediaType;
+import okhttp3.Protocol;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import okio.Buffer;
 
 public class HttpArtifactCacheTest {
@@ -107,7 +107,7 @@ public class HttpArtifactCacheTest {
     HttpArtifactCacheEvent.Started started = HttpArtifactCacheEvent.newFetchStartedEvent(
         ImmutableSet.<RuleKey>of()
     );
-    started.configure(-1, -1, -1, new BuildId());
+    started.configure(-1, -1, -1, -1, new BuildId());
     return HttpArtifactCacheEvent.newFinishedEventBuilder(started);
   }
 

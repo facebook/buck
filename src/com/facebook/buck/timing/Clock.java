@@ -21,10 +21,15 @@ public interface Clock {
   /**
    * @see System#currentTimeMillis()
    */
-  public long currentTimeMillis();
+  long currentTimeMillis();
 
   /**
    * @see System#nanoTime()
    */
-  public long nanoTime();
+  long nanoTime();
+
+  /**
+   * @see java.lang.management.ThreadMXBean#getThreadUserTime(long)
+   */
+  long threadUserNanoTime(long threadId);
 }

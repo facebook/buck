@@ -1,9 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY 311fd8b7d3d42314e6a5fd97bdaaf24d240383ee #@#
+#@# GENERATED FILE: DO NOT MODIFY 5dcd4dcba503496ff0ed86aac131191fcc3e5288 #@#
 {
   "testutil" : {
     "deps" : [ ],
     "exported_deps" : [
-      "//src/com/facebook/buck/timing:timing"
+      "//src/com/facebook/buck/timing:timing",
+      "//third-party/java/guava:guava"
     ]
   },
   "timing" : {

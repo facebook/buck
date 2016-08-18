@@ -80,6 +80,6 @@ public class HttpArtifactCacheEventTest {
   }
 
   private static void configureEvent(AbstractBuckEvent event) {
-    event.configure(-1, -1, -1, new BuildId());
+    event.configure(-1, -1, -1, -1, new BuildId());
   }
 }

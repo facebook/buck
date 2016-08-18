@@ -96,9 +96,9 @@ public class HttpArtifactCacheUploadListenerTest {
 
   private BuildEvent.Finished createBuildFinishedEvent(int timeMillis) {
     BuildEvent.Started startedEvent = BuildEvent.started(Lists.<String>newArrayList());
-    startedEvent.configure(timeMillis, 0, 0, buildId);
+    startedEvent.configure(timeMillis, 0, 0, 0, buildId);
     BuildEvent.Finished finishedEvent = BuildEvent.finished(startedEvent, 0);
-    finishedEvent.configure(timeMillis, 0, 0, buildId);
+    finishedEvent.configure(timeMillis, 0, 0, 0, buildId);
     return finishedEvent;
   }
 
@@ -106,7 +106,7 @@ public class HttpArtifactCacheUploadListenerTest {
       int timeMillis) {
     HttpArtifactCacheEvent.Finished event =
         HttpArtifactCacheEvent.newFinishedEventBuilder(lastStartedEvent).build();
-    event.configure(timeMillis, 0, 0, buildId);
+    event.configure(timeMillis, 0, 0, 0, buildId);
     return event;
   }
 
@@ -115,7 +115,7 @@ public class HttpArtifactCacheUploadListenerTest {
         HttpArtifactCacheEvent.newStoreScheduledEvent(
             Optional.<String>absent(), ImmutableSet.<RuleKey>of());
     lastStartedEvent = HttpArtifactCacheEvent.newStoreStartedEvent(scheduled);
-    lastStartedEvent.configure(timeMillis, 0, 0, buildId);
+    lastStartedEvent.configure(timeMillis, 0, 0, 0, buildId);
     return lastStartedEvent;
   }
 

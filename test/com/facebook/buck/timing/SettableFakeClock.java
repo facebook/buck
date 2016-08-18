@@ -16,8 +16,13 @@
 
 package com.facebook.buck.timing;
 
-import java.util.concurrent.atomic.AtomicLong;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Fake implementation of {@link Clock} which returns the last time
@@ -26,10 +31,19 @@ import java.util.concurrent.TimeUnit;
 public class SettableFakeClock implements Clock {
   private final AtomicLong currentTimeMillis;
   private final AtomicLong nanoTime;
+  private final Map<Long, Long> threadIdToUserNanoTime;
 
-  public SettableFakeClock(long currentTimeMillis, long nanoTime) {
+  public SettableFakeClock(
+      long currentTimeMillis,
+      long nanoTime,
+      ImmutableMap<Long, Long> threadIdToUserNanoTime) {
     this.currentTimeMillis = new AtomicLong(currentTimeMillis);
     this.nanoTime = new AtomicLong(nanoTime);
+    this.threadIdToUserNanoTime = new HashMap<>(threadIdToUserNanoTime);
+  }
+
+  public SettableFakeClock(long currentTimeMillis, long nanoTime) {
+    this(currentTimeMillis, nanoTime, ImmutableMap.<Long, Long>of());
   }
 
   public void setCurrentTimeMillis(long millis) {
@@ -41,6 +55,10 @@ public class SettableFakeClock implements Clock {
     this.currentTimeMillis.addAndGet(TimeUnit.NANOSECONDS.toMillis(nanos));
   }
 
+  public void advanceUserNanoTime(long threadId, long userNanoTimeDelta) {
+    threadIdToUserNanoTime.put(threadId, threadUserNanoTime(threadId) + userNanoTimeDelta);
+  }
+
   @Override
   public long currentTimeMillis() {
     return currentTimeMillis.get();
@@ -49,5 +67,10 @@ public class SettableFakeClock implements Clock {
   @Override
   public long nanoTime() {
     return nanoTime.get();
+  }
+
+  @Override
+  public long threadUserNanoTime(long threadId) {
+    return Optional.fromNullable(threadIdToUserNanoTime.get(threadId)).or(-1L);
   }
 }

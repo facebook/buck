@@ -34,6 +34,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   private boolean isConfigured;
   private long timestamp;
   private long nanoTime;
+  private long threadUserNanoTime;
   private long threadId;
   @Nullable
   private BuildId buildId;
@@ -50,10 +51,16 @@ public abstract class AbstractBuckEvent implements BuckEvent {
    */
   @Override
   @VisibleForTesting
-  public void configure(long timestamp, long nanoTime, long threadId, BuildId buildId) {
+  public void configure(
+      long timestamp,
+      long nanoTime,
+      long threadUserNanoTime,
+      long threadId,
+      BuildId buildId) {
     Preconditions.checkState(!isConfigured, "Events can only be configured once.");
     this.timestamp = timestamp;
     this.nanoTime = nanoTime;
+    this.threadUserNanoTime = threadUserNanoTime;
     this.threadId = threadId;
     this.buildId = buildId;
     isConfigured = true;
@@ -74,6 +81,11 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   public long getNanoTime() {
     Preconditions.checkState(isConfigured, "Event was not configured yet.");
     return nanoTime;
+  }
+
+  @Override
+  public long getThreadUserNanoTime() {
+    return threadUserNanoTime;
   }
 
   @Override

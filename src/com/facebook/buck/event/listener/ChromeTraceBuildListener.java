@@ -180,6 +180,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
             /* processId */ 0,
             /* threadId */ 0,
             /* microTime */ 0,
+            /* microThreadUserTime */ 0,
             ImmutableMap.of("name", "buck")));
   }
 
@@ -687,6 +688,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         0,
         event.getThreadId(),
         TimeUnit.NANOSECONDS.toMicros(event.getNanoTime()),
+        TimeUnit.NANOSECONDS.toMicros(event.getThreadUserNanoTime()),
         arguments);
     submitTraceEvent(chromeTraceEvent);
   }

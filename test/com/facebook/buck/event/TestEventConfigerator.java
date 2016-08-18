@@ -15,37 +15,121 @@
  */
 package com.facebook.buck.event;
 
+import com.facebook.buck.timing.Clock;
+import com.google.common.base.Optional;
+
 import java.util.concurrent.TimeUnit;
 
 public class TestEventConfigerator {
   private TestEventConfigerator() {}
 
+  public static <T extends AbstractBuckEvent> ConfigBuilder<T> from(T event) {
+    return new ConfigBuilder<>(event);
+  }
+
   public static <T extends AbstractBuckEvent> T configureTestEvent(T event) {
-    return configureTestEvent(event, 0L, 1L, 2L);
+    return from(event).configure();
   }
 
   public static <T extends AbstractBuckEvent> T configureTestEvent(T event, BuckEventBus eventBus) {
-    return configureTestEvent(event, eventBus.getClock().currentTimeMillis(),
-        eventBus.getClock().nanoTime(),
-        eventBus.getThreadIdSupplier().get());
+    return from(event).timesFromEventBus(eventBus).configure();
+  }
+
+  public static <T extends AbstractBuckEvent> T configureTestEvent(T event,
+      long timestamp,
+      long nanotime,
+      long threadUserNanoTime,
+      long threadid) {
+    return from(event)
+        .setCurrentTimeMillis(timestamp)
+        .setTimestampNanos(nanotime)
+        .setThreadUserNanoTime(threadUserNanoTime)
+        .setThreadId(threadid)
+        .configure();
   }
 
   public static <T extends AbstractBuckEvent> T configureTestEvent(T event,
       long timestamp,
       long nanotime,
       long threadid) {
-    event.configure(timestamp, nanotime, threadid, BuckEventBusFactory.BUILD_ID_FOR_TEST);
-    return event;
+    return from(event)
+        .setCurrentTimeMillis(timestamp)
+        .setTimestampNanos(nanotime)
+        .setThreadId(threadid)
+        .configure();
   }
 
   public static <T extends AbstractBuckEvent> T configureTestEventAtTime(T event,
       long time,
       TimeUnit timeUnit,
       long threadid) {
-    event.configure(timeUnit.toMillis(time),
-        timeUnit.toNanos(time),
-        threadid,
-        BuckEventBusFactory.BUILD_ID_FOR_TEST);
-    return event;
+    return from(event)
+        .setCurrentTimeMillis(timeUnit.toMillis(time))
+        .setTimestampNanos(timeUnit.toNanos(time))
+        .setThreadId(threadid)
+        .configure();
+  }
+
+  public static class ConfigBuilder<T extends AbstractBuckEvent> {
+    private final T event;
+    private long currentTimeMillis;
+    private Optional<Long> timestampNanos;
+    private long threadUserNanoTime;
+    private long threadId;
+
+    public ConfigBuilder(T event) {
+      this.event = event;
+      this.currentTimeMillis = 0L;
+      this.timestampNanos = Optional.absent();
+      this.threadUserNanoTime = -1L;
+      this.threadId = 2L;
+    }
+
+    public ConfigBuilder<T> setCurrentTime(long time, TimeUnit unit) {
+      return setCurrentTimeMillis(unit.toMillis(time));
+    }
+
+    public ConfigBuilder<T> setCurrentTimeMillis(long timestamp) {
+      this.currentTimeMillis = timestamp;
+      return this;
+    }
+
+    public ConfigBuilder<T> setTimestampNanos(long nanoTime) {
+      this.timestampNanos = Optional.of(nanoTime);
+      return this;
+    }
+
+    public ConfigBuilder<T> setThreadUserTime(long time, TimeUnit timeUnit) {
+      return setThreadUserNanoTime(timeUnit.toNanos(time));
+    }
+
+    public ConfigBuilder<T> setThreadUserNanoTime(long threadUserNanoTime) {
+      this.threadUserNanoTime = threadUserNanoTime;
+      return this;
+    }
+
+    public ConfigBuilder<T> setThreadId(long threadId) {
+      this.threadId = threadId;
+      return this;
+    }
+
+    public ConfigBuilder<T> timesFromEventBus(BuckEventBus eventBus) {
+      Clock clock = eventBus.getClock();
+      setThreadId(eventBus.getThreadIdSupplier().get());
+      setCurrentTimeMillis(clock.currentTimeMillis());
+      setTimestampNanos(clock.nanoTime());
+      setThreadUserNanoTime(clock.threadUserNanoTime(threadId));
+      return this;
+    }
+
+    public T configure() {
+      event.configure(
+          currentTimeMillis,
+          timestampNanos.or(TimeUnit.MILLISECONDS.toNanos(currentTimeMillis)),
+          threadUserNanoTime,
+          threadId,
+          BuckEventBusFactory.BUILD_ID_FOR_TEST);
+      return event;
+    }
   }
 }

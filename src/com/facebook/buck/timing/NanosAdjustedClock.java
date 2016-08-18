@@ -20,16 +20,11 @@ package com.facebook.buck.timing;
  * {@link Clock} implementation that invokes the {@link System} calls,
  * adjusted to use the given nanos epoch.
  */
-public class NanosAdjustedClock implements Clock {
+public class NanosAdjustedClock extends DefaultClock {
   private final long nanosEpoch;
 
   public NanosAdjustedClock(long nanosEpoch) {
     this.nanosEpoch = nanosEpoch - System.nanoTime();
-  }
-
-  @Override
-  public long currentTimeMillis() {
-    return System.currentTimeMillis();
   }
 
   @Override

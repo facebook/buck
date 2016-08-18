@@ -16,10 +16,22 @@
 
 package com.facebook.buck.timing;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
+
 /**
  * {@link Clock} implementation that invokes the {@link System} calls.
  */
 public class DefaultClock implements Clock {
+
+  private final ThreadMXBean threadMXBean;
+  private final boolean userNanoTimeEnabled;
+
+  public DefaultClock() {
+    threadMXBean = ManagementFactory.getThreadMXBean();
+    userNanoTimeEnabled = threadMXBean.isThreadCpuTimeEnabled();
+  }
+
   @Override
   public long currentTimeMillis() {
     return System.currentTimeMillis();
@@ -28,5 +40,13 @@ public class DefaultClock implements Clock {
   @Override
   public long nanoTime() {
     return System.nanoTime();
+  }
+
+  @Override
+  public long threadUserNanoTime(long threadId) {
+    if (!userNanoTimeEnabled) {
+      return -1;
+    }
+    return threadMXBean.getThreadUserTime(threadId);
   }
 }
