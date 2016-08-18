@@ -99,9 +99,9 @@ public class DependenciesOptimizer {
   }
 
   /**
-   * Use our own method to compare 'deps' stings.
-   * 'deps' should be sorted with local references ':' preceding any cross-repo references '@'
-   * e.g :inner, //world:empty, //world/asia:jp, @mars, @moon
+   * Use our own method to compare 'deps' strings.
+   * 'deps' should be sorted with local references ':' preceding any cross-repo references 'cell//'
+   * e.g :inner, //world:empty, //world/asia:jp, mars//olympus, moon//sea:tranquility
    */
   private static int compareDependencyStrings(String baseString, String anotherString) {
     int endBaseString = baseString.length();
@@ -125,10 +125,6 @@ public class DependenciesOptimizer {
         return -1;
       } else if (c2 == ':') {
         return 1;
-      } else if (c1 == '@') {
-        return 1;
-      } else if (c2 == '@') {
-        return -1;
       } else if (c1 < c2) {
         return -1;
       } else {
