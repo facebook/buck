@@ -16,7 +16,8 @@ public enum BuildStatus implements org.apache.thrift.TEnum {
   QUEUED(1),
   BUILDING(2),
   FINISHED_SUCCESSFULLY(3),
-  FAILED(4);
+  FAILED(4),
+  CREATED(5);
 
   private final int value;
 
@@ -47,6 +48,8 @@ public enum BuildStatus implements org.apache.thrift.TEnum {
         return FINISHED_SUCCESSFULLY;
       case 4:
         return FAILED;
+      case 5:
+        return CREATED;
       default:
         return null;
     }

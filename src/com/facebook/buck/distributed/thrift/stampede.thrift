@@ -44,6 +44,9 @@ enum BuildStatus {
 
   // The build has failed.
   FAILED = 4,
+
+  // In the initialization stage, not yet queued for building
+  CREATED = 5,
 }
 
 struct BuildJob {
