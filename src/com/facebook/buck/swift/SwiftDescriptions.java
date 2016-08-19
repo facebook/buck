@@ -18,7 +18,7 @@ package com.facebook.buck.swift;
 
 import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_EXTENSION;
 
-import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
+import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
@@ -52,7 +52,7 @@ public class SwiftDescriptions {
     return swiftSrcsBuilder.build();
   }
 
-  public static <A extends AppleNativeTargetDescriptionArg> void populateSwiftLibraryDescriptionArg(
+  public static <A extends CxxLibraryDescription.Arg> void populateSwiftLibraryDescriptionArg(
       final SourcePathResolver sourcePathResolver,
       SwiftLibraryDescription.Arg output,
       final A args,
