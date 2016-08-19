@@ -16,6 +16,9 @@
 
 package com.facebook.buck.apple;
 
+import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR;
+import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_LIBRARY_FLAVOR;
+
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -40,11 +43,11 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
-import com.facebook.buck.rules.MixedWithSwift;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.swift.SwiftDescriptions;
+import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
@@ -70,8 +73,7 @@ public class AppleBinaryDescription implements
     Flavored,
     ImplicitDepsInferringDescription<AppleBinaryDescription.Arg>,
     ImplicitFlavorsInferringDescription,
-    MetadataProvidingDescription<AppleBinaryDescription.Arg>,
-    MixedWithSwift<AppleBinaryDescription.Arg> {
+    MetadataProvidingDescription<AppleBinaryDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_binary");
   public static final Flavor APP_FLAVOR = ImmutableFlavor.of("app");
@@ -96,6 +98,7 @@ public class AppleBinaryDescription implements
   };
 
   private final CxxBinaryDescription delegate;
+  private final SwiftLibraryDescription swiftDelegate;
   private final FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
@@ -103,11 +106,13 @@ public class AppleBinaryDescription implements
 
   public AppleBinaryDescription(
       CxxBinaryDescription delegate,
+      SwiftLibraryDescription swiftDelegate,
       FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
       AppleDebugFormat defaultDebugFormat) {
     this.delegate = delegate;
+    this.swiftDelegate = swiftDelegate;
     this.platformFlavorsToAppleCxxPlatforms = platformFlavorsToAppleCxxPlatforms;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
@@ -129,8 +134,13 @@ public class AppleBinaryDescription implements
     if (FluentIterable.from(flavors).allMatch(IS_SUPPORTED_FLAVOR)) {
       return true;
     }
-
-    Collection<ImmutableSortedSet<Flavor>> thinFlavorSets = generateThinDelegateFlavors(flavors);
+    ImmutableSet<Flavor> delegateFlavors = ImmutableSet.copyOf(Sets.difference(
+        flavors, NON_DELEGATE_FLAVORS));
+    if (swiftDelegate.hasFlavors(delegateFlavors)) {
+      return true;
+    }
+    Collection<ImmutableSortedSet<Flavor>> thinFlavorSets =
+        generateThinDelegateFlavors(delegateFlavors);
     if (thinFlavorSets.size() > 0) {
       return Iterables.all(
           thinFlavorSets,
@@ -141,15 +151,12 @@ public class AppleBinaryDescription implements
             }
           });
     } else {
-      return delegate.hasFlavors(
-          ImmutableSet.copyOf(Sets.difference(flavors, NON_DELEGATE_FLAVORS)));
+      return delegate.hasFlavors(delegateFlavors);
     }
   }
 
   private Collection<ImmutableSortedSet<Flavor>> generateThinDelegateFlavors(
-      ImmutableSet<Flavor> flavors) {
-    final ImmutableSet<Flavor> delegateFlavors = ImmutableSet.copyOf(
-        Sets.difference(flavors, NON_DELEGATE_FLAVORS));
+      ImmutableSet<Flavor> delegateFlavors) {
     return MultiarchFileInfos.generateThinFlavors(
         platformFlavorsToAppleCxxPlatforms.getFlavors(),
         ImmutableSortedSet.copyOf(delegateFlavors));
@@ -185,6 +192,18 @@ public class AppleBinaryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
+    ImmutableSortedSet<Flavor> flavors = params.getBuildTarget().getFlavors();
+    if (flavors.contains(SWIFT_LIBRARY_FLAVOR) || flavors.contains(SWIFT_COMPILE_FLAVOR)) {
+      SwiftLibraryDescription.Arg delegateArgs = swiftDelegate.createUnpopulatedConstructorArg();
+      SwiftDescriptions.populateSwiftLibraryDescriptionArg(
+          new SourcePathResolver(resolver),
+          delegateArgs,
+          args,
+          params.getBuildTarget());
+      return resolver.addToIndex(
+          swiftDelegate.createBuildRule(targetGraph, params, resolver, delegateArgs));
+    }
+
     // remove debug format flavors so binary will have the same output regardless of debug format
     BuildTarget unstrippedBinaryBuildTarget = params.getBuildTarget()
         .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
@@ -450,8 +469,9 @@ public class AppleBinaryDescription implements
       final Arg constructorArg) {
     Collection<ImmutableSortedSet<Flavor>> thinFlavorSets =
         generateThinDelegateFlavors(buildTarget.getFlavors());
+    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
     if (thinFlavorSets.size() > 0) {
-      return Iterables.concat(
+      deps.addAll(Iterables.concat(
           Iterables.transform(
               thinFlavorSets,
               new Function<ImmutableSortedSet<Flavor>, Iterable<BuildTarget>>() {
@@ -463,28 +483,17 @@ public class AppleBinaryDescription implements
                       constructorArg.linkerFlags.get(),
                       constructorArg.platformLinkerFlags.get().getValues());
                 }
-              }));
+              })
+      ));
     } else {
-      return delegate.findDepsForTargetFromConstructorArgs(
+      deps.addAll(delegate.findDepsForTargetFromConstructorArgs(
           buildTarget,
           cellRoots,
           constructorArg.linkerFlags.get(),
-          constructorArg.platformLinkerFlags.get().getValues());
+          constructorArg.platformLinkerFlags.get().getValues()));
     }
-  }
-
-  @Override
-  public Optional<BuildRule> generateSwiftBuildRule(
-      BuildRuleParams params,
-      BuildRuleResolver buildRuleResolver,
-      Arg args) throws NoSuchBuildTargetException {
-    return SwiftDescriptions.generateCompanionSwiftBuildRule(
-        params,
-        buildRuleResolver,
-        args,
-        delegate.getDefaultCxxPlatform(),
-        delegate.getCxxPlatforms(),
-        platformFlavorsToAppleCxxPlatforms);
+    swiftDelegate.addCompanionTarget(deps, buildTarget, constructorArg.srcs.get());
+    return deps.build();
   }
 
   @SuppressFieldNotInitialized

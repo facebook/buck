@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 1025abdb9ba1dddf1bdbab1d188f2712d0f624dc #@#
+#@# GENERATED FILE: DO NOT MODIFY 2e57b26fb003ba91b30d618e621dc8bb49e8853a #@#
 {
   "platform" : {
     "deps" : [
@@ -24,7 +24,6 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/model:macros",
       "//src/com/facebook/buck/step/fs:fs",
-      "//src/com/facebook/buck/swift:swift",
       "//src/com/facebook/buck/test/result/type:type",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
@@ -52,6 +51,7 @@
       "//src/com/facebook/buck/shell:rules",
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step:step",
+      "//src/com/facebook/buck/swift:swift",
       "//src/com/facebook/buck/test:test",
       "//src/com/facebook/buck/test/selectors:selectors",
       "//src/com/facebook/buck/util:io",

@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
@@ -36,23 +37,44 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 
 import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 public class SwiftLibraryDescription implements
     Description<SwiftLibraryDescription.Arg>,
     Flavored {
   public static final BuildRuleType TYPE = BuildRuleType.of("swift_library");
+
+  public static final Flavor SWIFT_LIBRARY_FLAVOR = ImmutableFlavor.of("swift-lib");
+  public static final Flavor SWIFT_COMPILE_FLAVOR = ImmutableFlavor.of("swift-compile");
+
+
+  private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
+      SWIFT_LIBRARY_FLAVOR,
+      SWIFT_COMPILE_FLAVOR);
+
+  private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
+    @Override
+    public boolean apply(Flavor flavor) {
+      return SUPPORTED_FLAVORS.contains(flavor);
+    }
+  };
 
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
@@ -79,6 +101,11 @@ public class SwiftLibraryDescription implements
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+    ImmutableSet<Flavor> currentUnsupportedFlavors = ImmutableSet.copyOf(Sets.filter(
+        flavors, Predicates.not(IS_SUPPORTED_FLAVOR)));
+    if (currentUnsupportedFlavors.isEmpty()) {
+      return true;
+    }
     return cxxPlatformFlavorDomain.containsAnyOf(flavors);
   }
 
@@ -91,42 +118,62 @@ public class SwiftLibraryDescription implements
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     BuildTarget buildTarget = params.getBuildTarget();
+    Optional<Map.Entry<Flavor, CxxPlatform>> platform = cxxPlatformFlavorDomain.getFlavorAndValue(
+        buildTarget);
+    ImmutableSortedSet<Flavor> buildFlavors = buildTarget.getFlavors();
 
-    AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
-        cxxPlatformFlavorDomain,
-        defaultCxxPlatform,
-        appleCxxPlatformFlavorDomain,
-        buildTarget,
-        Optional.<MultiarchFileInfo>absent());
-    Optional<Tool> swiftCompiler = appleCxxPlatform.getSwift();
-    if (!swiftCompiler.isPresent()) {
-      throw new HumanReadableException("Platform %s is missing swift compiler", appleCxxPlatform);
+    if (buildFlavors.contains(SWIFT_COMPILE_FLAVOR) ||
+        !buildFlavors.contains(SWIFT_LIBRARY_FLAVOR) && platform.isPresent()) {
+      AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
+          cxxPlatformFlavorDomain,
+          defaultCxxPlatform,
+          appleCxxPlatformFlavorDomain,
+          params.getBuildTarget(),
+          Optional.<MultiarchFileInfo>absent());
+      Optional<Tool> swiftCompiler = appleCxxPlatform.getSwift();
+      if (!swiftCompiler.isPresent()) {
+        throw new HumanReadableException("Platform %s is missing swift compiler", appleCxxPlatform);
+      }
+
+      CxxPlatform cxxPlatform = cxxPlatformFlavorDomain.getValue(buildTarget)
+          .or(defaultCxxPlatform);
+      Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
+          CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, params.getDeps());
+
+      return new SwiftCompile(
+          cxxPreprocessorInputs,
+          params,
+          new SourcePathResolver(resolver),
+          swiftCompiler.get(),
+          params.getBuildTarget().getShortName(),
+          BuildTargets.getGenPath(
+              params.getProjectFilesystem(),
+              params.getBuildTarget(), "%s"),
+          args.srcs.get(),
+          Optional.<Boolean>absent());
     }
-
-    CxxPlatform cxxPlatform = cxxPlatformFlavorDomain.getValue(buildTarget)
-        .or(defaultCxxPlatform);
-
-    Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, params.getDeps());
-
 
     // Otherwise, we return the generic placeholder of this library.
     return new SwiftLibrary(
-        swiftCompiler.get(),
         params,
+        resolver,
         new SourcePathResolver(resolver),
-        ImmutableList.<BuildRule>of(),
+        ImmutableSet.<BuildRule>of(),
         args.frameworks.get(),
         args.libraries.get(),
         appleCxxPlatformFlavorDomain,
-        cxxPreprocessorInputs,
-        BuildTargets.getGenPath(
-            params.getProjectFilesystem(),
-            buildTarget.withFlavors(cxxPlatform.getFlavor()), "%s"),
-        args.moduleName.or(buildTarget.getShortName()),
-        args.srcs.get(),
-        args.enableObjcInterop,
         args.supportedPlatformsRegex);
+  }
+
+  public void addCompanionTarget(
+      ImmutableSet.Builder<BuildTarget> deps,
+      BuildTarget buildTarget,
+      ImmutableSortedSet<SourceWithFlags> srcs) {
+    if (SwiftDescriptions.hasSwiftSource(srcs) &&
+        !buildTarget.getFlavors().contains(SWIFT_LIBRARY_FLAVOR) &&
+        !buildTarget.getFlavors().contains(SWIFT_COMPILE_FLAVOR)) {
+      deps.add(buildTarget.withAppendedFlavors(SWIFT_LIBRARY_FLAVOR));
+    }
   }
 
   @SuppressFieldNotInitialized

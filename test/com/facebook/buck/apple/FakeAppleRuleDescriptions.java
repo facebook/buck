@@ -170,6 +170,11 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_IPHONEOS_X86_64_PLATFORM,
           DEFAULT_MACOSX_X86_64_PLATFORM);
 
+  public static final SwiftLibraryDescription SWIFT_LIBRARY_DESCRIPTION =
+      new SwiftLibraryDescription(
+          DEFAULT_APPLE_FLAVOR_DOMAIN,
+          DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
+          DEFAULT_IPHONEOS_X86_64_PLATFORM.getCxxPlatform());
   /**
    * A fake apple_library description with an iOS platform for use in tests.
    */
@@ -180,6 +185,7 @@ public class FakeAppleRuleDescriptions {
             DEFAULT_PLATFORM,
             new InferBuckConfig(DEFAULT_BUCK_CONFIG),
             DEFAULT_APPLE_FLAVOR_DOMAIN),
+        SWIFT_LIBRARY_DESCRIPTION,
         DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
         DEFAULT_PLATFORM,
         CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
@@ -197,6 +203,7 @@ public class FakeAppleRuleDescriptions {
             new InferBuckConfig(DEFAULT_BUCK_CONFIG),
             DEFAULT_IPHONEOS_I386_PLATFORM.getCxxPlatform(),
             DEFAULT_APPLE_FLAVOR_DOMAIN),
+        SWIFT_LIBRARY_DESCRIPTION,
         DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
         CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
         ProvisioningProfileStore.fromProvisioningProfiles(
@@ -234,10 +241,4 @@ public class FakeAppleRuleDescriptions {
           Suppliers.ofInstance(Optional.<Path>absent()),
           AppleDebugFormat.NONE,
           DEFAULT_TIMEOUT);
-
-  public static final SwiftLibraryDescription SWIFT_LIBRARY_DESCRIPTION =
-      new SwiftLibraryDescription(
-          DEFAULT_APPLE_FLAVOR_DOMAIN,
-          DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
-          DEFAULT_IPHONEOS_X86_64_PLATFORM.getCxxPlatform());
 }

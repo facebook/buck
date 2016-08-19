@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 352af2212183e4803ddd6c1bf2d9dfcf686ce025 #@#
+#@# GENERATED FILE: DO NOT MODIFY 1f5c48c833f28f4d550859d8b3f8bbd108d389cd #@#
 {
   "apple" : {
     "deps" : [
@@ -71,6 +71,7 @@
       "//src/com/facebook/buck/apple/xcode:xcode",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/swift:swift",
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/cxx:testutil",

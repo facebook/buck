@@ -17,34 +17,21 @@
 package com.facebook.buck.swift;
 
 import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_EXTENSION;
-import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_FLAVOR;
 
-import com.facebook.buck.apple.AppleCxxPlatform;
-import com.facebook.buck.apple.ApplePlatforms;
-import com.facebook.buck.apple.MultiarchFileInfo;
-import com.facebook.buck.cxx.CxxConstructorArg;
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.CxxPreprocessables;
-import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
-import com.facebook.buck.rules.Tool;
-import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.util.Collection;
-import java.util.regex.Pattern;
+import java.nio.file.Paths;
 
 public class SwiftDescriptions {
   /**
@@ -53,73 +40,47 @@ public class SwiftDescriptions {
   private SwiftDescriptions() {
   }
 
-  public static <T extends CxxConstructorArg> Optional<BuildRule> generateCompanionSwiftBuildRule(
-      BuildRuleParams parentParams,
-      BuildRuleResolver buildRuleResolver,
-      T args,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms)
-      throws NoSuchBuildTargetException {
-    BuildTarget parentTarget = parentParams.getBuildTarget();
-    BuildTarget swiftCompanionTarget = parentTarget.withAppendedFlavors(SWIFT_FLAVOR);
-
-    // check the cache
-    Optional<BuildRule> rule = buildRuleResolver.getRuleOptional(swiftCompanionTarget);
-    if (rule.isPresent()) {
-      return rule;
-    }
-
-    if (!args.srcs.isPresent() || args.srcs.get().isEmpty()) {
-      return Optional.absent();
-    }
-
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
+  private static ImmutableSortedSet<SourcePath> filterSwiftSources(
+      SourcePathResolver sourcePathResolver, ImmutableSet<SourceWithFlags> srcs) {
     ImmutableSortedSet.Builder<SourcePath> swiftSrcsBuilder = ImmutableSortedSet.naturalOrder();
-    for (SourceWithFlags source : args.srcs.get()) {
+    for (SourceWithFlags source : srcs) {
       if (MorePaths.getFileExtension(sourcePathResolver.getAbsolutePath(source.getSourcePath()))
           .equalsIgnoreCase(SWIFT_EXTENSION)) {
         swiftSrcsBuilder.add(source.getSourcePath());
       }
     }
-    ImmutableSortedSet<SourcePath> swiftSrcs = swiftSrcsBuilder.build();
-    if (swiftSrcs.isEmpty()) {
-      return Optional.absent();
-    }
+    return swiftSrcsBuilder.build();
+  }
 
-    AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
-        cxxPlatformFlavorDomain,
-        defaultCxxPlatform,
-        platformFlavorsToAppleCxxPlatforms,
-        swiftCompanionTarget,
-        Optional.<MultiarchFileInfo>absent());
-    Optional<Tool> swiftCompiler = appleCxxPlatform.getSwift();
-    if (!swiftCompiler.isPresent()) {
-      throw new HumanReadableException("Platform %s is missing swift compiler", appleCxxPlatform);
-    }
+  public static <A extends AppleNativeTargetDescriptionArg> void populateSwiftLibraryDescriptionArg(
+      final SourcePathResolver sourcePathResolver,
+      SwiftLibraryDescription.Arg output,
+      final A args,
+      BuildTarget buildTarget) {
+    output.srcs = args.srcs.transform(
+        new Function<ImmutableSortedSet<SourceWithFlags>, ImmutableSortedSet<SourcePath>>() {
+          @Override
+          public ImmutableSortedSet<SourcePath> apply(ImmutableSortedSet<SourceWithFlags> input) {
+            return filterSwiftSources(sourcePathResolver, args.srcs.get());
+          }
+        });
+    output.compilerFlags = args.compilerFlags;
+    output.frameworks = args.frameworks;
+    output.libraries = args.libraries;
+    output.deps = args.deps;
+    output.supportedPlatformsRegex = args.supportedPlatformsRegex;
+    output.moduleName = Optional.of(buildTarget.getShortName());
+    output.enableObjcInterop = Optional.of(true);
+  }
 
-    CxxPlatform cxxPlatform = cxxPlatformFlavorDomain.getValue(swiftCompanionTarget)
-        .or(defaultCxxPlatform);
-
-    Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, parentParams.getDeps());
-
-    BuildRuleParams params = parentParams.copyWithBuildTarget(swiftCompanionTarget);
-    return Optional.<BuildRule>of(new SwiftLibrary(
-        swiftCompiler.get(),
-        params,
-        sourcePathResolver,
-        ImmutableList.<BuildRule>of(),
-        args.frameworks.get(),
-        args.libraries.get(),
-        platformFlavorsToAppleCxxPlatforms,
-        cxxPreprocessorInputs,
-        BuildTargets.getGenPath(
-            params.getProjectFilesystem(),
-            swiftCompanionTarget, "%s"),
-        swiftCompanionTarget.getShortName(),
-        swiftSrcs,
-        Optional.of(true),
-        Optional.<Pattern>absent()));
+  static boolean hasSwiftSource(ImmutableSortedSet<SourceWithFlags> srcs) {
+    return FluentIterable.from(srcs)
+        .firstMatch(new Predicate<SourceWithFlags>() {
+          @Override
+          public boolean apply(SourceWithFlags input) {
+            return MorePaths.getFileExtension(Paths.get(input.getSourcePath().toString()))
+                .equals(SWIFT_EXTENSION);
+          }
+        }).isPresent();
   }
 }

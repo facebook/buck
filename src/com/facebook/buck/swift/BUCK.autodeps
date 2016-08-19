@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY 2879bcdcd0d822c9ddb133dceff9af8ae05b5df6 #@#
+#@# GENERATED FILE: DO NOT MODIFY 241c440f80d7ff29878459e40b484eaf5efca00d #@#
 {
   "swift" : {
     "deps" : [
+      "//src/com/facebook/buck/apple:rules",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/rules/args:args",
@@ -17,11 +18,11 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/step:step",
       "//third-party/java/guava:guava",
-      "//third-party/java/infer-annotations:infer-annotations",
-      "//third-party/java/jsr:jsr305"
+      "//third-party/java/infer-annotations:infer-annotations"
     ]
   }
 }
