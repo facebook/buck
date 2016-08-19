@@ -67,8 +67,9 @@ public class EdenMountTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void getMountPointReturnsValuePassedToConstructor() {
-    EdenService.Client thriftClient = createMock(EdenService.Client.class);
+    ThreadLocal<EdenService.Client> thriftClient = createMock(ThreadLocal.class);
     Path mountPoint = Paths.get("/home/mbolin/src/buck");
     replay(thriftClient);
 
@@ -79,8 +80,9 @@ public class EdenMountTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void toStringHasExpectedFormatting() {
-    EdenService.Client thriftClient = createMock(EdenService.Client.class);
+    ThreadLocal<EdenService.Client> thriftClient = createMock(ThreadLocal.class);
     Path mountPoint = Paths.get("/home/mbolin/src/buck");
     replay(thriftClient);
 

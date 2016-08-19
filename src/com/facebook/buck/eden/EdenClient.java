@@ -25,7 +25,9 @@ import com.facebook.thrift.protocol.TBinaryProtocol;
 import com.facebook.thrift.protocol.TProtocol;
 import com.facebook.thrift.transport.TSocket;
 import com.facebook.thrift.transport.TTransport;
+import com.facebook.thrift.transport.TTransportException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -39,17 +41,31 @@ import javax.annotation.Nullable;
  * though it may have zero or more mount points.
  */
 public final class EdenClient {
-  private final EdenService.Client client;
+  /**
+   * Instances of {@link com.facebook.eden.thrift.EdenService.Client} are not thread-safe, so we
+   * create them via a {@link ThreadLocal} rather than create a new client for each Thrift call.
+   */
+  private final ThreadLocal<EdenService.Client> clientFactory;
 
   /**
-   * @param client through which Eden Thrift API calls should be made.
+   * @param clientFactory creates one Thrift client per thread through which Eden Thrift API calls
+   *     should be made.
    */
-  @VisibleForTesting
-  EdenClient(EdenService.Client client) {
-    this.client = client;
+  private EdenClient(ThreadLocal<EdenService.Client> clientFactory) {
+    this.clientFactory = clientFactory;
   }
 
-  public static EdenClient newInstance() throws IOException, TException {
+  @VisibleForTesting
+  EdenClient(final EdenService.Client client) {
+    this(new ThreadLocal<EdenService.Client>() {
+      @Override
+      protected EdenService.Client initialValue() {
+        return client;
+      }
+    });
+  }
+
+  public static Optional<EdenClient> newInstance() {
     // The default path for the Eden socket is ~/local/.eden/socket.
     Path socketFile = Paths.get(
         System.getProperty("user.home"),
@@ -57,17 +73,41 @@ public final class EdenClient {
     return newInstance(socketFile);
   }
 
-  private static EdenClient newInstance(Path socketFile) throws IOException, TException {
-    UnixDomainSocket socket = UnixDomainSocket.createSocketWithPath(socketFile);
-    TTransport transport = new TSocket(socket);
-    // No need to invoke transport.open() because the UnixDomainSocket is already connected.
-    TProtocol protocol = new TBinaryProtocol(transport);
-    EdenService.Client client = new EdenService.Client(protocol);
-    return new EdenClient(client);
+  private static Optional<EdenClient> newInstance(final Path socketFile) {
+    ThreadLocal<EdenService.Client> clientFactory = new ThreadLocal<EdenService.Client>() {
+      /**
+       * @return {@code null} if there is no instance of Eden to connect to because this method
+       *     cannot throw checked exceptions to signal a failure.
+       */
+      @Override
+      @Nullable
+      protected EdenService.Client initialValue() {
+        TTransport transport;
+        try {
+          UnixDomainSocket socket = UnixDomainSocket.createSocketWithPath(socketFile);
+          transport = new TSocket(socket);
+        } catch (IOException | TTransportException e) {
+          return null;
+        }
+        // No need to invoke transport.open() because the UnixDomainSocket is already connected.
+        TProtocol protocol = new TBinaryProtocol(transport);
+        return new EdenService.Client(protocol);
+      }
+    };
+
+    // We forcibly try to create an EdenService.Client as a way of verifying that `socketFile` is a
+    // valid UNIX domain socket for talking to Eden. If this is not the case, then we should not
+    // return a new EdenClient.
+    EdenService.Client client = clientFactory.get();
+    if (client != null) {
+      return Optional.of(new EdenClient(clientFactory));
+    } else {
+      return Optional.absent();
+    }
   }
 
   public List<MountInfo> getMountInfos() throws EdenError, TException {
-    return client.listMounts();
+    return clientFactory.get().listMounts();
   }
 
   /**
@@ -80,7 +120,7 @@ public final class EdenClient {
       // java.nio.file.Path and Jimfs Path objects.
       Path mountPoint = projectRoot.getFileSystem().getPath(info.mountPoint);
       if (projectRoot.startsWith(mountPoint)) {
-        return new EdenMount(client, mountPoint, projectRoot);
+        return new EdenMount(clientFactory, mountPoint, projectRoot);
       }
     }
     return null;

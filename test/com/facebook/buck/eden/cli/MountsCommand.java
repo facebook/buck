@@ -20,6 +20,7 @@ import com.facebook.buck.eden.EdenClient;
 import com.facebook.eden.thrift.MountInfo;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
+import com.google.common.base.Optional;
 
 import java.io.IOException;
 import java.util.List;
@@ -27,9 +28,13 @@ import java.util.List;
 public class MountsCommand implements Command {
   @Override
   public int run() throws EdenError, IOException, TException {
-    EdenClient client = EdenClient.newInstance();
+    Optional<EdenClient> client = EdenClient.newInstance();
+    if (!client.isPresent()) {
+      System.err.println("Could not connect to Eden");
+      return 1;
+    }
 
-    List<MountInfo> mountInfos = client.getMountInfos();
+    List<MountInfo> mountInfos = client.get().getMountInfos();
     System.out.printf("Number of mounts: %d\n", mountInfos.size());
     for (MountInfo info : mountInfos) {
       System.out.println(info.mountPoint);

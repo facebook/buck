@@ -23,11 +23,9 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
+import com.google.common.base.Optional;
 
-import java.io.IOException;
 import java.nio.file.Path;
-
-import javax.annotation.Nullable;
 
 /**
  * {@link ProjectFilesystemDelegateFactory} mediates the creation of a
@@ -44,12 +42,14 @@ public final class ProjectFilesystemDelegateFactory {
    * Must always create a new delegate for the specified {@code root}.
    */
   public static ProjectFilesystemDelegate newInstance(Path root) {
-    EdenClient client = createEdenClientOrSwallowException();
+    Optional<EdenClient> client = tryToCreateEdenClient();
 
-    EdenMount mount = null;
-    if (client != null) {
+    if (client.isPresent()) {
       try {
-        mount = client.getMountFor(root);
+        EdenMount mount = client.get().getMountFor(root);
+        if (mount != null) {
+          return new EdenProjectFilesystemDelegate(mount);
+        }
       } catch (TException | EdenError e) {
         // If Eden is running but root is not a mount point, Eden getMountFor() should just return
         // null rather than throw an error.
@@ -57,24 +57,15 @@ public final class ProjectFilesystemDelegateFactory {
       }
     }
 
-    if (mount != null) {
-      return new EdenProjectFilesystemDelegate(mount);
-    } else {
-      return new DefaultProjectFilesystemDelegate(root);
-    }
+    return new DefaultProjectFilesystemDelegate(root);
   }
 
-  @Nullable
-  private static EdenClient createEdenClientOrSwallowException() {
-    if (Platform.detect() == Platform.WINDOWS) {
-      return null;
-    }
-
-    try {
+  /** @return {@link Optional#absent()} if there is no instance of Eden running. */
+  private static Optional<EdenClient> tryToCreateEdenClient() {
+    if (Platform.detect() != Platform.WINDOWS) {
       return EdenClient.newInstance();
-    } catch (IOException | TException e) {
-      // Nothing to do: it is very common that there is no EdenClient.
-      return null;
+    } else {
+      return Optional.absent();
     }
   }
 }
