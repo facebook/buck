@@ -279,7 +279,7 @@ public class ProjectTest {
     // Check the dependencies.
     SerializableDependentModule inheritedJdk = SerializableDependentModule.newInheritedJdk();
     SerializableDependentModule guavaAsProvidedDep = SerializableDependentModule.newLibrary(
-        guava.getBuildTarget(), "buck_out_gen_third_party_guava_guava_jar");
+        guava.getBuildTarget(), "buck_out_gen_third_party_guava___guava___guava_10_0_1_jar");
     guavaAsProvidedDep.scope = "PROVIDED";
 
     assertListEquals(
@@ -395,7 +395,7 @@ public class ProjectTest {
 
     // Check the moduleDependencies.
     SerializableDependentModule guavaAsCompiledDep = SerializableDependentModule.newLibrary(
-        guava.getBuildTarget(), "buck_out_gen_third_party_guava_guava_jar");
+        guava.getBuildTarget(), "buck_out_gen_third_party_guava___guava___guava_10_0_1_jar");
     assertEquals("Important that Guava is listed as a 'COMPILED' dependency here because it is " +
         "only listed as a 'PROVIDED' dependency earlier.",
         ImmutableList.of(
@@ -495,13 +495,13 @@ public class ProjectTest {
             SerializableDependentModule.newSourceFolder(),
             SerializableDependentModule.newLibrary(
                 easymock.getBuildTarget(),
-                "buck_out_gen_third_party_java_easymock_easymock_jar"),
+                "buck_out_gen_third_party_java_easymock___easymock___easymock_jar"),
             SerializableDependentModule.newLibrary(
                 cglib.getBuildTarget(),
-                "buck_out_gen_third_party_java_easymock_cglib_jar"),
+                "buck_out_gen_third_party_java_easymock___cglib___cglib_jar"),
             SerializableDependentModule.newLibrary(
                 objenesis.getBuildTarget(),
-                "buck_out_gen_third_party_java_easymock_objenesis_jar"),
+                "buck_out_gen_third_party_java_easymock___objenesis___objenesis_jar"),
             SerializableDependentModule.newInheritedJdk()));
   }
 
@@ -550,7 +550,7 @@ public class ProjectTest {
             SerializableDependentModule.newSourceFolder(),
             SerializableDependentModule.newLibrary(
                 guava.getBuildTarget(),
-                "buck_out_gen_third_party_java_guava_guava_jar"),
+                "buck_out_gen_third_party_java_guava___guava___guava_jar"),
             SerializableDependentModule.newStandardJdk(
                 Optional.<String>absent(),
                 Optional.<String>absent())),
@@ -619,7 +619,7 @@ public class ProjectTest {
             SerializableDependentModule.newSourceFolder(),
             SerializableDependentModule.newLibrary(
                 httpCore.getBuildTarget(),
-                "buck_out_gen_third_party_java_httpcore_httpcore_jar"),
+                "buck_out_gen_third_party_java_httpcore___httpcore___httpcore_4_0_1_jar"),
             SerializableDependentModule.newModule(
                 supportV4.getBuildTarget(), "module_java_com_android_support_v4"),
             SerializableDependentModule.newStandardJdk(

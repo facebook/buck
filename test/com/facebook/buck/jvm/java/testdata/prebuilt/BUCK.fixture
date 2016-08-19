@@ -54,3 +54,14 @@ java_binary(
     ':lib_from_gen_dir',
   ],
 )
+
+export_file(
+  name = 'exported_zip',
+  out = 'junit.zip',
+  src = 'junit.jar',
+)
+
+prebuilt_jar(
+  name = 'jar_from_exported_zip',
+  binary_jar = ':exported_zip',
+)
