@@ -23,6 +23,7 @@ import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal.CycleExceptio
 import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.hashing.FilePathHashLoader;
+import com.facebook.buck.io.BuckPaths;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
@@ -841,7 +842,11 @@ public class TargetsCommand extends AbstractCommand {
           showOptionsBuilder.setRuleKey(ruleKeyBuilderFactory.get().build(rule).toString());
         }
         if (isShowOutput() || isShowFullOutput()) {
-          Optional<Path> outputPath = getUserFacingOutputPath(rule, isShowFullOutput());
+          Optional<Path> outputPath =
+              getUserFacingOutputPath(
+                  rule,
+                  isShowFullOutput(),
+                  params.getBuckConfig().getBuckOutCompatLink());
           if (outputPath.isPresent()) {
             showOptionsBuilder.setOutputPath(outputPath.get().toString());
           }
@@ -856,8 +861,24 @@ public class TargetsCommand extends AbstractCommand {
     return builder.build();
   }
 
-  static Optional<Path> getUserFacingOutputPath(final BuildRule rule, boolean absolute) {
+  static Optional<Path> getUserFacingOutputPath(
+      BuildRule rule,
+      boolean absolute,
+      boolean buckOutCompatLink) {
     Optional<Path> outputPathOptional = Optional.fromNullable(rule.getPathToOutput());
+
+    // When using buck out compat mode, we favor using the default buck output path in the UI, so
+    // amend the output paths when this is set.
+    if (outputPathOptional.isPresent() && buckOutCompatLink) {
+      BuckPaths paths = rule.getProjectFilesystem().getBuckPaths();
+      if (outputPathOptional.get().startsWith(paths.getConfiguredBuckOut())) {
+        outputPathOptional =
+            Optional.of(paths.getBuckOut().resolve(outputPathOptional.get().subpath(
+                paths.getConfiguredBuckOut().getNameCount(),
+                outputPathOptional.get().getNameCount())));
+      }
+    }
+
     if (absolute) {
       return outputPathOptional.transform(rule.getProjectFilesystem().getAbsolutifier());
     } else {

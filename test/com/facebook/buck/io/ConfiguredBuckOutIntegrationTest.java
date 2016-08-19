@@ -123,4 +123,64 @@ public class ConfiguredBuckOutIntegrationTest {
     workspace.getBuildLog().assertTargetHadMatchingRuleKey("//:dummy");
   }
 
+  @Test
+  public void targetsShowOutput() throws IOException {
+    String output =
+        workspace.runBuckCommand(
+            "targets",
+            "--show-output",
+            "-c", "project.buck_out=something",
+            "//:dummy")
+            .assertSuccess()
+            .getStdout()
+            .trim();
+    output = Splitter.on(' ').splitToList(output).get(1);
+    assertThat(
+        MorePaths.pathWithUnixSeparators(output),
+        Matchers.startsWith("something/"));
+  }
+
+  @Test
+  public void targetsShowOutputCompatSymlink() throws IOException {
+    assumeThat(Platform.detect(), Matchers.not(Matchers.is(Platform.WINDOWS)));
+    String output =
+        workspace.runBuckCommand(
+            "targets",
+            "--show-output",
+            "-c", "project.buck_out=something",
+            "-c", "project.buck_out_compat_link=true",
+            "//:dummy")
+            .assertSuccess()
+            .getStdout()
+            .trim();
+    output = Splitter.on(' ').splitToList(output).get(1);
+    assertThat(
+        MorePaths.pathWithUnixSeparators(output),
+        Matchers.startsWith("buck-out/gen/"));
+  }
+
+  @Test
+  public void buildShowOutput() throws IOException {
+    Path output =
+        workspace.buildAndReturnOutput(
+            "-c", "project.buck_out=something",
+            "//:dummy");
+    assertThat(
+        MorePaths.pathWithUnixSeparators(workspace.getDestPath().relativize(output)),
+        Matchers.startsWith("something/"));
+  }
+
+  @Test
+  public void buildShowOutputCompatSymlink() throws IOException {
+    assumeThat(Platform.detect(), Matchers.not(Matchers.is(Platform.WINDOWS)));
+    Path output =
+        workspace.buildAndReturnOutput(
+            "-c", "project.buck_out=something",
+            "-c", "project.buck_out_compat_link=true",
+            "//:dummy");
+    assertThat(
+        MorePaths.pathWithUnixSeparators(workspace.getDestPath().relativize(output)),
+        Matchers.startsWith("buck-out/gen/"));
+  }
+
 }

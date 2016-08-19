@@ -543,7 +543,11 @@ public class BuildCommand extends AbstractCommand {
     for (BuildTarget buildTarget : buildTargets) {
       try {
         BuildRule rule = actionGraphAndResolver.getResolver().requireRule(buildTarget);
-        Optional<Path> outputPath = TargetsCommand.getUserFacingOutputPath(rule, showFullOutput);
+        Optional<Path> outputPath =
+            TargetsCommand.getUserFacingOutputPath(
+                rule,
+                showFullOutput,
+                params.getBuckConfig().getBuckOutCompatLink());
         params.getConsole().getStdOut().printf(
             "%s%s%s\n",
             rule.getFullyQualifiedName(),
