@@ -581,6 +581,9 @@ public class AppleBundle
     Preconditions.checkNotNull(binaryOutputPath);
 
     copyBinaryIntoBundle(stepsBuilder, binaryOutputPath);
+    if (isFrameworkBundle()) {
+      binarySetFrameworkInstallName(stepsBuilder);
+    }
     if (!frameworks.isEmpty()) {
       binaryFrameworkRPaths(stepsBuilder);
     }
@@ -599,6 +602,33 @@ public class AppleBundle
             getProjectFilesystem(),
             binaryOutputPath,
             bundleBinaryPath));
+  }
+
+  private void binarySetFrameworkInstallName(ImmutableList.Builder<Step> stepsBuilder) {
+    stepsBuilder.add(
+        new ShellStep(getProjectFilesystem().getRootPath()) {
+          @Override
+          protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+            ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
+
+            commandBuilder.addAll(installNameTool.getCommandPrefix(getResolver()));
+            commandBuilder.add("-id");
+            commandBuilder.add(String.format("@rpath/%s.framework/%s", binaryName, binaryName));
+            commandBuilder.add(
+                getProjectFilesystem().resolve(bundleBinaryPath).toString());
+            return commandBuilder.build();
+          }
+
+          @Override
+          public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+            return installNameTool.getEnvironment(getResolver());
+          }
+
+          @Override
+          public String getShortName() {
+            return "install_name_tool";
+          }
+        });
   }
 
   private void binaryFrameworkRPaths(
@@ -631,31 +661,6 @@ public class AppleBundle
             }
           });
     }
-
-    stepsBuilder.add(
-        new ShellStep(getProjectFilesystem().getRootPath()) {
-          @Override
-          protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-            ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
-
-            commandBuilder.addAll(installNameTool.getCommandPrefix(getResolver()));
-            commandBuilder.add("-id");
-            commandBuilder.add(String.format("@rpath/%s.framework/%s", binaryName, binaryName));
-            commandBuilder.add(
-                getProjectFilesystem().resolve(bundleBinaryPath).toString());
-            return commandBuilder.build();
-          }
-
-          @Override
-          public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-            return installNameTool.getEnvironment(getResolver());
-          }
-
-          @Override
-          public String getShortName() {
-            return "install_name_tool";
-          }
-        });
   }
 
   private void copyAnotherCopyOfWatchKitStub(
@@ -1054,12 +1059,14 @@ public class AppleBundle
   @Override
   public NativeLinkableInput getNativeLinkableInput(
       CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
-    return NativeLinkableInput.of(
-        Collections.<Arg>emptyList(),
-        ImmutableSet.of(
-            FrameworkPath.ofSourcePath(new BuildTargetSourcePath(this.getBuildTarget()))),
-        Collections.<FrameworkPath>emptySet()
-    );
+    if (isFrameworkBundle()) {
+      return NativeLinkableInput.of(
+          Collections.<Arg>emptyList(),
+          ImmutableSet.of(
+              FrameworkPath.ofSourcePath(new BuildTargetSourcePath(this.getBuildTarget()))),
+          Collections.<FrameworkPath>emptySet());
+    }
+    return NativeLinkableInput.of();
   }
 
   @Override

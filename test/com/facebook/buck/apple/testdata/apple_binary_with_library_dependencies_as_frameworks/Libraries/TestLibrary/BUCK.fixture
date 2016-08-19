@@ -4,5 +4,6 @@ apple_library(
   exported_headers = ['TestClass.h'],
   srcs = ['TestClass.m'],
   deps = ['//Libraries/TestLibraryDep:TestLibraryDep#framework'],
+  frameworks = ['$SDKROOT/System/Library/Frameworks/Foundation.framework'],
   visibility = ['PUBLIC']
 )

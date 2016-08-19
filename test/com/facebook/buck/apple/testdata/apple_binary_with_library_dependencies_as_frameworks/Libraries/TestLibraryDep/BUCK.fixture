@@ -5,5 +5,6 @@ apple_library(
   srcs = ['TestClassDep.m'],
   linker_flags = ['-lobjc'],
   deps = ['//Libraries/TestLibraryTransitiveDep:TestLibraryTransitiveDep#framework'],
+  frameworks = ['$SDKROOT/System/Library/Frameworks/Foundation.framework'],
   visibility = ['PUBLIC'],
 )
