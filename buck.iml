@@ -2,7 +2,7 @@
 <module type="JAVA_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Python" name="Python">
-      <configuration sdkName="Python 2" />
+      <configuration sdkName="" />
     </facet>
   </component>
   <component name="NewModuleRootManager" inherit-compiler-output="true">
@@ -70,6 +70,5 @@
     <orderEntry type="library" name="eden" level="project" />
     <orderEntry type="library" name="java-thrift-dependencies" level="project" />
     <orderEntry type="library" name="xz-java-1.5" level="project" />
-    <orderEntry type="library" name="Python 2 interpreter library" level="application" />
   </component>
 </module>
