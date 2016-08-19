@@ -24,6 +24,8 @@ import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxTestBuilder;
 import com.facebook.buck.cxx.NativeLinkStrategy;
+import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasBuildTarget;
@@ -52,6 +54,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -62,6 +65,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 public class LuaBinaryDescriptionTest {
@@ -440,6 +444,54 @@ public class LuaBinaryDescriptionTest {
             binary.getComponents().getNativeLibraries().keySet(),
             Functions.toStringFunction()),
         Matchers.containsInAnyOrder("libomnibus.so", "libcxx.so"));
+  }
+
+  @Test
+  public void pythonExtensionDepUsingMergedNativeLinkStrategy() throws Exception {
+    FlavorDomain<PythonPlatform> pythonPlatforms = FlavorDomain.of("Python Platform", PY2);
+
+    PrebuiltCxxLibraryBuilder python2Builder =
+        new PrebuiltCxxLibraryBuilder(PYTHON2_DEP_TARGET)
+            .setProvided(true)
+            .setExportedLinkerFlags(ImmutableList.of("-lpython2"));
+
+    CxxPythonExtensionBuilder extensionBuilder =
+        new CxxPythonExtensionBuilder(
+            BuildTargetFactory.newInstance("//:extension"),
+            pythonPlatforms,
+            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            CxxPlatformUtils.DEFAULT_PLATFORMS);
+    extensionBuilder.setBaseModule("hello");
+
+    LuaBinaryBuilder binaryBuilder =
+        new LuaBinaryBuilder(
+            BuildTargetFactory.newInstance("//:bin"),
+            FakeLuaConfig.DEFAULT.withNativeLinkStrategy(NativeLinkStrategy.MERGED),
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            CxxPlatformUtils.DEFAULT_PLATFORMS,
+            pythonPlatforms);
+    binaryBuilder.setMainModule("main");
+    binaryBuilder.setDeps(ImmutableSortedSet.of(extensionBuilder.getTarget()));
+
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(
+                python2Builder.build(),
+                extensionBuilder.build(),
+                binaryBuilder.build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
+    python2Builder.build(resolver);
+    extensionBuilder.build(resolver);
+    LuaBinary binary = (LuaBinary) binaryBuilder.build(resolver);
+    assertThat(
+        binary.getComponents().getNativeLibraries().entrySet(),
+        Matchers.<Map.Entry<String, SourcePath>>empty());
+    assertThat(
+        Iterables.transform(
+            binary.getComponents().getPythonModules().keySet(),
+            Functions.toStringFunction()),
+        Matchers.hasItem(MorePaths.pathWithPlatformSeparators("hello/extension.so")));
   }
 
 }

@@ -341,7 +341,7 @@ public class LuaBinaryDescription implements
         } else if (rule instanceof CxxPythonExtension) {
           CxxPythonExtension extension = (CxxPythonExtension) rule;
           NativeLinkTarget target = extension.getNativeLinkTarget(pythonPlatform);
-          pythonExtensions.put(rule.getBuildTarget(), (CxxPythonExtension) rule);
+          pythonExtensions.put(target.getBuildTarget(), (CxxPythonExtension) rule);
           omnibusRoots.addIncludedRoot(target);
         } else if (rule instanceof PythonPackagable) {
           PythonPackagable packageable = (PythonPackagable) rule;

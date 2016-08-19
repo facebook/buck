@@ -18,8 +18,11 @@ package com.facebook.buck.lua;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonTestUtils;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.Description;
@@ -34,15 +37,31 @@ public class LuaBinaryBuilder extends AbstractNodeBuilder<LuaBinaryDescription.A
     super(description, target);
   }
 
-  public LuaBinaryBuilder(BuildTarget target, LuaConfig config) {
+  public LuaBinaryBuilder(
+      BuildTarget target,
+      LuaConfig config,
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<CxxPlatform> cxxPlatforms,
+      FlavorDomain<PythonPlatform> pythonPlatforms) {
     this(
         new LuaBinaryDescription(
             config,
-            new CxxBuckConfig(FakeBuckConfig.builder().build()),
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS,
-            PythonTestUtils.PYTHON_PLATFORMS),
+            cxxBuckConfig,
+            defaultCxxPlatform,
+            cxxPlatforms,
+            pythonPlatforms),
         target);
+  }
+
+  public LuaBinaryBuilder(BuildTarget target, LuaConfig config) {
+    this(
+        target,
+        config,
+        new CxxBuckConfig(FakeBuckConfig.builder().build()),
+        CxxPlatformUtils.DEFAULT_PLATFORM,
+        CxxPlatformUtils.DEFAULT_PLATFORMS,
+        PythonTestUtils.PYTHON_PLATFORMS);
   }
 
   public LuaBinaryBuilder(BuildTarget target) {
