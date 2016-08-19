@@ -40,9 +40,9 @@
       <excludeFolder url="file://$MODULE_DIR$/ignore" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" scope="TEST" name="buck_out_gen_libs_junit_jar" level="project" />
-    <orderEntry type="library" exported="" name="buck_out_gen_libs_guava_jar" level="project" />
-    <orderEntry type="library" exported="" name="buck_out_gen_libs_jsr305_jar" level="project" />
+    <orderEntry type="library" exported="" scope="TEST" name="buck_out_gen_libs___junit___junit_jar" level="project" />
+    <orderEntry type="library" exported="" name="buck_out_gen_libs___guava___guava_jar" level="project" />
+    <orderEntry type="library" exported="" name="buck_out_gen_libs___jsr305___jsr305_jar" level="project" />
     <orderEntry type="inheritedJdk" />
   </component>
 </module>

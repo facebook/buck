@@ -46,6 +46,25 @@ public class PrebuiltJarIntegrationTest {
 
 
   @Test
+  public void outputIsPlacedInCorrectFolder() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "prebuilt",
+        temp);
+    workspace.setUp();
+    Path output = workspace.buildAndReturnOutput("//:jar_from_gen");
+    assertTrue(Files.exists(output));
+
+    Path localPath = BuildTargets.getGenPath(
+        workspace.asCell().getFilesystem(),
+        BuildTargetFactory.newInstance("//:jar_from_gen"),
+        "");
+    Path expectedRoot = workspace.resolve(localPath);
+
+    assertTrue(output.startsWith(expectedRoot));
+  }
+
+  @Test
   public void testAbiKeyIsHashOfFileContents() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -87,8 +106,8 @@ public class PrebuiltJarIntegrationTest {
         "prebuilt",
         temp);
     workspace.setUp();
-    workspace.runBuckBuild("//:jar_from_gen").assertSuccess();
-    assertTrue(Files.exists(workspace.getPath("buck-out/gen/jar_from_gen.jar")));
+    Path output = workspace.buildAndReturnOutput("//:jar_from_gen");
+    assertTrue(Files.exists(output));
   }
 
   @Test
@@ -98,9 +117,9 @@ public class PrebuiltJarIntegrationTest {
         "prebuilt",
         temp);
     workspace.setUp();
-    workspace.runBuckBuild("//:jar_from_gen_dir").assertSuccess();
-    assertTrue(Files.exists(workspace.getPath("buck-out/gen/jar_from_gen_dir.jar")));
-    assertTrue(Files.isDirectory(workspace.getPath("buck-out/gen/jar_from_gen_dir.jar")));
+    Path output = workspace.buildAndReturnOutput("//:jar_from_gen_dir");
+    assertTrue(Files.exists(output));
+    assertTrue(Files.isDirectory(output));
 
     workspace.runBuckCommand("run", "//:bin_from_gen_dir").assertSuccess();
   }
@@ -112,8 +131,8 @@ public class PrebuiltJarIntegrationTest {
         "prebuilt",
         temp);
     workspace.setUp();
-    workspace.runBuckBuild("//:jar_from_gen").assertSuccess();
-    assertTrue(Files.exists(workspace.getPath("buck-out/gen/jar_from_gen.jar")));
+    Path output = workspace.buildAndReturnOutput("//:jar_from_gen");
+    assertTrue(Files.exists(output));
 
     workspace.copyFile("tiny.jar", "junit.jar");
 
@@ -130,8 +149,8 @@ public class PrebuiltJarIntegrationTest {
         "prebuilt",
         temp);
     workspace.setUp();
-    workspace.runBuckBuild("//:jar_from_gen").assertSuccess();
-    assertTrue(Files.exists(workspace.getPath("buck-out/gen/jar_from_gen.jar")));
+    Path output = workspace.buildAndReturnOutput("//:jar_from_gen");
+    assertTrue(Files.exists(output));
 
     workspace.replaceFileContents("BUCK", "cp ", "cp  ");
 
