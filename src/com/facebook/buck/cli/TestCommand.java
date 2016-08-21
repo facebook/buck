@@ -52,6 +52,7 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -242,7 +243,7 @@ public class TestCommand extends BuildCommand {
   }
 
   private TestRunningOptions getTestRunningOptions(CommandRunnerParams params) {
-    return TestRunningOptions.builder()
+    TestRunningOptions.Builder builder = TestRunningOptions.builder()
         .setCodeCoverageEnabled(isCodeCoverageEnabled)
         .setRunAllTests(isRunAllTests())
         .setTestSelectorList(testSelectorOptions.getTestSelectorList())
@@ -254,8 +255,20 @@ public class TestCommand extends BuildCommand {
         .setPathToJavaAgent(Optional.fromNullable(pathToJavaAgent))
         .setCoverageReportFormat(coverageReportFormat)
         .setCoverageReportTitle(coverageReportTitle)
-        .setEnvironmentOverrides(environmentOverrides)
-        .build();
+        .setEnvironmentOverrides(environmentOverrides);
+
+    Optional<ImmutableList<String>> coverageIncludes =
+        params.getBuckConfig().getOptionalListWithoutComments("test", "coverageIncludes", ',');
+    if (coverageIncludes.isPresent()) {
+      builder.setCoverageIncludes(Joiner.on(",").join(coverageIncludes.get()));
+    }
+
+    Optional<ImmutableList<String>> coverageExcludes =
+        params.getBuckConfig().getOptionalListWithoutComments("test", "coverageExcludes", ',');
+    if (coverageExcludes.isPresent()) {
+      builder.setCoverageExcludes(Joiner.on(",").join(coverageExcludes.get()));
+    }
+    return builder.build();
   }
 
   private int runTestsInternal(
