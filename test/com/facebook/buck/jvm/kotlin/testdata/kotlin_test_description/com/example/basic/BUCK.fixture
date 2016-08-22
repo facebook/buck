@@ -1,0 +1,24 @@
+kotlin_test(
+  name = 'passing',
+  srcs = [
+    'PassingUnitTest.kt',
+  ],
+  deps = [
+    ':junit',
+  ],
+)
+
+kotlin_test(
+  name = 'failing',
+  srcs = [
+    'FailingUnitTest.kt',
+  ],
+  deps = [
+    ':junit',
+  ],
+)
+
+prebuilt_jar(
+  name = 'junit',
+  binary_jar = 'junit-4.11.jar',
+)

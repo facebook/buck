@@ -1,0 +1,74 @@
+/*
+ * Copyright 2016-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.jvm.kotlin;
+
+import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.integration.TestDataHelper;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+
+import java.io.IOException;
+
+public class KotlinTestIntegrationTest {
+
+  @Rule
+  public TemporaryPaths tmp = new TemporaryPaths();
+
+  private ProjectWorkspace workspace;
+
+  @Before
+  public void setUp() throws Exception {
+    KotlinTestAssumptions.assumeCompilerAvailable();
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "kotlin_test_description", tmp);
+    workspace.setUp();
+  }
+
+  /**
+   * Tests that a Test Rule without any tests to run does not fail.
+   */
+  @Test
+  public void emptyTestRule() throws IOException {
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("test", "//com/example/empty_test:test");
+    result.assertSuccess("An empty test rule should pass.");
+  }
+
+  @Test
+  public void allTestsPassingMakesTheBuildResultASuccess() throws Exception {
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("test", "//com/example/basic:passing");
+    result.assertSuccess("Build should've succeeded.");
+  }
+
+  @Test
+  public void oneTestFailingMakesBuildResultAFailure() throws Exception {
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("test", "//com/example/basic:failing");
+    result.assertTestFailure();
+  }
+
+  @Test
+  public void compilationFailureMakesTheBuildResultAFailure() throws Exception {
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("test", "//com/example/basic:failing");
+    result.assertTestFailure("Test should've failed.");
+  }
+}

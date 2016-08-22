@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY af3044b6dc7e32ade2bd324c795ac5542eb4f33e #@#
+#@# GENERATED FILE: DO NOT MODIFY 872c0ffaa97efdcf51cb74d9381af18d16fa3b15 #@#
 {
   "cli" : {
     "deps" : [
@@ -25,6 +25,7 @@
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/halide:halide",
       "//src/com/facebook/buck/hashing:hashing",
+      "//src/com/facebook/buck/io:BuckPaths",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:watchman",
       "//src/com/facebook/buck/jvm/java:autodeps",
@@ -59,7 +60,6 @@
       "//src/com/facebook/buck/util:watchman",
       "//src/com/facebook/buck/util/environment:env-filter",
       "//src/com/facebook/buck/util/network:network",
-      "//src/com/facebook/buck/util/network/offline:offline",
       "//src/com/facebook/buck/util/shutdown:shutdown",
       "//src/com/facebook/buck/util/versioncontrol:impl",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
