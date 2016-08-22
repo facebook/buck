@@ -123,6 +123,21 @@ public abstract class BaseRunner {
     }
 
     // Create an XML transformer that pretty-prints with a 2-space indent.
+    // The transformer factory uses a system property to find the class to use. We need to default
+    // to the system default since we have the user's classpath and they may not have everything set
+    // up for the XSLT transform to work.
+    String vendor = System.getProperty("java.vm.vendor");
+    String factoryClass;
+    if ("IBM Corporation".equals(vendor)) {
+      // Used in the IBM JDK --- from
+      // https://www.ibm.com/support/knowledgecenter/SSYKE2_8.0.0/com.ibm.java.aix.80.doc/user/xml/using_xml.html
+      factoryClass = "com.ibm.xtq.xslt.jaxp.compiler.TransformerFactoryImpl";
+    } else {
+      // Used in the OpenJDK and the Oracle JDK.
+      factoryClass = "com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl";
+    }
+    // When we get this far, we're exiting, so no need to reset the property.
+    System.setProperty("javax.xml.transform.TransformerFactory", factoryClass);
     TransformerFactory transformerFactory = TransformerFactory.newInstance();
     Transformer trans = transformerFactory.newTransformer();
     trans.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
