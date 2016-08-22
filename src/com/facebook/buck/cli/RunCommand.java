@@ -159,7 +159,7 @@ public class RunCommand extends AbstractCommand {
                     .putAll(params.getEnvironment())
                     .putAll(executable.getEnvironment(resolver))
                     .build())
-            .setDirectory(params.getCell().getFilesystem().getRootPath().toFile())
+            .setDirectory(params.getCell().getFilesystem().getRootPath())
             .build();
     ForwardingProcessListener processListener =
         new ForwardingProcessListener(

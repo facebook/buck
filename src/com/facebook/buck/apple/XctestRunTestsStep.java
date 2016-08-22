@@ -113,7 +113,7 @@ class XctestRunTestsStep implements Step {
   public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder()
         .addAllCommand(getCommand())
-        .setDirectory(filesystem.getRootPath().toAbsolutePath().toFile())
+        .setDirectory(filesystem.getRootPath().toAbsolutePath())
         .setRedirectErrorStream(true)
         .setEnvironment(getEnv(context));
 

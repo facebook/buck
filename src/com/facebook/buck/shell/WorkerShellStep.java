@@ -98,7 +98,7 @@ public class WorkerShellStep implements Step {
     ProcessExecutorParams processParams = ProcessExecutorParams.builder()
         .setCommand(getCommand(context.getPlatform()))
         .setEnvironment(getEnvironmentForProcess(context))
-        .setDirectory(filesystem.getRootPath().toFile())
+        .setDirectory(filesystem.getRootPath())
         .build();
     WorkerProcess newProcess = new WorkerProcess(
         context.getProcessExecutor(),

@@ -259,7 +259,7 @@ public class ListeningProcessExecutor {
       processBuilder.environment().putAll(params.getEnvironment().get());
     }
     if (params.getDirectory().isPresent()) {
-      processBuilder.setCwd(params.getDirectory().get().toPath());
+      processBuilder.setCwd(params.getDirectory().get());
     }
 
     NuProcess process = BgProcessKiller.startProcess(processBuilder);

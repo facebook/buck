@@ -70,7 +70,7 @@ public class DefaultExtraInfoCollector implements ExtraInfoCollector {
               .addCommand(
                   "--output-dir",
                   projectFilesystem.resolve(rageExtraFilesDir).toString())
-              .setDirectory(projectFilesystem.getRootPath().toFile())
+              .setDirectory(projectFilesystem.getRootPath())
               .build(),
           ImmutableSet.of(
               ProcessExecutor.Option.EXPECTING_STD_OUT,

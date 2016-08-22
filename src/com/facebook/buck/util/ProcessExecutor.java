@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
@@ -176,7 +177,7 @@ public class ProcessExecutor {
     }
     ProcessBuilder pb = new ProcessBuilder(command);
     if (params.getDirectory().isPresent()) {
-      pb.directory(params.getDirectory().get());
+      pb.directory(params.getDirectory().get().toFile());
     }
     if (params.getEnvironment().isPresent()) {
       pb.environment().clear();

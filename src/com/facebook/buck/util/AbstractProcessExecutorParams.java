@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableList;
 
 import org.immutables.value.Value;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -46,7 +46,7 @@ abstract class AbstractProcessExecutorParams {
    * If present, the current working directory for the launched process.
    */
   @Value.Parameter
-  public abstract Optional<File> getDirectory();
+  public abstract Optional<Path> getDirectory();
 
   /**
    * If present, the map of environment variables used for the launched

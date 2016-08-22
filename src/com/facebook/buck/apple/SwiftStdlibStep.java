@@ -66,7 +66,7 @@ class SwiftStdlibStep implements Step {
 
   private ProcessExecutorParams makeProcessExecutorParams() {
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
-    builder.setDirectory(workingDirectory.toAbsolutePath().toFile());
+    builder.setDirectory(workingDirectory.toAbsolutePath());
     builder.setCommand(command);
     builder.addCommand("--destination", temp.toString());
     if (codeSignIdentitySupplier.isPresent()) {
