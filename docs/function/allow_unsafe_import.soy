@@ -18,17 +18,32 @@ When <a href="{ROOT}concept/buckconfig.html#project.enable_build_file_sandboxing
 enabled, <code>allow_unsafe_import()</code> function may be used to create a context that lifts the
 restrictions on module importing.
 
+<p>
+<b>Using this function should be avoided</b>, and done carefully when necessary. Buck's internal caches invalidate build files
+based on known inputs, and using arbitrary Python code can introduce nondeterministic behavior
+or inputs that Buck won't know about.
+
 <h3>Whitelist and safe versions</h3>
-Some modules can be imported in a normal way because they were whitelisted or a safe version was
+Some modules can be imported in a normal way (without using <code>allow_unsafe_import()</code>) because they were whitelisted or a safe version was
 configured.
 
-<table summary="Whitelist and safe versions"><tr>
+<table summary="Whitelist"><tr>
 <td><b>Whitelist</b></td><td>copy, re, functools, itertools, json, hashlib, types, string, ast,
 __future__, collections, operator, fnmatch</td>
-</tr><tr>
-<td><b>Safe versions</b></td><td>os, os.path, pipes</td>
 </tr></table>
 
+In the safe versions of modules only selected parts can be used.
+
+<table summary="Safe versions"><tr>
+<td><b>Module</b></td><td><b>Available parts</b></td>
+</tr><tr>
+<td><b>os</b></td><td>environ, getenv, path, sep, pathsep, linesep</td>
+</tr><tr>
+<td><b>os.path</b></td><td>basename, commonprefix, dirname, isabs, join, normcase,
+relpath, split, splitdrive, splitext, sep, pathsep</td>
+</tr><tr>
+<td><b>pipes</b></td><td>quote</td>
+</tr></table>
 
 {/param}
 
@@ -47,9 +62,19 @@ __future__, collections, operator, fnmatch</td>
 Buck has no way to know if the results of uncontrolled file system or network access change,
 and will not reevaluate the build file if that happens.
 {literal}<pre class="prettyprint lang-py">
+import copy # whitelisted
+import os   # safe version will be imported
 with allow_unsafe_import():
     from os.path import isfile
     import httplib
+
+# Warning! Buck will not detect that the existence of file A affects
+# the results of the parsing. The build file will not be processed
+# again when A is added/removed.
+if isfile(A):
+    foo()
+else:
+    bar()
 </pre>{/literal}
 
 {/param}
