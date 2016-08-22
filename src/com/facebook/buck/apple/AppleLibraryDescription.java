@@ -51,9 +51,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -128,6 +126,7 @@ public class AppleLibraryDescription implements
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
   private final AppleDebugFormat defaultDebugFormat;
+  private final Boolean packageLibraryAsFramework;
 
   public AppleLibraryDescription(
       CxxLibraryDescription delegate,
@@ -136,7 +135,8 @@ public class AppleLibraryDescription implements
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
-      AppleDebugFormat defaultDebugFormat) {
+      AppleDebugFormat defaultDebugFormat,
+      boolean packageLibraryAsFramework) {
     this.delegate = delegate;
     this.swiftDelegate = swiftDelegate;
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
@@ -144,6 +144,7 @@ public class AppleLibraryDescription implements
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
     this.defaultDebugFormat = defaultDebugFormat;
+    this.packageLibraryAsFramework = packageLibraryAsFramework;
   }
 
   @Override
@@ -410,31 +411,33 @@ public class AppleLibraryDescription implements
           buildTarget);
       return delegate.createMetadata(buildTarget, resolver, delegateArg, metadataClass);
     }
-    Optional<Flavor> cxxPlatformFlavor = delegate.getCxxPlatforms().getFlavor(buildTarget);
-    ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
-    for (BuildTarget dep : args.deps.get()) {
-      Optional<FrameworkDependencies> frameworks =
-          resolver.requireMetadata(
-              BuildTarget.builder(dep)
-                  .addFlavors(AppleDescriptions.FRAMEWORK_FLAVOR)
-                  .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                  .addFlavors(cxxPlatformFlavor.or(delegate.getDefaultCxxPlatform().getFlavor()))
-                  .build(),
-              FrameworkDependencies.class);
-      if (frameworks.isPresent()) {
-        sourcePaths.addAll(frameworks.get().getSourcePaths());
+    if (packageLibraryAsFramework) {
+      Optional<Flavor> cxxPlatformFlavor = delegate.getCxxPlatforms().getFlavor(buildTarget);
+      ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
+      for (BuildTarget dep : args.deps.get()) {
+        Optional<FrameworkDependencies> frameworks =
+            resolver.requireMetadata(
+                BuildTarget.builder(dep)
+                    .addFlavors(AppleDescriptions.FRAMEWORK_FLAVOR)
+                    .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                    .addFlavors(cxxPlatformFlavor.or(delegate.getDefaultCxxPlatform().getFlavor()))
+                    .build(),
+                FrameworkDependencies.class);
+        if (frameworks.isPresent()) {
+          sourcePaths.addAll(frameworks.get().getSourcePaths());
+        }
       }
-    }
+      if (buildTarget.getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR) &&
+          args.preferredLinkage.or(NativeLinkable.Linkage.ANY) != NativeLinkable.Linkage.STATIC) {
+        // Not all parts of Buck use require yet, so require the rule here so it's available in the
+        // resolver for the parts that don't.
+        resolver.requireRule(buildTarget);
+        sourcePaths.add(new BuildTargetSourcePath(buildTarget));
 
-    if (buildTarget.getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR) &&
-        args.preferredLinkage.or(NativeLinkable.Linkage.ANY) != NativeLinkable.Linkage.STATIC) {
-      // Not all parts of Buck use require yet, so require the rule here so it's available in the
-      // resolver for the parts that don't.
-      resolver.requireRule(buildTarget);
-      sourcePaths.add(new BuildTargetSourcePath(buildTarget));
-
+      }
+      return Optional.of(metadataClass.cast(FrameworkDependencies.of(sourcePaths.build())));
     }
-    return Optional.of(metadataClass.cast(FrameworkDependencies.of(sourcePaths.build())));
+    return Optional.absent();
   }
 
   @Override

@@ -36,6 +36,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -165,54 +166,8 @@ public class CxxLinkableEnhancer {
     Preconditions.checkState(
         !bundleLoader.isPresent() || linkType == Linker.LinkType.MACH_O_BUNDLE);
 
-    Optional<FrameworkDependencies> frameworks =
-      ruleResolver.requireMetadata(target, FrameworkDependencies.class);
-
-    final Function<SourcePath, BuildTarget> sourcePathToBuildTargetFunction = new Function<SourcePath, BuildTarget>() {
-      @Nullable
-      @Override
-      public BuildTarget apply(@Nullable SourcePath input) {
-        if (input instanceof BuildTargetSourcePath) {
-          return ((BuildTargetSourcePath) input).getTarget();
-        }
-        return null;
-      }
-    };
-    final ImmutableSet<BuildTarget> frameworkTargets = FluentIterable.from(frameworks.get().getSourcePaths())
-        .transform(sourcePathToBuildTargetFunction)
-        .filter(Predicates.notNull())
-        .toSet();
-
-    final Function<NativeLinkable, NativeLinkable> replaceDylibWithFramework =
-        new Function<NativeLinkable, NativeLinkable>() {
-          @Override
-          public NativeLinkable apply(NativeLinkable input) {
-            for (BuildTarget framework : frameworkTargets) {
-              if (framework.getUnflavoredBuildTarget()
-                  .equals(input.getBuildTarget().getUnflavoredBuildTarget())) {
-                try {
-                  BuildRule potentialFramework = ruleResolver.requireRule(framework);
-                  if (potentialFramework instanceof AppleBundle) {
-                    return (AppleBundle)potentialFramework;
-                  }
-                } catch (NoSuchBuildTargetException e) {
-                  return input;
-                }
-              }
-            }
-            return input;
-          }
-        };
-
     nativeLinkableDeps = FluentIterable.from(nativeLinkableDeps).
-        transform(replaceDylibWithFramework);
-//
-//    for (NativeLinkable nativeLinkable : nativeLinkableDeps) {
-//      BuildTarget nativeLinkableTarget = nativeLinkable.getBuildTarget();
-//      if (frameworkTargets.contains(nativeLinkableTarget.getUnflavoredBuildTarget())) {
-//        blacklist = ImmutableSet.<BuildTarget>builder().addAll(blacklist).add(nativeLinkableTarget).build();
-//      }
-//    }
+        transform(CxxLinkableEnhancer.replaceDylibWithFramework(ruleResolver, target));
 
     // Collect and topologically sort our deps that contribute to the link.
     ImmutableList.Builder < NativeLinkableInput > nativeLinkableInputs = ImmutableList.builder();
@@ -409,5 +364,56 @@ public class CxxLinkableEnhancer {
         Linker.LinkableDepType.SHARED,
         Optional.<Linker.CxxRuntimeType>absent());
   }
+
+  /*
+   * requiremetadata and the noop rules are different
+   */
+  private static Function<NativeLinkable, NativeLinkable> replaceDylibWithFramework(
+      final BuildRuleResolver ruleResolver,
+      BuildTarget target)
+  throws NoSuchBuildTargetException{
+
+    Optional<FrameworkDependencies> frameworks =
+        ruleResolver.requireMetadata(target, FrameworkDependencies.class);
+    if (!frameworks.isPresent()) {
+      return Functions.identity();
+    }
+
+    final Function<SourcePath, BuildTarget> sourcePathToBuildTargetFunction = new Function<SourcePath, BuildTarget>() {
+      @Nullable
+      @Override
+      public BuildTarget apply(@Nullable SourcePath input) {
+        if (input instanceof BuildTargetSourcePath) {
+          return ((BuildTargetSourcePath) input).getTarget();
+        }
+        return null;
+      }
+    };
+    final ImmutableSet<BuildTarget> frameworkTargets = FluentIterable.from(frameworks.get().getSourcePaths())
+        .transform(sourcePathToBuildTargetFunction)
+        .filter(Predicates.notNull())
+        .toSet();
+
+    return new Function<NativeLinkable, NativeLinkable>() {
+      @Override
+      public NativeLinkable apply(NativeLinkable input) {
+        for (BuildTarget framework : frameworkTargets) {
+          if (framework.getUnflavoredBuildTarget()
+              .equals(input.getBuildTarget().getUnflavoredBuildTarget())) {
+            try {
+              BuildRule potentialFramework = ruleResolver.requireRule(framework);
+              if (potentialFramework instanceof AppleBundle) {
+                return (AppleBundle) potentialFramework;
+              }
+            } catch (NoSuchBuildTargetException e) {
+              return input;
+            }
+          }
+        }
+        return input;
+      }
+    };
+  }
+
 
 }

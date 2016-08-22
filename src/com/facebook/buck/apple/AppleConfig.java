@@ -354,6 +354,13 @@ public class AppleConfig {
         true);
   }
 
+  public boolean packageAppleLibraryAsFramework() {
+    return delegate.getBooleanValue(
+        "apple",
+        "package_apple_library_as_framework",
+        false);
+  }
+
   /**
    * Returns the custom packager command specified in the config, if defined.
    *

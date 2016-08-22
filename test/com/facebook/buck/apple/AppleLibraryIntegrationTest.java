@@ -449,6 +449,8 @@ public class AppleLibraryIntegrationTest {
         "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
+        "--config",
+        "apple.package_apple_library_as_framework=true",
         target.getFullyQualifiedName());
     result.assertSuccess();
 
@@ -494,6 +496,8 @@ public class AppleLibraryIntegrationTest {
         "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
+        "--config",
+        "apple.package_apple_library_as_framework=true",
         target.getFullyQualifiedName());
     result.assertSuccess();
 
@@ -558,7 +562,10 @@ public class AppleLibraryIntegrationTest {
         "//Libraries/TestLibraryDep:TestLibraryDep#dwarf-and-dsym,framework" +
         ",macosx-x86_64,include-frameworks");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "build", target.getFullyQualifiedName());
+        "build",
+        "--config",
+        "apple.package_apple_library_as_framework=true",
+        target.getFullyQualifiedName());
     result.assertSuccess();
 
     Path testBinaryPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))

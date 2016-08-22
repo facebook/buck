@@ -569,7 +569,8 @@ public class KnownBuildRuleTypes {
             defaultCxxPlatform,
             codeSignIdentityStore,
             provisioningProfileStore,
-            appleConfig.getDefaultDebugInfoFormatForLibraries());
+            appleConfig.getDefaultDebugInfoFormatForLibraries(),
+            appleConfig.packageAppleLibraryAsFramework());
     builder.register(appleLibraryDescription);
     PrebuiltAppleFrameworkDescription appleFrameworkDescription =
         new PrebuiltAppleFrameworkDescription();
@@ -582,7 +583,8 @@ public class KnownBuildRuleTypes {
             platformFlavorsToAppleCxxPlatforms,
             codeSignIdentityStore,
             provisioningProfileStore,
-            appleConfig.getDefaultDebugInfoFormatForBinaries());
+            appleConfig.getDefaultDebugInfoFormatForBinaries(),
+            appleConfig.packageAppleLibraryAsFramework());
     builder.register(appleBinaryDescription);
 
     HaskellBuckConfig haskellBuckConfig = new HaskellBuckConfig(config, executableFinder);

@@ -253,7 +253,10 @@ public class AppleBinaryIntegrationTest {
 
     BuildTarget target = BuildTargetFactory.newInstance(
         "//Apps/TestApp:TestApp#app,macosx-x86_64");
-    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+    workspace.runBuckCommand("build",
+        "--config",
+        "apple.package_apple_library_as_framework=true",
+        target.getFullyQualifiedName()).assertSuccess();
 
     Path bundlePath = workspace.getPath(
         BuildTargets.getGenPath(
@@ -915,7 +918,10 @@ public class AppleBinaryIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance(
         "//TestApp:TestAppBundle#dwarf-and-dsym,include-frameworks");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "build", target.getFullyQualifiedName());
+        "build",
+        "--config",
+        "apple.package_apple_library_as_framework=true",
+        target.getFullyQualifiedName());
     result.assertSuccess();
 
     Path testBinaryPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))
