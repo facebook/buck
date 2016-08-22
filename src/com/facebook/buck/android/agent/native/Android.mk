@@ -7,7 +7,6 @@ LOCAL_SRC_FILES := \
   miniz-extensions.c \
   get-signature.c \
   mkdir-p.c \
-  receive-file.c \
 
 MINIZ_CPPFLAGS := \
 	-DMINIZ_NO_COMPRESSOR \

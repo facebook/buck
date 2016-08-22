@@ -19,8 +19,6 @@ int main(int argc, char *argv[]) {
   int retcode;
   if (strcmp(command, "get-signature") == 0) {
     retcode = do_get_signature(count_user_args, user_args);
-  } else if (strcmp(command, "receive-file") == 0) {
-    retcode = do_receive_file(count_user_args, user_args);
   } else if (strcmp(command, "mkdir-p") == 0) {
     retcode = do_mkdir_p(count_user_args, user_args);
   } else {

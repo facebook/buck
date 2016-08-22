@@ -33,19 +33,7 @@ public final class AgentUtil {
 
   // These must match the values in the agent manifest.
   public static final String AGENT_PACKAGE_NAME = "com.facebook.buck.android.agent";
-  public static final String AGENT_VERSION_CODE = "3";
-
-  /**
-   * Size in bytes of the binary data use to generate the secret key for receive-file.
-   */
-  public static final int BINARY_SECRET_KEY_SIZE = 16;
-
-  /**
-   * Size of the text version of the receive-file secret key.
-   */
-  public static final int TEXT_SECRET_KEY_SIZE = 32;
-
-  public static final String TEMP_PREFIX = "exopackage_temp-";
+  public static final String AGENT_VERSION_CODE = "4";
 
   public static String getJarSignature(String packagePath) throws IOException {
     Pattern signatureFilePattern = Pattern.compile("META-INF/[A-Z]+\\.SF");
