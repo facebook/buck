@@ -100,7 +100,7 @@ public class KotlinLibraryDescription implements Description<KotlinLibraryDescri
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
                 new KotlincToJarStepFactory(
                     kotlinBuckConfig.getKotlinCompiler().get(),
-                    args.extraKotlincArguments.or(ImmutableList.<String>of())),
+                    args.extraKotlincArguments.get()),
                 Optional.<Path>absent(),
                 Optional.<String>absent(),
                 ImmutableSortedSet.<BuildTarget>of(),

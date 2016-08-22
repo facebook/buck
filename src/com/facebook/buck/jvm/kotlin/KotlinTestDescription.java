@@ -91,7 +91,7 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
 
     KotlincToJarStepFactory stepFactory = new KotlincToJarStepFactory(
         kotlinBuckConfig.getKotlinCompiler().get(),
-        args.extraKotlincArguments.or(ImmutableList.<String>of()));
+        args.extraKotlincArguments.get());
 
     JavaTest test =
         resolver.addToIndex(
