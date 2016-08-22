@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
