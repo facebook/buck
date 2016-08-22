@@ -335,7 +335,7 @@ public class TestCommand extends BuildCommand {
             .addCommand(
                 "--jobs",
                 String.valueOf(getConcurrencyLimit(params.getBuckConfig()).threadLimit))
-            .setDirectory(params.getCell().getFilesystem().getRootPath().toFile())
+            .setDirectory(params.getCell().getFilesystem().getRootPath())
             .build();
     ForwardingProcessListener processListener =
         new ForwardingProcessListener(

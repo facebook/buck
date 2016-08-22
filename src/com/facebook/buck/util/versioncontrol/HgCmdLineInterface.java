@@ -32,9 +32,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -89,13 +89,13 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
           "'{date|hgdate}'");
 
   private ProcessExecutorFactory processExecutorFactory;
-  private final File projectRoot;
+  private final Path projectRoot;
   private final String hgCmd;
   private final ImmutableMap<String, String> environment;
 
   public HgCmdLineInterface(
       ProcessExecutorFactory processExecutorFactory,
-      File projectRoot,
+      Path projectRoot,
       String hgCmd,
       ImmutableMap<String, String> environment) {
     this.processExecutorFactory = processExecutorFactory;

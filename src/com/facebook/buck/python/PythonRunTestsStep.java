@@ -104,7 +104,7 @@ public class PythonRunTestsStep implements Step {
                 .addAll(commandPrefix)
                 .add("-l", "-L", "buck")
                 .build())
-        .setDirectory(workingDirectory.toFile())
+        .setDirectory(workingDirectory)
         .setEnvironment(environment.get())
         .build();
     ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(

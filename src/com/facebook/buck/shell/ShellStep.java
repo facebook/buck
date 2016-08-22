@@ -95,7 +95,7 @@ public abstract class ShellStep implements Step {
     Map<String, String> environment = Maps.newHashMap();
     setProcessEnvironment(context, environment, workingDirectory.toFile());
     builder.setEnvironment(environment);
-    builder.setDirectory(workingDirectory.toFile());
+    builder.setDirectory(workingDirectory);
 
     Optional<String> stdin = getStdin(context);
     if (stdin.isPresent()) {

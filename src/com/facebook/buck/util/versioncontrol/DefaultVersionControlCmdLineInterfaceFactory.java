@@ -45,7 +45,7 @@ public class DefaultVersionControlCmdLineInterfaceFactory
   @Override
   public VersionControlCmdLineInterface createCmdLineInterface() throws InterruptedException {
       HgCmdLineInterface hgCmdLineInterface =
-          new HgCmdLineInterface(processExecutorFactory, projectRoot.toFile(), hgCmd, environment);
+          new HgCmdLineInterface(processExecutorFactory, projectRoot, hgCmd, environment);
 
       try {
         hgCmdLineInterface.currentRevisionId();

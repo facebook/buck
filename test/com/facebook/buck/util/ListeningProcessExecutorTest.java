@@ -77,7 +77,7 @@ public class ListeningProcessExecutorTest {
       paramsBuilder.addCommand("cat");
     }
     paramsBuilder.addCommand("hello-world.txt");
-    paramsBuilder.setDirectory(tmp.getRoot().toFile());
+    paramsBuilder.setDirectory(tmp.getRoot());
     Path helloWorldPath = tmp.getRoot().resolve("hello-world.txt");
     String fileContents = "Hello, world!";
     Files.write(helloWorldPath, fileContents.getBytes(StandardCharsets.UTF_8));
