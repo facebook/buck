@@ -196,7 +196,7 @@ class SwiftLibrary
     return ImmutableMap.of();
   }
 
-  private SwiftCompile requireSwiftCompileRule(Flavor... flavors)
+  SwiftCompile requireSwiftCompileRule(Flavor... flavors)
       throws NoSuchBuildTargetException {
     BuildTarget requiredBuildTarget = getBuildTarget()
         .withAppendedFlavors(flavors)

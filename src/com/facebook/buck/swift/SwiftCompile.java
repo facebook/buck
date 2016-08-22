@@ -16,14 +16,17 @@
 
 package com.facebook.buck.swift;
 
+import static com.facebook.buck.cxx.CxxPreprocessables.IncludeType.LOCAL;
 import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_MAIN_FILENAME;
 import static com.facebook.buck.swift.SwiftUtil.normalizeSwiftModuleName;
 import static com.facebook.buck.swift.SwiftUtil.toSwiftHeaderName;
 
 import com.facebook.buck.cxx.CxxHeaders;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -31,6 +34,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -81,21 +85,22 @@ class SwiftCompile
       new Function<String, String>() {
         @Override
         public String apply(String input) {
-          return CxxPreprocessables.IncludeType.LOCAL.getFlag().concat(input);
+          return LOCAL.getFlag().concat(input);
         }
       };
 
   SwiftCompile(
-      Iterable<CxxPreprocessorInput> cxxPreprocessorInputs,
+      final CxxPlatform cxxPlatform,
       BuildRuleParams params,
       SourcePathResolver resolver,
       Tool swiftCompiler,
       String moduleName,
       Path outputPath,
       Iterable<SourcePath> srcs,
-      Optional<Boolean> enableObjcInterop) {
+      Optional<Boolean> enableObjcInterop) throws NoSuchBuildTargetException {
     super(params, resolver);
-    this.cxxPreprocessorInputs = cxxPreprocessorInputs;
+    this.cxxPreprocessorInputs =
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, params.getDeps());
     this.swiftCompiler = swiftCompiler;
     this.outputPath = outputPath;
     this.headerPath = outputPath.resolve(toSwiftHeaderName(moduleName) + ".h");
@@ -123,6 +128,17 @@ class SwiftCompile
     compilerCommand.addAll(
         MoreIterables.zipAndConcat(Iterables.cycle("-Xcc"),
             getSwiftIncludeArgs()));
+    compilerCommand.addAll(MoreIterables.zipAndConcat(
+        Iterables.cycle(LOCAL.getFlag()),
+        FluentIterable.from(getDeps())
+            .filter(SwiftCompile.class)
+            .transform(SourcePaths.getToBuildTargetSourcePath())
+            .transform(new Function<SourcePath, String>() {
+              @Override
+              public String apply(SourcePath input) {
+                return getResolver().getAbsolutePath(input).toString();
+              }
+            })));
     compilerCommand.add(
         "-c",
         enableObjcInterop ? "-enable-objc-interop" : "",
@@ -179,7 +195,7 @@ class SwiftCompile
    * 2. swift doesn't like spaces after the "-I" flag.
    */
   @VisibleForTesting
-  public ImmutableList<String> getSwiftIncludeArgs() {
+  ImmutableList<String> getSwiftIncludeArgs() {
     SourcePathResolver resolver = getResolver();
     ImmutableList.Builder<String> args = ImmutableList.builder();
 

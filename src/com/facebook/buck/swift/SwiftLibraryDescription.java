@@ -20,8 +20,6 @@ import com.facebook.buck.apple.AppleCxxPlatform;
 import com.facebook.buck.apple.ApplePlatforms;
 import com.facebook.buck.apple.MultiarchFileInfo;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.CxxPreprocessables;
-import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -43,15 +41,19 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -117,10 +119,10 @@ public class SwiftLibraryDescription implements
       A args) throws NoSuchBuildTargetException {
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
-    BuildTarget buildTarget = params.getBuildTarget();
+    final BuildTarget buildTarget = params.getBuildTarget();
     Optional<Map.Entry<Flavor, CxxPlatform>> platform = cxxPlatformFlavorDomain.getFlavorAndValue(
         buildTarget);
-    ImmutableSortedSet<Flavor> buildFlavors = buildTarget.getFlavors();
+    final ImmutableSortedSet<Flavor> buildFlavors = buildTarget.getFlavors();
 
     if (buildFlavors.contains(SWIFT_COMPILE_FLAVOR) ||
         !buildFlavors.contains(SWIFT_LIBRARY_FLAVOR) && platform.isPresent()) {
@@ -135,13 +137,27 @@ public class SwiftLibraryDescription implements
         throw new HumanReadableException("Platform %s is missing swift compiler", appleCxxPlatform);
       }
 
-      CxxPlatform cxxPlatform = cxxPlatformFlavorDomain.getValue(buildTarget)
-          .or(defaultCxxPlatform);
-      Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
-          CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, params.getDeps());
+      // All swift-compile rules of swift-lib deps are required since we need their swiftmodules
+      // during compilation.
+      params = params.appendExtraDeps(Suppliers.ofInstance(
+          FluentIterable.from(params.getDeps())
+              .filter(SwiftLibrary.class)
+              .transform(new Function<SwiftLibrary, BuildRule>() {
+                @Override
+                public BuildRule apply(SwiftLibrary input) {
+                  try {
+                    return input.requireSwiftCompileRule(
+                        Iterables.toArray(buildFlavors, Flavor.class));
+                  } catch (NoSuchBuildTargetException e) {
+                    throw new HumanReadableException(e,
+                        "Could not find SwiftCompile with target %s", buildTarget);
+                  }
+                }
+              })
+              .toSortedSet(Ordering.natural())));
 
       return new SwiftCompile(
-          cxxPreprocessorInputs,
+          platform.get().getValue(),
           params,
           new SourcePathResolver(resolver),
           swiftCompiler.get(),
