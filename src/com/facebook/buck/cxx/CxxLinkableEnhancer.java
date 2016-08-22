@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.apple.AppleBundle;
+import com.facebook.buck.apple.FrameworkDependencies;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -23,6 +25,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -48,6 +51,8 @@ import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 import java.util.EnumSet;
+
+import javax.annotation.Nullable;
 
 public class CxxLinkableEnhancer {
   private static final Logger LOG = Logger.get(CxxLinkableEnhancer.class);
@@ -139,7 +144,7 @@ public class CxxLinkableEnhancer {
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
+      final BuildRuleResolver ruleResolver,
       final SourcePathResolver resolver,
       BuildTarget target,
       Linker.LinkType linkType,
@@ -160,8 +165,57 @@ public class CxxLinkableEnhancer {
     Preconditions.checkState(
         !bundleLoader.isPresent() || linkType == Linker.LinkType.MACH_O_BUNDLE);
 
+    Optional<FrameworkDependencies> frameworks =
+      ruleResolver.requireMetadata(target, FrameworkDependencies.class);
+
+    final Function<SourcePath, BuildTarget> sourcePathToBuildTargetFunction = new Function<SourcePath, BuildTarget>() {
+      @Nullable
+      @Override
+      public BuildTarget apply(@Nullable SourcePath input) {
+        if (input instanceof BuildTargetSourcePath) {
+          return ((BuildTargetSourcePath) input).getTarget();
+        }
+        return null;
+      }
+    };
+    final ImmutableSet<BuildTarget> frameworkTargets = FluentIterable.from(frameworks.get().getSourcePaths())
+        .transform(sourcePathToBuildTargetFunction)
+        .filter(Predicates.notNull())
+        .toSet();
+
+    final Function<NativeLinkable, NativeLinkable> replaceDylibWithFramework =
+        new Function<NativeLinkable, NativeLinkable>() {
+          @Override
+          public NativeLinkable apply(NativeLinkable input) {
+            for (BuildTarget framework : frameworkTargets) {
+              if (framework.getUnflavoredBuildTarget()
+                  .equals(input.getBuildTarget().getUnflavoredBuildTarget())) {
+                try {
+                  BuildRule potentialFramework = ruleResolver.requireRule(framework);
+                  if (potentialFramework instanceof AppleBundle) {
+                    return (AppleBundle)potentialFramework;
+                  }
+                } catch (NoSuchBuildTargetException e) {
+                  return input;
+                }
+              }
+            }
+            return input;
+          }
+        };
+
+    nativeLinkableDeps = FluentIterable.from(nativeLinkableDeps).
+        transform(replaceDylibWithFramework);
+//
+//    for (NativeLinkable nativeLinkable : nativeLinkableDeps) {
+//      BuildTarget nativeLinkableTarget = nativeLinkable.getBuildTarget();
+//      if (frameworkTargets.contains(nativeLinkableTarget.getUnflavoredBuildTarget())) {
+//        blacklist = ImmutableSet.<BuildTarget>builder().addAll(blacklist).add(nativeLinkableTarget).build();
+//      }
+//    }
+
     // Collect and topologically sort our deps that contribute to the link.
-    ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
+    ImmutableList.Builder < NativeLinkableInput > nativeLinkableInputs = ImmutableList.builder();
     nativeLinkableInputs.add(immediateLinkableInput);
     for (NativeLinkable nativeLinkable : Maps.filterKeys(
         NativeLinkables.getNativeLinkables(cxxPlatform, nativeLinkableDeps, depType),

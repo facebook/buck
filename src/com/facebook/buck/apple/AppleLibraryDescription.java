@@ -411,10 +411,6 @@ public class AppleLibraryDescription implements
       return delegate.createMetadata(buildTarget, resolver, delegateArg, metadataClass);
     }
     Optional<Flavor> cxxPlatformFlavor = delegate.getCxxPlatforms().getFlavor(buildTarget);
-    Preconditions.checkState(
-        cxxPlatformFlavor.isPresent(),
-        "Could not find cxx platform in:\n%s",
-        Joiner.on(", ").join(buildTarget.getFlavors()));
     ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
     for (BuildTarget dep : args.deps.get()) {
       Optional<FrameworkDependencies> frameworks =
@@ -422,7 +418,7 @@ public class AppleLibraryDescription implements
               BuildTarget.builder(dep)
                   .addFlavors(AppleDescriptions.FRAMEWORK_FLAVOR)
                   .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                  .addFlavors(cxxPlatformFlavor.get())
+                  .addFlavors(cxxPlatformFlavor.or(delegate.getDefaultCxxPlatform().getFlavor()))
                   .build(),
               FrameworkDependencies.class);
       if (frameworks.isPresent()) {

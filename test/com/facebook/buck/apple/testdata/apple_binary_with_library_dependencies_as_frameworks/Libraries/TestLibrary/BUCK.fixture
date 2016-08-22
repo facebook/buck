@@ -3,7 +3,7 @@ apple_library(
   info_plist = 'Info.plist',
   exported_headers = ['TestClass.h'],
   srcs = ['TestClass.m'],
-  deps = ['//Libraries/TestLibraryDep:TestLibraryDep#framework'],
+  deps = ['//Libraries/TestLibraryDep:TestLibraryDep'],
   frameworks = ['$SDKROOT/System/Library/Frameworks/Foundation.framework'],
   visibility = ['PUBLIC']
 )

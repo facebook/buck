@@ -1,7 +1,7 @@
 apple_binary(
   name = 'TestApp',
   srcs = ['main.m'],
-  deps = ['//libraries/TestLibrary:TestLibrary#framework'],
+  deps = ['//libraries/TestLibrary:TestLibrary'],
   frameworks = ['$SDKROOT/System/Library/Frameworks/Foundation.framework'],
 )
 
