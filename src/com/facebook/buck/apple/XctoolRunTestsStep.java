@@ -294,16 +294,23 @@ class XctoolRunTestsStep implements Step {
         int exitCode = -1;
         String stderr = "Unexpected termination";
         try {
-          ProcessOutputReader outputReader = new ProcessOutputReader(launchedProcess);
-          Thread readerThread = new Thread(outputReader);
-          readerThread.start();
+          ProcessStdoutReader stdoutReader = new ProcessStdoutReader(launchedProcess);
+          ProcessStderrReader stderrReader = new ProcessStderrReader(launchedProcess);
+          Thread stdoutReaderThread = new Thread(stdoutReader);
+          Thread stderrReaderThread = new Thread(stderrReader);
+          stdoutReaderThread.start();
+          stderrReaderThread.start();
           exitCode = waitForProcessAndGetExitCode(
               context.getProcessExecutor(),
               launchedProcess,
-              timeoutInMs
-          );
-          readerThread.join(timeoutInMs.or(1000L));
-          stderr = outputReader.getStdErr();
+              timeoutInMs);
+          stdoutReaderThread.join(timeoutInMs.or(1000L));
+          stderrReaderThread.join(timeoutInMs.or(1000L));
+          Optional<IOException> exception = stdoutReader.getException();
+          if (exception.isPresent()) {
+            throw exception.get();
+          }
+          stderr = stderrReader.getStdErr();
           LOG.debug("Finished running command, exit code %d, stderr %s", exitCode, stderr);
         } finally {
           context.getProcessExecutor().destroyLaunchedProcess(launchedProcess);
@@ -340,25 +347,20 @@ class XctoolRunTestsStep implements Step {
     }
   }
 
-  class ProcessOutputReader implements Runnable {
+  private class ProcessStdoutReader implements Runnable {
 
     private final ProcessExecutor.LaunchedProcess launchedProcess;
-    private String stderr = "";
+    private Optional<IOException> exception = Optional.absent();
 
-    public ProcessOutputReader(ProcessExecutor.LaunchedProcess launchedProcess) {
+    public ProcessStdoutReader(ProcessExecutor.LaunchedProcess launchedProcess) {
       this.launchedProcess = launchedProcess;
     }
 
     @Override
     public void run() {
-      try (OutputStream outputStream = filesystem.newFileOutputStream(
-          outputPath);
+      try (OutputStream outputStream = filesystem.newFileOutputStream(outputPath);
            TeeInputStream stdoutWrapperStream = new TeeInputStream(
-               launchedProcess.getInputStream(), outputStream);
-           InputStreamReader stderrReader = new InputStreamReader(
-               launchedProcess.getErrorStream(),
-               StandardCharsets.UTF_8);
-           BufferedReader bufferedStderrReader = new BufferedReader(stderrReader)) {
+               launchedProcess.getInputStream(), outputStream)) {
         if (stdoutReadingCallback.isPresent()) {
           // The caller is responsible for reading all the data, which TeeInputStream will
           // copy to outputStream.
@@ -369,18 +371,37 @@ class XctoolRunTestsStep implements Step {
           stdoutWrapperStream.close();
           ByteStreams.copy(launchedProcess.getInputStream(), outputStream);
         }
+      } catch (IOException e) {
+        exception = Optional.of(e);
+      }
+    }
 
+    public Optional<IOException> getException() {
+      return exception;
+    }
+  }
+
+  private static class ProcessStderrReader implements Runnable {
+
+    private final ProcessExecutor.LaunchedProcess launchedProcess;
+    private String stderr = "";
+
+    public ProcessStderrReader(ProcessExecutor.LaunchedProcess launchedProcess) {
+      this.launchedProcess = launchedProcess;
+    }
+
+    @Override
+    public void run() {
+      try (InputStreamReader stderrReader = new InputStreamReader(
+               launchedProcess.getErrorStream(),
+               StandardCharsets.UTF_8);
+           BufferedReader bufferedStderrReader = new BufferedReader(stderrReader)) {
         stderr = CharStreams.toString(bufferedStderrReader).trim();
       } catch (IOException e) {
         StringWriter stackTraceOut = new StringWriter();
         e.printStackTrace(new PrintWriter(stackTraceOut));
         stderr = stackTraceOut.getBuffer().toString();
-      } finally {
-        if (stderr == null) {
-          stderr = "Internal error: error output not set.";
-        }
       }
-
     }
 
     public String getStdErr() {
