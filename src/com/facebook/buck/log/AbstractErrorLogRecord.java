@@ -20,7 +20,7 @@ import static com.facebook.buck.util.MoreThrowables.getInitialCause;
 import static com.facebook.buck.util.MoreThrowables.getThrowableOrigin;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.util.network.HostnameFetching;
+import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

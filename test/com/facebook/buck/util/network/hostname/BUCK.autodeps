@@ -1,0 +1,13 @@
+#@# GENERATED FILE: DO NOT MODIFY 1081ab8c0f2c0c1540e87279b7397123ad16c3c1 #@#
+{
+  "hostname" : {
+    "deps" : [
+      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util/network/hostname:hostname",
+      "//test/com/facebook/buck/testutil:testutil",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

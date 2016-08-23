@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util.network;
+package com.facebook.buck.util.network.hostname;
 
 import com.sun.jna.Native;
 import com.sun.jna.ptr.IntByReference;

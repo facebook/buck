@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 1583df536f66eec6d67a5a6efa32d9439304627a #@#
+#@# GENERATED FILE: DO NOT MODIFY 67bc4ece7694efbf66a46d40d0a76e2f7868c0b0 #@#
 {
   "cli" : {
     "deps" : [
@@ -123,7 +123,7 @@
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/util/environment:env-filter",
-      "//src/com/facebook/buck/util/network:network"
+      "//src/com/facebook/buck/util/network/hostname:hostname"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/config:config",

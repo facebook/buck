@@ -1,0 +1,9 @@
+#@# GENERATED FILE: DO NOT MODIFY 9ad6797f351da7c464537bfc554a71d0f0572a23 #@#
+{
+  "hostname" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//third-party/java/jna:jna"
+    ]
+  }
+}

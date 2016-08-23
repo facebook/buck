@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util.network;
+package com.facebook.buck.util.network.hostname;
 
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;

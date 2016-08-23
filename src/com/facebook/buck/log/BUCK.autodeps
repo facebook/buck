@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY b53f4b42ba403c59a20ac965a627379cc246e9d4 #@#
+#@# GENERATED FILE: DO NOT MODIFY ad39127dd6db86f79b715c3739b2a3d49a4f7cd2 #@#
 {
   "log" : {
     "deps" : [
@@ -8,7 +8,7 @@
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/concurrent:concurrent",
-      "//src/com/facebook/buck/util/network:network",
+      "//src/com/facebook/buck/util/network/hostname:hostname",
       "//third-party/java/immutables:processor",
       "//third-party/java/jsr:jsr305",
       "//third-party/java/stringtemplate:stringtemplate"

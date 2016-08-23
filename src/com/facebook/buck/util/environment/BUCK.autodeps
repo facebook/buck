@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 9c49de7b42c6dd74624931ed672fa05e5b797bb7 #@#
+#@# GENERATED FILE: DO NOT MODIFY d6945226726d512198097db55c23f35838ac9ecb #@#
 {
   "env-filter" : {
     "deps" : [ ],
@@ -10,7 +10,7 @@
   "environment" : {
     "deps" : [
       "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/util/network:network",
+      "//src/com/facebook/buck/util/network/hostname:hostname",
       "//third-party/java/ObjCBridge:ObjCBridge",
       "//third-party/java/immutables:processor"
     ],
