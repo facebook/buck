@@ -18,8 +18,11 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJob;
+import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
+import com.facebook.buck.distributed.thrift.BuildJobStateTargetGraph;
+import com.facebook.buck.distributed.thrift.BuildJobStateTargetNode;
 import com.facebook.buck.distributed.thrift.BuildStatusResponse;
 import com.facebook.buck.distributed.thrift.CASContainsResponse;
 import com.facebook.buck.distributed.thrift.CreateBuildResponse;
@@ -27,6 +30,8 @@ import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.distributed.thrift.StartBuildResponse;
+import com.facebook.buck.slb.ThriftProtocol;
+import com.facebook.buck.slb.ThriftUtil;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -64,6 +69,48 @@ public class DistBuildServiceTest {
   @After
   public void tearDown() {
     executor.shutdown();
+  }
+
+  @Test
+  public void canUploadTargetGraph() throws Exception {
+    Capture<FrontendRequest> request = EasyMock.newCapture();
+    FrontendResponse response = new FrontendResponse();
+    response.setType(FrontendRequestType.STORE_BUILD_GRAPH);
+    response.setWasSuccessful(true);
+    EasyMock.expect(frontendService.makeRequest(
+        EasyMock.capture(request))).andReturn(response).once();
+
+    EasyMock.replay(frontendService);
+
+    BuildJobState buildJobState = new BuildJobState();
+    List<BuildJobStateFileHashes> fileHashes = new ArrayList<>();
+    buildJobState.setFileHashes(fileHashes);
+    BuildJobStateTargetGraph graph = new BuildJobStateTargetGraph();
+    graph.setNodes(new ArrayList<BuildJobStateTargetNode>());
+    BuildJobStateTargetNode node1 = new BuildJobStateTargetNode();
+    node1.setRawNode("node1");
+    BuildJobStateTargetNode node2 = new BuildJobStateTargetNode();
+    node2.setRawNode("node1");
+    graph.addToNodes(node1);
+    graph.addToNodes(node2);
+    buildJobState.setTargetGraph(graph);
+    BuildId id = new BuildId();
+    id.setId("check-id");
+    distBuildService.uploadTargetGraph(buildJobState, id, executor).get();
+
+    Assert.assertTrue(request.getValue().isSetType());
+    Assert.assertEquals(request.getValue().getType(), FrontendRequestType.STORE_BUILD_GRAPH);
+    Assert.assertTrue(request.getValue().isSetStoreBuildGraphRequest());
+    Assert.assertTrue(request.getValue().getStoreBuildGraphRequest().isSetBuildId());
+    Assert.assertEquals(request.getValue().getStoreBuildGraphRequest().getBuildId(), id);
+    Assert.assertTrue(request.getValue().getStoreBuildGraphRequest().isSetBuildGraph());
+
+    BuildJobState sentState = new BuildJobState();
+    ThriftUtil.deserialize(
+        ThriftProtocol.BINARY,
+        request.getValue().getStoreBuildGraphRequest().getBuildGraph(),
+        sentState);
+    Assert.assertTrue(buildJobState.equals(sentState));
   }
 
   @Test

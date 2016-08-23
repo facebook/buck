@@ -18,6 +18,7 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJob;
+import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.BuildStatusRequest;
@@ -28,11 +29,16 @@ import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.distributed.thrift.StartBuildRequest;
+import com.facebook.buck.distributed.thrift.StoreBuildGraphRequest;
 import com.facebook.buck.distributed.thrift.StoreLocalChangesRequest;
+import com.facebook.buck.slb.ThriftProtocol;
+import com.facebook.buck.slb.ThriftUtil;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+
+import org.apache.thrift.TException;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -45,6 +51,7 @@ import java.util.concurrent.Callable;
 
 public class DistBuildService {
   private final FrontendService service;
+  private static final ThriftProtocol buildGraphSerializerProtocol = ThriftProtocol.BINARY;
 
   public DistBuildService(
       FrontendService service) {
@@ -62,6 +69,42 @@ public class DistBuildService {
     }
     Preconditions.checkState(request.getType().equals(response.getType()));
     return response;
+  }
+
+  public ListenableFuture<Void> uploadTargetGraph(
+      final BuildJobState buildJobStateArg,
+      final BuildId buildId,
+      ListeningExecutorService executorService) throws IOException {
+    // TODO(shivanker): We shouldn't be doing this. Fix after we stop reading all files into memory.
+    final BuildJobState buildJobState = buildJobStateArg.deepCopy();
+    return executorService.submit(new Callable<Void>() {
+      @Override
+      public Void call() throws IOException {
+        // Get rid of file contents from buildJobState
+        for (BuildJobStateFileHashes cell : buildJobState.getFileHashes()) {
+          for (BuildJobStateFileHashEntry file : cell.getEntries()) {
+            file.unsetContents();
+          }
+        }
+
+        // Now serialize and send the whole buildJobState
+        StoreBuildGraphRequest storeBuildGraphRequest = new StoreBuildGraphRequest();
+        storeBuildGraphRequest.setBuildId(buildId);
+        try {
+          storeBuildGraphRequest.setBuildGraph(
+              ThriftUtil.serialize(buildGraphSerializerProtocol, buildJobState));
+        } catch (TException e) {
+          throw new IOException(e);
+        }
+
+        FrontendRequest request = new FrontendRequest();
+        request.setType(FrontendRequestType.STORE_BUILD_GRAPH);
+        request.setStoreBuildGraphRequest(storeBuildGraphRequest);
+        makeRequestChecked(request);
+        // No response expected.
+        return null;
+      }
+    });
   }
 
   public ListenableFuture<Void> uploadMissingFiles(

@@ -73,6 +73,14 @@ public class DistributedBuild {
     }
     LOG.info("Uploaded local changes. Build status: " + job.getStatus().toString());
 
+    try {
+      distBuildService.uploadTargetGraph(buildJobState, id, executorService).get();
+    } catch (ExecutionException e) {
+      LOG.error("Exception uploading build graph: " + e);
+      throw new RuntimeException(e);
+    }
+    LOG.info("Uploaded target graph. Build status: " + job.getStatus().toString());
+
     job = distBuildService.startBuild(id);
     LOG.info("Started job. Build status: " + job.getStatus().toString());
     logDebugInfo(job);

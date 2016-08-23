@@ -451,6 +451,7 @@ public class DistributedBuildFileHashes {
       }
       if (!isDirectory && !pathIsAbsolute) {
         try {
+          // TODO(shivanker, ruibm): Don't read everything in memory right away.
           fileHashEntry.setContents(Files.readAllBytes(path));
         } catch (IOException e) {
           throw new RuntimeException(e);
