@@ -14,8 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.log;
+package com.facebook.buck.log.memory;
 
+import com.facebook.buck.log.LogFormatter;
+import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 

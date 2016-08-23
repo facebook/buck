@@ -53,13 +53,13 @@ java.util.logging.FileHandler.encoding=UTF-8
 
 # Use a circular buffer to store high granularity logging in memory, only interesting if we hit
 # an error.
-com.facebook.buck.log.MemoryHandler.level=ALL
+com.facebook.buck.log.memory.MemoryHandler.level=ALL
 
 # Define the buffer size.
-com.facebook.buck.log.MemoryHandler.size=100
+com.facebook.buck.log.memory.MemoryHandler.size=100
 
 # Define the push level.
-com.facebook.buck.log.MemoryHandler.push=SEVERE
+com.facebook.buck.log.memory.MemoryHandler.push=SEVERE
 
 # Max size in bytes all logs will take.
 com.facebook.buck.log.LogFileHandler.max_size_bytes=<default_max_size_bytes>
