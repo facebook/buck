@@ -28,9 +28,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
 
-@Immutable
 public class TestResultSummary implements TestResultSummaryExternalInterface {
 
   private final String testCaseName;

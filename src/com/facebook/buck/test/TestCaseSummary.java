@@ -26,9 +26,6 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Locale;
 
-import javax.annotation.concurrent.Immutable;
-
-@Immutable
 public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestResultSummary> {
 
   /**

@@ -71,12 +71,10 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
 
 /**
  * Structured representation of data read from a {@code .buckconfig} file.
  */
-@Immutable
 public class BuckConfig {
 
   public static final String BUCK_CONFIG_OVERRIDE_FILE_NAME = ".buckconfig.local";

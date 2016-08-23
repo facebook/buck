@@ -18,12 +18,9 @@ package com.facebook.buck.android;
 
 import java.nio.file.Path;
 
-import javax.annotation.concurrent.Immutable;
-
 /**
  * Specifies how secondary .dex files should be stored in the .apk.
  */
-@Immutable
 enum DexStore {
   /**
    * Secondary dexes should be raw dex files for inclusion in the APK.

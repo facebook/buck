@@ -28,13 +28,10 @@ import com.google.common.base.Strings;
 
 import java.nio.file.Path;
 
-import javax.annotation.concurrent.Immutable;
-
 /**
  * Context for parsing build target names. Fully-qualified target names are parsed the same
  * regardless of the context.
  */
-@Immutable
 public abstract class BuildTargetPatternParser<T> {
 
   private static final String BUILD_RULE_PREFIX = "//";
