@@ -29,9 +29,8 @@ import com.facebook.buck.distributed.DistributedBuildState;
 import com.facebook.buck.distributed.DistributedBuildTargetGraphCodec;
 import com.facebook.buck.distributed.DistributedBuildTypeCoercerFactory;
 import com.facebook.buck.distributed.DistributedCachingBuildEngineDelegate;
+import com.facebook.buck.distributed.FrontendService;
 import com.facebook.buck.distributed.thrift.BuildJobState;
-import com.facebook.buck.distributed.thrift.FrontendRequest;
-import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -67,9 +66,7 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.LoadBalancedService;
-import com.facebook.buck.slb.ThriftOverHttpService;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
-import com.facebook.buck.slb.ThriftService;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDevice;
@@ -154,7 +151,7 @@ public class BuildCommand extends AbstractCommand {
       name = DEEP_LONG_ARG,
       usage =
           "Perform a \"deep\" build, which makes the output of all transitive dependencies" +
-          " available.",
+              " available.",
       forbids = SHALLOW_LONG_ARG)
   private boolean deepBuild = false;
 
@@ -171,7 +168,7 @@ public class BuildCommand extends AbstractCommand {
       name = SHALLOW_LONG_ARG,
       usage =
           "Perform a \"shallow\" build, which only makes the output of all explicitly listed" +
-          " targets available.",
+              " targets available.",
       forbids = DEEP_LONG_ARG)
   private boolean shallowBuild = false;
 
@@ -324,7 +321,8 @@ public class BuildCommand extends AbstractCommand {
         executors);
   }
 
-  @Nullable private Build lastBuild;
+  @Nullable
+  private Build lastBuild;
 
   private ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of();
 
@@ -363,7 +361,7 @@ public class BuildCommand extends AbstractCommand {
       CommandRunnerParams params,
       WeightedListeningExecutorService executorService,
       ImmutableSet<String> additionalTargets) throws IOException, InterruptedException {
-    if (!additionalTargets.isEmpty()){
+    if (!additionalTargets.isEmpty()) {
       this.arguments.addAll(additionalTargets);
     }
 
@@ -399,12 +397,111 @@ public class BuildCommand extends AbstractCommand {
     return exitCode;
   }
 
+  private int executeDistributedBuildFromStateDump(
+      DistributedBuildState state,
+      DistributedBuildTargetGraphCodec targetGraphCodec,
+      final CommandRunnerParams params,
+      final WeightedListeningExecutorService executorService)
+      throws IOException, InterruptedException {
+    final TargetGraph targetGraph = state.createTargetGraph(targetGraphCodec);
+
+    ActionGraphAndResolver actionGraphAndResolver = Preconditions.checkNotNull(
+        params.getActionGraphCache().getActionGraph(
+            params.getBuckEventBus(),
+                  /* checkActionGraphs */ false,
+            targetGraph,
+            params.getBuckConfig().getKeySeed()));
+    BuckConfig rootCellBuckConfig = state.getRootCell().getBuckConfig();
+    DistributedCachingBuildEngineDelegate cachingBuildEngineDelegate =
+        new DistributedCachingBuildEngineDelegate(
+            new SourcePathResolver(actionGraphAndResolver.getResolver()),
+            state);
+
+    // TODO(ruibm, marcinkosiba): This is incorrect, we probably need rule-level control
+    // over what gets built.
+    ImmutableList<TargetNodeSpec> targetNodeSpecs = parseArgumentsAsTargetNodeSpecs(
+        rootCellBuckConfig,
+        getArguments());
+    FluentIterable<BuildTarget> targetsToBuild = FluentIterable.from(targetNodeSpecs)
+        .transformAndConcat(new Function<TargetNodeSpec, Iterable<BuildTarget>>() {
+          @Override
+          public Iterable<BuildTarget> apply(TargetNodeSpec input) {
+            return input.filter(targetGraph.getNodes()).keySet();
+          }
+        });
+    return executeBuild(
+        params,
+        actionGraphAndResolver,
+        executorService,
+        params.getArtifactCache(),
+        cachingBuildEngineDelegate,
+        rootCellBuckConfig,
+        targetsToBuild);
+  }
+
+  private BuildJobState computeDistributedBuildJobState(
+      DistributedBuildTargetGraphCodec targetGraphCodec,
+      final CommandRunnerParams params,
+      final WeightedListeningExecutorService executorService)
+      throws InterruptedException, ActionGraphCreationException, IOException {
+    TargetGraphAndBuildTargets targetGraphAndBuildTargets =
+        createTargetGraph(params, executorService);
+    ActionGraphAndResolver actionGraphAndResolver = createActionGraphAndResolver(
+        params,
+        targetGraphAndBuildTargets);
+    DistributedBuildCellIndexer cellIndexer =
+        new DistributedBuildCellIndexer(params.getCell());
+    DistributedBuildFileHashes distributedBuildFileHashes = new DistributedBuildFileHashes(
+        actionGraphAndResolver.getActionGraph(),
+        new SourcePathResolver(actionGraphAndResolver.getResolver()),
+        params.getFileHashCache(),
+        cellIndexer,
+        executorService,
+        params.getBuckConfig().getKeySeed());
+
+    return DistributedBuildState.dump(
+        cellIndexer,
+        distributedBuildFileHashes,
+        targetGraphCodec,
+        targetGraphAndBuildTargets.getTargetGraph()
+    );
+  }
+
   private int executeDistributedBuild(
       final CommandRunnerParams params,
       final WeightedListeningExecutorService executorService)
       throws IOException, InterruptedException, ActionGraphCreationException {
     ProjectFilesystem filesystem = params.getCell().getFilesystem();
 
+    DistributedBuildTypeCoercerFactory typeCoercerFactory =
+        new DistributedBuildTypeCoercerFactory(params.getObjectMapper());
+    ParserTargetNodeFactory<TargetNode<?>> parserTargetNodeFactory =
+        DefaultParserTargetNodeFactory.createForDistributedBuild(
+            new ConstructorArgMarshaller(typeCoercerFactory),
+            new TargetNodeFactory(typeCoercerFactory));
+    DistributedBuildTargetGraphCodec targetGraphCodec = new DistributedBuildTargetGraphCodec(
+        params.getObjectMapper(),
+        parserTargetNodeFactory,
+        new Function<TargetNode<?>, Map<String, Object>>() {
+          @Nullable
+          @Override
+          public Map<String, Object> apply(TargetNode<?> input) {
+            try {
+              return params.getParser().getRawTargetNode(
+                  params.getBuckEventBus(),
+                  params.getCell().getCell(input.getBuildTarget()),
+                  false /* enableProfiling */,
+                  executorService,
+                  input);
+            } catch (BuildFileParseException | InterruptedException e) {
+              throw new RuntimeException(e);
+            }
+          }
+        });
+
+    // Are we loading from or just dumping to a state file?
+    // TODO(ruibm, shivanker): Remove the if block (keep the else)
+    // after removing the distributedBuildStateFile option.
     if (distributedBuildStateFile != null) {
       Path stateDumpPath = Paths.get(distributedBuildStateFile);
       TTransport transport;
@@ -418,88 +515,18 @@ public class BuildCommand extends AbstractCommand {
       TProtocol protocol = new TTupleProtocol(transport);
 
       try {
-        DistributedBuildTypeCoercerFactory typeCoercerFactory =
-            new DistributedBuildTypeCoercerFactory(params.getObjectMapper());
-        ParserTargetNodeFactory<TargetNode<?>> parserTargetNodeFactory =
-            DefaultParserTargetNodeFactory.createForDistributedBuild(
-                new ConstructorArgMarshaller(typeCoercerFactory),
-                new TargetNodeFactory(typeCoercerFactory));
-        DistributedBuildTargetGraphCodec targetGraphCodec = new DistributedBuildTargetGraphCodec(
-            params.getObjectMapper(),
-            parserTargetNodeFactory,
-            new Function<TargetNode<?>, Map<String, Object>>() {
-              @Nullable
-              @Override
-              public Map<String, Object> apply(TargetNode<?> input) {
-                try {
-                  return params.getParser().getRawTargetNode(
-                      params.getBuckEventBus(),
-                      params.getCell().getCell(input.getBuildTarget()),
-                      /* enableProfiling */ false,
-                      executorService,
-                      input);
-                } catch (BuildFileParseException | InterruptedException e) {
-                  throw new RuntimeException(e);
-                }
-              }
-            });
-
         if (loading) {
           DistributedBuildState state = DistributedBuildState.load(protocol, params.getCell());
-          final TargetGraph targetGraph = state.createTargetGraph(targetGraphCodec);
-
-          ActionGraphAndResolver actionGraphAndResolver = Preconditions.checkNotNull(
-              params.getActionGraphCache().getActionGraph(
-                  params.getBuckEventBus(),
-                  /* checkActionGraphs */ false,
-                  targetGraph,
-                  params.getBuckConfig().getKeySeed()));
-          BuckConfig rootCellBuckConfig = state.getRootCell().getBuckConfig();
-          DistributedCachingBuildEngineDelegate cachingBuildEngineDelegate =
-              new DistributedCachingBuildEngineDelegate(
-                  new SourcePathResolver(actionGraphAndResolver.getResolver()),
-                  state);
-
-          // TODO(ruibm, marcinkosiba): This is incorrect, we probably need rule-level control
-          // over what gets built.
-          ImmutableList<TargetNodeSpec> targetNodeSpecs = parseArgumentsAsTargetNodeSpecs(
-              rootCellBuckConfig,
-              getArguments());
-          FluentIterable<BuildTarget> targetsToBuild = FluentIterable.from(targetNodeSpecs)
-              .transformAndConcat(new Function<TargetNodeSpec, Iterable<BuildTarget>>() {
-                @Override
-                public Iterable<BuildTarget> apply(TargetNodeSpec input) {
-                  return input.filter(targetGraph.getNodes()).keySet();
-                }
-              });
-          return executeBuild(
-              params,
-              actionGraphAndResolver,
-              executorService,
-              params.getArtifactCache(),
-              cachingBuildEngineDelegate,
-              rootCellBuckConfig,
-              targetsToBuild);
-        } else {
-          TargetGraphAndBuildTargets targetGraphAndBuildTargets =
-              createTargetGraph(params, executorService);
-          ActionGraphAndResolver actionGraphAndResolver = createActionGraphAndResolver(
-              params,
-              targetGraphAndBuildTargets);
-          DistributedBuildCellIndexer cellIndexer =
-              new DistributedBuildCellIndexer(params.getCell());
-          DistributedBuildFileHashes distributedBuildFileHashes = new DistributedBuildFileHashes(
-              actionGraphAndResolver.getActionGraph(),
-              new SourcePathResolver(actionGraphAndResolver.getResolver()),
-              params.getFileHashCache(),
-              cellIndexer,
-              executorService,
-              params.getBuckConfig().getKeySeed());
-          BuildJobState jobState = DistributedBuildState.dump(
-              cellIndexer,
-              distributedBuildFileHashes,
+          return executeDistributedBuildFromStateDump(
+              state,
               targetGraphCodec,
-              targetGraphAndBuildTargets.getTargetGraph());
+              params,
+              executorService);
+        } else {
+          BuildJobState jobState = computeDistributedBuildJobState(
+              targetGraphCodec,
+              params,
+              executorService);
           jobState.write(protocol);
           transport.flush();
           return 0;
@@ -509,21 +536,27 @@ public class BuildCommand extends AbstractCommand {
       } finally {
         transport.close();
       }
-    }
+    } else {
 
-    DistBuildConfig config = new DistBuildConfig(params.getBuckConfig());
-    ClientSideSlb slb = config.getFrontendConfig().createHttpClientSideSlb(
-        params.getClock(),
-        params.getBuckEventBus(),
-        new CommandThreadFactory("BuildCommand.HttpLoadBalancer"));
-    OkHttpClient client = config.createOkHttpClient();
+      DistBuildConfig config = new DistBuildConfig(params.getBuckConfig());
+      ClientSideSlb slb = config.getFrontendConfig().createHttpClientSideSlb(
+          params.getClock(),
+          params.getBuckEventBus(),
+          new CommandThreadFactory("BuildCommand.HttpLoadBalancer"));
+      OkHttpClient client = config.createOkHttpClient();
 
-    try (HttpService httpService = new LoadBalancedService(slb, client, params.getBuckEventBus());
-         ThriftService<FrontendRequest, FrontendResponse> service = new ThriftOverHttpService<>(
-             ThriftOverHttpServiceConfig.of(httpService))) {
-      DistributedBuild build = new DistributedBuild(
-          new DistBuildService(service, params.getBuckEventBus()));
-      return build.executeAndPrintFailuresToEventBus();
+      try (HttpService httpService = new LoadBalancedService(slb, client, params.getBuckEventBus());
+           FrontendService service = new FrontendService(
+               ThriftOverHttpServiceConfig.of(httpService))) {
+        DistributedBuild build = new DistributedBuild(
+            computeDistributedBuildJobState(
+                targetGraphCodec,
+                params,
+                executorService),
+            new DistBuildService(service),
+            1000 /* millisBetweenStatusPoll */);
+        return build.executeAndPrintFailuresToEventBus(executorService, params.getBuckEventBus());
+      }
     }
   }
 

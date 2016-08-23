@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 6c0a46b7bb0f623f42c218d5362e6b3301202770 #@#
+#@# GENERATED FILE: DO NOT MODIFY ceaeef782393d407a7f6267c57198f2da9ae981d #@#
 {
   "distributed" : {
     "deps" : [
@@ -27,6 +27,7 @@
       "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/slb:slb",
       "//src/com/facebook/buck/util/cache:cache",
+      "//src/com/facebook/buck/util/concurrent:concurrent",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
       "//third-party/java/jackson:jackson-databind",

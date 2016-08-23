@@ -18,141 +18,138 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJob;
-import com.facebook.buck.distributed.thrift.BuildStatus;
+import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
+import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.BuildStatusRequest;
+import com.facebook.buck.distributed.thrift.CASContainsRequest;
 import com.facebook.buck.distributed.thrift.CreateBuildRequest;
+import com.facebook.buck.distributed.thrift.FileInfo;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
-import com.facebook.buck.distributed.thrift.LogRecord;
 import com.facebook.buck.distributed.thrift.StartBuildRequest;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.log.Logger;
-import com.facebook.buck.slb.ThriftService;
-import com.google.common.base.Optional;
+import com.facebook.buck.distributed.thrift.StoreLocalChangesRequest;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
+import java.util.concurrent.Callable;
 
 
 public class DistBuildService {
-
-  private static final Logger LOG = Logger.get(DistBuildService.class);
-
-  private static final int MAX_BUILD_DURATION_MILLIS = 10000;
-  private static final DateFormat DATE_FORMAT = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]");
-
-  private final ThriftService<FrontendRequest, FrontendResponse> service;
-  private final BuckEventBus eventBus;
+  private final FrontendService service;
 
   public DistBuildService(
-      ThriftService<FrontendRequest, FrontendResponse> service,
-      BuckEventBus eventBus) {
+      FrontendService service) {
     this.service = service;
-    this.eventBus = eventBus;
   }
 
-  public void submitJob() throws IOException {
+  private FrontendResponse makeRequestChecked(FrontendRequest request) throws IOException {
+    FrontendResponse response = service.makeRequest(request);
+    Preconditions.checkState(response.isSetWasSuccessful());
+    if (!response.wasSuccessful) {
+      throw new IOException(String.format(
+          "Request of type [%s] failed with error message [%s]",
+          request.type.toString(),
+          response.getErrorMessage()));
+    }
+    Preconditions.checkState(request.getType().equals(response.getType()));
+    return response;
+  }
 
+  public ListenableFuture<Void> uploadMissingFiles(
+      final List<BuildJobStateFileHashes> fileHashes,
+      ListeningExecutorService executorService) throws IOException {
+    return executorService.submit(new Callable<Void>() {
+      @Override
+      public Void call() throws IOException {
+        Map<String, ByteBuffer> sha1ToFileContents = new HashMap<>();
+        for (BuildJobStateFileHashes filesystem : fileHashes) {
+          for (BuildJobStateFileHashEntry file : filesystem.entries) {
+            // TODO(shivanker): Eventually, we won't have file contents in BuildJobState.
+            // Then change this code to load file contents inline (only for missing files)
+            sha1ToFileContents.put(file.hashCode, file.contents);
+          }
+        }
+
+        List<String> contentHashes = ImmutableList.copyOf(sha1ToFileContents.keySet());
+        CASContainsRequest containsReq = new CASContainsRequest();
+        containsReq.setContentSha1s(contentHashes);
+        FrontendRequest request = new FrontendRequest();
+        request.setType(FrontendRequestType.CAS_CONTAINS);
+        request.setCasContainsRequest(containsReq);
+        FrontendResponse response = makeRequestChecked(request);
+
+        Preconditions.checkState(
+            response.getCasContainsResponse().exists.size() == contentHashes.size());
+        List<Boolean> isPresent = response.getCasContainsResponse().exists;
+        List<FileInfo> filesToBeUploaded = new LinkedList<>();
+        for (int i = 0; i < isPresent.size(); ++i) {
+          if (!isPresent.get(i)) {
+            FileInfo file = new FileInfo();
+            file.setContentHash(contentHashes.get(i));
+            file.setContent(sha1ToFileContents.get(contentHashes.get(i)));
+            filesToBeUploaded.add(file);
+          }
+        }
+
+        request = new FrontendRequest();
+        StoreLocalChangesRequest storeReq = new StoreLocalChangesRequest();
+        storeReq.setFiles(filesToBeUploaded);
+        request.setType(FrontendRequestType.STORE_LOCAL_CHANGES);
+        request.setStoreLocalChangesRequest(storeReq);
+        makeRequestChecked(request);
+        // No response expected.
+        return null;
+      }
+    });
+  }
+
+  public BuildJob createBuild() throws IOException {
     // Tell server to create the build and get the build id.
     CreateBuildRequest createTimeRequest = new CreateBuildRequest();
     createTimeRequest.setCreateTimestampMillis(System.currentTimeMillis());
     FrontendRequest request = new FrontendRequest();
     request.setType(FrontendRequestType.CREATE_BUILD);
     request.setCreateBuildRequest(createTimeRequest);
-    FrontendResponse response = new FrontendResponse();
-    service.makeRequest(request, response);
-    Preconditions.checkState(response.getType().equals(FrontendRequestType.CREATE_BUILD));
-    BuildJob job = response.getCreateBuildResponse().getBuildJob();
-    final BuildId id = job.getBuildId();
-    LOG.info("Created job. Build id = " + id.getId());
-    logDebugInfo(job);
+    FrontendResponse response = makeRequestChecked(request);
 
+    return response.getCreateBuildResponse().getBuildJob();
+  }
+
+  public BuildJob startBuild(BuildId id) throws IOException {
     // Start the build
     StartBuildRequest startRequest = new StartBuildRequest();
     startRequest.setBuildId(id);
-    request.clear();
+    FrontendRequest request = new FrontendRequest();
     request.setType(FrontendRequestType.START_BUILD);
     request.setStartBuildRequest(startRequest);
-    response.clear();
-    service.makeRequest(request, response);
-    Preconditions.checkState(response.getType().equals(FrontendRequestType.START_BUILD));
-    job = response.getStartBuildResponse().getBuildJob();
-    Preconditions.checkState(job.getBuildId().equals(id));
-    LOG.info("Started job. Build status: " + job.getStatus().toString());
-    logDebugInfo(job);
+    FrontendResponse response = makeRequestChecked(request);
 
+    BuildJob job = response.getStartBuildResponse().getBuildJob();
+    Preconditions.checkState(job.getBuildId().equals(id));
+    return job;
+  }
+
+  public BuildJob pollBuild(BuildId id) throws IOException {
     // Create the poll for buildStatus request.
     BuildStatusRequest statusRequest = new BuildStatusRequest();
     statusRequest.setBuildId(id);
-    request.clear();
+    FrontendRequest request = new FrontendRequest();
     request.setType(FrontendRequestType.BUILD_STATUS);
     request.setBuildStatusRequest(statusRequest);
-    Stopwatch stopwatch = Stopwatch.createStarted();
+    FrontendResponse response = makeRequestChecked(request);
 
-    // Keep polling until the build is complete or failed.
-    do {
-      response.clear();
-      service.makeRequest(request, response);
-      Preconditions.checkState(response.getType().equals(FrontendRequestType.BUILD_STATUS));
-      job = response.getBuildStatusResponse().getBuildJob();
-      Preconditions.checkState(job.getBuildId().equals(id));
-      LOG.info("Got build status: " + job.getStatus().toString());
-
-      DistBuildStatus distBuildStatus =
-          prepareStatusFromJob(job)
-          .setETAMillis(MAX_BUILD_DURATION_MILLIS - stopwatch.elapsed(TimeUnit.MILLISECONDS))
-          .build();
-      eventBus.post(new DistBuildStatusEvent(distBuildStatus));
-
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        LOG.error(e, "BuildStatus polling sleep call has been interrupted unexpectedly.");
-      }
-    } while (!(job.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY) ||
-               job.getStatus().equals(BuildStatus.FAILED)));
-
-    LOG.info("Build was " +
-        (response.isWasSuccessful() ? "" : "not ") +
-        "successful!");
-    if (response.isSetErrorMessage()) {
-      LOG.error("Error msg: " + response.getErrorMessage());
-    }
-    logDebugInfo(job);
-
-    DistBuildStatus distBuildStatus = prepareStatusFromJob(job).setETAMillis(0).build();
-    eventBus.post(new DistBuildStatusEvent(distBuildStatus));
+    BuildJob job = response.getBuildStatusResponse().getBuildJob();
+    Preconditions.checkState(job.getBuildId().equals(id));
+    return job;
   }
 
-  private DistBuildStatus.Builder prepareStatusFromJob(BuildJob job) {
-    Optional<List<LogRecord>> logBook = Optional.absent();
-    Optional<String> lastLine = Optional.absent();
-    if (job.isSetDebug() && job.getDebug().isSetLogBook())  {
-      logBook = Optional.of(job.getDebug().getLogBook());
-      if (logBook.get().size() > 0) {
-        lastLine = Optional.of(logBook.get().get(logBook.get().size() - 1).getName());
-      }
-    }
-
-    return DistBuildStatus.builder()
-        .setStatus(job.getStatus())
-        .setMessage(lastLine)
-        .setLogBook(logBook);
-  }
-
-  private void logDebugInfo(BuildJob job) {
-    if (job.isSetDebug() && job.getDebug().getLogBook().size() > 0) {
-      LOG.debug("Received debug info: ");
-      for (LogRecord log : job.getDebug().getLogBook()) {
-        LOG.debug(DATE_FORMAT.format(new Date(log.getTimestampMillis())) + log.getName());
-      }
-    }
-  }
 }

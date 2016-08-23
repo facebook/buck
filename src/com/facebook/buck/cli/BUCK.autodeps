@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY af3044b6dc7e32ade2bd324c795ac5542eb4f33e #@#
+#@# GENERATED FILE: DO NOT MODIFY 1583df536f66eec6d67a5a6efa32d9439304627a #@#
 {
   "cli" : {
     "deps" : [
@@ -25,6 +25,7 @@
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/halide:halide",
       "//src/com/facebook/buck/hashing:hashing",
+      "//src/com/facebook/buck/io:BuckPaths",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:watchman",
       "//src/com/facebook/buck/jvm/java:autodeps",
