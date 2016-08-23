@@ -12,6 +12,7 @@ prebuilt_jar(
     '//third-party/java/maven:maven-model',
     '//third-party/java/maven:maven-model-builder',
     '//third-party/java/maven:maven-repository-metadata',
+    "//src/com/facebook/buck/jvm/java/coverage:report-generator",
   ],
 )
 
