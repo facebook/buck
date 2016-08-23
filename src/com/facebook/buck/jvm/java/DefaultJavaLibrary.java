@@ -446,10 +446,11 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
     SuggestBuildRules suggestBuildRule =
         DefaultSuggestBuildRules.createSuggestBuildFunction(
-            JAR_RESOLVER, declaredClasspathEntries,
-            ImmutableSetMultimap.<JavaLibrary, Path>builder()
-                .putAll(getTransitiveClasspathEntries())
-                .putAll(this, additionalClasspathEntries)
+            JAR_RESOLVER,
+            declaredClasspathEntries.keySet(),
+            ImmutableSet.<JavaLibrary>builder()
+                .addAll(getTransitiveClasspathEntries().keySet())
+                .add(this)
                 .build(),
             context.getActionGraph().getNodes());
 

@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.model.BuildTarget;
@@ -26,6 +25,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -73,10 +73,8 @@ public class DefaultSuggestBuildRulesTest {
     SuggestBuildRules suggestFn =
         DefaultSuggestBuildRules.createSuggestBuildFunction(
             jarResolver,
-            ImmutableSetMultimap.<JavaLibrary, Path>of(),
-            ImmutableSetMultimap.<JavaLibrary, Path>builder()
-                .putAll(transitiveClasspathEntries)
-                .build(),
+            ImmutableSet.<JavaLibrary>of(),
+            transitiveClasspathEntries.keySet(),
             ImmutableList.of(libraryTwo, parent, grandparent));
 
     final ImmutableSet<String> suggestions =
@@ -103,10 +101,8 @@ public class DefaultSuggestBuildRulesTest {
     SuggestBuildRules suggestFn =
         DefaultSuggestBuildRules.createSuggestBuildFunction(
             jarResolver,
-            ImmutableSetMultimap.<JavaLibrary, Path>of(),
-            ImmutableSetMultimap.<JavaLibrary, Path>builder()
-                .putAll(transitiveClasspathEntries)
-                .build(),
+            ImmutableSet.<JavaLibrary>of(),
+            transitiveClasspathEntries.keySet(),
             ImmutableList.of(libraryTwo, parent, grandparent));
 
     final ImmutableSet<String> suggestions =

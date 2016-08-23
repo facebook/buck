@@ -27,7 +27,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
@@ -43,8 +42,8 @@ final class DefaultSuggestBuildRules implements SuggestBuildRules {
    */
   static SuggestBuildRules createSuggestBuildFunction(
       final JarResolver jarResolver,
-      final ImmutableSetMultimap<JavaLibrary, Path> declaredClasspathEntries,
-      final ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries,
+      final ImmutableSet<JavaLibrary> declaredDeps,
+      final ImmutableSet<JavaLibrary> transitiveDeps,
       final Iterable<BuildRule> buildRules) {
 
     final Supplier<ImmutableList<JavaLibrary>> sortedTransitiveNotDeclaredDeps =
@@ -53,8 +52,8 @@ final class DefaultSuggestBuildRules implements SuggestBuildRules {
               @Override
               public ImmutableList<JavaLibrary> get() {
                 Set<JavaLibrary> transitiveNotDeclaredDeps = Sets.difference(
-                    transitiveClasspathEntries.keySet(),
-                    Sets.union(ImmutableSet.of(this), declaredClasspathEntries.keySet()));
+                    transitiveDeps,
+                    Sets.union(ImmutableSet.of(this), declaredDeps));
                 DirectedAcyclicGraph<BuildRule> graph =
                     BuildRuleDependencyVisitors.getBuildRuleDirectedGraphFilteredBy(
                         buildRules,
