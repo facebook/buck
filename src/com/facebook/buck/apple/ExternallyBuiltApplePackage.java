@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -30,7 +29,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 
 import org.immutables.value.Value;
 
@@ -55,8 +53,7 @@ public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppen
         Optional.<Arg>absent(),
         Optional.<Arg>absent(),
         params.getBuildTarget().getShortName() + "." +
-            packageConfigAndPlatformInfo.getConfig().getExtension(),
-        ImmutableSortedSet.<BuildTarget>of());
+            packageConfigAndPlatformInfo.getConfig().getExtension());
     this.packageConfigAndPlatformInfo = packageConfigAndPlatformInfo;
   }
 

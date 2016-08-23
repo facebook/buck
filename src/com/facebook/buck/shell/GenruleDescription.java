@@ -20,11 +20,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 
 public class GenruleDescription extends AbstractGenruleDescription<GenruleDescription.Arg> {
 
@@ -45,33 +43,27 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args,
-      ImmutableList<SourcePath> srcs,
       Optional<com.facebook.buck.rules.args.Arg> cmd,
       Optional<com.facebook.buck.rules.args.Arg> bash,
-      Optional<com.facebook.buck.rules.args.Arg> cmdExe,
-      String out) {
+      Optional<com.facebook.buck.rules.args.Arg> cmdExe) {
     if (!args.executable.or(false)) {
       return new Genrule(
           params,
           new SourcePathResolver(resolver),
-          srcs,
+          args.srcs.get(),
           cmd,
           bash,
           cmdExe,
-          out,
-          args.tests.get()
-      );
+          args.out);
     } else {
       return new GenruleBinary(
           params,
           new SourcePathResolver(resolver),
-          srcs,
+          args.srcs.get(),
           cmd,
           bash,
           cmdExe,
-          out,
-          args.tests.get()
-      );
+          args.out);
     }
   }
 

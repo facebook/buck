@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -33,7 +32,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -67,8 +65,7 @@ public class ApkGenrule extends Genrule implements InstallableApk {
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
-      SourcePath apk,
-      ImmutableSortedSet<BuildTarget> tests) {
+      SourcePath apk) {
     super(
         params,
         resolver,
@@ -76,8 +73,7 @@ public class ApkGenrule extends Genrule implements InstallableApk {
         cmd,
         bash,
         cmdExe,
-        /* out */ params.getBuildTarget().getShortNameAndFlavorPostfix() + ".apk",
-        tests);
+        /* out */ params.getBuildTarget().getShortNameAndFlavorPostfix() + ".apk");
 
     Optional<BuildRule> rule = resolver.getRule(apk);
     Preconditions.checkState(rule.isPresent());

@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasTests;
+import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
@@ -34,7 +35,6 @@ import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.MavenCoordinatesMacroExpander;
@@ -67,20 +67,17 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       A args,
-      ImmutableList<SourcePath> srcs,
       Optional<com.facebook.buck.rules.args.Arg> cmd,
       Optional<com.facebook.buck.rules.args.Arg> bash,
-      Optional<com.facebook.buck.rules.args.Arg> cmdExe,
-      String out) {
+      Optional<com.facebook.buck.rules.args.Arg> cmdExe) {
     return new Genrule(
         params,
         new SourcePathResolver(resolver),
-        srcs,
+        args.srcs.get(),
         cmd,
         bash,
         cmdExe,
-        out,
-        args.tests.get());
+        args.out);
   }
 
   protected MacroHandler getMacroHandlerForParseTimeDeps() {
@@ -131,11 +128,9 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
             }),
         resolver,
         args,
-        args.srcs.get(),
         cmd,
         bash,
-        cmdExe,
-        args.out);
+        cmdExe);
   }
 
   @Override

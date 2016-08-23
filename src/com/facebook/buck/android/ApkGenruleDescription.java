@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.InstallableApk;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.HumanReadableException;
@@ -31,7 +30,6 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenruleDescription.Arg> {
@@ -53,11 +51,9 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args,
-      ImmutableList<SourcePath> srcs,
       Optional<com.facebook.buck.rules.args.Arg> cmd,
       Optional<com.facebook.buck.rules.args.Arg> bash,
-      Optional<com.facebook.buck.rules.args.Arg> cmdExe,
-      String out) {
+      Optional<com.facebook.buck.rules.args.Arg> cmdExe) {
 
     final BuildRule installableApk = resolver.getRule(args.apk);
     if (!(installableApk instanceof InstallableApk)) {
@@ -82,12 +78,11 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
                   }
                 })),
         new SourcePathResolver(resolver),
-        srcs,
+        args.srcs.get(),
         cmd,
         bash,
         cmdExe,
-        new BuildTargetSourcePath(args.apk),
-        args.tests.get());
+        new BuildTargetSourcePath(args.apk));
   }
 
   @SuppressFieldNotInitialized
