@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util.network.thrift;
+package com.facebook.buck.util.network;
 
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
@@ -24,7 +24,6 @@ import com.facebook.buck.distributed.thrift.LogRequestType;
 import com.facebook.buck.distributed.thrift.ScribeData;
 import com.facebook.buck.slb.ThriftService;
 import com.facebook.buck.util.concurrent.MostExecutors;
-import com.facebook.buck.util.network.ScribeLogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
