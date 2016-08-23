@@ -32,7 +32,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.MetadataProvidingDescription;
-import com.facebook.buck.rules.NoopBuildRuleWithTests;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -142,7 +142,7 @@ public class GoLibraryDescription implements
               .append(args.exportedDeps.or(ImmutableSortedSet.<BuildTarget>of())));
     }
 
-    return new NoopBuildRuleWithTests(params, new SourcePathResolver(resolver), args.tests.get());
+    return new NoopBuildRule(params, new SourcePathResolver(resolver));
   }
 
   @SuppressFieldNotInitialized

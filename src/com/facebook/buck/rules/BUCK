@@ -1,5 +1,3 @@
-
-
 # This is here to break circular dependencies, since this interface is
 # threaded through almost everything.
 java_library(
@@ -200,7 +198,6 @@ java_immutables_library(
     'InstallableApk.java',
     'Manifest.java',
     'NoopBuildRule.java',
-    'NoopBuildRuleWithTests.java',
     'OverrideScheduleRule.java',
     'ProjectConfig.java',
     'ProjectConfigDescription.java',
