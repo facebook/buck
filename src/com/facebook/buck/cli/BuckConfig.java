@@ -48,7 +48,6 @@ import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
-import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
@@ -77,7 +76,6 @@ import javax.annotation.concurrent.Immutable;
 /**
  * Structured representation of data read from a {@code .buckconfig} file.
  */
-@Beta
 @Immutable
 public class BuckConfig {
 

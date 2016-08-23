@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.google.common.annotations.Beta;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -32,7 +31,6 @@ import java.util.Objects;
  * matches the one on disk, then it has no work to do. It should also try to fetch its output from
  * an {@link ArtifactCache} to avoid doing any computation.
  */
-@Beta
 public abstract class AbstractBuildRule implements BuildRule {
 
   private final BuildTarget buildTarget;

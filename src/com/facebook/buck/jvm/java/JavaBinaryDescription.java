@@ -35,7 +35,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -152,9 +151,7 @@ public class JavaBinaryDescription implements
     public Optional<String> mainClass;
     public Optional<SourcePath> manifestFile;
     public Optional<Boolean> mergeManifests;
-    @Beta
     public Optional<Path> metaInfDirectory;
-    @Beta
     public Optional<ImmutableSet<Pattern>> blacklist;
   }
 }

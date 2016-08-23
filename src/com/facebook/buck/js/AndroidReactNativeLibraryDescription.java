@@ -30,14 +30,12 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Collections;
 
-@Beta
 public class AndroidReactNativeLibraryDescription
     implements
     Description<AndroidReactNativeLibraryDescription.Args>,
