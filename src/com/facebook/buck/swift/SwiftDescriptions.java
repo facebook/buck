@@ -26,14 +26,10 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Paths;
-
-public class SwiftDescriptions {
+class SwiftDescriptions {
   /**
    * Utility class: do not instantiate.
    */
@@ -52,7 +48,7 @@ public class SwiftDescriptions {
     return swiftSrcsBuilder.build();
   }
 
-  public static <A extends CxxLibraryDescription.Arg> void populateSwiftLibraryDescriptionArg(
+  static <A extends CxxLibraryDescription.Arg> void populateSwiftLibraryDescriptionArg(
       final SourcePathResolver sourcePathResolver,
       SwiftLibraryDescription.Arg output,
       final A args,
@@ -73,14 +69,4 @@ public class SwiftDescriptions {
     output.enableObjcInterop = Optional.of(true);
   }
 
-  static boolean hasSwiftSource(ImmutableSortedSet<SourceWithFlags> srcs) {
-    return FluentIterable.from(srcs)
-        .firstMatch(new Predicate<SourceWithFlags>() {
-          @Override
-          public boolean apply(SourceWithFlags input) {
-            return MorePaths.getFileExtension(Paths.get(input.getSourcePath().toString()))
-                .equals(SWIFT_EXTENSION);
-          }
-        }).isPresent();
-  }
 }

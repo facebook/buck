@@ -46,7 +46,6 @@ import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.swift.SwiftDescriptions;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -194,14 +193,7 @@ public class AppleBinaryDescription implements
       A args) throws NoSuchBuildTargetException {
     ImmutableSortedSet<Flavor> flavors = params.getBuildTarget().getFlavors();
     if (flavors.contains(SWIFT_LIBRARY_FLAVOR) || flavors.contains(SWIFT_COMPILE_FLAVOR)) {
-      SwiftLibraryDescription.Arg delegateArgs = swiftDelegate.createUnpopulatedConstructorArg();
-      SwiftDescriptions.populateSwiftLibraryDescriptionArg(
-          new SourcePathResolver(resolver),
-          delegateArgs,
-          args,
-          params.getBuildTarget());
-      return resolver.addToIndex(
-          swiftDelegate.createBuildRule(targetGraph, params, resolver, delegateArgs));
+      return swiftDelegate.createCompanionBuildRule(targetGraph, params, resolver, args);
     }
 
     // remove debug format flavors so binary will have the same output regardless of debug format
@@ -492,7 +484,7 @@ public class AppleBinaryDescription implements
           constructorArg.linkerFlags.get(),
           constructorArg.platformLinkerFlags.get().getValues()));
     }
-    swiftDelegate.addCompanionTarget(deps, buildTarget, constructorArg.srcs.get());
+    swiftDelegate.addCompanionTarget(deps, buildTarget);
     return deps.build();
   }
 

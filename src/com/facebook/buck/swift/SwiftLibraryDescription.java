@@ -19,6 +19,7 @@ package com.facebook.buck.swift;
 import com.facebook.buck.apple.AppleCxxPlatform;
 import com.facebook.buck.apple.ApplePlatforms;
 import com.facebook.buck.apple.MultiarchFileInfo;
+import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -33,9 +34,9 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -65,7 +66,6 @@ public class SwiftLibraryDescription implements
 
   public static final Flavor SWIFT_LIBRARY_FLAVOR = ImmutableFlavor.of("swift-lib");
   public static final Flavor SWIFT_COMPILE_FLAVOR = ImmutableFlavor.of("swift-compile");
-
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       SWIFT_LIBRARY_FLAVOR,
@@ -181,12 +181,26 @@ public class SwiftLibraryDescription implements
         args.supportedPlatformsRegex);
   }
 
-  public void addCompanionTarget(
-      ImmutableSet.Builder<BuildTarget> deps,
-      BuildTarget buildTarget,
-      ImmutableSortedSet<SourceWithFlags> srcs) {
-    if (SwiftDescriptions.hasSwiftSource(srcs) &&
-        !buildTarget.getFlavors().contains(SWIFT_LIBRARY_FLAVOR) &&
+  public <A extends CxxLibraryDescription.Arg> BuildRule createCompanionBuildRule(
+      TargetGraph targetGraph,
+      BuildRuleParams params,
+      BuildRuleResolver resolver, A args) throws NoSuchBuildTargetException {
+    SwiftLibraryDescription.Arg delegateArgs = createUnpopulatedConstructorArg();
+    SwiftDescriptions.populateSwiftLibraryDescriptionArg(
+        new SourcePathResolver(resolver),
+        delegateArgs,
+        args,
+        params.getBuildTarget());
+    if (delegateArgs.srcs.isPresent()) {
+      return resolver.addToIndex(
+          createBuildRule(targetGraph, params, resolver, delegateArgs));
+    } else {
+      return new NoopBuildRule(params, new SourcePathResolver(resolver));
+    }
+  }
+
+  public void addCompanionTarget(ImmutableSet.Builder<BuildTarget> deps, BuildTarget buildTarget) {
+    if (!buildTarget.getFlavors().contains(SWIFT_LIBRARY_FLAVOR) &&
         !buildTarget.getFlavors().contains(SWIFT_COMPILE_FLAVOR)) {
       deps.add(buildTarget.withAppendedFlavors(SWIFT_LIBRARY_FLAVOR));
     }
