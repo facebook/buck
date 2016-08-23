@@ -87,6 +87,8 @@ public interface JavaLibrary extends BuildRule, HasClasspathEntries,
   @Override
   public ImmutableSortedSet<SourcePath> getSources();
 
+  public ImmutableSortedSet<SourcePath> getResources();
+
   public Optional<Path> getGeneratedSourcePath();
 
   public static class Data {

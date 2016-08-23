@@ -115,6 +115,11 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
     return srcs;
   }
 
+  @Override
+  public ImmutableSortedSet<SourcePath> getResources() {
+    return ImmutableSortedSet.of();
+  }
+
   public FakeJavaLibrary setJavaSrcs(ImmutableSortedSet<Path> srcs) {
     Preconditions.checkNotNull(srcs);
     this.srcs = FluentIterable.from(srcs)

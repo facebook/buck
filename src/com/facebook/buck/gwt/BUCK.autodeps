@@ -1,9 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY b52959db296e6096453bbcff8b3f2c46e5bcca84 #@#
+#@# GENERATED FILE: DO NOT MODIFY 5cc4da7aea7eee41da238c06afb12368c6d2e527 #@#
 {
   "gwt" : {
     "deps" : [
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/jvm/java:steps",
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step/fs:fs"
     ],

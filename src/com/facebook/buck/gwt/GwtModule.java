@@ -14,8 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.jvm.java;
+package com.facebook.buck.gwt;
 
+import com.facebook.buck.jvm.java.CopyResourcesStep;
+import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -38,9 +40,6 @@ import java.nio.file.Path;
  * contains resources.)
  */
 public class GwtModule extends AbstractBuildRule {
-
-  // TODO(bolinfest): Figure out how to move this to the com.facebook.buck.gwt package.
-  // To do that, we need a way to register a flavor with a Description from outside the package.
 
   private final Path outputFile;
   @AddToRuleKey
