@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -80,7 +81,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
   @Override
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
-      BuildRuleParams params,
+      final BuildRuleParams params,
       final BuildRuleResolver resolver,
       A args) {
 
@@ -97,11 +98,36 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
           return ImmutableSet.of();
         }
 
+        // If the java library doesn't generate any output, it doesn't contribute a GwtModule
         JavaLibrary javaLibrary = (JavaLibrary) rule;
+        if (javaLibrary.getPathToOutput() == null) {
+          return rule.getDeps();
+        }
+
         BuildTarget gwtModuleTarget = BuildTargets.createFlavoredBuildTarget(
             javaLibrary.getBuildTarget().checkUnflavored(),
             JavaLibrary.GWT_MODULE_FLAVOR);
         Optional<BuildRule> gwtModule = resolver.getRuleOptional(gwtModuleTarget);
+        if (!gwtModule.isPresent() && javaLibrary.getPathToOutput() != null) {
+          ImmutableSortedSet<SourcePath> filesForGwtModule =
+              ImmutableSortedSet.<SourcePath>naturalOrder()
+                  .addAll(javaLibrary.getSources())
+                  .addAll(javaLibrary.getResources())
+                  .build();
+          ImmutableSortedSet<BuildRule> deps =
+              ImmutableSortedSet.copyOf(
+                  new SourcePathResolver(resolver).filterBuildRuleInputs(filesForGwtModule));
+
+          BuildRule module = resolver.addToIndex(
+              new GwtModule(
+                  params.copyWithChanges(
+                      gwtModuleTarget,
+                      Suppliers.ofInstance(deps),
+                      Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                  new SourcePathResolver(resolver),
+                  filesForGwtModule));
+          gwtModule = Optional.of(module);
+        }
 
         // Note that gwtModule could be absent if javaLibrary is a rule with no srcs of its own,
         // but a rule that exists only as a collection of deps.

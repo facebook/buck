@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 3a1de69e3d1700109113f4f295ac05c389353b47 #@#
+#@# GENERATED FILE: DO NOT MODIFY b53f4b42ba403c59a20ac965a627379cc246e9d4 #@#
 {
   "log" : {
     "deps" : [
@@ -6,13 +6,10 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/log:appendablelogrecord",
       "//src/com/facebook/buck/util:constants",
-      "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/concurrent:concurrent",
       "//src/com/facebook/buck/util/network:network",
       "//third-party/java/immutables:processor",
-      "//third-party/java/jackson:jackson-core",
-      "//third-party/java/jackson:jackson-databind",
       "//third-party/java/jsr:jsr305",
       "//third-party/java/stringtemplate:stringtemplate"
     ],
