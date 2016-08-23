@@ -25,6 +25,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -112,7 +113,11 @@ public class OCamlBuildStep implements Step {
     //
     // To get the DAG we launch ocamldep tool which provides the direct dependency information, like
     // module A depends on modules B, C, D.
-    ImmutableList<Path> sortedInput = sortDependency(depToolStep.getStdout());
+    ImmutableList<Path> sortedInput =
+        sortDependency(
+            depToolStep.getStdout(),
+            ocamlContext.getSourcePathResolver().getAllAbsolutePaths(ocamlContext.getMLInput()));
+
     ImmutableList.Builder<Path> nativeLinkerInputs = ImmutableList.builder();
 
     if (!bytecodeOnly) {
@@ -289,7 +294,9 @@ public class OCamlBuildStep implements Step {
       String inputFileName = inputOutput.getFileName().toString();
       String outputFileName = inputFileName
           .replaceFirst(OCamlCompilables.OCAML_ML_REGEX, OCamlCompilables.OCAML_CMX)
-          .replaceFirst(OCamlCompilables.OCAML_MLI_REGEX, OCamlCompilables.OCAML_CMI);
+          .replaceFirst(OCamlCompilables.OCAML_RE_REGEX, OCamlCompilables.OCAML_CMX)
+          .replaceFirst(OCamlCompilables.OCAML_MLI_REGEX, OCamlCompilables.OCAML_CMI)
+          .replaceFirst(OCamlCompilables.OCAML_REI_REGEX, OCamlCompilables.OCAML_CMI);
       Path outputPath = ocamlContext.getCompileNativeOutputDir().resolve(outputFileName);
       if (!outputFileName.endsWith(OCamlCompilables.OCAML_CMI)) {
         linkerInputs.add(outputPath);
@@ -334,7 +341,9 @@ public class OCamlBuildStep implements Step {
       String inputFileName = inputOutput.getFileName().toString();
       String outputFileName = inputFileName
           .replaceFirst(OCamlCompilables.OCAML_ML_REGEX, OCamlCompilables.OCAML_CMO)
-          .replaceFirst(OCamlCompilables.OCAML_MLI_REGEX, OCamlCompilables.OCAML_CMI);
+          .replaceFirst(OCamlCompilables.OCAML_RE_REGEX, OCamlCompilables.OCAML_CMO)
+          .replaceFirst(OCamlCompilables.OCAML_MLI_REGEX, OCamlCompilables.OCAML_CMI)
+          .replaceFirst(OCamlCompilables.OCAML_REI_REGEX, OCamlCompilables.OCAML_CMI);
       Path outputPath = ocamlContext.getCompileBytecodeOutputDir().resolve(outputFileName);
       if (!outputFileName.endsWith(OCamlCompilables.OCAML_CMI)) {
         linkerInputs.add(outputPath);
@@ -402,12 +411,24 @@ public class OCamlBuildStep implements Step {
     return StepExecutionResult.SUCCESS;
   }
 
-  private ImmutableList<Path> sortDependency(String depOutput) {
+
+  private ImmutableList<Path> sortDependency(
+      String depOutput,
+      final ImmutableList<Path> mlInput) {
     OCamlDependencyGraphGenerator graphGenerator = new OCamlDependencyGraphGenerator();
     return
         FluentIterable.from(graphGenerator.generate(depOutput))
-        .transform(MorePaths.TO_PATH)
-        .toList();
+            .transform(MorePaths.TO_PATH)
+            // The output of generate needs to be filtered as .cmo dependencies
+            // are generated as both .ml and .re files.
+            .filter(
+                new Predicate<Path>() {
+                  @Override
+                  public boolean apply(Path input) {
+                    return mlInput.contains(input);
+                  }
+                })
+            .toList();
   }
 
 }

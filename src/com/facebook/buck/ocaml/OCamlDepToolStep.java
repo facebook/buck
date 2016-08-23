@@ -22,10 +22,9 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProcessExecutor;
-import com.google.common.base.Functions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.Files;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -71,14 +70,47 @@ public class OCamlDepToolStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(@Nullable ExecutionContext context) {
-    return ImmutableList.<String>builder()
+
+    ImmutableList.Builder<String> cmd = ImmutableList.<String>builder();
+
+    cmd
         .addAll(ocamlDepTool.getCommandPrefix(resolver))
         .add("-one-line")
         .add("-native")
         .addAll(flags)
-        .addAll(FluentIterable.from(input)
-            .transform(resolver.getAbsolutePathFunction())
-            .transform(Functions.toStringFunction()))
-        .build();
+        .add("-ml-synonym").add(".re")
+        .add("-mli-synonym").add(".rei");
+
+    boolean previousFileWasReason = false;
+
+    for (SourcePath sourcePath : input) {
+      String filePath = resolver.getAbsolutePath(sourcePath).toString();
+      String ext = Files.getFileExtension(filePath);
+      String dotExt = "." + ext;
+
+      boolean isImplementation =
+          dotExt.equals(OCamlCompilables.OCAML_ML) ||
+              dotExt.equals(OCamlCompilables.OCAML_RE);
+      boolean isReason =
+          dotExt.equals(OCamlCompilables.OCAML_RE) ||
+              dotExt.equals(OCamlCompilables.OCAML_REI);
+
+      if (isReason && !previousFileWasReason) {
+        cmd.add("-pp").add("refmt");
+      } else if (!isReason && previousFileWasReason) {
+        // Use cat to restore the preprocessor only when the previous file was Reason.
+        cmd.add("-pp").add("cat");
+      }
+
+      // Note -impl and -intf must go after the -pp flag, if any.
+      cmd.add(isImplementation ? "-impl" : "-intf");
+
+
+      cmd.add(filePath);
+
+      previousFileWasReason = isReason;
+    }
+
+    return cmd.build();
   }
 }

@@ -50,23 +50,41 @@ public class OCamlDependencyGraphGenerator {
     final ImmutableList<String> sortedDeps = TopologicalSort.sort(
         graph, Predicates.<String>alwaysTrue());
 
-    return FluentIterable.from(sortedDeps).transform(
-        new Function<String, String>() {
-          @Override
-          public String apply(String input) {
-            return replaceObjExtWithSourceExt(input);
-          }
-        }).toList();
+    // Two copies of dependencies as .cmo can map to .ml or .re
+
+    FluentIterable<String> dependenciesML =
+        FluentIterable.from(sortedDeps).transform(
+            new Function<String, String>() {
+              @Override
+              public String apply(String input) {
+                return replaceObjExtWithSourceExt(input, false /* isReason */);
+              }
+            });
+
+    FluentIterable<String> dependenciesRE =
+        FluentIterable.from(sortedDeps).transform(
+            new Function<String, String>() {
+              @Override
+              public String apply(String input) {
+                return replaceObjExtWithSourceExt(input, true /* isReason */);
+              }
+            });
+
+    return new ImmutableList.Builder<String>()
+        .addAll(dependenciesML)
+        .addAll(dependenciesRE)
+        .build();
   }
 
-  private String replaceObjExtWithSourceExt(String name) {
+  private String replaceObjExtWithSourceExt(String name, boolean isReason) {
     return name.replaceAll(
           OCamlCompilables.OCAML_CMX_REGEX,
-          OCamlCompilables.OCAML_ML)
+          isReason ? OCamlCompilables.OCAML_RE : OCamlCompilables.OCAML_ML)
         .replaceAll(
             OCamlCompilables.OCAML_CMI_REGEX,
-            OCamlCompilables.OCAML_MLI);
+            isReason ? OCamlCompilables.OCAML_REI : OCamlCompilables.OCAML_MLI);
   }
+
   public ImmutableMap<Path, ImmutableList<Path>> generateDependencyMap(
       String depString) {
     ImmutableMap.Builder<Path, ImmutableList<Path>> mapBuilder = ImmutableMap.builder();
@@ -75,10 +93,14 @@ public class OCamlDependencyGraphGenerator {
       List<String> sourceAndDeps = Splitter.on(OCAML_SOURCE_AND_DEPS_SEPARATOR)
           .trimResults().splitToList(line);
       if (sourceAndDeps.size() >= 1) {
-        String source = replaceObjExtWithSourceExt(sourceAndDeps.get(0));
-        if (source.endsWith(OCamlCompilables.OCAML_ML) ||
-            source.endsWith(OCamlCompilables.OCAML_MLI)) {
-          FluentIterable<Path> dependencies = FluentIterable
+        String sourceML = replaceObjExtWithSourceExt(sourceAndDeps.get(0), /* isReason */ false);
+        String sourceRE = replaceObjExtWithSourceExt(sourceAndDeps.get(0), /* isReason */ true);
+        if (sourceML.endsWith(OCamlCompilables.OCAML_ML) ||
+            sourceML.endsWith(OCamlCompilables.OCAML_MLI)) {
+
+          // Two copies of dependencies as .cmo can map to .ml or .re
+
+          FluentIterable<Path> dependenciesML = FluentIterable
               .from(
                 Splitter.on(OCAML_DEPS_SEPARATOR)
                   .trimResults().splitToList(sourceAndDeps.get(1)))
@@ -92,12 +114,39 @@ public class OCamlDependencyGraphGenerator {
                   new Function<String, Path>() {
                     @Override
                     public Path apply(String input) {
-                      return Paths.get(replaceObjExtWithSourceExt(input));
+                      return Paths.get(replaceObjExtWithSourceExt(input, /* isReason */ false));
                     }
                   });
-          mapBuilder.put(
-              Paths.get(source),
-              ImmutableList.copyOf(dependencies));
+
+          FluentIterable<Path> dependenciesRE = FluentIterable
+              .from(
+                  Splitter.on(OCAML_DEPS_SEPARATOR)
+                      .trimResults().splitToList(sourceAndDeps.get(1)))
+              .filter(new Predicate<String>() {
+                        @Override
+                        public boolean apply(String input) {
+                          return !input.isEmpty();
+                        }
+                      })
+              .transform(
+                  new Function<String, Path>() {
+                    @Override
+                    public Path apply(String input) {
+                      return Paths.get(replaceObjExtWithSourceExt(input, /* isReason */ true));
+                    }
+                  });
+          ImmutableList<Path> dependencies =
+              new ImmutableList.Builder<Path>()
+                  .addAll(dependenciesML)
+                  .addAll(dependenciesRE)
+                  .build();
+          mapBuilder
+              .put(
+                  Paths.get(sourceML),
+                  dependencies)
+              .put(
+                  Paths.get(sourceRE),
+                  dependencies);
         }
       }
     }

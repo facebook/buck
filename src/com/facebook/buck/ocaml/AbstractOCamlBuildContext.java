@@ -132,7 +132,9 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
             OCamlUtil.sourcePathExt(
                 getSourcePathResolver(),
                 OCamlCompilables.OCAML_ML,
-                OCamlCompilables.OCAML_MLI))
+                OCamlCompilables.OCAML_RE,
+                OCamlCompilables.OCAML_MLI,
+                OCamlCompilables.OCAML_REI))
         .append(getLexOutput(getLexInput()))
         .append(getYaccOutput(getYaccInput()))
         .toSet()

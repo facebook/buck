@@ -28,13 +28,15 @@ class OCamlCompilables {
    * Source files that can be preprocessed and compiled.
    */
   public static final ImmutableSet<String> SOURCE_EXTENSIONS =
-      ImmutableSet.of("ml", "mli", "mly", "mll", "c");
+      ImmutableSet.of("ml", "re", "mli", "rei", "mly", "mll", "c");
 
   protected static final String OCAML_C = ".c";
   protected static final String OCAML_O = ".o";
   protected static final String OCAML_A = ".a";
   protected static final String OCAML_ML = ".ml";
+  protected static final String OCAML_RE = ".re";
   protected static final String OCAML_MLI = ".mli";
+  protected static final String OCAML_REI = ".rei";
   protected static final String OCAML_CMX = ".cmx";
   protected static final String OCAML_CMO = ".cmo";
   protected static final String OCAML_CMI = ".cmi";
@@ -42,7 +44,9 @@ class OCamlCompilables {
   protected static final String OCAML_MLL = ".mll";
   protected static final String OCAML_C_REGEX = "\\.c$";
   protected static final String OCAML_ML_REGEX = "\\.ml$";
+  protected static final String OCAML_RE_REGEX = "\\.re$";
   protected static final String OCAML_MLI_REGEX = "\\.mli$";
+  protected static final String OCAML_REI_REGEX = "\\.rei$";
   protected static final String OCAML_CMX_REGEX = "\\.cmx$";
   protected static final String OCAML_CMI_REGEX = "\\.cmi$";
   protected static final String OCAML_MLY_REGEX = "\\.mly$";

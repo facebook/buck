@@ -336,9 +336,11 @@ public class OCamlBuildRulesGenerator {
     Preconditions.checkArgument(OCamlCompilables.SOURCE_EXTENSIONS.contains(ext),
         "Unexpected extension: " + ext);
     String dotExt = "." + ext;
-    if (dotExt.equals(OCamlCompilables.OCAML_ML)) {
+    if (dotExt.equals(OCamlCompilables.OCAML_ML) ||
+        dotExt.equals(OCamlCompilables.OCAML_RE)) {
       return base + OCamlCompilables.OCAML_CMX;
-    } else if (dotExt.equals(OCamlCompilables.OCAML_MLI)) {
+    } else if (dotExt.equals(OCamlCompilables.OCAML_MLI) ||
+        dotExt.equals(OCamlCompilables.OCAML_REI)) {
       return base + OCamlCompilables.OCAML_CMI;
     } else {
       Preconditions.checkState(false, "Unexpected extension: " + ext);
@@ -354,9 +356,11 @@ public class OCamlBuildRulesGenerator {
     String ext = Files.getFileExtension(name);
     Preconditions.checkArgument(OCamlCompilables.SOURCE_EXTENSIONS.contains(ext));
     String dotExt = "." + ext;
-    if (dotExt.equals(OCamlCompilables.OCAML_ML)) {
+    if (dotExt.equals(OCamlCompilables.OCAML_ML) ||
+        dotExt.equals(OCamlCompilables.OCAML_RE)) {
       return base + OCamlCompilables.OCAML_CMO;
-    } else if (dotExt.equals(OCamlCompilables.OCAML_MLI)) {
+    } else if (dotExt.equals(OCamlCompilables.OCAML_MLI) ||
+        dotExt.equals(OCamlCompilables.OCAML_REI)) {
       return base + OCamlCompilables.OCAML_CMI;
     } else {
       Preconditions.checkState(false, "Unexpected extension: " + ext);

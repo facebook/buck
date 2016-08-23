@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -135,7 +136,16 @@ public class OCamlMLCompileStep extends ShellStep {
         cmd.add("-nostdlib", OCamlCompilables.OCAML_INCLUDE_FLAG, args.stdlib.get());
     }
 
-    return cmd
+    String ext = Files.getFileExtension(args.input.toString());
+    String dotExt = "." + ext;
+    boolean isImplementation =
+          dotExt.equals(OCamlCompilables.OCAML_ML) ||
+              dotExt.equals(OCamlCompilables.OCAML_RE);
+    boolean isReason =
+        dotExt.equals(OCamlCompilables.OCAML_RE) ||
+            dotExt.equals(OCamlCompilables.OCAML_REI);
+
+    cmd
         .add("-cc", args.cCompiler.get(0))
         .addAll(
             MoreIterables.zipAndConcat(
@@ -145,9 +155,21 @@ public class OCamlMLCompileStep extends ShellStep {
         .add("-annot")
         .add("-bin-annot")
         .add("-o", args.output.toString())
-        .addAll(args.flags)
-        .add(args.input.toString())
-        .build();
+        .addAll(args.flags);
+
+    if (isReason && isImplementation) {
+      cmd.add("-pp").add("refmt")
+          .add("-intf-suffix").add("rei")
+          .add("-impl");
+    }
+    if (isReason && !isImplementation) {
+      cmd.add("-pp").add("refmt")
+          .add("-intf");
+    }
+
+
+    cmd.add(args.input.toString());
+    return cmd.build();
   }
 
   @Override
