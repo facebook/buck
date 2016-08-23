@@ -6,6 +6,7 @@ prebuilt_jar(
     'LICENSE',
   ],
   visibility = [
+    "//src/com/facebook/buck/jvm/java/coverage:coverage",
     '//test/...',
     '//third-party/java/maven:maven-aether-provider',
     '//third-party/java/maven:maven-model',

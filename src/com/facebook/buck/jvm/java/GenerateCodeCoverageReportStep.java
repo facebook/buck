@@ -25,6 +25,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -48,6 +49,8 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   private CoverageReportFormat format;
   private final String title;
   private final Path propertyFile;
+  private final Optional<String> coverageIncludes;
+  private final Optional<String> coverageExcludes;
 
   public GenerateCodeCoverageReportStep(
       JavaRuntimeLauncher javaRuntimeLauncher,
@@ -56,7 +59,9 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
       Set<Path> classesDirectories,
       Path outputDirectory,
       CoverageReportFormat format,
-      String title) {
+      String title,
+      Optional<String> coverageIncludes,
+      Optional<String> coverageExcludes) {
     super(filesystem.getRootPath());
     this.javaRuntimeLauncher = javaRuntimeLauncher;
 
@@ -67,6 +72,8 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
     this.format = format;
     this.title = title;
     this.propertyFile = outputDirectory.resolve("parameters.properties");
+    this.coverageIncludes = coverageIncludes;
+    this.coverageExcludes = coverageExcludes;
   }
 
   @Override
@@ -102,6 +109,14 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
                 classesDirectories,
                 filesystem.getAbsolutifier())));
     properties.setProperty("src.dir", Joiner.on(":").join(sourceDirectories));
+
+    if (coverageIncludes.isPresent()) {
+      properties.setProperty("jacoco.includes", coverageIncludes.get());
+    }
+
+    if (coverageExcludes.isPresent()) {
+      properties.setProperty("jacoco.excludes", coverageExcludes.get());
+    }
 
     try (Writer writer = new OutputStreamWriter(outputStream, "utf8")) {
       properties.store(writer, "Parameters for Jacoco report generator.");

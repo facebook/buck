@@ -77,4 +77,8 @@ abstract class AbstractTestRunningOptions {
   }
 
   public abstract ImmutableMap<String, String> getEnvironmentOverrides();
+
+  public abstract Optional<String> getCoverageExcludes();
+
+  public abstract Optional<String> getCoverageIncludes();
 }

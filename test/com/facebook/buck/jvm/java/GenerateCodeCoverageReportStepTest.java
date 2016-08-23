@@ -24,6 +24,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -65,7 +66,9 @@ public class  GenerateCodeCoverageReportStepTest {
         CLASSES_DIRECTORIES,
         Paths.get(OUTPUT_DIRECTORY),
         CoverageReportFormat.HTML,
-        "TitleFoo");
+        "TitleFoo",
+        Optional.<String>absent(),
+        Optional.<String>absent());
 
     context = TestExecutionContext.newInstance();
   }

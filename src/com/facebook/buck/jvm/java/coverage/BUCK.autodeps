@@ -1,8 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY b5fa3b699a8c476f7be319c7539baf0d3c3f0e44 #@#
+#@# GENERATED FILE: DO NOT MODIFY 4f8783d4de5d93c62ed0f7ac6bf09f6d7d930478 #@#
 {
   "coverage" : {
     "deps" : [
-      "//third-party/java/jacoco:jacoco"
+      "//third-party/java/jacoco:jacoco",
+      "//third-party/java/plexus:plexus-utils"
     ],
     "exported_deps" : [ ]
   }

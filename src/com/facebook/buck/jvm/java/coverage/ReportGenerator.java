@@ -1,3 +1,18 @@
+/*
+ * Copyright 2016-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 /*******************************************************************************
  * Source of this file 'http://www.eclemma.org/jacoco/trunk/doc/examples/java/ReportGenerator.java'
  * We have modified it to make it compatible with Buck's usage.
@@ -13,6 +28,7 @@
  *******************************************************************************/
 package com.facebook.buck.jvm.java.coverage;
 
+import org.codehaus.plexus.util.FileUtils;
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
 import org.jacoco.core.analysis.IBundleCoverage;
@@ -55,6 +71,8 @@ public class ReportGenerator {
         private final String sourcesPath;
         private final File reportDirectory;
         private final String reportFormat;
+        private final String coverageIncludes;
+        private final String coverageExcludes;
 
         /**
          * Create a new generator based for the given project.
@@ -69,6 +87,8 @@ public class ReportGenerator {
                 this.sourcesPath = properties.getProperty("src.dir");
                 this.reportDirectory = new File(jacocoOutputDir, "code-coverage");
                 this.reportFormat = properties.getProperty("jacoco.format", "html");
+                this.coverageIncludes = properties.getProperty("jacoco.includes", "**");
+                this.coverageExcludes = properties.getProperty("jacoco.excludes", "");
         }
 
         /**
@@ -151,9 +171,12 @@ public class ReportGenerator {
                 final Analyzer analyzer = new Analyzer(
                     execFileLoader.getExecutionDataStore(), coverageBuilder);
 
-                String[] jarsPath = classesPath.split(":");
-                for (String jarPath : jarsPath) {
-                        analyzer.analyzeAll(new File(jarPath));
+                String[] classesDirs = classesPath.split(":");
+                for (String classesDir : classesDirs) {
+                        for (File clazz : FileUtils.getFiles(new File(classesDir),
+                            coverageIncludes, coverageExcludes)) {
+                                analyzer.analyzeAll(clazz);
+                        }
                 }
 
                 return coverageBuilder.getBundle(title);

@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.GenerateCodeCoverageReportStep;
 import com.facebook.buck.jvm.java.JacocoConstants;
@@ -447,7 +448,9 @@ public class TestRunning {
                 params.getCell().getFilesystem(),
                 JacocoConstants.getJacocoOutputDir(params.getCell().getFilesystem()),
                 options.getCoverageReportFormat(),
-                options.getCoverageReportTitle()),
+                options.getCoverageReportTitle(),
+                options.getCoverageIncludes(),
+                options.getCoverageExcludes()),
             Optional.<BuildTarget>absent());
       } catch (StepFailedException e) {
         params.getBuckEventBus().post(
@@ -762,7 +765,9 @@ public class TestRunning {
       ProjectFilesystem filesystem,
       Path outputDirectory,
       CoverageReportFormat format,
-      String title) {
+      String title,
+      Optional<String> coverageIncludes,
+      Optional<String> coverageExcludes) {
     ImmutableSet.Builder<String> srcDirectories = ImmutableSet.builder();
     ImmutableSet.Builder<Path> pathsToClasses = ImmutableSet.builder();
 
@@ -773,11 +778,11 @@ public class TestRunning {
       if (!sourceFolderPath.isEmpty()) {
         srcDirectories.addAll(sourceFolderPath);
       }
-      Path pathToOutput = rule.getPathToOutput();
-      if (pathToOutput == null) {
+      Path classesDir = DefaultJavaLibrary.getClassesDir(rule.getBuildTarget(), filesystem);
+      if (classesDir == null) {
         continue;
       }
-      pathsToClasses.add(pathToOutput);
+      pathsToClasses.add(classesDir);
     }
 
     return new GenerateCodeCoverageReportStep(
@@ -787,7 +792,9 @@ public class TestRunning {
         pathsToClasses.build(),
         outputDirectory,
         format,
-        title);
+        title,
+        coverageIncludes,
+        coverageExcludes);
   }
 
   /**
