@@ -290,13 +290,16 @@ public class AppleBundle
     stepsBuilder.add(
         new MakeCleanDirectoryStep(getProjectFilesystem(), bundleRoot));
 
+    Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
+
     if (assetCatalog.isPresent()) {
+      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), resourcesDestinationPath));
       Path bundleDir = assetCatalog.get().getOutputDir();
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
               bundleDir,
-              bundleRoot,
+              resourcesDestinationPath,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
 
@@ -344,7 +347,6 @@ public class AppleBundle
       appendCopyDsymStep(stepsBuilder, buildableContext);
     }
 
-    Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
     if (
         !Iterables.isEmpty(
             Iterables.concat(
