@@ -152,7 +152,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         args.infoPlist,
         args.infoPlistSubstitutions,
         args.deps.get(),
-        args.getTests(),
+        args.tests.get(),
         flavoredDebugFormat);
   }
 

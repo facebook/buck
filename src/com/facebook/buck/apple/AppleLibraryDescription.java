@@ -218,7 +218,7 @@ public class AppleLibraryDescription implements
         args.infoPlist.get(),
         args.infoPlistSubstitutions,
         args.deps.get(),
-        args.getTests(),
+        args.tests.get(),
         debugFormat);
   }
 

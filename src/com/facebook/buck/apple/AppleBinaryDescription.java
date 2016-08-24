@@ -289,7 +289,7 @@ public class AppleBinaryDescription implements
         args.infoPlist.get(),
         args.infoPlistSubstitutions,
         args.deps.get(),
-        args.getTests(),
+        args.tests.get(),
         flavoredDebugFormat);
   }
 

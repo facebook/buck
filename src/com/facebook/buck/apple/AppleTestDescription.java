@@ -268,7 +268,7 @@ public class AppleTestDescription implements
         args.infoPlist,
         args.infoPlistSubstitutions,
         args.deps.get(),
-        args.getTests(),
+        args.tests.get(),
         debugFormat);
 
     Optional<SourcePath> xctool = getXctool(params, resolver, sourcePathResolver);
