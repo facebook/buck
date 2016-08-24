@@ -94,12 +94,9 @@ public class JavaBuckConfig {
   }
 
   private Optional<Path> getPathToExecutable(String executableName) {
-    Optional<String> path = delegate.getValue("tools", executableName);
+    Optional<Path> path = delegate.getPath("tools", executableName);
     if (path.isPresent()) {
-      File file = new File(path.get());
-      if (!file.exists()) {
-        throw new HumanReadableException(executableName + " does not exist: " + file.getPath());
-      }
+      File file = path.get().toFile();
       if (!file.canExecute()) {
         throw new HumanReadableException(executableName + " is not executable: " + file.getPath());
       }

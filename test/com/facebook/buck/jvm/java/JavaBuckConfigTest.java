@@ -78,12 +78,29 @@ public class JavaBuckConfigTest {
     JavaBuckConfig config = new JavaBuckConfig(
         FakeBuckConfig
             .builder()
+            .setFilesystem(defaultFilesystem)
             .setSections(ImmutableMap.of("tools", ImmutableMap.of("java", javaCommand)))
             .build());
 
     JavaOptions options = config.getDefaultJavaOptions();
     assertEquals(Optional.of(java), options.getJavaPath());
     assertEquals(javaCommand, options.getJavaRuntimeLauncher().getCommand());
+  }
+
+  @Test
+  public void whenJavaExistsAndIsRelativePathThenItsAbsolutePathIsReturned() throws IOException {
+    Path java = temporaryFolder.newExecutableFile();
+    String javaFilename = java.getFileName().toString();
+    JavaBuckConfig config = new JavaBuckConfig(
+        FakeBuckConfig
+            .builder()
+            .setFilesystem(defaultFilesystem)
+            .setSections(ImmutableMap.of("tools", ImmutableMap.of("java", javaFilename)))
+            .build());
+
+    JavaOptions options = config.getDefaultJavaOptions();
+    assertEquals(Optional.of(java), options.getJavaPath());
+    assertEquals(java.toString(), options.getJavaRuntimeLauncher().getCommand());
   }
 
   @Test
@@ -116,7 +133,9 @@ public class JavaBuckConfigTest {
       config.getJavacPath();
       fail("Should throw exception as javac file does not exist.");
     } catch (HumanReadableException e) {
-      assertEquals(e.getHumanReadableErrorMessage(), "javac does not exist: " + invalidPath);
+      assertEquals(
+          "Overridden tools:javac path not found: " + invalidPath,
+          e.getHumanReadableErrorMessage());
     }
   }
 
@@ -222,7 +241,11 @@ public class JavaBuckConfigTest {
 
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
         "tools", ImmutableMap.of("javac", javac.toString()));
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    BuckConfig buckConfig = FakeBuckConfig
+        .builder()
+        .setFilesystem(defaultFilesystem)
+        .setSections(sections)
+        .build();
     JavaBuckConfig javaConfig = new JavaBuckConfig(buckConfig);
     JavacOptions javacOptions = javaConfig.getDefaultJavacOptions();
 

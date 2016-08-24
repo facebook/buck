@@ -26,6 +26,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.model.BuildTarget;
@@ -33,7 +34,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
@@ -159,13 +159,18 @@ public class KnownBuildRuleTypesTest {
       javac = temporaryFolder.newExecutableFile();
     }
 
+    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
         "tools", ImmutableMap.of("javac", javac.toString()));
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    BuckConfig buckConfig = FakeBuckConfig
+        .builder()
+        .setFilesystem(filesystem)
+        .setSections(sections)
+        .build();
 
     KnownBuildRuleTypes buildRuleTypes =
         DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(
-            new FakeProjectFilesystem(), environment);
+            filesystem, environment);
     DefaultJavaLibrary libraryRule = createJavaLibrary(buildRuleTypes);
 
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "fakeVersion 0.1");
@@ -239,9 +244,14 @@ public class KnownBuildRuleTypesTest {
         new FakeAndroidDirectoryResolver());
 
     final Path javac = temporaryFolder.newExecutableFile();
+    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
         "tools", ImmutableMap.of("javac", javac.toString()));
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    BuckConfig buckConfig = FakeBuckConfig
+        .builder()
+        .setFilesystem(filesystem)
+        .setSections(sections)
+        .build();
 
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "");
 
