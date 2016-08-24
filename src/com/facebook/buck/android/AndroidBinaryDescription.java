@@ -36,6 +36,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.HasTests;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
@@ -360,7 +361,7 @@ public class AndroidBinaryDescription
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
+  public static class Arg extends AbstractDescriptionArg implements HasTests {
     public SourcePath manifest;
     public BuildTarget keystore;
     public Optional<String> packageType;
@@ -405,12 +406,15 @@ public class AndroidBinaryDescription
     public Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap;
     public Optional<Boolean> enableRelinker;
     public Optional<ManifestEntries> manifestEntries;
-
-    /** This will never be absent after this Arg is populated. */
     public Optional<BuildConfigFields> buildConfigValues;
-
     public Optional<SourcePath> buildConfigValuesFile;
-
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
+
+    @Override
+    public ImmutableSortedSet<BuildTarget> getTests() {
+      return tests.get();
+    }
+
   }
 }

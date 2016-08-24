@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
@@ -35,6 +36,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -370,7 +372,7 @@ public class PythonBinaryDescription implements
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
+  public static class Arg extends AbstractDescriptionArg implements HasTests {
     public Optional<SourcePath> main;
     public Optional<String> mainModule;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
@@ -382,6 +384,13 @@ public class PythonBinaryDescription implements
     public Optional<ImmutableSet<BuildTarget>> preloadDeps;
     public Optional<ImmutableList<String>> linkerFlags;
     public Optional<String> extension;
+    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
+
+    @Override
+    public ImmutableSortedSet<BuildTarget> getTests() {
+      return tests.get();
+    }
+
   }
 
 }

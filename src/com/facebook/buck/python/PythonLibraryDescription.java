@@ -17,12 +17,14 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasTests;
 import com.facebook.buck.python.PythonLibraryDescription.Arg;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -39,17 +41,6 @@ import java.nio.file.Path;
 public class PythonLibraryDescription implements Description<Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("python_library");
-
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public Optional<SourceList> srcs;
-    public Optional<PatternMatchedCollection<SourceList>> platformSrcs;
-    public Optional<SourceList> resources;
-    public Optional<PatternMatchedCollection<SourceList>> platformResources;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-    public Optional<String> baseModule;
-    public Optional<Boolean> zipSafe;
-  }
 
   @Override
   public BuildRuleType getBuildRuleType() {
@@ -117,6 +108,24 @@ public class PythonLibraryDescription implements Description<Arg> {
           }
         },
         args.zipSafe);
+  }
+
+  @SuppressFieldNotInitialized
+  public static class Arg extends AbstractDescriptionArg implements HasTests {
+    public Optional<SourceList> srcs;
+    public Optional<PatternMatchedCollection<SourceList>> platformSrcs;
+    public Optional<SourceList> resources;
+    public Optional<PatternMatchedCollection<SourceList>> platformResources;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<String> baseModule;
+    public Optional<Boolean> zipSafe;
+    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
+
+    @Override
+    public ImmutableSortedSet<BuildTarget> getTests() {
+      return tests.get();
+    }
+
   }
 
 }

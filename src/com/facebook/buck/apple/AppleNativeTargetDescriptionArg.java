@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -29,7 +28,7 @@ import com.google.common.collect.ImmutableSortedMap;
  * Arguments common to Apple targets.
  */
 @SuppressFieldNotInitialized
-public class AppleNativeTargetDescriptionArg extends CxxLibraryDescription.Arg implements HasTests {
+public class AppleNativeTargetDescriptionArg extends CxxLibraryDescription.Arg {
   public Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs;
   public Optional<ImmutableList<SourcePath>> extraXcodeSources;
   public Optional<String> headerPathPrefix;
