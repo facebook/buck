@@ -23,38 +23,23 @@ import com.facebook.buck.distributed.thrift.LogRequest;
 import com.facebook.buck.distributed.thrift.LogRequestType;
 import com.facebook.buck.distributed.thrift.ScribeData;
 import com.facebook.buck.slb.ThriftService;
-import com.facebook.buck.util.concurrent.MostExecutors;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
 public class ThriftScribeLogger extends ScribeLogger {
 
-  private static final int MAX_PARALLEL_REQUESTS = 5;
-
   private final ThriftService<FrontendRequest, FrontendResponse> thriftService;
   private final ListeningExecutorService executorService;
 
-  @VisibleForTesting
-  protected ThriftScribeLogger(
+  public ThriftScribeLogger(
       ThriftService<FrontendRequest, FrontendResponse> thriftService,
       ListeningExecutorService executorService) {
     this.thriftService = thriftService;
     this.executorService = executorService;
-  }
-
-  // TODO(michsien): Once we remove static loggers, remove and switch to passing executor.
-  public ThriftScribeLogger(ThriftService<FrontendRequest, FrontendResponse> thriftService) {
-    this.thriftService = thriftService;
-    this.executorService = MoreExecutors.listeningDecorator(
-        MostExecutors.newMultiThreadExecutor(
-            "ThriftScribeLogger",
-            MAX_PARALLEL_REQUESTS));
   }
 
   @Override
@@ -92,5 +77,7 @@ public class ThriftScribeLogger extends ScribeLogger {
 
   @Override
   public void close() throws Exception {
+    executorService.shutdown();
+    thriftService.close();
   }
 }
