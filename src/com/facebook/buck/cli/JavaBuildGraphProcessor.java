@@ -37,6 +37,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
@@ -149,8 +150,8 @@ final class JavaBuildGraphProcessor {
           .setBuckEventBus(eventBus)
           .setEnvironment(/* environment */ ImmutableMap.<String, String>of())
           .setExecutors(
-              ImmutableMap.<ExecutionContext.ExecutorPool, ListeningExecutorService>of(
-                  ExecutionContext.ExecutorPool.CPU,
+              ImmutableMap.<ExecutorPool, ListeningExecutorService>of(
+                  ExecutorPool.CPU,
                   executorService))
           .setJavaPackageFinder(params.getJavaPackageFinder())
           .setObjectMapper(params.getObjectMapper())

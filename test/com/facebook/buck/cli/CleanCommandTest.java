@@ -31,7 +31,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
-import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
@@ -130,7 +130,7 @@ public class CleanCommandTest extends EasyMockSupport {
         Optional.<WebServer>absent(),
         FakeBuckConfig.builder().build(),
         new NullFileHashCache(),
-        new HashMap<ExecutionContext.ExecutorPool, ListeningExecutorService>(),
+        new HashMap<ExecutorPool, ListeningExecutorService>(),
         CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION,
         new ActionGraphCache(new BroadcastEventListener()));
   }

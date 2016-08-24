@@ -41,8 +41,8 @@ public class TestExecutionContext {
   private static ClassLoaderCache testClassLoaderCache = new ClassLoaderCache();
 
   public static ExecutionContext.Builder newBuilder() {
-    Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors = new HashMap<>();
-    executors.put(ExecutionContext.ExecutorPool.CPU, MoreExecutors.listeningDecorator(
+    Map<ExecutorPool, ListeningExecutorService> executors = new HashMap<>();
+    executors.put(ExecutorPool.CPU, MoreExecutors.listeningDecorator(
         Executors.newCachedThreadPool()));
     return ExecutionContext.builder()
         .setConsole(new TestConsole())

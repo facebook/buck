@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.LineProcessorRunnable;
 import com.google.common.annotations.VisibleForTesting;
@@ -69,7 +70,7 @@ class CxxErrorTransformerFactory {
       ExecutionContext context,
       InputStream inputStream,
       OutputStream outputStream) {
-    return new LineProcessorRunnable(context.getExecutorService(ExecutionContext.ExecutorPool.CPU),
+    return new LineProcessorRunnable(context.getExecutorService(ExecutorPool.CPU),
         inputStream,
         outputStream) {
       @Override

@@ -38,7 +38,7 @@ import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -134,7 +134,7 @@ public class ReplCommandIntegrationTest {
         Optional.<WebServer>absent(),
         FakeBuckConfig.builder().build(),
         new NullFileHashCache(),
-        new HashMap<ExecutionContext.ExecutorPool, ListeningExecutorService>(),
+        new HashMap<ExecutorPool, ListeningExecutorService>(),
         CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION,
         new ActionGraphCache(new BroadcastEventListener()));
   }

@@ -78,7 +78,7 @@ import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.test.TestConfig;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.timing.Clock;
@@ -926,13 +926,13 @@ public final class Main {
         Locale locale = Locale.getDefault();
 
         // Create a cached thread pool for cpu intensive tasks
-        Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors = new HashMap<>();
-        executors.put(ExecutionContext.ExecutorPool.CPU, listeningDecorator(
+        Map<ExecutorPool, ListeningExecutorService> executors = new HashMap<>();
+        executors.put(ExecutorPool.CPU, listeningDecorator(
             Executors.newCachedThreadPool()));
         // Create a thread pool for network I/O tasks
-        executors.put(ExecutionContext.ExecutorPool.NETWORK, newDirectExecutorService());
+        executors.put(ExecutorPool.NETWORK, newDirectExecutorService());
         executors.put(
-            ExecutionContext.ExecutorPool.PROJECT,
+            ExecutorPool.PROJECT,
             listeningDecorator(
                 MostExecutors.newMultiThreadExecutor(
                     "Project",
@@ -1179,7 +1179,7 @@ public final class Main {
             TRASH_CLEANER.startCleaningDirectory();
           }
           // shut down the cached thread pools
-          for (ExecutionContext.ExecutorPool p : executors.keySet()) {
+          for (ExecutorPool p : executors.keySet()) {
             closeExecutorService(p.toString(), executors.get(p), EXECUTOR_SERVICES_TIMEOUT_SECONDS);
           }
         }
