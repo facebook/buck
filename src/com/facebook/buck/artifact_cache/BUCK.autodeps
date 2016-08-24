@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY fdb301556cb51c8b551a2767f0f69750237ae731 #@#
+#@# GENERATED FILE: DO NOT MODIFY d6f74ab54e785d7efbdd431d793c4cdfaee6bed4 #@#
 {
   "artifact_cache" : {
     "deps" : [
@@ -57,8 +57,7 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
-      "//src/com/facebook/buck/util:util",
-      "//third-party/java/thrift:libthrift"
+      "//src/com/facebook/buck/util:util"
     ],
     "exported_deps" : [
       "//src-gen:thrift",

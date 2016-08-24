@@ -114,7 +114,6 @@ public class MainIntegrationTest {
     }
   }
 
-
   private String getUsageString() {
     return Joiner.on('\n').join(
         "buck build tool",
@@ -128,6 +127,7 @@ public class MainIntegrationTest {
         "  build       builds the specified target",
         "  cache       makes calls to the artifact cache",
         "  clean       deletes any generated files",
+        "  distbuild   attaches to a distributed build (experimental)",
         "  fetch       downloads remote resources to your local machine",
         "  install     builds and installs an application",
         "  machoutils  provides some utils for Mach O binary files",

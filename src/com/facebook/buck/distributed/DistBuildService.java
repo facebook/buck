@@ -38,8 +38,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import org.apache.thrift.TException;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -90,12 +88,8 @@ public class DistBuildService {
         // Now serialize and send the whole buildJobState
         StoreBuildGraphRequest storeBuildGraphRequest = new StoreBuildGraphRequest();
         storeBuildGraphRequest.setBuildId(buildId);
-        try {
-          storeBuildGraphRequest.setBuildGraph(
-              ThriftUtil.serialize(buildGraphSerializerProtocol, buildJobState));
-        } catch (TException e) {
-          throw new IOException(e);
-        }
+        storeBuildGraphRequest.setBuildGraph(
+            ThriftUtil.serialize(buildGraphSerializerProtocol, buildJobState));
 
         FrontendRequest request = new FrontendRequest();
         request.setType(FrontendRequestType.STORE_BUILD_GRAPH);

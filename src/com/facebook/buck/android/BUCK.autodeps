@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 6a0630bf2eff7cc77d7581624709fedcb3685041 #@#
+#@# GENERATED FILE: DO NOT MODIFY 2fbd09da4c0bcaa13ccc2350c7c1128f27d01826 #@#
 {
   "apkmodule" : {
     "deps" : [
@@ -130,8 +130,7 @@
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/rules:build_rule",
-      "//third-party/java/guava:guava",
-      "//third-party/java/jsr:jsr305"
+      "//third-party/java/guava:guava"
     ]
   },
   "steps" : {

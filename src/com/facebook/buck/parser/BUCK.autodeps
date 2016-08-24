@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 5d75efe4480745d74e87c9db326e81e8bb84f003 #@#
+#@# GENERATED FILE: DO NOT MODIFY e50f7716fbe3693957e3d6cb8503dcfc7d89f35b #@#
 {
   "config" : {
     "deps" : [ ],
@@ -47,8 +47,7 @@
     "exported_deps" : [
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:interfaces",
-      "//src/com/facebook/buck/util:exceptions",
-      "//third-party/java/jsr:jsr305"
+      "//src/com/facebook/buck/util:exceptions"
     ]
   }
 }
