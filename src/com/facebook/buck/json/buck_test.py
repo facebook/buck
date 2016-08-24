@@ -119,7 +119,8 @@ class TestBuckPlatformBase(object):
 
     def test_subdir_glob(self):
         build_env = BuildFileContext(
-            self.fake_path(''), None, None, None, None, [], None, None, None, None, None, False)
+            self.fake_path(''), None, None, None, None, [], None, None, None, None, None, False,
+            False)
         search_base = self.fake_path(
             'foo',
             glob_results={
@@ -141,7 +142,8 @@ class TestBuckPlatformBase(object):
 
     def test_subdir_glob_with_prefix(self):
         build_env = BuildFileContext(
-            self.fake_path(''), None, None, None, None, [], None, None, None, None, None, False)
+            self.fake_path(''), None, None, None, None, [], None, None, None, None, None, False,
+            False)
         search_base = self.fake_path(
             'foo',
             glob_results={
@@ -332,7 +334,8 @@ class TestBuck(unittest.TestCase):
             ['**/*.java'],
             [],
             False,
-            '/path/to/glob')
+            '/path/to/glob',
+            False)
         self.assertEquals(
             {
                 'relative_root': '/path/to/glob',
@@ -340,8 +343,8 @@ class TestBuck(unittest.TestCase):
                 'fields': ['name'],
                 'expression': [
                     'allof',
-                    'exists',
                     ['anyof', ['type', 'f'], ['type', 'l']],
+                    'exists',
                     ['anyof', ['match', '**/*.java', 'wholename', {}]],
                 ]
             },
@@ -352,7 +355,8 @@ class TestBuck(unittest.TestCase):
             ['**/*.java'],
             ['**/*Test.java'],
             False,
-            '/path/to/glob')
+            '/path/to/glob',
+            False)
         self.assertEquals(
             {
                 'relative_root': '/path/to/glob',
@@ -360,9 +364,29 @@ class TestBuck(unittest.TestCase):
                 'fields': ['name'],
                 'expression': [
                     'allof',
-                    'exists',
                     ['anyof', ['type', 'f'], ['type', 'l']],
+                    ['not', ['anyof', ['match', '**/*Test.java', 'wholename', {}]]],
+                    'exists',
                     ['anyof', ['match', '**/*.java', 'wholename', {}]],
+                ]
+            },
+            query_params)
+
+    def test_watchman_query_params_glob_generator(self):
+        query_params = format_watchman_query_params(
+            ['**/*.java'],
+            ['**/*Test.java'],
+            False,
+            '/path/to/glob',
+            True)
+        self.assertEquals(
+            {
+                'relative_root': '/path/to/glob',
+                'glob': ['**/*.java'],
+                'fields': ['name'],
+                'expression': [
+                    'allof',
+                    ['anyof', ['type', 'f'], ['type', 'l']],
                     ['not', ['anyof', ['match', '**/*Test.java', 'wholename', {}]]],
                 ]
             },

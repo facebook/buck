@@ -78,7 +78,8 @@ class BuildFileContext(object):
 
     def __init__(self, project_root, base_path, dirname, autodeps, allow_empty_globs, ignore_paths,
                  watchman_client, watchman_watch_root, watchman_project_prefix,
-                 sync_cookie_state, watchman_error, watchman_glob_stat_results):
+                 sync_cookie_state, watchman_error, watchman_glob_stat_results,
+                 watchman_use_glob_generator):
         self.globals = {}
         self.includes = set()
         self.used_configs = {}
@@ -95,6 +96,7 @@ class BuildFileContext(object):
         self.sync_cookie_state = sync_cookie_state
         self.watchman_error = watchman_error
         self.watchman_glob_stat_results = watchman_glob_stat_results
+        self.watchman_use_glob_generator = watchman_use_glob_generator
         self.diagnostics = set()
         self.rules = {}
 
@@ -264,7 +266,8 @@ def glob(includes, excludes=None, include_dotfiles=False, build_env=None, search
                 build_env.sync_cookie_state,
                 build_env.watchman_client,
                 build_env.diagnostics,
-                build_env.watchman_glob_stat_results)
+                build_env.watchman_glob_stat_results,
+                build_env.watchman_use_glob_generator)
         except build_env.watchman_error as e:
             build_env.diagnostics.add(
                 Diagnostic(
@@ -364,18 +367,14 @@ def subdir_glob(glob_specs, excludes=None, prefix=None, build_env=None, search_b
 
 COLLAPSE_SLASHES = re.compile(r'/+')
 
-def format_watchman_query_params(includes, excludes, include_dotfiles, relative_root):
-    match_exprs = ["allof", "exists", ["anyof", ["type", "f"], ["type", "l"]]]
+
+def format_watchman_query_params(includes, excludes, include_dotfiles, relative_root,
+                                 watchman_use_glob_generator):
+    match_exprs = ["allof", ["anyof", ["type", "f"], ["type", "l"]]]
     match_flags = {}
 
     if include_dotfiles:
         match_flags["includedotfiles"] = True
-    if includes:
-        match_exprs.append(
-            ["anyof"] +
-            # Collapse multiple consecutive slashes in pattern until fix in
-            # https://github.com/facebook/watchman/pull/310/ is available
-            [["match", COLLAPSE_SLASHES.sub('/', i), "wholename", match_flags] for i in includes])
     if excludes:
         match_exprs.append(
             ["not",
@@ -383,20 +382,38 @@ def format_watchman_query_params(includes, excludes, include_dotfiles, relative_
              [["match", COLLAPSE_SLASHES.sub('/', x), "wholename", match_flags]
               for x in excludes]])
 
-    return {
+    query = {
         "relative_root": relative_root,
+        "fields": ["name"],
+    }
+
+    if watchman_use_glob_generator:
+        query["glob"] = includes
+        # We don't have to check for existence; the glob generator only matches
+        # files which exist.
+    else:
+        # We do have to check for existence; the path generator
+        # includes files which don't exist.
+        match_exprs.append("exists")
+
         # Explicitly pass an empty path so Watchman queries only the tree of files
         # starting at base_path.
-        "path": [''],
-        "fields": ["name"],
-        "expression": match_exprs,
-    }
+        query["path"] = ['']
+        match_exprs.append(
+            ["anyof"] +
+            # Collapse multiple consecutive slashes in pattern until fix in
+            # https://github.com/facebook/watchman/pull/310/ is available
+            [["match", COLLAPSE_SLASHES.sub('/', i), "wholename", match_flags] for i in includes])
+
+    query["expression"] = match_exprs
+
+    return query
 
 
 @memoized()
 def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watch_root,
                   watchman_project_prefix, sync_cookie_state, watchman_client, diagnostics,
-                  watchman_glob_stat_results):
+                  watchman_glob_stat_results, watchman_use_glob_generator):
     assert includes, "The includes argument must be a non-empty list of strings."
 
     if watchman_project_prefix:
@@ -404,7 +421,7 @@ def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watc
     else:
         relative_root = base_path
     query_params = format_watchman_query_params(
-        includes, excludes, include_dotfiles, relative_root)
+        includes, excludes, include_dotfiles, relative_root, watchman_use_glob_generator)
 
     # Sync cookies cause a massive overhead when issuing thousands of
     # glob queries.  Only enable them (by not setting sync_timeout to 0)
@@ -542,7 +559,8 @@ class BuildFileProcessor(object):
 
     def __init__(self, project_root, watchman_watch_root, watchman_project_prefix, build_file_name,
                  allow_empty_globs, ignore_buck_autodeps_files, watchman_client, watchman_error,
-                 watchman_glob_stat_results, enable_build_file_sandboxing,
+                 watchman_glob_stat_results, watchman_use_glob_generator,
+                 enable_build_file_sandboxing,
                  project_import_whitelist=None, implicit_includes=None, extra_funcs=None,
                  configs=None, env_vars=None, ignore_paths=None):
         if project_import_whitelist is None:
@@ -572,6 +590,7 @@ class BuildFileProcessor(object):
         self._watchman_client = watchman_client
         self._watchman_error = watchman_error
         self._watchman_glob_stat_results = watchman_glob_stat_results
+        self._watchman_use_glob_generator = watchman_use_glob_generator
         self._configs = configs
         self._env_vars = env_vars
         self._ignore_paths = ignore_paths
@@ -1060,7 +1079,8 @@ class BuildFileProcessor(object):
             self._watchman_project_prefix,
             self._sync_cookie_state,
             self._watchman_error,
-            self._watchman_glob_stat_results)
+            self._watchman_glob_stat_results,
+            self._watchman_use_glob_generator)
 
         # If the .autodeps file has been successfully parsed, then treat it as if it were
         # a file loaded via include_defs() in that a change to the .autodeps file should
@@ -1293,6 +1313,11 @@ def main():
         dest='use_watchman_glob',
         help='Invokes `watchman query` to get lists of files instead of globbing in-process.')
     parser.add_option(
+        '--watchman_use_glob_generator',
+        action='store_true',
+        dest='watchman_use_glob_generator',
+        help='Uses Watchman glob generator to speed queries')
+    parser.add_option(
         '--watchman_glob_stat_results',
         action='store_true',
         dest='watchman_glob_stat_results',
@@ -1403,6 +1428,7 @@ def main():
         watchman_client,
         watchman_error,
         options.watchman_glob_stat_results,
+        options.watchman_use_glob_generator,
         options.enable_build_file_sandboxing,
         project_import_whitelist=options.build_file_import_whitelist or [],
         implicit_includes=options.include or [],
