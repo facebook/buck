@@ -50,13 +50,25 @@ public class Watchman implements AutoCloseable {
   public enum Capability {
     DIRNAME,
     SUPPORTS_PROJECT_WATCH,
-    WILDMATCH_GLOB
+    WILDMATCH_GLOB,
+    WILDMATCH_MULTISLASH,
+    GLOB_GENERATOR
   }
+
+  private static final ImmutableMap<String, Capability> ALL_CAPABILITIES =
+      ImmutableMap.of(
+          "term-dirname", Capability.DIRNAME,
+          "cmd-watch-project", Capability.SUPPORTS_PROJECT_WATCH,
+          "wildmatch", Capability.WILDMATCH_GLOB,
+          "wildmatch_multislash", Capability.WILDMATCH_MULTISLASH,
+          "glob_generator", Capability.GLOB_GENERATOR
+      );
 
   private static final Logger LOG = Logger.get(Watchman.class);
 
   private static final String WATCHMAN_DIRNAME_MIN_VERSION = "3.1";
   private static final String WATCHMAN_WILDMATCH_GLOB_MIN_VERSION = "3.6.0";
+  private static final String WATCHMAN_CAPABILITIES_VERSION = "3.8";
   private static final long POLL_TIME_NANOS = TimeUnit.SECONDS.toNanos(1);
   // Match default timeout of hgwatchman.
   private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(10);
@@ -139,13 +151,45 @@ public class Watchman implements AutoCloseable {
       }
       LOG.debug("Connected to Watchman");
 
-      ImmutableSet<Capability> capabilities = deriveCapabilities(rawVersion.get());
+      long versionQueryStartTimeNanos = clock.nanoTime();
+      remainingTimeNanos -= versionQueryStartTimeNanos - startTimeNanos;
+
+      ImmutableSet.Builder<Capability> capabilitiesBuilder = ImmutableSet.builder();
+      if (VERSION_COMPARATOR.compare(rawVersion.get(), WATCHMAN_CAPABILITIES_VERSION) >= 0) {
+        result = watchmanClient.get().queryWithTimeout(
+            remainingTimeNanos,
+            "version",
+            ImmutableMap.of(
+                "optional",
+                ALL_CAPABILITIES.keySet()));
+
+        LOG.info(
+          "Took %d ms to query capabilities %s",
+          TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - versionQueryStartTimeNanos),
+          ALL_CAPABILITIES);
+
+        if (!result.isPresent()) {
+          LOG.warn("Could not get version response from Watchman, disabling Watchman");
+          watchmanClient.get().close();
+          return NULL_WATCHMAN;
+        }
+
+        if (!extractCapabilities(result.get(), capabilitiesBuilder)) {
+          LOG.warn("Could not extract capabilities, disabling Watchman");
+          watchmanClient.get().close();
+          return NULL_WATCHMAN;
+        }
+      } else {
+        deriveCapabilities(rawVersion.get(), capabilitiesBuilder);
+      }
+      ImmutableSet<Capability> capabilities = capabilitiesBuilder.build();
+      LOG.debug("Got Watchman capabilities: %s", capabilities);
 
       Path absoluteRootPath = rootPath.toAbsolutePath();
       LOG.info("Adding watchman root: %s", absoluteRootPath);
 
       long watchStartTimeNanos = clock.nanoTime();
-      remainingTimeNanos -= (watchStartTimeNanos - startTimeNanos);
+      remainingTimeNanos -= (watchStartTimeNanos - versionQueryStartTimeNanos);
       if (capabilities.contains(Capability.SUPPORTS_PROJECT_WATCH)) {
         result = watchmanClient.get().queryWithTimeout(
             remainingTimeNanos,
@@ -205,9 +249,45 @@ public class Watchman implements AutoCloseable {
     }
   }
 
-  private static ImmutableSet<Capability> deriveCapabilities(String version) {
-    ImmutableSet.Builder<Capability> capabilities = ImmutableSet.builder();
+  @SuppressWarnings("unchecked")
+  private static boolean extractCapabilities(
+      Map<String, ? extends Object> versionResponse,
+      ImmutableSet.Builder<Capability> capabilitiesBuilder) {
+    if (versionResponse.containsKey("error")) {
+      LOG.warn("Error in watchman output: %s", versionResponse.get("error"));
+      return false;
+    }
 
+    if (versionResponse.containsKey("warning")) {
+      LOG.warn("Warning in watchman output: %s", versionResponse.get("warning"));
+      // Warnings are not fatal. Don't panic.
+    }
+
+    Object capabilitiesResponse = versionResponse.get("capabilities");
+    if (!(capabilitiesResponse instanceof Map<?, ?>)) {
+      LOG.warn("capabilities response is not map, got %s", capabilitiesResponse);
+      return false;
+    }
+
+    LOG.debug("Got capabilities response: %s", capabilitiesResponse);
+
+    Map<String, Boolean> capabilities = (Map<String, Boolean>) capabilitiesResponse;
+    for (Map.Entry<String, Boolean> capabilityEntry : capabilities.entrySet()) {
+      Capability capability = ALL_CAPABILITIES.get(capabilityEntry.getKey());
+      if (capability == null) {
+        LOG.warn("Unexpected capability in response: %s", capabilityEntry.getKey());
+        return false;
+      }
+      if (capabilityEntry.getValue()) {
+        capabilitiesBuilder.add(capability);
+      }
+    }
+    return true;
+  }
+
+  private static void deriveCapabilities(
+      String version,
+      ImmutableSet.Builder<Capability> capabilities) {
     // Check watchman version. We only want to use watch-project in watchman >= 3.4, since early
     // versions don't return the project path relative to the repo root.
     if (VERSION_COMPARATOR.compare(version, WATCHMAN_PROJECT_WATCH_VERSION) >= 0) {
@@ -220,8 +300,6 @@ public class Watchman implements AutoCloseable {
     if (VERSION_COMPARATOR.compare(version, WATCHMAN_WILDMATCH_GLOB_MIN_VERSION) >= 0) {
       capabilities.add(Capability.WILDMATCH_GLOB);
     }
-
-    return capabilities.build();
   }
 
   @SuppressWarnings("unchecked")
