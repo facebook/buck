@@ -16,9 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR;
-import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_LIBRARY_FLAVOR;
-
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -191,9 +188,10 @@ public class AppleBinaryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    ImmutableSortedSet<Flavor> flavors = params.getBuildTarget().getFlavors();
-    if (flavors.contains(SWIFT_LIBRARY_FLAVOR) || flavors.contains(SWIFT_COMPILE_FLAVOR)) {
-      return swiftDelegate.createCompanionBuildRule(targetGraph, params, resolver, args);
+    Optional<BuildRule> swiftCompanionBuildRule = swiftDelegate.createCompanionBuildRule(
+        targetGraph, params, resolver, args);
+    if (swiftCompanionBuildRule.isPresent()) {
+      params = params.appendExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
     }
 
     // remove debug format flavors so binary will have the same output regardless of debug format
@@ -461,9 +459,8 @@ public class AppleBinaryDescription implements
       final Arg constructorArg) {
     Collection<ImmutableSortedSet<Flavor>> thinFlavorSets =
         generateThinDelegateFlavors(buildTarget.getFlavors());
-    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
     if (thinFlavorSets.size() > 0) {
-      deps.addAll(Iterables.concat(
+      return Iterables.concat(
           Iterables.transform(
               thinFlavorSets,
               new Function<ImmutableSortedSet<Flavor>, Iterable<BuildTarget>>() {
@@ -476,16 +473,14 @@ public class AppleBinaryDescription implements
                       constructorArg.platformLinkerFlags.get().getValues());
                 }
               })
-      ));
+      );
     } else {
-      deps.addAll(delegate.findDepsForTargetFromConstructorArgs(
+      return delegate.findDepsForTargetFromConstructorArgs(
           buildTarget,
           cellRoots,
           constructorArg.linkerFlags.get(),
-          constructorArg.platformLinkerFlags.get().getValues()));
+          constructorArg.platformLinkerFlags.get().getValues());
     }
-    swiftDelegate.addCompanionTarget(deps, buildTarget);
-    return deps.build();
   }
 
   @SuppressFieldNotInitialized

@@ -16,9 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR;
-import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_LIBRARY_FLAVOR;
-
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -169,9 +166,10 @@ public class AppleLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    ImmutableSortedSet<Flavor> flavors = params.getBuildTarget().getFlavors();
-    if (flavors.contains(SWIFT_LIBRARY_FLAVOR) || flavors.contains(SWIFT_COMPILE_FLAVOR)) {
-      return swiftDelegate.createCompanionBuildRule(targetGraph, params, resolver, args);
+    Optional<BuildRule> swiftCompanionBuildRule = swiftDelegate.createCompanionBuildRule(
+        targetGraph, params, resolver, args);
+    if (swiftCompanionBuildRule.isPresent()) {
+      params = params.appendExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
     }
     Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(
         params.getBuildTarget());
@@ -452,13 +450,10 @@ public class AppleLibraryDescription implements
       final BuildTarget buildTarget,
       final CellPathResolver cellRoots,
       final AppleNativeTargetDescriptionArg constructorArg) {
-    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
-    deps.addAll(delegate.findDepsForTargetFromConstructorArgs(
+    return delegate.findDepsForTargetFromConstructorArgs(
             buildTarget,
             cellRoots,
-            constructorArg));
-    swiftDelegate.addCompanionTarget(deps, buildTarget);
-    return deps.build();
+            constructorArg);
   }
 
   public static boolean isSharedLibraryTarget(BuildTarget target) {
