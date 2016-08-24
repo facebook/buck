@@ -44,6 +44,48 @@ public class Symbols {
     this.all = all;
   }
 
+  // See `man objdump`.
+  static final Pattern SYMBOL_RE = Pattern.compile(
+      "\\s*" +
+          "(?<address>[0-9a-f]{8})" +
+          " " +
+          "(?<global>.)" +
+          "(?<weak>.)" +
+          "(?<constructor>.)" +
+          "(?<warning>.)" +
+          "(?<indirect>.)" +
+          "(?<debugging>.)" +
+          "(?<type>.)" +
+          "\\s*" +
+          "(?<section>[^\\s]*)" +
+          "\\s*" +
+          "(?<align>[0-9a-f]*)" +
+          "\\s*" +
+          "((?<lib>[^\\s]*)\\s+)?" +
+          "(?<name>[^\\s]+)");
+
+  static class SymbolInfo {
+    String symbol;
+    boolean isUndefined;
+    boolean isGlobal;
+    SymbolInfo(String symbol, boolean undefined, boolean global) {
+      this.symbol = symbol;
+      this.isUndefined = undefined;
+      this.isGlobal = global;
+    }
+  }
+
+  public static SymbolInfo extractSymbolInfo(String line) {
+    Matcher m = SYMBOL_RE.matcher(line);
+    if (!m.matches()) {
+      return null;
+    }
+    return new SymbolInfo(
+        m.group("name"),
+        "*UND*".equals(m.group("section")),
+        "gu!".contains(m.group("global")));
+  }
+
   public static Symbols getSymbols(
       Tool objdump,
       SourcePathResolver resolver,
@@ -52,40 +94,20 @@ public class Symbols {
     final ImmutableSet.Builder<String> global = ImmutableSet.builder();
     final ImmutableSet.Builder<String> all = ImmutableSet.builder();
 
-    // See `man objdump`.
-    final Pattern re = Pattern.compile(
-        "\\s*" +
-            "(?<address>[0-9a-f]{8})" +
-            " " +
-            "(?<global>.)" +
-            "(?<weak>.)" +
-            "(?<constructor>.)" +
-            "(?<warning>.)" +
-            "(?<indirect>.)" +
-            "(?<debugging>.)" +
-            "(?<type>.)" +
-            "\\s*" +
-            "(?<section>[^\\s]*)" +
-            "\\s*" +
-            "(?<align>[0-9a-f]*)" +
-            " " +
-            "(?<name>[^\\s]*)");
-
     runObjdump(objdump, resolver, lib, ImmutableList.of("-T"),
         new LineProcessor<Void>() {
           @Override
           public boolean processLine(String line) throws IOException {
-            Matcher m = re.matcher(line);
-            if (!m.matches()) {
+            SymbolInfo si = extractSymbolInfo(line);
+            if (si == null) {
               return true;
             }
-            String symbol = m.group("name");
-            if ("*UND*".equals(m.group("section"))) {
-              undefined.add(symbol);
-            } else if ("gu!".contains(m.group("global"))) {
-              global.add(symbol);
+            if (si.isUndefined) {
+              undefined.add(si.symbol);
+            } else if (si.isGlobal) {
+              global.add(si.symbol);
             }
-            all.add(symbol);
+            all.add(si.symbol);
             return true;
           }
 
