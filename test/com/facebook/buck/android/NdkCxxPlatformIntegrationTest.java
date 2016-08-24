@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cxx.CxxPreprocessMode;
 import com.facebook.buck.io.MorePaths;
@@ -137,12 +138,16 @@ public class NdkCxxPlatformIntegrationTest {
 
   @Test
   public void runtimeSupportsStl() throws IOException {
+    assumeTrue("libcxx is unsupported with this ndk",
+        NdkCxxPlatforms.isSupportedConfiguration(getNdkRoot(), cxxRuntime));
     ProjectWorkspace workspace = setupWorkspace("runtime_stl");
     workspace.runBuckCommand("build", String.format("//:main#android-%s", arch)).assertSuccess();
   }
 
   @Test
   public void changedPlatformTarget() throws IOException {
+    assumeTrue("libcxx is unsupported with this ndk",
+        NdkCxxPlatforms.isSupportedConfiguration(getNdkRoot(), cxxRuntime));
     // 64-bit only works with platform 21, so we can't change the platform to anything else.
     assumeThat("skip this test for 64-bit, for now", arch, not(equalTo("x86_64")));
 

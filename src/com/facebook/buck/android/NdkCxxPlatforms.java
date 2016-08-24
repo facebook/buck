@@ -111,6 +111,17 @@ public class NdkCxxPlatforms {
     return "3.8";
   }
 
+  public static boolean isSupportedConfiguration(
+      Path ndkRoot,
+      CxxRuntime cxxRuntime) {
+    // TODO(12846101): With ndk r12, Android has started to use libc++abi. Buck
+    // needs to figure out how to support that.
+    String ndkVersion = readVersion(ndkRoot);
+    return !(
+      cxxRuntime == NdkCxxPlatforms.CxxRuntime.LIBCXX &&
+      getNdkMajorVersion(ndkVersion) >= 12);
+  }
+
   public static ImmutableMap<TargetCpuType, NdkCxxPlatform> getPlatforms(
       CxxBuckConfig config,
       ProjectFilesystem ndkRoot,
@@ -366,7 +377,7 @@ public class NdkCxxPlatforms {
     String version =
         Joiner.on('-').join(
             ImmutableList.of(
-                readVersion(ndk),
+                readVersion(ndk.getRootPath()),
                 targetConfiguration.getToolchain(),
                 targetConfiguration.getTargetAppPlatform(),
                 compilerType,
@@ -508,8 +519,8 @@ public class NdkCxxPlatforms {
    * @param ndkRoot the path where Android NDK is located.
    * @return the version of the Android NDK located in {@code ndkRoot}.
    */
-  private static String readVersion(ProjectFilesystem ndkRoot) {
-    return DefaultAndroidDirectoryResolver.findNdkVersionFromDirectory(ndkRoot.getRootPath()).get();
+  private static String readVersion(Path ndkRoot) {
+    return DefaultAndroidDirectoryResolver.findNdkVersionFromDirectory(ndkRoot).get();
   }
 
   /**
