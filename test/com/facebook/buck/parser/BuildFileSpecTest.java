@@ -144,7 +144,6 @@ public class BuildFileSpecTest {
         .setFilesystem(filesystem)
         .setWatchman(
             new Watchman(
-                Optional.of("4.0.0"),
                 Optional.of("project-name"),
                 Optional.of("/path/to/src"),
                 ImmutableSet.of(
@@ -192,7 +191,6 @@ public class BuildFileSpecTest {
         .setFilesystem(filesystem)
         .setWatchman(
             new Watchman(
-                Optional.of("4.0.0"),
                 Optional.of("project-name"),
                 Optional.of("/path/to/src"),
                 ImmutableSet.of(
@@ -249,7 +247,6 @@ public class BuildFileSpecTest {
         .setFilesystem(filesystem)
         .setWatchman(
             new Watchman(
-                Optional.of("4.0.0"),
                 Optional.of("project-name"),
                 Optional.of("/path/to/src"),
                 ImmutableSet.of(

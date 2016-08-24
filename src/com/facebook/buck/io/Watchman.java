@@ -25,7 +25,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.ForwardingProcessListener;
-import com.facebook.buck.util.VersionStringComparator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -45,8 +44,6 @@ import java.util.concurrent.TimeUnit;
 
 public class Watchman implements AutoCloseable {
 
-  private static final String WATCHMAN_PROJECT_WATCH_VERSION = "3.4";
-
   public enum Capability {
     DIRNAME,
     SUPPORTS_PROJECT_WATCH,
@@ -54,6 +51,11 @@ public class Watchman implements AutoCloseable {
     WILDMATCH_MULTISLASH,
     GLOB_GENERATOR
   }
+
+  private static final ImmutableSet<String> REQUIRED_CAPABILITIES =
+      ImmutableSet.of(
+          "cmd-watch-project"
+      );
 
   private static final ImmutableMap<String, Capability> ALL_CAPABILITIES =
       ImmutableMap.of(
@@ -66,24 +68,18 @@ public class Watchman implements AutoCloseable {
 
   private static final Logger LOG = Logger.get(Watchman.class);
 
-  private static final String WATCHMAN_DIRNAME_MIN_VERSION = "3.1";
-  private static final String WATCHMAN_WILDMATCH_GLOB_MIN_VERSION = "3.6.0";
-  private static final String WATCHMAN_CAPABILITIES_VERSION = "3.8";
   private static final long POLL_TIME_NANOS = TimeUnit.SECONDS.toNanos(1);
   // Match default timeout of hgwatchman.
   private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(10);
 
-  private static final VersionStringComparator VERSION_COMPARATOR = new VersionStringComparator();
   private static final Path WATCHMAN = Paths.get("watchman");
   public static final Watchman NULL_WATCHMAN = new Watchman(
-      Optional.<String>absent(),
       Optional.<String>absent(),
       Optional.<String>absent(),
       ImmutableSet.<Capability>of(),
       Optional.<Path>absent(),
       Optional.<WatchmanClient>absent());
 
-  private final Optional<String> version;
   private final Optional<String> projectName;
   private final Optional<String> watchRoot;
   private final ImmutableSet<Capability> capabilities;
@@ -132,18 +128,13 @@ public class Watchman implements AutoCloseable {
         return NULL_WATCHMAN;
       }
 
-      Optional<String> rawVersion = Optional.fromNullable((String) result.get().get("version"));
-      if (!rawVersion.isPresent()) {
-        return NULL_WATCHMAN;
-      }
-
       String rawSockname = (String) result.get().get("sockname");
       if (rawSockname == null) {
         return NULL_WATCHMAN;
       }
       Path socketPath = Paths.get(rawSockname);
 
-      LOG.info("Connecting to Watchman version %s at %s", rawVersion.get(), socketPath);
+      LOG.info("Connecting to Watchman version %s at %s", result.get().get("version"), socketPath);
       watchmanClient = watchmanConnector.apply(socketPath);
       if (!watchmanClient.isPresent()) {
         LOG.warn("Could not connect to Watchman, disabling.");
@@ -154,33 +145,31 @@ public class Watchman implements AutoCloseable {
       long versionQueryStartTimeNanos = clock.nanoTime();
       remainingTimeNanos -= versionQueryStartTimeNanos - startTimeNanos;
 
-      ImmutableSet.Builder<Capability> capabilitiesBuilder = ImmutableSet.builder();
-      if (VERSION_COMPARATOR.compare(rawVersion.get(), WATCHMAN_CAPABILITIES_VERSION) >= 0) {
-        result = watchmanClient.get().queryWithTimeout(
-            remainingTimeNanos,
-            "version",
-            ImmutableMap.of(
-                "optional",
-                ALL_CAPABILITIES.keySet()));
+      result = watchmanClient.get().queryWithTimeout(
+          remainingTimeNanos,
+          "version",
+          ImmutableMap.of(
+              "required",
+              REQUIRED_CAPABILITIES,
+              "optional",
+              ALL_CAPABILITIES.keySet()));
 
-        LOG.info(
+      LOG.info(
           "Took %d ms to query capabilities %s",
           TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - versionQueryStartTimeNanos),
           ALL_CAPABILITIES);
 
-        if (!result.isPresent()) {
-          LOG.warn("Could not get version response from Watchman, disabling Watchman");
-          watchmanClient.get().close();
-          return NULL_WATCHMAN;
-        }
+      if (!result.isPresent()) {
+        LOG.warn("Could not get version response from Watchman, disabling Watchman");
+        watchmanClient.get().close();
+        return NULL_WATCHMAN;
+      }
 
-        if (!extractCapabilities(result.get(), capabilitiesBuilder)) {
-          LOG.warn("Could not extract capabilities, disabling Watchman");
-          watchmanClient.get().close();
-          return NULL_WATCHMAN;
-        }
-      } else {
-        deriveCapabilities(rawVersion.get(), capabilitiesBuilder);
+      ImmutableSet.Builder<Capability> capabilitiesBuilder = ImmutableSet.builder();
+      if (!extractCapabilities(result.get(), capabilitiesBuilder)) {
+        LOG.warn("Could not extract capabilities, disabling Watchman");
+        watchmanClient.get().close();
+        return NULL_WATCHMAN;
       }
       ImmutableSet<Capability> capabilities = capabilitiesBuilder.build();
       LOG.debug("Got Watchman capabilities: %s", capabilities);
@@ -190,17 +179,10 @@ public class Watchman implements AutoCloseable {
 
       long watchStartTimeNanos = clock.nanoTime();
       remainingTimeNanos -= (watchStartTimeNanos - versionQueryStartTimeNanos);
-      if (capabilities.contains(Capability.SUPPORTS_PROJECT_WATCH)) {
-        result = watchmanClient.get().queryWithTimeout(
-            remainingTimeNanos,
-            "watch-project",
-            absoluteRootPath.toString());
-      } else {
-        result = watchmanClient.get().queryWithTimeout(
-            remainingTimeNanos,
-            "watch",
-            absoluteRootPath.toString());
-      }
+      result = watchmanClient.get().queryWithTimeout(
+          remainingTimeNanos,
+          "watch-project",
+          absoluteRootPath.toString());
       LOG.info(
           "Took %d ms to add root %s",
           TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - watchStartTimeNanos),
@@ -230,7 +212,6 @@ public class Watchman implements AutoCloseable {
       }
 
       return new Watchman(
-          rawVersion,
           Optional.fromNullable((String) map.get("relative_path")),
           Optional.fromNullable((String) map.get("watch")),
           capabilities,
@@ -283,23 +264,6 @@ public class Watchman implements AutoCloseable {
       }
     }
     return true;
-  }
-
-  private static void deriveCapabilities(
-      String version,
-      ImmutableSet.Builder<Capability> capabilities) {
-    // Check watchman version. We only want to use watch-project in watchman >= 3.4, since early
-    // versions don't return the project path relative to the repo root.
-    if (VERSION_COMPARATOR.compare(version, WATCHMAN_PROJECT_WATCH_VERSION) >= 0) {
-      capabilities.add(Capability.SUPPORTS_PROJECT_WATCH);
-    }
-
-    if (VERSION_COMPARATOR.compare(version, WATCHMAN_DIRNAME_MIN_VERSION) >= 0) {
-      capabilities.add(Capability.DIRNAME);
-    }
-    if (VERSION_COMPARATOR.compare(version, WATCHMAN_WILDMATCH_GLOB_MIN_VERSION) >= 0) {
-      capabilities.add(Capability.WILDMATCH_GLOB);
-    }
   }
 
   @SuppressWarnings("unchecked")
@@ -400,22 +364,16 @@ public class Watchman implements AutoCloseable {
   // the WatchmanClient separately.
   @VisibleForTesting
   public Watchman(
-      Optional<String> version,
       Optional<String> projectName,
       Optional<String> watchRoot,
       ImmutableSet<Capability> capabilities,
       Optional<Path> socketPath,
       Optional<WatchmanClient> watchmanClient) {
-    this.version = version;
     this.projectName = projectName;
     this.watchRoot = watchRoot;
     this.capabilities = capabilities;
     this.socketPath = socketPath;
     this.watchmanClient = watchmanClient;
-  }
-
-  public Optional<String> getVersion() {
-    return version;
   }
 
   public Optional<String> getProjectPrefix() {
