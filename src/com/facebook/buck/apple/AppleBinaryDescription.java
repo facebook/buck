@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import static com.facebook.buck.swift.SwiftLibraryDescription.isSwiftTarget;
+
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -191,7 +193,13 @@ public class AppleBinaryDescription implements
     Optional<BuildRule> swiftCompanionBuildRule = swiftDelegate.createCompanionBuildRule(
         targetGraph, params, resolver, args);
     if (swiftCompanionBuildRule.isPresent()) {
-      params = params.appendExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
+      // when creating a swift target, there is no need to proceed with apple binary rules,
+      // otherwise, add this swift rule as a dependency.
+      if (isSwiftTarget(params.getBuildTarget())) {
+        return swiftCompanionBuildRule.get();
+      } else {
+        params = params.appendExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
+      }
     }
 
     // remove debug format flavors so binary will have the same output regardless of debug format

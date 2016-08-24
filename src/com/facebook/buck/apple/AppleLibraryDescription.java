@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import static com.facebook.buck.swift.SwiftLibraryDescription.isSwiftTarget;
+
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -169,8 +171,15 @@ public class AppleLibraryDescription implements
     Optional<BuildRule> swiftCompanionBuildRule = swiftDelegate.createCompanionBuildRule(
         targetGraph, params, resolver, args);
     if (swiftCompanionBuildRule.isPresent()) {
-      params = params.appendExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
+      // when creating a swift target, there is no need to proceed with apple binary rules,
+      // otherwise, add this swift rule as a dependency.
+      if (isSwiftTarget(params.getBuildTarget())) {
+        return swiftCompanionBuildRule.get();
+      } else {
+        params = params.appendExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
+      }
     }
+
     Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(
         params.getBuildTarget());
     if (type.isPresent() && type.get().getValue().equals(Type.FRAMEWORK)) {

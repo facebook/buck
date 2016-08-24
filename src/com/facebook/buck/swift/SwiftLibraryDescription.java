@@ -63,8 +63,8 @@ public class SwiftLibraryDescription implements
     Flavored {
   public static final BuildRuleType TYPE = BuildRuleType.of("swift_library");
 
-  public static final Flavor SWIFT_LIBRARY_FLAVOR = ImmutableFlavor.of("swift-lib");
-  public static final Flavor SWIFT_COMPILE_FLAVOR = ImmutableFlavor.of("swift-compile");
+  static final Flavor SWIFT_LIBRARY_FLAVOR = ImmutableFlavor.of("swift-lib");
+  static final Flavor SWIFT_COMPILE_FLAVOR = ImmutableFlavor.of("swift-compile");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       SWIFT_LIBRARY_FLAVOR,
@@ -185,13 +185,22 @@ public class SwiftLibraryDescription implements
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
+    BuildTarget buildTarget = params.getBuildTarget();
+    if (!isSwiftTarget(buildTarget)) {
+      boolean hasSwiftSource = !SwiftDescriptions.filterSwiftSources(
+          new SourcePathResolver(resolver),
+          args.srcs.get()).isEmpty();
+      return hasSwiftSource ?
+          Optional.of(resolver.requireRule(buildTarget.withAppendedFlavors(SWIFT_LIBRARY_FLAVOR)))
+          : Optional.<BuildRule>absent();
+    }
+
     final SwiftLibraryDescription.Arg delegateArgs = createUnpopulatedConstructorArg();
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
         new SourcePathResolver(resolver),
         delegateArgs,
         args,
-        params.getBuildTarget());
-
+        buildTarget);
     if (delegateArgs.srcs.isPresent() && !delegateArgs.srcs.get().isEmpty()) {
       return Optional.of(
           resolver.addToIndex(
@@ -199,6 +208,11 @@ public class SwiftLibraryDescription implements
     } else {
       return Optional.absent();
     }
+  }
+
+  public static boolean isSwiftTarget(BuildTarget buildTarget) {
+    return buildTarget.getFlavors().contains(SWIFT_LIBRARY_FLAVOR) ||
+        buildTarget.getFlavors().contains(SWIFT_COMPILE_FLAVOR);
   }
 
   @SuppressFieldNotInitialized
