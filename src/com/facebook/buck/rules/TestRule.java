@@ -114,11 +114,6 @@ public interface TestRule extends HasBuildTarget, BuildRule {
   ImmutableSet<String> getContacts();
 
   /**
-   * @return The set of {@link BuildRule} instances that this test is testing.
-   */
-  ImmutableSet<BuildRule> getSourceUnderTest();
-
-  /**
    * @return The relative path to the output directory of the test rule.
    */
   Path getPathToTestOutputDirectory();

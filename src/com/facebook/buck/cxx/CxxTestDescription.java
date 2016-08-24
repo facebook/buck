@@ -21,6 +21,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasSourceUnderTest;
+import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -34,7 +35,6 @@ import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.model.MacroException;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
@@ -226,7 +226,6 @@ public class CxxTestDescription implements
             additionalDeps,
             args.labels.get(),
             args.contacts.get(),
-            resolver.getAllRules(args.sourceUnderTest.get()),
             args.runTestSeparately.or(false),
             args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
             cxxBuckConfig.getMaximumTestOutputSize());
@@ -246,7 +245,6 @@ public class CxxTestDescription implements
             additionalDeps,
             args.labels.get(),
             args.contacts.get(),
-            resolver.getAllRules(args.sourceUnderTest.get()),
             args.runTestSeparately.or(false),
             args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs));
         break;

@@ -65,7 +65,6 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule, Has
   private final Supplier<ImmutableSortedSet<BuildRule>> additionalDeps;
   private final ImmutableSet<Label> labels;
   private final ImmutableSet<String> contacts;
-  private final ImmutableSet<BuildRule> sourceUnderTest;
   private final boolean runTestSeparately;
   private final Optional<Long> testRuleTimeoutMs;
 
@@ -79,7 +78,6 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule, Has
       Supplier<ImmutableSortedSet<BuildRule>> additionalDeps,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
-      ImmutableSet<BuildRule> sourceUnderTest,
       boolean runTestSeparately,
       Optional<Long> testRuleTimeoutMs) {
     super(params, resolver);
@@ -98,7 +96,6 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule, Has
     this.additionalDeps = Suppliers.memoize(additionalDeps);
     this.labels = labels;
     this.contacts = contacts;
-    this.sourceUnderTest = sourceUnderTest;
     this.runTestSeparately = runTestSeparately;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
   }
@@ -207,11 +204,6 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule, Has
   @Override
   public ImmutableSet<String> getContacts() {
     return contacts;
-  }
-
-  @Override
-  public ImmutableSet<BuildRule> getSourceUnderTest() {
-    return sourceUnderTest;
   }
 
   @Override

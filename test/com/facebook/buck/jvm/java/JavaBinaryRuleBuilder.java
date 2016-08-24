@@ -47,5 +47,10 @@ public class JavaBinaryRuleBuilder extends AbstractNodeBuilder<JavaBinaryDescrip
     arg.mainClass = Optional.of(mainClass);
     return this;
   }
+
+  public JavaBinaryRuleBuilder addTest(BuildTarget test) {
+    arg.tests = amend(arg.tests, test);
+    return this;
+  }
 }
 

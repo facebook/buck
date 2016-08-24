@@ -107,11 +107,6 @@ public class ShTest
   }
 
   @Override
-  public ImmutableSet<BuildRule> getSourceUnderTest() {
-    return ImmutableSet.of();
-  }
-
-  @Override
   public boolean hasTestResultFiles() {
     // If result.json was not written, then the test needs to be run.
     return getProjectFilesystem().isFile(getPathToTestOutputResult());

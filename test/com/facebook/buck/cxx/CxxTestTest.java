@@ -77,7 +77,6 @@ public class CxxTestTest {
           Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
           ImmutableSet.<Label>of(),
           ImmutableSet.<String>of(),
-          ImmutableSet.<BuildRule>of(),
           /* runTestSeparately */ false,
           TEST_TIMEOUT_MS);
     }

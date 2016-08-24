@@ -124,4 +124,9 @@ public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescripti
     arg.annotationProcessors = Optional.of(annotationProcessors);
     return this;
   }
+
+  public JavaLibraryBuilder addTest(BuildTarget test) {
+    arg.tests = amend(arg.tests, test);
+    return this;
+  }
 }

@@ -111,9 +111,6 @@ public class JavaTest
 
   private final ImmutableSet<String> contacts;
 
-  @AddToRuleKey(stringify = true)
-  private ImmutableSet<BuildRule> sourceUnderTest;
-
   private final ImmutableSet<Path> additionalClasspathEntries;
 
   private final Optional<Level> stdOutLogLevel;
@@ -156,7 +153,6 @@ public class JavaTest
       JavaRuntimeLauncher javaRuntimeLauncher,
       List<String> vmArgs,
       Map<String, String> nativeLibsEnvironment,
-      ImmutableSet<BuildRule> sourceUnderTest,
       Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
       Optional<Long> testRuleTimeoutMs,
@@ -185,7 +181,6 @@ public class JavaTest
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.vmArgs = ImmutableList.copyOf(vmArgs);
     this.nativeLibsEnvironment = ImmutableMap.copyOf(nativeLibsEnvironment);
-    this.sourceUnderTest = sourceUnderTest;
     this.labels = ImmutableSet.copyOf(labels);
     this.contacts = ImmutableSet.copyOf(contacts);
     this.additionalClasspathEntries = addtionalClasspathEntries;
@@ -206,14 +201,6 @@ public class JavaTest
   @Override
   public ImmutableSet<String> getContacts() {
     return contacts;
-  }
-
-  /**
-   * @return A set of rules that this test rule will be testing.
-   */
-  @Override
-  public ImmutableSet<BuildRule> getSourceUnderTest() {
-    return sourceUnderTest;
   }
 
   /**

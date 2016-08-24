@@ -75,9 +75,6 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
   @AddToRuleKey
   private final JavaRuntimeLauncher javaRuntimeLauncher;
 
-  @AddToRuleKey
-  private ImmutableSet<BuildRule> sourceUnderTest;
-
   private final ImmutableSet<Label> labels;
 
   private final ImmutableSet<String> contacts;
@@ -93,12 +90,10 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
       Set<Label> labels,
       Set<String> contacts,
       JavaRuntimeLauncher javaRuntimeLauncher,
-      ImmutableSet<BuildRule> sourceUnderTest,
       Optional<Long> testRuleTimeoutMs) {
     super(params, resolver);
     this.apk = apk;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
-    this.sourceUnderTest = sourceUnderTest;
     this.labels = ImmutableSet.copyOf(labels);
     this.contacts = ImmutableSet.copyOf(contacts);
     this.testRuleTimeoutMs = testRuleTimeoutMs;
@@ -112,11 +107,6 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
   @Override
   public ImmutableSet<String> getContacts() {
     return contacts;
-  }
-
-  @Override
-  public ImmutableSet<BuildRule> getSourceUnderTest() {
-    return sourceUnderTest;
   }
 
   @Override

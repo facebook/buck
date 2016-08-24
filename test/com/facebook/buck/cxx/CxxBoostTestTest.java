@@ -34,8 +34,8 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.test.TestResultSummary;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -102,7 +102,6 @@ public class CxxBoostTestTest {
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
             ImmutableSet.<Label>of(),
             ImmutableSet.<String>of(),
-            ImmutableSet.<BuildRule>of(),
             /* runTestSeparately */ false,
             /* testRuleTimeoutMs */ Optional.<Long>absent());
 

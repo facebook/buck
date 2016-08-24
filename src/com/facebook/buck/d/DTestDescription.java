@@ -121,9 +121,7 @@ public class DTestDescription implements
         binaryRule,
         args.contacts.get(),
         args.labels.get(),
-        args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
-        buildRuleResolver.getAllRules(
-            args.sourceUnderTest.or(ImmutableSortedSet.<BuildTarget>of())));
+        args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs));
   }
 
   @Override

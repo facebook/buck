@@ -21,15 +21,15 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -86,7 +86,6 @@ public class AndroidInstrumentationTestDescription
         args.labels.get(),
         args.contacts.get(),
         javaOptions.getJavaRuntimeLauncher(),
-        resolver.getAllRules(args.sourceUnderTest.get()),
         args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs));
   }
 

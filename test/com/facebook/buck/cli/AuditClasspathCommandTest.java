@@ -73,38 +73,35 @@ public class AuditClasspathCommandTest {
 
     // Add build rules such that all implementations of HasClasspathEntries are tested.
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:test-java-library");
+    BuildTarget testJavaTarget = BuildTargetFactory.newInstance("//:project-tests");
+    BuildTarget androidLibraryTarget = BuildTargetFactory.newInstance("//:test-android-library");
+    BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//:keystore");
+    BuildTarget testAndroidTarget = BuildTargetFactory.newInstance("//:test-android-binary");
+
     TargetNode<?> javaLibraryNode = JavaLibraryBuilder
         .createBuilder(javaLibraryTarget)
         .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java"))
+        .addTest(testJavaTarget)
         .build();
-
-    BuildTarget androidLibraryTarget = BuildTargetFactory.newInstance("//:test-android-library");
     TargetNode<?> androidLibraryNode = AndroidLibraryBuilder
         .createBuilder(androidLibraryTarget)
         .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
         .addDep(javaLibraryTarget)
         .build();
-
-    BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//:keystore");
     TargetNode<?> keystoreNode = KeystoreBuilder
         .createBuilder(keystoreTarget)
         .setStore(new FakeSourcePath("debug.keystore"))
         .setProperties(new FakeSourcePath("keystore.properties"))
         .build();
-
-    BuildTarget testAndroidTarget = BuildTargetFactory.newInstance("//:test-android-binary");
     TargetNode<?> testAndroidNode = AndroidBinaryBuilder
         .createBuilder(testAndroidTarget)
         .setManifest(new FakeSourcePath("AndroidManifest.xml"))
         .setKeystore(keystoreTarget)
         .setOriginalDeps(ImmutableSortedSet.of(androidLibraryTarget, javaLibraryTarget))
         .build();
-
-    BuildTarget testJavaTarget = BuildTargetFactory.newInstance("//:project-tests");
     TargetNode<?> testJavaNode = JavaTestBuilder
         .createBuilder(testJavaTarget)
         .addDep(javaLibraryTarget)
-        .setSourceUnderTest(ImmutableSortedSet.of(javaLibraryTarget))
         .addSrc(Paths.get("src/com/facebook/test/ProjectTests.java"))
         .build();
 

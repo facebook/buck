@@ -1199,7 +1199,6 @@ public class ProjectCommand extends BuildCommand {
           graphRootsOrSourceTargets,
           projectGraph,
           isWithDependenciesTests);
-      // The test nodes for a recursively parsed project is the same regardless.
       if (!needsFullRecursiveParse) {
         projectGraph = params.getParser().buildTargetGraph(
             params.getBuckEventBus(),
@@ -1207,6 +1206,17 @@ public class ProjectCommand extends BuildCommand {
             getEnableParserProfiling(),
             executor,
             Sets.union(graphRoots, explicitTestTargets));
+      } else {
+        projectGraph = params.getParser().buildTargetGraph(
+            params.getBuckEventBus(),
+            params.getCell(),
+            getEnableParserProfiling(),
+            executor,
+            Sets.union(
+                FluentIterable.from(projectGraph.getNodes())
+                    .transform(HasBuildTarget.TO_TARGET)
+                    .toSet(),
+                explicitTestTargets));
       }
     }
 

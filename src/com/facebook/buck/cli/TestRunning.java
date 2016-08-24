@@ -33,7 +33,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildResult;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.TestRule;
@@ -629,25 +628,8 @@ public class TestRunning {
     // Gathering all rules whose source will be under test.
     for (TestRule test : tests) {
       if (test instanceof JavaTest) {
+        // Look at the transitive dependencies for `tests` attribute that refers to this test.
         JavaTest javaTest = (JavaTest) test;
-
-        // First, look at sourceUnderTest.
-        ImmutableSet<BuildRule> sourceUnderTest = javaTest.getSourceUnderTest();
-        for (BuildRule buildRule : sourceUnderTest) {
-          if (buildRule instanceof JavaLibrary) {
-            JavaLibrary javaLibrary = (JavaLibrary) buildRule;
-            rulesUnderTest.add(javaLibrary);
-          } else {
-            throw new HumanReadableException(
-                "Test '%s' is a java_test() " +
-                    "but it is testing module '%s' " +
-                    "which is not a java_library()!",
-                test.getBuildTarget(),
-                buildRule.getBuildTarget());
-          }
-        }
-
-        // Then, look at the transitive dependencies for `tests` attribute that refers to this test.
         ImmutableSet<JavaLibrary> transitiveDeps = javaTest.getTransitiveClasspathDeps();
         for (JavaLibrary dep: transitiveDeps) {
           if (dep instanceof JavaLibraryWithTests) {

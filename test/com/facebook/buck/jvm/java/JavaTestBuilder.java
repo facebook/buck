@@ -25,7 +25,6 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
@@ -58,12 +57,6 @@ public class JavaTestBuilder extends AbstractNodeBuilder<JavaTestDescription.Arg
 
   public JavaTestBuilder addSrc(Path path) {
     arg.srcs = amend(arg.srcs, new PathSourcePath(new FakeProjectFilesystem(), path));
-    return this;
-  }
-
-  public JavaTestBuilder setSourceUnderTest(
-      @Nullable ImmutableSortedSet<BuildTarget> sourceUnderTest) {
-    arg.sourceUnderTest = Optional.fromNullable(sourceUnderTest);
     return this;
   }
 

@@ -151,7 +151,6 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                 javaOptions.getJavaRuntimeLauncher(),
                 args.vmArgs.get(),
                 /* sourcesUnderTest */ cxxLibraryEnhancement.nativeLibsEnvironment,
-                ImmutableSet.<BuildRule>of(),
                 args.resourcesRoot,
                 args.mavenCoords,
                 args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),

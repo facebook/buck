@@ -19,10 +19,10 @@ package com.facebook.buck.d;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
@@ -60,7 +60,6 @@ public class DTest extends AbstractBuildRule implements
     TestRule {
   private ImmutableSortedSet<String> contacts;
   private ImmutableSortedSet<Label> labels;
-  private ImmutableSet<BuildRule> sourceUnderTest;
   private final BuildRule testBinaryBuildRule;
   private final Optional<Long> testRuleTimeoutMs;
 
@@ -70,12 +69,10 @@ public class DTest extends AbstractBuildRule implements
       BuildRule testBinaryBuildRule,
       ImmutableSortedSet<String> contacts,
       ImmutableSortedSet<Label> labels,
-      Optional<Long> testRuleTimeoutMs,
-      ImmutableSet<BuildRule> sourceUnderTest) {
+      Optional<Long> testRuleTimeoutMs) {
     super(params, resolver);
     this.contacts = contacts;
     this.labels = labels;
-    this.sourceUnderTest = sourceUnderTest;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.testBinaryBuildRule = testBinaryBuildRule;
   }
@@ -131,11 +128,6 @@ public class DTest extends AbstractBuildRule implements
 
   private ImmutableList<String> getShellCommand() {
     return getExecutableCommand(getProjectFilesystem());
-  }
-
-  @Override
-  public ImmutableSet<BuildRule> getSourceUnderTest() {
-    return sourceUnderTest;
   }
 
   @Override

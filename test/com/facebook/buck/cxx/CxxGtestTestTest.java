@@ -106,7 +106,6 @@ public class CxxGtestTestTest {
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
         ImmutableSet.<Label>of(),
         ImmutableSet.<String>of(),
-        ImmutableSet.<BuildRule>of(),
         /* runTestSeparately */ false,
         /* testRuleTimeoutMs */ Optional.<Long>absent(),
         /* maxTestOutputSize */ 100L);

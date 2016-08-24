@@ -6,9 +6,6 @@ java_test(
     '//modules/dep1:dep1',
     '//libs:junit',
   ],
-  source_under_test = [
-    '//modules/dep1:dep1',
-  ]
 )
 
 project_config(

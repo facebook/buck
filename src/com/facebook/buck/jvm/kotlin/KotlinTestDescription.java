@@ -122,7 +122,6 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
                 javaOptions.getJavaRuntimeLauncher(),
                 args.vmArgs.get(),
                 ImmutableMap.<String, String>of(), /* native libs environment */
-                ImmutableSet.<BuildRule>of(), /* sources under test */
                 Optional.<Path>absent(), /* resources root */
                 Optional.<String>absent(), /* maven coords */
                 args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),

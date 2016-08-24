@@ -25,7 +25,6 @@ import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -127,7 +126,6 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                 javaOptions.getJavaRuntimeLauncher(),
                 args.vmArgs.get(),
                 ImmutableMap.<String, String>of(),
-                ImmutableSet.<BuildRule>of(),
                 Optional.<Path>absent(),
                 Optional.<String>absent(),
                 args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),

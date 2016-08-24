@@ -82,7 +82,6 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       Supplier<ImmutableSortedSet<BuildRule>> additionalDeps,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
-      ImmutableSet<BuildRule> sourceUnderTest,
       boolean runTestSeparately,
       Optional<Long> testRuleTimeoutMs,
       long maxTestOutputSize) {
@@ -96,7 +95,6 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         additionalDeps,
         labels,
         contacts,
-        sourceUnderTest,
         runTestSeparately,
         testRuleTimeoutMs);
     this.binary = binary;

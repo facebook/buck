@@ -231,13 +231,6 @@ public class AppleTest
   }
 
   @Override
-  public ImmutableSet<BuildRule> getSourceUnderTest() {
-    // Apple tests always express a rule -> test dependency, not the other way
-    // around.
-    return ImmutableSet.of();
-  }
-
-  @Override
   public boolean hasTestResultFiles() {
     return getProjectFilesystem().exists(testOutputPath);
   }

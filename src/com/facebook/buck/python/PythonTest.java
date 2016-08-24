@@ -65,7 +65,6 @@ public class PythonTest
   private final ImmutableSet<Label> labels;
   private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
-  private final ImmutableSet<BuildRule> sourceUnderTest;
   private final ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage;
 
   public PythonTest(
@@ -73,7 +72,6 @@ public class PythonTest
       SourcePathResolver resolver,
       final Supplier<ImmutableMap<String, String>> env,
       final PythonBinary binary,
-      ImmutableSet<BuildRule> sourceUnderTest,
       ImmutableSet<Label> labels,
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
       Optional<Long> testRuleTimeoutMs,
@@ -92,7 +90,6 @@ public class PythonTest
           }
         });
     this.binary = binary;
-    this.sourceUnderTest = sourceUnderTest;
     this.labels = labels;
     this.neededCoverage = neededCoverage;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
@@ -148,11 +145,6 @@ public class PythonTest
   @Override
   public boolean hasTestResultFiles() {
     return getProjectFilesystem().isFile(getPathToTestOutputResult());
-  }
-
-  @Override
-  public ImmutableSet<BuildRule> getSourceUnderTest() {
-    return sourceUnderTest;
   }
 
   @Override

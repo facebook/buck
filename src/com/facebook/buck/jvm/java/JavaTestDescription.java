@@ -22,7 +22,6 @@ import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -32,14 +31,12 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -141,10 +138,6 @@ public class JavaTestDescription implements
                 javaOptions.getJavaRuntimeLauncher(),
                 args.vmArgs.get(),
                 cxxLibraryEnhancement.nativeLibsEnvironment,
-                validateAndGetSourcesUnderTest(
-                    args.sourceUnderTest.get(),
-                    params.getBuildTarget(),
-                    resolver),
                 args.resourcesRoot,
                 args.mavenCoords,
                 args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
@@ -163,28 +156,6 @@ public class JavaTestDescription implements
     return test;
   }
 
-  public static ImmutableSet<BuildRule> validateAndGetSourcesUnderTest(
-      ImmutableSet<BuildTarget> sourceUnderTestTargets,
-      BuildTarget owner,
-      BuildRuleResolver resolver) {
-    ImmutableSet.Builder<BuildRule> sourceUnderTest = ImmutableSet.builder();
-    for (BuildTarget target : sourceUnderTestTargets) {
-      BuildRule rule = resolver.getRule(target);
-      if (!(rule instanceof JavaLibrary)) {
-        // In this case, the source under test specified in the build file was not a Java library
-        // rule. Since EMMA requires the sources to be in Java, we will throw this exception and
-        // not continue with the tests.
-        throw new HumanReadableException(
-            "Specified source under test for %s is not a Java library: %s (%s).",
-            owner,
-            rule.getFullyQualifiedName(),
-            rule.getType());
-      }
-      sourceUnderTest.add(rule);
-    }
-    return sourceUnderTest.build();
-  }
-
   @Override
   public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
@@ -198,10 +169,9 @@ public class JavaTestDescription implements
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends JavaLibraryDescription.Arg implements HasSourceUnderTest {
+  public static class Arg extends JavaLibraryDescription.Arg {
     public Optional<ImmutableSortedSet<String>> contacts;
     public Optional<ImmutableSortedSet<Label>> labels;
-    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
     public Optional<ImmutableList<String>> vmArgs;
     public Optional<TestType> testType;
     public Optional<Boolean> runTestSeparately;
@@ -210,11 +180,6 @@ public class JavaTestDescription implements
     public Optional<Boolean> useCxxLibraries;
     public Optional<Long> testRuleTimeoutMs;
     public Optional<ImmutableMap<String, String>> env;
-
-    @Override
-    public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {
-      return sourceUnderTest.get();
-    }
 
     public boolean getRunTestSeparately() {
       return runTestSeparately.or(false);

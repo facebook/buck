@@ -128,11 +128,6 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   }
 
   @Override
-  public ImmutableSet<BuildRule> getSourceUnderTest() {
-    return ImmutableSet.of();
-  }
-
-  @Override
   public Path getPathToTestOutputDirectory() {
     if (!pathToTestOutputDirectory.isPresent()) {
       throw new UnsupportedOperationException("getPathToTestOutput() not supported in fake");

@@ -371,7 +371,6 @@ public class PythonTestDescription implements
         pathResolver,
         testEnv,
         binary,
-        resolver.getAllRules(args.sourceUnderTest.or(ImmutableSortedSet.<BuildTarget>of())),
         args.labels.or(ImmutableSet.<Label>of()),
         neededCoverageBuilder.build(),
         args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),

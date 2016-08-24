@@ -249,14 +249,6 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
     return contacts;
   }
 
-  /**
-   * @return A set of rules that this test rule will be testing.
-   */
-  @Override
-  public ImmutableSet<BuildRule> getSourceUnderTest() {
-    return ImmutableSet.of();
-  }
-
   @Override
   public Path getPathToTestOutputDirectory() {
     return BuildTargets.getGenPath(
