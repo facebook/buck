@@ -16,15 +16,18 @@
 
 package com.facebook.buck.slb;
 
+import org.apache.thrift.TException;
+
 import java.io.IOException;
 
-public class ThriftServiceException extends IOException {
-
-  public ThriftServiceException(String message, Throwable innerException) {
-    super(message, innerException);
+// Convenience wrapper of the TException that inherits from IOException so the rest of the code
+// remains agnostic of the underlying data protocols we use for network operations.
+public class ThriftException extends IOException {
+  public ThriftException(TException exception) {
+    super(exception);
   }
 
-  public ThriftServiceException(String message) {
+  public ThriftException(String message) {
     super(message);
   }
 }

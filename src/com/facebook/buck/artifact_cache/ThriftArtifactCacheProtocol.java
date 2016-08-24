@@ -30,8 +30,6 @@ import com.google.common.hash.HashingOutputStream;
 import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
 
-import org.apache.thrift.TException;
-
 import java.io.Closeable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -44,7 +42,7 @@ import java.io.OutputStream;
  * - int32 Big Endian size bytes of thrift serialized thriftData.
  * - Thrift serialized thriftData.
  * - Remainder of the stream contains binary payload data. Information about it is available in
- *   the Thrift thriftData.
+ * the Thrift thriftData.
  */
 public class ThriftArtifactCacheProtocol {
 
@@ -71,13 +69,13 @@ public class ThriftArtifactCacheProtocol {
 
   public static String computeCrc32(ByteSource source) throws IOException {
     try (InputStream inputStream = source.openStream();
-        HashingOutputStream outputStream =
-            new HashingOutputStream(HASH_FUNCTION, new OutputStream() {
-              @Override
-              public void write(int b) throws IOException {
-                // Do nothing.
-              }
-            })) {
+         HashingOutputStream outputStream =
+             new HashingOutputStream(HASH_FUNCTION, new OutputStream() {
+               @Override
+               public void write(int b) throws IOException {
+                 // Do nothing.
+               }
+             })) {
       ByteStreams.copy(inputStream, outputStream);
       return outputStream.hash().toString();
     }
@@ -114,11 +112,7 @@ public class ThriftArtifactCacheProtocol {
       }
       this.totalPayloadBytes = payloadBytes;
 
-      try {
-        serializedThriftData = ThriftUtil.serialize(protocol, thriftData);
-      } catch (TException e) {
-        throw new IOException("Failed to serialize BuckCacheFetchRequest.", e);
-      }
+      serializedThriftData = ThriftUtil.serialize(protocol, thriftData);
     }
 
     public long getRequestLengthBytes() {
@@ -158,7 +152,7 @@ public class ThriftArtifactCacheProtocol {
 
       try {
         ThriftUtil.deserialize(protocol, thriftData, this.thriftData);
-      } catch (TException e) {
+      } catch (IOException e) {
         String message = String.format(
             "Failed to deserialize [%d] bytes of BuckCacheFetchResponse.",
             thriftByteSize);

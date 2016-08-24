@@ -25,5 +25,5 @@ public interface ThriftService
     <ThriftRequest extends TBase<?, ?>, ThriftResponse extends TBase<?, ?>> extends Closeable {
 
   void makeRequest(ThriftRequest thriftRequest, ThriftResponse thriftResponse)
-      throws ThriftServiceException, IOException;
+      throws IOException;
 }

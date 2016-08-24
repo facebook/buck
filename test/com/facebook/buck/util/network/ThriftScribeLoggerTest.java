@@ -26,8 +26,8 @@ import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.distributed.thrift.LogRequestType;
+import com.facebook.buck.slb.ThriftException;
 import com.facebook.buck.slb.ThriftService;
-import com.facebook.buck.slb.ThriftServiceException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -127,8 +127,8 @@ public class ThriftScribeLoggerTest {
       @Override
       public void makeRequest(
           FrontendRequest frontendRequest,
-          FrontendResponse frontendResponse) throws ThriftServiceException {
-        throw new ThriftServiceException("Error");
+          FrontendResponse frontendResponse) throws ThriftException {
+        throw new ThriftException("Error");
       }
 
       @Override

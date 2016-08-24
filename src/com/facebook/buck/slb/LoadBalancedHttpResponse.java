@@ -81,7 +81,6 @@ public class LoadBalancedHttpResponse extends OkHttpResponseWrapper {
     @Override
     public void close() throws IOException {
       rawStream.close();
-      super.close();
     }
 
     @Override

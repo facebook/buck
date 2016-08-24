@@ -17,19 +17,15 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.log.Logger;
+
+import org.apache.thrift.TBase;
+
+import java.io.IOException;
+import java.io.InputStream;
+
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-
-import org.apache.thrift.TBase;
-import org.apache.thrift.TException;
-import org.apache.thrift.TSerializer;
-import org.apache.thrift.protocol.TProtocol;
-import org.apache.thrift.protocol.TSimpleJSONProtocol;
-import org.apache.thrift.transport.TIOStreamTransport;
-import org.apache.thrift.transport.TTransport;
-
-import java.io.IOException;
 
 public class ThriftOverHttpService
     <ThriftRequest extends TBase<?, ?>, ThriftResponse extends TBase<?, ?>>
@@ -51,20 +47,10 @@ public class ThriftOverHttpService
       throws IOException {
 
     if (LOG.isVerboseEnabled()) {
-      LOG.verbose("Making Thrift Request: [%s].", thriftToDebugJson(thriftRequest));
+      LOG.verbose("Making Thrift Request: [%s].", ThriftUtil.thriftToDebugJson(thriftRequest));
     }
 
-    // Prepare the request.
-    // TODO(ruibm): Move to use a TTransport that won't need to keep both serialized and raw
-    // data in memory.
-    TSerializer serializer = new TSerializer(config.getThriftProtocol().getFactory());
-    byte[] serializedBytes = null;
-    try {
-      serializedBytes = serializer.serialize(thriftRequest);
-    } catch (TException e) {
-      throw new ThriftServiceException("Problems serializing the thrift struct.", e);
-    }
-
+    byte[] serializedBytes = ThriftUtil.serialize(config.getThriftProtocol(), thriftRequest);
     RequestBody body = RequestBody.create(
         THRIFT_CONTENT_TYPE,
         serializedBytes,
@@ -81,7 +67,7 @@ public class ThriftOverHttpService
     try (HttpResponse response = config.getService().makeRequest(
         config.getThriftPath(), requestBuilder)) {
       if (response.code() != 200) {
-        throw new ThriftServiceException(
+        throw new IOException(
             String.format(
                 "HTTP response returned unexpected status code [%s] from URL [%s].",
                 response.code(),
@@ -89,16 +75,8 @@ public class ThriftOverHttpService
       }
 
       // Deserialize the body payload into the thrift struct.
-      try (TIOStreamTransport responseTransport = new TIOStreamTransport(response.getBody())) {
-        TProtocol responseProtocol =
-            newProtocolInstance(config.getThriftProtocol(), responseTransport);
-        thriftResponse.read(responseProtocol);
-        if (LOG.isVerboseEnabled()) {
-          LOG.debug("Received Thrift Response: [%s].", thriftToDebugJson(thriftResponse));
-        }
-
-      } catch (TException e) {
-        throw new ThriftServiceException("Failed to deserialize the thrift body payload.", e);
+      try (InputStream responseBody = response.getBody()) {
+        ThriftUtil.deserialize(config.getThriftProtocol(), responseBody, thriftResponse);
       }
     }
   }
@@ -106,19 +84,5 @@ public class ThriftOverHttpService
   @Override
   public void close() throws IOException {
     config.getService().close();
-  }
-
-  public static TProtocol newProtocolInstance(ThriftProtocol protocol, TTransport transport) {
-    return protocol.getFactory().getProtocol(transport);
-  }
-
-  public static String thriftToDebugJson(TBase<?, ?> thriftObject) {
-    TSerializer serializer = new TSerializer(new TSimpleJSONProtocol.Factory());
-    try {
-      return new String(serializer.serialize(thriftObject));
-    } catch (TException e) {
-      LOG.error(e, "Failed trying to serialize to debug JSON.");
-      return "FAILED_TO_DESERIALIZE";
-    }
   }
 }
