@@ -73,8 +73,6 @@ public class NdkCxxPlatforms {
 
   public static final NdkCxxPlatformCompiler.Type DEFAULT_COMPILER_TYPE =
       NdkCxxPlatformCompiler.Type.GCC;
-  public static final String DEFAULT_GCC_VERSION = "4.8";
-  public static final String DEFAULT_CLANG_VERSION = "3.5";
   public static final String DEFAULT_TARGET_APP_PLATFORM = "android-9";
   public static final ImmutableSet<String> DEFAULT_CPU_ABIS =
       ImmutableSet.of("arm", "armv7", "x86");
@@ -89,6 +87,29 @@ public class NdkCxxPlatforms {
 
   // Utility class, do not instantiate.
   private NdkCxxPlatforms() { }
+
+  static int getNdkMajorVersion(String ndkVersion) {
+    return
+        ndkVersion.startsWith("r9") ? 9 :
+        ndkVersion.startsWith("r10") ? 10 :
+        ndkVersion.startsWith("11.") ? 11 :
+        ndkVersion.startsWith("12.") ? 12 :
+        -1;
+  }
+
+  public static String getDefaultGccVersionForNdk(Optional<String> ndkVersion) {
+    if (ndkVersion.isPresent() && getNdkMajorVersion(ndkVersion.get()) < 11) {
+      return "4.8";
+    }
+    return "4.9";
+  }
+
+  public static String getDefaultClangVersionForNdk(Optional<String> ndkVersion) {
+    if (ndkVersion.isPresent() && getNdkMajorVersion(ndkVersion.get()) < 11) {
+      return "3.5";
+    }
+    return "3.8";
+  }
 
   public static ImmutableMap<TargetCpuType, NdkCxxPlatform> getPlatforms(
       CxxBuckConfig config,

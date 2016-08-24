@@ -486,14 +486,17 @@ public class AndroidBinaryIntegrationTest {
 
     Optional<Path> ndkPath = androidResolver.getNdkOrAbsent();
     assertTrue(ndkPath.isPresent());
+    Optional<String> ndkVersion =
+      DefaultAndroidDirectoryResolver.findNdkVersionFromDirectory(ndkPath.get());
+    String gccVersion = NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion);
 
     ImmutableCollection<NdkCxxPlatform> platforms = NdkCxxPlatforms.getPlatforms(
         CxxPlatformUtils.DEFAULT_CONFIG,
         new ProjectFilesystem(ndkPath.get()),
         NdkCxxPlatformCompiler.builder()
             .setType(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE)
-            .setVersion(NdkCxxPlatforms.DEFAULT_GCC_VERSION)
-            .setGccVersion(NdkCxxPlatforms.DEFAULT_GCC_VERSION)
+            .setVersion(gccVersion)
+            .setGccVersion(gccVersion)
             .build(),
         NdkCxxPlatforms.DEFAULT_CXX_RUNTIME,
         NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM,

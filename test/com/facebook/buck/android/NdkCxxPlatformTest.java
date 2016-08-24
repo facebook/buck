@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatformUtils;
@@ -182,6 +183,18 @@ public class NdkCxxPlatformTest {
       ruleKeys.put(entry.getKey(), ruleKeyBuilderFactory.build(rule));
     }
     return ruleKeys.build();
+  }
+
+  @Test
+  public void testNdkMajorVersion() {
+    assertEquals(9, NdkCxxPlatforms.getNdkMajorVersion("r9"));
+    assertEquals(9, NdkCxxPlatforms.getNdkMajorVersion("r9b"));
+    assertEquals(10, NdkCxxPlatforms.getNdkMajorVersion("r10c"));
+    assertEquals(10, NdkCxxPlatforms.getNdkMajorVersion("r10e"));
+    assertEquals(11, NdkCxxPlatforms.getNdkMajorVersion("11.0.1234"));
+    assertEquals(11, NdkCxxPlatforms.getNdkMajorVersion("11.2.2725575"));
+    assertEquals(12, NdkCxxPlatforms.getNdkMajorVersion("12.0.1234"));
+    assertEquals(12, NdkCxxPlatforms.getNdkMajorVersion("12.1.2977051"));
   }
 
   // The important aspects we check for in rule keys is that the host platform and the path

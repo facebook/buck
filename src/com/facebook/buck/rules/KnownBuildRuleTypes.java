@@ -326,14 +326,16 @@ public class KnownBuildRuleTypes {
     if (ndkRoot.isPresent()) {
       NdkCxxPlatformCompiler.Type compilerType =
           androidConfig.getNdkCompiler().or(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE);
-      String gccVersion = androidConfig.getNdkGccVersion().or(NdkCxxPlatforms.DEFAULT_GCC_VERSION);
+      String gccVersion = androidConfig.getNdkGccVersion().or(
+          NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion));
+      String clangVersion = androidConfig.getNdkClangVersion().or(
+          NdkCxxPlatforms.getDefaultClangVersionForNdk(ndkVersion));
+      String compilerVersion = compilerType == NdkCxxPlatformCompiler.Type.GCC ?
+        gccVersion : clangVersion;
       NdkCxxPlatformCompiler compiler =
           NdkCxxPlatformCompiler.builder()
               .setType(compilerType)
-              .setVersion(
-                  compilerType == NdkCxxPlatformCompiler.Type.GCC ?
-                      gccVersion :
-                      androidConfig.getNdkClangVersion().or(NdkCxxPlatforms.DEFAULT_CLANG_VERSION))
+              .setVersion(compilerVersion)
               .setGccVersion(gccVersion)
               .build();
       ndkCxxPlatformsBuilder.putAll(
