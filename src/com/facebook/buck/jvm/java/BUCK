@@ -112,6 +112,7 @@ java_library(
     'JavaLibraryDescription.java',
     'JavaLibraryClasspathProvider.java',
     'JavaLibraryRules.java',
+    'JavaLibraryWithTests.java',
     'JavaSourceJar.java',
     'JavaTest.java',
     'JavaTestDescription.java',

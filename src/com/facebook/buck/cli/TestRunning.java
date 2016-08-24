@@ -25,12 +25,12 @@ import com.facebook.buck.jvm.java.GenerateCodeCoverageReportStep;
 import com.facebook.buck.jvm.java.JacocoConstants;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibraryWithTests;
 import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
@@ -650,8 +650,8 @@ public class TestRunning {
         // Then, look at the transitive dependencies for `tests` attribute that refers to this test.
         ImmutableSet<JavaLibrary> transitiveDeps = javaTest.getTransitiveClasspathDeps();
         for (JavaLibrary dep: transitiveDeps) {
-          if (dep instanceof HasTests) {
-            ImmutableSortedSet<BuildTarget> depTests = ((HasTests) dep).getTests();
+          if (dep instanceof JavaLibraryWithTests) {
+            ImmutableSortedSet<BuildTarget> depTests = ((JavaLibraryWithTests) dep).getTests();
             if (depTests.contains(test.getBuildTarget())) {
               rulesUnderTest.add(dep);
             }
