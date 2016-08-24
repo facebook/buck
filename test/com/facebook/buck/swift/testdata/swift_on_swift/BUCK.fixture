@@ -33,7 +33,7 @@ swift_library(
 apple_binary(
     name = 'ios-parent',
     srcs = [ 'ios-parent/AppDelegate.swift' ],
-    deps = [ ':iosdep1#iphonesimulator-x86_64' ], # TODO remove flavor
+    deps = [ ':iosdep1' ],
     frameworks = [
         '$SDKROOT/System/Library/Frameworks/UIKit.framework',
         '$SDKROOT/System/Library/Frameworks/Foundation.framework',

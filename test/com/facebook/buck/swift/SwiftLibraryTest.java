@@ -95,7 +95,7 @@ public class SwiftLibraryTest {
         ImmutableSortedSet.<BuildTarget>of()
     );
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-x86_64");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
         .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(depRule))
         .build();
@@ -110,7 +110,7 @@ public class SwiftLibraryTest {
     args.enableObjcInterop = Optional.absent();
     args.supportedPlatformsRegex = Optional.absent();
 
-    SwiftLibrary buildRule = (SwiftLibrary) FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION
+    SwiftCompile buildRule = (SwiftCompile) FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION
         .createBuildRule(TargetGraph.EMPTY, params, resolver, args);
 
     ImmutableList<String> swiftIncludeArgs = buildRule.getSwiftIncludeArgs();

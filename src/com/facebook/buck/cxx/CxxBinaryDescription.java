@@ -305,7 +305,7 @@ public class CxxBinaryDescription implements
     return deps.build();
   }
 
-      @Override
+  @Override
   public boolean hasFlavors(ImmutableSet<Flavor> inputFlavors) {
     Set<Flavor> flavors = inputFlavors;
 

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import static com.facebook.buck.swift.SwiftLibraryDescription.isSwiftTarget;
+
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -42,11 +44,10 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
-import com.facebook.buck.rules.MixedWithSwift;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.swift.SwiftDescriptions;
+import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Joiner;
@@ -68,8 +69,7 @@ public class AppleLibraryDescription implements
     Flavored,
     ImplicitDepsInferringDescription<AppleLibraryDescription.Arg>,
     ImplicitFlavorsInferringDescription,
-    MetadataProvidingDescription<AppleLibraryDescription.Arg>,
-    MixedWithSwift<AppleLibraryDescription.Arg> {
+    MetadataProvidingDescription<AppleLibraryDescription.Arg> {
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_library");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
@@ -121,6 +121,7 @@ public class AppleLibraryDescription implements
       FlavorDomain.from("C/C++ Library Type", Type.class);
 
   private final CxxLibraryDescription delegate;
+  private final SwiftLibraryDescription swiftDelegate;
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
   private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
@@ -129,12 +130,14 @@ public class AppleLibraryDescription implements
 
   public AppleLibraryDescription(
       CxxLibraryDescription delegate,
+      SwiftLibraryDescription swiftDelegate,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
       AppleDebugFormat defaultDebugFormat) {
     this.delegate = delegate;
+    this.swiftDelegate = swiftDelegate;
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.codeSignIdentityStore = codeSignIdentityStore;
@@ -155,7 +158,8 @@ public class AppleLibraryDescription implements
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
     return FluentIterable.from(flavors).allMatch(IS_SUPPORTED_FLAVOR) ||
-        delegate.hasFlavors(flavors);
+        delegate.hasFlavors(flavors) ||
+        swiftDelegate.hasFlavors(flavors);
   }
 
   @Override
@@ -164,6 +168,18 @@ public class AppleLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
+    Optional<BuildRule> swiftCompanionBuildRule = swiftDelegate.createCompanionBuildRule(
+        targetGraph, params, resolver, args);
+    if (swiftCompanionBuildRule.isPresent()) {
+      // when creating a swift target, there is no need to proceed with apple binary rules,
+      // otherwise, add this swift rule as a dependency.
+      if (isSwiftTarget(params.getBuildTarget())) {
+        return swiftCompanionBuildRule.get();
+      } else {
+        params = params.appendExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
+      }
+    }
+
     Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(
         params.getBuildTarget());
     if (type.isPresent() && type.get().getValue().equals(Type.FRAMEWORK)) {
@@ -439,28 +455,14 @@ public class AppleLibraryDescription implements
         (AppleNativeTargetDescriptionArg) constructorArg);
   }
 
-  @Override
-  public Optional<BuildRule> generateSwiftBuildRule(
-      BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
-      Arg args) throws NoSuchBuildTargetException {
-    return SwiftDescriptions.generateCompanionSwiftBuildRule(
-        params,
-        ruleResolver,
-        args,
-        delegate.getDefaultCxxPlatform(),
-        delegate.getCxxPlatforms(),
-        appleCxxPlatformFlavorDomain);
-  }
-
   public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       final BuildTarget buildTarget,
       final CellPathResolver cellRoots,
       final AppleNativeTargetDescriptionArg constructorArg) {
     return delegate.findDepsForTargetFromConstructorArgs(
-        buildTarget,
-        cellRoots,
-        constructorArg);
+            buildTarget,
+            cellRoots,
+            constructorArg);
   }
 
   public static boolean isSharedLibraryTarget(BuildTarget target) {

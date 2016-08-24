@@ -17,9 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Takes in an {@link TargetNode} from the target graph and builds a {@link BuildRule}.
@@ -46,17 +44,6 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
         Suppliers.ofInstance(ruleResolver.requireAllRules(targetNode.getExtraDeps())),
         ruleFactoryParams.getProjectFilesystem(),
         targetNode.getCellNames());
-
-    if (description instanceof MixedWithSwift) {
-      @SuppressWarnings("unchecked")
-      Optional<BuildRule> swiftCompanionTarget = ((MixedWithSwift<T>) description)
-          .generateSwiftBuildRule(params, ruleResolver, arg);
-      if (swiftCompanionTarget.isPresent()) {
-        params = params.appendExtraDeps(
-            ImmutableSet.of(
-                ruleResolver.addToIndex(swiftCompanionTarget.get())));
-      }
-    }
 
     return description.createBuildRule(targetGraph, params, ruleResolver, arg);
   }
