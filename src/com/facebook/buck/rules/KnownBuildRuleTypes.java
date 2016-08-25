@@ -513,9 +513,9 @@ public class KnownBuildRuleTypes {
 
     SwiftLibraryDescription swiftLibraryDescription =
         new SwiftLibraryDescription(
+            cxxBuckConfig,
             cxxPlatforms,
-            platformFlavorsToAppleCxxPlatforms,
-            defaultCxxPlatform);
+            platformFlavorsToAppleCxxPlatforms, defaultCxxPlatform);
     builder.register(swiftLibraryDescription);
 
     CodeSignIdentityStore codeSignIdentityStore =

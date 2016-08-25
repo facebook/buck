@@ -22,6 +22,7 @@ import static com.facebook.buck.swift.SwiftUtil.normalizeSwiftModuleName;
 import static com.facebook.buck.swift.SwiftUtil.toSwiftHeaderName;
 
 import com.facebook.buck.cxx.CxxHeaders;
+import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
@@ -78,6 +79,7 @@ class SwiftCompile
   private final boolean hasMainEntry;
   private final boolean enableObjcInterop;
   private final Optional<SourcePath> bridgingHeader;
+  private final CxxLink delegateLinkRule;
 
   private final Iterable<CxxPreprocessorInput> cxxPreprocessorInputs;
 
@@ -91,6 +93,7 @@ class SwiftCompile
       };
 
   SwiftCompile(
+      CxxLink delegateLinkRule,
       final CxxPlatform cxxPlatform,
       BuildRuleParams params,
       SourcePathResolver resolver,
@@ -101,6 +104,7 @@ class SwiftCompile
       Optional<Boolean> enableObjcInterop,
       Optional<SourcePath> bridgingHeader) throws NoSuchBuildTargetException {
     super(params, resolver);
+    this.delegateLinkRule = delegateLinkRule;
     this.cxxPreprocessorInputs =
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, params.getDeps());
     this.swiftCompiler = swiftCompiler;
@@ -177,9 +181,13 @@ class SwiftCompile
       BuildContext context,
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(outputPath);
-    return ImmutableList.of(
-        new MkdirStep(getProjectFilesystem(), outputPath),
-        makeCompileStep());
+    delegateLinkRule.getBuildSteps(context, buildableContext);
+    return ImmutableList.<Step>builder()
+        .add(
+            new MkdirStep(getProjectFilesystem(), outputPath),
+            makeCompileStep())
+        .addAll(delegateLinkRule.getBuildSteps(context, buildableContext))
+        .build();
   }
 
   @Override

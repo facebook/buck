@@ -20,6 +20,7 @@ import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPILE_FLAV
 import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_LIBRARY_FLAVOR;
 
 import com.facebook.buck.apple.AppleCxxPlatform;
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -44,9 +45,12 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.util.MoreStrings;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
@@ -54,8 +58,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.io.Files;
 
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -176,15 +182,35 @@ class SwiftLibrary
     for (Path swiftRuntimePath : swiftRuntimePaths) {
       inputBuilder.addAllArgs(StringArg.from("-L", swiftRuntimePath.toString()));
     }
+
+    BuildTarget ruleTarget = rule.getBuildTarget();
     inputBuilder
         .addAllArgs(StringArg.from("-Xlinker", "-add_ast_path"))
         .addArgs(
             new SourcePathArg(
                 getResolver(),
-                new BuildTargetSourcePath(rule.getBuildTarget(), rule.getModulePath())),
-            new SourcePathArg(
-                getResolver(),
-                new BuildTargetSourcePath(rule.getBuildTarget(), rule.getObjectPath())));
+                new BuildTargetSourcePath(ruleTarget, rule.getModulePath())));
+    if (!sharedRequested) {
+      inputBuilder.addArgs(
+          new SourcePathArg(
+              getResolver(),
+              new BuildTargetSourcePath(ruleTarget, rule.getObjectPath())));
+    } else {
+      ImmutableMap<String, SourcePath> sharedLibs = getSharedLibraries(cxxPlatform);
+      inputBuilder.addAllArgs(
+          FluentIterable.from(sharedLibs.entrySet())
+              .transformAndConcat(new Function<Map.Entry<String, SourcePath>, Iterable<Arg>>() {
+                @Override
+                public Iterable<Arg> apply(Map.Entry<String, SourcePath> input) {
+                  return StringArg.from(
+                      "-L",
+                      getResolver().getAbsolutePath(input.getValue()).toString(),
+                      "-l",
+                      MoreStrings.stripPrefix(
+                          Files.getNameWithoutExtension(input.getKey()), "lib").get());
+                }
+              }));
+    }
     inputBuilder.addAllFrameworks(frameworks);
     inputBuilder.addAllLibraries(libraries);
     return inputBuilder.build();
@@ -193,7 +219,19 @@ class SwiftLibrary
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(
       CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
-    return ImmutableMap.of();
+    if (!isPlatformSupported(cxxPlatform)) {
+      return ImmutableMap.of();
+    }
+    ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
+    String sharedLibrarySoname = CxxDescriptionEnhancer.getSharedLibrarySoname(
+        Optional.<String>absent(),
+        getBuildTarget(),
+        cxxPlatform);
+    BuildRule sharedLibraryBuildRule = requireSwiftCompileRule(cxxPlatform.getFlavor());
+    libs.put(
+        sharedLibrarySoname,
+        new BuildTargetSourcePath(sharedLibraryBuildRule.getBuildTarget()));
+    return libs.build();
   }
 
   SwiftCompile requireSwiftCompileRule(Flavor... flavors)

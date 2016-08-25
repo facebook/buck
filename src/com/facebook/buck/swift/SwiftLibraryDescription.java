@@ -19,8 +19,15 @@ package com.facebook.buck.swift;
 import com.facebook.buck.apple.AppleCxxPlatform;
 import com.facebook.buck.apple.ApplePlatforms;
 import com.facebook.buck.apple.MultiarchFileInfo;
+import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxLink;
+import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -45,7 +52,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -54,6 +60,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -77,14 +84,17 @@ public class SwiftLibraryDescription implements
     }
   };
 
+  private final CxxBuckConfig cxxBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
   private final CxxPlatform defaultCxxPlatform;
 
   public SwiftLibraryDescription(
+      CxxBuckConfig cxxBuckConfig,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform) {
+    this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
     this.defaultCxxPlatform = defaultCxxPlatform;
@@ -129,7 +139,7 @@ public class SwiftLibraryDescription implements
           cxxPlatformFlavorDomain,
           defaultCxxPlatform,
           appleCxxPlatformFlavorDomain,
-          params.getBuildTarget(),
+          buildTarget,
           Optional.<MultiarchFileInfo>absent());
       Optional<Tool> swiftCompiler = appleCxxPlatform.getSwift();
       if (!swiftCompiler.isPresent()) {
@@ -138,7 +148,7 @@ public class SwiftLibraryDescription implements
 
       // All swift-compile rules of swift-lib deps are required since we need their swiftmodules
       // during compilation.
-      params = params.appendExtraDeps(Suppliers.ofInstance(
+      params = params.appendExtraDeps(
           FluentIterable.from(params.getDeps())
               .filter(SwiftLibrary.class)
               .transform(new Function<SwiftLibrary, BuildRule>() {
@@ -153,17 +163,47 @@ public class SwiftLibraryDescription implements
                   }
                 }
               })
-              .toSortedSet(Ordering.natural())));
+              .toSortedSet(Ordering.natural()));
+
+      final Linker.LinkType linkType = Linker.LinkType.SHARED;
+      SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+      String moduleName = args.moduleName.or(buildTarget.getShortName());
+      CxxPlatform cxxPlatform = platform.get().getValue();
+      Path sharedLibOutput = CxxDescriptionEnhancer.getSharedLibraryPath(
+          params.getProjectFilesystem(),
+          buildTarget,
+          CxxDescriptionEnhancer.getSharedLibrarySoname(
+              Optional.<String>absent(),
+              buildTarget.withoutFlavors(SUPPORTED_FLAVORS),
+              cxxPlatform));
+
+      CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+          cxxBuckConfig,
+          cxxPlatform,
+          params,
+          resolver,
+          sourcePathResolver,
+          buildTarget,
+          linkType,
+          Optional.of(moduleName),
+          sharedLibOutput,
+          Linker.LinkableDepType.SHARED,
+          Iterables.filter(params.getDeps(), NativeLinkable.class),
+          Optional.<Linker.CxxRuntimeType>absent(),
+          Optional.<SourcePath>absent(),
+          ImmutableSet.<BuildTarget>of(),
+          NativeLinkableInput.of());
 
       return new SwiftCompile(
-          platform.get().getValue(),
+          cxxLink,
+          cxxPlatform,
           params,
           new SourcePathResolver(resolver),
           swiftCompiler.get(),
-          params.getBuildTarget().getShortName(),
+          moduleName,
           BuildTargets.getGenPath(
               params.getProjectFilesystem(),
-              params.getBuildTarget(), "%s"),
+              buildTarget, "%s"),
           args.srcs.get(),
           Optional.<Boolean>absent(),
           args.bridgingHeader);

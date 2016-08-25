@@ -172,6 +172,7 @@ public class FakeAppleRuleDescriptions {
 
   public static final SwiftLibraryDescription SWIFT_LIBRARY_DESCRIPTION =
       new SwiftLibraryDescription(
+          CxxPlatformUtils.DEFAULT_CONFIG,
           DEFAULT_APPLE_FLAVOR_DOMAIN,
           DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
           DEFAULT_IPHONEOS_X86_64_PLATFORM.getCxxPlatform());
