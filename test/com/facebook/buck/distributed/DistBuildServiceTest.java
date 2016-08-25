@@ -30,8 +30,6 @@ import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.distributed.thrift.StartBuildResponse;
-import com.facebook.buck.slb.ThriftProtocol;
-import com.facebook.buck.slb.ThriftUtil;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -105,11 +103,8 @@ public class DistBuildServiceTest {
     Assert.assertEquals(request.getValue().getStoreBuildGraphRequest().getBuildId(), id);
     Assert.assertTrue(request.getValue().getStoreBuildGraphRequest().isSetBuildGraph());
 
-    BuildJobState sentState = new BuildJobState();
-    ThriftUtil.deserialize(
-        ThriftProtocol.BINARY,
-        request.getValue().getStoreBuildGraphRequest().getBuildGraph(),
-        sentState);
+    BuildJobState sentState = BuildJobStateSerializer.deserialize(
+        request.getValue().getStoreBuildGraphRequest().getBuildGraph());
     Assert.assertTrue(buildJobState.equals(sentState));
   }
 

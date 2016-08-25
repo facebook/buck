@@ -22,7 +22,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public class BuildJobStateSerializerTest {
@@ -31,12 +30,7 @@ public class BuildJobStateSerializerTest {
   public void testSerializationIsSymmetrical() throws IOException {
     BuildJobState state = new BuildJobState();
 
-    byte[] data = null;
-    try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
-      BuildJobStateSerializer.serialize(state, outStream);
-      data = outStream.toByteArray();
-    }
-
+    byte[] data = BuildJobStateSerializer.serialize(state);
     Assert.assertNotNull(data);
     Assert.assertTrue(data.length > 0);
 

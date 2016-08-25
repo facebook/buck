@@ -21,6 +21,7 @@ import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -37,6 +38,13 @@ public abstract class BuildJobStateSerializer {
   public static void serialize(BuildJobState state, OutputStream stream) throws IOException {
     try (DeflaterOutputStream zlibStream = new DeflaterOutputStream(stream)) {
       ThriftUtil.serialize(PROTOCOL, state, zlibStream);
+    }
+  }
+
+  public static byte[] serialize(BuildJobState state) throws IOException {
+    try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
+      serialize(state, stream);
+      return stream.toByteArray();
     }
   }
 
