@@ -30,6 +30,10 @@ struct BuildId {
   1 : optional string id;
 }
 
+struct BuckVersion {
+  1: optional string version;
+}
+
 enum BuildStatus {
   UNKNOWN = 0,
 
@@ -53,6 +57,7 @@ struct BuildJob {
   1: optional BuildId buildId;
   2: optional DebugInfo debug;
   3: optional BuildStatus status = BuildStatus.UNKNOWN;
+  4: optional BuckVersion buckVersion;
 }
 
 struct ScribeData {
@@ -77,6 +82,7 @@ struct FileInfo {
 
 struct CreateBuildRequest {
   1: optional i64 createTimestampMillis;
+  2: optional BuckVersion buckVersion;
 }
 
 struct CreateBuildResponse {
