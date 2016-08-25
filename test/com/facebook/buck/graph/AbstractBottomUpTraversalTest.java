@@ -57,8 +57,8 @@ public class AbstractBottomUpTraversalTest {
         new DefaultDirectedAcyclicGraph<String>(mutableGraph);
 
     final List<String> visitedNodes = Lists.newLinkedList();
-    AbstractBottomUpTraversal<String, List<String>> traversal =
-        new AbstractBottomUpTraversal<String, List<String>>(immutableGraph) {
+    AbstractBottomUpTraversal<String, RuntimeException> traversal =
+        new AbstractBottomUpTraversal<String, RuntimeException>(immutableGraph) {
 
       @Override
       public void visit(String node) {
@@ -102,8 +102,8 @@ public class AbstractBottomUpTraversalTest {
         new DefaultDirectedAcyclicGraph<String>(mutableGraph);
 
     final List<String> visitedNodes = Lists.newLinkedList();
-    AbstractBottomUpTraversal<String, List<String>> traversal =
-        new AbstractBottomUpTraversal<String, List<String>>(immutableGraph) {
+    AbstractBottomUpTraversal<String, RuntimeException> traversal =
+        new AbstractBottomUpTraversal<String, RuntimeException>(immutableGraph) {
 
       @Override
       public void visit(String node) {

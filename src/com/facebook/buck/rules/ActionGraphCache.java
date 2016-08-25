@@ -143,8 +143,8 @@ public class ActionGraphCache {
     final int numberOfNodes = targetGraph.getNodes().size();
     final AtomicInteger processedNodes = new AtomicInteger(0);
 
-    AbstractBottomUpTraversal<TargetNode<?>, ActionGraph> bottomUpTraversal =
-        new AbstractBottomUpTraversal<TargetNode<?>, ActionGraph>(targetGraph) {
+    AbstractBottomUpTraversal<TargetNode<?>, RuntimeException> bottomUpTraversal =
+        new AbstractBottomUpTraversal<TargetNode<?>, RuntimeException>(targetGraph) {
 
           @Override
           public void visit(TargetNode<?> node) {

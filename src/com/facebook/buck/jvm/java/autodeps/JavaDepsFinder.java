@@ -208,7 +208,7 @@ public class JavaDepsFinder {
     // Currently, we traverse the entire target graph using a single thread. However, the work to
     // visit each node could be done in parallel, so long as the updates to the above collections
     // were thread-safe.
-    new AbstractBottomUpTraversal<TargetNode<?>, Void>(graph) {
+    new AbstractBottomUpTraversal<TargetNode<?>, RuntimeException>(graph) {
       @Override
       public void visit(TargetNode<?> node) {
         BuildRuleType buildRuleType = node.getDescription().getBuildRuleType();

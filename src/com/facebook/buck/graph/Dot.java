@@ -45,7 +45,7 @@ public class Dot<T> {
   public void writeOutput() throws IOException {
     output.append("digraph " + graphName + " {\n");
 
-    new AbstractBottomUpTraversal<T, Object>(graph) {
+    new AbstractBottomUpTraversal<T, RuntimeException>(graph) {
 
       @Override
       public void visit(T node) {
@@ -75,7 +75,7 @@ public class Dot<T> {
     final ImmutableSortedSet.Builder<String> builder = ImmutableSortedSet.naturalOrder();
     output.append("digraph " + graphName + " {\n");
 
-    new AbstractBottomUpTraversal<T, Object>(graph) {
+    new AbstractBottomUpTraversal<T, RuntimeException>(graph) {
 
       @Override
       public void visit(T node) {
