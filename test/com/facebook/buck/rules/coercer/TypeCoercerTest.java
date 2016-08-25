@@ -185,12 +185,6 @@ public class TypeCoercerTest {
     typeCoercerFactory.typeCoercerForType(type);
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void disallowMapWithOptionalKeys() throws NoSuchFieldException {
-    Type type = TestFields.class.getField("optionalIntegerMapOfStrings").getGenericType();
-    typeCoercerFactory.typeCoercerForType(type);
-  }
-
   /**
    * Traverse visits every element of an input value without coercing to the output type.
    */
@@ -691,7 +685,6 @@ public class TypeCoercerTest {
     public LinkedList<Integer> subclassOfList;
     public Object object;
     public ImmutableMap<String, ImmutableList<BuildTarget>> stringMapOfListOfBuildTargets;
-    public Map<Optional<Integer>, String> optionalIntegerMapOfStrings;
     public String primitiveString;
     public Either<String, List<String>> eitherStringOrStringList;
     public Either<Set<String>, Map<String, String>> eitherStringSetOrStringToStringMap;

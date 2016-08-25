@@ -30,6 +30,7 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -222,6 +223,9 @@ public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
       } else if (rawClass.isAssignableFrom(PatternMatchedCollection.class)) {
         return new PatternMatchedCollectionTypeCoercer<>(
             patternTypeCoercer,
+            typeCoercerForType(getSingletonTypeParameter(parameterizedType)));
+      } else if (rawClass.isAssignableFrom(Optional.class)) {
+        return new OptionalTypeCoercer<>(
             typeCoercerForType(getSingletonTypeParameter(parameterizedType)));
       } else {
         throw new IllegalArgumentException("Unhandled type: " + type);
