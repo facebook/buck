@@ -35,10 +35,6 @@ java_immutables_library(
     'ProjectPredicates',
     'TestRun',
   ],
-  resources = [
-    '//src/com/facebook/buck/cli/quickstart/android:android-template',
-    '//src/com/facebook/buck/cli/quickstart/ios:ios-template',
-  ],
   tests = [
     '//test/com/facebook/buck/cli:cli',
     '//test/com/facebook/buck/cli:cli-apple-integration',

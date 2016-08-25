@@ -74,7 +74,6 @@ function _buck_completion_run() {
         clean)      _buck_completion_try_clean      "$@";;
         install)    _buck_completion_try_install    "$@";;
         project)    _buck_completion_try_project    "$@";;
-        quickstart) _buck_completion_try_quickstart "$@";;
         run)        _buck_completion_try_run        "$@";;
         targets)    _buck_completion_try_targets    "$@";;
         test)       _buck_completion_try_test       "$@";;
@@ -167,11 +166,6 @@ function _buck_completion_try_project() {
       --process-annotations
       --verbose
       --without-tests"
-}
-
-function _buck_completion_try_quickstart() {
-  _buck_completion_try_long_arg "--android-sdk --dest-dir --help --no-cache --verbose" \
-    || _buck_completion_try_dest_dir "$@"
 }
 
 function _buck_completion_try_run() {
@@ -484,7 +478,7 @@ function _buck_completion_log() {
 }
 
 function _buck_completion_echo_buck_commands() {
-  echo "audit build cache clean install project quickstart run targets test uninstall --version --help -V"
+  echo "audit build cache clean install project run targets test uninstall --version --help -V"
 }
 
 function _buck_completion_internal_error() {
