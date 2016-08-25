@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -399,11 +398,10 @@ public class PythonTestDescription implements
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends PythonLibraryDescription.Arg implements HasSourceUnderTest {
+  public static class Arg extends PythonLibraryDescription.Arg {
     public Optional<String> mainModule;
     public Optional<ImmutableSet<String>> contacts;
     public Optional<ImmutableSet<Label>> labels;
-    public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
     public Optional<String> platform;
     public Optional<String> extension;
     public Optional<PythonBuckConfig.PackageStyle> packageStyle;
@@ -415,11 +413,6 @@ public class PythonTestDescription implements
 
     public Optional<ImmutableMap<String, String>> env;
     public Optional<Long> testRuleTimeoutMs;
-
-    @Override
-    public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {
-      return sourceUnderTest.get();
-    }
   }
 
 }
