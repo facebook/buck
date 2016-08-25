@@ -30,6 +30,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
+
 public class ThriftScribeLogger extends ScribeLogger {
 
   private final ThriftService<FrontendRequest, FrontendResponse> thriftService;
