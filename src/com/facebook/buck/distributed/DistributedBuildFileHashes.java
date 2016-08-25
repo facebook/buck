@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
@@ -50,6 +51,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -233,12 +235,14 @@ public class DistributedBuildFileHashes {
    *                          where on the local machine we wish to transplant the files from the
    *                          remote to.
    * @param remoteFileHashes the serialized state.
+   * @param provider of the file contents.
    * @return the loader.
    */
   public static FileHashLoader createMaterializingLoader(
       ProjectFilesystem projectFilesystem,
-      BuildJobStateFileHashes remoteFileHashes) {
-    return new FileMaterializer(projectFilesystem, remoteFileHashes);
+      BuildJobStateFileHashes remoteFileHashes,
+      FileContentsProvider provider) {
+    return new FileMaterializer(projectFilesystem, remoteFileHashes, provider);
   }
 
   private static ImmutableMap<Path, BuildJobStateFileHashEntry> indexEntriesByPath(
@@ -288,12 +292,15 @@ public class DistributedBuildFileHashes {
   private static class FileMaterializer implements FileHashLoader {
     private final Map<Path, BuildJobStateFileHashEntry> remoteFileHashes;
     private final Set<Path> materializedPaths;
+    private final FileContentsProvider provider;
 
     public FileMaterializer(
         final ProjectFilesystem projectFilesystem,
-        BuildJobStateFileHashes remoteFileHashes) {
+        BuildJobStateFileHashes remoteFileHashes,
+        FileContentsProvider provider) {
       this.remoteFileHashes = indexEntriesByPath(projectFilesystem, remoteFileHashes);
       this.materializedPaths = new HashSet<>();
+      this.provider = provider;
     }
 
     private void materializeIfNeeded(Path path) throws IOException {
@@ -305,12 +312,22 @@ public class DistributedBuildFileHashes {
       BuildJobStateFileHashEntry fileHashEntry = remoteFileHashes.get(path);
       if (fileHashEntry == null ||
           fileHashEntry.isIsDirectory() ||
-          fileHashEntry.isPathIsAbsolute() ||
-          !fileHashEntry.isSetContents()) {
+          fileHashEntry.isPathIsAbsolute()) {
         return;
       }
+
+      Optional<InputStream> sourceStreamOptional = provider.getFileContents(fileHashEntry);
+      if (!sourceStreamOptional.isPresent()) {
+        throw new HumanReadableException(
+            String.format(
+                "Input source file is missing from stampede. File=[%s]",
+                fileHashEntry.toString()));
+      }
+
       Files.createDirectories(path.getParent());
-      Files.write(path, fileHashEntry.getContents());
+      try (InputStream sourceStream = sourceStreamOptional.get()) {
+        Files.copy(sourceStream, path);
+      }
     }
 
     @Override

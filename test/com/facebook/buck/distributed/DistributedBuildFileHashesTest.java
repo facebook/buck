@@ -155,7 +155,8 @@ public class DistributedBuildFileHashesTest {
         "/read_hashes");
     FileHashLoader materializer = DistributedBuildFileHashes.createMaterializingLoader(
         materializeProjectFilesystem,
-        fileHashes.get(0));
+        fileHashes.get(0),
+        new FileContentsProviders.InlineContentsProvider());
 
     materializer.get(materializeProjectFilesystem.resolve(f.javaSrcPath));
     assertThat(

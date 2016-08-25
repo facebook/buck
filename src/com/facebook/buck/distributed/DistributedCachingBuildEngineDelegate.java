@@ -46,7 +46,8 @@ public class DistributedCachingBuildEngineDelegate implements CachingBuildEngine
 
   public DistributedCachingBuildEngineDelegate(
       SourcePathResolver sourcePathResolver,
-      final DistributedBuildState remoteState) {
+      final DistributedBuildState remoteState,
+      final FileContentsProvider provider) {
     this.fileHashCacheLoader = CacheBuilder.newBuilder()
         .build(new CacheLoader<ProjectFilesystem, FileHashCache>() {
           @Override
@@ -67,7 +68,7 @@ public class DistributedCachingBuildEngineDelegate implements CachingBuildEngine
         CacheBuilder.newBuilder().build(new CacheLoader<ProjectFilesystem, FileHashLoader>() {
           @Override
           public FileHashLoader load(ProjectFilesystem filesystem) throws Exception {
-            return remoteState.createMaterializingLoader(filesystem);
+            return remoteState.createMaterializingLoader(filesystem, provider);
           }
         }),
         /* keySeed */ 0);

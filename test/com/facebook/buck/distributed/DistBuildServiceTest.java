@@ -47,8 +47,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
+// TODO(ruibm, shivanker): Revisit these tests and clean them up.
 public class DistBuildServiceTest {
   @Rule
   public TemporaryPaths temporaryFolder = new TemporaryPaths();
@@ -70,7 +72,7 @@ public class DistBuildServiceTest {
   }
 
   @Test
-  public void canUploadTargetGraph() throws Exception {
+  public void canUploadTargetGraph() throws IOException, ExecutionException, InterruptedException {
     Capture<FrontendRequest> request = EasyMock.newCapture();
     FrontendResponse response = new FrontendResponse();
     response.setType(FrontendRequestType.STORE_BUILD_GRAPH);
@@ -252,7 +254,7 @@ public class DistBuildServiceTest {
 
     BuildId id = new BuildId();
     id.setId(idString);
-    BuildJob job = distBuildService.pollBuild(id);
+    BuildJob job = distBuildService.getCurrentBuildJobState(id);
 
     Assert.assertEquals(request.getValue().getType(), FrontendRequestType.BUILD_STATUS);
     Assert.assertTrue(request.getValue().isSetBuildStatusRequest());
@@ -261,5 +263,18 @@ public class DistBuildServiceTest {
 
     Assert.assertTrue(job.isSetBuildId());
     Assert.assertEquals(job.getBuildId(), id);
+  }
+
+  @Test
+  public void testRequestContainsBuildId() {
+    BuildId buildId = createBuildId("topspin");
+    FrontendRequest request = DistBuildService.createFrontendBuildStatusRequest(buildId);
+    Assert.assertEquals(buildId, request.getBuildStatusRequest().getBuildId());
+  }
+
+  private static BuildId createBuildId(String id) {
+    BuildId buildId = new BuildId();
+    buildId.setId(id);
+    return buildId;
   }
 }

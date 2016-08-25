@@ -16,15 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.distributed.DistBuildConfig;
-import com.facebook.buck.distributed.thrift.FrontendRequest;
-import com.facebook.buck.distributed.thrift.FrontendResponse;
-import com.facebook.buck.log.CommandThreadFactory;
-import com.facebook.buck.slb.ClientSideSlb;
-import com.facebook.buck.slb.LoadBalancedService;
-import com.facebook.buck.slb.ThriftOverHttpService;
-import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
-import com.facebook.buck.slb.ThriftService;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 
@@ -35,13 +26,12 @@ import org.kohsuke.args4j.spi.SubCommands;
 
 import java.io.IOException;
 
-import okhttp3.OkHttpClient;
-
 public class DistBuildCommand extends AbstractContainerCommand {
 
   @Argument(handler = AdditionalOptionsSubCommandHandler.class)
   @SubCommands({
       @SubCommand(name = "status", impl = DistBuildStatusCommand.class),
+      @SubCommand(name = "run", impl = DistBuildRunCommand.class),
   })
   @SuppressFieldNotInitialized
   private Command subcommand;
@@ -74,22 +64,6 @@ public class DistBuildCommand extends AbstractContainerCommand {
   @Override
   public boolean isReadOnly() {
     return false;
-  }
-
-  public static ThriftService<FrontendRequest, FrontendResponse> newFrontendService(
-      CommandRunnerParams params) {
-    DistBuildConfig config = new DistBuildConfig(params.getBuckConfig());
-    ClientSideSlb slb = config.getFrontendConfig().createHttpClientSideSlb(
-        params.getClock(),
-        params.getBuckEventBus(),
-        new CommandThreadFactory("BuildCommand.HttpLoadBalancer"));
-    OkHttpClient client = config.createOkHttpClient();
-
-    return new ThriftOverHttpService<>(
-        ThriftOverHttpServiceConfig.of(new LoadBalancedService(
-            slb,
-            client,
-            params.getBuckEventBus())));
   }
 
   @Override

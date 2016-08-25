@@ -32,7 +32,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
@@ -40,9 +39,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-
-import org.apache.thrift.TException;
-import org.apache.thrift.protocol.TProtocol;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -94,17 +90,13 @@ public class DistributedBuildState {
     return jobState;
   }
 
-  public static DistributedBuildState load(TProtocol protocol, Cell rootCell)
-      throws TException, IOException, InterruptedException {
-    BuildJobState jobState = new BuildJobState();
-    jobState.read(protocol);
-    return load(jobState, rootCell);
-  }
-
-  @VisibleForTesting
-  static DistributedBuildState load(BuildJobState jobState, Cell rootCell)
+  public static DistributedBuildState load(BuildJobState jobState, Cell rootCell)
       throws IOException, InterruptedException {
     return new DistributedBuildState(jobState, createCells(jobState, rootCell));
+  }
+
+  public BuildJobState getRemoteState() {
+    return remoteState;
   }
 
   private static ImmutableBiMap<Integer, Cell> createCells(BuildJobState remoteState, Cell rootCell)
@@ -209,13 +201,16 @@ public class DistributedBuildState {
     return DistributedBuildFileHashes.createFileHashCache(projectFilesystem, remoteFileHashes);
   }
 
-  public FileHashLoader createMaterializingLoader(ProjectFilesystem projectFilesystem) {
+  public FileHashLoader createMaterializingLoader(
+      ProjectFilesystem projectFilesystem,
+      FileContentsProvider provider) {
     BuildJobStateFileHashes remoteFileHashes = Preconditions.checkNotNull(
         fileHashes.get(projectFilesystem),
         "Don't have file hashes for filesystem %s.",
         projectFilesystem);
     return DistributedBuildFileHashes.createMaterializingLoader(
         projectFilesystem,
-        remoteFileHashes);
+        remoteFileHashes,
+        provider);
   }
 }

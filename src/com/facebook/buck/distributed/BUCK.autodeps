@@ -1,24 +1,29 @@
-#@# GENERATED FILE: DO NOT MODIFY ceaeef782393d407a7f6267c57198f2da9ae981d #@#
+#@# GENERATED FILE: DO NOT MODIFY 82610ad480bf43dfaf6407c756cb397c5b12f071 #@#
 {
   "distributed" : {
     "deps" : [
+      "//src/com/facebook/buck/command:command",
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/graph:graph",
+      "//src/com/facebook/buck/json:json",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/rules:default_cell_path_resolver",
-      "//src/com/facebook/buck/util/environment:platform",
+      "//src/com/facebook/buck/rules:rules",
+      "//src/com/facebook/buck/util:exceptions",
       "//third-party/java/immutables:processor",
-      "//third-party/java/jackson:jackson-core",
-      "//third-party/java/jsr:jsr305"
+      "//third-party/java/jackson:jackson-core"
     ],
     "exported_deps" : [
       "//src-gen:thrift",
+      "//src/com/facebook/buck/android:utils",
+      "//src/com/facebook/buck/artifact_cache:artifact_cache",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/hashing:hashing",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:parser",
+      "//src/com/facebook/buck/rules:action_graph_cache",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:caching_build_engine_delegates",
       "//src/com/facebook/buck/rules:rule_key",
@@ -26,13 +31,17 @@
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/slb:slb",
+      "//src/com/facebook/buck/step:step",
+      "//src/com/facebook/buck/timing:timing",
+      "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/concurrent:concurrent",
+      "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
       "//third-party/java/jackson:jackson-databind",
-      "//third-party/java/okhttp:okhttp",
-      "//third-party/java/thrift:libthrift"
+      "//third-party/java/jsr:jsr305",
+      "//third-party/java/okhttp:okhttp"
     ]
   }
 }

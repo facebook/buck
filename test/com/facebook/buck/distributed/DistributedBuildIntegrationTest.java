@@ -35,7 +35,6 @@ public class DistributedBuildIntegrationTest {
     Path stateFilePath = temporaryFolder.getRoot().resolve("state_dump.bin");
     final Path destinationFolderPath = temporaryFolder.newFolder("destination");
 
-
     ProjectWorkspace sourceWorkspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "simple_java_target",
@@ -45,7 +44,7 @@ public class DistributedBuildIntegrationTest {
     sourceWorkspace.runBuckBuild(
         "//:lib",
         "--distributed",
-        "--distributed-state-dump",
+        "--build-state-file",
         stateFilePath.toString())
         .assertSuccess();
 
@@ -55,10 +54,8 @@ public class DistributedBuildIntegrationTest {
         destinationFolderPath);
     destinationWorkspace.setUp();
 
-    destinationWorkspace.runBuckBuild(
-        "//:lib",
-        "--distributed",
-        "--distributed-state-dump",
+    destinationWorkspace.runBuckDistBuildRun(
+        "--build-state-file",
         stateFilePath.toString())
         .assertSuccess();
   }

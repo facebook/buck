@@ -42,6 +42,8 @@ struct BuildJobStateFileHashEntry {
   4: optional bool isDirectory;
   // The paths to source files are relative, the paths to tools, SDKs, etc.. are absolute.
   5: optional bool pathIsAbsolute;
+
+  // Inlined binary contents of this particular input dep file.
   6: optional binary contents;
 }
 
@@ -71,4 +73,3 @@ struct BuildJobState {
   2: optional list<BuildJobStateFileHashes> fileHashes;
   3: optional BuildJobStateTargetGraph targetGraph;
 }
-

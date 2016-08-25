@@ -245,6 +245,14 @@ public class ProjectWorkspace {
     return runBuckCommand(totalArgs);
   }
 
+  public ProcessResult runBuckDistBuildRun(String... args) throws IOException {
+    String[] totalArgs = new String[args.length + 2];
+    totalArgs[0] = "distbuild";
+    totalArgs[1] = "run";
+    System.arraycopy(args, 0, totalArgs, 2, args.length);
+    return runBuckCommand(totalArgs);
+  }
+
   public Path buildAndReturnOutput(String... args) throws IOException {
 
     // Add in `--show-output` to the build, so we can parse the output paths after the fact.

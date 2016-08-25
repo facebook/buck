@@ -20,7 +20,7 @@ import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.command.Build;
-import com.facebook.buck.distributed.DistBuildConfig;
+import com.facebook.buck.distributed.BuildJobStateSerializer;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistributedBuild;
 import com.facebook.buck.distributed.DistributedBuildCellIndexer;
@@ -28,14 +28,11 @@ import com.facebook.buck.distributed.DistributedBuildFileHashes;
 import com.facebook.buck.distributed.DistributedBuildState;
 import com.facebook.buck.distributed.DistributedBuildTargetGraphCodec;
 import com.facebook.buck.distributed.DistributedBuildTypeCoercerFactory;
-import com.facebook.buck.distributed.DistributedCachingBuildEngineDelegate;
-import com.facebook.buck.distributed.FrontendService;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.HasBuildTarget;
@@ -45,7 +42,6 @@ import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
-import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildEngine;
@@ -58,15 +54,10 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
-import com.facebook.buck.slb.ClientSideSlb;
-import com.facebook.buck.slb.HttpService;
-import com.facebook.buck.slb.LoadBalancedService;
-import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.step.TargetDevice;
@@ -85,7 +76,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -94,25 +84,16 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import org.apache.thrift.TException;
-import org.apache.thrift.protocol.TProtocol;
-import org.apache.thrift.protocol.TTupleProtocol;
-import org.apache.thrift.transport.TIOStreamTransport;
-import org.apache.thrift.transport.TTransport;
-import org.apache.thrift.transport.TZlibTransport;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
-
-import okhttp3.OkHttpClient;
 
 public class BuildCommand extends AbstractCommand {
 
@@ -127,7 +108,6 @@ public class BuildCommand extends AbstractCommand {
   private static final String SHOW_FULL_OUTPUT_LONG_ARG = "--show-full-output";
   private static final String SHOW_RULEKEY_LONG_ARG = "--show-rulekey";
   private static final String DISTRIBUTED_LONG_ARG = "--distributed";
-  private static final String DISTRIBUTED_STATE_DUMP_LONG_ARG = "--distributed-state-dump";
 
   @Option(
       name = KEEP_GOING_LONG_ARG,
@@ -201,8 +181,8 @@ public class BuildCommand extends AbstractCommand {
 
   @Nullable
   @Option(
-      name = DISTRIBUTED_STATE_DUMP_LONG_ARG,
-      usage = "Dump/load distributed build state to/from a file. (experimental).",
+      name = DistBuildRunCommand.BUILD_STATE_FILE_ARG_NAME,
+      usage = DistBuildRunCommand.BUILD_STATE_FILE_ARG_USAGE,
       hidden = true)
   private String distributedBuildStateFile = null;
 
@@ -397,48 +377,6 @@ public class BuildCommand extends AbstractCommand {
     return exitCode;
   }
 
-  private int executeDistributedBuildFromStateDump(
-      DistributedBuildState state,
-      DistributedBuildTargetGraphCodec targetGraphCodec,
-      final CommandRunnerParams params,
-      final WeightedListeningExecutorService executorService)
-      throws IOException, InterruptedException {
-    final TargetGraph targetGraph = state.createTargetGraph(targetGraphCodec);
-
-    ActionGraphAndResolver actionGraphAndResolver = Preconditions.checkNotNull(
-        params.getActionGraphCache().getActionGraph(
-            params.getBuckEventBus(),
-                  /* checkActionGraphs */ false,
-            targetGraph,
-            params.getBuckConfig().getKeySeed()));
-    BuckConfig rootCellBuckConfig = state.getRootCell().getBuckConfig();
-    DistributedCachingBuildEngineDelegate cachingBuildEngineDelegate =
-        new DistributedCachingBuildEngineDelegate(
-            new SourcePathResolver(actionGraphAndResolver.getResolver()),
-            state);
-
-    // TODO(ruibm, marcinkosiba): This is incorrect, we probably need rule-level control
-    // over what gets built.
-    ImmutableList<TargetNodeSpec> targetNodeSpecs = parseArgumentsAsTargetNodeSpecs(
-        rootCellBuckConfig,
-        getArguments());
-    FluentIterable<BuildTarget> targetsToBuild = FluentIterable.from(targetNodeSpecs)
-        .transformAndConcat(new Function<TargetNodeSpec, Iterable<BuildTarget>>() {
-          @Override
-          public Iterable<BuildTarget> apply(TargetNodeSpec input) {
-            return input.filter(targetGraph.getNodes()).keySet();
-          }
-        });
-    return executeBuild(
-        params,
-        actionGraphAndResolver,
-        executorService,
-        params.getArtifactCache(),
-        cachingBuildEngineDelegate,
-        rootCellBuckConfig,
-        targetsToBuild);
-  }
-
   private BuildJobState computeDistributedBuildJobState(
       DistributedBuildTargetGraphCodec targetGraphCodec,
       final CommandRunnerParams params,
@@ -499,61 +437,26 @@ public class BuildCommand extends AbstractCommand {
           }
         });
 
-    // Are we loading from or just dumping to a state file?
-    // TODO(ruibm, shivanker): Remove the if block (keep the else)
-    // after removing the distributedBuildStateFile option.
     if (distributedBuildStateFile != null) {
+      BuildJobState jobState = computeDistributedBuildJobState(
+          targetGraphCodec,
+          params,
+          executorService);
+
       Path stateDumpPath = Paths.get(distributedBuildStateFile);
-      TTransport transport;
-      boolean loading = Files.exists(stateDumpPath);
-      if (loading) {
-        transport = new TIOStreamTransport(filesystem.newFileInputStream(stateDumpPath));
-      } else {
-        transport = new TIOStreamTransport(filesystem.newFileOutputStream(stateDumpPath));
-      }
-      transport = new TZlibTransport(transport);
-      TProtocol protocol = new TTupleProtocol(transport);
+      BuildJobStateSerializer.serialize(
+          jobState,
+          filesystem.newFileOutputStream(stateDumpPath));
+      return 0;
 
-      try {
-        if (loading) {
-          DistributedBuildState state = DistributedBuildState.load(protocol, params.getCell());
-          return executeDistributedBuildFromStateDump(
-              state,
-              targetGraphCodec,
-              params,
-              executorService);
-        } else {
-          BuildJobState jobState = computeDistributedBuildJobState(
-              targetGraphCodec,
-              params,
-              executorService);
-          jobState.write(protocol);
-          transport.flush();
-          return 0;
-        }
-      } catch (TException e) {
-        throw new RuntimeException(e);
-      } finally {
-        transport.close();
-      }
     } else {
-
-      DistBuildConfig config = new DistBuildConfig(params.getBuckConfig());
-      ClientSideSlb slb = config.getFrontendConfig().createHttpClientSideSlb(
-          params.getClock(),
-          params.getBuckEventBus(),
-          new CommandThreadFactory("BuildCommand.HttpLoadBalancer"));
-      OkHttpClient client = config.createOkHttpClient();
-
-      try (HttpService httpService = new LoadBalancedService(slb, client, params.getBuckEventBus());
-           FrontendService service = new FrontendService(
-               ThriftOverHttpServiceConfig.of(httpService))) {
+      try (DistBuildService service =  DistBuildFactory.newDistBuildService(params)) {
         DistributedBuild build = new DistributedBuild(
             computeDistributedBuildJobState(
                 targetGraphCodec,
                 params,
                 executorService),
-            new DistBuildService(service),
+            service,
             1000 /* millisBetweenStatusPoll */);
         return build.executeAndPrintFailuresToEventBus(executorService, params.getBuckEventBus());
       }

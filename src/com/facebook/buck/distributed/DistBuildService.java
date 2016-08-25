@@ -164,8 +164,7 @@ public class DistBuildService implements Closeable {
     return job;
   }
 
-  public BuildJob pollBuild(BuildId id) throws IOException {
-    // Create the poll for buildStatus request.
+  public BuildJob getCurrentBuildJobState(BuildId id) throws IOException {
     BuildStatusRequest statusRequest = new BuildStatusRequest();
     statusRequest.setBuildId(id);
     FrontendRequest request = new FrontendRequest();
@@ -215,10 +214,20 @@ public class DistBuildService implements Closeable {
 
   public static FrontendRequest createFetchSourceFileRequest(String fileHash) {
     FetchSourceFilesRequest fetchSourceFileRequest = new FetchSourceFilesRequest();
+    fetchSourceFileRequest.setContentHashesIsSet(true);
     fetchSourceFileRequest.addToContentHashes(fileHash);
     FrontendRequest frontendRequest = new FrontendRequest();
     frontendRequest.setType(FrontendRequestType.FETCH_SRC_FILES);
     frontendRequest.setFetchSourceFilesRequest(fetchSourceFileRequest);
+    return frontendRequest;
+  }
+
+  public static FrontendRequest createFrontendBuildStatusRequest(BuildId buildId) {
+    BuildStatusRequest buildStatusRequest = new BuildStatusRequest();
+    buildStatusRequest.setBuildId(buildId);
+    FrontendRequest frontendRequest = new FrontendRequest();
+    frontendRequest.setType(FrontendRequestType.BUILD_STATUS);
+    frontendRequest.setBuildStatusRequest(buildStatusRequest);
     return frontendRequest;
   }
 
@@ -232,7 +241,7 @@ public class DistBuildService implements Closeable {
     Preconditions.checkState(response.isSetWasSuccessful());
     if (!response.wasSuccessful) {
       throw new IOException(String.format(
-          "Distributed build frontend request of type [%s] failed with error message [%s].",
+          "Stampede request of type [%s] failed with error message [%s].",
           request.type.toString(),
           response.getErrorMessage()));
     }

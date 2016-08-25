@@ -23,6 +23,7 @@ import com.facebook.buck.util.HumanReadableException;
 import org.kohsuke.args4j.Option;
 
 public abstract class AbstractDistBuildCommand extends AbstractCommand {
+
   @Nullable
   @Option(name = "--build-id", usage = "Distributed build id.")
   private String buildId;

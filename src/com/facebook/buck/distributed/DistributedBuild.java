@@ -88,7 +88,7 @@ public class DistributedBuild {
     Stopwatch stopwatch = Stopwatch.createStarted();
     // Keep polling until the build is complete or failed.
     do {
-      job = distBuildService.pollBuild(id);
+      job = distBuildService.getCurrentBuildJobState(id);
       LOG.info("Got build status: " + job.getStatus().toString());
 
       DistBuildStatus distBuildStatus =

@@ -16,17 +16,13 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.distributed.BuildStatusGetter;
+import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJob;
-import com.facebook.buck.distributed.thrift.FrontendRequest;
-import com.facebook.buck.distributed.thrift.FrontendResponse;
-import com.facebook.buck.slb.ThriftService;
 import com.facebook.buck.util.Console;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.common.base.Optional;
 
 import java.io.IOException;
 
@@ -49,22 +45,15 @@ public class DistBuildStatusCommand extends AbstractDistBuildCommand {
     objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
     objectMapper.disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET);
 
-    try (ThriftService<FrontendRequest, FrontendResponse> service =
-             DistBuildCommand.newFrontendService(params)) {
-      Optional<BuildJob> buildJob = BuildStatusGetter.getBuildJob(getBuildId(), service);
-      if (buildJob.isPresent()) {
-        objectMapper.writeValue(console.getStdOut(), buildJob.get());
-        console.getStdOut().println();
-        console.printSuccess(String.format(
-            "Successfully fetched the build status for [%s].",
-            buildId));
-        return 0;
-      } else {
-        console.printBuildFailure(String.format(
-            "Distributed build with [%s] does not exist.",
-            buildId));
-        return -1;
-      }
+    try (DistBuildService service =
+             DistBuildFactory.newDistBuildService(params)) {
+      BuildJob buildJob = service.getCurrentBuildJobState(getBuildId());
+      objectMapper.writeValue(console.getStdOut(), buildJob);
+      console.getStdOut().println();
+      console.printSuccess(String.format(
+          "Successfully fetched the build status for [%s].",
+          buildId));
+      return 0;
     }
   }
 }
