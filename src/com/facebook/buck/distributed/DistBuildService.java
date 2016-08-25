@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -52,6 +53,8 @@ import java.util.concurrent.Callable;
 
 
 public class DistBuildService implements Closeable {
+  private static final String BUCK_GIT_COMMIT_KEY = "buck.git_commit";
+
   private final FrontendService service;
 
   public DistBuildService(
@@ -138,10 +141,21 @@ public class DistBuildService implements Closeable {
     });
   }
 
+  private String getBuckGitCommitHash() {
+    return System.getProperty(BUCK_GIT_COMMIT_KEY, "N/A");
+  }
+
+  private BuckVersion createBuckVersion(String version) {
+    BuckVersion buckVersion = new BuckVersion();
+    buckVersion.setVersion(version);
+    return buckVersion;
+  }
+
   public BuildJob createBuild() throws IOException {
     // Tell server to create the build and get the build id.
     CreateBuildRequest createTimeRequest = new CreateBuildRequest();
     createTimeRequest.setCreateTimestampMillis(System.currentTimeMillis());
+    createTimeRequest.setBuckVersion(createBuckVersion(getBuckGitCommitHash()));
     FrontendRequest request = new FrontendRequest();
     request.setType(FrontendRequestType.CREATE_BUILD);
     request.setCreateBuildRequest(createTimeRequest);
