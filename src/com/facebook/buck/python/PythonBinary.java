@@ -58,10 +58,7 @@ public abstract class PythonBinary
   }
 
   protected final Path getBinPath() {
-    return BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        getBuildTarget().withFlavors(),
-        "%s" + pexExtension);
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s" + pexExtension);
   }
 
   @Override
