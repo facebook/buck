@@ -114,7 +114,7 @@ public class DistributedBuild {
     DistBuildStatus distBuildStatus = prepareStatusFromJob(job).setETAMillis(0).build();
     eventBus.post(new DistBuildStatusEvent(distBuildStatus));
 
-    return 0;
+    return job.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY) ? 0 : 1;
   }
 
   private DistBuildStatus.Builder prepareStatusFromJob(BuildJob job) {

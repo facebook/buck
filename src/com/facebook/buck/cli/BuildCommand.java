@@ -357,16 +357,25 @@ public class BuildCommand extends AbstractCommand {
 
     int exitCode;
     try {
+      // Parse the build files to create a TargetGraph and ActionGraph.
+      TargetGraphAndBuildTargets targetGraphAndBuildTargets =
+          createTargetGraph(params, executorService);
+      ActionGraphAndResolver actionGraphAndResolver = createActionGraphAndResolver(
+          params,
+          targetGraphAndBuildTargets);
+
       if (useDistributedBuild) {
-        exitCode = executeDistributedBuild(params, executorService);
+        exitCode = executeDistributedBuild(
+            params,
+            targetGraphAndBuildTargets,
+            actionGraphAndResolver,
+            executorService);
       } else {
-        // Parse the build files to create a ActionGraph.
-        ActionGraphAndResolver actionGraphAndResolver =
-            createActionGraphAndResolver(params, executorService);
         exitCode = executeLocalBuild(params, actionGraphAndResolver, executorService);
-        if (exitCode == 0 && (showOutput || showFullOutput || showRuleKey)) {
-          showOutputs(params, actionGraphAndResolver);
-        }
+      }
+
+      if (exitCode == 0 && (showOutput || showFullOutput || showRuleKey)) {
+        showOutputs(params, actionGraphAndResolver);
       }
     } catch (ActionGraphCreationException e) {
       params.getConsole().printBuildFailure(e.getMessage());
@@ -380,13 +389,10 @@ public class BuildCommand extends AbstractCommand {
   private BuildJobState computeDistributedBuildJobState(
       DistributedBuildTargetGraphCodec targetGraphCodec,
       final CommandRunnerParams params,
+      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
+      ActionGraphAndResolver actionGraphAndResolver,
       final WeightedListeningExecutorService executorService)
-      throws InterruptedException, ActionGraphCreationException, IOException {
-    TargetGraphAndBuildTargets targetGraphAndBuildTargets =
-        createTargetGraph(params, executorService);
-    ActionGraphAndResolver actionGraphAndResolver = createActionGraphAndResolver(
-        params,
-        targetGraphAndBuildTargets);
+      throws InterruptedException, IOException {
     DistributedBuildCellIndexer cellIndexer =
         new DistributedBuildCellIndexer(params.getCell());
     DistributedBuildFileHashes distributedBuildFileHashes = new DistributedBuildFileHashes(
@@ -407,6 +413,8 @@ public class BuildCommand extends AbstractCommand {
 
   private int executeDistributedBuild(
       final CommandRunnerParams params,
+      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
+      ActionGraphAndResolver actionGraphAndResolver,
       final WeightedListeningExecutorService executorService)
       throws IOException, InterruptedException, ActionGraphCreationException {
     ProjectFilesystem filesystem = params.getCell().getFilesystem();
@@ -437,12 +445,14 @@ public class BuildCommand extends AbstractCommand {
           }
         });
 
-    if (distributedBuildStateFile != null) {
-      BuildJobState jobState = computeDistributedBuildJobState(
-          targetGraphCodec,
-          params,
-          executorService);
+    BuildJobState jobState = computeDistributedBuildJobState(
+        targetGraphCodec,
+        params,
+        targetGraphAndBuildTargets,
+        actionGraphAndResolver,
+        executorService);
 
+    if (distributedBuildStateFile != null) {
       Path stateDumpPath = Paths.get(distributedBuildStateFile);
       BuildJobStateSerializer.serialize(
           jobState,
@@ -452,13 +462,19 @@ public class BuildCommand extends AbstractCommand {
     } else {
       try (DistBuildService service =  DistBuildFactory.newDistBuildService(params)) {
         DistributedBuild build = new DistributedBuild(
-            computeDistributedBuildJobState(
-                targetGraphCodec,
-                params,
-                executorService),
+            jobState,
             service,
             1000 /* millisBetweenStatusPoll */);
-        return build.executeAndPrintFailuresToEventBus(executorService, params.getBuckEventBus());
+        int exitCode = build.executeAndPrintFailuresToEventBus(
+            executorService,
+            params.getBuckEventBus());
+
+        // After dist-build is complete, start build locally and we'll find everything in the cache.
+        // TODO(shivanker): Add a flag to disable building, and only fetch from the cache.
+        if (exitCode == 0) {
+          exitCode = executeLocalBuild(params, actionGraphAndResolver, executorService);
+        }
+        return exitCode;
       }
     }
   }
