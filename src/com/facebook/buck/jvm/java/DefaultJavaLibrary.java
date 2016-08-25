@@ -380,6 +380,11 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   }
 
   @Override
+  public ImmutableSortedSet<SourcePath> getResources() {
+    return resources;
+  }
+
+  @Override
   public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries() {
     return ImmutableSortedSet.copyOf(Sets.union(getDeclaredDeps(), exportedDeps));
   }

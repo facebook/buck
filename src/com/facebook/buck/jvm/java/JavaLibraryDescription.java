@@ -40,7 +40,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -175,13 +174,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
             params,
             new BuildTargetSourcePath(defaultJavaLibrary.getBuildTarget())));
 
-    addGwtModule(
-        resolver,
-        pathResolver,
-        params,
-        args);
-
-    if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
+  if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
       return defaultJavaLibrary;
     } else {
       return MavenUberJar.create(
@@ -190,50 +183,6 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
           pathResolver,
           args.mavenCoords);
     }
-  }
-
-  /**
-   * Creates a {@link BuildRule} with the {@link JavaLibrary#GWT_MODULE_FLAVOR}, if appropriate.
-   * <p>
-   * If {@code arg.srcs} or {@code arg.resources} is non-empty, then the return value will not be
-   * absent.
-   */
-  @VisibleForTesting
-  static Optional<GwtModule> addGwtModule(
-      BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
-      BuildRuleParams javaLibraryParams,
-      Arg arg) {
-    BuildTarget libraryTarget = javaLibraryParams.getBuildTarget();
-
-    if (arg.srcs.get().isEmpty() &&
-        arg.resources.get().isEmpty() &&
-        !libraryTarget.isFlavored()) {
-      return Optional.absent();
-    }
-
-    BuildTarget gwtModuleBuildTarget = BuildTarget.of(
-        libraryTarget.getUnflavoredBuildTarget(),
-        ImmutableSet.of(JavaLibrary.GWT_MODULE_FLAVOR));
-    ImmutableSortedSet<SourcePath> filesForGwtModule = ImmutableSortedSet
-        .<SourcePath>naturalOrder()
-        .addAll(arg.srcs.get())
-        .addAll(arg.resources.get())
-        .build();
-
-    // If any of the srcs or resources are BuildTargetSourcePaths, then their respective BuildRules
-    // must be included as deps.
-    ImmutableSortedSet<BuildRule> deps =
-        ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(filesForGwtModule));
-    GwtModule gwtModule = new GwtModule(
-        javaLibraryParams.copyWithChanges(
-            gwtModuleBuildTarget,
-            Suppliers.ofInstance(deps),
-            /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
-        pathResolver,
-        filesForGwtModule);
-    resolver.addToIndex(gwtModule);
-    return Optional.of(gwtModule);
   }
 
   @SuppressFieldNotInitialized

@@ -102,7 +102,6 @@ java_library(
     'CalculateAbi.java',
     'DefaultJavaLibrary.java',
     'DefaultSuggestBuildRules.java',
-    'GwtModule.java',
     'JarArchiveDependencySupplier.java',
     'JarFattener.java',
     'JavaBinary.java',
