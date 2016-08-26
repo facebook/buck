@@ -1110,7 +1110,11 @@ public class NdkCxxPlatforms {
       if (isGcc()) {
         return processPathPattern("toolchains/{toolchain}-{compiler_version}/prebuilt/{hostname}");
       } else {
-        return processPathPattern("toolchains/llvm-{compiler_version}/prebuilt/{hostname}");
+        if (ndkMajorVersion < 11) {
+          return processPathPattern("toolchains/llvm-{compiler_version}/prebuilt/{hostname}");
+        } else {
+          return processPathPattern("toolchains/llvm/prebuilt/{hostname}");
+        }
       }
     }
 
@@ -1124,17 +1128,29 @@ public class NdkCxxPlatforms {
 
     Path getLibexecGccToolPath() {
       Assertions.assertCondition(isGcc());
-      return processPathPattern(
-          getNdkToolRoot(),
-          "libexec/gcc/{toolchain_target}/{compiler_version}");
+      if (ndkMajorVersion < 12) {
+        return processPathPattern(
+            getNdkToolRoot(), "libexec/gcc/{toolchain_target}/{compiler_version}");
+      } else {
+        return processPathPattern(
+            getNdkToolRoot(), "libexec/gcc/{toolchain_target}/{compiler_version}.x");
+      }
     }
 
     Path getLibPath() {
       String pattern;
       if (isGcc()) {
-        pattern = "lib/{compiler_type}/{toolchain_target}/{compiler_version}";
+        if (ndkMajorVersion < 12) {
+          pattern = "lib/{compiler_type}/{toolchain_target}/{compiler_version}";
+        } else {
+          pattern = "lib/{compiler_type}/{toolchain_target}/{compiler_version}.x";
+        }
       } else {
-        pattern = "lib/{compiler_type}/{compiler_version}";
+        if (ndkMajorVersion < 11) {
+          pattern = "lib/{compiler_type}/{compiler_version}";
+        } else {
+          pattern = "lib64/{compiler_type}/{compiler_version}";
+        }
       }
       return processPathPattern(getNdkToolRoot(), pattern);
     }
