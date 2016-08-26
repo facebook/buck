@@ -350,23 +350,13 @@ public class TargetsCommand extends AbstractCommand {
       return 0;
     }
 
-    // Parse the entire action graph, or (if targets are specified),
-    // only the specified targets and their dependencies..
-    //
-    // TODO(k21):
-    // If --detect-test-changes is specified, we need to load the whole graph, because we cannot
-    // know which targets can refer to the specified targets or their dependencies in their
-    // 'source_under_test'. Once we migrate from 'source_under_test' to 'tests', this should no
-    // longer be necessary.
-    TargetGraphAndBuildTargets graphAndTargets =
-        buildTargetGraphAndTargets(params, executor);
-
-    SortedMap<String, TargetNode<?>> matchingNodes = getMatchingNodes(
+    return printResults(
         params,
-        graphAndTargets,
-        buildRuleTypes);
-
-    return printResults(params, executor, matchingNodes);
+        executor,
+        getMatchingNodes(
+            params,
+            buildTargetGraphAndTargets(params, executor),
+            buildRuleTypes));
   }
 
   private TargetGraphAndBuildTargets buildTargetGraphAndTargetsForShowRules(
@@ -480,6 +470,14 @@ public class TargetsCommand extends AbstractCommand {
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
     ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
     boolean ignoreBuckAutodepsFiles = false;
+    // Parse the entire action graph, or (if targets are specified),
+    // only the specified targets and their dependencies..
+    //
+    // TODO(k21):
+    // If --detect-test-changes is specified, we need to load the whole graph, because we cannot
+    // know which targets can refer to the specified targets or their dependencies in their
+    // 'source_under_test'. Once we migrate from 'source_under_test' to 'tests', this should no
+    // longer be necessary.
     if (getArguments().isEmpty() || isDetectTestChanges()) {
       return TargetGraphAndBuildTargets.builder()
           .setBuildTargets(ImmutableSet.<BuildTarget>of())
