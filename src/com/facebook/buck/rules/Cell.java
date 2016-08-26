@@ -336,8 +336,14 @@ public class Cell {
     return getKnownBuildRuleTypes().getAllDescriptions();
   }
 
-  public Path getAbsolutePathToBuildFile(BuildTarget target)
-      throws MissingBuildFileException {
+  /**
+   * For use in performance-sensitive code or if you don't care if the build file actually exists,
+   * otherwise prefer {@link #getAbsolutePathToBuildFile(BuildTarget)}.
+   *
+   * @param target target to look up
+   * @return path which may or may not exist.
+   */
+  public Path getAbsolutePathToBuildFileUnsafe(BuildTarget target) {
     Cell targetCell = getCell(target);
 
     ProjectFilesystem targetFilesystem = targetCell.getFilesystem();
@@ -345,9 +351,15 @@ public class Cell {
     Path buildFile = targetFilesystem
         .resolve(target.getBasePath())
         .resolve(targetCell.getBuildFileName());
+    return buildFile;
+  }
 
-    if (!targetFilesystem.isFile(buildFile)) {
-      throw new MissingBuildFileException(target, targetCell.getBuckConfig());
+  public Path getAbsolutePathToBuildFile(BuildTarget target)
+      throws MissingBuildFileException {
+    Path buildFile = getAbsolutePathToBuildFileUnsafe(target);
+    Cell cell = getCell(target);
+    if (!cell.getFilesystem().isFile(buildFile)) {
+      throw new MissingBuildFileException(target, cell.getBuckConfig());
     }
     return buildFile;
   }

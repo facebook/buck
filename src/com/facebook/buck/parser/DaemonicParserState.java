@@ -118,7 +118,7 @@ class DaemonicParserState {
     public Optional<T> lookupComputedNode(Cell cell, BuildTarget target)
         throws BuildTargetException {
       invalidateIfProjectBuildFileParserStateChanged(cell);
-      final Path buildFile = cell.getAbsolutePathToBuildFile(target);
+      final Path buildFile = cell.getAbsolutePathToBuildFileUnsafe(target);
       invalidateIfBuckConfigHasChanged(cell, buildFile);
 
       Cache<BuildTarget, T> state = getCache(cell);
@@ -132,7 +132,7 @@ class DaemonicParserState {
     public T putComputedNodeIfNotPresent(Cell cell, BuildTarget target, T targetNode)
         throws BuildTargetException {
       invalidateIfProjectBuildFileParserStateChanged(cell);
-      final Path buildFile = cell.getAbsolutePathToBuildFile(target);
+      final Path buildFile = cell.getAbsolutePathToBuildFileUnsafe(target);
       invalidateIfBuckConfigHasChanged(cell, buildFile);
 
       return getOrCreateCache(cell).putComputedNodeIfNotPresent(cell, target, targetNode);
