@@ -92,16 +92,6 @@ files that contain tests to run via the <a href="https://docs.python.org/2/libra
   {/param}
 {/call}
 
-{call buck.arg}
-  {param name: 'source_under_test' /}
-  {param default : '[]' /}
-  {param desc}
-  <code>python_library()</code> rules that the <code>python_test()</code> is
-  testing. These must be among the transitive dependencies of the
-  {sp}<code>python_test()</code>.
-  {/param}
-{/call}
-
 {call buck.test_rule_timeout_ms /}
 
 {call python_common.package_style_arg /}

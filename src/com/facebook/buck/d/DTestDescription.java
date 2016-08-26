@@ -137,7 +137,6 @@ public class DTestDescription implements
     public SourceList srcs;
     public Optional<ImmutableSortedSet<String>> contacts;
     public Optional<ImmutableSortedSet<Label>> labels;
-    public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
     public Optional<Long> testRuleTimeoutMs;
     public ImmutableSortedSet<BuildTarget> deps;
     public Optional<ImmutableList<String>> linkerFlags;

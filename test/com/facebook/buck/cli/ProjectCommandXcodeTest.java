@@ -78,8 +78,7 @@ public class ProjectCommandXcodeTest {
     // |
     // QuxBin
     //
-    // FooBin and BazLib use "tests" to specify their tests while FooLibTest uses source_under_test
-    // to specify that it is a test of FooLib.
+    // FooBin and BazLib and FooLibTest use "tests" to specify their tests.
 
     BuildTarget bazTestTarget = BuildTargetFactory.newInstance("//baz:xctest");
     BuildTarget fooBinTestTarget = BuildTargetFactory.newInstance("//foo:bin-xctest");

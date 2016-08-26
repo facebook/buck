@@ -148,10 +148,9 @@ public class WorkspaceAndProjectGeneratorTest {
     // QuxBin
     //
     //
-    // FooBin and BazLib use "tests" to specify their tests while FooLibTest uses source_under_test
-    // to specify that it is a test of FooLib.
+    // FooBin and BazLib and FooLibTest use "tests" to specify their tests.
     //
-    // Calling generate on FooBin should pull in everything except BazLibTest and QuxBin
+    // Calling generate on FooBin should pull in everything except BazLibTest and QuxBin.
 
     BuildTarget bazTestTarget = BuildTarget.builder(rootCell.getRoot(), "//baz", "xctest").build();
     BuildTarget fooBinTestTarget = BuildTarget
@@ -1077,10 +1076,9 @@ public class WorkspaceAndProjectGeneratorTest {
     // QuxBin
     //
     //
-    // FooBin and BazLib use "tests" to specify their tests while FooLibTest uses source_under_test
-    // to specify that it is a test of FooLib.
+    // FooBin and BazLib and FooLibTest use "tests" to specify their tests.
     //
-    // Calling generate on FooBin should pull in everything except BazLibTest and QuxBin
+    // Calling generate on FooBin should pull in everything except BazLibTest and QuxBin.
 
     BuildTarget bazTestTarget = BuildTarget.builder(rootCell.getRoot(), "//baz", "BazTest").build();
     BuildTarget fooBinTestTarget = BuildTarget

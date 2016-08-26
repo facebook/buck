@@ -51,10 +51,8 @@
 {call buck.param}
   {param name: 'without-tests' /}
   {param desc}
-    Indicates that Buck should build a project slice without tests (the default is to include any
-    tests that reference the targets in the project with <code>source_under_test</code> on
-    {sp}<code>*_test</code> rules and <code>tests</code> on <code>*_library</code> and
-    {sp}<code>*_binary</code> rules).
+    Indicates that Buck should build a project slice without tests (the default is to include 
+    {sp}<code>tests</code> on <code>*_library</code> and <code>*_binary</code> rules).
   {/param}
 {/call}
 

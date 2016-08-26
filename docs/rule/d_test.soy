@@ -44,16 +44,6 @@ must provide a main() function.
   {/param}
 {/call}
 
-{call buck.arg}
-  {param name: 'source_under_test' /}
-  {param default : '[]' /}
-  {param desc}
-  <code>d_library()</code> rules that the <code>d_test()</code> is
-  testing. These must be among the transitive dependencies of the
-  {sp}<code>d_test()</code>.
-  {/param}
-{/call}
-
 {call buck.test_rule_timeout_ms /}
 
 {call d_common.deps_arg /}
