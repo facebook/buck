@@ -24,8 +24,12 @@ based on known inputs, and using arbitrary Python code can introduce nondetermin
 or inputs that Buck won't know about.
 
 <h3>Whitelist and safe versions</h3>
-Some modules can be imported in a normal way (without using <code>allow_unsafe_import()</code>) because they were whitelisted or a safe version was
-configured.
+Some modules can be imported in a normal way (without using <code>allow_unsafe_import()</code>)
+because they were whitelisted or a safe version was configured. After checking if they are safe to use
+in build files, more modules (e.g. local ones)
+can be added to the whitelist using
+<a href="{ROOT}concept/buckconfig.html#project.build_file_import_whitelist"> <code>build_file_import_whitelist</code> </a>
+config setting.
 
 <table summary="Whitelist"><tr>
 <td><b>Whitelist</b></td><td>copy, re, functools, itertools, json, hashlib, types, string, ast,
