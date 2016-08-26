@@ -86,7 +86,7 @@ public class DistBuildExecutor {
         Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
         args.getRootCell(),
         Optional.<TargetDevice>absent(),
-        newEmptyAndroidSupplier(),
+        getExplodingAndroidSupplier(),
         buildEngine,
         args.getArtifactCache(),
         config.createDefaultJavaPackageFinder(),
@@ -169,14 +169,8 @@ public class DistBuildExecutor {
     return cachingBuildEngineDelegate;
   }
 
-  private Supplier<AndroidPlatformTarget> newEmptyAndroidSupplier() {
-    return new Supplier<AndroidPlatformTarget>() {
-      @Nullable
-      @Override
-      public AndroidPlatformTarget get() {
-        return null;
-      }
-    };
+  private Supplier<AndroidPlatformTarget> getExplodingAndroidSupplier() {
+    return AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
   }
 
   private DistributedBuildTargetGraphCodec createGraphCodec() {
