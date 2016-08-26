@@ -111,6 +111,13 @@ public class HalideLibraryDescription
     return target.withFlavors(HALIDE_COMPILER_FLAVOR);
   }
 
+  public static boolean isPlatformSupported(Arg arg, CxxPlatform cxxPlatform) {
+    return !arg.supportedPlatformsRegex.isPresent() ||
+        arg.supportedPlatformsRegex.get()
+            .matcher(cxxPlatform.getFlavor().toString())
+            .find();
+  }
+
   private CxxBinary createHalideCompiler(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,

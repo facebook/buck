@@ -768,12 +768,23 @@ public class ProjectGenerator {
       requiredBuildTargetsBuilder.add(
           HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget));
 
-      // Also, run the compiler once at project time to generate the header
-      // file needed for compilation.
-      requiredBuildTargetsBuilder.add(
-          buildTarget.withFlavors(
-              HalideLibraryDescription.HALIDE_COMPILE_FLAVOR,
-              defaultCxxPlatform.getFlavor()));
+      // HACK: Don't generate the Halide headers unless the compiler is expected
+      // to generate output for the default platform -- a Halide library that
+      // uses a platform regex may not be able to use the default platform.
+      // This assumes that there's a 'default' variant of the rule to generate
+      // headers from.
+      if (HalideLibraryDescription.isPlatformSupported(
+          halideTargetNode.getConstructorArg(),
+          defaultCxxPlatform)) {
+
+        // Run the compiler once at project time to generate the header
+        // file needed for compilation if the Halide target is for the default
+        // platform.
+        requiredBuildTargetsBuilder.add(
+            buildTarget.withFlavors(
+                HalideLibraryDescription.HALIDE_COMPILE_FLAVOR,
+                defaultCxxPlatform.getFlavor()));
+      }
     }
     buckEventBus.post(ProjectGenerationEvent.processed());
     return result;
