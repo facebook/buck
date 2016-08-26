@@ -216,7 +216,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
 
     protected Suspended(BuildRule rule, RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
       super(rule);
-      this.ruleKey = ruleKeyBuilderFactory.newInstance(rule).build().toString();
+      this.ruleKey = ruleKeyBuilderFactory.build(rule).toString();
     }
 
     @JsonIgnore
@@ -242,7 +242,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
 
     protected Resumed(BuildRule rule, RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
       super(rule);
-      this.ruleKey = ruleKeyBuilderFactory.newInstance(rule).build().toString();
+      this.ruleKey = ruleKeyBuilderFactory.build(rule).toString();
     }
 
     @JsonIgnore
