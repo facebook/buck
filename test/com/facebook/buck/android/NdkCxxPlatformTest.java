@@ -239,7 +239,8 @@ public class NdkCxxPlatformTest {
                   "target-app-platform",
                   ImmutableSet.of("x86"),
                   platform,
-                  new AlwaysFoundExecutableFinder());
+                  new AlwaysFoundExecutableFinder(),
+                  /* strictToolchainPaths */ false);
           preprocessAndCompileRukeKeys.put(
               String.format("NdkCxxPlatform(%s, %s)", dir, platform),
               constructCompileRuleKeys(Operation.PREPROCESS_AND_COMPILE, platforms));

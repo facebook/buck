@@ -37,6 +37,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.infer.annotation.Assertions;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -49,6 +50,8 @@ import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 public class NdkCxxPlatforms {
@@ -138,7 +141,8 @@ public class NdkCxxPlatforms {
         androidPlatform,
         cpuAbis,
         platform,
-        new ExecutableFinder());
+        new ExecutableFinder(),
+        /* strictToolchainPaths */ true);
   }
 
   /**
@@ -152,8 +156,8 @@ public class NdkCxxPlatforms {
       String androidPlatform,
       Set<String> cpuAbis,
       Platform platform,
-      ExecutableFinder executableFinder) {
-
+      ExecutableFinder executableFinder,
+      boolean strictToolchainPaths) {
     ImmutableMap.Builder<TargetCpuType, NdkCxxPlatform> ndkCxxPlatformBuilder =
         ImmutableMap.builder();
 
@@ -210,7 +214,8 @@ public class NdkCxxPlatforms {
                           "-Wl,--fix-cortex-a8"))
                   .build(),
               cxxRuntime,
-              executableFinder);
+              executableFinder,
+              strictToolchainPaths);
       ndkCxxPlatformBuilder.put(TargetCpuType.ARM, armeabi);
     }
 
@@ -262,7 +267,8 @@ public class NdkCxxPlatforms {
                       ImmutableList.of("-target", "armv7-none-linux-androideabi"))
                   .build(),
               cxxRuntime,
-              executableFinder);
+              executableFinder,
+              strictToolchainPaths);
       ndkCxxPlatformBuilder.put(TargetCpuType.ARMV7, armeabiv7);
     }
 
@@ -307,7 +313,8 @@ public class NdkCxxPlatforms {
                           "-target", "i686-none-linux-android"))
                   .build(),
               cxxRuntime,
-              executableFinder);
+              executableFinder,
+              strictToolchainPaths);
       ndkCxxPlatformBuilder.put(TargetCpuType.X86, x86);
     }
 
@@ -350,7 +357,8 @@ public class NdkCxxPlatforms {
                           "-target", "i686-none-linux-android"))
                   .build(),
               cxxRuntime,
-              executableFinder);
+              executableFinder,
+              strictToolchainPaths);
       ndkCxxPlatformBuilder.put(TargetCpuType.X86_64, x86_64);
     }
 
@@ -365,8 +373,8 @@ public class NdkCxxPlatforms {
       ProjectFilesystem ndk,
       NdkCxxPlatformTargetConfiguration targetConfiguration,
       CxxRuntime cxxRuntime,
-      ExecutableFinder executableFinder) {
-
+      ExecutableFinder executableFinder,
+      boolean strictToolchainPaths) {
     Path ndkRoot = ndk.getRootPath();
 
     // Create a version string to use when generating rule keys via the NDK tools we'll generate
@@ -388,9 +396,11 @@ public class NdkCxxPlatforms {
     Host host = Preconditions.checkNotNull(BUILD_PLATFORMS.get(platform));
 
     NdkCxxToolchainPaths toolchainPaths = new NdkCxxToolchainPaths(
-        ndk.getRootPath(), targetConfiguration, host.toString());
-    NdkCxxToolchainPaths sanitizedPaths = new NdkCxxToolchainPaths(
-        Paths.get(ANDROID_NDK_ROOT), targetConfiguration, BUILD_HOST_SUBST);
+        ndkRoot, targetConfiguration, host.toString(), strictToolchainPaths);
+    // Sanitized paths will have magic placeholders for parts of the paths that
+    // are machine/host-specific. See comments on ANDROID_NDK_ROOT and
+    // BUILD_HOST_SUBST above.
+    NdkCxxToolchainPaths sanitizedPaths = toolchainPaths.getSanitizedPaths();
 
     // Build up the map of paths that must be sanitized.
     ImmutableBiMap.Builder<Path, Path> sanitizePaths = ImmutableBiMap.builder();
@@ -1012,30 +1022,96 @@ public class NdkCxxPlatforms {
 
   static class NdkCxxToolchainPaths {
     private Path ndkRoot;
+    private String ndkVersion;
     private NdkCxxPlatformTargetConfiguration targetConfiguration;
     private String hostName;
+    private Map<String, Path> cachedPaths;
+    private boolean strict;
+    private int ndkMajorVersion;
 
     NdkCxxToolchainPaths(
         Path ndkRoot,
         NdkCxxPlatformTargetConfiguration targetConfiguration,
-        String hostName) {
-      this.ndkRoot = ndkRoot;
+        String hostName,
+        boolean strict) {
+      this(ndkRoot, readVersion(ndkRoot), targetConfiguration, hostName, strict);
+    }
+
+    NdkCxxToolchainPaths(
+        Path ndkRoot,
+        String ndkVersion,
+        NdkCxxPlatformTargetConfiguration targetConfiguration,
+        String hostName,
+        boolean strict) {
+      this.cachedPaths = new HashMap<>();
+      this.strict = strict;
+
       this.targetConfiguration = targetConfiguration;
       this.hostName = hostName;
+      this.ndkRoot = ndkRoot;
+      this.ndkVersion = ndkVersion;
+      this.ndkMajorVersion = getNdkMajorVersion(ndkVersion);
+
+      Assertions.assertCondition(
+          ndkMajorVersion > 0,
+          "Unknown ndk version: " + ndkVersion);
+    }
+
+    NdkCxxToolchainPaths getSanitizedPaths() {
+      return new NdkCxxToolchainPaths(
+          Paths.get(ANDROID_NDK_ROOT),
+          ndkVersion,
+          targetConfiguration,
+          BUILD_HOST_SUBST,
+          false);
+    }
+
+    Path processPathPattern(Path root, String pattern) {
+      String key = root.toString() + "/" + pattern;
+      Path result = cachedPaths.get(key);
+      if (result == null) {
+        String[] segments = pattern.split("/");
+        result = root;
+        for (String s : segments) {
+          if (s.contains("{")) {
+            s = s.replace("{toolchain}", targetConfiguration.getToolchain().toString());
+            s = s.replace(
+                "{toolchain_target}", targetConfiguration.getToolchainTarget().toString());
+            s = s.replace("{compiler_version}", targetConfiguration.getCompiler().getVersion());
+            s = s.replace("{compiler_type}", targetConfiguration.getCompiler().getType().getName());
+            s = s.replace(
+                "{gcc_compiler_version}", targetConfiguration.getCompiler().getGccVersion());
+            s = s.replace("{hostname}", hostName);
+            s = s.replace("{target_platform}", targetConfiguration.getTargetAppPlatform());
+            s = s.replace("{target_arch}", targetConfiguration.getTargetArch().toString());
+            s = s.replace("{target_arch_abi}", targetConfiguration.getTargetArchAbi().toString());
+          }
+          result = result.resolve(s);
+        }
+        if (strict) {
+          Assertions.assertCondition(
+              result.toFile().exists(),
+              result.toString() + " doesn't exist.");
+        }
+        cachedPaths.put(key, result);
+      }
+      return result;
+    }
+
+    private boolean isGcc() {
+      return targetConfiguration.getCompiler().getType() == NdkCxxPlatformCompiler.Type.GCC;
+    }
+
+    Path processPathPattern(String s) {
+      return processPathPattern(ndkRoot, s);
     }
 
     Path getNdkToolRoot() {
-      return ndkRoot
-          .resolve("toolchains")
-          .resolve(
-              String.format(
-                  "%s-%s",
-                  targetConfiguration.getCompiler().getType() == NdkCxxPlatformCompiler.Type.CLANG ?
-                      "llvm" :
-                      targetConfiguration.getToolchain(),
-                  targetConfiguration.getCompiler().getVersion()))
-          .resolve("prebuilt")
-          .resolve(hostName);
+      if (isGcc()) {
+        return processPathPattern("toolchains/{toolchain}-{compiler_version}/prebuilt/{hostname}");
+      } else {
+        return processPathPattern("toolchains/llvm-{compiler_version}/prebuilt/{hostname}");
+      }
     }
 
     /**
@@ -1043,82 +1119,64 @@ public class NdkCxxPlatforms {
      *     architecture.
      */
     Path getSysroot() {
-      return ndkRoot
-          .resolve("platforms")
-          .resolve(targetConfiguration.getTargetAppPlatform())
-          .resolve("arch-" + targetConfiguration.getTargetArch());
+      return processPathPattern("platforms/{target_platform}/arch-{target_arch}");
     }
 
     Path getLibexecGccToolPath() {
-      return getNdkToolRoot()
-          .resolve("libexec")
-          .resolve("gcc")
-          .resolve(targetConfiguration.getToolchain().toString())
-          .resolve(targetConfiguration.getCompiler().getVersion());
+      Assertions.assertCondition(isGcc());
+      return processPathPattern(
+          getNdkToolRoot(),
+          "libexec/gcc/{toolchain_target}/{compiler_version}");
     }
 
     Path getLibPath() {
-      return getNdkToolRoot()
-          .resolve("lib")
-          .resolve(targetConfiguration.getCompiler().getType().getName())
-          .resolve(
-              targetConfiguration.getCompiler().getType() == NdkCxxPlatformCompiler.Type.GCC ?
-                  targetConfiguration.getToolchainTarget().toString() :
-                  "")
-          .resolve(targetConfiguration.getCompiler().getVersion());
+      String pattern;
+      if (isGcc()) {
+        pattern = "lib/{compiler_type}/{toolchain_target}/{compiler_version}";
+      } else {
+        pattern = "lib/{compiler_type}/{compiler_version}";
+      }
+      return processPathPattern(getNdkToolRoot(), pattern);
     }
 
     Path getNdkGccToolRoot() {
-      return ndkRoot
-          .resolve("toolchains")
-          .resolve(
-              String.format(
-                  "%s-%s",
-                  targetConfiguration.getToolchain(),
-                  targetConfiguration.getCompiler().getGccVersion()))
-          .resolve("prebuilt")
-          .resolve(hostName);
+      return processPathPattern(
+          "toolchains/{toolchain}-{gcc_compiler_version}/prebuilt/{hostname}");
     }
 
     Path getToolchainBinPath() {
-      return getNdkToolRoot()
-          .resolve(
-              targetConfiguration.getCompiler().getType() == NdkCxxPlatformCompiler.Type.GCC ?
-                  targetConfiguration.getToolchainTarget().toString() :
-                  "")
-          .resolve("bin");
+      if (isGcc()) {
+        return processPathPattern(getNdkToolRoot(), "{toolchain_target}/bin");
+      } else {
+        return processPathPattern(getNdkToolRoot(), "bin");
+      }
     }
 
-    Path getGccToolchainBinPath() {
-      return getNdkGccToolRoot()
-          .resolve(targetConfiguration.getToolchainTarget().toString())
-          .resolve("bin");
+    private Path getGccToolchainBinPath() {
+      return processPathPattern(getNdkGccToolRoot(), "{toolchain_target}/bin");
     }
 
-    Path getCxxRuntimeDirectory(CxxRuntime cxxRuntime) {
-      return ndkRoot
-          .resolve("sources")
-          .resolve("cxx-stl")
-          .resolve(cxxRuntime.getName())
-          .resolve(
-              cxxRuntime == CxxRuntime.GNUSTL ?
-                  targetConfiguration.getCompiler().getGccVersion() :
-                  "");
+    private Path getCxxRuntimeDirectory(CxxRuntime cxxRuntime) {
+      if (cxxRuntime == CxxRuntime.GNUSTL) {
+        return processPathPattern(
+            "sources/cxx-stl/" + cxxRuntime.getName() + "/{gcc_compiler_version}");
+      } else {
+        return processPathPattern(
+            "sources/cxx-stl/" + cxxRuntime.getName());
+      }
+
     }
 
-    Path getCxxRuntimeLibsDirectory(CxxRuntime cxxRuntime) {
-      return getCxxRuntimeDirectory(cxxRuntime)
-          .resolve("libs")
-          .resolve(targetConfiguration.getTargetArchAbi().toString());
+    private Path getCxxRuntimeLibsDirectory(CxxRuntime cxxRuntime) {
+      return processPathPattern(getCxxRuntimeDirectory(cxxRuntime), "libs/{target_arch_abi}");
     }
 
     Path getToolPath(String tool) {
-      return getNdkToolRoot()
-            .resolve("bin")
-            .resolve(
-                (targetConfiguration.getCompiler().getType() == NdkCxxPlatformCompiler.Type.GCC ?
-                    targetConfiguration.getToolchainTarget().toString() + "-" :
-                    "") + tool);
+      if (isGcc()) {
+        return processPathPattern(getNdkToolRoot(), "bin/{toolchain_target}-" + tool);
+      } else {
+        return processPathPattern(getNdkToolRoot(), "bin/" + tool);
+      }
     }
 
     public Path getNdkRoot() {
