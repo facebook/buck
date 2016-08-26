@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -33,7 +32,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class AndroidInstrumentationTestDescription
@@ -89,30 +87,12 @@ public class AndroidInstrumentationTestDescription
         args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs));
   }
 
-  public static ImmutableSet<BuildRule> validateAndGetSourcesUnderTest(
-      ImmutableSet<BuildTarget> sourceUnderTestTargets,
-      BuildRuleResolver resolver) {
-    ImmutableSet.Builder<BuildRule> sourceUnderTest = ImmutableSet.builder();
-    for (BuildTarget target : sourceUnderTestTargets) {
-      BuildRule rule = resolver.getRule(target);
-      sourceUnderTest.add(rule);
-    }
-    return sourceUnderTest.build();
-  }
-
-
   @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg implements HasSourceUnderTest {
+  public static class Arg extends AbstractDescriptionArg {
     public BuildTarget apk;
     public Optional<ImmutableSortedSet<Label>> labels;
     public Optional<ImmutableSortedSet<String>> contacts;
-    public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
     public Optional<Long> testRuleTimeoutMs;
-
-    @Override
-    public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {
-      return sourceUnderTest.get();
-    }
   }
 
 }
