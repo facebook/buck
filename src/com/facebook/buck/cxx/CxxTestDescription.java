@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -370,10 +369,9 @@ public class CxxTestDescription implements
   }
 
   @SuppressFieldNotInitialized
-  public class Arg extends CxxBinaryDescription.Arg implements HasSourceUnderTest {
+  public class Arg extends CxxBinaryDescription.Arg {
     public Optional<ImmutableSet<String>> contacts;
     public Optional<ImmutableSet<Label>> labels;
-    public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
     public Optional<CxxTestType> framework;
     public Optional<ImmutableMap<String, String>> env;
     public Optional<ImmutableList<String>> args;
@@ -381,11 +379,6 @@ public class CxxTestDescription implements
     public Optional<Boolean> useDefaultTestMain;
     public Optional<Long> testRuleTimeoutMs;
     public Optional<ImmutableSortedSet<Path>> resources;
-
-    @Override
-    public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {
-      return sourceUnderTest.get();
-    }
   }
 
 }
