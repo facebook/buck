@@ -248,6 +248,9 @@ public class DistributedBuildFileHashes {
   private static ImmutableMap<Path, BuildJobStateFileHashEntry> indexEntriesByPath(
       final ProjectFilesystem projectFilesystem,
       BuildJobStateFileHashes remoteFileHashes) {
+    if (!remoteFileHashes.isSetEntries()) {
+      return ImmutableMap.of();
+    }
     return FluentIterable.from(remoteFileHashes.entries)
         .filter(new Predicate<BuildJobStateFileHashEntry>() {
           @Override
@@ -269,6 +272,9 @@ public class DistributedBuildFileHashes {
   indexEntriesByArchivePath(
       final ProjectFilesystem projectFilesystem,
       BuildJobStateFileHashes remoteFileHashes) {
+    if (!remoteFileHashes.isSetEntries()) {
+      return ImmutableMap.of();
+    }
     return FluentIterable.from(remoteFileHashes.entries)
         .filter(new Predicate<BuildJobStateFileHashEntry>() {
           @Override

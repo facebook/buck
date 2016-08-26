@@ -73,6 +73,9 @@ public class DistBuildService implements Closeable {
       public Void call() throws IOException {
         // Get rid of file contents from buildJobState
         for (BuildJobStateFileHashes cell : buildJobState.getFileHashes()) {
+          if (!cell.isSetEntries()) {
+            continue;
+          }
           for (BuildJobStateFileHashEntry file : cell.getEntries()) {
             file.unsetContents();
           }
@@ -101,6 +104,9 @@ public class DistBuildService implements Closeable {
       public Void call() throws IOException {
         Map<String, ByteBuffer> sha1ToFileContents = new HashMap<>();
         for (BuildJobStateFileHashes filesystem : fileHashes) {
+          if (!filesystem.isSetEntries()) {
+            continue;
+          }
           for (BuildJobStateFileHashEntry file : filesystem.entries) {
             // TODO(shivanker): Eventually, we won't have file contents in BuildJobState.
             // Then change this code to load file contents inline (only for missing files)
