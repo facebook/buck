@@ -31,7 +31,6 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.BuildFileSpec;
@@ -652,15 +651,6 @@ public class TargetsCommand extends AbstractCommand {
                   node);
             }
             extraEdgesBuilder.put(testNode.get(), node);
-          }
-        }
-
-        if (node.getConstructorArg() instanceof HasSourceUnderTest) {
-          ImmutableSortedSet<BuildTarget> sourceUnderTest =
-              ((HasSourceUnderTest) node.getConstructorArg()).getSourceUnderTest();
-          for (BuildTarget sourceTarget : sourceUnderTest) {
-            TargetNode<?> sourceNode = graph.get(sourceTarget);
-            extraEdgesBuilder.put(node, sourceNode);
           }
         }
       }

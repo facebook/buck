@@ -85,11 +85,9 @@ public class ProjectCommandTests {
 
     return TargetGraphAndTargets.create(
         graphRoots,
-        graphRootsOrSourceTargets,
         projectGraph,
         projectPredicates.getAssociatedProjectPredicate(),
         withTests,
-        withDependenciesTests,
         explicitTests);
   }
 

@@ -1222,11 +1222,9 @@ public class ProjectCommand extends BuildCommand {
 
     return TargetGraphAndTargets.create(
         graphRoots,
-        graphRootsOrSourceTargets,
         projectGraph,
         associatedProjectPredicate,
         isWithTests,
-        isWithDependenciesTests,
         explicitTestTargets);
   }
 

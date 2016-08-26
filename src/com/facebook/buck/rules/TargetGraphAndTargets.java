@@ -17,14 +17,11 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasSourceUnderTest;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 
 public class TargetGraphAndTargets {
   private final TargetGraph targetGraph;
@@ -108,11 +105,9 @@ public class TargetGraphAndTargets {
 
   public static TargetGraphAndTargets create(
       final ImmutableSet<BuildTarget> graphRoots,
-      final ImmutableSet<BuildTarget> graphRootsWithoutWorkspaces,
       TargetGraph projectGraph,
       AssociatedTargetNodePredicate associatedProjectPredicate,
       boolean isWithTests,
-      final boolean isWithDependenciesTests,
       ImmutableSet<BuildTarget> explicitTests) {
     // Get the roots of the main graph. This contains all the targets in the project slice, or all
     // the valid project roots if a project slice is not specified.
@@ -122,42 +117,8 @@ public class TargetGraphAndTargets {
     // of the main graph or their dependencies.
     ImmutableSet<TargetNode<?>> associatedTests = ImmutableSet.of();
     if (isWithTests) {
-      AssociatedTargetNodePredicate associatedTestsPredicate = new AssociatedTargetNodePredicate() {
-        @Override
-        public boolean apply(TargetNode<?> targetNode, TargetGraph targetGraph) {
-          if (!targetNode.getType().isTestRule()) {
-            return false;
-          }
-          ImmutableSortedSet<BuildTarget> sourceUnderTest;
-          if (targetNode.getConstructorArg() instanceof HasSourceUnderTest) {
-            HasSourceUnderTest argWithSourceUnderTest =
-                (HasSourceUnderTest) targetNode.getConstructorArg();
-            sourceUnderTest = argWithSourceUnderTest.getSourceUnderTest();
-          } else {
-            return false;
-          }
-
-          for (BuildTarget buildTargetUnderTest : sourceUnderTest) {
-            if (targetGraph.getOptional(buildTargetUnderTest).isPresent()) {
-              return isWithDependenciesTests ||
-                  graphRootsWithoutWorkspaces.contains(buildTargetUnderTest);
-            }
-          }
-
-          return false;
-        }
-      };
-
-      associatedTests = ImmutableSet.copyOf(
-          Sets.union(
-              ImmutableSet.copyOf(
-                  projectGraph.getAll(explicitTests)),
-              getAssociatedTargetNodes(
-                  projectGraph,
-                  projectRoots,
-                  associatedTestsPredicate)
-          )
-      );
+      associatedTests =
+          ImmutableSet.copyOf(ImmutableSet.copyOf(projectGraph.getAll(explicitTests)));
     }
 
     ImmutableSet<TargetNode<?>> associatedProjects = getAssociatedTargetNodes(
