@@ -1,12 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY f1dd930abbfd69f4893447430ba8ab186d5a485d #@#
+#@# GENERATED FILE: DO NOT MODIFY 48a87f218f030217569e3da17eca5f75338f8d5e #@#
 {
   "memory" : {
     "deps" : [
-      "//src/com/facebook/buck/event/listener:listener",
       "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/util:object_mapper",
-      "//third-party/java/jackson:jackson-core",
-      "//third-party/java/jackson:jackson-databind"
+      "//src/com/facebook/buck/log:log"
     ],
     "exported_deps" : [
       "//third-party/java/guava:guava"
