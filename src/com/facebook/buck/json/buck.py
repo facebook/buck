@@ -471,13 +471,22 @@ def stat_results(base_path, result, diagnostics):
     return statted_result
 
 
+def path_component_contains_dot(relative_path):
+    for p in relative_path.parts:
+        if p.startswith('.'):
+            return True
+    return False
+
+
 def glob_internal(includes, excludes, project_root_relative_excludes, include_dotfiles, search_base, project_root):
 
     def includes_iterator():
         for pattern in includes:
             for path in search_base.glob(pattern):
                 # TODO(bhamiltoncx): Handle hidden files on Windows.
-                if path.is_file() and (include_dotfiles or not path.name.startswith('.')):
+                if path.is_file() and \
+                   (include_dotfiles or not path_component_contains_dot(
+                       path.relative_to(search_base))):
                     yield path
 
     non_special_excludes = set()

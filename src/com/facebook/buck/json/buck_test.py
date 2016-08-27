@@ -1,4 +1,5 @@
-from buck import format_watchman_query_params, glob_internal, LazyBuildEnvPartial
+from buck import format_watchman_query_params, glob_internal, LazyBuildEnvPartial, \
+    path_component_contains_dot
 from buck import subdir_glob, flatten_dicts, BuildFileContext
 from pathlib import Path, PurePosixPath, PureWindowsPath
 import itertools
@@ -195,6 +196,20 @@ class TestBuckPlatformBase(object):
         search_base = self.fake_path(
             'foo',
             glob_results={'*.java': ['A.java', '.B.java']})
+        self.assertGlobMatches(
+            ['A.java'],
+            glob_internal(
+                includes=['*.java'],
+                excludes=[],
+                project_root_relative_excludes=[],
+                include_dotfiles=False,
+                search_base=search_base,
+                project_root=self.fake_path('')))
+
+    def test_glob_includes_skips_dot_directories(self):
+        search_base = self.fake_path(
+            'foo',
+            glob_results={'*.java': ['A.java', '.test/B.java']})
         self.assertGlobMatches(
             ['A.java'],
             glob_internal(
@@ -439,6 +454,14 @@ class TestBuck(unittest.TestCase):
                 },
                 override2
         )
+
+    def test_path_component_contains_dot(self):
+        self.assertFalse(path_component_contains_dot(Path('')))
+        self.assertFalse(path_component_contains_dot(Path('foo')))
+        self.assertFalse(path_component_contains_dot(Path('foo/bar')))
+        self.assertTrue(path_component_contains_dot(Path('.foo/bar')))
+        self.assertTrue(path_component_contains_dot(Path('foo/.bar')))
+        self.assertTrue(path_component_contains_dot(Path('.foo/.bar')))
 
 
 class TestMemoized(unittest.TestCase):
