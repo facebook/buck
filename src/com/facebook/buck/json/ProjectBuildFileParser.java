@@ -452,21 +452,33 @@ public class ProjectBuildFileParser implements AutoCloseable {
                 source));
       }
       if (source != null && source.equals("watchman")) {
-        handleWatchmanDiagnostic(level, message, buckEventBus, watchmanDiagnosticCache);
+        handleWatchmanDiagnostic(buildFile, level, message, buckEventBus, watchmanDiagnosticCache);
       } else {
+        String header;
+        if (source != null) {
+          header = buildFile + " (" + source + ")";
+        } else {
+          header = buildFile.toString();
+        }
         switch (level) {
+          case "debug":
+            LOG.debug("%s: %s", header, message);
+            break;
+          case "info":
+            LOG.info("%s: %s", header, message);
+            break;
           case "warning":
-            LOG.warn("Warning raised by BUCK file parser for file %s: %s", buildFile, message);
+            LOG.warn("Warning raised by BUCK file parser for file %s: %s", header, message);
             buckEventBus.post(
                 ConsoleEvent.warning("Warning raised by BUCK file parser: %s", message));
             break;
           case "error":
-            LOG.warn("Error raised by BUCK file parser for file %s: %s", buildFile, message);
+            LOG.warn("Error raised by BUCK file parser for file %s: %s", header, message);
             buckEventBus.post(
                 ConsoleEvent.severe("Error raised by BUCK file parser: %s", message));
             break;
           case "fatal":
-            LOG.warn("Fatal error raised by BUCK file parser for file %s: %s", buildFile, message);
+            LOG.warn("Fatal error raised by BUCK file parser for file %s: %s", header, message);
             throw BuildFileParseException.createForBuildFileParseError(
                 buildFile,
                 new IOException(message));
@@ -483,12 +495,22 @@ public class ProjectBuildFileParser implements AutoCloseable {
   }
 
   private static void handleWatchmanDiagnostic(
+      Path buildFile,
       String level,
       String message,
       BuckEventBus buckEventBus,
       WatchmanDiagnosticCache watchmanDiagnosticCache) {
     WatchmanDiagnostic.Level watchmanDiagnosticLevel;
     switch (level) {
+      // Watchman itself doesn't issue debug or info, but in case
+      // engineers hacking on stuff add calls, let's log them
+      // then return.
+      case "debug":
+        LOG.debug("%s (watchman): %s", buildFile, message);
+        return;
+      case "info":
+        LOG.info("%s (watchman): %s", buildFile, message);
+        return;
       case "warning":
         watchmanDiagnosticLevel = WatchmanDiagnostic.Level.WARNING;
         break;
