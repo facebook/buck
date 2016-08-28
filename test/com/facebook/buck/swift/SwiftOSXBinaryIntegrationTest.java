@@ -16,6 +16,7 @@
 
 package com.facebook.buck.swift;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -105,5 +106,22 @@ public class SwiftOSXBinaryIntegrationTest {
     assertThat(
         runResult.getStdout(),
         equalTo("Hello Swift\n"));
+  }
+
+  @Test
+  public void swiftCallingObjCRunsAndPrintsMessageOnOSX() throws IOException {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX),
+        is(true));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "swift_calls_objc", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand(
+        "run", ":SwiftCallsObjC#macosx-x86_64");
+    runResult.assertSuccess();
+    assertThat(
+        runResult.getStdout(),
+        containsString("Hello ObjC\n"));
   }
 }

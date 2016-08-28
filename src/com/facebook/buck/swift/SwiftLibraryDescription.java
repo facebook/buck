@@ -165,7 +165,8 @@ public class SwiftLibraryDescription implements
               params.getProjectFilesystem(),
               params.getBuildTarget(), "%s"),
           args.srcs.get(),
-          Optional.<Boolean>absent());
+          Optional.<Boolean>absent(),
+          args.bridgingHeader);
     }
 
     // Otherwise, we return the generic placeholder of this library.
@@ -224,6 +225,7 @@ public class SwiftLibraryDescription implements
     public Optional<ImmutableSortedSet<FrameworkPath>> libraries;
     public Optional<Boolean> enableObjcInterop;
     public Optional<Pattern> supportedPlatformsRegex;
+    public Optional<SourcePath> bridgingHeader;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 

@@ -77,6 +77,7 @@ class SwiftCompile
 
   private final boolean hasMainEntry;
   private final boolean enableObjcInterop;
+  private final Optional<SourcePath> bridgingHeader;
 
   private final Iterable<CxxPreprocessorInput> cxxPreprocessorInputs;
 
@@ -97,7 +98,8 @@ class SwiftCompile
       String moduleName,
       Path outputPath,
       Iterable<SourcePath> srcs,
-      Optional<Boolean> enableObjcInterop) throws NoSuchBuildTargetException {
+      Optional<Boolean> enableObjcInterop,
+      Optional<SourcePath> bridgingHeader) throws NoSuchBuildTargetException {
     super(params, resolver);
     this.cxxPreprocessorInputs =
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, params.getDeps());
@@ -112,6 +114,7 @@ class SwiftCompile
 
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.enableObjcInterop = enableObjcInterop.or(true);
+    this.bridgingHeader = bridgingHeader;
     this.hasMainEntry = FluentIterable.from(srcs).firstMatch(new Predicate<SourcePath>() {
       @Override
       public boolean apply(SourcePath input) {
@@ -124,6 +127,12 @@ class SwiftCompile
   private SwiftCompileStep makeCompileStep() {
     ImmutableList.Builder<String> compilerCommand = ImmutableList.builder();
     compilerCommand.addAll(swiftCompiler.getCommandPrefix(getResolver()));
+
+    if (bridgingHeader.isPresent()) {
+      compilerCommand.add(
+          "-import-objc-header",
+          getResolver().getRelativePath(bridgingHeader.get()).toString());
+    }
 
     compilerCommand.addAll(
         MoreIterables.zipAndConcat(Iterables.cycle("-Xcc"),

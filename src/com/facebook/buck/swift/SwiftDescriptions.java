@@ -67,6 +67,7 @@ class SwiftDescriptions {
     output.supportedPlatformsRegex = args.supportedPlatformsRegex;
     output.moduleName = Optional.of(buildTarget.getShortName());
     output.enableObjcInterop = Optional.of(true);
+    output.bridgingHeader = args.bridgingHeader;
   }
 
 }

@@ -922,6 +922,7 @@ public class CxxLibraryDescription implements
     public Optional<Boolean> linkWhole;
     public Optional<Boolean> canBeAsset;
     public Optional<NativeLinkable.Linkage> preferredLinkage;
+    public Optional<SourcePath> bridgingHeader;
   }
 
 }
