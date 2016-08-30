@@ -146,6 +146,8 @@ public class SwiftLibraryDescription implements
         throw new HumanReadableException("Platform %s is missing swift compiler", appleCxxPlatform);
       }
 
+      final CxxPlatform cxxPlatform = platform.get().getValue();
+
       // All swift-compile rules of swift-lib deps are required since we need their swiftmodules
       // during compilation.
       params = params.appendExtraDeps(
@@ -155,8 +157,7 @@ public class SwiftLibraryDescription implements
                 @Override
                 public BuildRule apply(SwiftLibrary input) {
                   try {
-                    return input.requireSwiftCompileRule(
-                        Iterables.toArray(buildFlavors, Flavor.class));
+                    return input.requireSwiftCompileRule(cxxPlatform.getFlavor());
                   } catch (NoSuchBuildTargetException e) {
                     throw new HumanReadableException(e,
                         "Could not find SwiftCompile with target %s", buildTarget);
@@ -168,7 +169,6 @@ public class SwiftLibraryDescription implements
       final Linker.LinkType linkType = Linker.LinkType.SHARED;
       SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
       String moduleName = args.moduleName.or(buildTarget.getShortName());
-      CxxPlatform cxxPlatform = platform.get().getValue();
       Path sharedLibOutput = CxxDescriptionEnhancer.getSharedLibraryPath(
           params.getProjectFilesystem(),
           buildTarget,

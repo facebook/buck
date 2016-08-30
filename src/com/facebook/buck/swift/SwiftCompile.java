@@ -181,7 +181,6 @@ class SwiftCompile
       BuildContext context,
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(outputPath);
-    delegateLinkRule.getBuildSteps(context, buildableContext);
     return ImmutableList.<Step>builder()
         .add(
             new MkdirStep(getProjectFilesystem(), outputPath),

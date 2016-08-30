@@ -189,13 +189,12 @@ class SwiftLibrary
         .addArgs(
             new SourcePathArg(
                 getResolver(),
-                new BuildTargetSourcePath(ruleTarget, rule.getModulePath())));
-    if (!sharedRequested) {
-      inputBuilder.addArgs(
+                new BuildTargetSourcePath(ruleTarget, rule.getModulePath())))
+        .addArgs(
           new SourcePathArg(
               getResolver(),
               new BuildTargetSourcePath(ruleTarget, rule.getObjectPath())));
-    } else {
+    if (sharedRequested) {
       ImmutableMap<String, SourcePath> sharedLibs = getSharedLibraries(cxxPlatform);
       inputBuilder.addAllArgs(
           FluentIterable.from(sharedLibs.entrySet())
@@ -250,7 +249,11 @@ class SwiftLibrary
 
   @Override
   public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-    return Linkage.ANY;
+    if (getBuildTarget().getFlavors().contains(SWIFT_LIBRARY_FLAVOR)) {
+      return Linkage.STATIC;
+    } else {
+      return Linkage.ANY;
+    }
   }
 
   @Override

@@ -142,5 +142,16 @@ public class SwiftIOSBundleIntegrationTest {
         .resolve("iosdep1#iphonesimulator-x86_64,swift-compile")
         .resolve("libiosdep1.dylib");
     assertThat(Files.exists(dep1Output), CoreMatchers.is(true));
+
+    workspace.runBuckCommand(
+        "build",
+        ":ios-parent-dynamic#iphonesimulator-x86_64",
+        "--config",
+        "cxx.cflags=-g")
+        .assertSuccess();
+    Path binaryOutout = tmp.getRoot()
+        .resolve(filesystem.getBuckPaths().getGenDir())
+        .resolve("ios-parent-dynamic#iphonesimulator-x86_64");
+    assertThat(Files.exists(binaryOutout), CoreMatchers.is(true));
   }
 }

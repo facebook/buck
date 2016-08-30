@@ -40,6 +40,17 @@ apple_binary(
     ]
 )
 
+apple_binary(
+    name = 'ios-parent-dynamic',
+    srcs = [ 'ios-parent/AppDelegate.swift' ],
+    deps = [ ':iosdep1' ],
+    link_style = 'shared',
+    frameworks = [
+        '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+    ]
+)
+
 apple_bundle(
     name='ios-sos',
     binary=':ios-parent',
