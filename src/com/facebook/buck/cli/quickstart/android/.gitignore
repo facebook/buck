@@ -1,0 +1,7 @@
+*.iml
+/.idea/compiler.xml
+/.idea/libraries/*.xml
+/.idea/modules.xml
+/.idea/runConfigurations/Debug_Buck_test.xml
+/buck-out
+/.buckd

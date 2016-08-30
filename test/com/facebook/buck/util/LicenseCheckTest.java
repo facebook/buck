@@ -45,8 +45,12 @@ public class LicenseCheckTest {
           "test/com/facebook/buck/util/WindowsCreateProcessEscapeTest.java"));
 
   private static final ImmutableSet<Path> NON_APACHE_LICENSE_DIRS_WHITELIST = ImmutableSet.of(
+      // Ignore the files in the template for quickstarting an Android project
+      Paths.get("src/com/facebook/buck/cli/quickstart/android/"),
+
       // Ignore the generated parsing files for the plugin
-      Paths.get("src/com/facebook/buck/intellij/plugin/gen/"));
+      Paths.get("src/com/facebook/buck/intellij/plugin/gen/")
+  );
 
   @Test
   public void ensureAllSrcFilesHaveTheApacheLicense() throws IOException {

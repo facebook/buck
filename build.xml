@@ -380,6 +380,17 @@
   </macrodef>
 
   <target name="package-resources">
+    <mkdir dir="${classes.dir}/com/facebook/buck/cli/quickstart/android"/>
+    <zip basedir="src/com/facebook/buck/cli/quickstart/android"
+         destfile="${classes.dir}/com/facebook/buck/cli/quickstart/android/android-template.zip"
+         excludes="BUCK"
+         defaultexcludes="no"/>
+
+    <mkdir dir="${classes.dir}/com/facebook/buck/cli/quickstart/ios"/>
+    <zip basedir="src/com/facebook/buck/cli/quickstart/ios"
+         destfile="${classes.dir}/com/facebook/buck/cli/quickstart/ios/ios-template.zip"
+         excludes="BUCK"
+         defaultexcludes="no"/>
     <mkdir dir="${classes.dir}/com/facebook/buck/android"/>
     <copy file="${third-party.dir}/java/ddmlib/ddmlib-22.5.3.jar"
           tofile="${classes.dir}/com/facebook/buck/android/ddmlib.jar"/>
@@ -404,6 +415,7 @@
           -->
           <exclude name="com/facebook/buck/android/support/**" />
           <exclude name="com/facebook/buck/cli/bootstrapper/**" />
+          <exclude name="com/facebook/buck/cli/quickstart/**" />
           <exclude name="com/facebook/buck/event/api/**" />
           <exclude name="com/facebook/buck/intellij/plugin/**" />
           <exclude name="com/facebook/buck/testrunner/**" />
@@ -852,6 +864,7 @@
         <arg value="-notimestamp"/>
         <fileset dir="${src.dir}">
           <include name="**/*.java" />
+          <exclude name="com/facebook/buck/cli/quickstart/**" />
           <exclude name="com/facebook/buck/android/support/exopackage/**" />
           <exclude name="com/facebook/buck/intellij/plugin/**" />
         </fileset>

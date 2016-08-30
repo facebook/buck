@@ -134,6 +134,7 @@ public class MainIntegrationTest {
         "  project     generates project configuration files for an IDE",
         "  publish     builds and publishes a library to a central repository",
         "  query       provides facilities to query information about the target nodes graph",
+        "  quickstart  generates a default project directory",
         "  rage        create a defect report",
         "  repl        a shell for interactive experimentation with buck internals",
         "  root        prints the absolute path to the root of the current buck project",

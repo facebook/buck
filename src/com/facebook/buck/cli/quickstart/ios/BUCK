@@ -1,0 +1,8 @@
+zip_file(
+  name = 'ios-template',
+  srcs = glob(['**/*'], excludes = ['BUCK'], include_dotfiles=True),
+  visibility = [
+    '//src/com/facebook/buck/cli:cli',
+  ],
+)
+
