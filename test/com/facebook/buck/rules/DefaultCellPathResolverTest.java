@@ -86,6 +86,33 @@ public class DefaultCellPathResolverTest {
   }
 
   @Test
+  public void transtiveMappingForNonexistantCell() throws Exception {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+
+    Path root = vfs.getPath("/opt/local/");
+    Path cell1Root = root.resolve("repo1");
+    Files.createDirectories(cell1Root);
+    Path cell2Root = root.resolve("repo2");
+
+    DefaultCellPathResolver cellPathResolver = new DefaultCellPathResolver(
+        cell1Root,
+        ConfigBuilder.createFromText(
+            REPOSITORIES_SECTION,
+            " simple = " + cell2Root.toString()));
+
+    // Allow non-existant paths; Buck should allow paths whose .buckconfigs
+    // cannot be loaded.
+    assertThat(
+        cellPathResolver.getTransitivePathMapping(),
+        Matchers.equalTo(
+            ImmutableMap.of(
+                RelativeCellName.ROOT_CELL_NAME, cell1Root,
+                RelativeCellName.of(ImmutableList.of("simple")), cell2Root
+            )
+        ));
+  }
+
+  @Test
   public void transtiveMappingForSymlinkCycle() throws Exception {
     Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
 

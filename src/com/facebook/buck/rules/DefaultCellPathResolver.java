@@ -99,10 +99,16 @@ public class DefaultCellPathResolver implements CellPathResolver {
       ImmutableMap.Builder<RelativeCellName, Path> result,
       Set<Path> pathStack,
       RelativeCellName parentCellPath,
-      DefaultCellPathResolver parentStub) throws IOException {
+      DefaultCellPathResolver parentStub) {
     ImmutableMap<String, Path> partialMapping = parentStub.getPartialMapping();
     for (Map.Entry<String, Path> entry : partialMapping.entrySet()) {
-      Path cellRoot = entry.getValue().toRealPath().normalize();
+      Path cellRoot = entry.getValue().normalize();
+      try {
+        cellRoot = cellRoot.toRealPath().normalize();
+      } catch (IOException e) {
+        LOG.warn("cellroot [" + cellRoot + "] does not exist in filesystem");
+      }
+
       // Do not recurse into previously visited Cell roots. It's OK for cell references to form
       // cycles as long as the targets don't form a cycle.
       // We intentionally allow for the map to contain entries whose Config objects can't be
