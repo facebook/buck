@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY c2f7c9318b445f1d2b097b59e3400bfe2aaf1490 #@#
+#@# GENERATED FILE: DO NOT MODIFY bf762933701a4f1bb106db5a1eaf0da12c57789d #@#
 {
   "concurrent" : {
     "deps" : [
@@ -6,6 +6,7 @@
       "//src/com/facebook/buck/util/concurrent:concurrent",
       "//test/com/facebook/buck/util/concurrent:testutil",
       "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:hamcrest-junit",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/junit:junit"
     ],

@@ -1,6 +1,9 @@
-java_library(
+java_immutables_library(
   name = 'concurrent',
   srcs = glob(['*.java']),
+  immutable_types = [
+    'ListeningSemaphoreArrayPendingItem',
+  ],
   tests = [
     '//test/com/facebook/buck/util/concurrent:concurrent',
   ],

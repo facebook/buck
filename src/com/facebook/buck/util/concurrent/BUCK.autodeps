@@ -1,10 +1,12 @@
-#@# GENERATED FILE: DO NOT MODIFY 4d25c2d3e26d3561acfd96bfad20aa34d04b0e4e #@#
+#@# GENERATED FILE: DO NOT MODIFY e419b58edd32414e146fd02ea83911b7e9f218a5 #@#
 {
   "concurrent" : {
     "deps" : [
-      "//src/com/facebook/buck/log:api"
+      "//src/com/facebook/buck/log:api",
+      "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/concurrent-locks:concurrent-locks",
       "//third-party/java/guava:guava",
       "//third-party/java/jsr:jsr305"
