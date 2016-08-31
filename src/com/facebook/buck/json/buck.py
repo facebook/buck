@@ -1234,9 +1234,11 @@ def format_traceback_and_exception():
     return formatted_traceback + formatted_exception
 
 
-def process_with_diagnostics(build_file, build_file_processor, to_parent,
+def process_with_diagnostics(build_file_query, build_file_processor, to_parent,
                              should_profile=False):
-    build_file = cygwin_adjusted_path(build_file)
+    build_file = build_file_query.get('buildFile')
+    build_file = cygwin_adjusted_path(build_file).rstrip()
+
     diagnostics = set()
     values = []
     if should_profile:
@@ -1245,7 +1247,7 @@ def process_with_diagnostics(build_file, build_file_processor, to_parent,
     else:
         profile = None
     try:
-        values = build_file_processor.process(build_file.rstrip(), diagnostics=diagnostics)
+        values = build_file_processor.process(build_file, diagnostics=diagnostics)
     except Exception as e:
         # Control-C and sys.exit() don't emit diagnostics.
         if not (e is KeyboardInterrupt or e is SystemExit):
@@ -1459,12 +1461,14 @@ def main():
     with buildFileProcessor.with_env_interceptors():
 
         for build_file in args:
-            process_with_diagnostics(build_file, buildFileProcessor, to_parent,
+            query = {
+                'buildFile': build_file,
+            }
+            process_with_diagnostics(query, buildFileProcessor, to_parent,
                                      should_profile=options.profile)
 
-        # "for ... in sys.stdin" in Python 2.x hangs until stdin is closed.
-        for build_file in iter(sys.stdin.readline, ''):
-            process_with_diagnostics(build_file, buildFileProcessor, to_parent,
+        for build_file_query in iter(lambda: bser.load(sys.stdin), None):
+            process_with_diagnostics(build_file_query, buildFileProcessor, to_parent,
                                      should_profile=options.profile)
 
     if options.quiet:

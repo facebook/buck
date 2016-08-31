@@ -47,11 +47,9 @@ import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value;
 
 import java.io.BufferedOutputStream;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -77,7 +75,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private Supplier<Path> ignorePathsJson;
 
   @Nullable private ProcessExecutor.LaunchedProcess buckPyProcess;
-  @Nullable private BufferedWriter buckPyStdinWriter;
+  @Nullable private BufferedOutputStream buckPyStdinWriter;
 
   private final ProjectBuildFileParserOptions options;
   private final ConstructorArgMarshaller marshaller;
@@ -232,7 +230,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
           stderrConsumerTerminationFuture);
       stderrConsumerThread.start();
 
-      buckPyStdinWriter = new BufferedWriter(new OutputStreamWriter(stdin));
+      buckPyStdinWriter = new BufferedOutputStream(stdin);
     }
   }
 
@@ -368,10 +366,12 @@ public class ProjectBuildFileParser implements AutoCloseable {
     ImmutableList<Map<String, Object>> values = ImmutableList.of();
     String profile = "";
     try (AssertScopeExclusiveAccess.Scope scope = assertSingleThreadedParsing.scope()) {
-      String buildFileString = buildFile.toString();
-      LOG.verbose("Writing to buck.py stdin: %s", buildFileString);
-      buckPyStdinWriter.write(buildFileString);
-      buckPyStdinWriter.newLine();
+      bserSerializer.serializeToStream(
+          ImmutableMap.of(
+              "buildFile", buildFile.toString(),
+              "watchRoot", options.getWatchman().getWatchRoot().or(""),
+              "projectPrefix", options.getWatchman().getProjectPrefix().or("")),
+          buckPyStdinWriter);
       buckPyStdinWriter.flush();
 
       LOG.debug("Parsing output of process %s...", buckPyProcess);
