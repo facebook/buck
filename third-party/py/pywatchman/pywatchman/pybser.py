@@ -336,18 +336,63 @@ def _bser_loads_recursive(buf, pos, mutable=True):
     else:
         raise RuntimeError('unhandled bser opcode 0x%02x' % (val_type,))
 
-
-def pdu_len(buf):
+def _pdu_info_helper(buf):
     if buf[0:2] != EMPTY_HEADER[0:2]:
         raise RuntimeError('Invalid BSER header')
     expected_len, pos = _bunser_int(buf, 2)
+    return expected_len, pos
+
+def pdu_len(buf):
+    expected_len, pos = _pdu_info_helper(buf)
     return expected_len + pos
 
 
 def loads(buf, mutable=True):
-    if buf[0:2] != EMPTY_HEADER[0:2]:
-        raise RuntimeError('Invalid BSER header')
-    expected_len, pos = _bunser_int(buf, 2)
+    expected_len, pos = _pdu_info_helper(buf)
     if len(buf) != expected_len + pos:
         raise RuntimeError('bser data len != header len')
+    return _bser_loads_recursive(buf, pos, mutable)[0]
+
+def _read_bytes(fp, buf):
+    """Read bytes from a file-like object
+
+    @param fp: File-like object that implements read(int)
+    @type fp: file
+
+    @param buf: Buffer to read into
+    @type buf: bytes
+
+    @return: buf
+    """
+
+    offset = 0
+    remaining = len(buf)
+    while remaining > 0:
+        l = fp.readinto((ctypes.c_char * remaining).from_buffer(buf, offset))
+        if l is None or l == 0:
+            return offset
+        offset += l
+        remaining -= l
+    return offset
+
+def load(fp, mutable=True):
+    """Deserialize bser from a file-like object"""
+    buf = ctypes.create_string_buffer(8192)
+    # 2 bytes marker, 1 byte int size, up to 8 bytes int64 value
+    SNIFF_BUFFER_SIZE = 13
+
+    header = (ctypes.c_char * SNIFF_BUFFER_SIZE).from_buffer(buf)
+    num_bytes = _read_bytes(fp, header)
+    if num_bytes < SNIFF_BUFFER_SIZE:
+        return None
+
+    expected_len, pos = _pdu_info_helper(header)
+    total_len = expected_len + pos
+    if len(buf) < total_len:
+        ctypes.resize(buf, total_len)
+    body = (ctypes.c_char * (total_len - len(header))).from_buffer(buf, len(header))
+    num_bytes = _read_bytes(fp, body)
+    if num_bytes < (total_len - len(header)):
+        raise RuntimeError('bser data ended early')
+
     return _bser_loads_recursive(buf, pos, mutable)[0]
