@@ -20,11 +20,9 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import org.immutables.value.Value;
 
-import java.util.Map;
-
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractListeningSemaphoreArrayPendingItem {
   public abstract SettableFuture<Void> getFuture();
-  public abstract Map<String, Integer> getResources();
+  public abstract ResourceAmounts getResources();
 }

@@ -16,17 +16,13 @@
 package com.facebook.buck.util.concurrent;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Wrapper around several ListeningSemaphore to manage the acquisition and release
@@ -34,18 +30,13 @@ import java.util.Map;
  */
 public class ListeningMultiSemaphore {
 
-  private final Map<String, Integer> actualCounters;
-  private final ImmutableMap<String, Integer> maximumValues;
+  private ResourceAmounts usedValues;
+  private final ResourceAmounts maximumValues;
   private final List<ListeningSemaphoreArrayPendingItem> pending = new LinkedList<>();
 
-  public ListeningMultiSemaphore(ImmutableMap<String, Integer> availableResources) {
-    this.actualCounters = new HashMap<>();
-    ImmutableMap.Builder<String, Integer> maximumValuesBuilder = ImmutableMap.builder();
-    for (Map.Entry<String, Integer> entry : availableResources.entrySet()) {
-      this.actualCounters.put(entry.getKey(), 0);
-      maximumValuesBuilder.put(entry);
-    }
-    this.maximumValues = maximumValuesBuilder.build();
+  public ListeningMultiSemaphore(ResourceAmounts availableResources) {
+    this.usedValues = ResourceAmounts.ZERO;
+    this.maximumValues = availableResources;
   }
 
   /**
@@ -55,53 +46,37 @@ public class ListeningMultiSemaphore {
    * When you finish your job, you must release acquired resources by calling release() method
    * below.
    *
-   * @param resources Resource names and their values that need to be acquired.
+   * @param resources Resource amounts that need to be acquired.
    *
    * @return Future that will be completed once resource will be acquired.
-   *
-   * @throws IllegalArgumentException if resources argument contains keys that are not present in
-   * the multi semaphore.
    */
-  public synchronized ListenableFuture<Void> acquire(Map<String, Integer> resources) {
+  public synchronized ListenableFuture<Void> acquire(ResourceAmounts resources) {
     if (!checkIfResourcesAvailable(resources)) {
       SettableFuture<Void> pendingFuture = SettableFuture.create();
       pending.add(ListeningSemaphoreArrayPendingItem.of(pendingFuture, resources));
       return pendingFuture;
     }
 
-    decreaseAvailableResources(resources);
+    increaseUsedResources(resources);
     return Futures.immediateFuture(null);
   }
 
   /**
    * Releases previously acquired resources.
    *
-   * @param resources Resource names and their values that need to be released. This argument should
+   * @param resources Resource amounts that need to be released. This argument should
    *                  match one you used during resource acquiring.
-   *
-   * @throws IllegalArgumentException if resources argument contains keys that are not present in
-   * the multi semaphore.
    */
-  public synchronized void release(Map<String, Integer> resources) {
-    increaseAvailableResources(resources);
+  public synchronized void release(ResourceAmounts resources) {
+    decreaseUsedResources(resources);
     processPendingFutures();
   }
 
-  public synchronized ImmutableMap<String, Integer> getAvailableResources() {
-    ImmutableMap.Builder<String, Integer> builder = ImmutableMap.builder();
-
-    for (String key : maximumValues.keySet()) {
-      Integer maximumValue = maximumValues.get(key);
-      Integer currentValue = actualCounters.get(key);
-      Preconditions.checkNotNull(maximumValue);
-      Preconditions.checkNotNull(currentValue);
-      builder.put(key, maximumValue - currentValue);
-    }
-
-    return builder.build();
+  public synchronized ResourceAmounts getAvailableResources() {
+    return maximumValues.subtract(usedValues);
   }
 
-  public synchronized ImmutableMap<String, Integer> getMaximumValues() {
+  public synchronized ResourceAmounts getMaximumValues() {
     return maximumValues;
   }
 
@@ -109,56 +84,26 @@ public class ListeningMultiSemaphore {
     return pending.size();
   }
 
-  private synchronized void checkResourceNames(Map<String, Integer> resources) {
-    Sets.SetView<String> unknownResourceNames = Sets.difference(
-        resources.keySet(),
-        actualCounters.keySet());
-    if (unknownResourceNames.size() != 0) {
-      throw new IllegalArgumentException(
-          String.format(
-              "ListeningMultiSemaphore (%s) was not initialized with " +
-                  "the following resource names: %s",
-              actualCounters.keySet(),
-              unknownResourceNames));
-    }
+  private synchronized boolean checkIfResourcesAvailable(ResourceAmounts resources) {
+    return !usedValues.append(resources).containsValuesGreaterThan(maximumValues);
   }
 
-  private synchronized boolean checkIfResourcesAvailable(Map<String, Integer> resources) {
-    checkResourceNames(resources);
-    for (Map.Entry<String, Integer> entry : resources.entrySet()) {
-      Integer currentValue = actualCounters.get(entry.getKey());
-      final Integer maximumValue = maximumValues.get(entry.getKey());
-      Preconditions.checkNotNull(maximumValue);
-      Preconditions.checkNotNull(currentValue);
-      if (currentValue + entry.getValue() > maximumValue) {
-        return false;
-      }
-    }
-    return true;
+  private synchronized void increaseUsedResources(ResourceAmounts resources) {
+    ResourceAmounts updatedAmounts = usedValues.append(resources);
+    Preconditions.checkArgument(
+        !updatedAmounts.containsValuesGreaterThan(maximumValues),
+        "Cannot decrease available resources by %s. Current: %s, Maximum: %s",
+        resources, usedValues, maximumValues);
+    usedValues = updatedAmounts;
   }
 
-  private synchronized void decreaseAvailableResources(Map<String, Integer> resources) {
-    checkResourceNames(resources);
-    for (Map.Entry<String, Integer> entry : resources.entrySet()) {
-      Integer oldValue = actualCounters.get(entry.getKey());
-      Preconditions.checkNotNull(oldValue);
-      Integer newValue = oldValue + entry.getValue();
-      actualCounters.put(entry.getKey(), newValue);
-    }
-  }
-
-  private synchronized void increaseAvailableResources(Map<String, Integer> resources) {
-    checkResourceNames(resources);
-    for (Map.Entry<String, Integer> entry : resources.entrySet()) {
-      Integer oldValue = actualCounters.get(entry.getKey());
-      Preconditions.checkNotNull(oldValue);
-      Integer newValue = oldValue - entry.getValue();
-      Preconditions.checkArgument(
-          newValue.intValue() >= 0,
-          "Resource %s has been over-released, new actual value is %d, old value was %d",
-          entry.getKey(), newValue, oldValue);
-      actualCounters.put(entry.getKey(), newValue);
-    }
+  private synchronized void decreaseUsedResources(ResourceAmounts resources) {
+    ResourceAmounts updatedAmounts = usedValues.subtract(resources);
+    Preconditions.checkArgument(
+        !updatedAmounts.containsValuesLessThan(ResourceAmounts.ZERO),
+        "Cannot increase available resources by %s. Current: %s, Maximum: %s",
+        resources, usedValues, maximumValues);
+    usedValues = updatedAmounts;
   }
 
   private synchronized void processPendingFutures() {
@@ -168,9 +113,9 @@ public class ListeningMultiSemaphore {
       ListeningSemaphoreArrayPendingItem item = iterator.next();
       if (checkIfResourcesAvailable(item.getResources())) {
         iterator.remove();
-        decreaseAvailableResources(item.getResources());
+        increaseUsedResources(item.getResources());
         if (!item.getFuture().set(null)) {
-          increaseAvailableResources(item.getResources());
+          decreaseUsedResources(item.getResources());
         }
       }
     }
