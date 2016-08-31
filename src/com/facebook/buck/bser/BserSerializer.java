@@ -36,8 +36,6 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.CharBuffer;
-import java.nio.channels.Channels;
-import java.nio.channels.WritableByteChannel;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
@@ -85,9 +83,7 @@ public class BserSerializer {
     buffer = serializeToBuffer(value, buffer);
     buffer.flip();
 
-    try (WritableByteChannel c = Channels.newChannel(outputStream)) {
-      c.write(buffer);
-    }
+    outputStream.write(buffer.array(), 0, buffer.limit());
   }
 
   /**
@@ -98,6 +94,7 @@ public class BserSerializer {
    * After returning, buffer.position() is advanced past the last encoded byte.
    */
   public ByteBuffer serializeToBuffer(Object value, ByteBuffer buffer) throws IOException {
+    buffer = increaseBufferCapacityIfNeeded(buffer, EMPTY_HEADER.length);
     buffer.put(EMPTY_HEADER);
     buffer = appendRecursive(buffer, value, utf8Encoder);
 

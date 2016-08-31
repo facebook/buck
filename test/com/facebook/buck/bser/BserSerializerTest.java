@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.sameInstance;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.base.Strings;
@@ -266,11 +267,35 @@ public class BserSerializerTest {
   }
 
   @Test
+  public void emptyBufferAllocatesNewBuffer() throws IOException {
+    BserSerializer serializer = new BserSerializer();
+    buffer = ByteBuffer.allocate(1).order(ByteOrder.nativeOrder());
+    ByteBuffer result = serializer.serializeToBuffer(true, buffer);
+    assertThat(result, is(not(sameInstance(buffer))));
+  }
+
+  class CloseableByteArrayOutputStream extends ByteArrayOutputStream {
+    private boolean closed = false;
+
+    @Override
+    public void close() throws IOException {
+      super.close();
+      this.closed = true;
+    }
+
+    public boolean isClosed() {
+      return closed;
+    }
+  }
+
+  @Test
   public void serializeTrueToStream() throws IOException {
-    try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+    try (CloseableByteArrayOutputStream os = new CloseableByteArrayOutputStream()) {
       BserSerializer serializer = new BserSerializer();
       serializer.serializeToStream(true, os);
+      assertFalse(os.isClosed());
       assertThat(os.toByteArray(), equalTo(BaseEncoding.base16().decode(EXPECTED_TRUE)));
     }
   }
+
 }
