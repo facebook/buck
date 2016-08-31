@@ -1,10 +1,11 @@
-#@# GENERATED FILE: DO NOT MODIFY f1626070b210001719e983fd67e501a7fcde2564 #@#
+#@# GENERATED FILE: DO NOT MODIFY c322dc04e96fea4b98334ad34601325a41e917f7 #@#
 {
   "intellij" : {
     "deps" : [
       "//src/com/facebook/buck/android:packageable",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/graph:graph",
+      "//src/com/facebook/buck/jvm/java:config",
       "//src/com/facebook/buck/jvm/java:packagefinder",
       "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/jvm/java:support",

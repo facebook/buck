@@ -26,7 +26,7 @@ import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidResourceBuilder;
 import com.facebook.buck.android.AndroidResourceDescription;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
@@ -34,6 +34,7 @@ import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -639,6 +640,39 @@ public class IjModuleGraphTest {
   }
 
   @Test
+  public void testModuleAggregationDoesNotCoalesceJava8() {
+    TargetNode<?> blah1 = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/blah/blah:blah"))
+        .setSourceLevel("1.8")
+        .build();
+
+    TargetNode<?> blah2 = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/blah/blah2:blah2"))
+        .setTargetLevel("1.8")
+        .build();
+
+     TargetNode<?> commonApp = AndroidLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
+        .addDep(blah1.getBuildTarget())
+        .addDep(blah2.getBuildTarget())
+        .build();
+
+    IjModuleGraph moduleGraph = createModuleGraph(
+        ImmutableSet.of(blah1, blah2, commonApp),
+        ImmutableMap.<TargetNode<?>, Path>of(),
+        Functions.constant(Optional.<Path>absent()),
+        IjModuleGraph.AggregationMode.SHALLOW);
+
+    IjModule blah1Module = getModuleForTarget(moduleGraph, blah1);
+    IjModule blah2Module = getModuleForTarget(moduleGraph, blah2);
+
+    assertThat(blah1Module, Matchers.not(Matchers.equalTo(blah2Module)));
+    assertThat(
+        blah1Module.getModuleBasePath(),
+        Matchers.not(Matchers.equalTo(blah2Module.getModuleBasePath())));
+  }
+
+  @Test
   public void testBlockedPathDepthCalculation() {
     IjModuleGraph.BlockedPathNode rootNode = new IjModuleGraph.BlockedPathNode();
 
@@ -810,6 +844,7 @@ public class IjModuleGraphTest {
         false);
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(sourceOnlyResolver);
     return IjModuleGraph.from(
+        FakeBuckConfig.builder().build(),
         TargetGraphFactory.newInstance(targets),
         libraryFactory,
         moduleFactory,

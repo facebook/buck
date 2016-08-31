@@ -120,6 +120,16 @@ public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescripti
     return this;
   }
 
+  public JavaLibraryBuilder setSourceLevel(String sourceLevel) {
+    arg.source = Optional.of(sourceLevel);
+    return this;
+  }
+
+  public JavaLibraryBuilder setTargetLevel(String targetLevel) {
+    arg.target = Optional.of(targetLevel);
+    return this;
+  }
+
   public JavaLibraryBuilder setAnnotationProcessors(ImmutableSet<String> annotationProcessors) {
     arg.annotationProcessors = Optional.of(annotationProcessors);
     return this;

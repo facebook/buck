@@ -201,6 +201,7 @@ public class IjProject {
           }
         };
     IjModuleGraph moduleGraph = IjModuleGraph.from(
+        buckConfig,
         targetGraphAndTargets.getTargetGraph(),
         libraryFactory,
         new IjModuleFactory(moduleFactoryResolver, excludeArtifacts),
