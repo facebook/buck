@@ -136,7 +136,6 @@ public class MainIntegrationTest {
         "  query       provides facilities to query information about the target nodes graph",
         "  quickstart  generates a default project directory",
         "  rage        create a defect report",
-        "  repl        a shell for interactive experimentation with buck internals",
         "  root        prints the absolute path to the root of the current buck project",
         "  run         runs a target as a command",
         "  server      query and control the http server",
