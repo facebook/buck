@@ -168,14 +168,14 @@ public class SwiftLibraryDescription implements
 
       final Linker.LinkType linkType = Linker.LinkType.SHARED;
       SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
-      String moduleName = args.moduleName.or(buildTarget.getShortName());
+      String soname = CxxDescriptionEnhancer.getSharedLibrarySoname(
+          Optional.<String>absent(),
+          buildTarget.withoutFlavors(SUPPORTED_FLAVORS),
+          cxxPlatform);
       Path sharedLibOutput = CxxDescriptionEnhancer.getSharedLibraryPath(
           params.getProjectFilesystem(),
           buildTarget,
-          CxxDescriptionEnhancer.getSharedLibrarySoname(
-              Optional.<String>absent(),
-              buildTarget.withoutFlavors(SUPPORTED_FLAVORS),
-              cxxPlatform));
+          soname);
 
       CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
           cxxBuckConfig,
@@ -185,7 +185,7 @@ public class SwiftLibraryDescription implements
           sourcePathResolver,
           buildTarget,
           linkType,
-          Optional.of(moduleName),
+          Optional.of(soname),
           sharedLibOutput,
           Linker.LinkableDepType.SHARED,
           Iterables.filter(params.getDeps(), NativeLinkable.class),
@@ -200,7 +200,7 @@ public class SwiftLibraryDescription implements
           params,
           new SourcePathResolver(resolver),
           swiftCompiler.get(),
-          moduleName,
+          args.moduleName.or(buildTarget.getShortName()),
           BuildTargets.getGenPath(
               params.getProjectFilesystem(),
               buildTarget, "%s"),
