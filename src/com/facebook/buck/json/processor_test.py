@@ -61,9 +61,11 @@ def with_envs(envs):
 
 class ProjectFile(object):
 
-    def __init__(self, path, contents):
+    def __init__(self, root, path, contents):
         self.path = path
         self.name = '//{0}'.format(path)
+        self.root = root
+        self.prefix = None
         if isinstance(contents, (tuple, list)):
             contents = os.linesep.join(contents) + os.linesep
         self.contents = contents
@@ -94,8 +96,6 @@ class BuckTest(unittest.TestCase):
     def create_build_file_processor(self, *includes, **kwargs):
         return BuildFileProcessor(
             self.project_root,
-            self.project_root,  # watchman_watch_root
-            None,               # watchman_project_prefix
             self.build_file_name,
             self.allow_empty_globs,
             False,              # ignore_buck_autodeps_files
@@ -120,13 +120,13 @@ class BuckTest(unittest.TestCase):
 
         # Setup the includes defs.  The first one defines a variable that the
         # second one (incorrectly) implicitly references.
-        include_def1 = ProjectFile(path='inc_def1', contents=('FOO = 1',))
-        include_def2 = ProjectFile(path='inc_def2', contents=('BAR = FOO',))
+        include_def1 = ProjectFile(self.project_root, path='inc_def1', contents=('FOO = 1',))
+        include_def2 = ProjectFile(self.project_root, path='inc_def2', contents=('BAR = FOO',))
         self.write_files(include_def1, include_def2)
 
         # Construct a processor using the above as default includes, and verify
         # that the second one can't use the first's globals.
-        build_file = ProjectFile(path='BUCK', contents='')
+        build_file = ProjectFile(self.project_root, path='BUCK', contents='')
         self.write_file(build_file)
         build_file_processor = self.create_build_file_processor(
             include_def1.name,
@@ -134,12 +134,13 @@ class BuckTest(unittest.TestCase):
         self.assertRaises(
             NameError,
             build_file_processor.process,
-            build_file.path, set())
+            build_file.root, build_file.prefix, build_file.path, set())
 
         # Construct a processor with no default includes, have a generated
         # build file include the include defs one after another, and verify
         # that the second one can't use the first's globals.
         build_file = ProjectFile(
+            self.project_root,
             path='BUCK',
             contents=(
                 'include_defs({0!r})'.format(include_def1.name),
@@ -150,7 +151,7 @@ class BuckTest(unittest.TestCase):
         self.assertRaises(
             NameError,
             build_file_processor.process,
-            build_file.path, set())
+            build_file.root, build_file.prefix, build_file.path, set())
 
     def test_lazy_include_defs(self):
         """
@@ -163,8 +164,9 @@ class BuckTest(unittest.TestCase):
 
         # Setup the includes defs.  The first one defines a variable that the
         # second one references after a local 'include_defs' call.
-        include_def1 = ProjectFile(path='inc_def1', contents=('FOO = 1',))
+        include_def1 = ProjectFile(self.project_root, path='inc_def1', contents=('FOO = 1',))
         include_def2 = ProjectFile(
+            self.project_root,
             path='inc_def2',
             contents=(
                 'def test():',
@@ -176,18 +178,19 @@ class BuckTest(unittest.TestCase):
         # Construct a processor using the above as default includes, and verify
         # that the function 'test' can use 'FOO' after including the first
         # include def.
-        build_file = ProjectFile(path='BUCK', contents=('test()',))
+        build_file = ProjectFile(self.project_root, path='BUCK', contents=('test()',))
         self.write_file(build_file)
         build_file_processor = self.create_build_file_processor(
             include_def1.name,
             include_def2.name)
-        build_file_processor.process(build_file.path, set())
+        build_file_processor.process(build_file.root, build_file.prefix, build_file.path, set())
 
         # Construct a processor with no default includes, have a generated
         # build file include the include defs one after another, and verify
         # that the function 'test' can use 'FOO' after including the first
         # include def.
         build_file = ProjectFile(
+            self.project_root,
             path='BUCK',
             contents=(
                 'include_defs({0!r})'.format(include_def1.name),
@@ -196,28 +199,29 @@ class BuckTest(unittest.TestCase):
             ))
         self.write_file(build_file)
         build_file_processor = self.create_build_file_processor()
-        build_file_processor.process(build_file.path, set())
+        build_file_processor.process(build_file.root, build_file.prefix, build_file.path, set())
 
     def test_private_globals_are_ignored(self):
         """
         Verify globals prefixed with '_' don't get imported via 'include_defs'.
         """
 
-        include_def = ProjectFile(path='inc_def1', contents=('_FOO = 1',))
+        include_def = ProjectFile(self.project_root, path='inc_def1', contents=('_FOO = 1',))
         self.write_file(include_def)
 
         # Test we don't get private module attributes from default includes.
-        build_file = ProjectFile(path='BUCK', contents=('_FOO',))
+        build_file = ProjectFile(self.project_root, path='BUCK', contents=('_FOO',))
         self.write_file(build_file)
         build_file_processor = self.create_build_file_processor(
             include_def.name)
         self.assertRaises(
             NameError,
             build_file_processor.process,
-            build_file.path, set())
+            build_file.root, build_file.prefix, build_file.path, set())
 
         # Test we don't get private module attributes from explicit includes.
         build_file = ProjectFile(
+            self.project_root,
             path='BUCK',
             contents=(
                 'include_defs({0!r})'.format(include_def.name),
@@ -228,7 +232,7 @@ class BuckTest(unittest.TestCase):
         self.assertRaises(
             NameError,
             build_file_processor.process,
-            build_file.path, set())
+            build_file.root, build_file.prefix, build_file.path, set())
 
     def test_implicit_includes_apply_to_explicit_includes(self):
         """
@@ -237,9 +241,10 @@ class BuckTest(unittest.TestCase):
 
         # Setup an implicit include that defines a variable, another include
         # that uses it, and a build file that uses the explicit include.
-        implicit_inc = ProjectFile(path='implicit', contents=('FOO = 1',))
-        explicit_inc = ProjectFile(path='explicit', contents=('FOO',))
+        implicit_inc = ProjectFile(self.project_root, path='implicit', contents=('FOO = 1',))
+        explicit_inc = ProjectFile(self.project_root, path='explicit', contents=('FOO',))
         build_file = ProjectFile(
+            self.project_root,
             path='BUCK',
             contents=(
                 'include_defs({0!r})'.format(explicit_inc.name),
@@ -250,7 +255,7 @@ class BuckTest(unittest.TestCase):
         # variable in the implicit include.
         build_file_processor = self.create_build_file_processor(
             implicit_inc.name)
-        build_file_processor.process(build_file.path, set())
+        build_file_processor.process(build_file.root, build_file.prefix, build_file.path, set())
 
     def test_all_list_is_respected(self):
         """
@@ -259,22 +264,24 @@ class BuckTest(unittest.TestCase):
         """
 
         include_def = ProjectFile(
+            self.project_root,
             path='inc_def1',
             contents=('__all__ = []', 'FOO = 1'))
         self.write_file(include_def)
 
         # Test we don't get non-whitelisted attributes from default includes.
-        build_file = ProjectFile(path='BUCK', contents=('FOO',))
+        build_file = ProjectFile(self.project_root, path='BUCK', contents=('FOO',))
         self.write_file(build_file)
         build_file_processor = self.create_build_file_processor(
             include_def.name)
         self.assertRaises(
             NameError,
             build_file_processor.process,
-            build_file.path, set())
+            build_file.root, build_file.prefix, build_file.path, set())
 
         # Test we don't get non-whitelisted attributes from explicit includes.
         build_file = ProjectFile(
+            self.project_root,
             path='BUCK',
             contents=(
                 'include_defs({0!r})'.format(include_def.name),
@@ -285,7 +292,7 @@ class BuckTest(unittest.TestCase):
         self.assertRaises(
             NameError,
             build_file_processor.process,
-            build_file.path, set())
+            build_file.root, build_file.prefix, build_file.path, set())
 
     def test_do_not_override_overridden_builtins(self):
         """
@@ -295,6 +302,7 @@ class BuckTest(unittest.TestCase):
 
         # Override java_library and have it automatically add a dep
         build_defs = ProjectFile(
+            self.project_root,
             path='BUILD_DEFS',
             contents=(
                 # While not strictly needed for this test, we want to make sure we are overriding
@@ -304,8 +312,9 @@ class BuckTest(unittest.TestCase):
                 '  raise ValueError()',
                 'include_defs("//OTHER_DEFS")',
             ))
-        other_defs = ProjectFile(path='OTHER_DEFS', contents=())
+        other_defs = ProjectFile(self.project_root, path='OTHER_DEFS', contents=())
         build_file = ProjectFile(
+            self.project_root,
             path='BUCK',
             contents=(
                 'get_base_path()',
@@ -317,7 +326,7 @@ class BuckTest(unittest.TestCase):
         self.assertRaises(
             ValueError,
             build_file_processor.process,
-            build_file.path, set())
+            build_file.root, build_file.prefix, build_file.path, set())
 
     def test_watchman_glob_failure_falls_back_to_regular_glob_and_adds_diagnostic(self):
         class FakeWatchmanError(Exception):
@@ -338,6 +347,7 @@ class BuckTest(unittest.TestCase):
         self.watchman_error = FakeWatchmanError
 
         build_file = ProjectFile(
+            self.project_root,
             path='BUCK',
             contents=(
                 'foo_rule(',
@@ -345,12 +355,13 @@ class BuckTest(unittest.TestCase):
                 '  srcs=glob(["*.java"]),',
                 ')'
             ))
-        java_file = ProjectFile(path='Foo.java', contents=())
+        java_file = ProjectFile(self.project_root, path='Foo.java', contents=())
         self.write_files(build_file, java_file)
         build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
         build_file_processor.install_builtins(__builtin__.__dict__)
         diagnostics = set()
-        rules = build_file_processor.process(build_file.path, diagnostics)
+        rules = build_file_processor.process(build_file.root, build_file.prefix, build_file.path,
+                                             diagnostics)
         self.assertTrue(self.watchman_client.query_invoked)
         self.assertEqual(['Foo.java'], rules[0]['srcs'])
         self.assertEqual(
@@ -371,6 +382,7 @@ class BuckTest(unittest.TestCase):
         self.watchman_client = FakeWatchmanClient()
 
         build_file = ProjectFile(
+            self.project_root,
             path='BUCK',
             contents=(
                 'foo_rule(',
@@ -378,12 +390,13 @@ class BuckTest(unittest.TestCase):
                 '  srcs=glob(["*.java"]),',
                 ')'
             ))
-        java_file = ProjectFile(path='Foo.java', contents=())
+        java_file = ProjectFile(self.project_root, path='Foo.java', contents=())
         self.write_files(build_file, java_file)
         build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
         build_file_processor.install_builtins(__builtin__.__dict__)
         diagnostics = set()
-        rules = build_file_processor.process(build_file.path, diagnostics)
+        rules = build_file_processor.process(build_file.root, build_file.prefix, build_file.path,
+                                             diagnostics)
         self.assertEqual(['Foo.java'], rules[0]['srcs'])
         self.assertEqual(
             set([Diagnostic(
@@ -398,6 +411,7 @@ class BuckTest(unittest.TestCase):
         """
 
         build_file = ProjectFile(
+            self.project_root,
             path='BUCK',
             contents=(
                 'assert read_config("hello", "world") == "foo"',
@@ -407,7 +421,8 @@ class BuckTest(unittest.TestCase):
         self.write_file(build_file)
         build_file_processor = self.create_build_file_processor(
             configs={('hello', 'world'): 'foo'})
-        result = build_file_processor.process(build_file.path, set())
+        result = build_file_processor.process(build_file.root, build_file.prefix, build_file.path,
+                                              set())
         self.assertEquals(
             get_config_from_results(result),
             {'hello': {'world': 'foo', 'bar': None, 'goo': None}})
@@ -418,9 +433,10 @@ class BuckTest(unittest.TestCase):
         """
 
         # Setup the build file and dependency.
-        dep = ProjectFile(path='dep', contents=('',))
+        dep = ProjectFile(self.project_root, path='dep', contents=('',))
         build_file = (
             ProjectFile(
+                self.project_root,
                 path='BUCK',
                 contents=(
                     'add_build_file_dep("//dep")',
@@ -430,7 +446,8 @@ class BuckTest(unittest.TestCase):
 
         # Create a process and run it.
         build_file_processor = self.create_build_file_processor()
-        results = build_file_processor.process(build_file.path, set())
+        results = build_file_processor.process(build_file.root, build_file.prefix, build_file.path,
+                                               set())
 
         # Verify that the dep was recorded.
         self.assertTrue(
@@ -440,6 +457,7 @@ class BuckTest(unittest.TestCase):
     def test_import_works_without_sandboxing(self):
         self.enable_build_file_sandboxing = False
         build_file = ProjectFile(
+            self.project_root,
             path='BUCK',
             contents=(
                 'import ssl',
@@ -447,11 +465,12 @@ class BuckTest(unittest.TestCase):
         self.write_files(build_file)
         build_file_processor = self.create_build_file_processor()
         build_file_processor.install_builtins(__builtin__.__dict__)
-        build_file_processor.process(build_file.path, set())
+        build_file_processor.process(build_file.root, build_file.prefix, build_file.path, set())
 
     def test_enabled_sandboxing_blocks_import(self):
         self.enable_build_file_sandboxing = True
         build_file = ProjectFile(
+            self.project_root,
             path='BUCK',
             contents=(
                 'import ssl',
@@ -462,7 +481,7 @@ class BuckTest(unittest.TestCase):
         self.assertRaises(
             ImportError,
             build_file_processor.process,
-            build_file.path, set())
+            build_file.root, build_file.prefix, build_file.path, set())
 
     def test_import_whitelist(self):
         """
@@ -472,6 +491,7 @@ class BuckTest(unittest.TestCase):
         self.enable_build_file_sandboxing = True
         self.project_import_whitelist = ['sys', 'subprocess']
         build_file = ProjectFile(
+            self.project_root,
             path='BUCK',
             contents=(
                 'import json',
@@ -482,7 +502,7 @@ class BuckTest(unittest.TestCase):
             ))
         self.write_files(build_file)
         build_file_processor = self.create_build_file_processor()
-        build_file_processor.process(build_file.path, set())
+        build_file_processor.process(build_file.root, build_file.prefix, build_file.path, set())
 
     def test_allow_unsafe_import_allows_to_import(self):
         """
@@ -491,6 +511,7 @@ class BuckTest(unittest.TestCase):
         self.enable_build_file_sandboxing = True
         # Importing httplib results in `__import__()` calls for other modules, e.g. socket, sys
         build_file = ProjectFile(
+            self.project_root,
             path='BUCK',
             contents=(
                 'with allow_unsafe_import():',
@@ -499,7 +520,7 @@ class BuckTest(unittest.TestCase):
         self.write_files(build_file)
         build_file_processor = self.create_build_file_processor()
         build_file_processor.install_builtins(__builtin__.__dict__)
-        build_file_processor.process(build_file.path, set())
+        build_file_processor.process(build_file.root, build_file.prefix, build_file.path, set())
 
     def test_modules_are_not_copied_unless_specified(self):
         """
@@ -507,6 +528,7 @@ class BuckTest(unittest.TestCase):
         """
 
         include_def = ProjectFile(
+            self.project_root,
             path='inc_def',
             contents=(
                 'import math',
@@ -517,6 +539,7 @@ class BuckTest(unittest.TestCase):
 
         # Module math should not be accessible
         build_file = ProjectFile(
+            self.project_root,
             path='BUCK',
             contents=(
                 'include_defs({0!r})'.format(include_def.name),
@@ -527,10 +550,11 @@ class BuckTest(unittest.TestCase):
         self.assertRaises(
             NameError,
             build_file_processor.process,
-            build_file.path, set())
+            build_file.root, build_file.prefix, build_file.path, set())
 
         # Confirm that math_pi() works
         build_file = ProjectFile(
+            self.project_root,
             path='BUCK',
             contents=(
                 'include_defs({0!r})'.format(include_def.name),
@@ -538,16 +562,18 @@ class BuckTest(unittest.TestCase):
             ))
         self.write_file(build_file)
         build_file_processor = self.create_build_file_processor()
-        build_file_processor.process(build_file.path, set())
+        build_file_processor.process(build_file.root, build_file.prefix, build_file.path, set())
 
         # If specified in '__all__', math should be accessible
         include_def = ProjectFile(
+            self.project_root,
             path='inc_def',
             contents=(
                 '__all__ = ["math"]',
                 'import math',
             ))
         build_file = ProjectFile(
+            self.project_root,
             path='BUCK',
             contents=(
                 'include_defs({0!r})'.format(include_def.name),
@@ -555,7 +581,7 @@ class BuckTest(unittest.TestCase):
             ))
         self.write_files(include_def, build_file)
         build_file_processor = self.create_build_file_processor()
-        build_file_processor.process(build_file.path, set())
+        build_file_processor.process(build_file.root, build_file.prefix, build_file.path, set())
 
     def test_os_getenv(self):
         """
@@ -563,6 +589,7 @@ class BuckTest(unittest.TestCase):
         """
 
         build_file = ProjectFile(
+            self.project_root,
             path='BUCK',
             contents=(
                 'import os',
@@ -574,7 +601,8 @@ class BuckTest(unittest.TestCase):
         with with_envs({'TEST1': 'foo', 'TEST2': None, 'TEST3': None}):
             build_file_processor = self.create_build_file_processor()
             with build_file_processor.with_env_interceptors():
-                result = build_file_processor.process(build_file.path, set())
+                result = build_file_processor.process(build_file.root, build_file.prefix,
+                                                      build_file.path, set())
         self.assertEquals(
             get_env_from_results(result),
             {'TEST1': "foo", 'TEST2': None, 'TEST3': None})
@@ -586,6 +614,7 @@ class BuckTest(unittest.TestCase):
         """
 
         build_file = ProjectFile(
+            self.project_root,
             path='BUCK',
             contents=(
                 'import os',
@@ -600,7 +629,8 @@ class BuckTest(unittest.TestCase):
         with with_envs({'TEST1': 'foo', 'TEST2': None, 'TEST3': None, 'TEST4': '', 'TEST5': None}):
             build_file_processor = self.create_build_file_processor()
             with build_file_processor.with_env_interceptors():
-                result = build_file_processor.process(build_file.path, set())
+                result = build_file_processor.process(build_file.root, build_file.prefix,
+                                                      build_file.path, set())
         self.assertEquals(
             get_env_from_results(result),
             {'TEST1': "foo", 'TEST2': None, 'TEST3': None, 'TEST4': '', 'TEST5': None})
@@ -613,6 +643,7 @@ class BuckTest(unittest.TestCase):
 
         self.enable_build_file_sandboxing = True
         build_file = ProjectFile(
+            self.project_root,
             path='BUCK',
             contents=(
                 'import os.path',
@@ -626,7 +657,8 @@ class BuckTest(unittest.TestCase):
         self.write_files(build_file)
         with with_envs({'TEST1': 'foo'}):
             build_file_processor = self.create_build_file_processor()
-            build_file_processor.process(build_file.path, set())
+            build_file_processor.process(build_file.root, build_file.prefix, build_file.path,
+                                         set())
 
     def test_safe_modules_block_unsafe_functions(self):
         """
@@ -635,6 +667,7 @@ class BuckTest(unittest.TestCase):
 
         self.enable_build_file_sandboxing = True
         build_file = ProjectFile(
+            self.project_root,
             path='BUCK',
             contents=(
                 'import os.path',
@@ -646,4 +679,4 @@ class BuckTest(unittest.TestCase):
         self.assertRaises(
             AttributeError,
             build_file_processor.process,
-            build_file.path, set())
+            build_file.root, build_file.prefix, build_file.path, set())

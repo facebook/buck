@@ -566,12 +566,12 @@ GENDEPS_SIGNATURE = re.compile(r'^#@# GENERATED FILE: DO NOT MODIFY ([a-f0-9]{40
 
 class BuildFileProcessor(object):
 
-    def __init__(self, project_root, watchman_watch_root, watchman_project_prefix, build_file_name,
-                 allow_empty_globs, ignore_buck_autodeps_files, watchman_client, watchman_error,
+    def __init__(self, project_root, build_file_name, allow_empty_globs,
+                 ignore_buck_autodeps_files, watchman_client, watchman_error,
                  watchman_glob_stat_results, watchman_use_glob_generator,
-                 enable_build_file_sandboxing,
-                 project_import_whitelist=None, implicit_includes=None, extra_funcs=None,
-                 configs=None, env_vars=None, ignore_paths=None):
+                 enable_build_file_sandboxing, project_import_whitelist=None,
+                 implicit_includes=None, extra_funcs=None, configs=None, env_vars=None,
+                 ignore_paths=None):
         if project_import_whitelist is None:
             project_import_whitelist = []
         if implicit_includes is None:
@@ -589,8 +589,6 @@ class BuildFileProcessor(object):
         self._sync_cookie_state = SyncCookieState()
 
         self._project_root = project_root
-        self._watchman_watch_root = watchman_watch_root
-        self._watchman_project_prefix = watchman_project_prefix
         self._build_file_name = build_file_name
         self._implicit_includes = implicit_includes
         self._allow_empty_globs = allow_empty_globs
@@ -1050,7 +1048,7 @@ class BuildFileProcessor(object):
             path,
             implicit_includes=implicit_includes)
 
-    def _process_build_file(self, path, implicit_includes=None):
+    def _process_build_file(self, watch_root, project_prefix, path, implicit_includes=None):
         """
         Process the build file at the given path.
         """
@@ -1059,8 +1057,7 @@ class BuildFileProcessor(object):
 
         # Create the build file context, including the base path and directory
         # name of the given path.
-        relative_path_to_build_file = os.path.relpath(
-            path, self._project_root).replace('\\', '/')
+        relative_path_to_build_file = os.path.relpath(path, self._project_root).replace('\\', '/')
         len_suffix = -len('/' + self._build_file_name)
         base_path = relative_path_to_build_file[:len_suffix]
         dirname = os.path.dirname(path)
@@ -1084,8 +1081,8 @@ class BuildFileProcessor(object):
             self._allow_empty_globs,
             self._ignore_paths,
             self._watchman_client,
-            self._watchman_watch_root,
-            self._watchman_project_prefix,
+            watch_root,
+            project_prefix,
             self._sync_cookie_state,
             self._watchman_error,
             self._watchman_glob_stat_results,
@@ -1161,14 +1158,13 @@ class BuildFileProcessor(object):
             raise InvalidSignatureError(
                 'Signature did not match contents in {0}'.format(autodeps_file))
 
-
-    def process(self, path, diagnostics):
+    def process(self, watch_root, project_prefix, path, diagnostics):
         """
         Process a build file returning a dict of its rules and includes.
         """
-        build_env, mod = self._process_build_file(
-            os.path.join(self._project_root, path),
-            implicit_includes=self._implicit_includes)
+        build_env, mod = self._process_build_file(watch_root, project_prefix,
+                                                  os.path.join(self._project_root, path),
+                                                  implicit_includes=self._implicit_includes)
 
         # Initialize the output object to a map of the parsed rules.
         values = build_env.rules.values()
@@ -1237,7 +1233,13 @@ def format_traceback_and_exception():
 def process_with_diagnostics(build_file_query, build_file_processor, to_parent,
                              should_profile=False):
     build_file = build_file_query.get('buildFile')
-    build_file = cygwin_adjusted_path(build_file).rstrip()
+    watch_root = build_file_query.get('watchRoot')
+    project_prefix = build_file_query.get('projectPrefix')
+
+    build_file = cygwin_adjusted_path(build_file).rstrip().encode('ascii')
+    watch_root = cygwin_adjusted_path(watch_root).rstrip().encode('ascii')
+    if project_prefix is not None:
+        project_prefix = cygwin_adjusted_path(project_prefix).rstrip().encode('ascii')
 
     diagnostics = set()
     values = []
@@ -1247,7 +1249,11 @@ def process_with_diagnostics(build_file_query, build_file_processor, to_parent,
     else:
         profile = None
     try:
-        values = build_file_processor.process(build_file, diagnostics=diagnostics)
+        values = build_file_processor.process(
+            watch_root,
+            project_prefix,
+            build_file,
+            diagnostics=diagnostics)
     except Exception as e:
         # Control-C and sys.exit() don't emit diagnostics.
         if not (e is KeyboardInterrupt or e is SystemExit):
@@ -1334,23 +1340,11 @@ def main():
         dest='watchman_glob_stat_results',
         help='Invokes `stat()` to sanity check result of `watchman query`.')
     parser.add_option(
-        '--watchman_watch_root',
-        action='store',
-        type='string',
-        dest='watchman_watch_root',
-        help='Path to root of watchman watch as returned by `watchman watch-project`.')
-    parser.add_option(
         '--watchman_socket_path',
         action='store',
         type='string',
         dest='watchman_socket_path',
         help='Path to Unix domain socket/named pipe as returned by `watchman get-sockname`.')
-    parser.add_option(
-        '--watchman_project_prefix',
-        action='store',
-        type='string',
-        dest='watchman_project_prefix',
-        help='Relative project prefix as returned by `watchman watch-project`.')
     parser.add_option(
         '--watchman_query_timeout_ms',
         action='store',
@@ -1431,8 +1425,6 @@ def main():
 
     buildFileProcessor = BuildFileProcessor(
         project_root,
-        options.watchman_watch_root,
-        options.watchman_project_prefix,
         options.build_file_name,
         options.allow_empty_globs,
         options.ignore_buck_autodeps_files,
@@ -1463,6 +1455,8 @@ def main():
         for build_file in args:
             query = {
                 'buildFile': build_file,
+                'watchRoot': project_root,
+                'projectPrefix': project_root,
             }
             process_with_diagnostics(query, buildFileProcessor, to_parent,
                                      should_profile=options.profile)
