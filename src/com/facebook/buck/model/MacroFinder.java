@@ -54,6 +54,25 @@ public class MacroFinder {
    **/
   private static final Pattern MACRO_PATTERN = Pattern.compile("\\$\\(([^)\\s]+)(?: ([^)]*))?\\)");
 
+  public Optional<MacroMatchResult> match(ImmutableSet<String> macros, String blob)
+      throws MacroException {
+    Matcher matcher = MACRO_PATTERN.matcher(blob);
+    if (matcher.matches()) {
+      if (!macros.contains(matcher.group(1))) {
+        throw new MacroException(
+            String.format("expanding %s: no such macro \"%s\"", matcher.group(), matcher.group(1)));
+      }
+      return Optional.of(
+          MacroMatchResult.builder()
+              .setMacroType(matcher.group(1))
+              .setMacroInput(Optional.fromNullable(matcher.group(2)).or(""))
+              .setStartIndex(0)
+              .setEndIndex(blob.length())
+              .build());
+    }
+    return Optional.absent();
+  }
+
   public String replace(ImmutableMap<String, MacroReplacer> replacers, String blob)
       throws MacroException {
 

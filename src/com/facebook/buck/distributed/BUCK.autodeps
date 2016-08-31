@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY 82610ad480bf43dfaf6407c756cb397c5b12f071 #@#
+#@# GENERATED FILE: DO NOT MODIFY 8e73629123ac28e4b3dbde5f7781bbb946a313a8 #@#
 {
   "distributed" : {
     "deps" : [
+      "//src/com/facebook/buck/android:utils",
       "//src/com/facebook/buck/command:command",
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/graph:graph",
@@ -15,7 +16,6 @@
     ],
     "exported_deps" : [
       "//src-gen:thrift",
-      "//src/com/facebook/buck/android:utils",
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/event:event",

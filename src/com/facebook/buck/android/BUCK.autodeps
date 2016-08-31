@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 2fbd09da4c0bcaa13ccc2350c7c1128f27d01826 #@#
+#@# GENERATED FILE: DO NOT MODIFY 1d3e0238313d3652735bccc3d1c92dfef3b0cb20 #@#
 {
   "apkmodule" : {
     "deps" : [
@@ -151,6 +151,7 @@
       "//third-party/java/android:sdklib",
       "//third-party/java/dx:dx",
       "//third-party/java/immutables:processor",
+      "//third-party/java/infer-annotations:infer-annotations",
       "//third-party/java/jackson:jackson-databind"
     ],
     "exported_deps" : [

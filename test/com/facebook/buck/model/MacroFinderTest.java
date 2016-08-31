@@ -17,14 +17,17 @@
 package com.facebook.buck.model;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.rules.macros.FunctionMacroReplacer;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class MacroFinderTest {
@@ -33,7 +36,6 @@ public class MacroFinderTest {
 
   @Test
   public void findAll() throws MacroException {
-
     ImmutableList<MacroMatchResult> expectedResults =
         ImmutableList.of(
             MacroMatchResult.builder()
@@ -76,6 +78,38 @@ public class MacroFinderTest {
         ImmutableMap.<String, MacroReplacer>of("macro", new FunctionMacroReplacer(replacer)),
         "hello $(macro arg1) goodbye $(macro arg2)");
     assertEquals("hello something goodbye something else", actual);
+  }
+
+  @Test
+  public void match() throws MacroException {
+    assertThat(
+        FINDER.match(ImmutableSet.of("macro1"), "nothing to see here"),
+        Matchers.equalTo(Optional.<MacroMatchResult>absent()));
+    assertThat(
+        FINDER.match(ImmutableSet.of("macro1"), "$(macro1)"),
+        Matchers.equalTo(
+            Optional.of(
+                MacroMatchResult.builder()
+                    .setMacroType("macro1")
+                    .setMacroInput("")
+                    .setStartIndex(0)
+                    .setEndIndex(9)
+                    .build())));
+    assertThat(
+        FINDER.match(ImmutableSet.of("macro1"), "$(macro1 arg)"),
+        Matchers.equalTo(
+            Optional.of(
+                MacroMatchResult.builder()
+                    .setMacroType("macro1")
+                    .setMacroInput("arg")
+                    .setStartIndex(0)
+                    .setEndIndex(13)
+                    .build())));
+  }
+
+  @Test(expected = MacroException.class)
+  public void matchWithInvalidName() throws MacroException {
+    FINDER.match(ImmutableSet.of("macro1"), "$(macro2)");
   }
 
 }

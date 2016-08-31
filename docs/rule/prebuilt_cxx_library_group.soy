@@ -1,0 +1,142 @@
+{namespace prebuilt_cxx_library_group}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'prebuilt_cxx_library_group()' /}
+    {param prettify: true /}
+    {param description}
+      A prebuilt_cxx_library_group() rule represents a group of native libraries which should
+      be handled together in a single rule, perhaps using special link-line construction.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A <code>prebuilt_cxx_library_group()</code> rule represents a group of native libraries which should
+be handled together in a single rule, perhaps using special link-line construction.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call cxx_common.exported_preprocessor_flags_arg /}
+
+{call buck.arg}
+  {param name: 'static_link' /}
+  {param default: '[]' /}
+  {param desc}
+    The arguments to use when linking this library group using the static link style.
+    The actual paths to libraries should be listed in the <code>static_libs</code> parameter,
+    and referenced via the the <code>$(lib [index])</code> macro in these args.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'static_libs' /}
+  {param default: '[]' /}
+  {param desc}
+    The paths to the libraries used when using the static link style.
+    The <code>static_link</code> parameter should refer to these libs using their index
+    number.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'static_pic_link' /}
+  {param default: '[]' /}
+  {param desc}
+    The arguments to use when linking this library group using the static-pic link style.
+    The actual paths to libraries should be listed in the <code>static_pic_libs</code>
+    parameter, and referenced via the the <code>$(lib [index])</code> macro in
+    these args.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'static_pic_libs' /}
+  {param default: '[]' /}
+  {param desc}
+    The paths to the libraries used when using the static link style.
+    The <code>static_pic_link</code> parameter should refer to these libs using their
+    index number.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'shared_link' /}
+  {param default: '[]' /}
+  {param desc}
+    The arguments to use when linking this library group using the shared link style.
+    The actual paths to libraries should be listed in the <code>shared_libs</code>
+    parameter, and referenced via the the <code>$(lib [name])</code> macro (or the
+    <code>$(rel-lib [name])</code> macro, when the shared library should be linked
+    using the <code>-L[dir] -l[name]</code> style) in these args.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'shared_libs' /}
+  {{param default: '{}' /}}
+  {param desc}
+    The map of shared library names to paths used when using the shared link style.
+    The <code>shared_link</code> parameter should refer to these libs using their library
+    name.
+  {/param}
+{/call}
+
+{/param} // close args
+
+{param examples}
+
+<p>
+  A prebuilt library group wrapping two libraries that must be linked together.
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+prebuilt_cxx_library_group(
+  name = 'util',
+  static_link = [
+    '-Wl,--start-group',
+    '$(lib 0)',
+    '$(lib 1)',
+    '-Wl,--end-group',
+  ],
+  static_libs = [
+    'lib/liba.a',
+    'lib/libb.a',
+  ],
+  static_pic_link = [
+    '-Wl,--start-group',
+    '$(lib 0)',
+    '$(lib 1)',
+    '-Wl,--end-group',
+  ],
+  static_libs = [
+    'lib/liba_pic.a',
+    'lib/libb_pic.a',
+  ],
+  shared_link = [
+    '$(rel-lib liba.so)',
+    '$(rel-lib libb.so)',
+  ],
+  shared_libs = {
+    'liba.a': 'lib/liba.so',
+    'libb.a': 'lib/libb.so',
+  },
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}
