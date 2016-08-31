@@ -42,6 +42,10 @@ except ImportError:
     SourceFileLoader = None
 
 
+EXIT_CODE_SUCCESS = 0
+EXIT_CODE_TEST_FAILURE = 70
+
+
 class TestStatus(object):
 
     ABORTED = 'FAILURE'
@@ -616,14 +620,15 @@ class MainProgram(object):
                         self.options.list_format,))
 
                 print(name)
-            return 0
+            return EXIT_CODE_SUCCESS
         else:
             result = self.run_tests(test_suite)
             if self.options.output is not None:
                 with open(self.options.output, 'w') as f:
                     json.dump(result.getResults(), f, indent=4, sort_keys=True)
-            return 0
-            #return 0 if result.wasSuccessful() else 1
+            if not result.wasSuccessful():
+                return EXIT_CODE_TEST_FAILURE
+            return EXIT_CODE_SUCCESS
 
     def run_tests(self, test_suite):
         # Install a signal handler to catch Ctrl-C and display the results

@@ -41,6 +41,7 @@ import java.util.EnumSet;
 public class PythonRunTestsStep implements Step {
   private static final CharMatcher PYTHON_RE_REGULAR_CHARACTERS = CharMatcher.anyOf(
       "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890");
+  public static final int TEST_FAILURES_EXIT_CODE = 70;
 
   private final Path workingDirectory;
   private final String testName;
@@ -179,6 +180,20 @@ public class PythonRunTestsStep implements Step {
 
   private ShellStep getShellStepWithArgs(final String... args) {
     return new ShellStep(workingDirectory) {
+      @Override
+      public StepExecutionResult execute(ExecutionContext context)
+          throws InterruptedException, IOException {
+        StepExecutionResult executionResult = super.execute(context);
+        // The test runner returns 0 if all tests passed, or
+        // TEST_FAILURES_EXIT_CODE if some tests failed.  Either of these
+        // return codes indicates that we succeeded in running the tests.
+        if (executionResult.getExitCode() == 0 ||
+            executionResult.getExitCode() == TEST_FAILURES_EXIT_CODE) {
+          return StepExecutionResult.SUCCESS;
+        }
+        return executionResult;
+      }
+
       @Override
       protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
         return ImmutableList.<String>builder().addAll(commandPrefix).add(args).build();

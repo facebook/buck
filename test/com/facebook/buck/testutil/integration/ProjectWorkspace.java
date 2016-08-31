@@ -691,7 +691,7 @@ public class ProjectWorkspace {
       return assertExitCode(message, 1);
     }
 
-    private ProcessResult assertExitCode(@Nullable String message, int exitCode) {
+    public ProcessResult assertExitCode(@Nullable String message, int exitCode) {
       if (exitCode == getExitCode()) {
         return this;
       }
