@@ -61,7 +61,7 @@ class BuckCodesign(object):
                 self.identity = line[len(AUTHORITY_MARKER):].strip()
                 print("Found identity: " + self.identity)
                 break
-        if not self.identity:
+        if not hasattr(self, 'identity'):
             print("Unable to find identity information from signature:\n" + signature)
             sys.exit(1)
 
