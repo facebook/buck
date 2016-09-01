@@ -69,11 +69,11 @@ public class SwiftLibraryDescription implements
     Flavored {
   public static final BuildRuleType TYPE = BuildRuleType.of("swift_library");
 
-  static final Flavor SWIFT_LIBRARY_FLAVOR = ImmutableFlavor.of("swift-lib");
+  static final Flavor SWIFT_COMPANION_FLAVOR = ImmutableFlavor.of("swift-companion");
   static final Flavor SWIFT_COMPILE_FLAVOR = ImmutableFlavor.of("swift-compile");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
-      SWIFT_LIBRARY_FLAVOR,
+      SWIFT_COMPANION_FLAVOR,
       SWIFT_COMPILE_FLAVOR);
 
   private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
@@ -154,7 +154,7 @@ public class SwiftLibraryDescription implements
         buildTarget);
     final ImmutableSortedSet<Flavor> buildFlavors = buildTarget.getFlavors();
 
-    if (!buildFlavors.contains(SWIFT_LIBRARY_FLAVOR) && platform.isPresent()) {
+    if (!buildFlavors.contains(SWIFT_COMPANION_FLAVOR) && platform.isPresent()) {
       AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
           cxxPlatformFlavorDomain,
           defaultCxxPlatform,
@@ -260,9 +260,8 @@ public class SwiftLibraryDescription implements
         buildTarget,
         sharedLibrarySoname);
 
-    SwiftRuntimeNativeLinkable swiftRuntimeLinkable = new SwiftRuntimeNativeLinkable(
-        buildTarget,
-        appleCxxPlatform);
+    SwiftRuntimeNativeLinkable swiftRuntimeLinkable =
+        new SwiftRuntimeNativeLinkable(appleCxxPlatform);
 
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder()
         .from(swiftRuntimeLinkable.getNativeLinkableInput(
@@ -271,7 +270,7 @@ public class SwiftLibraryDescription implements
         .withoutFlavors(ImmutableSet.of(CxxDescriptionEnhancer.SHARED_FLAVOR))
         .withAppendedFlavors(SWIFT_COMPILE_FLAVOR);
     SwiftCompile rule = (SwiftCompile) resolver.requireRule(requiredBuildTarget);
-    rule.populateLinkableInput(inputBuilder);
+    inputBuilder.addAllArgs(rule.getLinkArgs());
     return resolver.addToIndex(CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
@@ -303,7 +302,7 @@ public class SwiftLibraryDescription implements
           new SourcePathResolver(resolver),
           args.srcs.get()).isEmpty();
       return hasSwiftSource ?
-          Optional.of(resolver.requireRule(buildTarget.withAppendedFlavors(SWIFT_LIBRARY_FLAVOR)))
+          Optional.of(resolver.requireRule(buildTarget.withAppendedFlavors(SWIFT_COMPANION_FLAVOR)))
           : Optional.<BuildRule>absent();
     }
 
@@ -323,7 +322,7 @@ public class SwiftLibraryDescription implements
   }
 
   public static boolean isSwiftTarget(BuildTarget buildTarget) {
-    return buildTarget.getFlavors().contains(SWIFT_LIBRARY_FLAVOR) ||
+    return buildTarget.getFlavors().contains(SWIFT_COMPANION_FLAVOR) ||
         buildTarget.getFlavors().contains(SWIFT_COMPILE_FLAVOR);
   }
 

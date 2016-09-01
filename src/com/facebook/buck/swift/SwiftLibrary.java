@@ -16,9 +16,8 @@
 
 package com.facebook.buck.swift;
 
-import static com.facebook.buck.swift.SwiftDescriptions.isSharedRequested;
+import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPANION_FLAVOR;
 import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR;
-import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_LIBRARY_FLAVOR;
 
 import com.facebook.buck.apple.AppleCxxPlatform;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -110,7 +109,6 @@ class SwiftLibrary
     return FluentIterable.from(getDeclaredDeps())
         .filter(NativeLinkable.class)
         .append(new SwiftRuntimeNativeLinkable(
-            this.getBuildTarget(),
             appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor())));
   }
 
@@ -129,11 +127,11 @@ class SwiftLibrary
       Linker.LinkableDepType type) throws NoSuchBuildTargetException {
     SwiftCompile rule = requireSwiftCompileRule(cxxPlatform.getFlavor());
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
-    rule.populateLinkableInput(inputBuilder);
     inputBuilder
+        .addAllArgs(rule.getLinkArgs())
         .addAllFrameworks(frameworks)
         .addAllLibraries(libraries);
-    if (isSharedRequested(type)) {
+    if (type == Linker.LinkableDepType.SHARED) {
       inputBuilder.addArgs(new SourcePathArg(getResolver(),
           new BuildTargetSourcePath(requireSwiftLinkRule(cxxPlatform.getFlavor())
               .getBuildTarget())));
@@ -163,7 +161,7 @@ class SwiftLibrary
       throws NoSuchBuildTargetException {
     BuildTarget requiredBuildTarget = getBuildTarget()
         .withAppendedFlavors(flavors)
-        .withoutFlavors(ImmutableSet.of(SWIFT_LIBRARY_FLAVOR))
+        .withoutFlavors(ImmutableSet.of(SWIFT_COMPANION_FLAVOR))
         .withAppendedFlavors(SWIFT_COMPILE_FLAVOR);
     BuildRule rule = ruleResolver.requireRule(requiredBuildTarget);
     if (!(rule instanceof SwiftCompile)) {
@@ -175,7 +173,7 @@ class SwiftLibrary
 
   private BuildRule requireSwiftLinkRule(Flavor... flavors) throws NoSuchBuildTargetException {
     BuildTarget requiredBuildTarget = getBuildTarget()
-        .withoutFlavors(ImmutableSet.of(SWIFT_LIBRARY_FLAVOR))
+        .withoutFlavors(ImmutableSet.of(SWIFT_COMPANION_FLAVOR))
         .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .withAppendedFlavors(flavors);
     BuildRule rule = ruleResolver.requireRule(requiredBuildTarget);
@@ -190,7 +188,8 @@ class SwiftLibrary
 
   @Override
   public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-    if (getBuildTarget().getFlavors().contains(SWIFT_LIBRARY_FLAVOR)) {
+    // don't create dylib for swift companion target.
+    if (getBuildTarget().getFlavors().contains(SWIFT_COMPANION_FLAVOR)) {
       return Linkage.STATIC;
     } else {
       return Linkage.ANY;

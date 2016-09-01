@@ -25,7 +25,6 @@ import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
-import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -38,6 +37,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.Step;
@@ -50,6 +50,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
@@ -235,16 +236,15 @@ class SwiftCompile
     return args.build();
   }
 
-  void populateLinkableInput(NativeLinkableInput.Builder inputBuilder) {
-    inputBuilder
-        .addAllArgs(StringArg.from("-Xlinker", "-add_ast_path"))
-        .addArgs(
-            new SourcePathArg(
-                getResolver(),
-                new BuildTargetSourcePath(getBuildTarget(), modulePath)))
-        .addArgs(
-            new SourcePathArg(
-                getResolver(),
-                new BuildTargetSourcePath(getBuildTarget(), objectPath)));
+  ImmutableSet<Arg> getLinkArgs() {
+    return ImmutableSet.<Arg>builder()
+        .addAll(StringArg.from("-Xlinker", "-add_ast_path"))
+        .add(new SourcePathArg(
+            getResolver(),
+            new BuildTargetSourcePath(getBuildTarget(), modulePath)))
+        .add(new SourcePathArg(
+            getResolver(),
+            new BuildTargetSourcePath(getBuildTarget(), objectPath)))
+        .build();
   }
 }
