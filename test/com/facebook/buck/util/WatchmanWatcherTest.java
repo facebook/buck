@@ -35,6 +35,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.FakeWatchmanClient;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.PathOrGlobMatcher;
+import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanDiagnostic;
 import com.facebook.buck.io.WatchmanDiagnosticCache;
@@ -468,28 +469,32 @@ public class WatchmanWatcherTest {
 
   @Test
   public void watchmanQueryWithRepoRelativePrefix() {
-    List<Object> query = WatchmanWatcher.createQuery(
-        "path/to/repo",
-        Optional.of("project"),
+    List<List<Object>> queries = WatchmanWatcher.createQuery(
+         ImmutableMap.of(
+             Paths.get("path/to/repo/project"),
+             ProjectWatch.of("path/to/repo", Optional.of("project"))),
         "uuid",
         ImmutableSet.<PathOrGlobMatcher>of(),
         ImmutableSet.of(Watchman.Capability.DIRNAME));
 
+    assertEquals(1, queries.size());
     assertThat(
-        query,
+        queries.get(0),
         hasItem(hasEntry("relative_root", "project")));
   }
 
   @Test
   public void watchmanQueryWithExcludePathsAddsExpressionToQuery() {
-    List<Object> query = WatchmanWatcher.createQuery(
-        "/path/to/repo",
-        Optional.<String>absent(),
+    List<List<Object>> queries = WatchmanWatcher.createQuery(
+         ImmutableMap.of(
+             Paths.get("/path/to/repo"),
+             ProjectWatch.of("/path/to/repo", Optional.<String>absent())),
         "uuid",
         ImmutableSet.<PathOrGlobMatcher>of(
             new PathOrGlobMatcher(Paths.get("foo")),
             new PathOrGlobMatcher(Paths.get("bar/baz"))),
         ImmutableSet.of(Watchman.Capability.DIRNAME));
+    assertEquals(1, queries.size());
     assertEquals(
         ImmutableList.of(
             "query",
@@ -507,19 +512,21 @@ public class WatchmanWatcherTest {
                             MorePaths.pathWithPlatformSeparators("bar/baz")))),
                 "empty_on_fresh_instance", true,
                 "fields", ImmutableList.of("name", "exists", "new"))),
-        query);
+        queries.get(0));
   }
 
   @Test
   public void watchmanQueryWithExcludePathsAddsMatchExpressionToQueryIfDirnameNotAvailable() {
-    List<Object> query = WatchmanWatcher.createQuery(
-        "/path/to/repo",
-        Optional.<String>absent(),
+    List<List<Object>> queries = WatchmanWatcher.createQuery(
+         ImmutableMap.of(
+             Paths.get("/path/to/repo"),
+             ProjectWatch.of("/path/to/repo", Optional.<String>absent())),
         "uuid",
         ImmutableSet.<PathOrGlobMatcher>of(
             new PathOrGlobMatcher(Paths.get("foo")),
             new PathOrGlobMatcher(Paths.get("bar/baz"))),
         ImmutableSet.<Watchman.Capability>of());
+    assertEquals(1, queries.size());
     assertEquals(
         ImmutableList.of(
             "query",
@@ -541,20 +548,22 @@ public class WatchmanWatcherTest {
                             "wholename"))),
                 "empty_on_fresh_instance", true,
                 "fields", ImmutableList.of("name", "exists", "new"))),
-        query);
+        queries.get(0));
   }
 
   @Test
   public void watchmanQueryRelativizesExcludePaths() {
     String watchRoot = Paths.get("/path/to/repo").toAbsolutePath().toString();
-    List<Object> query = WatchmanWatcher.createQuery(
-        watchRoot,
-        Optional.<String>absent(),
+    List<List<Object>> queries = WatchmanWatcher.createQuery(
+         ImmutableMap.of(
+             Paths.get(watchRoot),
+             ProjectWatch.of(watchRoot, Optional.<String>absent())),
         "uuid",
         ImmutableSet.<PathOrGlobMatcher>of(
             new PathOrGlobMatcher(Paths.get("/path/to/repo/foo").toAbsolutePath()),
             new PathOrGlobMatcher(Paths.get("/path/to/repo/bar/baz").toAbsolutePath())),
         ImmutableSet.of(Watchman.Capability.DIRNAME));
+    assertEquals(1, queries.size());
     assertEquals(
         ImmutableList.of(
             "query",
@@ -572,18 +581,20 @@ public class WatchmanWatcherTest {
                             MorePaths.pathWithPlatformSeparators("bar/baz")))),
                 "empty_on_fresh_instance", true,
                 "fields", ImmutableList.of("name", "exists", "new"))),
-        query);
+        queries.get(0));
   }
 
   @Test
   public void watchmanQueryWithExcludeGlobsAddsExpressionToQuery() {
-    List<Object> query = WatchmanWatcher.createQuery(
-        "/path/to/repo",
-        Optional.<String>absent(),
+    List<List<Object>> queries = WatchmanWatcher.createQuery(
+         ImmutableMap.of(
+             Paths.get("/path/to/repo"),
+             ProjectWatch.of("/path/to/repo", Optional.<String>absent())),
         "uuid",
         ImmutableSet.<PathOrGlobMatcher>of(
             new PathOrGlobMatcher("*.pbxproj")),
         ImmutableSet.of(Watchman.Capability.DIRNAME));
+    assertEquals(1, queries.size());
     assertEquals(
         ImmutableList.of(
             "query",
@@ -602,7 +613,66 @@ public class WatchmanWatcherTest {
                             ImmutableMap.<String, Object>of("includedotfiles", true)))),
                 "empty_on_fresh_instance", true,
                 "fields", ImmutableList.of("name", "exists", "new"))),
-        query);
+        queries.get(0));
+  }
+
+  @Test
+  public void watchmanQueryWithMultipleRelativePaths() {
+    List<List<Object>> queries = WatchmanWatcher.createQuery(
+         ImmutableMap.of(
+             Paths.get("/path/to/repo/project1"),
+             ProjectWatch.of("/path/to/repo", Optional.of("project1")),
+             Paths.get("/path/to/repo/project2"),
+             ProjectWatch.of("/path/to/repo", Optional.of("project2")),
+             Paths.get("/path/to/repo/project3"),
+             ProjectWatch.of("/path/to/repo", Optional.of("project3"))),
+        "uuid",
+        ImmutableSet.<PathOrGlobMatcher>of(),
+        ImmutableSet.of(Watchman.Capability.DIRNAME));
+
+    assertEquals(3, queries.size());
+    assertEquals(
+        ImmutableList.of(
+            ImmutableList.of(
+                "query",
+                "/path/to/repo",
+                ImmutableMap.of(
+                    "since", "n:buckduuid",
+                    "expression", ImmutableList.of(
+                        "not",
+                        ImmutableList.of(
+                            "anyof",
+                            ImmutableList.of("type", "d"))),
+                    "empty_on_fresh_instance", true,
+                    "fields", ImmutableList.of("name", "exists", "new"),
+                    "relative_root", "project1")),
+            ImmutableList.of(
+                "query",
+                "/path/to/repo",
+                ImmutableMap.of(
+                    "since", "n:buckduuid",
+                    "expression", ImmutableList.of(
+                        "not",
+                        ImmutableList.of(
+                            "anyof",
+                            ImmutableList.of("type", "d"))),
+                    "empty_on_fresh_instance", true,
+                    "fields", ImmutableList.of("name", "exists", "new"),
+                    "relative_root", "project2")),
+            ImmutableList.of(
+                "query",
+                "/path/to/repo",
+                ImmutableMap.of(
+                    "since", "n:buckduuid",
+                    "expression", ImmutableList.of(
+                        "not",
+                        ImmutableList.of(
+                            "anyof",
+                            ImmutableList.of("type", "d"))),
+                    "empty_on_fresh_instance", true,
+                    "fields", ImmutableList.of("name", "exists", "new"),
+                    "relative_root", "project3"))),
+        queries);
   }
 
   @Test
@@ -691,6 +761,6 @@ public class WatchmanWatcherTest {
         watchmanClient,
         overflow,
         timeoutMillis,
-        FAKE_QUERY);
+        ImmutableList.of(FAKE_QUERY));
   }
 }

@@ -59,6 +59,14 @@ public class ProjectBuildFileParserPoolTest {
       int expectedCreateCount) throws Exception {
     final AtomicInteger createCount = new AtomicInteger(0);
     Cell cell = EasyMock.createMock(Cell.class);
+    EasyMock.expect(cell.getRoot()).andAnswer(
+        new IAnswer<Path>() {
+          @Override
+          public Path answer() {
+            return Paths.get(".");
+          }
+        }).anyTimes();
+    EasyMock.replay(cell);
 
     final CountDownLatch createParserLatch = new CountDownLatch(expectedCreateCount);
     try (ProjectBuildFileParserPool parserPool =
@@ -118,6 +126,15 @@ public class ProjectBuildFileParserPoolTest {
     final int parsersCount = 4;
     final AtomicInteger parserCount = new AtomicInteger(0);
     Cell cell = EasyMock.createMock(Cell.class);
+    EasyMock.expect(cell.getRoot()).andAnswer(
+        new IAnswer<Path>() {
+          @Override
+          public Path answer() {
+            return Paths.get(".");
+          }
+        }).anyTimes();
+    EasyMock.replay(cell);
+
     ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
         Executors.newFixedThreadPool(parsersCount));
 
@@ -133,7 +150,10 @@ public class ProjectBuildFileParserPoolTest {
                 final ProjectBuildFileParser parser =
                     EasyMock.createMock(ProjectBuildFileParser.class);
                 try {
-                  EasyMock.expect(parser.getAllRulesAndMetaRules(EasyMock.anyObject(Path.class)))
+                  EasyMock.expect(
+                      parser.getAllRulesAndMetaRules(
+                          EasyMock.anyObject(Path.class),
+                          EasyMock.anyObject(Path.class)))
                       .andAnswer(
                           new IAnswer<ImmutableList<Map<String, Object>>>() {
                             @Override
@@ -182,6 +202,15 @@ public class ProjectBuildFileParserPoolTest {
   public void fuzzForConcurrentAccess() throws Exception {
     final int parsersCount = 3;
     Cell cell = EasyMock.createMock(Cell.class);
+    EasyMock.expect(cell.getRoot()).andAnswer(
+        new IAnswer<Path>() {
+          @Override
+          public Path answer() {
+            return Paths.get(".");
+          }
+        }).anyTimes();
+    EasyMock.replay(cell);
+
     ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
         Executors.newFixedThreadPool(4));
 
@@ -218,6 +247,15 @@ public class ProjectBuildFileParserPoolTest {
   @Test
   public void ignoresCancellation() throws Exception {
     Cell cell = EasyMock.createMock(Cell.class);
+    EasyMock.expect(cell.getRoot()).andAnswer(
+        new IAnswer<Path>() {
+          @Override
+          public Path answer() {
+            return Paths.get(".");
+          }
+        }).anyTimes();
+    EasyMock.replay(cell);
+
     ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
         Executors.newFixedThreadPool(1));
 
@@ -255,6 +293,14 @@ public class ProjectBuildFileParserPoolTest {
   @Test
   public void closeWhenRunningJobs() throws Exception {
     Cell cell = EasyMock.createMock(Cell.class);
+    EasyMock.expect(cell.getRoot()).andAnswer(
+        new IAnswer<Path>() {
+          @Override
+          public Path answer() {
+            return Paths.get(".");
+          }
+        }).anyTimes();
+    EasyMock.replay(cell);
     ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
         Executors.newFixedThreadPool(1));
 
@@ -310,6 +356,14 @@ public class ProjectBuildFileParserPoolTest {
   @Test
   public void workThatThrows() throws Exception {
     Cell cell = EasyMock.createMock(Cell.class);
+    EasyMock.expect(cell.getRoot()).andAnswer(
+        new IAnswer<Path>() {
+          @Override
+          public Path answer() {
+            return Paths.get(".");
+          }
+        }).anyTimes();
+    EasyMock.replay(cell);
     ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
         Executors.newFixedThreadPool(1));
 
@@ -364,7 +418,10 @@ public class ProjectBuildFileParserPoolTest {
       IAnswer<ImmutableList<Map<String, Object>>> parseFn) {
     ProjectBuildFileParser mock = EasyMock.createMock(ProjectBuildFileParser.class);
     try {
-      EasyMock.expect(mock.getAllRulesAndMetaRules(EasyMock.anyObject(Path.class)))
+      EasyMock.expect(
+          mock.getAllRulesAndMetaRules(
+              EasyMock.anyObject(Path.class),
+              EasyMock.anyObject(Path.class)))
           .andAnswer(parseFn)
           .anyTimes();
     } catch (Exception e) {

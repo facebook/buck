@@ -23,6 +23,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.PathOrGlobMatcher;
+import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.WatchmanDiagnostic;
 import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.log.Logger;
@@ -36,6 +37,7 @@ import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.AssertScopeExclusiveAccess;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -320,7 +322,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
    */
   public List<Map<String, Object>> getAll(Path buildFile)
       throws BuildFileParseException, InterruptedException {
-    ImmutableList<Map<String, Object>> result = getAllRulesAndMetaRules(buildFile);
+    ImmutableList<Map<String, Object>> result =
+        getAllRulesAndMetaRules(options.getProjectRoot().toAbsolutePath(), buildFile);
 
     // Strip out the __includes, __configs, and __env meta rules, which are the last rules.
     return Collections.unmodifiableList(result.subList(0, result.size() - 3));
@@ -332,10 +335,10 @@ public class ProjectBuildFileParser implements AutoCloseable {
    *
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
-  public ImmutableList<Map<String, Object>> getAllRulesAndMetaRules(Path buildFile)
+  public ImmutableList<Map<String, Object>> getAllRulesAndMetaRules(Path cellPath, Path buildFile)
       throws BuildFileParseException, InterruptedException {
     try {
-      return getAllRulesInternal(buildFile);
+      return getAllRulesInternal(cellPath, buildFile);
     } catch (IOException e) {
       MoreThrowables.propagateIfInterrupt(e);
       throw BuildFileParseException.createForBuildFileParseError(buildFile, e);
@@ -343,7 +346,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   }
 
   @VisibleForTesting
-  protected ImmutableList<Map<String, Object>> getAllRulesInternal(Path buildFile)
+  protected ImmutableList<Map<String, Object>> getAllRulesInternal(Path cellPath, Path buildFile)
       throws IOException, BuildFileParseException {
     ensureNotClosed();
     initIfNeeded();
@@ -358,11 +361,14 @@ public class ProjectBuildFileParser implements AutoCloseable {
     ImmutableList<Map<String, Object>> values = ImmutableList.of();
     String profile = "";
     try (AssertScopeExclusiveAccess.Scope scope = assertSingleThreadedParsing.scope()) {
+      ProjectWatch projectWatch = Optional
+          .fromNullable(options.getWatchman().getProjectWatches().get(cellPath))
+          .or(ProjectWatch.of(cellPath.toString(), Optional.<String>absent()));
       bserSerializer.serializeToStream(
           ImmutableMap.of(
               "buildFile", buildFile.toString(),
-              "watchRoot", options.getWatchman().getWatchRoot().or(""),
-              "projectPrefix", options.getWatchman().getProjectPrefix().or("")),
+              "watchRoot", projectWatch.getWatchRoot(),
+              "projectPrefix", projectWatch.getProjectPrefix().or("")),
           buckPyStdinWriter);
       buckPyStdinWriter.flush();
 

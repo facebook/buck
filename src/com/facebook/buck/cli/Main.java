@@ -728,13 +728,16 @@ public final class Main {
         canonicalRootPath,
         command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME));
     ProjectFilesystem filesystem = new ProjectFilesystem(canonicalRootPath, config);
+    DefaultCellPathResolver cellPathResolver =
+      new DefaultCellPathResolver(filesystem.getRootPath(), config);
     BuckConfig buckConfig = new BuckConfig(
         config,
         filesystem,
         architecture,
         platform,
         clientEnvironment,
-        new DefaultCellPathResolver(filesystem.getRootPath(), config));
+        cellPathResolver);
+    ImmutableSet<Path> projectWatches = cellPathResolver.getKnownRoots();
 
     // Setup the console.
     Verbosity verbosity = VerbosityParser.parse(args);
@@ -823,7 +826,7 @@ public final class Main {
                buildWatchman(
                    context,
                    parserConfig,
-                   projectRoot,
+                   projectWatches,
                    clientEnvironment,
                    console,
                    clock)) {
@@ -1057,7 +1060,7 @@ public final class Main {
             try {
               Daemon daemon = getDaemon(rootCell, objectMapper);
               WatchmanWatcher watchmanWatcher = new WatchmanWatcher(
-                  watchman.getWatchRoot().or(canonicalRootPath.toString()),
+                  watchman.getProjectWatches(),
                   daemon.getFileEventBus(),
                   ImmutableSet.<PathOrGlobMatcher>builder()
                       .addAll(filesystem.getIgnorePaths())
@@ -1251,19 +1254,18 @@ public final class Main {
   private static final Watchman buildWatchman(
       Optional<NGContext> context,
       ParserConfig parserConfig,
-      Path projectRoot,
+      ImmutableSet<Path> projectWatchList,
       ImmutableMap<String, String> clientEnvironment,
       Console console,
       Clock clock) throws InterruptedException, IOException {
     Watchman watchman;
     if (context.isPresent() || parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN) {
-      watchman = Watchman.build(projectRoot, clientEnvironment, console, clock);
+      watchman = Watchman.build(projectWatchList, clientEnvironment, console, clock);
 
       LOG.debug(
-          "Watchman capabilities: %s Watch root: %s Project prefix: %s Glob handler config: %s ",
+          "Watchman capabilities: %s Project watches: %s Glob handler config: %s ",
           watchman.getCapabilities(),
-          watchman.getWatchRoot(),
-          watchman.getProjectPrefix(),
+          watchman.getProjectWatches(),
           parserConfig.getGlobHandler());
 
     } else {

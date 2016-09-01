@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.config.ConfigBuilder;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.FakeWatchmanClient;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanClient;
@@ -144,8 +145,9 @@ public class BuildFileSpecTest {
         .setFilesystem(filesystem)
         .setWatchman(
             new Watchman(
-                Optional.of("project-name"),
-                Optional.of("/path/to/src"),
+                ImmutableMap.of(
+                    filesystem.getRootPath(),
+                    ProjectWatch.of("/path/to/src", Optional.of("project-name"))),
                 ImmutableSet.of(
                     Watchman.Capability.SUPPORTS_PROJECT_WATCH,
                     Watchman.Capability.DIRNAME,
@@ -191,8 +193,9 @@ public class BuildFileSpecTest {
         .setFilesystem(filesystem)
         .setWatchman(
             new Watchman(
-                Optional.of("project-name"),
-                Optional.of("/path/to/src"),
+                ImmutableMap.of(
+                    filesystem.getRootPath(),
+                    ProjectWatch.of("/path/to/src", Optional.of("project-name"))),
                 ImmutableSet.of(
                     Watchman.Capability.SUPPORTS_PROJECT_WATCH,
                     Watchman.Capability.DIRNAME,
@@ -247,8 +250,9 @@ public class BuildFileSpecTest {
         .setFilesystem(filesystem)
         .setWatchman(
             new Watchman(
-                Optional.of("project-name"),
-                Optional.of("/path/to/src"),
+                ImmutableMap.of(
+                    filesystem.getRootPath(),
+                    ProjectWatch.of("/path/to/src", Optional.of("project-name"))),
                 ImmutableSet.of(
                     Watchman.Capability.SUPPORTS_PROJECT_WATCH,
                     Watchman.Capability.DIRNAME,

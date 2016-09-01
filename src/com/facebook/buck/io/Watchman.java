@@ -74,20 +74,18 @@ public class Watchman implements AutoCloseable {
 
   private static final Path WATCHMAN = Paths.get("watchman");
   public static final Watchman NULL_WATCHMAN = new Watchman(
-      Optional.<String>absent(),
-      Optional.<String>absent(),
+      ImmutableMap.<Path, ProjectWatch>of(),
       ImmutableSet.<Capability>of(),
       Optional.<Path>absent(),
       Optional.<WatchmanClient>absent());
 
-  private final Optional<String> projectName;
-  private final Optional<String> watchRoot;
+  private final ImmutableMap<Path, ProjectWatch> projectWatches;
   private final ImmutableSet<Capability> capabilities;
   private final Optional<Path> socketPath;
   private final Optional<WatchmanClient> watchmanClient;
 
   public static Watchman build(
-      Path rootPath,
+      ImmutableSet<Path> projectWatchList,
       ImmutableMap<String, String> env,
       Console console,
       Clock clock)
@@ -97,7 +95,7 @@ public class Watchman implements AutoCloseable {
         localSocketWatchmanConnector(
             console,
             clock),
-        rootPath,
+        projectWatchList,
         env,
         new ExecutableFinder(),
         console,
@@ -109,12 +107,12 @@ public class Watchman implements AutoCloseable {
   static Watchman build(
       ListeningProcessExecutor executor,
       Function<Path, Optional<WatchmanClient>> watchmanConnector,
-      Path rootPath,
+      ImmutableSet<Path> projectWatchList,
       ImmutableMap<String, String> env,
       ExecutableFinder exeFinder,
       Console console,
       Clock clock) throws InterruptedException {
-    LOG.info("Creating for: " + rootPath);
+    LOG.info("Creating for: " + projectWatchList);
     Optional<WatchmanClient> watchmanClient = Optional.absent();
     try {
       Path watchmanPath = exeFinder.getExecutable(WATCHMAN, env).toAbsolutePath();
@@ -174,46 +172,54 @@ public class Watchman implements AutoCloseable {
       ImmutableSet<Capability> capabilities = capabilitiesBuilder.build();
       LOG.debug("Got Watchman capabilities: %s", capabilities);
 
-      Path absoluteRootPath = rootPath.toAbsolutePath();
-      LOG.info("Adding watchman root: %s", absoluteRootPath);
+      ImmutableMap.Builder<Path, ProjectWatch> projectWatchesBuilder =
+          ImmutableMap.<Path, ProjectWatch>builder();
 
-      long watchStartTimeNanos = clock.nanoTime();
-      remainingTimeNanos -= (watchStartTimeNanos - versionQueryStartTimeNanos);
-      result = watchmanClient.get().queryWithTimeout(
-          remainingTimeNanos,
-          "watch-project",
-          absoluteRootPath.toString());
-      LOG.info(
-          "Took %d ms to add root %s",
-          TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - watchStartTimeNanos),
-          absoluteRootPath);
+      for (Path path : projectWatchList) {
+        Path absoluteRootPath = path.toAbsolutePath();
+        LOG.info("Adding watchman root: %s", absoluteRootPath);
 
-      if (!result.isPresent()) {
-        watchmanClient.get().close();
-        return NULL_WATCHMAN;
-      }
+        long watchStartTimeNanos = clock.nanoTime();
+        remainingTimeNanos -= (watchStartTimeNanos - startTimeNanos);
+        result = watchmanClient.get().queryWithTimeout(
+            remainingTimeNanos,
+            "watch-project",
+            absoluteRootPath.toString());
+        LOG.info(
+            "Took %d ms to add root %s",
+            TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - watchStartTimeNanos),
+            absoluteRootPath);
 
-      Map<String, ? extends Object> map = result.get();
+        if (!result.isPresent()) {
+          watchmanClient.get().close();
+          return NULL_WATCHMAN;
+        }
 
-      if (map.containsKey("error")) {
-        LOG.warn("Error in watchman output: %s", map.get("error"));
-        watchmanClient.get().close();
-        return NULL_WATCHMAN;
-      }
+        Map<String, ? extends Object> map = result.get();
 
-      if (map.containsKey("warning")) {
-        LOG.warn("Warning in watchman output: %s", map.get("warning"));
-        // Warnings are not fatal. Don't panic.
-      }
+        if (map.containsKey("error")) {
+          LOG.warn("Error in watchman output: %s", map.get("error"));
+          watchmanClient.get().close();
+          return NULL_WATCHMAN;
+        }
 
-      if (!map.containsKey("watch")) {
-        watchmanClient.get().close();
-        return NULL_WATCHMAN;
+        if (map.containsKey("warning")) {
+          LOG.warn("Warning in watchman output: %s", map.get("warning"));
+          // Warnings are not fatal. Don't panic.
+        }
+
+        if (!map.containsKey("watch")) {
+          watchmanClient.get().close();
+          return NULL_WATCHMAN;
+        }
+
+        String watchRoot = (String) map.get("watch");
+        Optional<String> watchPrefix = Optional.fromNullable((String) map.get("relative_path"));
+        projectWatchesBuilder.put(path, ProjectWatch.of(watchRoot, watchPrefix));
       }
 
       return new Watchman(
-          Optional.fromNullable((String) map.get("relative_path")),
-          Optional.fromNullable((String) map.get("watch")),
+          projectWatchesBuilder.build(),
           capabilities,
           Optional.of(socketPath),
           watchmanClient);
@@ -364,24 +370,18 @@ public class Watchman implements AutoCloseable {
   // the WatchmanClient separately.
   @VisibleForTesting
   public Watchman(
-      Optional<String> projectName,
-      Optional<String> watchRoot,
+      ImmutableMap<Path, ProjectWatch> projectWatches,
       ImmutableSet<Capability> capabilities,
       Optional<Path> socketPath,
       Optional<WatchmanClient> watchmanClient) {
-    this.projectName = projectName;
-    this.watchRoot = watchRoot;
+    this.projectWatches = projectWatches;
     this.capabilities = capabilities;
     this.socketPath = socketPath;
     this.watchmanClient = watchmanClient;
   }
 
-  public Optional<String> getProjectPrefix() {
-    return projectName;
-  }
-
-  public Optional<String> getWatchRoot() {
-    return watchRoot;
+  public ImmutableMap<Path, ProjectWatch> getProjectWatches() {
+    return projectWatches;
   }
 
   public ImmutableSet<Capability> getCapabilities() {

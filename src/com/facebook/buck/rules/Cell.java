@@ -213,7 +213,11 @@ public class Cell {
             rootConfig.getEnvironment(),
             cellPathResolver);
 
-        Watchman.build(cellPath, rootConfig.getEnvironment(), console, clock).close();
+        Watchman.build(
+            cellPathResolver.getKnownRoots(),
+            rootConfig.getEnvironment(),
+            console,
+            clock).close();
 
         return new Cell(
             cellPathResolver.getKnownRoots(),
