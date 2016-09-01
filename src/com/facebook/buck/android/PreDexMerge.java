@@ -166,7 +166,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
       // they will appear at in the APK.
       metadataSubdir = metadataDir.resolve(AndroidBinary.SECONDARY_DEX_SUBDIR);
       jarfilesSubdir = jarfilesDir.resolve(AndroidBinary.SECONDARY_DEX_SUBDIR);
-      additionalJarfilesDir = jarfilesDir.resolve("additional_dexes");
+      additionalJarfilesDir = workDir.resolve("additional_dexes");
       additionalJarfilesSubdir = additionalJarfilesDir.resolve("assets");
       metadataFile = metadataSubdir.resolve("metadata.txt");
     }
