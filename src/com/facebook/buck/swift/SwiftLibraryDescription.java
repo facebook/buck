@@ -22,7 +22,6 @@ import com.facebook.buck.apple.MultiarchFileInfo;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
@@ -31,6 +30,7 @@ import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -56,7 +56,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
@@ -83,6 +82,28 @@ public class SwiftLibraryDescription implements
       return SUPPORTED_FLAVORS.contains(flavor);
     }
   };
+
+  public enum Type implements FlavorConvertible {
+    SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR),
+    STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR),
+    MACH_O_BUNDLE(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR),
+    ;
+
+    private final Flavor flavor;
+
+    Type(Flavor flavor) {
+      this.flavor = flavor;
+    }
+
+    @Override
+    public Flavor getFlavor() {
+      return flavor;
+    }
+  }
+
+  private static final FlavorDomain<Type> LIBRARY_TYPE =
+      FlavorDomain.from("Swift Library Type", Type.class);
+
 
   private final CxxBuckConfig cxxBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
@@ -124,7 +145,7 @@ public class SwiftLibraryDescription implements
   public <A extends SwiftLibraryDescription.Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      final BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
@@ -148,6 +169,37 @@ public class SwiftLibraryDescription implements
 
       final CxxPlatform cxxPlatform = platform.get().getValue();
 
+      // See if we're building a particular "type" and "platform" of this library, and if so, extract
+      // them from the flavors attached to the build target.
+      Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
+      if (type.isPresent() && platform.isPresent()) {
+        Set<Flavor> flavors = Sets.newHashSet(params.getBuildTarget().getFlavors());
+        flavors.remove(type.get().getKey());
+        BuildTarget target = BuildTarget
+            .builder(params.getBuildTarget().getUnflavoredBuildTarget())
+            .addAllFlavors(flavors)
+            .build();
+        BuildRuleParams typeParams =
+            params.copyWithChanges(
+                target,
+                params.getDeclaredDeps(),
+                params.getExtraDeps());
+
+        switch (type.get().getValue()) {
+          case SHARED:
+            return createSharedLibraryBuildRule(
+                typeParams,
+                resolver,
+                target,
+                appleCxxPlatform,
+                cxxPlatform);
+          case STATIC:
+          case MACH_O_BUNDLE:
+          // TODO(tho@uber.com) create build rule for other types.
+        }
+        throw new RuntimeException("unhandled library build type");
+      }
+
       // All swift-compile rules of swift-lib deps are required since we need their swiftmodules
       // during compilation.
       params = params.appendExtraDeps(
@@ -165,37 +217,7 @@ public class SwiftLibraryDescription implements
                 }
               })
               .toSortedSet(Ordering.natural()));
-
-      final Linker.LinkType linkType = Linker.LinkType.SHARED;
-      SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
-      String soname = CxxDescriptionEnhancer.getSharedLibrarySoname(
-          Optional.<String>absent(),
-          buildTarget.withoutFlavors(SUPPORTED_FLAVORS),
-          cxxPlatform);
-      Path sharedLibOutput = CxxDescriptionEnhancer.getSharedLibraryPath(
-          params.getProjectFilesystem(),
-          buildTarget,
-          soname);
-
-      CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-          cxxBuckConfig,
-          cxxPlatform,
-          params,
-          resolver,
-          sourcePathResolver,
-          buildTarget,
-          linkType,
-          Optional.of(soname),
-          sharedLibOutput,
-          Linker.LinkableDepType.SHARED,
-          Iterables.filter(params.getDeps(), NativeLinkable.class),
-          Optional.<Linker.CxxRuntimeType>absent(),
-          Optional.<SourcePath>absent(),
-          ImmutableSet.<BuildTarget>of(),
-          NativeLinkableInput.of());
-
       return new SwiftCompile(
-          cxxLink,
           cxxPlatform,
           params,
           new SourcePathResolver(resolver),
@@ -219,6 +241,54 @@ public class SwiftLibraryDescription implements
         args.libraries.get(),
         appleCxxPlatformFlavorDomain,
         args.supportedPlatformsRegex);
+  }
+
+  private BuildRule createSharedLibraryBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      BuildTarget buildTarget,
+      AppleCxxPlatform appleCxxPlatform,
+      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    String soname = CxxDescriptionEnhancer.getSharedLibrarySoname(
+        Optional.<String>absent(),
+        buildTarget.withoutFlavors(SUPPORTED_FLAVORS),
+        cxxPlatform);
+    Path sharedLibOutput = CxxDescriptionEnhancer.getSharedLibraryPath(
+        params.getProjectFilesystem(),
+        buildTarget,
+        soname);
+
+    SwiftRuntimeNativeLinkable swiftRuntimeLinkable = new SwiftRuntimeNativeLinkable(
+        buildTarget,
+        appleCxxPlatform);
+
+    NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder()
+        .from(swiftRuntimeLinkable.getNativeLinkableInput(
+                cxxPlatform, Linker.LinkableDepType.SHARED));
+    BuildTarget requiredBuildTarget = buildTarget
+        .withoutFlavors(ImmutableSet.of(CxxDescriptionEnhancer.SHARED_FLAVOR))
+        .withAppendedFlavors(SWIFT_COMPILE_FLAVOR);
+    SwiftCompile rule = (SwiftCompile) resolver.requireRule(requiredBuildTarget);
+    rule.populateLinkableInput(inputBuilder);
+    return resolver.addToIndex(CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        cxxBuckConfig,
+        cxxPlatform,
+        params,
+        resolver,
+        sourcePathResolver,
+        buildTarget,
+        Linker.LinkType.SHARED,
+        Optional.of(soname),
+        sharedLibOutput,
+        Linker.LinkableDepType.SHARED,
+        FluentIterable.from(params.getDeps())
+            .filter(NativeLinkable.class)
+            .append(swiftRuntimeLinkable),
+        Optional.<Linker.CxxRuntimeType>absent(),
+        Optional.<SourcePath>absent(),
+        ImmutableSet.<BuildTarget>of(),
+        inputBuilder.build()));
   }
 
   public <A extends CxxLibraryDescription.Arg> Optional<BuildRule> createCompanionBuildRule(

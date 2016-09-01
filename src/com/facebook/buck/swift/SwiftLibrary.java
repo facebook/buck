@@ -16,12 +16,14 @@
 
 package com.facebook.buck.swift;
 
+import static com.facebook.buck.swift.SwiftDescriptions.isSharedRequested;
 import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR;
 import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_LIBRARY_FLAVOR;
 
 import com.facebook.buck.apple.AppleCxxPlatform;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxHeadersDir;
+import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
@@ -32,7 +34,6 @@ import com.facebook.buck.cxx.ImmutableCxxPreprocessorInputCacheKey;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
@@ -45,12 +46,8 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.MoreStrings;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
@@ -58,11 +55,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.io.Files;
 
-import java.nio.file.Path;
-import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -72,8 +65,6 @@ import java.util.regex.Pattern;
 class SwiftLibrary
     extends NoopBuildRule
     implements HasRuntimeDeps, NativeLinkable, CxxPreprocessorDep {
-
-  private static final Logger LOG = Logger.get(SwiftLibrary.class);
 
   private final LoadingCache<
       CxxPreprocessables.CxxPreprocessorInputCacheKey,
@@ -116,12 +107,11 @@ class SwiftLibrary
 
   @Override
   public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
-    // TODO(bhamiltoncx, ryu2): Use pseudo targets to represent the Swift
-    // runtime library's linker args here so NativeLinkables can
-    // deduplicate the linker flags on the build target (which would be the same for
-    // all libraries).
     return FluentIterable.from(getDeclaredDeps())
-        .filter(NativeLinkable.class);
+        .filter(NativeLinkable.class)
+        .append(new SwiftRuntimeNativeLinkable(
+            this.getBuildTarget(),
+            appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor())));
   }
 
   @Override
@@ -138,80 +128,16 @@ class SwiftLibrary
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) throws NoSuchBuildTargetException {
     SwiftCompile rule = requireSwiftCompileRule(cxxPlatform.getFlavor());
-    LOG.debug("Required rule: %s", rule);
-
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
-
-    // Add linker flags.
-
-    AppleCxxPlatform appleCxxPlatform =
-        appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
-
-    // TODO(ryu2): Many of these args need to be deduplicated using a pseudo
-    // target to represent the Swift runtime library's linker args.
-    Set<Path> swiftRuntimePaths = ImmutableSet.of();
-    boolean sharedRequested = false;
-    switch (type) {
-      case STATIC:
-        // Fall through.
-      case STATIC_PIC:
-        swiftRuntimePaths = appleCxxPlatform.getSwiftStaticRuntimePaths();
-        break;
-      case SHARED:
-        sharedRequested = true;
-        break;
-    }
-
-    // Fall back to shared if static isn't supported on this platform.
-    if (sharedRequested || swiftRuntimePaths.isEmpty()) {
-      inputBuilder.addAllArgs(
-          StringArg.from(
-              "-Xlinker",
-              "-rpath",
-              "-Xlinker",
-              "@executable_path/Frameworks"));
-      swiftRuntimePaths = appleCxxPlatform.getSwiftRuntimePaths();
-    } else {
-      // Static linking requires force-loading Swift libs, since the dependency
-      // discovery mechanism is disabled otherwise.
-      inputBuilder.addAllArgs(
-          StringArg.from(
-              "-Xlinker",
-              "-force_load_swift_libs"));
-    }
-    for (Path swiftRuntimePath : swiftRuntimePaths) {
-      inputBuilder.addAllArgs(StringArg.from("-L", swiftRuntimePath.toString()));
-    }
-
-    BuildTarget ruleTarget = rule.getBuildTarget();
+    rule.populateLinkableInput(inputBuilder);
     inputBuilder
-        .addAllArgs(StringArg.from("-Xlinker", "-add_ast_path"))
-        .addArgs(
-            new SourcePathArg(
-                getResolver(),
-                new BuildTargetSourcePath(ruleTarget, rule.getModulePath())))
-        .addArgs(
-          new SourcePathArg(
-              getResolver(),
-              new BuildTargetSourcePath(ruleTarget, rule.getObjectPath())));
-    if (sharedRequested) {
-      ImmutableMap<String, SourcePath> sharedLibs = getSharedLibraries(cxxPlatform);
-      inputBuilder.addAllArgs(
-          FluentIterable.from(sharedLibs.entrySet())
-              .transformAndConcat(new Function<Map.Entry<String, SourcePath>, Iterable<Arg>>() {
-                @Override
-                public Iterable<Arg> apply(Map.Entry<String, SourcePath> input) {
-                  return StringArg.from(
-                      "-L",
-                      getResolver().getAbsolutePath(input.getValue()).toString(),
-                      "-l",
-                      MoreStrings.stripPrefix(
-                          Files.getNameWithoutExtension(input.getKey()), "lib").get());
-                }
-              }));
+        .addAllFrameworks(frameworks)
+        .addAllLibraries(libraries);
+    if (isSharedRequested(type)) {
+      inputBuilder.addArgs(new SourcePathArg(getResolver(),
+          new BuildTargetSourcePath(requireSwiftLinkRule(cxxPlatform.getFlavor())
+              .getBuildTarget())));
     }
-    inputBuilder.addAllFrameworks(frameworks);
-    inputBuilder.addAllLibraries(libraries);
     return inputBuilder.build();
   }
 
@@ -222,22 +148,37 @@ class SwiftLibrary
       return ImmutableMap.of();
     }
     ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
+    BuildRule sharedLibraryBuildRule = requireSwiftLinkRule(cxxPlatform.getFlavor());
     String sharedLibrarySoname = CxxDescriptionEnhancer.getSharedLibrarySoname(
         Optional.<String>absent(),
-        getBuildTarget(),
+        sharedLibraryBuildRule.getBuildTarget(),
         cxxPlatform);
-    BuildRule sharedLibraryBuildRule = requireSwiftCompileRule(cxxPlatform.getFlavor());
     libs.put(
         sharedLibrarySoname,
         new BuildTargetSourcePath(sharedLibraryBuildRule.getBuildTarget()));
     return libs.build();
   }
 
+  BuildRule requireSwiftLinkRule(Flavor... flavors) throws NoSuchBuildTargetException {
+    BuildTarget requiredBuildTarget = getBuildTarget()
+        .withoutFlavors(ImmutableSet.of(SWIFT_LIBRARY_FLAVOR))
+        .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .withAppendedFlavors(flavors);
+    BuildRule rule = ruleResolver.requireRule(requiredBuildTarget);
+    if (!(rule instanceof CxxLink)) {
+      throw new RuntimeException(
+          String.format(
+              "Could not find CxxLink with target %s",
+              requiredBuildTarget));
+    }
+    return rule;
+  }
+
   SwiftCompile requireSwiftCompileRule(Flavor... flavors)
       throws NoSuchBuildTargetException {
     BuildTarget requiredBuildTarget = getBuildTarget()
         .withAppendedFlavors(flavors)
-        .withoutFlavors(ImmutableSet.of(SWIFT_LIBRARY_FLAVOR))
+        .withoutFlavors(ImmutableSet.of(SWIFT_LIBRARY_FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR))
         .withAppendedFlavors(SWIFT_COMPILE_FLAVOR);
     BuildRule rule = ruleResolver.requireRule(requiredBuildTarget);
     if (!(rule instanceof SwiftCompile)) {

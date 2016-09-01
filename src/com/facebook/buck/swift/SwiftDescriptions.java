@@ -19,6 +19,7 @@ package com.facebook.buck.swift;
 import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_EXTENSION;
 
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
@@ -70,4 +71,15 @@ class SwiftDescriptions {
     output.bridgingHeader = args.bridgingHeader;
   }
 
+  static boolean isSharedRequested(Linker.LinkableDepType type) {
+    switch (type) {
+      case STATIC:
+        // Fall through.
+      case STATIC_PIC:
+        return false;
+      case SHARED:
+        return true;
+    }
+    throw new AssertionError();
+  }
 }

@@ -17,7 +17,9 @@
 package com.facebook.buck.swift;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
@@ -115,7 +117,7 @@ public class SwiftIOSBundleIntegrationTest {
   }
 
   @Test
-  public void testSwiftLibraryProducesDylib() throws Exception {
+  public void swiftLibraryWhenLinkStyleIsNotSharedDoesNotProduceDylib() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
@@ -131,27 +133,70 @@ public class SwiftIOSBundleIntegrationTest {
         "cxx.cflags=-g");
     result.assertSuccess();
 
-    Path parentOutput = tmp.getRoot()
+    Path binaryOutput = tmp.getRoot()
         .resolve(filesystem.getBuckPaths().getGenDir())
-        .resolve("ios-parent#iphonesimulator-x86_64,swift-compile")
-        .resolve("libios-parent.dylib");
-    assertThat(Files.exists(parentOutput), CoreMatchers.is(true));
+        .resolve("ios-parent#iphonesimulator-x86_64");
+    assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
+
+    assertThat(
+        workspace.runCommand("file", binaryOutput.toString()).getStdout().get(),
+        containsString("executable"));
+    assertThat(
+        workspace.runCommand("otool", "-hv", binaryOutput.toString()).getStdout().get(),
+        containsString("X86_64"));
+    assertThat(
+        workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),
+        not(containsString("libdep1.dylib")));
 
     Path dep1Output = tmp.getRoot()
         .resolve(filesystem.getBuckPaths().getGenDir())
         .resolve("iosdep1#iphonesimulator-x86_64,swift-compile")
         .resolve("libiosdep1.dylib");
-    assertThat(Files.exists(dep1Output), CoreMatchers.is(true));
+    assertThat(Files.notExists(dep1Output), CoreMatchers.is(true));
+  }
 
-    workspace.runBuckCommand(
+  @Test
+  public void swiftLibraryWhenLinkStyleIsSharedShouldProduceDylib() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "swift_on_swift", tmp);
+    workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         ":ios-parent-dynamic#iphonesimulator-x86_64",
         "--config",
-        "cxx.cflags=-g")
-        .assertSuccess();
-    Path binaryOutout = tmp.getRoot()
+        "cxx.cflags=-g");
+    result.assertSuccess();
+
+    Path binaryOutput = tmp.getRoot()
         .resolve(filesystem.getBuckPaths().getGenDir())
         .resolve("ios-parent-dynamic#iphonesimulator-x86_64");
-    assertThat(Files.exists(binaryOutout), CoreMatchers.is(true));
+    assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
+
+    assertThat(
+        workspace.runCommand("file", binaryOutput.toString()).getStdout().get(),
+        containsString("executable"));
+    assertThat(
+        workspace.runCommand("otool", "-hv", binaryOutput.toString()).getStdout().get(),
+        containsString("X86_64"));
+    assertThat(
+        workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),
+        containsString("libiosdep1.dylib"));
+
+    Path parentOutput = tmp.getRoot()
+        .resolve(filesystem.getBuckPaths().getGenDir())
+        .resolve("ios-parent-dynamic#iphonesimulator-x86_64,swift-compile")
+        .resolve("ios_parent_dynamic.swiftmodule");
+    assertThat(Files.exists(parentOutput), CoreMatchers.is(true));
+
+    Path dep1Output = tmp.getRoot()
+        .resolve(filesystem.getBuckPaths().getGenDir())
+        .resolve("iosdep1#iphonesimulator-x86_64")
+        .resolve("libiosdep1.dylib");
+    assertThat(Files.exists(dep1Output), CoreMatchers.is(true));
   }
 }
