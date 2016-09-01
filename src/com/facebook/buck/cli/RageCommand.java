@@ -90,8 +90,12 @@ public class RageCommand extends AbstractCommand {
           extraInfoCollector);
     }
     DefectSubmitResult defectSubmitResult = report.collectAndSubmitResult();
+    String uploadPrefix =
+        (defectSubmitResult.getReportSubmitLocation().startsWith("http://")) ?
+            ("Uploading report to") :
+            ("Report saved to");
 
-    stdOut.printf("Report saved to %s\n", defectSubmitResult.getReportSubmitLocation());
+    stdOut.printf("%s %s\n", uploadPrefix, defectSubmitResult.getReportSubmitLocation());
     if (defectSubmitResult.getReportSubmitMessage().isPresent()) {
       stdOut.println(defectSubmitResult.getReportSubmitMessage().get());
     }
