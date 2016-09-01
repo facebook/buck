@@ -225,6 +225,7 @@ public class PreDexedFilesSorter {
             dexesContents.size() + 1,
             steps);
         currentDexSize += canary.getSizeEstimate();
+        currentDexContents.add(canary);
 
         dexesContents.add(currentDexContents);
         dexInputsHashes.put(canary.getPathToDexFile(), canary.getClassesHash());
