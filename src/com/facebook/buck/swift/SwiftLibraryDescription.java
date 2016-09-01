@@ -191,7 +191,8 @@ public class SwiftLibraryDescription implements
                 resolver,
                 target,
                 appleCxxPlatform,
-                cxxPlatform);
+                cxxPlatform,
+                args.soname);
           case STATIC:
           case MACH_O_BUNDLE:
           // TODO(tho@uber.com) create build rule for other types.
@@ -247,16 +248,17 @@ public class SwiftLibraryDescription implements
       BuildRuleResolver resolver,
       BuildTarget buildTarget,
       AppleCxxPlatform appleCxxPlatform,
-      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform,
+      Optional<String> soname) throws NoSuchBuildTargetException {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
-    String soname = CxxDescriptionEnhancer.getSharedLibrarySoname(
-        Optional.<String>absent(),
+    String sharedLibrarySoname = CxxDescriptionEnhancer.getSharedLibrarySoname(
+        soname,
         buildTarget.withoutFlavors(SUPPORTED_FLAVORS),
         cxxPlatform);
     Path sharedLibOutput = CxxDescriptionEnhancer.getSharedLibraryPath(
         params.getProjectFilesystem(),
         buildTarget,
-        soname);
+        sharedLibrarySoname);
 
     SwiftRuntimeNativeLinkable swiftRuntimeLinkable = new SwiftRuntimeNativeLinkable(
         buildTarget,
@@ -278,7 +280,7 @@ public class SwiftLibraryDescription implements
         sourcePathResolver,
         buildTarget,
         Linker.LinkType.SHARED,
-        Optional.of(soname),
+        Optional.of(sharedLibrarySoname),
         sharedLibOutput,
         Linker.LinkableDepType.SHARED,
         FluentIterable.from(params.getDeps())
@@ -334,6 +336,7 @@ public class SwiftLibraryDescription implements
     public Optional<ImmutableSortedSet<FrameworkPath>> libraries;
     public Optional<Boolean> enableObjcInterop;
     public Optional<Pattern> supportedPlatformsRegex;
+    public Optional<String> soname;
     public Optional<SourcePath> bridgingHeader;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }

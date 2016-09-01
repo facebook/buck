@@ -51,6 +51,12 @@ apple_binary(
     ]
 )
 
+swift_library(
+    name = 'dep1-soname',
+    srcs = [ 'dep1/dep1.swift' ],
+    soname = 'custom-soname'
+)
+
 apple_bundle(
     name='ios-sos',
     binary=':ios-parent',

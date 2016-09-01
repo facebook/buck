@@ -199,4 +199,42 @@ public class SwiftIOSBundleIntegrationTest {
         .resolve("libiosdep1.dylib");
     assertThat(Files.exists(dep1Output), CoreMatchers.is(true));
   }
+
+  @Test
+  public void testSwiftSharedLibraryCustomSoname() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "swift_on_swift", tmp);
+    workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        ":dep1-soname#iphonesimulator-x86_64,shared",
+        "--config",
+        "cxx.cflags=-g");
+    result.assertSuccess();
+
+
+    Path binaryOutput = tmp.getRoot()
+        .resolve(filesystem.getBuckPaths().getGenDir())
+        .resolve("dep1-soname#iphonesimulator-x86_64")
+        .resolve("custom-soname");
+    assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
+
+    assertThat(
+        workspace.runCommand("file", binaryOutput.toString()).getStdout().get(),
+        containsString("shared library"));
+    assertThat(
+        workspace.runCommand("otool", "-hv", binaryOutput.toString()).getStdout().get(),
+        containsString("X86_64"));
+    assertThat(
+        workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),
+        containsString("@rpath/custom-soname"));
+    assertThat(
+        workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),
+        not(containsString("@rpath/dep1-soname")));
+  }
 }
