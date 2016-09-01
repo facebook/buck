@@ -45,7 +45,7 @@ final class SwiftRuntimeNativeLinkable implements NativeLinkable {
       .build();
   private final AppleCxxPlatform appleCxxPlatform;
 
-  SwiftRuntimeNativeLinkable(AppleCxxPlatform appleCxxPlatform) {;
+  SwiftRuntimeNativeLinkable(AppleCxxPlatform appleCxxPlatform) {
     this.appleCxxPlatform = appleCxxPlatform;
   }
 
