@@ -43,6 +43,8 @@ class TargetDataGenerator:
 
         build_target_set = BuildTargetSetGenerator
         build_target = singleton(build_target_set)
+        paths = PathSetGenerator
+        path = singleton(paths)
         source_path_set = SourcePathSetGenerator
         source_path = singleton(source_path_set)
         sources_with_flags = SourcesWithFlagsGenerator
@@ -64,6 +66,7 @@ class TargetDataGenerator:
             'keystore.properties': source_path,
             'keystore.store': source_path,
             'prebuilt_jar.binary_jar': source_path,
+            'prebuilt_native_library.native_libs': path,
             'sh_binary.main': source_path,
             'worker_tool.exe': build_target,
         }
