@@ -182,21 +182,13 @@ class SwiftCompile
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(outputPath);
     return ImmutableList.of(
-            new MkdirStep(getProjectFilesystem(), outputPath),
-            makeCompileStep());
+        new MkdirStep(getProjectFilesystem(), outputPath),
+        makeCompileStep());
   }
 
   @Override
   public Path getPathToOutput() {
     return outputPath;
-  }
-
-  Path getModulePath() {
-    return modulePath;
-  }
-
-  Path getObjectPath() {
-    return objectPath;
   }
 
   /**
@@ -249,10 +241,10 @@ class SwiftCompile
         .addArgs(
             new SourcePathArg(
                 getResolver(),
-                new BuildTargetSourcePath(getBuildTarget(), getModulePath())))
+                new BuildTargetSourcePath(getBuildTarget(), modulePath)))
         .addArgs(
             new SourcePathArg(
                 getResolver(),
-                new BuildTargetSourcePath(getBuildTarget(), getObjectPath())));
+                new BuildTargetSourcePath(getBuildTarget(), objectPath)));
   }
 }

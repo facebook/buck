@@ -154,8 +154,7 @@ public class SwiftLibraryDescription implements
         buildTarget);
     final ImmutableSortedSet<Flavor> buildFlavors = buildTarget.getFlavors();
 
-    if (buildFlavors.contains(SWIFT_COMPILE_FLAVOR) ||
-        !buildFlavors.contains(SWIFT_LIBRARY_FLAVOR) && platform.isPresent()) {
+    if (!buildFlavors.contains(SWIFT_LIBRARY_FLAVOR) && platform.isPresent()) {
       AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
           cxxPlatformFlavorDomain,
           defaultCxxPlatform,
@@ -172,7 +171,7 @@ public class SwiftLibraryDescription implements
       // See if we're building a particular "type" and "platform" of this library, and if so, extract
       // them from the flavors attached to the build target.
       Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
-      if (type.isPresent() && platform.isPresent()) {
+      if (!buildFlavors.contains(SWIFT_COMPILE_FLAVOR) && type.isPresent() && platform.isPresent()) {
         Set<Flavor> flavors = Sets.newHashSet(params.getBuildTarget().getFlavors());
         flavors.remove(type.get().getKey());
         BuildTarget target = BuildTarget

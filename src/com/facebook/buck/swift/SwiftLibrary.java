@@ -159,7 +159,21 @@ class SwiftLibrary
     return libs.build();
   }
 
-  BuildRule requireSwiftLinkRule(Flavor... flavors) throws NoSuchBuildTargetException {
+  SwiftCompile requireSwiftCompileRule(Flavor... flavors)
+      throws NoSuchBuildTargetException {
+    BuildTarget requiredBuildTarget = getBuildTarget()
+        .withAppendedFlavors(flavors)
+        .withoutFlavors(ImmutableSet.of(SWIFT_LIBRARY_FLAVOR))
+        .withAppendedFlavors(SWIFT_COMPILE_FLAVOR);
+    BuildRule rule = ruleResolver.requireRule(requiredBuildTarget);
+    if (!(rule instanceof SwiftCompile)) {
+      throw new RuntimeException(
+          String.format("Could not find SwiftCompile with target %s", requiredBuildTarget));
+    }
+    return (SwiftCompile) rule;
+  }
+
+  private BuildRule requireSwiftLinkRule(Flavor... flavors) throws NoSuchBuildTargetException {
     BuildTarget requiredBuildTarget = getBuildTarget()
         .withoutFlavors(ImmutableSet.of(SWIFT_LIBRARY_FLAVOR))
         .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
@@ -172,20 +186,6 @@ class SwiftLibrary
               requiredBuildTarget));
     }
     return rule;
-  }
-
-  SwiftCompile requireSwiftCompileRule(Flavor... flavors)
-      throws NoSuchBuildTargetException {
-    BuildTarget requiredBuildTarget = getBuildTarget()
-        .withAppendedFlavors(flavors)
-        .withoutFlavors(ImmutableSet.of(SWIFT_LIBRARY_FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR))
-        .withAppendedFlavors(SWIFT_COMPILE_FLAVOR);
-    BuildRule rule = ruleResolver.requireRule(requiredBuildTarget);
-    if (!(rule instanceof SwiftCompile)) {
-      throw new RuntimeException(
-          String.format("Could not find SwiftCompile with target %s", requiredBuildTarget));
-    }
-    return (SwiftCompile) rule;
   }
 
   @Override
