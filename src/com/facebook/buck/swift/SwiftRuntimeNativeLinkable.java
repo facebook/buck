@@ -69,7 +69,8 @@ final class SwiftRuntimeNativeLinkable implements NativeLinkable {
       CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
 
-    ImmutableSet<Path> swiftRuntimePaths = type == Linker.LinkableDepType.SHARED ? ImmutableSet.<Path>of() :
+    ImmutableSet<Path> swiftRuntimePaths = type == Linker.LinkableDepType.SHARED ?
+        ImmutableSet.<Path>of() :
         appleCxxPlatform.getSwiftStaticRuntimePaths();
 
     // Fall back to shared if static isn't supported on this platform.
