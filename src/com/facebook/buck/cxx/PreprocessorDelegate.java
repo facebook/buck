@@ -139,9 +139,18 @@ class PreprocessorDelegate implements RuleKeyAppendable {
    */
   public ImmutableList<String> getCommand(CxxToolFlags compilerFlags) {
     return ImmutableList.<String>builder()
-        .addAll(preprocessor.getCommandPrefix(resolver))
-        .addAll(CxxToolFlags.concat(getFlagsWithSearchPaths(), compilerFlags).getAllFlags())
+        .addAll(getCommandPrefix())
+        .addAll(getArguments(compilerFlags))
         .build();
+  }
+
+  public ImmutableList<String> getCommandPrefix() {
+    return preprocessor.getCommandPrefix(resolver);
+  }
+
+  public ImmutableList<String> getArguments(CxxToolFlags compilerFlags) {
+    return ImmutableList.copyOf(
+        CxxToolFlags.concat(getFlagsWithSearchPaths(), compilerFlags).getAllFlags());
   }
 
   public ImmutableMap<String, String> getEnvironment() {

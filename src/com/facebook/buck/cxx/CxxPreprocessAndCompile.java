@@ -205,7 +205,8 @@ public class CxxPreprocessAndCompile
     if (operation.isPreprocess()) {
       preprocessorCommand = Optional.of(
           new CxxPreprocessAndCompileStep.ToolCommand(
-              getPreprocessorDelegate().get().getCommand(compilerDelegate.getCompilerFlags()),
+              preprocessDelegate.get().getCommandPrefix(),
+              preprocessDelegate.get().getArguments(compilerDelegate.getCompilerFlags()),
               preprocessDelegate.get().getEnvironment(),
               preprocessDelegate.get().getFlagsForColorDiagnostics()));
     } else {
@@ -214,12 +215,13 @@ public class CxxPreprocessAndCompile
 
     Optional<CxxPreprocessAndCompileStep.ToolCommand> compilerCommand;
     if (operation.isCompile()) {
-      ImmutableList<String> command;
+      ImmutableList<String> arguments;
       if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO) {
-        command = compilerDelegate.getCommand(preprocessDelegate.get().getFlagsWithSearchPaths());
+        arguments =
+            compilerDelegate.getArguments(preprocessDelegate.get().getFlagsWithSearchPaths());
         if (precompiledHeader.isPresent()) {
-          command = ImmutableList.<String>builder()
-              .addAll(command)
+          arguments = ImmutableList.<String>builder()
+              .addAll(arguments)
               .add(
                   "-include-pch",
                   getResolver().getAbsolutePath(precompiledHeader.get().getSourcePath()).toString())
@@ -229,11 +231,12 @@ public class CxxPreprocessAndCompile
               .build();
         }
       } else {
-        command = compilerDelegate.getCommand(CxxToolFlags.of());
+        arguments = compilerDelegate.getArguments(CxxToolFlags.of());
       }
       compilerCommand = Optional.of(
           new CxxPreprocessAndCompileStep.ToolCommand(
-              command,
+              compilerDelegate.getCommandPrefix(),
+              arguments,
               compilerDelegate.getEnvironment(),
               compilerDelegate.getFlagsForColorDiagnostics()));
     } else {

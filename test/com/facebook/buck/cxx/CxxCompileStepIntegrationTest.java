@@ -68,12 +68,10 @@ public class CxxCompileStepIntegrationTest {
     Path scratchDir = filesystem.getRootPath().getFileSystem().getPath("scratchDir");
     filesystem.mkdirs(scratchDir);
 
-    ImmutableList.Builder<String> preprocessorCommand = ImmutableList.builder();
-    preprocessorCommand.addAll(compiler);
+    ImmutableList.Builder<String> preprocessorArguments = ImmutableList.builder();
 
-    ImmutableList.Builder<String> compilerCommand = ImmutableList.builder();
-    compilerCommand.addAll(compiler);
-    compilerCommand.add("-g");
+    ImmutableList.Builder<String> compilerArguments = ImmutableList.builder();
+    compilerArguments.add("-g");
 
     DebugPathSanitizer sanitizer = new DebugPathSanitizer(
         200,
@@ -92,12 +90,14 @@ public class CxxCompileStepIntegrationTest {
             CxxSource.Type.C,
             Optional.of(
                 new CxxPreprocessAndCompileStep.ToolCommand(
-                    preprocessorCommand.build(),
+                    compiler,
+                    preprocessorArguments.build(),
                     ImmutableMap.<String, String>of(),
                     Optional.<ImmutableList<String>>absent())),
             Optional.of(
                 new CxxPreprocessAndCompileStep.ToolCommand(
-                    compilerCommand.build(),
+                    compiler,
+                    compilerArguments.build(),
                     ImmutableMap.<String, String>of(),
                     Optional.<ImmutableList<String>>absent())),
             HeaderPathNormalizer.empty(pathResolver),

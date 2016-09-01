@@ -66,7 +66,17 @@ class CompilerDelegate implements RuleKeyAppendable {
    */
   public ImmutableList<String> getCommand(CxxToolFlags prependedFlags) {
     return ImmutableList.<String>builder()
-        .addAll(compiler.getCommandPrefix(resolver))
+        .addAll(getCommandPrefix())
+        .addAll(getArguments(prependedFlags))
+        .build();
+  }
+
+  public ImmutableList<String> getCommandPrefix() {
+    return compiler.getCommandPrefix(resolver);
+  }
+
+  public ImmutableList<String> getArguments(CxxToolFlags prependedFlags) {
+    return ImmutableList.<String>builder()
         .addAll(CxxToolFlags.concat(prependedFlags, compilerFlags).getAllFlags())
         .addAll(
             compiler.debugCompilationDirFlags(sanitizer.getCompilationDirectory())

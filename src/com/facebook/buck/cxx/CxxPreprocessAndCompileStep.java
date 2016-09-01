@@ -163,9 +163,9 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   @VisibleForTesting
-  ImmutableList<String> makePreprocessCommand(boolean allowColorsInDiagnostics) {
+  ImmutableList<String> makePreprocessArguments(boolean allowColorsInDiagnostics) {
     return ImmutableList.<String>builder()
-        .addAll(preprocessorCommand.get().getCommand(allowColorsInDiagnostics))
+        .addAll(preprocessorCommand.get().getArguments(allowColorsInDiagnostics))
         .add("-x", inputType.getLanguage())
         .add("-E")
         .addAll(getDepFileArgs(getDepTemp()))
@@ -174,13 +174,13 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   @VisibleForTesting
-  ImmutableList<String> makeCompileCommand(
+  ImmutableList<String> makeCompileArguments(
       String inputFileName,
       String inputLanguage,
       boolean preprocessable,
       boolean allowColorsInDiagnostics) {
     return ImmutableList.<String>builder()
-        .addAll(compilerCommand.get().getCommand(allowColorsInDiagnostics))
+        .addAll(compilerCommand.get().getArguments(allowColorsInDiagnostics))
         .add("-x", inputLanguage)
         .add("-c")
         .addAll(
@@ -193,9 +193,9 @@ public class CxxPreprocessAndCompileStep implements Step {
         .build();
   }
 
-  private ImmutableList<String> makeGeneratePchCommand(boolean allowColorInDiagnostics) {
+  private ImmutableList<String> makeGeneratePchArguments(boolean allowColorInDiagnostics) {
     return ImmutableList.<String>builder()
-        .addAll(preprocessorCommand.get().getCommand(allowColorInDiagnostics))
+        .addAll(preprocessorCommand.get().getArguments(allowColorInDiagnostics))
         // Using x-header language type directs the compiler to generate a PCH file.
         .add("-x", inputType.getPrecompiledHeaderLanguage().get())
         // PCH file generation can also output dep files.
@@ -222,18 +222,26 @@ public class CxxPreprocessAndCompileStep implements Step {
     Preconditions.checkState(compilerCommand.isPresent());
     ByteArrayOutputStream preprocessError = new ByteArrayOutputStream();
     ProcessBuilder preprocessBuilder = makeSubprocessBuilder(context);
-    preprocessBuilder.command(makePreprocessCommand(context.getAnsi().isAnsiTerminal()));
+    preprocessBuilder.command(
+        ImmutableList.<String>builder()
+            .addAll(preprocessorCommand.get().getCommandPrefix())
+            .addAll(makePreprocessArguments(context.getAnsi().isAnsiTerminal()))
+            .build());
     preprocessBuilder.environment().putAll(preprocessorCommand.get().getEnvironment());
     preprocessBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
 
     ByteArrayOutputStream compileError = new ByteArrayOutputStream();
     ProcessBuilder compileBuilder = makeSubprocessBuilder(context);
     compileBuilder.command(
-        makeCompileCommand(
-            "-",
-            inputType.getPreprocessedLanguage(),
-            /* preprocessable */ false,
-            context.getAnsi().isAnsiTerminal()));
+        ImmutableList.<String>builder()
+            .addAll(compilerCommand.get().getCommandPrefix())
+            .addAll(
+                makeCompileArguments(
+                    "-",
+                    inputType.getPreprocessedLanguage(),
+                    /* preprocessable */ false,
+                    context.getAnsi().isAnsiTerminal()))
+            .build());
     compileBuilder.environment().putAll(compilerCommand.get().getEnvironment());
     compileBuilder.redirectInput(ProcessBuilder.Redirect.PIPE);
 
@@ -341,7 +349,11 @@ public class CxxPreprocessAndCompileStep implements Step {
   private int executeOther(ExecutionContext context) throws Exception {
     ProcessBuilder builder = makeSubprocessBuilder(context);
 
-    builder.command(getCommand(context.getAnsi().isAnsiTerminal()));
+    builder.command(
+        ImmutableList.<String>builder()
+            .addAll(getCommandPrefix())
+            .addAll(getArguments(context.getAnsi().isAnsiTerminal()))
+            .build());
     // If we're preprocessing, file output goes through stdout, so we can postprocess it.
     if (operation == Operation.PREPROCESS) {
       builder.redirectOutput(ProcessBuilder.Redirect.PIPE);
@@ -501,22 +513,39 @@ public class CxxPreprocessAndCompileStep implements Step {
     // compilation database (its contents should not depend on how Buck was invoked) and in the
     // step's description. It is not used to determine what command this step runs, which needs
     // to decide whether to use colors or not based on whether the terminal supports them.
-    return getCommand(false);
+    return ImmutableList.<String>builder()
+        .addAll(getCommandPrefix())
+        .addAll(getArguments(false))
+        .build();
   }
 
-  public ImmutableList<String> getCommand(boolean allowColorsInDiagnostics) {
+  public ImmutableList<String> getCommandPrefix() {
     switch (operation) {
       case COMPILE:
       case COMPILE_MUNGE_DEBUGINFO:
-        return makeCompileCommand(
+        return compilerCommand.get().getCommandPrefix();
+      case PREPROCESS:
+      case GENERATE_PCH:
+        return preprocessorCommand.get().getCommandPrefix();
+      // $CASES-OMITTED$
+      default:
+        throw new RuntimeException("invalid operation type");
+    }
+  }
+
+  public ImmutableList<String> getArguments(boolean allowColorsInDiagnostics) {
+    switch (operation) {
+      case COMPILE:
+      case COMPILE_MUNGE_DEBUGINFO:
+        return makeCompileArguments(
             input.toString(),
             inputType.getLanguage(),
             inputType.isPreprocessable(),
             allowColorsInDiagnostics);
       case PREPROCESS:
-        return makePreprocessCommand(allowColorsInDiagnostics);
+        return makePreprocessArguments(allowColorsInDiagnostics);
       case GENERATE_PCH:
-        return makeGeneratePchCommand(allowColorsInDiagnostics);
+        return makeGeneratePchArguments(allowColorsInDiagnostics);
       // $CASES-OMITTED$
       default:
         throw new RuntimeException("invalid operation type");
@@ -527,24 +556,27 @@ public class CxxPreprocessAndCompileStep implements Step {
     switch (operation) {
       case PIPED_PREPROCESS_AND_COMPILE: {
         return Joiner.on(' ').join(
-            FluentIterable.from(makePreprocessCommand(/* allowColorsInDiagnostics */ false))
-            .transform(Escaper.SHELL_ESCAPER)) +
+            FluentIterable.from(preprocessorCommand.get().getCommandPrefix())
+                .append(makePreprocessArguments(/* allowColorsInDiagnostics */ false))
+                .transform(Escaper.SHELL_ESCAPER)) +
             " | " +
             Joiner.on(' ').join(
-                FluentIterable.from(
-                    makeCompileCommand(
-                        "-",
-                        inputType.getPreprocessedLanguage(),
-                        /* preprocessable */ false,
-                        /* allowColorsInDiagnostics */ false))
-                .transform(Escaper.SHELL_ESCAPER));
+                FluentIterable.from(compilerCommand.get().getCommandPrefix())
+                    .append(
+                        makeCompileArguments(
+                            "-",
+                            inputType.getPreprocessedLanguage(),
+                            /* preprocessable */ false,
+                            /* allowColorsInDiagnostics */ false))
+                    .transform(Escaper.SHELL_ESCAPER));
 
       }
       // $CASES-OMITTED$
       default: {
         return Joiner.on(' ').join(
-            FluentIterable.from(getCommand(false))
-            .transform(Escaper.SHELL_ESCAPER));
+            FluentIterable.from(getCommandPrefix())
+                .append(getArguments(false))
+                .transform(Escaper.SHELL_ESCAPER));
       }
     }
   }
@@ -619,27 +651,34 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   public static class ToolCommand {
-    private final ImmutableList<String> command;
+    private final ImmutableList<String> commandPrefix;
+    private final ImmutableList<String> arguments;
     private final ImmutableMap<String, String> environment;
     private final Optional<ImmutableList<String>> flagsForColorDiagnostics;
 
     public ToolCommand(
-        ImmutableList<String> command,
+        ImmutableList<String> commandPrefix,
+        ImmutableList<String> arguments,
         ImmutableMap<String, String> environment,
         Optional<ImmutableList<String>> flagsForColorDiagnostics) {
-      this.command = command;
+      this.commandPrefix = commandPrefix;
+      this.arguments = arguments;
       this.environment = environment;
       this.flagsForColorDiagnostics = flagsForColorDiagnostics;
     }
 
-    public ImmutableList<String> getCommand(boolean allowColorsInDiagnostics) {
+    public ImmutableList<String> getCommandPrefix() {
+      return commandPrefix;
+    }
+
+    public ImmutableList<String> getArguments(boolean allowColorsInDiagnostics) {
       if (allowColorsInDiagnostics && flagsForColorDiagnostics.isPresent()) {
         return ImmutableList.<String>builder()
-            .addAll(command)
+            .addAll(arguments)
             .addAll(flagsForColorDiagnostics.get())
             .build();
       } else {
-        return command;
+        return arguments;
       }
     }
 

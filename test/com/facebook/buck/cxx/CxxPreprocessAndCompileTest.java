@@ -519,7 +519,7 @@ public class CxxPreprocessAndCompileTest {
 
     ImmutableList<String> command =
         buildRule.makeMainStep(buildRule.getProjectFilesystem().getRootPath())
-            .makeCompileCommand(
+            .makeCompileArguments(
                 input.toString(),
                 "c++",
                 /* preprocessable */ true,
@@ -528,7 +528,7 @@ public class CxxPreprocessAndCompileTest {
 
     command =
         buildRule.makeMainStep(scratchDir)
-            .makeCompileCommand(
+            .makeCompileArguments(
                 input.toString(),
                 "c++",
                 /* preprocessable */ true,
@@ -572,12 +572,12 @@ public class CxxPreprocessAndCompileTest {
 
     ImmutableList<String> command =
         buildRule.makeMainStep(scratchDir)
-            .makePreprocessCommand(/* allowColorsInDiagnostics */ false);
+            .makePreprocessArguments(/* allowColorsInDiagnostics */ false);
     assertThat(command, not(hasItem(PreprocessorWithColorSupport.COLOR_FLAG)));
 
     command =
         buildRule.makeMainStep(scratchDir)
-            .makePreprocessCommand(/* allowColorsInDiagnostics */ true);
+            .makePreprocessArguments(/* allowColorsInDiagnostics */ true);
     assertThat(command, hasItem(PreprocessorWithColorSupport.COLOR_FLAG));
   }
 }
