@@ -79,6 +79,7 @@ public class RageCommand extends AbstractCommand {
           params.getStdIn(),
           params.getBuildEnvironmentDescription(),
           vcsInfoCollector,
+          rageConfig,
           extraInfoCollector);
     } else {
       report = new AutomatedReport(
@@ -87,6 +88,7 @@ public class RageCommand extends AbstractCommand {
           stdOut,
           params.getBuildEnvironmentDescription(),
           gatherVcsInfo ? vcsInfoCollector : Optional.<VcsInfoCollector>absent(),
+          rageConfig,
           extraInfoCollector);
     }
     DefectSubmitResult defectSubmitResult = report.collectAndSubmitResult();

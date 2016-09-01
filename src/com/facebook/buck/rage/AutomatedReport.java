@@ -40,8 +40,14 @@ public class AutomatedReport extends AbstractReport {
       PrintStream output,
       BuildEnvironmentDescription buildEnvironmentDescription,
       Optional<VcsInfoCollector> vcsInfoCollector,
+      RageConfig rageConfig,
       ExtraInfoCollector extraInfoCollector) {
-    super(filesystem, defectReporter, buildEnvironmentDescription, output, extraInfoCollector);
+    super(filesystem,
+        defectReporter,
+        buildEnvironmentDescription,
+        output,
+        rageConfig,
+        extraInfoCollector);
     this.vcsInfoCollector = vcsInfoCollector;
     this.buildLogHelper = new BuildLogHelper(filesystem);
     this.output = output;

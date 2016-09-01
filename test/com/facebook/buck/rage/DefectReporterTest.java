@@ -61,7 +61,8 @@ public class DefectReporterTest {
   @Test
   public void testAttachesPaths() throws Exception {
     ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
-    RageConfig config = RageConfig.builder().build();
+    RageConfig config = RageConfig.builder()
+        .build();
     DefectReporter reporter = new DefaultDefectReporter(
         filesystem,
         ObjectMappers.newDefaultInstance(),
@@ -88,7 +89,8 @@ public class DefectReporterTest {
   public void testAttachesReport() throws Exception {
     ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-    RageConfig config = RageConfig.builder().build();
+    RageConfig config = RageConfig.builder()
+        .build();
     DefectReporter reporter = new DefaultDefectReporter(
         filesystem,
         objectMapper,

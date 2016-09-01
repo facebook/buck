@@ -17,11 +17,14 @@
 package com.facebook.buck.rage;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.util.unit.SizeUnit;
+import com.google.common.base.Function;
 
 public class RageBuckConfig {
 
   private static final String SECTION_NAME = "rage";
   private static final String REPORT_UPLOAD_URL_FIELD = "report_upload_url";
+  private static final String REPORT_MAX_SIZE_FIELD = "report_max_size";
   private static final String EXTRA_INFO_COMMAND_FIELD = "extra_info_command";
 
   private RageBuckConfig() {
@@ -30,6 +33,14 @@ public class RageBuckConfig {
   public static RageConfig create(BuckConfig buckConfig) {
     return RageConfig.builder()
         .setReportUploadUri(buckConfig.getUrl(SECTION_NAME, REPORT_UPLOAD_URL_FIELD))
+        .setReportMaxSizeBytes(
+            buckConfig.getValue(SECTION_NAME, REPORT_MAX_SIZE_FIELD).transform(
+                new Function<String, Long>() {
+                  @Override
+                  public Long apply(String input) {
+                    return SizeUnit.parseBytes(input);
+                  }
+                }))
         .setExtraInfoCommand(
             buckConfig.getListWithoutComments(SECTION_NAME, EXTRA_INFO_COMMAND_FIELD))
         .build();

@@ -19,6 +19,7 @@ package com.facebook.buck.rage;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigPaths;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
@@ -42,11 +43,13 @@ import java.util.Set;
  * Base class for gathering logs and other interesting information from buck.
  */
 public abstract class AbstractReport {
+  private static final Logger LOG = Logger.get(AbstractReport.class);
 
   private final ProjectFilesystem filesystem;
   private final DefectReporter defectReporter;
   private final BuildEnvironmentDescription buildEnvironmentDescription;
   private final PrintStream output;
+  private final RageConfig rageConfig;
   private final ExtraInfoCollector extraInfoCollector;
 
   public AbstractReport(
@@ -54,11 +57,13 @@ public abstract class AbstractReport {
       DefectReporter defectReporter,
       BuildEnvironmentDescription buildEnvironmentDescription,
       PrintStream output,
+      RageConfig rageBuckConfig,
       ExtraInfoCollector extraInfoCollector) {
     this.filesystem = filesystem;
     this.defectReporter = defectReporter;
     this.buildEnvironmentDescription = buildEnvironmentDescription;
     this.output = output;
+    this.rageConfig = rageBuckConfig;
     this.extraInfoCollector = extraInfoCollector;
   }
 
@@ -103,6 +108,7 @@ public abstract class AbstractReport {
             })
         .append(extraInfoPaths)
         .append(userLocalConfiguration.getLocalConfigs())
+        .append(getTracePathsOfBuilds(highlightedBuilds))
         .toSet();
 
     DefectReport defectReport = DefectReport.builder()
@@ -150,6 +156,38 @@ public abstract class AbstractReport {
     }
 
     return ImmutableSet.copyOf(foundUserlocalConfigs);
+  }
+
+  /**
+   * It returns a list of trace files that corresponds to builds while respecting the maximum
+   * size of the final zip file.
+   * @param entries the highlighted builds
+   * @return a set of paths that points to the corresponding traces.
+   */
+  private ImmutableSet<Path> getTracePathsOfBuilds(ImmutableSet<BuildLogEntry> entries) {
+    ImmutableSet.Builder<Path> tracePaths = new ImmutableSet.Builder<>();
+    long reportSizeBytes = 0;
+    for (BuildLogEntry entry : entries) {
+      reportSizeBytes += entry.getSize();
+      if (entry.getTraceFile().isPresent()) {
+        try {
+          Path traceFile = filesystem.getPathForRelativeExistingPath(entry.getTraceFile().get());
+          long traceFileSizeBytes = Files.size(traceFile);
+          if (rageConfig.getReportMaxSizeBytes().isPresent()) {
+            if (reportSizeBytes + traceFileSizeBytes < rageConfig.getReportMaxSizeBytes().get()) {
+              tracePaths.add(entry.getTraceFile().get());
+              reportSizeBytes += traceFileSizeBytes;
+            }
+          } else {
+            tracePaths.add(entry.getTraceFile().get());
+            reportSizeBytes += traceFileSizeBytes;
+          }
+        } catch (IOException e) {
+          LOG.info("Trace path %s wasn't valid, skipping it.", entry.getTraceFile().get());
+        }
+      }
+    }
+    return tracePaths.build();
   }
 
   private boolean isNoBuckCheckPresent() {

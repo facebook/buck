@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY 6f0a73b62ad946683cbce55e22a767458bb1ac49 #@#
+#@# GENERATED FILE: DO NOT MODIFY 49ab9fc078b58f932c0c41e1c90b8d2f94fc6441 #@#
 {
   "config" : {
     "deps" : [
+      "//src/com/facebook/buck/util/unit:unit",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [

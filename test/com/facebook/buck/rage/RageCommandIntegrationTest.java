@@ -111,21 +111,19 @@ public class RageCommandIntegrationTest {
           });
       httpd.start();
 
-      RageConfig config = RageConfig.builder()
+      RageConfig rageConfig = RageConfig.builder()
           .setReportUploadUri(httpd.getUri("/rage"))
           .build();
       ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
       ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-      DefectReporter reporter = new DefaultDefectReporter(
-          filesystem,
-          objectMapper,
-          config);
+      DefectReporter reporter = new DefaultDefectReporter(filesystem, objectMapper, rageConfig);
       AutomatedReport automatedReport = new AutomatedReport(
           reporter,
           filesystem,
           new CapturingPrintStream(),
           TestBuildEnvironmentDescription.INSTANCE,
           VcsInfoCollector.create(new NoOpCmdLineInterface()),
+          rageConfig,
           EMPTY_EXTRA_INFO_HELPER);
       DefectSubmitResult defectSubmitResult = automatedReport.collectAndSubmitResult();
 
@@ -160,7 +158,7 @@ public class RageCommandIntegrationTest {
         this, "interactive_report", temporaryFolder);
     workspace.setUp();
 
-    RageConfig config = RageConfig.builder()
+    RageConfig rageConfig = RageConfig.builder()
         .setExtraInfoCommand(ImmutableList.of("python", "extra.py"))
         .build();
     ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
@@ -172,7 +170,8 @@ public class RageCommandIntegrationTest {
         new CapturingPrintStream(),
         TestBuildEnvironmentDescription.INSTANCE,
         VcsInfoCollector.create(new NoOpCmdLineInterface()),
-        new DefaultExtraInfoCollector(config, filesystem, new ProcessExecutor(console)));
+        rageConfig,
+        new DefaultExtraInfoCollector(rageConfig, filesystem, new ProcessExecutor(console)));
     automatedReport.collectAndSubmitResult();
     DefectReport defectReport = defectReporter.getDefectReport();
     assertThat(defectReport.getExtraInfo(), Matchers.equalTo(Optional.of("Extra\n")));
@@ -202,7 +201,7 @@ public class RageCommandIntegrationTest {
           });
       httpd.start();
 
-      RageConfig config = RageConfig.builder()
+      RageConfig rageConfig = RageConfig.builder()
           .setReportUploadUri(httpd.getUri("/rage"))
           .build();
       ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
@@ -210,13 +209,14 @@ public class RageCommandIntegrationTest {
       DefectReporter reporter = new DefaultDefectReporter(
           filesystem,
           objectMapper,
-          config);
+          rageConfig);
       AutomatedReport automatedReport = new AutomatedReport(
           reporter,
           filesystem,
           new CapturingPrintStream(),
           TestBuildEnvironmentDescription.INSTANCE,
           VcsInfoCollector.create(new NoOpCmdLineInterface()),
+          rageConfig,
           EMPTY_EXTRA_INFO_HELPER);
 
       expectedException.expect(HumanReadableException.class);

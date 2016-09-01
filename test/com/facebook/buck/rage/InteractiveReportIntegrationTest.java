@@ -16,11 +16,12 @@
 
 package com.facebook.buck.rage;
 
-import com.facebook.buck.cli.BuckConfig;
+import static org.junit.Assert.assertEquals;
+
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.TestBuildEnvironmentDescription;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.CapturingPrintStream;
@@ -29,6 +30,7 @@ import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -36,11 +38,32 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 
-
 public class InteractiveReportIntegrationTest {
+
+  private static final String BUILD_PATH = "buck-out/log/" +
+      "2016-06-21_16h16m24s_buildcommand_ac8bd626-6137-4747-84dd-5d4f215c876c/";
+  private static final String DEPS_PATH = "buck-out/log/" +
+        "2016-06-21_16h18m51s_autodepscommand_d09893d5-b11e-4e3f-a5bf-70c60a06896e/";
+
+  private ProjectWorkspace traceWorkspace;
+  private String tracePath1;
+  private String tracePath2;
 
   @Rule
   public TemporaryPaths temporaryFolder = new TemporaryPaths();
+
+  @Before
+  public void setUp() throws IOException {
+    tracePath1 = BUILD_PATH + "file.trace";
+    tracePath2 = DEPS_PATH + "file.trace";
+    traceWorkspace  = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "interactive_report",
+        temporaryFolder);
+    traceWorkspace.setUp();
+    traceWorkspace.writeContentsToPath(new String(new char[32 * 1024]), tracePath1);
+    traceWorkspace.writeContentsToPath(new String(new char[64 * 1024]), tracePath2);
+  }
 
   @Test
   public void testReport() throws Exception {
@@ -48,13 +71,51 @@ public class InteractiveReportIntegrationTest {
         this, "interactive_report", temporaryFolder);
     workspace.setUp();
 
+    DefectSubmitResult report = createDefectReport(
+        workspace,
+        new ByteArrayInputStream("0,1\nreport text\n".getBytes("UTF-8")));
+
+    Path reportFile = workspace.asCell().getFilesystem().resolve(
+        report.getReportLocalLocation().get());
+
+    ZipInspector zipInspector = new ZipInspector(reportFile);
+    zipInspector.assertFileExists("report.json");
+    zipInspector.assertFileExists(BUILD_PATH + "buck.log");
+    zipInspector.assertFileExists(DEPS_PATH + "buck.log");
+  }
+
+  @Test
+  public void testTraceInReport() throws Exception {
+    DefectSubmitResult report = createDefectReport(
+        traceWorkspace,
+        new ByteArrayInputStream("1\nreport text\n".getBytes("UTF-8")));
+    Path reportFile = traceWorkspace.asCell().getFilesystem().resolve(
+        report.getReportLocalLocation().get());
+
+    ZipInspector zipInspector = new ZipInspector(reportFile);
+    assertEquals(5, zipInspector.getZipFileEntries().size());
+  }
+
+  @Test
+  public void testTraceRespectReportSize() throws Exception {
+    DefectSubmitResult report = createDefectReport(
+        traceWorkspace,
+        new ByteArrayInputStream("0,1\nreport text\n".getBytes("UTF-8")));
+    Path reportFile = traceWorkspace.asCell().getFilesystem().resolve(
+        report.getReportLocalLocation().get());
+
+    ZipInspector zipInspector = new ZipInspector(reportFile);
+    assertEquals(6, zipInspector.getZipFileEntries().size());
+  }
+
+  private static DefectSubmitResult createDefectReport(
+      ProjectWorkspace workspace,
+      ByteArrayInputStream inputStream)
+    throws IOException, InterruptedException {
     ProjectFilesystem filesystem = workspace.asCell().getFilesystem();
     ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-    BuckConfig buckConfig = workspace.asCell().getBuckConfig();
-    DefectReporter defectReporter = new DefaultDefectReporter(
-        filesystem,
-        objectMapper,
-        RageBuckConfig.create(buckConfig));
+    RageConfig rageConfig = RageBuckConfig.create(workspace.asCell().getBuckConfig());
+    DefectReporter defectReporter = new DefaultDefectReporter(filesystem, objectMapper, rageConfig);
     CapturingPrintStream outputStream = new CapturingPrintStream();
     ExtraInfoCollector extraInfoCollector = new ExtraInfoCollector() {
       @Override
@@ -63,8 +124,6 @@ public class InteractiveReportIntegrationTest {
         return Optional.absent();
       }
     };
-    ByteArrayInputStream inputStream =
-        new ByteArrayInputStream("0,1\nreport text\n".getBytes("UTF-8"));
     InteractiveReport interactiveReport =
         new InteractiveReport(
             defectReporter,
@@ -73,15 +132,8 @@ public class InteractiveReportIntegrationTest {
             inputStream,
             TestBuildEnvironmentDescription.INSTANCE,
             VcsInfoCollector.create(new NoOpCmdLineInterface()),
+            rageConfig,
             extraInfoCollector);
-    DefectSubmitResult defectSubmitResult = interactiveReport.collectAndSubmitResult();
-    Path reportFile = filesystem.resolve(defectSubmitResult.getReportLocalLocation().get());
-
-    ZipInspector zipInspector = new ZipInspector(reportFile);
-    zipInspector.assertFileExists("report.json");
-    zipInspector.assertFileExists("buck-out/log/" +
-        "2016-06-21_16h16m24s_buildcommand_ac8bd626-6137-4747-84dd-5d4f215c876c/buck.log");
-    zipInspector.assertFileExists("buck-out/log/" +
-        "2016-06-21_16h18m51s_autodepscommand_d09893d5-b11e-4e3f-a5bf-70c60a06896e/buck.log");
+    return interactiveReport.collectAndSubmitResult();
   }
 }

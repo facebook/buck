@@ -28,5 +28,6 @@ import java.net.URI;
 @BuckStyleImmutable
 interface AbstractRageConfig {
   Optional<URI> getReportUploadUri();
+  Optional<Long> getReportMaxSizeBytes();
   ImmutableList<String> getExtraInfoCommand();
 }

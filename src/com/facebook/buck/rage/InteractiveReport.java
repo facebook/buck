@@ -54,8 +54,14 @@ public class InteractiveReport extends AbstractReport {
       InputStream stdin,
       BuildEnvironmentDescription buildEnvironmentDescription,
       Optional<VcsInfoCollector> vcsInfoCollector,
+      RageConfig rageConfig,
       ExtraInfoCollector extraInfoCollector) {
-    super(filesystem, defectReporter, buildEnvironmentDescription, output, extraInfoCollector);
+    super(filesystem,
+        defectReporter,
+        buildEnvironmentDescription,
+        output,
+        rageConfig,
+        extraInfoCollector);
     this.buildLogHelper = new BuildLogHelper(filesystem);
     this.vcsInfoCollector = vcsInfoCollector;
     this.output = output;

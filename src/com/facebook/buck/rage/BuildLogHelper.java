@@ -23,6 +23,8 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -67,6 +69,7 @@ public class BuildLogHelper {
   private BuildLogEntry newBuildLogEntry(Path logFile) throws IOException {
     Optional<InvocationInfo.ParsedLog> parsedLine = extractFirstMatchingLine(logFile);
     BuildLogEntry.Builder builder = BuildLogEntry.builder();
+
     if (parsedLine.isPresent()) {
       builder.setBuildId(parsedLine.get().getBuildId());
       builder.setCommandArgs(parsedLine.get().getArgs());
@@ -77,10 +80,19 @@ public class BuildLogHelper {
       builder.setRuleKeyLoggerLogFile(ruleKeyLoggerFile);
     }
 
+    Optional <Path> traceFile = FluentIterable
+        .from(projectFilesystem.getFilesUnderPath(logFile.getParent()))
+        .filter(new Predicate<Path>() {
+          @Override
+          public boolean apply(Path input) {
+            return input.toString().endsWith(".trace");
+          }
+        }).first();
     return builder
         .setRelativePath(logFile)
         .setSize(projectFilesystem.getFileSize(logFile))
         .setLastModifiedTime(new Date(projectFilesystem.getLastModifiedTime(logFile)))
+        .setTraceFile(traceFile)
         .build();
   }
 
@@ -146,6 +158,7 @@ public class BuildLogHelper {
     public abstract Optional<BuildId> getBuildId();
     public abstract Optional<String> getCommandArgs();
     public abstract Optional<Path> getRuleKeyLoggerLogFile();
+    public abstract Optional<Path> getTraceFile();
     public abstract long getSize();
     public abstract Date getLastModifiedTime();
 
@@ -154,6 +167,9 @@ public class BuildLogHelper {
       Preconditions.checkState(!getRelativePath().isAbsolute());
       if (getRuleKeyLoggerLogFile().isPresent()) {
         Preconditions.checkState(!getRuleKeyLoggerLogFile().get().isAbsolute());
+      }
+      if (getTraceFile().isPresent()) {
+        Preconditions.checkState(!getTraceFile().get().isAbsolute());
       }
     }
   }
