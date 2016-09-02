@@ -44,7 +44,7 @@ import java.io.IOException;
 import java.nio.channels.Channels;
 import java.util.List;
 
-public class RunCommand extends AbstractCommand {
+public final class RunCommand extends AbstractCommand {
 
   /**
    * Expected usage:
@@ -58,7 +58,7 @@ public class RunCommand extends AbstractCommand {
   @Option(name = "--", handler = ConsumeAllOptionsHandler.class)
   private List<String> withDashArguments = Lists.newArrayList();
 
-  private Supplier<ImmutableList<String>> arguments = Suppliers.memoize(
+  private final Supplier<ImmutableList<String>> arguments = Suppliers.memoize(
     new Supplier<ImmutableList<String>>() {
       @Override
       public ImmutableList<String> get() {
@@ -69,27 +69,23 @@ public class RunCommand extends AbstractCommand {
       }
     });
 
-  public ImmutableList<String> getArguments() {
+  @VisibleForTesting
+  ImmutableList<String> getArguments() {
     return arguments.get();
   }
 
   /** @return the arguments (if any) to be passed to the target command. */
-  public ImmutableList<String> getTargetArguments() {
+  private ImmutableList<String> getTargetArguments() {
     return arguments.get().subList(1, arguments.get().size());
   }
 
-  public boolean hasTargetSpecified() {
+  private boolean hasTargetSpecified() {
     return arguments.get().size() > 0;
   }
 
   /** @return the normalized target name for command to run. */
-  public String getTarget(BuckConfig buckConfig) {
+  private String getTarget(BuckConfig buckConfig) {
       return getCommandLineBuildTargetNormalizer(buckConfig).normalize(arguments.get().get(0));
-  }
-
-  @VisibleForTesting
-  void setArguments(ImmutableList<String> arguments) {
-    this.arguments = Suppliers.ofInstance(arguments);
   }
 
   @Override
