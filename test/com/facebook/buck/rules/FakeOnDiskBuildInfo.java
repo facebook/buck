@@ -79,6 +79,11 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
+  public ImmutableList<String> getValuesOrThrow(String key) {
+    return Optional.fromNullable(metadataValues.get(key)).get();
+  }
+
+  @Override
   public Optional<ImmutableMap<String, String>> getMap(String key) {
     return Optional.absent();
   }

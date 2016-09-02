@@ -564,7 +564,8 @@ public class CachingBuildEngine implements BuildEngine {
             // metadata.
             if (success != BuildRuleSuccessType.BUILT_LOCALLY) {
               for (String str :
-                   onDiskBuildInfo.getValues(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS).get()) {
+                   onDiskBuildInfo.getValuesOrThrow(
+                       BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS)) {
                 buildInfoRecorder.recordArtifact(Paths.get(str));
               }
             }

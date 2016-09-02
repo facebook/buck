@@ -27,7 +27,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 
 /**
@@ -72,6 +74,40 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
       return Optional.of(list);
     } catch (IOException ignored) {
       return Optional.absent();
+    }
+  }
+
+  @Override
+  public ImmutableList<String> getValuesOrThrow(String key) {
+    Optional<ImmutableList<String>> values = getValues(key);
+    if (values.isPresent()) {
+      return values.get();
+    } else {
+      Path path = projectFilesystem.getPathForRelativePath(metadataDirectory.resolve(key));
+      try {
+        BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
+        throw new RuntimeException(
+            String.format(
+                "Attributes of file " + path + " are :" +
+                    "Size: %d, " +
+                    "Is Directory: %b, " +
+                    "Is regular file %b, " +
+                    "Is symbolic link %b, " +
+                    "Is other %b, " +
+                    "Last access time %s, " +
+                    "Last modify time %s, " +
+                    "Creation time %s",
+                attr.size(),
+                attr.isDirectory(),
+                attr.isRegularFile(),
+                attr.isSymbolicLink(),
+                attr.isOther(),
+                attr.lastAccessTime(),
+                attr.lastModifiedTime(),
+                attr.creationTime()));
+      } catch (IOException e) {
+        throw new RuntimeException("Failed to read " + path, e);
+      }
     }
   }
 

@@ -38,6 +38,11 @@ public interface OnDiskBuildInfo {
   Optional<ImmutableList<String>> getValues(String key);
 
   /**
+   * Tries to read the values and if it fails it logs the attributes of the file it tried to read.
+   */
+  ImmutableList<String> getValuesOrThrow(String key);
+
+  /**
    * @return the map of strings associated with the specified key, if it exists.
    */
   Optional<ImmutableMap<String, String>> getMap(String key);
