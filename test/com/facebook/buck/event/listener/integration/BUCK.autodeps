@@ -1,14 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 15d3aac69fbf9fd3403e221b19dc1199b39cc6d7 #@#
+#@# GENERATED FILE: DO NOT MODIFY 705b26683b3227238b9388cae1d4433967113fd7 #@#
 {
   "integration" : {
     "deps" : [
-      "//src/com/facebook/buck/util:object_mapper",
-      "//test/com/facebook/buck/json:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
-      "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
-      "//third-party/java/jackson:jackson-databind",
-      "//third-party/java/jetty:jetty",
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]
