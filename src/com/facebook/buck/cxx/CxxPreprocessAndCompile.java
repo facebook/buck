@@ -184,7 +184,7 @@ public class CxxPreprocessAndCompile
   }
 
   @VisibleForTesting
-  CxxPreprocessAndCompileStep makeMainStep(Path scratchDir) {
+  CxxPreprocessAndCompileStep makeMainStep(Path scratchDir, boolean useArgfile) {
 
     // Check for conflicting headers.
     if (preprocessDelegate.isPresent()) {
@@ -259,7 +259,8 @@ public class CxxPreprocessAndCompile
         preprocessDelegate.isPresent() ?
             preprocessDelegate.get().getHeaderVerification() :
             HeaderVerification.of(HeaderVerification.Mode.IGNORE),
-        scratchDir);
+        scratchDir,
+        useArgfile);
   }
 
   @Override
@@ -283,7 +284,7 @@ public class CxxPreprocessAndCompile
     return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
         new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),
-        makeMainStep(scratchDir));
+        makeMainStep(scratchDir, true));
   }
 
   @VisibleForTesting
@@ -295,7 +296,7 @@ public class CxxPreprocessAndCompile
   public ImmutableList<String> getCommand(
       Optional<CxxPreprocessAndCompile> externalPreprocessRule) {
     if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO) {
-      return makeMainStep(getProjectFilesystem().getRootPath()).getCommand();
+      return makeMainStep(getProjectFilesystem().getRootPath(), false).getCommand();
     }
 
     CxxPreprocessAndCompile preprocessRule = externalPreprocessRule.or(this);

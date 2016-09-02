@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.hasItems;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -279,7 +280,7 @@ public class CxxSourceRuleFactoryTest {
       // expected compile target.
       CxxPreprocessAndCompile noPicCompile =
           cxxSourceRuleFactoryPDC.requireCompileBuildRule(name, cxxSource);
-      assertFalse(noPicCompile.makeMainStep(scratchDir).getCommand().contains("-fPIC"));
+      assertFalse(noPicCompile.makeMainStep(scratchDir, false).getCommand().contains("-fPIC"));
       assertEquals(
           cxxSourceRuleFactoryPDC.createCompileBuildTarget(name),
           noPicCompile.getBuildTarget());
@@ -288,7 +289,7 @@ public class CxxSourceRuleFactoryTest {
       // expected compile target.
       CxxPreprocessAndCompile picCompile =
           cxxSourceRuleFactoryPIC.requireCompileBuildRule(name, cxxSource);
-      assertTrue(picCompile.makeMainStep(scratchDir).getCommand().contains("-fPIC"));
+      assertTrue(picCompile.makeMainStep(scratchDir, false).getCommand().contains("-fPIC"));
       assertEquals(
           cxxSourceRuleFactoryPIC.createCompileBuildTarget(name),
           picCompile.getBuildTarget());
@@ -307,7 +308,10 @@ public class CxxSourceRuleFactoryTest {
               cxxSource,
               CxxPreprocessMode.SEPARATE);
       assertFalse(
-          noPicPreprocessAndCompile.makeMainStep(scratchDir).getCommand().contains("-fPIC"));
+          noPicPreprocessAndCompile
+              .makeMainStep(scratchDir, false)
+              .getCommand()
+              .contains("-fPIC"));
       assertEquals(
           cxxSourceRuleFactoryPDC.createCompileBuildTarget(name),
           noPicPreprocessAndCompile.getBuildTarget());
@@ -319,7 +323,8 @@ public class CxxSourceRuleFactoryTest {
               name,
               cxxSource,
               CxxPreprocessMode.SEPARATE);
-      assertTrue(picPreprocessAndCompile.makeMainStep(scratchDir).getCommand().contains("-fPIC"));
+      assertTrue(
+          picPreprocessAndCompile.makeMainStep(scratchDir, false).getCommand().contains("-fPIC"));
       assertEquals(
           cxxSourceRuleFactoryPIC.createCompileBuildTarget(name),
           picPreprocessAndCompile.getBuildTarget());
@@ -364,7 +369,7 @@ public class CxxSourceRuleFactoryTest {
       ImmutableList<String> explicitPrefixHeaderRelatedFlags = ImmutableList.of(
           "-include", filesystem.resolve(prefixHeaderName).toString());
 
-      CxxPreprocessAndCompileStep step = objcPreprocessAndCompile.makeMainStep(scratchDir);
+      CxxPreprocessAndCompileStep step = objcPreprocessAndCompile.makeMainStep(scratchDir, false);
       assertContains(step.getCommand(), explicitPrefixHeaderRelatedFlags);
     }
 
@@ -723,7 +728,7 @@ public class CxxSourceRuleFactoryTest {
       } else {
         rule = cxxSourceRuleFactory.requireCompileBuildRule(sourceName, source);
       }
-      ImmutableList<String> command = rule.makeMainStep(scratchDir).getCommand();
+      ImmutableList<String> command = rule.makeMainStep(scratchDir, false).getCommand();
       assertContains(command, expectedCompilerFlags);
       assertContains(command, expectedTypeSpecificFlags);
       assertContains(command, asflags);
@@ -775,7 +780,8 @@ public class CxxSourceRuleFactoryTest {
       CxxPreprocessAndCompile cxxCompile =
           cxxSourceRuleFactory.createCompileBuildRule(name, cxxSource);
       assertThat(
-          cxxCompile.makeMainStep(scratchDir).getCommand(), Matchers.hasItems("-x", expected));
+          cxxCompile.makeMainStep(scratchDir, false).getCommand(),
+          hasItems("-x", expected));
     }
   }
 }

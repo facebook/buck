@@ -35,6 +35,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 import java.io.ByteArrayOutputStream;
@@ -68,6 +69,7 @@ public class CxxPreprocessAndCompileStep implements Step {
    * Directory to use to store intermediate/temp files used for compilation.
    */
   private final Path scratchDir;
+  private final boolean useArgfile;
   private static final FileLastModifiedDateContentsScrubber FILE_LAST_MODIFIED_DATE_SCRUBBER =
       new FileLastModifiedDateContentsScrubber();
 
@@ -83,7 +85,8 @@ public class CxxPreprocessAndCompileStep implements Step {
       HeaderPathNormalizer headerPathNormalizer,
       DebugPathSanitizer sanitizer,
       HeaderVerification headerVerification,
-      Path scratchDir) {
+      Path scratchDir,
+      boolean useArgfile) {
     Preconditions.checkState(operation.isPreprocess() == preprocessorCommand.isPresent());
     Preconditions.checkState(operation.isCompile() == compilerCommand.isPresent());
 
@@ -99,6 +102,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     this.sanitizer = sanitizer;
     this.headerVerification = headerVerification;
     this.scratchDir = scratchDir;
+    this.useArgfile = useArgfile;
   }
 
   @Override
@@ -160,6 +164,10 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   private ImmutableList<String> getDepFileArgs(Path depFile) {
     return ImmutableList.of("-MD", "-MF", depFile.toString());
+  }
+
+  private Path getArgfile() {
+    return filesystem.resolve(scratchDir).resolve("argfile.txt");
   }
 
   @VisibleForTesting
@@ -349,11 +357,24 @@ public class CxxPreprocessAndCompileStep implements Step {
   private int executeOther(ExecutionContext context) throws Exception {
     ProcessBuilder builder = makeSubprocessBuilder(context);
 
-    builder.command(
-        ImmutableList.<String>builder()
-            .addAll(getCommandPrefix())
-            .addAll(getArguments(context.getAnsi().isAnsiTerminal()))
-            .build());
+    if (useArgfile) {
+      filesystem.writeLinesToPath(
+          Iterables.transform(
+              getArguments(context.getAnsi().isAnsiTerminal()),
+              Escaper.ARGFILE_ESCAPER),
+          getArgfile());
+      builder.command(
+          ImmutableList.<String>builder()
+              .addAll(getCommandPrefix())
+              .add("@" + getArgfile())
+              .build());
+    } else {
+      builder.command(
+          ImmutableList.<String>builder()
+              .addAll(getCommandPrefix())
+              .addAll(getArguments(context.getAnsi().isAnsiTerminal()))
+              .build());
+    }
     // If we're preprocessing, file output goes through stdout, so we can postprocess it.
     if (operation == Operation.PREPROCESS) {
       builder.redirectOutput(ProcessBuilder.Redirect.PIPE);

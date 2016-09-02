@@ -16,6 +16,9 @@
 
 package com.facebook.buck.cxx;
 
+import static com.facebook.buck.file.ProjectFilesystemMatchers.pathExists;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
@@ -40,6 +43,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -103,7 +107,8 @@ public class CxxCompileStepIntegrationTest {
             HeaderPathNormalizer.empty(pathResolver),
             sanitizer,
             CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
-            scratchDir);
+            scratchDir,
+            true);
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstance();
@@ -133,6 +138,76 @@ public class CxxCompileStepIntegrationTest {
   public void updateCompilationDir() throws Exception {
     assertCompDir(Paths.get("."), Optional.<String>absent());
     assertCompDir(Paths.get("blah"), Optional.<String>absent());
+  }
+
+  @Test
+  public void createsAnArgfile() throws Exception {
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    CxxPlatform platform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
+
+    // Build up the paths to various files the archive step will use.
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    ImmutableList<String> compiler =
+        platform.getCc().resolve(resolver).getCommandPrefix(pathResolver);
+    Path output = filesystem.resolve(Paths.get("output.o"));
+    Path depFile = filesystem.resolve(Paths.get("output.dep"));
+    Path relativeInput = Paths.get("input.c");
+    Path input = filesystem.resolve(relativeInput);
+    filesystem.writeContentsToPath("int main() {}", relativeInput);
+    Path scratchDir = filesystem.getRootPath().getFileSystem().getPath("scratchDir");
+    filesystem.mkdirs(scratchDir);
+
+    ImmutableList.Builder<String> preprocessorArguments = ImmutableList.builder();
+
+    ImmutableList.Builder<String> compilerArguments = ImmutableList.builder();
+    compilerArguments.add("-g");
+
+    // Build an archive step.
+    CxxPreprocessAndCompileStep step =
+        new CxxPreprocessAndCompileStep(
+            filesystem,
+            CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO,
+            output,
+            depFile,
+            relativeInput,
+            CxxSource.Type.C,
+            Optional.of(
+                new CxxPreprocessAndCompileStep.ToolCommand(
+                    compiler,
+                    preprocessorArguments.build(),
+                    ImmutableMap.<String, String>of(),
+                    Optional.<ImmutableList<String>>absent())),
+            Optional.of(
+                new CxxPreprocessAndCompileStep.ToolCommand(
+                    compiler,
+                    compilerArguments.build(),
+                    ImmutableMap.<String, String>of(),
+                    Optional.<ImmutableList<String>>absent())),
+            HeaderPathNormalizer.empty(pathResolver),
+            CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER,
+            CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
+            scratchDir,
+            true);
+
+    // Execute the archive step and verify it ran successfully.
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    TestConsole console = (TestConsole) executionContext.getConsole();
+    int exitCode = step.execute(executionContext).getExitCode();
+    assertEquals("compile step failed: " + console.getTextWrittenToStdErr(), 0, exitCode);
+
+    Path argfile = filesystem.resolve(scratchDir.resolve("argfile.txt"));
+    assertThat(filesystem, pathExists(argfile));
+    assertThat(
+        Files.readAllLines(argfile, StandardCharsets.UTF_8),
+        hasItem(
+            equalTo("-g")));
+
+    // Cleanup.
+    Files.delete(input);
+    Files.deleteIfExists(output);
   }
 
 }

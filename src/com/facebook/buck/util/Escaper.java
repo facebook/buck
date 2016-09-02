@@ -152,6 +152,31 @@ public final class Escaper {
       Platform.detect() == Platform.WINDOWS ? CREATE_PROCESS_ESCAPER : BASH_ESCAPER;
 
   /**
+   * Escaper for argfiles for clang and gcc.
+   *
+   * Based on the following docs in the gcc manual:
+   *
+   * {@literal @file}
+   * Read command-line options from file.  The options read are inserted
+   * in place of the original {@literal @file} option.  If file does not exist, or
+   * cannot be read, then the option will be treated literally, and not
+   * removed.
+   *
+   * Options in file are separated by whitespace.  A whitespace
+   * character may be included in an option by surrounding the entire
+   * option in either single or double quotes.  Any character (including
+   * a backslash) may be included by prefixing the character to be
+   * included with a backslash.  The file may itself contain additional
+   * {@literal @file} options; any such options will be processed recursively.
+   */
+  public static final Function<String, String> ARGFILE_ESCAPER = escaper(
+      Quoter.DOUBLE,
+      CharMatcher
+          .anyOf("\"\\")
+          .or(CharMatcher.whitespace()));
+
+
+  /**
    * Quotes a string to be passed to the shell, if necessary.  This works for the appropriate shell
    * regardless of the platform it is run on.
    * @param str string to escape

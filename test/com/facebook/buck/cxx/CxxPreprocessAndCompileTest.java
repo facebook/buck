@@ -356,7 +356,8 @@ public class CxxPreprocessAndCompileTest {
         .add(input.toString())
         .add("-o", output.toString())
         .build();
-    ImmutableList<String> actualCompileCommand = buildRule.makeMainStep(scratchDir).getCommand();
+    ImmutableList<String> actualCompileCommand =
+        buildRule.makeMainStep(scratchDir, false).getCommand();
     assertEquals(expectedCompileCommand, actualCompileCommand);
   }
 
@@ -419,7 +420,8 @@ public class CxxPreprocessAndCompileTest {
         .add(filesystem.resolve(scratchDir).resolve("dep.tmp").toString())
         .add(input.toString())
         .build();
-    ImmutableList<String> actualPreprocessCommand = buildRule.makeMainStep(scratchDir).getCommand();
+    ImmutableList<String> actualPreprocessCommand =
+        buildRule.makeMainStep(scratchDir, false).getCommand();
     assertEquals(expectedPreprocessCommand, actualPreprocessCommand);
   }
 
@@ -518,7 +520,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_SANITIZER);
 
     ImmutableList<String> command =
-        buildRule.makeMainStep(buildRule.getProjectFilesystem().getRootPath())
+        buildRule.makeMainStep(buildRule.getProjectFilesystem().getRootPath(), false)
             .makeCompileArguments(
                 input.toString(),
                 "c++",
@@ -527,7 +529,7 @@ public class CxxPreprocessAndCompileTest {
     assertThat(command, not(hasItem(CompilerWithColorSupport.COLOR_FLAG)));
 
     command =
-        buildRule.makeMainStep(scratchDir)
+        buildRule.makeMainStep(scratchDir, false)
             .makeCompileArguments(
                 input.toString(),
                 "c++",
@@ -571,13 +573,14 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_SANITIZER);
 
     ImmutableList<String> command =
-        buildRule.makeMainStep(scratchDir)
+        buildRule.makeMainStep(scratchDir, false)
             .makePreprocessArguments(/* allowColorsInDiagnostics */ false);
     assertThat(command, not(hasItem(PreprocessorWithColorSupport.COLOR_FLAG)));
 
     command =
-        buildRule.makeMainStep(scratchDir)
+        buildRule.makeMainStep(scratchDir, false)
             .makePreprocessArguments(/* allowColorsInDiagnostics */ true);
     assertThat(command, hasItem(PreprocessorWithColorSupport.COLOR_FLAG));
   }
+
 }

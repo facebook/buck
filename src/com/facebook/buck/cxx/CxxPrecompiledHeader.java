@@ -181,6 +181,7 @@ public class CxxPrecompiledHeader
         preprocessorDelegate.getHeaderPathNormalizer(),
         sanitizer,
         preprocessorDelegate.getHeaderVerification(),
-        scratchDir);
+        scratchDir,
+        true);
   }
 }

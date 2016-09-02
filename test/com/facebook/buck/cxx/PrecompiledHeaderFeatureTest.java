@@ -244,7 +244,7 @@ public class PrecompiledHeaderFeatureTest {
    */
   private static boolean commandLineContainsPchFlag(CxxPreprocessAndCompile rule) {
     return Iterables.tryFind(
-        rule.makeMainStep(Paths.get("/tmp/unused_scratch_dir")).getCommand(),
+        rule.makeMainStep(Paths.get("/tmp/unused_scratch_dir"), false).getCommand(),
         Predicates.equalTo("-include-pch")).isPresent();
   }
 
