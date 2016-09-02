@@ -514,6 +514,7 @@ public class KnownBuildRuleTypes {
 
     SwiftLibraryDescription swiftLibraryDescription =
         new SwiftLibraryDescription(
+            cxxBuckConfig,
             cxxPlatforms,
             platformFlavorsToAppleCxxPlatforms,
             defaultCxxPlatform);
