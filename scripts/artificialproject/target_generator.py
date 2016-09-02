@@ -10,6 +10,7 @@ from artificialproject.field_generators import (
     SourcePathSetGenerator,
     SourcesWithFlagsGenerator,
     StringGenerator,
+    VisibilityGenerator,
 )
 
 from artificialproject.random import weighted_choice
@@ -19,7 +20,7 @@ Context = collections.namedtuple('Context', [
     'input_target_data',
     'gen_targets_by_type',
     'output_repository',
-    'base_path',
+    'file_path_generator',
 ])
 
 
@@ -42,6 +43,9 @@ class TargetDataGenerator:
         def string(context):
             return StringGenerator()
 
+        def visibility(context):
+            return VisibilityGenerator()
+
         build_target_set = BuildTargetSetGenerator
         build_target = singleton(build_target_set)
         paths = PathSetGenerator
@@ -54,6 +58,7 @@ class TargetDataGenerator:
             '*.deps': build_target_set,
             '*.out': nullable(string),
             '*.srcs': source_path_set,
+            '*.visibility': visibility,
             'android_binary.keystore': build_target,
             'android_binary.manifest': source_path,
             'android_build_config.package': string,
@@ -111,7 +116,7 @@ class TargetDataGenerator:
             generator.add_sample(base_path, value)
 
     def generate(self):
-        base_path = self._context.base_path
+        base_path = self._context.file_path_generator.generate_package_path()
         result = {
             'name': self._target_name_generator(),
             'buck.type': self._type,

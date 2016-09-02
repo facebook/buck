@@ -76,6 +76,14 @@ class StringGenerator:
         return output
 
 
+class VisibilityGenerator:
+    def add_sample(self, base_path, sample):
+        pass
+
+    def generate(self, base_path):
+        return GeneratedField(['PUBLIC'], [])
+
+
 class BuildTargetSetGenerator:
     def __init__(self, context):
         self._context = context

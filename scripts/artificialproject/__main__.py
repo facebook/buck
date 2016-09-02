@@ -55,7 +55,7 @@ def main():
             project_data,
             gen_targets_by_type,
             args.output_repo,
-            file_path_generator.generate_package_path())
+            file_path_generator)
     target_generator = TargetGenerator(context)
     for target_name, target_data in project_data.items():
         target_generator.add_sample(target_data)
@@ -128,6 +128,7 @@ def main():
 
     for base_path, targets in targets_by_base_path.items():
         buck_file_path = os.path.join(args.output_repo, base_path, 'BUCK')
+        os.makedirs(os.path.dirname(buck_file_path), exist_ok=True)
         with open(buck_file_path, 'w') as buck_file:
             for target in targets:
                 buck_file.write('{}(\n'.format(target['buck.type']))

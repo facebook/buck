@@ -15,35 +15,54 @@ class FilePathGenerator:
         self._component_generator = StringGenerator()
         self._package_depths = collections.Counter()
         self._sizes_by_depth = collections.defaultdict(collections.Counter)
+        self._build_file_sizes = collections.Counter()
         self._root = {}
         self._package_paths = {}
         self._available_directories = {}
+        self._last_package_path = None
+        self._last_package_remaining_targets = None
 
     def analyze_project_data(self, project_data):
         dir_entries = collections.defaultdict(set)
+        build_file_entries = collections.defaultdict(set)
         for target_data in project_data.values():
             base_path = target_data['buck.base_path']
+            build_file_entries[base_path].add(target_data['name'])
             components = []
             while base_path:
                 base_path, component = os.path.split(base_path)
                 self._component_generator.add_string_sample(component)
                 components.append(component)
-            self._package_depths.update([len(components)])
+            # TODO(k21): Targets in the root of the repo are ignored
+            # because _generate_path does not handle depth == 0.
+            if components:
+                self._package_depths.update([len(components)])
             components = components[::-1]
             for i in range(len(components)):
                 prefix = components[:i]
                 name = components[i]
                 dir_entries[tuple(prefix)].add(name)
+        for base_path, names in build_file_entries.items():
+            self._build_file_sizes.update([len(names)])
         for path, entries in dir_entries.items():
             self._sizes_by_depth[len(path)].update([len(entries)])
 
     def generate_package_path(self):
+        if self._last_package_path is not None:
+            path = self._last_package_path
+            self._last_package_remaining_targets -= 1
+            if self._last_package_remaining_targets <= 0:
+                self._last_package_path = None
+            return path
         depth = weighted_choice(self._package_depths)
         path, parent_dir = self._generate_path(
                 '//', self._root, depth, self._sizes_by_depth,
                 self._component_generator)
         directory = {self.BUILD_FILE_NAME: None}
         parent_dir[os.path.basename(path)] = directory
+        self._last_package_path = path
+        self._last_package_remaining_targets = weighted_choice(
+                self._build_file_sizes) - 1
         return path
 
     def _generate_path(
