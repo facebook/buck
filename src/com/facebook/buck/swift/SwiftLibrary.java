@@ -106,12 +106,10 @@ class SwiftLibrary
 
   @Override
   public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
-    // TODO(bhamiltoncx, ryu2): Use pseudo targets to represent the Swift
-    // runtime library's linker args here so NativeLinkables can
-    // deduplicate the linker flags on the build target (which would be the same for
-    // all libraries).
     return FluentIterable.from(getDeclaredDeps())
-        .filter(NativeLinkable.class);
+        .filter(NativeLinkable.class)
+        .append(new SwiftRuntimeNativeLinkable(
+            appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor())));
   }
 
   @Override
