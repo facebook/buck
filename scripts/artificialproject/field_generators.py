@@ -54,6 +54,9 @@ class StringGenerator:
         self._other_chars = collections.Counter()
 
     def add_sample(self, base_path, sample):
+        self.add_string_sample(sample)
+
+    def add_string_sample(self, sample):
         self._lengths.update([len(sample)])
         if sample:
             self._first_chars.update(sample[0])
@@ -61,13 +64,16 @@ class StringGenerator:
             self._other_chars.update(ch)
 
     def generate(self, base_path):
+        return GeneratedField(self.generate_string(), [])
+
+    def generate_string(self):
         length = weighted_choice(self._lengths)
         output = ''
         if length > 0:
             output += weighted_choice(self._first_chars)
         while len(output) < length:
             output += weighted_choice(self._other_chars)
-        return GeneratedField(output, [])
+        return output
 
 
 class BuildTargetSetGenerator:
@@ -134,7 +140,10 @@ class PathSetGenerator:
         components = [self._component_generator.generate(base_path).value
                       for i in range(component_count)]
         path = os.path.join(*components)
-        full_path = os.path.join(self._context.output_repository, path)
+        full_path = os.path.join(
+                self._context.output_repository,
+                base_path,
+                path)
         if os.path.exists(full_path):
             raise GenerationFailedException()
         try:

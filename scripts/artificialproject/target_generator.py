@@ -19,6 +19,7 @@ Context = collections.namedtuple('Context', [
     'input_target_data',
     'gen_targets_by_type',
     'output_repository',
+    'base_path',
 ])
 
 
@@ -110,7 +111,7 @@ class TargetDataGenerator:
             generator.add_sample(base_path, value)
 
     def generate(self):
-        base_path = ''
+        base_path = self._context.base_path
         result = {
             'name': self._target_name_generator(),
             'buck.type': self._type,

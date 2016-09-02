@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 from artificialproject.field_generators import GenerationFailedException
-
+from artificialproject.file_path_generator import FilePathGenerator
 from artificialproject.target_generator import (
     Context,
     TargetGenerator,
@@ -49,7 +49,13 @@ def main():
     ], cwd=args.input_repo)
     project_data = json.loads(project_data_json.decode('utf8'))
     gen_targets_by_type = collections.defaultdict(list)
-    context = Context(project_data, gen_targets_by_type, args.output_repo)
+    file_path_generator = FilePathGenerator()
+    file_path_generator.analyze_project_data(project_data)
+    context = Context(
+            project_data,
+            gen_targets_by_type,
+            args.output_repo,
+            file_path_generator.generate_package_path())
     target_generator = TargetGenerator(context)
     for target_name, target_data in project_data.items():
         target_generator.add_sample(target_data)
@@ -111,9 +117,6 @@ def main():
     print(file=sys.stderr)
     print('Rejection rate: {:.2%}'.format(1.0 * rejected / count),
           file=sys.stderr)
-
-    for target in targets_by_name.values():
-        target['buck.base_path'] = ''
 
     print('Top target: //{}:{}'.format(
         generated_top_target['buck.base_path'], generated_top_target['name']),
