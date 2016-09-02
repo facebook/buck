@@ -1536,29 +1536,6 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
-{call buckconfig.entry}
-  {param section: 'log' /}
-  {param name: 'remote_log_url' /}
-  {param example_value: 'http://all.your.logs:500/are/belong/to/us' /}
-  {param description}
-    Will stream the build logs to the indicated address.  Currently <code>http</code> and{sp}
-    <code>https</code> scheme URLs are supported.  The events are sent in batches using PUT
-    requests.  Each batch contains a JSON array composing of the long entries.  <em>The format of
-    the individual log entries is not yet finalized and may change without warning between Buck
-    versions.</em>
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'log' /}
-  {param name: 'remote_log_sample_rate' /}
-  {param example_value: '0.1' /}
-  {param description}
-    The sample rate of Buck invocations to steam logs to {call buckconfig.log_remote_log_url /}.
-    Valid values are defined by the set of numbers, <code>n</code>, where <code>0 <= n <= 1</code>.
-  {/param}
-{/call}
-
 {call buckconfig.section}
   {param name: 'lua' /}
   {param description}

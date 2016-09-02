@@ -43,7 +43,6 @@ import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PatternAndMessage;
-import com.facebook.buck.util.SampleRate;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.Platform;
@@ -98,13 +97,6 @@ public class BuckConfig {
           "client", ImmutableSet.of("id"),
           "project", ImmutableSet.of("ide_prompt")
   );
-
-  private static final Function<String, URI> TO_URI = new Function<String, URI>() {
-    @Override
-    public URI apply(String input) {
-      return URI.create(input);
-    }
-  };
 
   private final CellPathResolver cellPathResolver;
 
@@ -568,18 +560,6 @@ public class BuckConfig {
 
   public Platform getPlatform() {
     return platform;
-  }
-
-  public Optional<URI> getRemoteLogUrl() {
-    return getValue("log", "remote_log_url").transform(TO_URI);
-  }
-
-  public Optional<SampleRate> getRemoteLogSampleRate() {
-    Optional<Float> sampleRate = config.getFloat("log", "remote_log_sample_rate");
-    if (sampleRate.isPresent()) {
-      return Optional.of(SampleRate.of(sampleRate.get()));
-    }
-    return Optional.absent();
   }
 
   public boolean isActionGraphCheckingEnabled() {

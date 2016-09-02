@@ -45,7 +45,6 @@ import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.event.listener.LoadBalancerEventsListener;
 import com.facebook.buck.event.listener.LoggingBuildListener;
 import com.facebook.buck.event.listener.ProgressEstimator;
-import com.facebook.buck.event.listener.RemoteLogUploaderEventListener;
 import com.facebook.buck.event.listener.RuleKeyLoggerListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleConfig;
@@ -93,7 +92,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.Libc;
-import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.PkillProcessManager;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
@@ -115,7 +113,6 @@ import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.network.RemoteLoggerFactory;
 import com.facebook.buck.util.shutdown.NonReentrantSystemExit;
 import com.facebook.buck.util.versioncontrol.DefaultVersionControlCmdLineInterfaceFactory;
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
@@ -148,7 +145,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.AtomicMoveNotSupportedException;
@@ -1013,7 +1009,6 @@ public final class Main {
               rootCell.getBuckConfig(),
               webServer,
               clock,
-              buildEnvironmentDescription,
               console,
               consoleListener,
               rootCell.getKnownBuildRuleTypes(),
@@ -1510,7 +1505,6 @@ public final class Main {
       BuckConfig config,
       Optional<WebServer> webServer,
       Clock clock,
-      BuildEnvironmentDescription buildEnvironmentDescription,
       Console console,
       AbstractConsoleEventBusListener consoleEventBusListener,
       KnownBuildRuleTypes knownBuildRuleTypes,
@@ -1550,20 +1544,6 @@ public final class Main {
           MostExecutors.newSingleThreadExecutor(
               new CommandThreadFactory(getClass().getName()))));
     }
-
-    Optional<URI> remoteLogUrl = config.getRemoteLogUrl();
-    boolean shouldSample = config.getRemoteLogSampleRate()
-        .transform(BuildIdSampler.CREATE_FUNCTION)
-        .transform(MoreFunctions.<BuildId, Boolean>applyFunction(invocationInfo.getBuildId()))
-        .or(true);
-    if (remoteLogUrl.isPresent() && shouldSample) {
-      eventListenersBuilder.add(
-          new RemoteLogUploaderEventListener(
-              objectMapper,
-              RemoteLoggerFactory.create(remoteLogUrl.get(), objectMapper),
-              buildEnvironmentDescription));
-    }
-
 
     JavaBuckConfig javaBuckConfig = new JavaBuckConfig(config);
     if (!javaBuckConfig.getSkipCheckingMissingDeps()) {
