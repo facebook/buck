@@ -110,16 +110,17 @@ class TargetDataGenerator:
             generator.add_sample(base_path, value)
 
     def generate(self):
+        base_path = ''
         result = {
             'name': self._target_name_generator(),
             'buck.type': self._type,
-            'buck.base_path': '',
+            'buck.base_path': base_path,
         }
         all_deps = set()
         for field, generator in self._generators.items():
             if generator is None:
                 continue
-            generated_field = generator.generate()
+            generated_field = generator.generate(base_path)
             result[field] = generated_field.value
             all_deps.update(generated_field.deps)
         result['.all_deps'] = all_deps
