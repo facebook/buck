@@ -49,7 +49,11 @@
         %if(generatedFolder.isAndroidResources)% type="java-resource" %endif%/>
     </content>
 }%
+%if(jdk)%
+    <orderEntry type="jdk" jdkName="%jdk%" jdkType="JavaSDK" />
+%else%
     <orderEntry type="inheritedJdk" />
+%endif%
     <orderEntry type="sourceFolder" forTests="false" />
 %dependencies:{dep |
   %if(dep.module)%

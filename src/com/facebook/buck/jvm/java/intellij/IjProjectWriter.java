@@ -109,6 +109,9 @@ public class IjProjectWriter {
     moduleContents.add(
         "androidFacet",
         projectDataPreparer.getAndroidProperties(module));
+    moduleContents.add(
+        "jdk",
+        module.getJdkVersion().orNull());
 
     writeToFile(moduleContents, path);
     return path;
