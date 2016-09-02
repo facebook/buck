@@ -50,7 +50,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGContext;
 
@@ -98,10 +97,7 @@ public class DaemonIntegrationTest {
     // this is one of the entries so it doesn't give up.
     tmp.newFolder(".git");
     Watchman watchman = Watchman.build(
-        ImmutableSet.of(tmp.getRoot()),
-        getWatchmanEnv(),
-        new TestConsole(),
-        new FakeClock(0));
+        tmp.getRoot(), getWatchmanEnv(), new TestConsole(), new FakeClock(0));
 
     // We assume watchman has been installed and configured properly on the system, and that setting
     // up the watch is successful.

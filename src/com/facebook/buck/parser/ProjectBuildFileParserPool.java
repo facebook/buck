@@ -115,7 +115,7 @@ class ProjectBuildFileParserPool implements AutoCloseable {
               boolean hadErrorDuringParsing = false;
               try {
                 return Futures.immediateFuture(
-                    ImmutableSet.copyOf(parser.getAllRulesAndMetaRules(cell.getRoot(), buildFile)));
+                    ImmutableSet.copyOf(parser.getAllRulesAndMetaRules(buildFile)));
               } catch (BuildFileParseException e) {
                 hadErrorDuringParsing = true;
                 throw e;

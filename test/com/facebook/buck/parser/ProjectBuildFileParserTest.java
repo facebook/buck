@@ -155,7 +155,7 @@ public class ProjectBuildFileParserTest {
              buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessAndPrintsToStderr(
                  buckEventBus)) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getAllRulesAndMetaRules(cell.getRoot(), Paths.get("foo"));
+      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"));
     }
     assertThat(
         consoleEvents,
@@ -185,7 +185,7 @@ public class ProjectBuildFileParserTest {
              buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessWithWarning(
                  buckEventBus, "This is a warning", "parser")) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getAllRulesAndMetaRules(cell.getRoot(), Paths.get("foo"));
+      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"));
     }
     assertThat(
         consoleEvents,
@@ -216,7 +216,7 @@ public class ProjectBuildFileParserTest {
              buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessWithWarning(
                  buckEventBus, "This is a watchman warning", "watchman")) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getAllRulesAndMetaRules(cell.getRoot(), Paths.get("foo"));
+      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"));
     }
     assertThat(
         consoleEvents,
@@ -257,7 +257,7 @@ public class ProjectBuildFileParserTest {
              buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessWithWarning(
                  buckEventBus, "This is a dupe watchman warning", "watchman")) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getAllRulesAndMetaRules(cell.getRoot(), Paths.get("foo"));
+      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"));
     }
     assertThat(
         consoleEvents,
@@ -286,7 +286,7 @@ public class ProjectBuildFileParserTest {
              buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessWithError(
                  buckEventBus, "This is an error", "parser")) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getAllRulesAndMetaRules(cell.getRoot(), Paths.get("foo"));
+      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"));
     }
     assertThat(
         consoleEvents,

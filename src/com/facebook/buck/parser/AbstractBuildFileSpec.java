@@ -17,7 +17,6 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanClient;
 import com.facebook.buck.log.Logger;
@@ -103,23 +102,20 @@ abstract class AbstractBuildFileSpec {
     boolean tryWatchman =
         buildFileSearchMethod == ParserConfig.BuildFileSearchMethod.WATCHMAN &&
         watchman.getWatchmanClient().isPresent() &&
-        !watchman.getProjectWatches().isEmpty();
+        watchman.getWatchRoot().isPresent();
     boolean walkComplete = false;
     if (tryWatchman) {
-      ProjectWatch projectWatch = Optional
-        .fromNullable(watchman.getProjectWatches().get(filesystem.getRootPath()))
-        .or(ProjectWatch.of(filesystem.getRootPath().toString(), Optional.<String>absent()));
       LOG.debug(
           "Searching for %s files (watch root %s, project prefix %s, base path %s) with Watchman",
           buildFileName,
-          projectWatch.getWatchRoot(),
-          projectWatch.getProjectPrefix(),
+          watchman.getWatchRoot().get(),
+          watchman.getProjectPrefix(),
           getBasePath());
       walkComplete = forEachBuildFileWatchman(
           filesystem,
           watchman.getWatchmanClient().get(),
-          projectWatch.getWatchRoot(),
-          projectWatch.getProjectPrefix(),
+          watchman.getWatchRoot().get(),
+          watchman.getProjectPrefix(),
           getBasePath(),
           buildFileName,
           function);
@@ -128,7 +124,7 @@ abstract class AbstractBuildFileSpec {
           "Not using Watchman (search method %s, client present %s, root present %s)",
           buildFileSearchMethod,
           watchman.getWatchmanClient().isPresent(),
-          !watchman.getProjectWatches().isEmpty());
+          watchman.getWatchRoot().isPresent());
     }
 
     if (!walkComplete) {
@@ -190,10 +186,7 @@ abstract class AbstractBuildFileSpec {
             WATCHMAN_QUERY_TIMEOUT_NANOS,
             query.toArray());
     if (!queryResponse.isPresent()) {
-      LOG.warn(
-          "Timed out after %d ns for Watchman query %s",
-          WATCHMAN_QUERY_TIMEOUT_NANOS,
-          query);
+      LOG.warn("Timed out after %d ns for Watchman query %s", WATCHMAN_QUERY_TIMEOUT_NANOS, query);
       return false;
     }
 

@@ -21,7 +21,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.PathOrGlobMatcher;
-import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.Watchman.Capability;
 import com.facebook.buck.io.WatchmanClient;
@@ -71,7 +70,7 @@ public class WatchmanWatcher {
   private static final long DEFAULT_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(10);
 
   private final EventBus fileChangeEventBus;
-  private final List<List<Object>> queries;
+  private final List<Object> query;
   private final WatchmanClient watchmanClient;
 
   /**
@@ -87,7 +86,7 @@ public class WatchmanWatcher {
   private final long timeoutMillis;
 
   public WatchmanWatcher(
-      ImmutableMap<Path, ProjectWatch> projectWatches,
+      String watchRoot,
       EventBus fileChangeEventBus,
       ImmutableSet<PathOrGlobMatcher> ignorePaths,
       Watchman watchman,
@@ -98,7 +97,8 @@ public class WatchmanWatcher {
         DEFAULT_OVERFLOW_THRESHOLD,
         DEFAULT_TIMEOUT_MILLIS,
         createQuery(
-            projectWatches,
+            watchRoot,
+            watchman.getProjectPrefix(),
             queryUUID.toString(),
             ignorePaths,
             watchman.getCapabilities()));
@@ -109,51 +109,50 @@ public class WatchmanWatcher {
                   WatchmanClient watchmanClient,
                   int overflow,
                   long timeoutMillis,
-                  List<List<Object>> queries) {
+                  List<Object> query) {
     this.fileChangeEventBus = fileChangeEventBus;
     this.watchmanClient = watchmanClient;
     this.overflow = overflow;
     this.timeoutMillis = timeoutMillis;
-    this.queries = queries;
+    this.query = query;
   }
 
   @VisibleForTesting
-  static List<List<Object>> createQuery(
-      ImmutableMap<Path, ProjectWatch> projectWatches,
+  static List<Object> createQuery(
+      String watchRoot,
+      Optional<String> watchPrefix,
       String uuid,
       ImmutableSet<PathOrGlobMatcher> ignorePaths,
       Set<Capability> watchmanCapabilities) {
-    List<List<Object>> queries = new ArrayList<>();
-    for (ProjectWatch projectWatch : projectWatches.values()) {
-      String watchRoot = projectWatch.getWatchRoot();
+    List<Object> queryParams = new ArrayList<>();
+    queryParams.add("query");
+    queryParams.add(watchRoot);
+    // Note that we use LinkedHashMap so insertion order is preserved. That
+    // helps us write tests that don't depend on the undefined order of HashMap.
+    Map<String, Object> sinceParams = new LinkedHashMap<>();
+    sinceParams.put(
+        "since",
+        new StringBuilder("n:buckd").append(uuid).toString());
 
-      List<Object> queryParams = new ArrayList<>();
-      queryParams.add("query");
-      queryParams.add(watchRoot);
-      // Note that we use LinkedHashMap so insertion order is preserved. That
-      // helps us write tests that don't depend on the undefined order of HashMap.
-      Map<String, Object> sinceParams = new LinkedHashMap<>();
-      sinceParams.put(
-          "since",
-          new StringBuilder("n:buckd").append(uuid).toString());
+    // Exclude any expressions added to this list.
+    List<Object> excludeAnyOf = Lists.<Object>newArrayList("anyof");
 
-      // Exclude any expressions added to this list.
-      List<Object> excludeAnyOf = Lists.<Object>newArrayList("anyof");
+    // Exclude all directories.
+    excludeAnyOf.add(Lists.newArrayList("type", "d"));
 
-      // Exclude all directories.
-      excludeAnyOf.add(Lists.newArrayList("type", "d"));
+    Path projectRoot = Paths.get(watchRoot);
+    if (watchPrefix.isPresent()) {
+      projectRoot = projectRoot.resolve(watchPrefix.get());
+    }
 
-      Path projectRoot = Paths.get(watchRoot);
-      projectRoot = projectRoot.resolve(projectWatch.getProjectPrefix().or(""));
-
-      // Exclude all files under directories in project.ignorePaths.
-      //
-      // Note that it's OK to exclude .git in a query (event though it's
-      // not currently OK to exclude .git in .watchmanconfig). This id
-      // because watchman's .git cookie magic is done before the query
-      // is applied.
-      for (PathOrGlobMatcher ignorePathOrGlob : ignorePaths) {
-        switch (ignorePathOrGlob.getType()) {
+    // Exclude all files under directories in project.ignorePaths.
+    //
+    // Note that it's OK to exclude .git in a query (event though it's
+    // not currently OK to exclude .git in .watchmanconfig). This id
+    // because watchman's .git cookie magic is done before the query
+    // is applied.
+    for (PathOrGlobMatcher ignorePathOrGlob : ignorePaths) {
+      switch (ignorePathOrGlob.getType()) {
         case PATH:
           Path ignorePath = ignorePathOrGlob.getPath();
           if (ignorePath.isAbsolute()) {
@@ -184,23 +183,21 @@ public class WatchmanWatcher {
         default:
           throw new RuntimeException(
               String.format("Unsupported type: '%s'", ignorePathOrGlob.getType()));
-        }
       }
-
-      sinceParams.put(
-          "expression",
-          Lists.newArrayList(
-              "not",
-              excludeAnyOf));
-      sinceParams.put("empty_on_fresh_instance", true);
-      sinceParams.put("fields", Lists.newArrayList("name", "exists", "new"));
-      if (projectWatch.getProjectPrefix().isPresent()) {
-        sinceParams.put("relative_root", projectWatch.getProjectPrefix().get());
-      }
-      queryParams.add(sinceParams);
-      queries.add(queryParams);
     }
-    return queries;
+
+    sinceParams.put(
+        "expression",
+        Lists.newArrayList(
+            "not",
+            excludeAnyOf));
+    sinceParams.put("empty_on_fresh_instance", true);
+    sinceParams.put("fields", Lists.newArrayList("name", "exists", "new"));
+    if (watchPrefix.isPresent()) {
+      sinceParams.put("relative_root", watchPrefix.get());
+    }
+    queryParams.add(sinceParams);
+    return queryParams;
   }
 
   /**
@@ -219,38 +216,37 @@ public class WatchmanWatcher {
       FreshInstanceAction freshInstanceAction
   ) throws IOException, InterruptedException {
     try {
-      for (List<Object> query : queries) {
-        Optional<? extends Map<String, ? extends Object>> queryResponse =
-            watchmanClient.queryWithTimeout(
-                TimeUnit.MILLISECONDS.toNanos(timeoutMillis),
-                query.toArray());
-        if (!queryResponse.isPresent()) {
-          LOG.warn(
-              "Could get response from Watchman for query %s within %d ms",
-              query,
-              timeoutMillis);
-          postWatchEvent(
-              createOverflowEvent("Query to Watchman timed out after " + timeoutMillis + "ms"));
-          return;
-        }
+      Optional<? extends Map<String, ? extends Object>> queryResponse =
+          watchmanClient.queryWithTimeout(
+              TimeUnit.MILLISECONDS.toNanos(timeoutMillis),
+              query.toArray());
+      if (!queryResponse.isPresent()) {
+        LOG.warn(
+            "Could get response from Watchman for query %s within %d ms",
+            query,
+            timeoutMillis);
+        postWatchEvent(
+            createOverflowEvent("Query to Watchman timed out after " + timeoutMillis + "ms"));
+        return;
+      }
 
-        Map<String, ? extends Object> response = queryResponse.get();
-        String error = (String) response.get("error");
-        if (error != null) {
-          watchmanDiagnosticCache.addDiagnostic(
-              WatchmanDiagnostic.of(WatchmanDiagnostic.Level.ERROR, error));
-          WatchmanWatcherException e = new WatchmanWatcherException(error);
-          LOG.error(
-              e,
-              "Error in Watchman output. Posting an overflow event to flush the caches");
-          postWatchEvent(createOverflowEvent("Watchman Error occurred - " + e.getMessage()));
-          throw e;
-        }
+      Map<String, ? extends Object> response = queryResponse.get();
+      String error = (String) response.get("error");
+      if (error != null) {
+        watchmanDiagnosticCache.addDiagnostic(
+            WatchmanDiagnostic.of(WatchmanDiagnostic.Level.ERROR, error));
+        WatchmanWatcherException e = new WatchmanWatcherException(error);
+        LOG.error(
+            e,
+            "Error in Watchman output. Posting an overflow event to flush the caches");
+        postWatchEvent(createOverflowEvent("Watchman Error occurred - " + e.getMessage()));
+        throw e;
+      }
 
-        String warning = (String) response.get("warning");
-        if (warning != null) {
-          switch (watchmanDiagnosticCache.addDiagnostic(
-                      WatchmanDiagnostic.of(WatchmanDiagnostic.Level.WARNING, warning))) {
+      String warning = (String) response.get("warning");
+      if (warning != null) {
+        switch (watchmanDiagnosticCache.addDiagnostic(
+                    WatchmanDiagnostic.of(WatchmanDiagnostic.Level.WARNING, warning))) {
           case NEW_DIAGNOSTIC:
             buckEventBus.post(
                 ConsoleEvent.warning("Watchman has produced a warning: %s", warning));
@@ -259,55 +255,54 @@ public class WatchmanWatcher {
           case DUPLICATE_DIAGNOSTIC:
             LOG.verbose("Watchman has produced a duplicate warning: %s", warning);
             break;
-          }
         }
+      }
 
-        Boolean isFreshInstance = (Boolean) response.get("is_fresh_instance");
-        if (isFreshInstance != null && isFreshInstance) {
-          LOG.debug(
-              "Watchman indicated a fresh instance (fresh instance action %s)",
-              freshInstanceAction);
-          switch (freshInstanceAction) {
+      Boolean isFreshInstance = (Boolean) response.get("is_fresh_instance");
+      if (isFreshInstance != null && isFreshInstance) {
+        LOG.debug(
+            "Watchman indicated a fresh instance (fresh instance action %s)",
+            freshInstanceAction);
+        switch (freshInstanceAction) {
           case NONE:
             break;
           case POST_OVERFLOW_EVENT:
             postWatchEvent(createOverflowEvent("New Buck instance"));
             break;
-          }
+        }
+        return;
+      }
+
+      List<Map<String, Object>> files = (List<Map<String, Object>>) response.get("files");
+      if (files != null) {
+        if (files.size() > overflow) {
+          String message = "Too many changed files (" + files.size() + " > " + overflow + ")";
+          LOG.warn(message + ", posting overflow event");
+          postWatchEvent(createOverflowEvent(message));
           return;
         }
 
-        List<Map<String, Object>> files = (List<Map<String, Object>>) response.get("files");
-        if (files != null) {
-          if (files.size() > overflow) {
-            String message = "Too many changed files (" + files.size() + " > " + overflow + ")";
-            LOG.warn(message + ", posting overflow event");
-            postWatchEvent(createOverflowEvent(message));
+        for (Map<String, Object> file : files) {
+          String fileName = (String) file.get("name");
+          if (fileName == null) {
+            LOG.warn("Filename missing from Watchman file response %s", file);
+            postWatchEvent(createOverflowEvent("Filename missing from Watchman response"));
             return;
           }
-
-          for (Map<String, Object> file : files) {
-            String fileName = (String) file.get("name");
-            if (fileName == null) {
-              LOG.warn("Filename missing from Watchman file response %s", file);
-              postWatchEvent(createOverflowEvent("Filename missing from Watchman response"));
-              return;
-            }
-            PathEventBuilder builder = new PathEventBuilder();
-            builder.setPath(Paths.get(fileName));
-            Boolean fileNew = (Boolean) file.get("new");
-            if (fileNew != null && fileNew) {
-              builder.setCreationEvent();
-            }
-            Boolean fileExists = (Boolean) file.get("exists");
-            if (fileExists != null && !fileExists) {
-              builder.setDeletionEvent();
-            }
-            postWatchEvent(builder.build());
+          PathEventBuilder builder = new PathEventBuilder();
+          builder.setPath(Paths.get(fileName));
+          Boolean fileNew = (Boolean) file.get("new");
+          if (fileNew != null && fileNew) {
+            builder.setCreationEvent();
           }
-
-          LOG.debug("Posted %d Watchman events.", files.size());
+          Boolean fileExists = (Boolean) file.get("exists");
+          if (fileExists != null && !fileExists) {
+            builder.setDeletionEvent();
+          }
+          postWatchEvent(builder.build());
         }
+
+        LOG.debug("Posted %d Watchman events.", files.size());
       }
     } catch (InterruptedException e) {
       String message = "Watchman communication interrupted";

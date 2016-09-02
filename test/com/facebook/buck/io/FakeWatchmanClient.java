@@ -17,7 +17,6 @@
 package com.facebook.buck.io;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 
@@ -30,10 +29,8 @@ import java.util.Map;
  */
 public class FakeWatchmanClient implements WatchmanClient {
   private final long queryElapsedTimeNanos;
-  private final List<? extends Map<
-    ? extends List<? extends Object>,
-    ? extends Map<String, ? extends Object>
-  >> queryResults;
+  private final Map<? extends List<? extends Object>, ? extends Map<String, ? extends Object>>
+    queryResults;
   private final Exception exceptionToThrow;
 
   public FakeWatchmanClient(
@@ -46,25 +43,6 @@ public class FakeWatchmanClient implements WatchmanClient {
       long queryElapsedTimeNanos,
       Map<? extends List<? extends Object>, ? extends Map<String, ? extends Object>> queryResults,
       Exception exceptionToThrow) {
-    this(queryElapsedTimeNanos, ImmutableList.of(queryResults), exceptionToThrow);
-  }
-
-  public FakeWatchmanClient(
-      long queryElapsedTimeNanos,
-      List<? extends Map<
-        ? extends List<? extends Object>,
-        ? extends Map<String, ? extends Object>
-      >> queryResults) {
-    this(queryElapsedTimeNanos, queryResults, null);
-  }
-
-  public FakeWatchmanClient(
-      long queryElapsedTimeNanos,
-      List<? extends Map<
-        ? extends List<? extends Object>,
-        ? extends Map<String, ? extends Object>
-      >> queryResults,
-      Exception exceptionToThrow) {
     this.queryElapsedTimeNanos = queryElapsedTimeNanos;
     this.queryResults = queryResults;
     this.exceptionToThrow = exceptionToThrow;
@@ -74,16 +52,7 @@ public class FakeWatchmanClient implements WatchmanClient {
   public Optional<? extends Map<String, ? extends Object>> queryWithTimeout(
       long timeoutNanos,
       Object... query) throws InterruptedException, IOException {
-    Map<String, ? extends Object> result = null;
-    for (Map<
-           ? extends List<? extends Object>,
-           ? extends Map<String, ? extends Object>
-         > results : queryResults) {
-      result = results.get(Arrays.asList(query));
-      if (result != null) {
-        break;
-      }
-    }
+    Map<String, ? extends Object> result = queryResults.get(Arrays.asList(query));
     if (result == null) {
       throw new RuntimeException(String.format("Could not find results for query %s", query));
     }
