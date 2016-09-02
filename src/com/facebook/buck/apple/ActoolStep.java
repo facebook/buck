@@ -75,14 +75,21 @@ class ActoolStep extends ShellStep {
         "--errors",
         "--platform", applePlatformName,
         "--minimum-deployment-target", target,
-        //TODO(k21): Let apps decide which device they want to target (iPhone / iPad / both)
-        "--target-device", "iphone",
-        "--target-device", "ipad",
         "--compress-pngs",
         "--compile",
         output.toString(),
         "--output-partial-info-plist",
         outputPlist.toString());
+
+    if (applePlatformName.equals(ApplePlatform.APPLETVOS.getName()) ||
+        applePlatformName.equals(ApplePlatform.APPLETVSIMULATOR.getName())) {
+      commandBuilder.add("--target-device", "tv");
+    } else {
+      //TODO(k21): Let apps decide which device they want to target (iPhone / iPad / both)
+      commandBuilder.add(
+          "--target-device", "iphone",
+          "--target-device", "ipad");
+    }
 
     if (appIcon.isPresent()) {
       commandBuilder.add("--app-icon", appIcon.get());
