@@ -20,13 +20,15 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeThat;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -96,5 +98,33 @@ public class JavaBinaryIntegrationTest {
     String javaHomeArg = "-Dbuck.fatjar.java.home=" + tmp.getRoot().toString();
     ProcessExecutor.Result result = workspace.runJar(jar, ImmutableList.of(javaHomeArg));
     assertEquals("Running java wrapper\nRunning inner jar", result.getStdout().get().trim());
+  }
+
+  @Test
+  public void fatJarWithBlacklist() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "java_binary_with_blacklist", tmp);
+    workspace.setUp();
+    Path binaryJarWithBlacklist = workspace.buildAndReturnOutput("//:bin-blacklist");
+    Path binaryJarWithoutBlacklist = workspace.buildAndReturnOutput("//:bin-no-blacklist");
+
+    ImmutableSet<String> commonEntries = ImmutableSet.of(
+        "META-INF/MANIFEST.MF",
+        "com/",
+        "com/example/",
+        "com/example/B.class"
+    );
+    ImmutableSet<String> blacklistedEntries = ImmutableSet.of(
+        "com/example/A.class",
+        "com/example/A$C.class",
+        "com/example/Alligator.class"
+    );
+    assertEquals(
+        "com.example.Alligator, com.example.A and any inner classes should be removed.",
+        commonEntries,
+        new ZipInspector(binaryJarWithBlacklist).getZipFileEntries());
+    assertEquals(
+        ImmutableSet.builder().addAll(commonEntries).addAll(blacklistedEntries).build(),
+        new ZipInspector(binaryJarWithoutBlacklist).getZipFileEntries());
   }
 }
