@@ -28,6 +28,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -315,6 +316,59 @@ public class NativeLinkablesTest {
             NativeLinkable.Linkage.ANY,
             Linker.LinkableDepType.STATIC),
         Matchers.equalTo(Linker.LinkableDepType.STATIC));
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void duplicateDifferentLibsConflict() throws Exception {
+    FakeNativeLinkable a =
+        new FakeNativeLinkable(
+            "//:a",
+            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.<NativeLinkable>of(),
+            NativeLinkable.Linkage.ANY,
+            NativeLinkableInput.builder().build(),
+            ImmutableMap.<String, SourcePath>of("liba.so", new FakeSourcePath("liba1.so")));
+    FakeNativeLinkable b =
+        new FakeNativeLinkable(
+            "//:b",
+            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.<NativeLinkable>of(),
+            NativeLinkable.Linkage.ANY,
+            NativeLinkableInput.builder().build(),
+            ImmutableMap.<String, SourcePath>of("liba.so", new FakeSourcePath("liba2.so")));
+    NativeLinkables.getTransitiveSharedLibraries(
+        CxxPlatformUtils.DEFAULT_PLATFORM,
+        ImmutableList.of(a, b),
+        Predicates.instanceOf(NativeLinkable.class));
+  }
+
+  @Test
+  public void duplicateIdenticalLibsDoNotConflict() throws Exception {
+    FakeSourcePath path = new FakeSourcePath("libc.so");
+    FakeNativeLinkable a =
+        new FakeNativeLinkable(
+            "//:a",
+            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.<NativeLinkable>of(),
+            NativeLinkable.Linkage.ANY,
+            NativeLinkableInput.builder().build(),
+            ImmutableMap.<String, SourcePath>of("libc.so", path));
+    FakeNativeLinkable b =
+        new FakeNativeLinkable(
+            "//:b",
+            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.<NativeLinkable>of(),
+            NativeLinkable.Linkage.ANY,
+            NativeLinkableInput.builder().build(),
+            ImmutableMap.<String, SourcePath>of("libc.so", path));
+    ImmutableSortedMap<String, SourcePath> sharedLibs =
+        NativeLinkables.getTransitiveSharedLibraries(
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            ImmutableList.of(a, b),
+            Predicates.instanceOf(NativeLinkable.class));
+    assertThat(
+        sharedLibs,
+        Matchers.equalTo(ImmutableSortedMap.<String, SourcePath>of("libc.so", path)));
   }
 
 }

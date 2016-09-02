@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -34,6 +35,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class NativeLinkables {
@@ -261,14 +263,24 @@ public class NativeLinkables {
     ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
         getTransitiveNativeLinkables(cxxPlatform, roots.values());
 
-    ImmutableSortedMap.Builder<String, SourcePath> libraries = ImmutableSortedMap.naturalOrder();
+    Map<String, SourcePath> libraries = new LinkedHashMap<>();
     for (NativeLinkable nativeLinkable : nativeLinkables.values()) {
       NativeLinkable.Linkage linkage = nativeLinkable.getPreferredLinkage(cxxPlatform);
       if (linkage != NativeLinkable.Linkage.STATIC) {
-        libraries.putAll(nativeLinkable.getSharedLibraries(cxxPlatform));
+        ImmutableMap<String, SourcePath> libs = nativeLinkable.getSharedLibraries(cxxPlatform);
+        for (Map.Entry<String, SourcePath> lib : libs.entrySet()) {
+          SourcePath prev = libraries.put(lib.getKey(), lib.getValue());
+          if (prev != null && !prev.equals(lib.getValue())) {
+            throw new HumanReadableException(
+                "conflicting libraries for key %s: %s != %s",
+                lib.getKey(),
+                lib.getValue(),
+                prev);
+          }
+        }
       }
     }
-    return libraries.build();
+    return ImmutableSortedMap.copyOf(libraries);
   }
 
   /**

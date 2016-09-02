@@ -24,6 +24,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -32,6 +33,7 @@ import org.immutables.value.Value;
 
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -110,10 +112,10 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
     private final BuildTarget owner;
 
     // The actual maps holding the components.
-    private final ImmutableMap.Builder<Path, SourcePath> modules = ImmutableMap.builder();
-    private final ImmutableMap.Builder<Path, SourcePath> resources = ImmutableMap.builder();
-    private final ImmutableMap.Builder<Path, SourcePath> nativeLibraries = ImmutableMap.builder();
-    private final ImmutableSet.Builder<SourcePath> prebuiltLibraries = ImmutableSet.builder();
+    private final Map<Path, SourcePath> modules = new HashMap<>();
+    private final Map<Path, SourcePath> resources = new HashMap<>();
+    private final Map<Path, SourcePath> nativeLibraries = new HashMap<>();
+    private final Set<SourcePath> prebuiltLibraries = new LinkedHashSet<>();
     private Optional<Boolean> zipSafe = Optional.absent();
 
     // Bookkeeping used to for error handling in the presence of duplicate
@@ -139,23 +141,26 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
 
     private Builder add(
         String type,
-        ImmutableMap.Builder<Path, SourcePath> builder,
+        Map<Path, SourcePath> builder,
         Map<Path, BuildTarget> sourceDescs,
         Path destination,
         SourcePath source,
         BuildTarget sourceDesc) {
-      BuildTarget existing = sourceDescs.get(destination);
-      if (existing != null) {
-        throw createDuplicateError(type, destination, sourceDesc, existing);
+      SourcePath existing = builder.put(destination, source);
+      if (existing != null && !existing.equals(source)) {
+        throw createDuplicateError(
+            type,
+            destination,
+            sourceDesc,
+            Preconditions.checkNotNull(sourceDescs.get(destination)));
       }
-      builder.put(destination, source);
       sourceDescs.put(destination, sourceDesc);
       return this;
     }
 
     private Builder add(
         String type,
-        ImmutableMap.Builder<Path, SourcePath> builder,
+        Map<Path, SourcePath> builder,
         Map<Path, BuildTarget> sourceDescs,
         Map<Path, SourcePath> toAdd,
         BuildTarget sourceDesc) {
@@ -216,10 +221,10 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
 
     public PythonPackageComponents build() {
       return PythonPackageComponents.of(
-          modules.build(),
-          resources.build(),
-          nativeLibraries.build(),
-          prebuiltLibraries.build(),
+          ImmutableMap.copyOf(modules),
+          ImmutableMap.copyOf(resources),
+          ImmutableMap.copyOf(nativeLibraries),
+          ImmutableSet.copyOf(prebuiltLibraries),
           zipSafe);
     }
 

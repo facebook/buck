@@ -101,4 +101,28 @@ public class PythonPackageableComponentsTest {
     }
   }
 
+  @Test
+  public void testDuplicateIndeticalSourcesInComponentsIsOk() {
+    BuildTarget me = BuildTargetFactory.newInstance("//:me");
+    BuildTarget them = BuildTargetFactory.newInstance("//:them");
+    Path dest = Paths.get("test");
+    SourcePath path = new FakeSourcePath("source");
+    PythonPackageComponents compA = PythonPackageComponents.of(
+        ImmutableMap.of(dest, path),
+        ImmutableMap.<Path, SourcePath>of(),
+        ImmutableMap.<Path, SourcePath>of(),
+        ImmutableSet.<SourcePath>of(),
+        Optional.<Boolean>absent());
+    PythonPackageComponents compB = PythonPackageComponents.of(
+        ImmutableMap.of(dest, path),
+        ImmutableMap.<Path, SourcePath>of(),
+        ImmutableMap.<Path, SourcePath>of(),
+        ImmutableSet.<SourcePath>of(),
+        Optional.<Boolean>absent());
+    PythonPackageComponents.Builder builder = new PythonPackageComponents.Builder(me);
+    builder.addComponent(compA, them);
+    builder.addComponent(compB, them);
+    builder.build();
+  }
+
 }
