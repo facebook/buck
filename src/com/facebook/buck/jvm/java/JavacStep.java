@@ -173,7 +173,8 @@ public class JavacStep implements Step {
 
         if (suggestBuildRules.isPresent()) {
           ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
-          ImmutableSet<String> suggestions = suggestBuildRules.get().suggest(failedImports);
+          ImmutableSortedSet<String> suggestions =
+            ImmutableSortedSet.copyOf(suggestBuildRules.get().suggest(failedImports));
 
           if (!suggestions.isEmpty()) {
             String invoker = invokingRule.toString();

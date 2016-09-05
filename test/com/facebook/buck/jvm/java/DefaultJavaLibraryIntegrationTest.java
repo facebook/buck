@@ -248,8 +248,8 @@ public class DefaultJavaLibraryIntegrationTest {
       "Blargh",
       "Meh",
       "Try adding the following deps:",
-      "//:foo",
-      "//:blargh");
+      "//:blargh",
+      "//:foo");
 
     buildResult.assertFailure("Build should have failed with warnings.");
 
