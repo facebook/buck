@@ -35,10 +35,10 @@ public class WeightedListeningExecutorServiceTest {
   public void submit() {
     WeightedListeningExecutorService service =
         new WeightedListeningExecutorService(
-            new ListeningSemaphore(1),
-            1,
+            new ListeningMultiSemaphore(ResourceAmounts.of(1, 0, 0, 0)),
+            ResourceAmounts.of(1, 0, 0, 0),
             newDirectExecutorService());
-    AtomicBoolean first = submitSetBool(service, 1);
+    AtomicBoolean first = submitSetBool(service, ResourceAmounts.of(1, 0, 0, 0));
     assertTrue(first.get());
   }
 
@@ -46,19 +46,22 @@ public class WeightedListeningExecutorServiceTest {
   public void blockedSubmit() {
     WeightedListeningExecutorService service =
         new WeightedListeningExecutorService(
-            new ListeningSemaphore(1),
-            1,
+            new ListeningMultiSemaphore(ResourceAmounts.of(1, 0, 0, 0)),
+            ResourceAmounts.of(1, 0, 0, 0),
             newDirectExecutorService());
-    AtomicBoolean first = submitSetBool(service, 2);
+    AtomicBoolean first = submitSetBool(service, ResourceAmounts.of(2, 0, 0, 0));
     assertFalse(first.get());
   }
 
   @Test
   public void cancelled() {
-    ListeningSemaphore semaphore = new ListeningSemaphore(1);
+    ListeningMultiSemaphore semaphore = new ListeningMultiSemaphore(ResourceAmounts.of(1, 0, 0, 0));
     ExplicitRunExecutorService wrappedService = new ExplicitRunExecutorService();
     WeightedListeningExecutorService service =
-        new WeightedListeningExecutorService(semaphore, 1, wrappedService);
+        new WeightedListeningExecutorService(
+            semaphore,
+            ResourceAmounts.of(1, 0, 0, 0),
+            wrappedService);
     final AtomicBoolean flag = new AtomicBoolean(false);
     ListenableFuture<Void> future =
         service.submit(
@@ -70,15 +73,17 @@ public class WeightedListeningExecutorServiceTest {
               }
             });
     assertFalse(future.isDone());
-    assertThat(semaphore.availablePermits(), Matchers.equalTo(0));
+    assertThat(semaphore.getAvailableResources(), Matchers.equalTo(ResourceAmounts.ZERO));
     future.cancel(/* mayInterruptIfRunning */ false);
     wrappedService.run();
     assertTrue(future.isCancelled());
     assertFalse(flag.get());
-    assertThat(semaphore.availablePermits(), Matchers.equalTo(1));
+    assertThat(semaphore.getAvailableResources(), Matchers.equalTo(ResourceAmounts.of(1, 0, 0, 0)));
   }
 
-  private AtomicBoolean submitSetBool(WeightedListeningExecutorService service, int weight) {
+  private AtomicBoolean submitSetBool(
+      WeightedListeningExecutorService service,
+      ResourceAmounts amounts) {
     final AtomicBoolean bool = new AtomicBoolean(false);
     service.submit(
         new Callable<Void>() {
@@ -88,7 +93,7 @@ public class WeightedListeningExecutorServiceTest {
             return null;
           }
         },
-        weight);
+        amounts);
     return bool;
   }
 

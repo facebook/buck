@@ -19,12 +19,13 @@ package com.facebook.buck.cli;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
 import com.facebook.buck.log.CommandThreadFactory;
-import com.facebook.buck.util.concurrent.LinkedBlockingStack;
-import com.facebook.buck.util.concurrent.ListeningSemaphore;
-import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.LimitedThreadPoolExecutor;
+import com.facebook.buck.util.concurrent.LinkedBlockingStack;
+import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.concurrent.ResourceAmounts;
+import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -67,11 +68,9 @@ public class CommandThreadManager implements AutoCloseable {
     this.threadGroup = new ThreadGroup(name);
     this.executor =
         new WeightedListeningExecutorService(
-            new ListeningSemaphore(
-                concurrencyLimit.threadLimit,
-                ListeningSemaphore.Cap.SOFT,
-                ListeningSemaphore.Fairness.FAIR),
-            /* defaultPermits */ 1,
+            new ListeningMultiSemaphore(
+                ResourceAmounts.of(concurrencyLimit.threadLimit, 0, 0, 0)),
+            /* defaultPermits */ ResourceAmounts.of(1, 0, 0, 0),
             listeningDecorator(
                 new LimitedThreadPoolExecutor(
                     new ThreadFactoryBuilder()

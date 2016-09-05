@@ -31,7 +31,7 @@ import javax.annotation.Nullable;
 
 /**
  * A {@link ListeningExecutorService} which gates execution using a {@link ListeningSemaphore} and
- * allows custom weights to be assigned to submitted tasks.
+ * allows resources to be assigned to submitted tasks.
  *
  * NOTE: If futures for submitted jobs are cancelled while they are running, it's possible that the
  * semaphore will be released for that cancelled job before it is finished, meaning more jobs may be
@@ -39,25 +39,25 @@ import javax.annotation.Nullable;
  */
 public class WeightedListeningExecutorService extends AbstractListeningExecutorService {
 
-  private final ListeningSemaphore semaphore;
-  private final int defaultWeight;
+  private final ListeningMultiSemaphore semaphore;
+  private final ResourceAmounts defaultValues;
   private final ListeningExecutorService delegate;
 
   public WeightedListeningExecutorService(
-      ListeningSemaphore semaphore,
-      int defaultWeight,
+      ListeningMultiSemaphore semaphore,
+      ResourceAmounts defaultValues,
       ListeningExecutorService delegate) {
     this.semaphore = semaphore;
-    this.defaultWeight = defaultWeight;
+    this.defaultValues = defaultValues;
     this.delegate = delegate;
   }
 
-  private <T> ListenableFuture<T> withSemaphore(
-      final int weight,
-      final Callable<T> callable) {
+  private <T> ListenableFuture<T> submitWithSemaphore(
+      final Callable<T> callable,
+      final ResourceAmounts amounts) {
     ListenableFuture<T> future =
         Futures.transformAsync(
-            semaphore.acquire(weight),
+            semaphore.acquire(amounts),
             new AsyncFunction<Void, T>() {
               @Override
               public ListenableFuture<T> apply(@Nullable Void input) {
@@ -73,52 +73,52 @@ public class WeightedListeningExecutorService extends AbstractListeningExecutorS
         new Runnable() {
           @Override
           public void run() {
-            semaphore.release(weight);
+            semaphore.release(amounts);
           }
         },
         com.google.common.util.concurrent.MoreExecutors.directExecutor());
     return future;
   }
 
-  public ListenableFuture<?> submit(final Runnable task, int weight) {
-    return submit(task, null, weight);
+  public ListenableFuture<?> submit(final Runnable task, ResourceAmounts amounts) {
+    return submit(task, null, amounts);
   }
 
   @Nonnull
   @Override
   public ListenableFuture<?> submit(Runnable task) {
-    return submit(task, defaultWeight);
+    return submit(task, defaultValues);
   }
 
   public <T> ListenableFuture<T> submit(
       final Runnable task,
       @Nullable final T result,
-      int weight) {
-    return withSemaphore(
-        weight,
+      ResourceAmounts amounts) {
+    return submitWithSemaphore(
         new Callable<T>() {
           @Override
           public T call() throws Exception {
             task.run();
             return result;
           }
-        });
+        },
+        amounts);
   }
 
   @Nonnull
   @Override
   public <T> ListenableFuture<T> submit(Runnable task, @Nullable T result) {
-    return submit(task, result, defaultWeight);
+    return submit(task, result, defaultValues);
   }
 
-  public <T> ListenableFuture<T> submit(Callable<T> task, int weight) {
-    return withSemaphore(weight, task);
+  public <T> ListenableFuture<T> submit(Callable<T> task, ResourceAmounts amounts) {
+    return submitWithSemaphore(task, amounts);
   }
 
   @Nonnull
   @Override
   public <T> ListenableFuture<T> submit(Callable<T> task) {
-    return submit(task, defaultWeight);
+    return submit(task, defaultValues);
   }
 
   @Override
