@@ -138,7 +138,21 @@ class SwiftLibrary
         .addAllArgs(rule.getLinkArgs())
         .addAllFrameworks(frameworks)
         .addAllLibraries(libraries);
-    if (type == Linker.LinkableDepType.SHARED) {
+    boolean isDynamic;
+    switch (linkage) {
+      case STATIC:
+        isDynamic = false;
+        break;
+      case SHARED:
+        isDynamic = true;
+        break;
+      case ANY:
+        isDynamic = type == Linker.LinkableDepType.SHARED;
+        break;
+      default:
+        throw new IllegalStateException("unhandled linkage type: " + linkage);
+    }
+    if (isDynamic) {
       inputBuilder.addArgs(new SourcePathArg(getResolver(),
           new BuildTargetSourcePath(requireSwiftLinkRule(cxxPlatform.getFlavor())
               .getBuildTarget())));
