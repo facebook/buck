@@ -78,6 +78,7 @@ class SwiftLibrary
   private final ImmutableSet<FrameworkPath> libraries;
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
   private final Optional<Pattern> supportedPlatformsRegex;
+  private final Linkage linkage;
 
   SwiftLibrary(
       BuildRuleParams params,
@@ -87,7 +88,8 @@ class SwiftLibrary
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
-      Optional<Pattern> supportedPlatformsRegex) {
+      Optional<Pattern> supportedPlatformsRegex,
+      Linkage linkage) {
     super(params, pathResolver);
     this.ruleResolver = ruleResolver;
     this.exportedDeps = exportedDeps;
@@ -95,6 +97,7 @@ class SwiftLibrary
     this.libraries = libraries;
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
     this.supportedPlatformsRegex = supportedPlatformsRegex;
+    this.linkage = linkage;
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
@@ -196,7 +199,7 @@ class SwiftLibrary
     if (getBuildTarget().getFlavors().contains(SWIFT_COMPANION_FLAVOR)) {
       return Linkage.STATIC;
     } else {
-      return Linkage.ANY;
+      return linkage;
     }
   }
 

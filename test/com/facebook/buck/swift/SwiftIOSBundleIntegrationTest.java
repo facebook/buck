@@ -30,8 +30,8 @@ import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 
@@ -236,5 +236,47 @@ public class SwiftIOSBundleIntegrationTest {
     assertThat(
         workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),
         not(containsString("@rpath/dep1-soname")));
+  }
+
+  @Test
+  public void testSwiftPreferredLinkage() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "swift_on_swift", tmp);
+    workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+
+    workspace.replaceFileContents(
+        "BUCK",
+        "preferred_linkage = 'any', # iosdep1 preferred_linkage anchor",
+        "preferred_linkage = 'static'");
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        ":ios-parent-dynamic#iphonesimulator-x86_64",
+        "--config",
+        "cxx.cflags=-g");
+    result.assertSuccess();
+
+    Path binaryOutput = tmp.getRoot()
+        .resolve(filesystem.getBuckPaths().getGenDir())
+        .resolve("ios-parent-dynamic#iphonesimulator-x86_64");
+    assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
+
+    Path dep1Output = tmp.getRoot()
+        .resolve(filesystem.getBuckPaths().getGenDir())
+        .resolve("iosdep1#iphonesimulator-x86_64")
+        .resolve("libiosdep1.dylib");
+    assertThat(Files.exists(dep1Output), CoreMatchers.is(false));
+
+    assertThat(
+        workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),
+        not(containsString("libiosdep1.dylib")));
+
+    assertThat(
+        workspace.runCommand("nm", binaryOutput.toString()).getStdout().or(""),
+        containsString("baz"));
   }
 }
