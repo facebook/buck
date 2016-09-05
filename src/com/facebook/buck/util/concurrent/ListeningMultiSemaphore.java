@@ -25,8 +25,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Wrapper around several ListeningSemaphore to manage the acquisition and release
- * of different resource types.
+ * A semaphore using {@link ListenableFuture}s for acquisition of different resource types
+ * rather than blocking.
  */
 public class ListeningMultiSemaphore {
 

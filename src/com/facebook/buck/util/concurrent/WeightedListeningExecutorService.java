@@ -30,8 +30,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * A {@link ListeningExecutorService} which gates execution using a {@link ListeningSemaphore} and
- * allows resources to be assigned to submitted tasks.
+ * A {@link ListeningExecutorService} which gates execution using a {@link ListeningMultiSemaphore}
+ * and allows resources to be assigned to submitted tasks.
  *
  * NOTE: If futures for submitted jobs are cancelled while they are running, it's possible that the
  * semaphore will be released for that cancelled job before it is finished, meaning more jobs may be
