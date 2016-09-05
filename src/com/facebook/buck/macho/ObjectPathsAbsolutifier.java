@@ -98,8 +98,9 @@ public class ObjectPathsAbsolutifier {
 
     updateBinaryUuid();
     int stringTableSizeIncrease = updateStringTableContents(magicInfo);
-    updateLinkeditSegment(stringTableSizeIncrease);
-    restoreOriginalCodeSignatureData(codeSignatureData, stringTableSizeIncrease);
+    Optional<LinkEditDataCommand> updatedCodeSignatureCommand =
+        restoreOriginalCodeSignatureData(codeSignatureData, stringTableSizeIncrease);
+    updateLinkeditSegment(updatedCodeSignatureCommand);
   }
 
   private Optional<Pair<LinkEditDataCommand, ByteBuffer>> getCodeSignatureDataToRelocate()
@@ -191,6 +192,10 @@ public class ObjectPathsAbsolutifier {
   }
 
   private int updateStringTableContents(final MachoMagicInfo magicInfo) throws IOException {
+    return processSymTabCommand(magicInfo, getSymTabCommand());
+  }
+
+  private SymTabCommand getSymTabCommand() throws IOException {
     buffer.position(0);
     ImmutableList<SymTabCommand> commands = LoadCommandUtils.findLoadCommandsWithClass(
         buffer,
@@ -199,10 +204,12 @@ public class ObjectPathsAbsolutifier {
     Preconditions.checkArgument(
         commands.size() == 1,
         "Found %d SymTabCommands, expected 1", commands.size());
-    return processSymTabCommand(magicInfo, commands.get(0));
+    return commands.get(0);
   }
 
-  private void updateLinkeditSegment(final int stringTableSizeIncrease) throws IOException {
+  private void updateLinkeditSegment(
+      Optional<LinkEditDataCommand> updatedCodeSignatureCommand)
+      throws IOException {
     buffer.position(0);
     ImmutableList<SegmentCommand> commands = LoadCommandUtils.findLoadCommandsWithClass(
         buffer,
@@ -211,22 +218,22 @@ public class ObjectPathsAbsolutifier {
 
     for (SegmentCommand segmentCommand : commands) {
       if (segmentCommand.getSegname().equals(CommandSegmentSectionNames.SEGMENT_LINKEDIT)) {
-        processLinkeditSegmentCommand(segmentCommand, stringTableSizeIncrease);
+        processLinkeditSegmentCommand(segmentCommand, updatedCodeSignatureCommand);
         break;
       }
     }
   }
 
-  private void restoreOriginalCodeSignatureData(
+  private Optional<LinkEditDataCommand> restoreOriginalCodeSignatureData(
       Optional<Pair<LinkEditDataCommand, ByteBuffer>> codeSignatureData,
       int stringTableSizeIncrease) throws IOException {
     if (!codeSignatureData.isPresent()) {
       LOG.info("Code had no code signature to relocate, skipping code signature update");
-      return;
+      return Optional.absent();
     }
     if (stringTableSizeIncrease == 0) {
       LOG.info("String table size did not change, skipping code signature update");
-      return;
+      return Optional.absent();
     }
     LinkEditDataCommand command = codeSignatureData.get().getFirst();
     ByteBuffer contents = codeSignatureData.get().getSecond();
@@ -234,23 +241,51 @@ public class ObjectPathsAbsolutifier {
 
     Preconditions.checkArgument(contents.capacity() > 0, "Contents of code signature is 0 bytes");
 
+    SymTabCommand symTabCommand = getSymTabCommand();
+
+    /**
+     * Code signature is aligned right after SymTabCommand's string table. Thus it is incorrect
+     * to just take previous code signature position and move it to the new place. We need to
+     * calculate new position by aligning the position of the first byte after string table.
+     */
+    int unalignedCodeSignatureOffset = symTabCommand.getStroff().intValue() +
+        symTabCommand.getStrsize().intValue();
+    int alignedCodeSignatureOffset = LinkEditDataCommandUtils.alignCodeSignatureOffsetValue(
+        unalignedCodeSignatureOffset);
     LinkEditDataCommand updated = command.withDataoff(
-        command.getDataoff().plus(UnsignedInteger.fromIntBits(stringTableSizeIncrease)));
+        UnsignedInteger.fromIntBits(
+            alignedCodeSignatureOffset));
+    updateFileSizeTo(updated.getDataoff().plus(updated.getDatasize()).intValue());
     LOG.verbose("Re-positioning code signature to " + updated.getDataoff().intValue());
     buffer.position(updated.getDataoff().intValue());
     buffer.put(contents);
     LOG.verbose("Updating LC_CODE_SIGNATURE for new code signature position");
     LinkEditDataCommandUtils.updateLinkEditDataCommand(buffer, command, updated);
+
+    return Optional.of(updated);
   }
 
   private void processLinkeditSegmentCommand(
       SegmentCommand original,
-      int stringTableSizeIncrease) throws IOException {
-    UnsignedLong updatedFileSize = original.getFilesize()
-        .plus(UnsignedLong.valueOf(stringTableSizeIncrease));
+      Optional<LinkEditDataCommand> updatedCodeSignatureCommand)
+      throws IOException {
+    SymTabCommand symTabCommand = getSymTabCommand();
+    int fileSize = symTabCommand.getStroff().intValue() + symTabCommand.getStrsize().intValue();
+    if (updatedCodeSignatureCommand.isPresent()) {
+      LinkEditDataCommand codeSignCommand = updatedCodeSignatureCommand.get();
+      /**
+       * If code signature is present, append it's size plus size of the gap between string table
+       * and code signature itself that can be caused by the aligning of the code signature.
+       */
+      fileSize = codeSignCommand.getDataoff().intValue() + codeSignCommand.getDatasize().intValue();
+    }
+
+    fileSize -= original.getFileoff().intValue();
+
+    UnsignedLong updatedFileSize = UnsignedLong.valueOf(fileSize);
     UnsignedLong updatedVmSize = UnsignedLong.fromLongBits(
         SegmentCommandUtils.alignValue(
-            original.getVmsize().intValue() + stringTableSizeIncrease));
+            updatedFileSize.intValue()));
     SegmentCommand updated = original.withFilesize(updatedFileSize).withVmsize(updatedVmSize);
     SegmentCommandUtils.updateSegmentCommand(buffer, original, updated);
   }
@@ -443,13 +478,22 @@ public class ObjectPathsAbsolutifier {
     archive.close();
   }
 
-  private void extendFileSizeToFitNewString(String string) throws IOException {
+  private void updateFileSizeTo(int newSize) throws IOException {
     ByteOrder order = buffer.order();
     int position = buffer.position();
-    file.setLength(file.length() + SymTabCommandUtils.sizeOfStringTableEntryWithContents(string));
+    file.setLength(newSize);
     remapBuffer();
     buffer.order(order);
     buffer.position(position);
+  }
+
+  private void extendFileSizeToFitNewDataWithLength(int length) throws IOException {
+    updateFileSizeTo((int) (file.length() + length));
+  }
+
+  private void extendFileSizeToFitNewString(String string) throws IOException {
+    extendFileSizeToFitNewDataWithLength(
+        SymTabCommandUtils.sizeOfStringTableEntryWithContents(string));
   }
 
   private Path getUnsanitizedAbsolutePath(Path relativePath) {

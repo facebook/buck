@@ -1,11 +1,7 @@
 import os
-import sys
-import subprocess
-import uuid
 import re
-import hashlib
-import shutil
-import mmap
+import subprocess
+import sys
 import tempfile
 
 AUTHORITY_MARKER = 'Authority='
@@ -15,6 +11,7 @@ class BuckCodesign(object):
     def __init__(self, codesign_tool_path, app_bundle_path):
         self.codesign_tool_path = codesign_tool_path
         self.app_bundle_path = app_bundle_path
+        self.adhoc_signature = False
 
     def get_output_for_command(self, command_as_array, fail_automatically=True, merge_stderr=True):
         err_output = None
@@ -61,11 +58,18 @@ class BuckCodesign(object):
                 self.identity = line[len(AUTHORITY_MARKER):].strip()
                 print("Found identity: " + self.identity)
                 break
-        if not hasattr(self, 'identity'):
+            if "Signature=adhoc" in line:
+                self.adhoc_signature = True
+                print("Found ad-hoc identity")
+                break
+        if not hasattr(self, 'identity') and self.adhoc_signature is False:
             print("Unable to find identity information from signature:\n" + signature)
             sys.exit(1)
 
     def prepare_identity_sha(self):
+        if self.adhoc_signature:
+            self.identity_sha = "-"
+            return
         available_identities = self.get_output_for_command(['security',
                                                             'find-identity',
                                                             '-v',
@@ -84,13 +88,20 @@ class BuckCodesign(object):
             sys.exit(1)
 
     def invoke_sign(self):
-        out = self.get_output_for_command([self.codesign_tool_path,
-                                           '-s',
-                                           self.identity_sha,
-                                           '-f',
-                                           '--entitlements',
-                                           self.entitlements_file.name,
-                                           self.app_bundle_path])
+        if not self.adhoc_signature:
+            out = self.get_output_for_command([self.codesign_tool_path,
+                                               '--force',
+                                               '--sign',
+                                               self.identity_sha,
+                                               '--entitlements',
+                                               self.entitlements_file.name,
+                                               self.app_bundle_path])
+        else:
+            out = self.get_output_for_command([self.codesign_tool_path,
+                                               '--force',
+                                               '--sign',
+                                               self.identity_sha,
+                                               self.app_bundle_path])
         print("Codesign complete: " + out)
 
     def sign(self):

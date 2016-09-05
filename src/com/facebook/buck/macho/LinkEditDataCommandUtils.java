@@ -49,4 +49,16 @@ public class LinkEditDataCommandUtils {
     buffer.position(updated.getLoadCommandCommonFields().getOffsetInBinary());
     writeCommandToBuffer(updated, buffer);
   }
+
+  public static int alignCodeSignatureOffsetValue(int value) {
+    /**
+     * Code signature offset is expected to be aligned by 16 bytes:
+     * https://opensource.apple.com/source/cctools/cctools-782/libstuff/checkout.c
+     * (look for "code signature data out of place" error)
+     */
+    int alignment = 15;
+    value += alignment;
+    value &= ~alignment;
+    return value;
+  }
 }
