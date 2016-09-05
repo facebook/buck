@@ -223,50 +223,24 @@ public class ProcessExecutor {
    * in milliseconds
    */
   public Result waitForLaunchedProcessWithTimeout(LaunchedProcess launchedProcess,
-    long millis,
-    final Optional<Function<Process, Void>> timeOutHandler) throws InterruptedException {
-      Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
-      final Process process = ((LaunchedProcessImpl) launchedProcess).process;
-      final AtomicBoolean timedOut = new AtomicBoolean(false);
-      Thread waiter =
-          new Thread(
-              new Runnable() {
-                @Override
-                public void run() {
-                  try {
-                    process.waitFor();
-                  } catch (InterruptedException e) {
-                    timedOut.set(true);
-                    if (timeOutHandler.isPresent()) {
-                      try {
-                        timeOutHandler.get().apply(process);
-                      } catch (RuntimeException e2) {
-                        LOG.error(e2, "timeOutHandler threw an Exception!");
-                      }
-                    }
-                  }
-                }
-              });
-      waiter.start();
-      waiter.join(millis);
-      waiter.interrupt();
-      waiter.join();
-      int exitCode = 1;
-      if (!timedOut.get()) {
-        exitCode = process.exitValue();
-      }
-      return new Result(
-          exitCode,
-          timedOut.get(),
-          Optional.<String>absent(),
-          Optional.<String>absent()
-      );
-    }
+      long millis,
+      final Optional<Function<Process, Void>> timeOutHandler) throws InterruptedException {
+    Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
+    final Process process = ((LaunchedProcessImpl) launchedProcess).process;
+    boolean timedOut = waitForTimeout(process, millis, timeOutHandler);
+    int exitCode = !timedOut ? process.exitValue() : 1;
+    return new Result(
+        exitCode,
+        timedOut,
+        Optional.<String>absent(),
+        Optional.<String>absent()
+    );
+  }
 
-    /**
-    * Convenience method for {@link #execute(Process, Set, Optional, Optional, Optional)}
-    * with boolean values set to {@code false} and optional values set to absent.
-    */
+  /**
+   * Convenience method for {@link #execute(Process, Set, Optional, Optional, Optional)}
+   * with boolean values set to {@code false} and optional values set to absent.
+   */
   public Result execute(Process process) throws InterruptedException {
     return execute(
         process,
