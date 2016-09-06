@@ -44,6 +44,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -196,10 +197,18 @@ public class HalideLibraryDescription
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       CxxPlatform platform,
-      Optional<String> functionNameOverride) throws NoSuchBuildTargetException {
+      Arg args) throws NoSuchBuildTargetException {
+
+    if (!isPlatformSupported(args, platform)) {
+      return new NoopBuildRule(
+          params,
+          pathResolver);
+    }
+
     BuildRule halideCompile = ruleResolver.requireRule(
         params.getBuildTarget().withFlavors(HALIDE_COMPILE_FLAVOR, platform.getFlavor()));
     BuildTarget buildTarget = halideCompile.getBuildTarget();
+
     return Archive.from(
         params.getBuildTarget(),
         params,
@@ -217,7 +226,7 @@ public class HalideLibraryDescription
                 HalideCompile.objectOutputPath(
                     buildTarget,
                     params.getProjectFilesystem(),
-                    functionNameOverride))));
+                    args.functionName))));
   }
 
   private Optional<ImmutableList<String>> expandInvocationFlags(
@@ -263,8 +272,9 @@ public class HalideLibraryDescription
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
     BuildTarget target = params.getBuildTarget();
-    ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(params.getBuildTarget().getFlavors());
+    ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(target.getFlavors());
     CxxPlatform cxxPlatform = cxxPlatforms.getValue(flavors).or(defaultCxxPlatform);
+
     if (flavors.contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)) {
       ImmutableMap.Builder<Path, SourcePath> headersBuilder = ImmutableMap.builder();
       BuildTarget compileTarget = resolver
@@ -316,7 +326,7 @@ public class HalideLibraryDescription
           resolver,
           new SourcePathResolver(resolver),
           cxxPlatform,
-          args.functionName);
+          args);
     } else if (flavors.contains(CxxDescriptionEnhancer.SHARED_FLAVOR)) {
       throw new HumanReadableException(
           "halide_library '%s' does not support shared libraries as output",
