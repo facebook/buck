@@ -26,7 +26,7 @@ public class ResourceAmountsEstimator {
    * Memory resource unit size has been chosen arbitrarily. We can tune the value if we need.
    */
   public static final int DEFAULT_MEMORY_CAP =
-      (int) (Runtime.getRuntime().maxMemory() / 100 * 1024 * 1024);
+      (int) (Runtime.getRuntime().maxMemory() / (100 * 1024 * 1024));
 
   /**
    * Disk IO resource unit size has been chosen arbitrarily. Since most of the jobs are light,
