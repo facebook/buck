@@ -472,9 +472,25 @@ public class AppleLibraryDescription implements
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends AppleNativeTargetDescriptionArg {
+  public static class Arg extends AppleNativeTargetDescriptionArg implements HasAppleBundleFields {
     public Optional<SourcePath> infoPlist;
     public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
+
+    @Override
+    public Either<AppleBundleExtension, String> getExtension() {
+      return Either.ofLeft(AppleBundleExtension.FRAMEWORK);
+    }
+
+    @Override
+    public SourcePath getInfoPlist() {
+      Preconditions.checkArgument(infoPlist.isPresent());
+      return infoPlist.get();
+    }
+
+    @Override
+    public Optional<String> getXcodeProductType() {
+      return Optional.<String>absent();
+    }
   }
 
 }

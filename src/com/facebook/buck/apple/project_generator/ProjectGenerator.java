@@ -1083,12 +1083,21 @@ public class ProjectGenerator {
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       Optional<TargetNode<AppleBundleDescription.Arg>> bundleLoaderNode)
       throws IOException {
-    PBXNativeTarget target = generateCxxLibraryTarget(
-        project,
-        targetNode,
-        AppleResources.collectDirectResources(targetGraph, targetNode),
-        AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
-        bundleLoaderNode);
+    PBXNativeTarget target;
+    if (targetNode.getBuildTarget().getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
+      target = generateAppleBundleTarget(
+          project,
+          targetNode.castArg(AppleLibraryDescription.Arg.class).get(),
+          targetNode,
+          bundleLoaderNode);
+    } else {
+      target = generateCxxLibraryTarget(
+          project,
+          targetNode,
+          AppleResources.collectDirectResources(targetGraph, targetNode),
+          AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
+          bundleLoaderNode);
+    }
     LOG.debug("Generated iOS library target %s", target);
     return target;
   }
@@ -2728,6 +2737,9 @@ public class ProjectGenerator {
           if (productType.isPresent()) {
             return productType.get();
           }
+        } else if (binaryNode.getBuildTarget().getFlavors().contains(
+            AppleDescriptions.FRAMEWORK_FLAVOR)) {
+          return ProductType.FRAMEWORK;
         } else {
           switch (extension) {
             case FRAMEWORK:
