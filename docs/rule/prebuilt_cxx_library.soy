@@ -73,6 +73,15 @@ files and provides various flags to control how they are linked and exported.
 
 {call cxx_common.exported_deps_arg /}
 
+{call buck.arg}
+  {param name: 'include_dirs' /}
+  {param default: 'None' /}
+  {param desc}
+    A directory that headers can be included from. This can use the <code>$(platform)</code>
+    macro to specify platform-dependent versions of the directory.
+  {/param}
+{/call}
+
 {/param} // close args
 
 {param examples}
