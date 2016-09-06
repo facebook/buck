@@ -30,7 +30,6 @@ public class RemoteLogBuckConfig {
   private static final long DEFAULT_REQUEST_TIMEOUT_MILLIS = 3000;
   private static final String REQUEST_MAX_THREADS = "remote_log_max_threads";
   private static final int DEFAULT_REQUEST_MAX_THREADS = 5;
-  private static final String REQUEST_THRIFT_ENABLED = "remote_log_thrift_enabled";
 
   private final SlbBuckConfig frontendConfig;
   private final BuckConfig buckConfig;
@@ -60,12 +59,5 @@ public class RemoteLogBuckConfig {
   public int getMaxThreads() {
     return buckConfig.getInteger(LOG_SECTION_NAME, REQUEST_MAX_THREADS)
         .or(DEFAULT_REQUEST_MAX_THREADS);
-  }
-
-  /**
-   * @return whether we should use thrift-based logging instead of just http.
-   */
-  public boolean isThriftEnabled() {
-    return buckConfig.getBooleanValue(LOG_SECTION_NAME, REQUEST_THRIFT_ENABLED, false);
   }
 }
