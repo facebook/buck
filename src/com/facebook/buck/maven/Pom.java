@@ -29,8 +29,23 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
+import org.apache.maven.model.Build;
+import org.apache.maven.model.CiManagement;
+import org.apache.maven.model.Contributor;
 import org.apache.maven.model.Dependency;
+import org.apache.maven.model.DependencyManagement;
+import org.apache.maven.model.Developer;
+import org.apache.maven.model.DistributionManagement;
+import org.apache.maven.model.IssueManagement;
+import org.apache.maven.model.License;
+import org.apache.maven.model.MailingList;
 import org.apache.maven.model.Model;
+import org.apache.maven.model.Organization;
+import org.apache.maven.model.Parent;
+import org.apache.maven.model.Prerequisites;
+import org.apache.maven.model.Profile;
+import org.apache.maven.model.Repository;
+import org.apache.maven.model.Scm;
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
 import org.apache.maven.model.building.DefaultModelBuildingRequest;
 import org.apache.maven.model.building.ModelBuilder;
@@ -48,7 +63,14 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
+
+import javax.annotation.Nullable;
 
 public class Pom {
 
@@ -64,7 +86,7 @@ public class Pom {
   private final MavenPublishable publishable;
   private final Path path;
 
-  public Pom(Path path, MavenPublishable buildRule) throws IOException {
+  public Pom(Path path, MavenPublishable buildRule) {
     this.path = path;
     this.publishable = buildRule;
     this.model = constructModel();
@@ -73,6 +95,7 @@ public class Pom {
 
   public static Path generatePomFile(MavenPublishable rule) throws IOException {
     Path pom = getPomPath(rule);
+    Files.deleteIfExists(pom);
     generatePomFile(rule, pom);
     return pom;
   }
@@ -114,27 +137,212 @@ public class Pom {
     updateModel(artifact, deps);
   }
 
-  private Model constructModel() throws IOException {
-    File file = path.toFile();
-    if (file.isFile()) {
-      ModelBuildingRequest modelBuildingRequest = new DefaultModelBuildingRequest()
-          .setPomFile(file);
-      ModelBuilder modelBuilder = MODEL_BUILDER_FACTORY.newInstance();
-      try {
-        ModelBuildingResult modelBuildingResult = modelBuilder.build(modelBuildingRequest);
+  private Model constructModel(File file, @Nullable Model model) {
+    ModelBuilder modelBuilder = MODEL_BUILDER_FACTORY.newInstance();
 
-        // Would contain extra stuff: <build/>, <repositories/>, <pluginRepositories/>, <reporting/>
-        // model = modelBuildingResult.getEffectiveModel();
+    try {
+      ModelBuildingRequest req = new DefaultModelBuildingRequest().setPomFile(file);
+      ModelBuildingResult modelBuildingResult = modelBuilder.build(req);
 
-        return Preconditions.checkNotNull(modelBuildingResult.getRawModel());
-      } catch (ModelBuildingException e) {
-        throw new RuntimeException(e);
-      }
-    } else {
-      Model model = new Model();
-      model.setModelVersion(POM_MODEL_VERSION);
-      return model;
+      Model constructed = Preconditions.checkNotNull(modelBuildingResult.getRawModel());
+
+      return merge(model, constructed);
+    } catch (ModelBuildingException e) {
+      throw new RuntimeException(e);
     }
+  }
+
+  private Model constructModel() {
+    File file = path.toFile();
+    Model model = new Model();
+    model.setModelVersion(POM_MODEL_VERSION);
+
+    if (publishable.getPomTemplate().isPresent()) {
+      model = constructModel(publishable.getPomTemplate().get().toFile(), model);
+    }
+
+    if (file.isFile()) {
+      Model fromFile = constructModel(file, model);
+      model = merge(model, fromFile);
+    }
+
+    return model;
+  }
+
+  private Model merge(Model first, @Nullable Model second) {
+    if (second == null) {
+      return first;
+    }
+
+    Model model = first.clone();
+
+    //---- Values from ModelBase
+
+    List<String> modules = second.getModules();
+    if (modules != null) {
+      for (String module : modules) {
+        model.addModule(module);
+      }
+    }
+
+    DistributionManagement distributionManagement = second.getDistributionManagement();
+    if (distributionManagement != null) {
+      model.setDistributionManagement(distributionManagement);
+    }
+
+    Properties properties = second.getProperties();
+    if (properties != null) {
+      for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+        model.addProperty((String) entry.getKey(), (String) entry.getValue());
+      }
+    }
+
+    DependencyManagement dependencyManagement = second.getDependencyManagement();
+    if (dependencyManagement != null) {
+      model.setDependencyManagement(dependencyManagement);
+    }
+
+    List<Dependency> dependencies = second.getDependencies();
+    if (dependencies != null) {
+      for (Dependency dependency : dependencies) {
+        model.addDependency(dependency);
+      }
+    }
+
+    List<Repository> repositories = second.getRepositories();
+    if (repositories != null) {
+      for (Repository repository : repositories) {
+        model.addRepository(repository);
+      }
+    }
+
+    List<Repository> pluginRepositories = second.getPluginRepositories();
+    if (pluginRepositories != null) {
+      for (Repository pluginRepository : pluginRepositories) {
+        model.addPluginRepository(pluginRepository);
+      }
+    }
+
+    // Ignore reports, reporting, and locations
+
+    //----- From Model
+    Parent parent = second.getParent();
+    if (parent != null) {
+      model.setParent(parent);
+    }
+
+    Organization organization = second.getOrganization();
+    if (organization != null) {
+      model.setOrganization(organization);
+    }
+
+    List<License> licenses = second.getLicenses();
+    Set<String> currentLicenseUrls = new HashSet<>();
+    if (model.getLicenses() != null) {
+      for (License license : model.getLicenses()) {
+        currentLicenseUrls.add(license.getUrl());
+      }
+    }
+    if (licenses != null) {
+      for (License license : licenses) {
+        if (!currentLicenseUrls.contains(license.getUrl())) {
+          model.addLicense(license);
+          currentLicenseUrls.add(license.getUrl());
+        }
+      }
+    }
+
+    List<Developer> developers = second.getDevelopers();
+    Set<String> currentDevelopers = new HashSet<>();
+    if (model.getDevelopers() != null) {
+      for (Developer developer : model.getDevelopers()) {
+        currentDevelopers.add(developer.getName());
+      }
+    }
+    if (developers != null) {
+      for (Developer developer : developers) {
+        if (!currentDevelopers.contains(developer.getName())) {
+          model.addDeveloper(developer);
+          currentDevelopers.add(developer.getName());
+        }
+      }
+    }
+
+    List<Contributor> contributors = second.getContributors();
+    Set<String> currentContributors = new HashSet<>();
+    if (model.getContributors() != null) {
+      for (Contributor contributor : model.getContributors()) {
+        currentDevelopers.add(contributor.getName());
+      }
+    }
+    if (contributors != null) {
+      for (Contributor contributor : contributors) {
+        if (!currentContributors.contains(contributor.getName())) {
+          model.addContributor(contributor);
+          currentContributors.add(contributor.getName());
+        }
+      }
+    }
+
+    List<MailingList> mailingLists = second.getMailingLists();
+    if (mailingLists != null) {
+      for (MailingList mailingList : mailingLists) {
+        model.addMailingList(mailingList);
+      }
+    }
+
+    Prerequisites prerequisites = second.getPrerequisites();
+    if (prerequisites != null) {
+      model.setPrerequisites(prerequisites);
+    }
+
+    Scm scm = second.getScm();
+    if (scm != null) {
+      model.setScm(scm);
+    }
+
+    String url = second.getUrl();
+    if (url != null) {
+      model.setUrl(url);
+    }
+
+    String description = second.getDescription();
+    if (description != null) {
+      model.setDescription(description);
+    }
+
+    IssueManagement issueManagement = second.getIssueManagement();
+    if (issueManagement != null) {
+      model.setIssueManagement(issueManagement);
+    }
+
+    CiManagement ciManagement = second.getCiManagement();
+    if (ciManagement != null) {
+      model.setCiManagement(ciManagement);
+    }
+
+    Build build = second.getBuild();
+    if (build != null) {
+      model.setBuild(build);
+    }
+
+    List<Profile> profiles = second.getProfiles();
+    Set<String> currentProfileIds = new HashSet<>();
+    if (model.getProfiles() != null) {
+      for (Profile profile : model.getProfiles()) {
+        currentProfileIds.add(profile.getId());
+      }
+    }
+    if (profiles != null) {
+      for (Profile profile : profiles) {
+        if (!currentProfileIds.contains(profile.getId())) {
+          model.addProfile(profile);
+          currentProfileIds.add(profile.getId());
+        }
+      }
+    }
+
+    return model;
   }
 
   private void updateModel(Artifact mavenCoordinates, Iterable<Artifact> deps) {

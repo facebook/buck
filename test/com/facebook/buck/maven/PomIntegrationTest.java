@@ -101,6 +101,9 @@ public class PomIntegrationTest extends EasyMockSupport {
     expect(mavenPublishable.getMavenCoords())
         .andReturn(Optional.fromNullable(mavenCoords))
         .anyTimes();
+    expect(mavenPublishable.getPomTemplate())
+        .andReturn(Optional.<Path>absent())
+        .anyTimes();
     expect(mavenPublishable.getMavenDeps()).andReturn(deps).anyTimes();
     replay(mavenPublishable);
     return mavenPublishable;
