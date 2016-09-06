@@ -14,8 +14,23 @@ prebuilt_jar(
   ],
 )
 
-prebuilt_jar(  
+prebuilt_jar(
   name = 'slf4j',
+  binary_jar = 'slf4j-jdk14-1.7.5.jar',
+  source_jar = 'slf4j-jdk14-1.7.5-sources.jar',
+  deps = [
+    ':slf4j-api',
+  ],
+  licenses = [
+    'LICENSE.txt',
+  ],
+  visibility = [
+    '//src-gen:thrift',
+  ],
+)
+
+prebuilt_jar(  
+  name = 'jcl-over-slf4j',
   binary_jar = 'jcl-over-slf4j-1.6.2.jar',
   source_jar = 'jcl-over-slf4j-1.6.2-sources.jar',
   deps = [
@@ -25,7 +40,6 @@ prebuilt_jar(
     'LICENSE.txt',
   ],
   visibility = [
-    '//src-gen:thrift',
     '//third-party/java/aether:aether-transport-http',
   ],
 )

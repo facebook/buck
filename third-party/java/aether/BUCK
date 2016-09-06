@@ -57,7 +57,7 @@ prebuilt_jar(
   deps = [
     '//third-party/java/httpcomponents:httpclient',
     '//third-party/java/jsr:jsr305',
-    '//third-party/java/slf4j:slf4j',
+    '//third-party/java/slf4j:jcl-over-slf4j',
     ':aether-api',
     ':aether-spi',
     ':aether-util',
