@@ -195,7 +195,6 @@ public class DistBuildServiceTest {
     Assert.assertEquals(request.getValue().getType(), FrontendRequestType.CREATE_BUILD);
     Assert.assertTrue(request.getValue().isSetCreateBuildRequest());
     Assert.assertTrue(request.getValue().getCreateBuildRequest().isSetCreateTimestampMillis());
-    Assert.assertTrue(request.getValue().getCreateBuildRequest().isSetBuckVersion());
 
     Assert.assertTrue(job.isSetBuildId());
     Assert.assertTrue(job.getBuildId().isSetId());

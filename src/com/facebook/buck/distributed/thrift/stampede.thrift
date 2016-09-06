@@ -30,10 +30,6 @@ struct BuildId {
   1 : optional string id;
 }
 
-struct BuckVersion {
-  1: optional string version;
-}
-
 enum BuildStatus {
   UNKNOWN = 0,
 
@@ -53,13 +49,6 @@ enum BuildStatus {
   CREATED = 5,
 }
 
-struct BuildJob {
-  1: optional BuildId buildId;
-  2: optional DebugInfo debug;
-  3: optional BuildStatus status = BuildStatus.UNKNOWN;
-  4: optional BuckVersion buckVersion;
-}
-
 struct ScribeData {
   1: optional string category;
   2: optional list<string> lines;
@@ -75,6 +64,29 @@ struct FileInfo {
   2: optional binary content;
 }
 
+enum BuckVersionType {
+  // When this is not explicitly set.
+  UNKNOWN = 0,
+
+  // Refers to a version in the buck git repository.
+  GIT = 1,
+
+  // Refers to a development version uploaded from the client.
+  DEVELOPMENT = 2,
+}
+
+struct BuckVersion {
+  1: optional BuckVersionType type = BuckVersionType.UNKNOWN;
+  2: optional string gitHash;
+  3: optional FileInfo developmentVersion;
+}
+
+struct BuildJob {
+  1: optional BuildId buildId;
+  2: optional DebugInfo debug;
+  3: optional BuildStatus status = BuildStatus.UNKNOWN;
+  4: optional BuckVersion buckVersion;
+}
 
 ##############################################################################
 ## Request/Response structs
@@ -82,7 +94,6 @@ struct FileInfo {
 
 struct CreateBuildRequest {
   1: optional i64 createTimestampMillis;
-  2: optional BuckVersion buckVersion;
 }
 
 struct CreateBuildResponse {
@@ -147,6 +158,12 @@ struct FetchBuildGraphResponse {
   1: optional binary buildGraph;
 }
 
+# Used to specify the BuckVersion a distributed build will use.
+struct SetBuckVersionRequest {
+  1: optional BuildId buildId;
+  2: optional BuckVersion buckVersion;
+}
+
 
 ##############################################################################
 ## Top-Level Buck-Frontend HTTP body thrift Request/Response format
@@ -164,6 +181,7 @@ enum FrontendRequestType {
   FETCH_SRC_FILES = 9,
   STORE_BUILD_GRAPH = 10,
   FETCH_BUILD_GRAPH = 11,
+  SET_BUCK_VERSION = 12,
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -179,6 +197,7 @@ struct FrontendRequest {
   10: optional FetchSourceFilesRequest fetchSourceFilesRequest;
   11: optional StoreBuildGraphRequest storeBuildGraphRequest;
   12: optional FetchBuildGraphRequest fetchBuildGraphRequest;
+  13: optional SetBuckVersionRequest setBuckVersionRequest;
 
   // Next Free ID: 13
 

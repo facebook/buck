@@ -32,6 +32,7 @@ import com.facebook.buck.distributed.thrift.FileInfo;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
+import com.facebook.buck.distributed.thrift.SetBuckVersionRequest;
 import com.facebook.buck.distributed.thrift.StartBuildRequest;
 import com.facebook.buck.distributed.thrift.StoreBuildGraphRequest;
 import com.facebook.buck.distributed.thrift.StoreLocalChangesRequest;
@@ -53,8 +54,6 @@ import java.util.concurrent.Callable;
 
 
 public class DistBuildService implements Closeable {
-  private static final String BUCK_GIT_COMMIT_KEY = "buck.git_commit";
-
   private final FrontendService service;
 
   public DistBuildService(
@@ -147,21 +146,10 @@ public class DistBuildService implements Closeable {
     });
   }
 
-  private String getBuckGitCommitHash() {
-    return System.getProperty(BUCK_GIT_COMMIT_KEY, "N/A");
-  }
-
-  private BuckVersion createBuckVersion(String version) {
-    BuckVersion buckVersion = new BuckVersion();
-    buckVersion.setVersion(version);
-    return buckVersion;
-  }
-
   public BuildJob createBuild() throws IOException {
     // Tell server to create the build and get the build id.
     CreateBuildRequest createTimeRequest = new CreateBuildRequest();
     createTimeRequest.setCreateTimestampMillis(System.currentTimeMillis());
-    createTimeRequest.setBuckVersion(createBuckVersion(getBuckGitCommitHash()));
     FrontendRequest request = new FrontendRequest();
     request.setType(FrontendRequestType.CREATE_BUILD);
     request.setCreateBuildRequest(createTimeRequest);
@@ -251,6 +239,16 @@ public class DistBuildService implements Closeable {
     return frontendRequest;
   }
 
+  public void setBuckVersion(BuildId id, BuckVersion buckVersion) throws IOException {
+    SetBuckVersionRequest setBuckVersionRequest = new SetBuckVersionRequest();
+    setBuckVersionRequest.setBuildId(id);
+    setBuckVersionRequest.setBuckVersion(buckVersion);
+    FrontendRequest request = new FrontendRequest();
+    request.setType(FrontendRequestType.SET_BUCK_VERSION);
+    request.setSetBuckVersionRequest(setBuckVersionRequest);
+    makeRequestChecked(request);
+  }
+
   @Override
   public void close() throws IOException {
     service.close();
@@ -262,7 +260,7 @@ public class DistBuildService implements Closeable {
     if (!response.wasSuccessful) {
       throw new IOException(String.format(
           "Stampede request of type [%s] failed with error message [%s].",
-          request.type.toString(),
+          request.getType().toString(),
           response.getErrorMessage()));
     }
     Preconditions.checkState(request.getType().equals(response.getType()));

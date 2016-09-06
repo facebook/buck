@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -44,15 +45,18 @@ public class DistributedBuild {
 
   private final DistBuildService distBuildService;
   private final BuildJobState buildJobState;
+  private final BuckVersion buckVersion;
   private int millisBetweenStatusPoll;
 
   public DistributedBuild(
       BuildJobState buildJobState,
       DistBuildService distBuildService,
-      int millisBetweenStatusPoll) {
+      int millisBetweenStatusPoll,
+      BuckVersion buckVersion) {
     this.buildJobState = buildJobState;
     this.distBuildService = distBuildService;
     this.millisBetweenStatusPoll = millisBetweenStatusPoll;
+    this.buckVersion = buckVersion;
   }
 
   public int executeAndPrintFailuresToEventBus(
@@ -80,6 +84,9 @@ public class DistributedBuild {
       throw new RuntimeException(e);
     }
     LOG.info("Uploaded target graph. Build status: " + job.getStatus().toString());
+
+    distBuildService.setBuckVersion(id, buckVersion);
+    LOG.info("Set Buck Version. Build status: " + job.getStatus().toString());
 
     job = distBuildService.startBuild(id);
     LOG.info("Started job. Build status: " + job.getStatus().toString());

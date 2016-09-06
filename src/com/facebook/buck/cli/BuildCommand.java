@@ -20,6 +20,7 @@ import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.command.Build;
+import com.facebook.buck.distributed.BuckVersionUtil;
 import com.facebook.buck.distributed.BuildJobStateSerializer;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistributedBuild;
@@ -28,6 +29,7 @@ import com.facebook.buck.distributed.DistributedBuildFileHashes;
 import com.facebook.buck.distributed.DistributedBuildState;
 import com.facebook.buck.distributed.DistributedBuildTargetGraphCodec;
 import com.facebook.buck.distributed.DistributedBuildTypeCoercerFactory;
+import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -88,6 +90,7 @@ import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -108,6 +111,9 @@ public class BuildCommand extends AbstractCommand {
   private static final String SHOW_FULL_OUTPUT_LONG_ARG = "--show-full-output";
   private static final String SHOW_RULEKEY_LONG_ARG = "--show-rulekey";
   private static final String DISTRIBUTED_LONG_ARG = "--distributed";
+  private static final String BUCK_BINARY_STRING_ARG = "--buck-binary";
+
+  private static final String BUCK_GIT_COMMIT_KEY = "buck.git_commit";
 
   @Option(
       name = KEEP_GOING_LONG_ARG,
@@ -185,6 +191,13 @@ public class BuildCommand extends AbstractCommand {
       usage = DistBuildRunCommand.BUILD_STATE_FILE_ARG_USAGE,
       hidden = true)
   private String distributedBuildStateFile = null;
+
+  @Nullable
+  @Option(
+      name = BUCK_BINARY_STRING_ARG,
+      usage = "Buck binary to use on a distributed build instead of the current git version.",
+      hidden = true)
+  private String buckBinary = null;
 
   @Argument
   private List<String> arguments = Lists.newArrayList();
@@ -460,11 +473,13 @@ public class BuildCommand extends AbstractCommand {
       return 0;
 
     } else {
-      try (DistBuildService service =  DistBuildFactory.newDistBuildService(params)) {
+      BuckVersion buckVersion = getBuckVersion();
+      try (DistBuildService service = DistBuildFactory.newDistBuildService(params)) {
         DistributedBuild build = new DistributedBuild(
             jobState,
             service,
-            1000 /* millisBetweenStatusPoll */);
+            1000 /* millisBetweenStatusPoll */,
+            buckVersion);
         int exitCode = build.executeAndPrintFailuresToEventBus(
             executorService,
             params.getBuckEventBus());
@@ -477,6 +492,30 @@ public class BuildCommand extends AbstractCommand {
         return exitCode;
       }
     }
+  }
+
+  private BuckVersion getBuckVersion() throws IOException {
+    if (buckBinary == null) {
+      String gitHash = System.getProperty(BUCK_GIT_COMMIT_KEY, null);
+      if (gitHash == null) {
+        throw new HumanReadableException(String.format(
+            "Property [%s] is not set and the command line flag [%s] was not passed.",
+            BUCK_GIT_COMMIT_KEY,
+            BUCK_BINARY_STRING_ARG));
+      }
+
+      return BuckVersionUtil.createFromGitHash(gitHash);
+    }
+
+    Path binaryPath = Paths.get(buckBinary);
+    if (!Files.isRegularFile(binaryPath)) {
+      throw new HumanReadableException(String.format(
+          "Buck binary [%s] passed under flag [%s] does not exist.",
+          binaryPath,
+          BUCK_BINARY_STRING_ARG));
+    }
+
+    return BuckVersionUtil.createFromLocalBinary(binaryPath);
   }
 
   private void showOutputs(
