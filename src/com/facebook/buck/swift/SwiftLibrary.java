@@ -78,6 +78,7 @@ class SwiftLibrary
   private final ImmutableSet<FrameworkPath> libraries;
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
   private final Optional<Pattern> supportedPlatformsRegex;
+  private final Linkage linkage;
 
   SwiftLibrary(
       BuildRuleParams params,
@@ -87,7 +88,8 @@ class SwiftLibrary
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
-      Optional<Pattern> supportedPlatformsRegex) {
+      Optional<Pattern> supportedPlatformsRegex,
+      Linkage linkage) {
     super(params, pathResolver);
     this.ruleResolver = ruleResolver;
     this.exportedDeps = exportedDeps;
@@ -95,6 +97,7 @@ class SwiftLibrary
     this.libraries = libraries;
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
     this.supportedPlatformsRegex = supportedPlatformsRegex;
+    this.linkage = linkage;
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
@@ -135,7 +138,21 @@ class SwiftLibrary
         .addAllArgs(rule.getLinkArgs())
         .addAllFrameworks(frameworks)
         .addAllLibraries(libraries);
-    if (type == Linker.LinkableDepType.SHARED) {
+    boolean isDynamic;
+    switch (linkage) {
+      case STATIC:
+        isDynamic = false;
+        break;
+      case SHARED:
+        isDynamic = true;
+        break;
+      case ANY:
+        isDynamic = type == Linker.LinkableDepType.SHARED;
+        break;
+      default:
+        throw new IllegalStateException("unhandled linkage type: " + linkage);
+    }
+    if (isDynamic) {
       inputBuilder.addArgs(new SourcePathArg(getResolver(),
           new BuildTargetSourcePath(requireSwiftLinkRule(cxxPlatform.getFlavor())
               .getBuildTarget())));
@@ -196,7 +213,7 @@ class SwiftLibrary
     if (getBuildTarget().getFlavors().contains(SWIFT_COMPANION_FLAVOR)) {
       return Linkage.STATIC;
     } else {
-      return Linkage.ANY;
+      return linkage;
     }
   }
 

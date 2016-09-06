@@ -241,7 +241,8 @@ public class SwiftLibraryDescription implements
         args.frameworks.get(),
         args.libraries.get(),
         appleCxxPlatformFlavorDomain,
-        args.supportedPlatformsRegex);
+        args.supportedPlatformsRegex,
+        args.preferredLinkage.or(NativeLinkable.Linkage.ANY));
   }
 
   private BuildRule createSharedLibraryBuildRule(
@@ -339,6 +340,7 @@ public class SwiftLibraryDescription implements
     public Optional<String> soname;
     public Optional<SourcePath> bridgingHeader;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<NativeLinkable.Linkage> preferredLinkage;
   }
 
 }

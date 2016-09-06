@@ -6,7 +6,7 @@ swift_library(
 apple_binary(
     name = 'parent',
     srcs = [ 'parent/main.swift' ],
-    deps = [ ':dep1' ]
+    deps = [ ':dep1' ],
 )
 
 swift_library(
@@ -27,7 +27,8 @@ apple_bundle(
 
 swift_library(
     name = 'iosdep1',
-    srcs = [ 'iosdep1/iosdep1.swift' ]
+    srcs = [ 'iosdep1/iosdep1.swift' ],
+    preferred_linkage = 'any', # iosdep1 preferred_linkage anchor
 )
 
 apple_binary(

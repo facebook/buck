@@ -68,6 +68,7 @@ class SwiftDescriptions {
     output.moduleName = Optional.of(buildTarget.getShortName());
     output.enableObjcInterop = Optional.of(true);
     output.bridgingHeader = args.bridgingHeader;
+    output.preferredLinkage = args.preferredLinkage;
   }
 
 }
