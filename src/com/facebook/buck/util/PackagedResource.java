@@ -19,8 +19,10 @@ package com.facebook.buck.util;
 import static com.facebook.buck.zip.Unzip.ExistingFileMode.OVERWRITE;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.zip.Unzip;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -45,12 +47,14 @@ public class PackagedResource implements Supplier<Path> {
   private final String name;
   private final Class<?> relativeTo;
   private final Path filename;
+  private final String extension;
   private final Supplier<Path> supplier;
 
   public PackagedResource(
       ProjectFilesystem filesystem,
       Class<?> relativeTo,
-      String pathRelativeToClass) {
+      String pathRelativeToClass,
+      Optional<String> destFileName) {
     this.filesystem = filesystem;
 
     this.relativeTo = relativeTo;
@@ -59,7 +63,9 @@ public class PackagedResource implements Supplier<Path> {
 
     this.name = pathRelativeToClass;
 
-    this.filename = Paths.get(pathRelativeToClass).getFileName();
+    this.filename = destFileName.transform(MorePaths.TO_PATH)
+        .or(Paths.get(pathRelativeToClass).getFileName());
+    this.extension = com.google.common.io.Files.getFileExtension(pathRelativeToClass);
 
     this.supplier = Suppliers.memoize(
         new Supplier<Path>() {
@@ -103,13 +109,13 @@ public class PackagedResource implements Supplier<Path> {
           filesystem.getBuckPaths().getResDir()
               .resolve(relativeTo.getCanonicalName())
               .resolve(filename);
+      outputPath = filesystem.resolve(outputPath);
 
       // If the path already exists, delete it.
       if (filesystem.exists(outputPath)) {
         filesystem.deleteRecursivelyIfExists(outputPath);
       }
 
-      String extension = com.google.common.io.Files.getFileExtension(filename.toString());
       if (extension.equals("zip")) {
         filesystem.mkdirs(outputPath);
         // Copy the zip to a temporary file, and mark that for deletion once the VM exits.

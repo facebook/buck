@@ -130,6 +130,7 @@ public class AuditRulesCommand extends AbstractCommand {
         params.getConsole(),
         params.getEnvironment(),
         params.getBuckEventBus(),
+        projectFilesystem,
         /* ignoreBuckAutodepsFiles */ false,
         new WatchmanDiagnosticCache())) {
       PrintStream out = params.getConsole().getStdOut();

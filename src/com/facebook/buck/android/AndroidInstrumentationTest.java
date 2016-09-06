@@ -169,7 +169,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
         new PackagedResource(
             this.getProjectFilesystem(),
             AndroidInstrumentationTest.class,
-            "ddmlib.jar")).getRelativePath().toString();
+            "ddmlib.jar",
+            Optional.<String>absent())).getRelativePath().toString();
 
     String kxml2 = new PathSourcePath(
         this.getProjectFilesystem(),
@@ -177,7 +178,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
         new PackagedResource(
             this.getProjectFilesystem(),
             AndroidInstrumentationTest.class,
-            "kxml2.jar")).getRelativePath().toString();
+            "kxml2.jar",
+            Optional.<String>absent())).getRelativePath().toString();
 
     AndroidInstrumentationTestJVMArgs jvmArgs = AndroidInstrumentationTestJVMArgs.builder()
         .setApkUnderTestPath(apkUnderTestPath)

@@ -398,6 +398,7 @@ public class Cell {
         console,
         config.getEnvironment(),
         eventBus,
+        filesystem,
         ignoreBuckAutodepsFiles,
         watchmanDiagnosticCache);
   }

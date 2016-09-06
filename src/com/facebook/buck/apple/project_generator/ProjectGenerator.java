@@ -427,7 +427,11 @@ public class ProjectGenerator {
   }
 
   static PackagedResource getPackagedResourceNamed(ProjectFilesystem filesystem, String name) {
-    return new PackagedResource(filesystem, ProjectGenerator.class, name);
+    return new PackagedResource(
+        filesystem,
+        ProjectGenerator.class,
+        name,
+        Optional.<String>absent());
   }
 
   static Path getPathToBuck(

@@ -153,7 +153,8 @@ public class QuickstartCommand extends AbstractCommand {
         new PackagedResource(
             params.getCell().getFilesystem(),
             QuickstartCommand.class,
-            Preconditions.checkNotNull(PATHS_TO_QUICKSTART_DIR.get(type)));
+            Preconditions.checkNotNull(PATHS_TO_QUICKSTART_DIR.get(type)),
+            Optional.<String>absent());
     Path origin = resource.get();
 
     final Path destination = Paths.get(projectDir);

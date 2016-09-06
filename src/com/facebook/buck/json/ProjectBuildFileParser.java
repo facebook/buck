@@ -23,6 +23,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.PathOrGlobMatcher;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.WatchmanDiagnostic;
 import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.log.Logger;
@@ -80,6 +81,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private final ProjectBuildFileParserOptions options;
   private final ConstructorArgMarshaller marshaller;
   private final BuckEventBus buckEventBus;
+  private final ProjectFilesystem filesystem;
   private final ProcessExecutor processExecutor;
   private final BserDeserializer bserDeserializer;
   private final BserSerializer bserSerializer;
@@ -100,6 +102,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       final ConstructorArgMarshaller marshaller,
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus,
+      ProjectFilesystem filesystem,
       ProcessExecutor processExecutor,
       boolean ignoreBuckAutodepsFiles,
       WatchmanDiagnosticCache watchmanDiagnosticCache) {
@@ -108,6 +111,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     this.marshaller = marshaller;
     this.environment = environment;
     this.buckEventBus = buckEventBus;
+    this.filesystem = filesystem;
     this.processExecutor = processExecutor;
     this.bserDeserializer = new BserDeserializer(BserDeserializer.KeyOrdering.SORTED);
     this.bserSerializer = new BserSerializer();
@@ -609,7 +613,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private synchronized Path getPathToBuckPy(ImmutableSet<Description<?>> descriptions)
       throws IOException {
     if (buckPythonProgram == null) {
-      buckPythonProgram = BuckPythonProgram.newInstance(marshaller, descriptions);
+      buckPythonProgram = BuckPythonProgram.newInstance(filesystem, marshaller, descriptions);
     }
     return buckPythonProgram.getExecutablePath();
   }

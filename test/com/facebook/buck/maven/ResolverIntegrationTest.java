@@ -133,6 +133,7 @@ public class ResolverIntegrationTest {
         new TestConsole(),
         ImmutableMap.<String, String>of(),
         BuckEventBusFactory.newInstance(),
+        filesystem,
         /* ignoreBuckAutodepsFiles */ false,
         new WatchmanDiagnosticCache());
   }

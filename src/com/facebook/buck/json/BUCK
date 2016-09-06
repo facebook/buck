@@ -29,11 +29,25 @@ java_immutables_library(
   ],
   resources = [
     'buck.py',
+    ':pywatchman-archive',
+    ':pathlib-archive',
   ],
   autodeps = True,
   visibility = [
     'PUBLIC',
   ],
+)
+
+export_file(
+  name = 'pathlib-archive',
+  out = 'pathlib-archive.zip',
+  src = '//third-party/py/pathlib:pathlib-archive',
+)
+
+export_file(
+  name = 'pywatchman-archive',
+  out = 'pywatchman-archive.zip',
+  src = '//third-party/py/pywatchman:pywatchman-archive',
 )
 
 python_library(

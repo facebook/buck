@@ -79,7 +79,11 @@ public class PythonBuckConfig {
                   return new PathSourcePath(
                       filesystem,
                       PythonBuckConfig.class + "/__test_main__.py",
-                      new PackagedResource(filesystem, PythonBuckConfig.class, "__test_main__.py"));
+                      new PackagedResource(
+                          filesystem,
+                          PythonBuckConfig.class,
+                          "__test_main__.py",
+                          Optional.<String>absent()));
                 }
               });
 

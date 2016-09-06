@@ -18,3 +18,14 @@ export_file(
     'PUBLIC',
   ],
 )
+
+zip_file(
+  name = 'pathlib-archive',
+  srcs = glob(['*.py']),
+  licenses = [
+    'LICENSE.txt',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/json:',
+  ],
+)

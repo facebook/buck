@@ -156,6 +156,7 @@ public class JavaSymbolFinder {
         console,
         environment,
         buckEventBus,
+        projectFilesystem,
         /* ignoreBuckAutodepsFiles */ false,
         new WatchmanDiagnosticCache())) {
       for (Path sourceFile : sourceFilePaths) {
