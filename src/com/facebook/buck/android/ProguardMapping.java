@@ -30,7 +30,7 @@ public class ProguardMapping {
   /** Utility class: do not instantiate. */
   private ProguardMapping() {}
 
-  private static final Pattern CLASS_LINE_PATTERN = Pattern.compile("([\\w.$]+) -> ([\\w.$]+):");
+  private static final Pattern CLASS_LINE_PATTERN = Pattern.compile("([-\\w.$]+) -> ([-\\w.$]+):");
 
   public static Map<String, String> readClassMapping(Iterable<String> lines) {
     ImmutableMap.Builder<String, String> classMappingBuilder = ImmutableMap.builder();
