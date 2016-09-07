@@ -1,19 +1,15 @@
-#@# GENERATED FILE: DO NOT MODIFY d11be9f9c4ea018d64a77ed1df286d4e7b4d2c35 #@#
+#@# GENERATED FILE: DO NOT MODIFY 5d0b157e833c1bce014c0e066eab6ac5cb82832c #@#
 {
   "network" : {
     "deps" : [
       "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/util:util",
-      "//src/com/facebook/buck/util/concurrent:concurrent",
-      "//src/com/facebook/buck/util/environment:platform"
+      "//src/com/facebook/buck/util/concurrent:concurrent"
     ],
     "exported_deps" : [
       "//src-gen:thrift",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/slb:slb",
-      "//src/com/facebook/buck/util:io",
       "//third-party/java/guava:guava",
-      "//third-party/java/jsr:jsr305",
       "//third-party/java/okhttp:okhttp"
     ]
   }

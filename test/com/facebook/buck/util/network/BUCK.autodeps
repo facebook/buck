@@ -1,12 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY 6f647ac757cad62c4ec1c332b7563dcdf63cf571 #@#
+#@# GENERATED FILE: DO NOT MODIFY 14bdcd4cc3990fac2592f8964f6f6986d4b3389a #@#
 {
   "network" : {
     "deps" : [
       "//src-gen:thrift",
       "//src/com/facebook/buck/slb:slb",
-      "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/network:network",
-      "//test/com/facebook/buck/util:testutil",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:hamcrest-junit",
       "//third-party/java/hamcrest:java-hamcrest",
