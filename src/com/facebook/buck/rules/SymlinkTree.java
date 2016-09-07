@@ -45,7 +45,7 @@ import java.util.logging.Level;
 
 public class SymlinkTree
     extends AbstractBuildRule
-    implements HasPostBuildSteps, SupportsInputBasedRuleKey, RuleKeyAppendable {
+    implements SupportsInputBasedRuleKey, RuleKeyAppendable {
 
   private final Path root;
   private final ImmutableSortedMap<Path, SourcePath> links;
@@ -145,7 +145,10 @@ public class SymlinkTree
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    return ImmutableList.of();
+    return ImmutableList.of(
+        getVerifiyStep(),
+        new MakeCleanDirectoryStep(getProjectFilesystem(), root),
+        new SymlinkTreeStep(getProjectFilesystem(), root, getResolver().getMappedPaths(links)));
   }
 
   // Put the link map into the rule key, as if it changes at all, we need to
@@ -192,18 +195,13 @@ public class SymlinkTree
       };
   }
 
-  // We generate the symlinks using post-build steps to avoid the cache because:
+  // We don't cache symlinks because:
   // 1) We don't currently support caching symlinks.
   // 2) It's almost certainly always more expensive to cache them rather than just re-create them.
   // 3) The symlinks are absolute.
   @Override
-  public ImmutableList<Step> getPostBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
-    return ImmutableList.of(
-        getVerifiyStep(),
-        new MakeCleanDirectoryStep(getProjectFilesystem(), root),
-        new SymlinkTreeStep(getProjectFilesystem(), root, getResolver().getMappedPaths(links)));
+  public boolean isCacheable() {
+    return false;
   }
 
   public Path getRoot() {
