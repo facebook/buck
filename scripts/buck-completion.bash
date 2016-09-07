@@ -200,7 +200,6 @@ function _buck_completion_try_test() {
       --all
       --code-coverage
       --debug
-      --dry-run
       --help
       --ignore-when-dependencies-fail
       --jacoco

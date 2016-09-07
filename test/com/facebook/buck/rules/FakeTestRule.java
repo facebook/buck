@@ -112,8 +112,7 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   @Override
   public Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
-      boolean isUsingTestSelectors,
-      boolean isDryRun) {
+      boolean isUsingTestSelectors) {
     return interpretedTestResults;
   }
 

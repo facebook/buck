@@ -296,8 +296,7 @@ public class TestRunning {
               isTestRunRequired,
               test.interpretTestResults(
                   executionContext,
-                  /*isUsingTestSelectors*/ !options.getTestSelectorList().isEmpty(),
-                  /*isDryRun*/ options.isDryRun())),
+                  /*isUsingTestSelectors*/ !options.getTestSelectorList().isEmpty())),
           testReportingCallback);
 
       // Always run the commands, even if the list of commands as empty. There may be zero

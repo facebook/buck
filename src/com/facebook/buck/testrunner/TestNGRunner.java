@@ -126,9 +126,8 @@ public final class TestNGRunner extends BaseRunner {
       String className = testMethod.getDeclaringClass().getName();
       String methodName = testMethod.getName();
       TestDescription testDescription = new TestDescription(className, methodName);
-      boolean isIncluded = testSelectorList.isIncluded(testDescription);
       seenDescriptions.add(testDescription);
-      annotation.setEnabled(isIncluded && !isDryRun);
+      annotation.setEnabled(testSelectorList.isIncluded(testDescription));
     }
   }
 

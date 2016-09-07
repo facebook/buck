@@ -153,15 +153,6 @@ public class TestSelectorsIntegrationTest {
   }
 
   @Test
-  public void shouldRespectTestSelectorsEvenWithDryRun() throws IOException {
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "test", "--all", "--dry-run", "--filter", "com.example.clown.CarTest");
-    result.assertSuccess();
-    // If filtering is broken during dry-runs, then we'll output the names of other tests!
-    assertThat(result.getStderr(), not(containsString("com.example.clown.FlowerTest")));
-  }
-
-  @Test
   public void assertNoSummariesForASingleTest() throws IOException {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "test", "//test/com/example/clown:clown");

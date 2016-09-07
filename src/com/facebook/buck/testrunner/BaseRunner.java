@@ -56,7 +56,6 @@ public abstract class BaseRunner {
   protected List<String> testClassNames;
   protected long defaultTestTimeoutMillis;
   protected TestSelectorList testSelectorList;
-  protected boolean isDryRun;
   protected Set<TestDescription> seenDescriptions = new HashSet<>();
 
   public abstract void run() throws Throwable;
@@ -149,9 +148,6 @@ public abstract class BaseRunner {
     if (!testSelectorList.isEmpty()) {
       testSelectorSuffix += ".test_selectors";
     }
-    if (isDryRun) {
-      testSelectorSuffix += ".dry_run";
-    }
     OutputStream output;
     if (outputDirectory != null) {
       File outputFile = new File(outputDirectory, testClassName + testSelectorSuffix + ".xml");
@@ -186,7 +182,6 @@ public abstract class BaseRunner {
     File outputDirectory = null;
     long defaultTestTimeoutMillis = Long.MAX_VALUE;
     TestSelectorList testSelectorList = TestSelectorList.empty();
-    boolean isDryRun = false;
 
     List<String> testClassNames = new ArrayList<>();
 
@@ -200,9 +195,6 @@ public abstract class BaseRunner {
           testSelectorList = TestSelectorList.builder()
               .addRawSelectors(rawSelectors)
               .build();
-          break;
-        case "--dry-run":
-          isDryRun = true;
           break;
         case "--output":
           outputDirectory = new File(args[++i]);
@@ -223,7 +215,6 @@ public abstract class BaseRunner {
 
     this.outputDirectory = outputDirectory;
     this.defaultTestTimeoutMillis = defaultTestTimeoutMillis;
-    this.isDryRun = isDryRun;
     this.testClassNames = testClassNames;
     this.testSelectorList = testSelectorList;
   }

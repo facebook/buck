@@ -140,7 +140,6 @@ public class CxxTestDescriptionTest {
             .build(resolver);
     TestRunningOptions options =
         TestRunningOptions.builder()
-            .setDryRun(false)
             .setTestSelectorList(TestSelectorList.empty())
             .build();
     ImmutableList<Step> steps =
@@ -172,11 +171,10 @@ public class CxxTestDescriptionTest {
             .setArgs(ImmutableList.of("value $(location //:some_rule)"))
             .build(resolver);
     TestRunningOptions testOptions =
-          TestRunningOptions.builder()
-          .setDryRun(false)
-          .setShufflingTests(false)
-          .setTestSelectorList(TestSelectorList.empty())
-          .build();
+        TestRunningOptions.builder()
+            .setShufflingTests(false)
+            .setTestSelectorList(TestSelectorList.empty())
+            .build();
     ImmutableList<Step> steps =
         cxxTest.runTests(
             TestExecutionContext.newInstance(),

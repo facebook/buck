@@ -364,8 +364,7 @@ public class AppleTest
   @Override
   public Callable<TestResults> interpretTestResults(
       final ExecutionContext executionContext,
-      boolean isUsingTestSelectors,
-      boolean isDryRun) {
+      boolean isUsingTestSelectors) {
     return new Callable<TestResults>() {
       @Override
       public TestResults call() throws Exception {

@@ -57,6 +57,8 @@ import java.util.logging.StreamHandler;
  */
 public final class JUnitRunner extends BaseRunner {
 
+  private static @interface Nullable {}
+
   static final String JUL_DEBUG_LOGS_HEADER = "====DEBUG LOGS====\n\n";
   static final String JUL_ERROR_LOGS_HEADER = "====ERROR LOGS====\n\n";
 
@@ -99,7 +101,7 @@ public final class JUnitRunner extends BaseRunner {
             if (!isIgnored) {
               seenDescriptions.add(testDescription);
             }
-            return !isDryRun;
+            return true;
           } else {
             return false;
           }
@@ -135,7 +137,7 @@ public final class JUnitRunner extends BaseRunner {
         jUnitCore.run(request);
       }
 
-      results = interpretResults(className, results);
+      results = interpretResults(results);
       if (results != null) {
         writeResult(className, results);
       }
@@ -154,27 +156,8 @@ public final class JUnitRunner extends BaseRunner {
    * However, if you are using a filter then a class-without-tests will cause a
    * NoTestsRemainException to be thrown, which is propagated back as an error.
    */
-  /* @Nullable */
-  private List<TestResult> interpretResults(String className, List<TestResult> results) {
-    // For dry runs, write fake results for every method seen in the given class.
-    if (isDryRun) {
-      List<TestResult> fakeResults = new ArrayList<>();
-      for (TestDescription seenDescription : seenDescriptions) {
-        if (seenDescription.getClassName().equals(className)) {
-          TestResult fakeResult = new TestResult(
-            seenDescription.getClassName(),
-              seenDescription.getMethodName(),
-              0L,
-              ResultType.DRY_RUN,
-              null,
-              "",
-              "");
-          fakeResults.add(fakeResult);
-        }
-      }
-      results = fakeResults;
-    }
-
+  @Nullable
+  private List<TestResult> interpretResults(List<TestResult> results) {
     // When not using any command line filtering options, all results should be recorded.
     if (testSelectorList.isEmpty()) {
       if (isSingleResultCausedByNoTestsRemainException(results)) {
@@ -261,14 +244,13 @@ public final class JUnitRunner extends BaseRunner {
 
       @Override
       protected AnnotatedBuilder annotatedBuilder() {
-        // If there is no default timeout specified in .buckconfig, then use
-        // the original behavior of AllDefaultPossibilitiesBuilder.
+        // If there is no default timeout specified in .buckconfig, then use the original behavior
+        // of AllDefaultPossibilitiesBuilder.
         //
-        // Additionally, if we are using test selectors or doing a dry-run then
-        // we should use the original behavior to use our
-        // BuckBlockJUnit4ClassRunner, which provides the Descriptions needed
-        // to do test selecting properly.
-        if (defaultTestTimeoutMillis <= 0 || isDryRun || !testSelectorList.isEmpty()) {
+        // Additionally, if we are using test selectors then we should use the original behavior to
+        // use BuckBlockJUnit4ClassRunner, which provides the Descriptions needed to do test
+        // selecting properly.
+        if (defaultTestTimeoutMillis <= 0 || !testSelectorList.isEmpty()) {
           return super.annotatedBuilder();
         }
 

@@ -229,8 +229,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
   @Override
   public Callable<TestResults> interpretTestResults(
       final ExecutionContext context,
-      final boolean isUsingTestSelectors,
-      final boolean isDryRun) {
+      final boolean isUsingTestSelectors) {
     return new Callable<TestResults>() {
       @Override
       public TestResults call() throws Exception {

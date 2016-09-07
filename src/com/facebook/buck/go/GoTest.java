@@ -219,20 +219,15 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
   @Override
   public Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
-      boolean isUsingTestSelectors,
-      final boolean isDryRun) {
+      boolean isUsingTestSelectors) {
     return new Callable<TestResults>() {
       @Override
       public TestResults call() throws Exception {
-        ImmutableList<TestCaseSummary> summaries = ImmutableList.of();
-        if (!isDryRun) {
-          summaries = ImmutableList.of(new TestCaseSummary(
-              getBuildTarget().getFullyQualifiedName(),
-              parseTestResults()));
-        }
         return TestResults.of(
             getBuildTarget(),
-            summaries,
+            ImmutableList.of(new TestCaseSummary(
+                getBuildTarget().getFullyQualifiedName(),
+                parseTestResults())),
             contacts,
             FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
       }

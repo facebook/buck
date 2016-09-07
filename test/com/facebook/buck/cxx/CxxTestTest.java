@@ -119,7 +119,6 @@ public class CxxTestTest {
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     TestRunningOptions options =
         TestRunningOptions.builder()
-            .setDryRun(false)
             .setTestSelectorList(TestSelectorList.empty())
             .build();
     ImmutableList<Step> actualSteps = cxxTest.runTests(
@@ -185,8 +184,7 @@ public class CxxTestTest {
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     Callable<TestResults> result = cxxTest.interpretTestResults(
         executionContext,
-        /* isUsingTestSelectors */ false,
-        /* isDryRun */ false);
+        /* isUsingTestSelectors */ false);
     result.call();
   }
 

@@ -79,16 +79,6 @@ abstract class AbstractJUnitJvmArgs {
   }
 
   /**
-   * @return If true, does not actually run the tests, just prints what would have happened.
-   *
-   * Defaults to false.
-   */
-  @Value.Default
-  boolean isDryRun() {
-    return false;
-  }
-
-  /**
    * @return The filesystem path to a JVM agent (i.e., a profiler).
    */
   abstract Optional<String> getPathToJavaAgent();
@@ -240,11 +230,6 @@ abstract class AbstractJUnitJvmArgs {
         selectorsArgBuilder.append(rawSelector).append("\n");
       }
       args.add("--test-selectors", selectorsArgBuilder.toString());
-    }
-
-    // Dry-run flag.
-    if (isDryRun()) {
-      args.add("--dry-run");
     }
 
     // List all of the tests to be run.

@@ -170,23 +170,20 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule, Has
   @Override
   public Callable<TestResults> interpretTestResults(
       final ExecutionContext executionContext,
-      boolean isUsingTestSelectors,
-      final boolean isDryRun) {
+      boolean isUsingTestSelectors) {
     return new Callable<TestResults>() {
       @Override
       public TestResults call() throws Exception {
         ImmutableList.Builder<TestCaseSummary> summaries = ImmutableList.builder();
-        if (!isDryRun) {
-          ImmutableList<TestResultSummary> resultSummaries =
-              parseResults(
-                  getPathToTestExitCode(),
-                  getPathToTestOutput(),
-                  getPathToTestResults());
-          TestCaseSummary summary = new TestCaseSummary(
-              getBuildTarget().getFullyQualifiedName(),
-              resultSummaries);
-          summaries.add(summary);
-        }
+        ImmutableList<TestResultSummary> resultSummaries =
+            parseResults(
+                getPathToTestExitCode(),
+                getPathToTestOutput(),
+                getPathToTestResults());
+        summaries.add(
+            new TestCaseSummary(
+                getBuildTarget().getFullyQualifiedName(),
+                resultSummaries));
         return TestResults.of(
             getBuildTarget(),
             summaries.build(),

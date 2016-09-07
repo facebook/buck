@@ -77,7 +77,7 @@ public interface TestRule extends HasBuildTarget, BuildRule {
    * present.
    * <p>
    * If this method returns {@code true}, then
-   * {@link #interpretTestResults(ExecutionContext, boolean, boolean)}
+   * {@link #interpretTestResults(ExecutionContext, boolean)}
    * should be able to be called directly.
    */
   boolean hasTestResultFiles();
@@ -100,8 +100,7 @@ public interface TestRule extends HasBuildTarget, BuildRule {
 
   Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
-      boolean isUsingTestSelectors,
-      boolean isDryRun);
+      boolean isUsingTestSelectors);
 
   /**
    * @return The set of labels for this build rule.
