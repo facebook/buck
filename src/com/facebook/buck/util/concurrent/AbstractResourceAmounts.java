@@ -56,7 +56,10 @@ abstract class AbstractResourceAmounts {
         getNetworkIO() < amounts.getNetworkIO();
   }
 
-  public boolean containsValuesGreaterThan(ResourceAmounts amounts) {
-    return amounts.containsValuesLessThan(ResourceAmounts.copyOf(this));
+  public boolean allValuesLessThanOrEqual(ResourceAmounts amounts) {
+    return getCpu() <= amounts.getCpu() &&
+        getMemory() <= amounts.getMemory() &&
+        getDiskIO() <= amounts.getDiskIO() &&
+        getNetworkIO() <= amounts.getNetworkIO();
   }
 }

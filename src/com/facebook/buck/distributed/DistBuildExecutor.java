@@ -100,7 +100,10 @@ public class DistBuildExecutor {
         ImmutableMap.<String, String>of(),
         args.getObjectMapper(),
         args.getClock(),
-        new ConcurrencyLimit(4, 1),
+        new ConcurrencyLimit(
+            4,
+            1,
+            config.getResourceAllocationFairness()),
         Optional.<AdbOptions>absent(),
         Optional.<TargetDeviceOptions>absent(),
         args.getExecutors())) {

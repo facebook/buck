@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;
+import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -138,7 +139,9 @@ public class CachingBuildEngineFactory {
 
   private static WeightedListeningExecutorService toWeighted(ListeningExecutorService service) {
     return new WeightedListeningExecutorService(
-        new ListeningMultiSemaphore(ResourceAmounts.of(Integer.MAX_VALUE, 0, 0, 0)),
+        new ListeningMultiSemaphore(
+            ResourceAmounts.of(Integer.MAX_VALUE, 0, 0, 0),
+            ResourceAllocationFairness.FAIR),
         /* defaultPermits */ ResourceAmounts.of(1, 0, 0, 0),
         service);
   }

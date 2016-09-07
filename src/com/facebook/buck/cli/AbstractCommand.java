@@ -266,7 +266,10 @@ public abstract class AbstractCommand implements Command {
       loadLimit = (double) buckConfig.getLoadLimit();
     }
 
-    return new ConcurrencyLimit(buckConfig.getNumThreads(), loadLimit);
+    return new ConcurrencyLimit(
+        buckConfig.getNumThreads(),
+        loadLimit,
+        buckConfig.getResourceAllocationFairness());
   }
 
   protected ImmutableList<String> getOptions() {

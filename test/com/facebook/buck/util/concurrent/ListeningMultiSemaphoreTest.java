@@ -29,7 +29,7 @@ public class ListeningMultiSemaphoreTest {
   @Test
   public void testCreatingWithMaximumValues() {
     ResourceAmounts values = ResourceAmounts.of(2, 10, 0, 0);
-    ListeningMultiSemaphore array = new ListeningMultiSemaphore(values);
+    ListeningMultiSemaphore array = getFairListeningMultiSemaphore(values);
     assertThat(array.getAvailableResources(), Matchers.equalTo(values));
     assertThat(array.getMaximumValues(), Matchers.equalTo(values));
     assertThat(array.getQueueLength(), Matchers.equalTo(0));
@@ -38,7 +38,7 @@ public class ListeningMultiSemaphoreTest {
   @Test
   public void testAcquiringResources() {
     ResourceAmounts values = amountsOfCpu(2);
-    ListeningMultiSemaphore array = new ListeningMultiSemaphore(values);
+    ListeningMultiSemaphore array = getFairListeningMultiSemaphore(values);
 
     ListenableFuture<Void> future = array.acquire(amountsOfCpu(1));
     assertThat(future.isDone(), Matchers.equalTo(true));
@@ -51,7 +51,7 @@ public class ListeningMultiSemaphoreTest {
   @Test
   public void testReleasingResources() {
     ResourceAmounts values = amountsOfCpu(2);
-    ListeningMultiSemaphore array = new ListeningMultiSemaphore(values);
+    ListeningMultiSemaphore array = getFairListeningMultiSemaphore(values);
 
     array.acquire(amountsOfCpu(1));
     array.release(amountsOfCpu(1));
@@ -61,7 +61,7 @@ public class ListeningMultiSemaphoreTest {
   @Test
   public void testProcessingPendingQueue() {
     ResourceAmounts values = amountsOfCpu(7);
-    ListeningMultiSemaphore array = new ListeningMultiSemaphore(values);
+    ListeningMultiSemaphore array = getFairListeningMultiSemaphore(values);
 
     ListenableFuture<Void> f1 = array.acquire(amountsOfCpu(3));
     assertThat(f1.isDone(), Matchers.equalTo(true));
@@ -91,7 +91,7 @@ public class ListeningMultiSemaphoreTest {
   @Test
   public void testProcessingPendingQueueWithCancelledFuturesReleasesPendingItems() {
     ResourceAmounts values = amountsOfCpu(7);
-    ListeningMultiSemaphore array = new ListeningMultiSemaphore(values);
+    ListeningMultiSemaphore array = getFairListeningMultiSemaphore(values);
 
     // this step acquired some resources.
     ListenableFuture<Void> f1 = array.acquire(amountsOfCpu(5));
@@ -146,7 +146,7 @@ public class ListeningMultiSemaphoreTest {
   @Test
   public void testAcquiringAndReleasingMultipleResources() {
     ResourceAmounts values = amountsOfCpuAndMemory(7, 7);
-    ListeningMultiSemaphore array = new ListeningMultiSemaphore(values);
+    ListeningMultiSemaphore array = getFairListeningMultiSemaphore(values);
 
     ListenableFuture<Void> cpuOnly = array.acquire(amountsOfCpu(5));
     ListenableFuture<Void> memOnly = array.acquire(amountsOfMemory(5));
@@ -192,6 +192,48 @@ public class ListeningMultiSemaphoreTest {
     assertThat(
         array.getAvailableResources(),
         Matchers.equalTo(amountsOfCpuAndMemory(0, 0)));
+  }
+
+  @Test
+  public void testCappingToMaximumAmounts() {
+    ListeningMultiSemaphore semaphore = new ListeningMultiSemaphore(
+        amountsOfCpu(5),
+        ResourceAllocationFairness.FAST);
+
+    // Try to acquire more permits than we have, which should block.
+    ListenableFuture<Void> first = semaphore.acquire(amountsOfCpu(100500));
+    assertThat(semaphore.getAvailableResources(), Matchers.equalTo(amountsOfCpu(0)));
+    assertThat(first.isDone(), Matchers.equalTo(true));
+
+    semaphore.release(amountsOfCpu(100500));
+    assertThat(semaphore.getAvailableResources(), Matchers.equalTo(semaphore.getMaximumValues()));
+  }
+
+  @Test
+  public void fastFairness() {
+    ListeningMultiSemaphore semaphore = new ListeningMultiSemaphore(
+        amountsOfCpu(4),
+        ResourceAllocationFairness.FAST);
+
+    semaphore.acquire(amountsOfCpu(2));
+
+    // Try to acquire more permits than we have, which should block.
+    ListenableFuture<Void> first = semaphore.acquire(amountsOfCpu(4));
+    assertThat(semaphore.getAvailableResources(), Matchers.equalTo(amountsOfCpu(2)));
+    assertThat(semaphore.getQueueLength(), Matchers.equalTo(1));
+    assertThat(first.isDone(), Matchers.equalTo(false));
+
+    // Acquire a single permit and verify it goes through.
+    ListenableFuture<Void> second = semaphore.acquire(amountsOfCpu(1));
+    assertThat(semaphore.getAvailableResources(), Matchers.equalTo(amountsOfCpu(1)));
+    assertThat(semaphore.getQueueLength(), Matchers.equalTo(1));
+    assertThat(second.isDone(), Matchers.equalTo(true));
+  }
+
+  private ListeningMultiSemaphore getFairListeningMultiSemaphore(ResourceAmounts values) {
+    return new ListeningMultiSemaphore(
+        values,
+        ResourceAllocationFairness.FAIR);
   }
 
   private static ResourceAmounts amountsOfCpu(int cpu) {

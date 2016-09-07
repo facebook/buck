@@ -43,6 +43,7 @@ import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PatternAndMessage;
+import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.Platform;
@@ -79,6 +80,7 @@ public class BuckConfig {
   public static final String BUCK_CONFIG_OVERRIDE_FILE_NAME = ".buckconfig.local";
 
   private static final String ALIAS_SECTION_HEADER = "alias";
+  private static final String RESOURCES_SECTION_HEADER = "resources";
 
   private static final Float DEFAULT_THREAD_CORE_RATIO = Float.valueOf(1.0F);
 
@@ -954,5 +956,14 @@ public class BuckConfig {
   public boolean getBuckOutCompatLink() {
     return getBooleanValue("project", "buck_out_compat_link", false);
   }
+
+  public ResourceAllocationFairness getResourceAllocationFairness() {
+    return config.getEnum(
+        RESOURCES_SECTION_HEADER,
+        "resource_allocation_fairness",
+        ResourceAllocationFairness.class)
+        .or(ResourceAllocationFairness.FAIR);
+  }
+
 
 }

@@ -83,6 +83,7 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;
 import com.facebook.buck.util.concurrent.MoreFutures;
+import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.zip.CustomZipEntry;
@@ -2687,7 +2688,8 @@ public class CachingBuildEngineTest {
               pathResolver,
               RuleScheduleInfo.DEFAULT.withJobsMultiplier(2));
       ListeningMultiSemaphore semaphore = new ListeningMultiSemaphore(
-          ResourceAmounts.of(3, 0, 0, 0));
+          ResourceAmounts.of(3, 0, 0, 0),
+          ResourceAllocationFairness.FAIR);
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
           .setExecutorService(
               new WeightedListeningExecutorService(

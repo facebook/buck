@@ -34,10 +34,14 @@ public class ListeningMultiSemaphore {
   private ResourceAmounts usedValues;
   private final ResourceAmounts maximumValues;
   private final List<ListeningSemaphoreArrayPendingItem> pending = new LinkedList<>();
+  private final ResourceAllocationFairness fairness;
 
-  public ListeningMultiSemaphore(ResourceAmounts availableResources) {
+  public ListeningMultiSemaphore(
+      ResourceAmounts availableResources,
+      ResourceAllocationFairness fairness) {
     this.usedValues = ResourceAmounts.ZERO;
     this.maximumValues = availableResources;
+    this.fairness = fairness;
   }
 
   /**
@@ -47,17 +51,18 @@ public class ListeningMultiSemaphore {
    * When you finish your job, you must release acquired resources by calling release() method
    * below.
    *
-   * @param resources Resource amounts that need to be acquired.
+   * @param resources Resource amounts that need to be acquired. If they are higher than maximum
+   *                  amounts, they will be capped to them.
    *
    * @return Future that will be completed once resource will be acquired.
    */
   public synchronized ListenableFuture<Void> acquire(ResourceAmounts resources) {
+    resources = capResourceAmounts(resources);
     if (!checkIfResourcesAvailable(resources)) {
       SettableFuture<Void> pendingFuture = SettableFuture.create();
       pending.add(ListeningSemaphoreArrayPendingItem.of(pendingFuture, resources));
       return pendingFuture;
     }
-
     increaseUsedResources(resources);
     return Futures.immediateFuture(null);
   }
@@ -69,6 +74,7 @@ public class ListeningMultiSemaphore {
    *                  match one you used during resource acquiring.
    */
   public void release(ResourceAmounts resources) {
+    resources = capResourceAmounts(resources);
     decreaseUsedResources(resources);
     processPendingFutures(getPendingItemsThatCanBeProcessed());
   }
@@ -84,6 +90,8 @@ public class ListeningMultiSemaphore {
         builder.add(item);
         increaseUsedResources(item.getResources());
         iterator.remove();
+      } else if (!fairnessAllowsReordering()) {
+        break;
       }
     }
     return builder.build();
@@ -101,17 +109,29 @@ public class ListeningMultiSemaphore {
     return pending.size();
   }
 
+  /**
+   * We assume that if requested amounts are larger than we have in maximumValues, then intention
+   * was to request all possible resources. This method caps the given resources to the maximum
+   * possible value. Without capping the deadlock will happen.
+   */
+  private ResourceAmounts capResourceAmounts(ResourceAmounts amounts) {
+    return ResourceAmounts.of(
+        Math.min(amounts.getCpu(), maximumValues.getCpu()),
+        Math.min(amounts.getMemory(), maximumValues.getMemory()),
+        Math.min(amounts.getDiskIO(), maximumValues.getDiskIO()),
+        Math.min(amounts.getNetworkIO(), maximumValues.getNetworkIO()));
+  }
+
   private synchronized boolean checkIfResourcesAvailable(ResourceAmounts resources) {
-    return !usedValues.append(resources).containsValuesGreaterThan(maximumValues);
+    Preconditions.checkState(
+        resources.allValuesLessThanOrEqual(maximumValues),
+        "Resource amounts (%s) must be capped to the maximum amounts (%s)",
+        resources, maximumValues);
+    return usedValues.append(resources).allValuesLessThanOrEqual(maximumValues);
   }
 
   private synchronized void increaseUsedResources(ResourceAmounts resources) {
-    ResourceAmounts updatedAmounts = usedValues.append(resources);
-    Preconditions.checkArgument(
-        !updatedAmounts.containsValuesGreaterThan(maximumValues),
-        "Cannot decrease available resources by %s. Current: %s, Maximum: %s",
-        resources, usedValues, maximumValues);
-    usedValues = updatedAmounts;
+    usedValues = usedValues.append(resources);
   }
 
   private synchronized void decreaseUsedResources(ResourceAmounts resources) {
@@ -137,4 +157,7 @@ public class ListeningMultiSemaphore {
     }
   }
 
+  private boolean fairnessAllowsReordering() {
+    return fairness == ResourceAllocationFairness.FAIR;
+  }
 }

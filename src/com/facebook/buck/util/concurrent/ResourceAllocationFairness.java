@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,24 +13,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.util.concurrent;
 
 /**
- * Amalgamation of parameters that control how many jobs we can run at once.
+ * How to handle fairness when acquiring the semaphore.
  */
-public class ConcurrencyLimit {
-
-  public final int threadLimit;
-  public final double loadLimit;
-  public final ResourceAllocationFairness resourceAllocationFairness;
-
-  public ConcurrencyLimit(
-      int threadLimit,
-      double loadLimit,
-      ResourceAllocationFairness resourceAllocationFairness) {
-    this.threadLimit = threadLimit;
-    this.loadLimit = loadLimit;
-    this.resourceAllocationFairness = resourceAllocationFairness;
-  }
+public enum ResourceAllocationFairness {
+  /**
+   * Make acquisitions happen in order.  This may mean a high-permit count acquisition can block
+   * smaller ones queued behind it that could otherwise grab the semaphore.
+   */
+  FAIR,
+  /**
+   * Move lower-permit count acquisitions that can acquire the lock ahead of high-count ones that
+   * are blocked due to size.
+   */
+  FAST,
 }

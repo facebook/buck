@@ -286,7 +286,8 @@ public class TestCommand extends BuildCommand {
 
     ConcurrencyLimit concurrencyLimit = new ConcurrencyLimit(
         getNumTestThreads(params.getBuckConfig()),
-        params.getBuckConfig().getLoadLimit());
+        params.getBuckConfig().getLoadLimit(),
+        params.getBuckConfig().getResourceAllocationFairness());
     try (
         CommandThreadManager testPool = new CommandThreadManager(
             "Test-Run",
