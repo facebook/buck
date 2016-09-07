@@ -28,6 +28,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.FakeClock;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -70,7 +71,8 @@ public class WatchmanWatcherIntegrationTest {
             tmp.getRoot(),
             ImmutableMap.copyOf(System.getenv()),
             new Console(Verbosity.ALL, System.out, System.err, Ansi.withoutTty()),
-            new DefaultClock());
+            new DefaultClock(),
+            Optional.<Long>absent());
     assumeTrue(watchman.getWatchmanClient().isPresent());
 
     eventBus = new EventBus();

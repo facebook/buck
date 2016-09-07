@@ -151,7 +151,8 @@ public class BuildFileSpecTest {
                     Watchman.Capability.DIRNAME,
                     Watchman.Capability.WILDMATCH_GLOB),
                 Optional.of(Paths.get(".watchman-sock")),
-                Optional.<WatchmanClient>of(fakeWatchmanClient)))
+                Optional.<WatchmanClient>of(fakeWatchmanClient),
+                TimeUnit.SECONDS.toMillis(45)))
         .build();
     ImmutableSet<Path> actualBuildFiles = recursiveSpec.findBuildFiles(
         cell,
@@ -198,7 +199,8 @@ public class BuildFileSpecTest {
                     Watchman.Capability.DIRNAME,
                     Watchman.Capability.WILDMATCH_GLOB),
                 Optional.of(Paths.get(".watchman-sock")),
-                Optional.<WatchmanClient>of(fakeWatchmanClient)))
+                Optional.<WatchmanClient>of(fakeWatchmanClient),
+                TimeUnit.SECONDS.toMillis(45)))
         .build();
 
     thrown.expect(IOException.class);
@@ -254,7 +256,8 @@ public class BuildFileSpecTest {
                     Watchman.Capability.DIRNAME,
                     Watchman.Capability.WILDMATCH_GLOB),
                 Optional.of(Paths.get(".watchman-sock")),
-                Optional.<WatchmanClient>of(timingOutWatchmanClient)))
+                Optional.<WatchmanClient>of(timingOutWatchmanClient),
+                TimeUnit.SECONDS.toMillis(45)))
         .build();
     ImmutableSet<Path> expectedBuildFiles =
         ImmutableSet.of(filesystem.resolve(buildFile), filesystem.resolve(nestedBuildFile));

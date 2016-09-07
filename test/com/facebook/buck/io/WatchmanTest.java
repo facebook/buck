@@ -101,7 +101,8 @@ public class WatchmanTest {
         env,
         finder,
         new TestConsole(),
-        clock);
+        clock,
+        Optional.<Long>absent());
 
     assertEquals(Watchman.NULL_WATCHMAN, watchman);
   }
@@ -152,7 +153,8 @@ public class WatchmanTest {
         env,
         finder,
         new TestConsole(),
-        clock);
+        clock,
+        Optional.<Long>absent());
 
     assertEquals(Watchman.NULL_WATCHMAN, watchman);
   }
@@ -211,7 +213,8 @@ public class WatchmanTest {
         env,
         finder,
         new TestConsole(),
-        clock);
+        clock,
+        Optional.<Long>absent());
 
     assertEquals(Watchman.NULL_WATCHMAN, watchman);
   }
@@ -269,7 +272,8 @@ public class WatchmanTest {
         env,
         finder,
         new TestConsole(),
-        clock);
+        clock,
+        Optional.of(TimeUnit.SECONDS.toMillis(5)));
 
     assertEquals(Watchman.NULL_WATCHMAN, watchman);
   }
@@ -325,7 +329,8 @@ public class WatchmanTest {
         env,
         finder,
         new TestConsole(),
-        clock);
+        clock,
+        Optional.of(TimeUnit.SECONDS.toMillis(5)));
 
     assertEquals(Watchman.NULL_WATCHMAN, watchman);
   }
@@ -382,7 +387,8 @@ public class WatchmanTest {
         env,
         finder,
         new TestConsole(),
-        clock);
+        clock,
+        Optional.<Long>absent());
 
     assertEquals(
         ImmutableSet.of(

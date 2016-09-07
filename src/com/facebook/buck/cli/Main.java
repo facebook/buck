@@ -1252,14 +1252,21 @@ public final class Main {
       Clock clock) throws InterruptedException, IOException {
     Watchman watchman;
     if (context.isPresent() || parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN) {
-      watchman = Watchman.build(projectRoot, clientEnvironment, console, clock);
+      watchman = Watchman.build(
+          projectRoot,
+          clientEnvironment,
+          console,
+          clock,
+          parserConfig.getWatchmanQueryTimeoutMs());
 
       LOG.debug(
-          "Watchman capabilities: %s Watch root: %s Project prefix: %s Glob handler config: %s ",
+          "Watchman capabilities: %s Watch root: %s Project prefix: %s Glob handler config: %s " +
+          "Query timeout ms config: %s",
           watchman.getCapabilities(),
           watchman.getWatchRoot(),
           watchman.getProjectPrefix(),
-          parserConfig.getGlobHandler());
+          parserConfig.getGlobHandler(),
+          parserConfig.getWatchmanQueryTimeoutMs());
 
     } else {
       watchman = Watchman.NULL_WATCHMAN;

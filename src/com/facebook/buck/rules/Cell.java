@@ -213,7 +213,15 @@ public class Cell {
             rootConfig.getEnvironment(),
             cellPathResolver);
 
-        Watchman.build(cellPath, rootConfig.getEnvironment(), console, clock).close();
+        ParserConfig parserConfig = new ParserConfig(buckConfig);
+
+        Watchman.build(
+            cellPath,
+            rootConfig.getEnvironment(),
+            console,
+            clock,
+            parserConfig.getWatchmanQueryTimeoutMs()
+        ).close();
 
         return new Cell(
             cellPathResolver.getKnownRoots(),
