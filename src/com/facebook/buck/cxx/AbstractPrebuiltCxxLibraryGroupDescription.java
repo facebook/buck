@@ -247,7 +247,9 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
           CxxPlatform cxxPlatform) {
-        return ImmutableList.of();
+        return FluentIterable.from(args.exportedDeps.or(ImmutableSortedSet.<BuildTarget>of()))
+            .transform(resolver.getRuleFunction())
+            .filter(NativeLinkable.class);
       }
 
       @Override
@@ -346,6 +348,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
     public Optional<ImmutableMap<String, SourcePath>> sharedLibs;
 
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
 
   }
 

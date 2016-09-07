@@ -34,6 +34,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -159,6 +160,23 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                     new StringArg("--something-else"),
                     new RelativeLinkArg(lib2))
                 .build()));
+  }
+
+  @Test
+  public void exportedDeps() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildTarget target = BuildTargetFactory.newInstance("//:lib");
+    CxxLibrary dep =
+        (CxxLibrary) new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .build(resolver);
+    NativeLinkable lib =
+        (NativeLinkable) new PrebuiltCxxLibraryGroupBuilder(target)
+            .setExportedDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
+            .build(resolver);
+    assertThat(
+        lib.getNativeLinkableExportedDeps(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.<NativeLinkable>contains(dep));
   }
 
 }

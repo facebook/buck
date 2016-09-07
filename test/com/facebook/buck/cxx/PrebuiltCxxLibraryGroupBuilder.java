@@ -76,4 +76,9 @@ public class PrebuiltCxxLibraryGroupBuilder
     return this;
   }
 
+  public PrebuiltCxxLibraryGroupBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> deps) {
+    arg.exportedDeps = Optional.of(deps);
+    return this;
+  }
+
 }
