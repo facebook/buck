@@ -7,19 +7,19 @@ import os
 DIR = os.path.dirname(__file__)
 
 # The location of the plugin directory
-PLUGIN_PATH = os.path.join(DIR, "../../src/com/facebook/buck/intellij/plugin/")
+PLUGIN_PATH = os.path.join(DIR, "../../src/com/facebook/buck/intellij/ideabuck/")
 # The location of the grammar-kit directory
 GRAMMAR_KIT = os.path.join(DIR, "../../third-party/java/grammar-kit/")
 
 OUT_DIR = os.path.join(PLUGIN_PATH, "gen")
-FLEX_OUT_DIR = os.path.join(OUT_DIR, "com/facebook/buck/intellij/plugin/lang")
+FLEX_OUT_DIR = os.path.join(OUT_DIR, "com/facebook/buck/intellij/ideabuck/lang")
 
 GRAMMAR_KIT_JAR = os.path.join(GRAMMAR_KIT, "grammar-kit.jar")
 GRAMMAR_KIT_JFLEX_JAR = os.path.join(GRAMMAR_KIT, "JFlex.jar")
 
 JFLEX_SKELETON = os.path.join(PLUGIN_PATH, "resources/idea-flex.skeleton")
-FLEX_FILE = os.path.join(PLUGIN_PATH, "src/com/facebook/buck/intellij/plugin/lang/Buck.flex")
-BNF_FILE = os.path.join(PLUGIN_PATH, "src/com/facebook/buck/intellij/plugin/lang/Buck.bnf")
+FLEX_FILE = os.path.join(PLUGIN_PATH, "src/com/facebook/buck/intellij/ideabuck/lang/Buck.flex")
+BNF_FILE = os.path.join(PLUGIN_PATH, "src/com/facebook/buck/intellij/ideabuck/lang/Buck.bnf")
 
 print FLEX_OUT_DIR
 

@@ -9,7 +9,7 @@ from updatecommon import get_release  # noqa ignore module level import not at t
 from updatecommon import upload_release  # noqa ignore module level import not at top lint
 
 
-BUILT_IDEA_BUCK = '../../buck-out/gen/src/com/facebook/buck/intellij/plugin/ideabuck.jar'
+BUILT_IDEA_BUCK = '../../buck-out/gen/src/com/facebook/buck/intellij/ideabuck/ideabuck.jar'
 
 
 @contextmanager
@@ -41,7 +41,7 @@ def build_plugin(version_tag, buck_repo_location):
             [
                 'buck',
                 'build',
-                '//src/com/facebook/buck/intellij/plugin:ideabuck',
+                '//src/com/facebook/buck/intellij/ideabuck:ideabuck',
             ],
             cwd=buck_repo_location)
     dest_name = 'buck-intellij-plugin-{version_name}.jar'.format(version_name=version_tag[1:])

@@ -25,7 +25,7 @@ java_library(
   ],
   visibility = [
     '//src/com/facebook/buck/httpserver:',
-    '//src/com/facebook/buck/intellij/plugin:ideabuck-lib',
+    '//src/com/facebook/buck/intellij/ideabuck:ideabuck-lib',
     '//test/com/facebook/buck/file:file',
     '//test/com/facebook/buck/cli:cli',
     '//test/com/facebook/buck/event/listener/integration:integration',

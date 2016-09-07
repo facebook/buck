@@ -49,7 +49,7 @@ public class LicenseCheckTest {
       Paths.get("src/com/facebook/buck/cli/quickstart/android/"),
 
       // Ignore the generated parsing files for the plugin
-      Paths.get("src/com/facebook/buck/intellij/plugin/gen/")
+      Paths.get("src/com/facebook/buck/intellij/ideabuck/gen/")
   );
 
   @Test

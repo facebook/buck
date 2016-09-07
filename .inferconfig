@@ -1,14 +1,14 @@
 {
   "checkers_whitelist": [
     "src",
-    "plugin"
+    "ideabuck"
   ],
   "checkers_blacklist": [
     "src-gen"
   ],
   "eradicate_whitelist": [
     "src",
-    "plugin"
+    "ideabuck"
   ],
   "eradicate_blacklist": [
     "src/com/facebook/buck/junit",
@@ -16,7 +16,7 @@
   ],
   "infer_whitelist": [
     "src",
-    "plugin"
+    "ideabuck"
   ],
   "infer_blacklist": [
     "src-gen"

@@ -18,7 +18,7 @@
 cd third-party/java/intellij/
 sh get_jars.sh "PathToYourIntellijLib" #for unix systems
 get_jars.bat "PathToYourIntellijLib"   #for windows systems
-buck build //src/com/facebook/buck/intellij/plugin:ideabuck
+buck build //src/com/facebook/buck/intellij/ideabuck:ideabuck
 </pre>
 {/literal}
 Once you have built the plugin, you can install it by following the{sp}
@@ -27,7 +27,7 @@ Installing Plugin from Disk</a> guide.
 In order to access it you have to go to <code>View > Tool Windows > Buck</code>.
 <h2 id="manual-build-intellij">Building with Intellij</h2>
 <p>
-  The Buck Intellij plugin can also be built with intellij. A big advantage of this, when working
+  The ideabuck plugin can also be built with intellij. A big advantage of this, when working
   on the plugin, is the fact that you can easily debug it by creating a new Run/Debug Configuration.
 </p>
 <ol>
@@ -42,8 +42,8 @@ In order to access it you have to go to <code>View > Tool Windows > Buck</code>.
         After you installed Grammar-Kit you can generate the files by navigating in Intellij to
         {literal}
           <pre>
-src/com/facebook/buck/intellij/plugin/src/com/facebook/buck/intellij/plugin/lang/Buck.bnf
-src/com/facebook/buck/intellij/plugin/src/com/facebook/buck/intellij/plugin/lang/Buck.flex
+src/com/facebook/buck/intellij/ideabuck/src/com/facebook/buck/intellij/ideabuck/lang/Buck.bnf
+src/com/facebook/buck/intellij/ideabuck/src/com/facebook/buck/intellij/ideabuck/lang/Buck.flex
           </pre>
         {/literal}
         and pressing <code>ctrl-shift-G / meta-shift-G</code>.
@@ -57,7 +57,7 @@ python scripts/intellij/generate_grammar_kit.py
         {/literal}
         <p>
           The above mentioned commands will create a <code>gen</code> directory in {sp}
-          <code>src/com/facebook/buck/intellij/plugin</code>.
+          <code>src/com/facebook/buck/intellij/ideabuck</code>.
         </p>
       </li>
     </ul>
@@ -70,7 +70,7 @@ python scripts/intellij/generate_grammar_kit.py
     plugin's module sdk</a>.
   </li>
   <li>
-    Remove the Buck Intellij Plugin, <code>buck/src/com/facebook/buck/intellij/plugin</code> from{sp}
+    Remove the Buck Intellij Plugin, <code>buck/src/com/facebook/buck/intellij/ideabuck</code> from{sp}
     <a href="https://www.jetbrains.com/help/idea/15.0/compiler-excludes.html?origin=old_help">
     the Compiler Excludes list</a>.
   </li>
