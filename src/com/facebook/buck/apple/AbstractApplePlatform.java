@@ -72,6 +72,7 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
           .setName("appletvsimulator")
           .setArchitectures(ImmutableList.of("x86_64"))
           .setMinVersionFlagPrefix("-mtvos-simulator-version-min=")
+          .setSwiftName("tvos")
           .build();
   public static final ApplePlatform MACOSX =
       ApplePlatform.builder()
