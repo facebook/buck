@@ -31,6 +31,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
+import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -122,7 +123,8 @@ abstract class AbstractExecutionContext implements Closeable {
     return new ConcurrencyLimit(
         /* threadLimit */ Runtime.getRuntime().availableProcessors(),
         /* loadLimit */ Double.POSITIVE_INFINITY,
-        ResourceAllocationFairness.FAIR);
+        ResourceAllocationFairness.FAIR,
+        ResourceAmountsEstimator.DEFAULT_MANAGED_THREAD_COUNT);
   }
 
   @Value.Default

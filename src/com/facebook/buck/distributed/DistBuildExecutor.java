@@ -103,7 +103,8 @@ public class DistBuildExecutor {
         new ConcurrencyLimit(
             4,
             1,
-            config.getResourceAllocationFairness()),
+            config.getResourceAllocationFairness(),
+            4),
         Optional.<AdbOptions>absent(),
         Optional.<TargetDeviceOptions>absent(),
         args.getExecutors())) {

@@ -16,21 +16,38 @@
 
 package com.facebook.buck.util.concurrent;
 
+import com.google.common.base.Preconditions;
+
 /**
  * Amalgamation of parameters that control how many jobs we can run at once.
  */
 public class ConcurrencyLimit {
 
+  /**
+   * Considered as number of build threads that are available for extensive computations.
+   */
   public final int threadLimit;
   public final double loadLimit;
   public final ResourceAllocationFairness resourceAllocationFairness;
+  /**
+   * Number of threads that Buck can manage and use them as worker threads. This number includes
+   * {@link ConcurrencyLimit#threadLimit} value. The rest of the threads may be used for lightweight
+   * tasks, I/O blocking tasks, etc.
+   */
+  public final int managedThreadCount;
 
   public ConcurrencyLimit(
       int threadLimit,
       double loadLimit,
-      ResourceAllocationFairness resourceAllocationFairness) {
+      ResourceAllocationFairness resourceAllocationFairness,
+      int managedThreadCount) {
     this.threadLimit = threadLimit;
     this.loadLimit = loadLimit;
     this.resourceAllocationFairness = resourceAllocationFairness;
+    this.managedThreadCount = managedThreadCount;
+
+    Preconditions.checkArgument(
+        threadLimit <= managedThreadCount,
+        "threadLimit (%d) should be <= managedThreadCount (%d)", threadLimit, managedThreadCount);
   }
 }

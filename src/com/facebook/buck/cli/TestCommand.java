@@ -231,6 +231,13 @@ public class TestCommand extends BuildCommand {
     return buckConfig.getNumThreads();
   }
 
+  public int getNumTestManagedThreads(BuckConfig buckConfig) {
+    if (isDebugEnabled()) {
+      return 1;
+    }
+    return buckConfig.getManagedThreadCount();
+  }
+
   private TestRunningOptions getTestRunningOptions(CommandRunnerParams params) {
     TestRunningOptions.Builder builder = TestRunningOptions.builder()
         .setCodeCoverageEnabled(isCodeCoverageEnabled)
@@ -275,7 +282,8 @@ public class TestCommand extends BuildCommand {
     ConcurrencyLimit concurrencyLimit = new ConcurrencyLimit(
         getNumTestThreads(params.getBuckConfig()),
         params.getBuckConfig().getLoadLimit(),
-        params.getBuckConfig().getResourceAllocationFairness());
+        params.getBuckConfig().getResourceAllocationFairness(),
+        getNumTestManagedThreads(params.getBuckConfig()));
     try (
         CommandThreadManager testPool = new CommandThreadManager(
             "Test-Run",

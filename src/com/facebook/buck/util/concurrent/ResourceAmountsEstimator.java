@@ -40,6 +40,17 @@ public class ResourceAmountsEstimator {
    */
   public static final int DEFAULT_NETWORK_IO_CAP = 30;
 
+  public static final ResourceAmounts DEFAULT_MAXIMUM_AMOUNTS = ResourceAmounts.of(
+      DEFAULT_CPU_CAP,
+      DEFAULT_MEMORY_CAP,
+      DEFAULT_DISK_IO_CAP,
+      DEFAULT_NETWORK_IO_CAP);
+
+  /**
+   * Total number of threads Buck can use to schedule various work.
+   */
+  public static final int DEFAULT_MANAGED_THREAD_COUNT = DEFAULT_CPU_CAP * 2;
+
   private ResourceAmountsEstimator() {}
 
   public static ResourceAmounts getEstimatedAmounts() {
@@ -49,4 +60,16 @@ public class ResourceAmountsEstimator {
         DEFAULT_DISK_IO_CAP,
         DEFAULT_NETWORK_IO_CAP);
   }
+
+  public static final int DEFAULT_CPU_AMOUNT = 1;
+  public static final int DEFAULT_MEMORY_AMOUNT = 1;
+  public static final int DEFAULT_DISK_IO_AMOUNT = 0;
+  public static final int DEFAULT_NETWORK_IO_AMOUNT = 0;
+  public static final ResourceAmounts DEFAULT_AMOUNTS = ResourceAmounts.of(
+      DEFAULT_CPU_AMOUNT,
+      DEFAULT_MEMORY_AMOUNT,
+      DEFAULT_DISK_IO_AMOUNT,
+      DEFAULT_NETWORK_IO_AMOUNT);
+
+
 }

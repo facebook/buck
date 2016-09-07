@@ -39,9 +39,10 @@ public class CommandThreadManagerTest {
     exception.expectMessage(this.getClass().getName());
 
     ConcurrencyLimit concurrencyLimit = new ConcurrencyLimit(
-        1,
-        Double.POSITIVE_INFINITY,
-        ResourceAllocationFairness.FAIR);
+        /* threadLimit */ 1,
+        /* loadLimit */ Double.POSITIVE_INFINITY,
+        ResourceAllocationFairness.FAIR,
+        /* managedThreadCount */ 1);
 
     try (CommandThreadManager pool =
              new CommandThreadManager(
