@@ -84,6 +84,12 @@ public class AdbHelper {
   public static final Pattern PACKAGE_NAME_PATTERN = Pattern.compile("[\\w.-]+");
 
   /**
+   * Pattern that matches Genymotion serial numbers.
+   */
+  private static final Pattern RE_LOCAL_TRANSPORT_SERIAL =
+      Pattern.compile("\\d+\\.\\d+\\.\\d+\\.\\d+:\\d+");
+
+  /**
    * If this environment variable is set, the device with the specified serial
    * number is targeted. The -s option overrides this.
    */
@@ -176,7 +182,7 @@ public class AdbHelper {
         if (emulatorsOnly.isSet()) {
           // Only devices of specific type are accepted:
           // either real devices only or emulators only.
-          deviceTypeMatches = (emulatorsOnly.asBoolean() == device.isEmulator());
+          deviceTypeMatches = (emulatorsOnly.asBoolean() == isEmulator(device));
         } else {
           // All online devices match.
           deviceTypeMatches = true;
@@ -203,6 +209,18 @@ public class AdbHelper {
     }
 
     return devices;
+  }
+
+  private boolean isEmulator(IDevice device) {
+    return isLocalTransport(device) || device.isEmulator();
+  }
+
+  /**
+   * To be consistent with adb, we treat all local transports (as opposed
+   * to USB transports) as emulators instead of devices.
+   */
+  private boolean isLocalTransport(IDevice device) {
+    return RE_LOCAL_TRANSPORT_SERIAL.matcher(device.getSerialNumber()).find();
   }
 
   private boolean isAdbInitialized(AndroidDebugBridge adb) {

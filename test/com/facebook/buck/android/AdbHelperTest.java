@@ -143,6 +143,43 @@ public class AdbHelperTest {
     assertNull(basicAdbHelper.filterDevices(devices));
   }
 
+  @Test
+  public void testEmulatorAddsGenymotionDevices() throws Throwable {
+    AdbHelper adbHelper = createAdbHelper(
+        new AdbOptions(),
+        new TargetDeviceOptions(true, false, null));
+
+    IDevice[] devices = new IDevice[] {
+      TestDevice.createRealDevice("foobarblahblah"),
+      TestDevice.createRealDevice("192.168.57.101:5555")
+    };
+
+    List<IDevice> filtered = adbHelper.filterDevices(devices);
+
+    assertNotNull(filtered);
+    assertEquals(1, filtered.size());
+    assertEquals("192.168.57.101:5555", filtered.get(0).getSerialNumber());
+  }
+
+  @Test
+  public void testGenymotionIsntARealDevice() throws Throwable {
+    AdbHelper adbHelper = createAdbHelper(
+        new AdbOptions(),
+        new TargetDeviceOptions(false, true, null));
+
+    IDevice[] devices = new IDevice[] {
+      TestDevice.createRealDevice("foobar"),
+      TestDevice.createRealDevice("192.168.57.101:5555")
+    };
+
+    List<IDevice> filtered = adbHelper.filterDevices(devices);
+
+    assertNotNull(filtered);
+    assertEquals(1, filtered.size());
+    assertEquals("foobar", filtered.get(0).getSerialNumber());
+  }
+
+
   /**
    * Verify that multi-install is not enabled and multiple devices
    * pass the filter null is returned. Also verify that if multiple
