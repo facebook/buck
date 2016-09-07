@@ -68,8 +68,8 @@ class FilePathGenerator:
         path, parent_dir = self._generate_path(
                 '//', self._root, depth, self._sizes_by_depth,
                 self._component_generator)
-        directory = {self.BUILD_FILE_NAME: None}
-        parent_dir[os.path.basename(path)] = directory
+        directory = {self.BUILD_FILE_NAME.lower(): None}
+        parent_dir[os.path.basename(path).lower()] = directory
         self._last_package_path = path
         self._last_package_remaining_targets = weighted_choice(
                 self._build_file_sizes) - 1
@@ -92,14 +92,14 @@ class FilePathGenerator:
         root = self._root
         components = self._split_path_into_components(package_path)
         for component in components:
-            root = root[component]
+            root = root[component.lower()]
         path, parent_dir = self._generate_path(
                 package_path,
                 root,
                 depth,
                 self._sizes_by_depth_in_package,
                 component_generator)
-        parent_dir[os.path.basename(path)] = None
+        parent_dir[os.path.basename(path).lower()] = None
         return path
 
     def _split_path_into_components(self, path):
@@ -137,7 +137,7 @@ class FilePathGenerator:
             name = self._generate_name(parent_dir, component_generator)
             path = os.path.join(parent_path, name)
             directory = {}
-            parent_dir[name] = directory
+            parent_dir[name.lower()] = directory
             size = weighted_choice(sizes_by_depth[depth])
         size -= 1
         if size > 0:
@@ -149,6 +149,7 @@ class FilePathGenerator:
     def _generate_name(self, directory, generator):
         for i in range(1000):
             name = generator.generate_string()
-            if name not in directory and name != self.BUILD_FILE_NAME:
+            if (name.lower() not in directory and
+                    name.lower() != self.BUILD_FILE_NAME.lower()):
                 return name
         raise GenerationFailedException()

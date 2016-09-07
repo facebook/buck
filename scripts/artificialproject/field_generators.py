@@ -156,12 +156,7 @@ class PathSetGenerator:
                 self._context.output_repository,
                 base_path,
                 path)
-        if os.path.exists(full_path):
-            raise GenerationFailedException()
-        try:
-            os.makedirs(os.path.dirname(full_path), exist_ok=True)
-        except (NotADirectoryError, FileExistsError):
-            raise GenerationFailedException()
+        os.makedirs(os.path.dirname(full_path), exist_ok=True)
         with open(full_path, 'w'):
             pass
         return path
