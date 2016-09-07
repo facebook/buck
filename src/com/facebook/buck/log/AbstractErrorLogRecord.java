@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.LogRecord;
 
 @Value.Immutable
@@ -114,8 +115,8 @@ abstract class AbstractErrorLogRecord {
 
   @Value.Derived
   public long getTime() {
-    return getRecord().getMillis();
-  };
+    return TimeUnit.MILLISECONDS.toSeconds(getRecord().getMillis());
+  }
 
   @Value.Derived
   public Optional<String> getLogger() {
