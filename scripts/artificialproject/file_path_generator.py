@@ -13,8 +13,14 @@ class FilePathGenerator:
 
     def __init__(self):
         self._component_generator = StringGenerator()
+        self._file_samples = collections.defaultdict(
+                lambda: collections.defaultdict(set))
+        self._file_samples_dirty = False
         self._package_depths = collections.Counter()
+        self._file_depths_in_package = collections.Counter()
         self._sizes_by_depth = collections.defaultdict(collections.Counter)
+        self._sizes_by_depth_in_package = collections.defaultdict(
+                collections.Counter)
         self._build_file_sizes = collections.Counter()
         self._root = {}
         self._package_paths = {}
@@ -28,24 +34,28 @@ class FilePathGenerator:
         for target_data in project_data.values():
             base_path = target_data['buck.base_path']
             build_file_entries[base_path].add(target_data['name'])
-            components = []
-            while base_path:
-                base_path, component = os.path.split(base_path)
-                self._component_generator.add_string_sample(component)
-                components.append(component)
+            components = self._split_path_into_components(base_path)
             # TODO(k21): Targets in the root of the repo are ignored
             # because _generate_path does not handle depth == 0.
             if components:
                 self._package_depths.update([len(components)])
-            components = components[::-1]
-            for i in range(len(components)):
+            for component in components:
+                self._component_generator.add_string_sample(component)
+            for i, name in enumerate(components):
                 prefix = components[:i]
-                name = components[i]
                 dir_entries[tuple(prefix)].add(name)
         for base_path, names in build_file_entries.items():
             self._build_file_sizes.update([len(names)])
         for path, entries in dir_entries.items():
             self._sizes_by_depth[len(path)].update([len(entries)])
+
+    def add_package_file_sample(self, package_path, relative_path):
+        components = self._split_path_into_components(relative_path)
+        self._file_depths_in_package.update([len(components)])
+        for i, name in enumerate(components):
+            prefix = components[:i]
+            self._file_samples[package_path][tuple(prefix)].add(name)
+        self._file_samples_dirty = True
 
     def generate_package_path(self):
         if self._last_package_path is not None:
@@ -64,6 +74,40 @@ class FilePathGenerator:
         self._last_package_remaining_targets = weighted_choice(
                 self._build_file_sizes) - 1
         return path
+
+    def generate_path_in_package(
+            self,
+            package_path,
+            depth,
+            component_generator):
+        if depth == 0:
+            return ''
+        if self._file_samples_dirty:
+            self._sizes_by_depth_in_package.clear()
+            for dir_entries in self._file_samples.values():
+                for path, entries in dir_entries.items():
+                    self._sizes_by_depth_in_package[len(path)].update([
+                        len(entries)])
+            self._file_samples_dirty = False
+        root = self._root
+        components = self._split_path_into_components(package_path)
+        for component in components:
+            root = root[component]
+        path, parent_dir = self._generate_path(
+                package_path,
+                root,
+                depth,
+                self._sizes_by_depth_in_package,
+                component_generator)
+        parent_dir[os.path.basename(path)] = None
+        return path
+
+    def _split_path_into_components(self, path):
+        components = []
+        while path:
+            path, component = os.path.split(path)
+            components.append(component)
+        return components[::-1]
 
     def _generate_path(
             self, package_key, root, depth, sizes_by_depth,
