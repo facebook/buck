@@ -57,6 +57,10 @@ public class ScalaBuckConfig {
     return delegate.getRequiredBuildTarget(SECTION, "library");
   }
 
+  ImmutableList<BuildTarget> getCompilerPlugins() {
+    return delegate.getBuildTargetList(SECTION, "compiler_plugins");
+  }
+
   Optional<BuildTarget> getScalacTarget() {
     return delegate.getMaybeBuildTarget(SECTION, "compiler");
   }
