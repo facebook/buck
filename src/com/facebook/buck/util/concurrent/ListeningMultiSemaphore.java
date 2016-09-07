@@ -16,6 +16,7 @@
 package com.facebook.buck.util.concurrent;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -67,9 +68,25 @@ public class ListeningMultiSemaphore {
    * @param resources Resource amounts that need to be released. This argument should
    *                  match one you used during resource acquiring.
    */
-  public synchronized void release(ResourceAmounts resources) {
+  public void release(ResourceAmounts resources) {
     decreaseUsedResources(resources);
-    processPendingFutures();
+    processPendingFutures(getPendingItemsThatCanBeProcessed());
+  }
+
+  private synchronized ImmutableList<ListeningSemaphoreArrayPendingItem>
+  getPendingItemsThatCanBeProcessed() {
+    ImmutableList.Builder<ListeningSemaphoreArrayPendingItem> builder = ImmutableList.builder();
+
+    Iterator<ListeningSemaphoreArrayPendingItem> iterator = pending.iterator();
+    while (!getAvailableResources().equals(ResourceAmounts.ZERO) && iterator.hasNext()) {
+      ListeningSemaphoreArrayPendingItem item = iterator.next();
+      if (checkIfResourcesAvailable(item.getResources())) {
+        builder.add(item);
+        increaseUsedResources(item.getResources());
+        iterator.remove();
+      }
+    }
+    return builder.build();
   }
 
   public synchronized ResourceAmounts getAvailableResources() {
@@ -106,18 +123,17 @@ public class ListeningMultiSemaphore {
     usedValues = updatedAmounts;
   }
 
-  private synchronized void processPendingFutures() {
-    Iterator<ListeningSemaphoreArrayPendingItem> iterator = pending.iterator();
+  private void processPendingFutures(ImmutableList<ListeningSemaphoreArrayPendingItem> items) {
+    ResourceAmounts failedAmounts = ResourceAmounts.ZERO;
 
-    while (iterator.hasNext()) {
-      ListeningSemaphoreArrayPendingItem item = iterator.next();
-      if (checkIfResourcesAvailable(item.getResources())) {
-        iterator.remove();
-        increaseUsedResources(item.getResources());
-        if (!item.getFuture().set(null)) {
-          decreaseUsedResources(item.getResources());
-        }
+    for (ListeningSemaphoreArrayPendingItem item : items) {
+      if (!item.getFuture().set(null)) {
+        failedAmounts = failedAmounts.append(item.getResources());
       }
+    }
+
+    if (!failedAmounts.equals(ResourceAmounts.ZERO)) {
+      release(failedAmounts);
     }
   }
 
