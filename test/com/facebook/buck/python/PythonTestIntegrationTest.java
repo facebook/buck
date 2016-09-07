@@ -57,9 +57,6 @@ public class PythonTestIntegrationTest {
     result1.assertSuccess();
     workspace.resetBuildLogFile();
 
-    ProcessResult runResult1 = workspace.runBuckCommand("run", "//:test-success");
-    runResult1.assertSuccess("python test binary should exit 0 on success");
-
     // This test should fail.
     ProcessResult result2 = workspace.runBuckCommand("test", "//:test-failure");
     result2.assertTestFailure();
@@ -67,9 +64,6 @@ public class PythonTestIntegrationTest {
         "`buck test` should fail because test_that_fails() failed.",
         result2.getStderr(),
         containsString("test_that_fails"));
-
-    ProcessResult runResult2 = workspace.runBuckCommand("run", "//:test-failure");
-    runResult2.assertFailure("python test binary should exit 1 on failure");
   }
 
   @Test
