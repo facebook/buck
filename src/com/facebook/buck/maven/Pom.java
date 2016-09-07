@@ -58,9 +58,8 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.nio.charset.Charset;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -378,12 +377,10 @@ public class Pom {
 
   public void flushToFile() throws IOException {
     getModel(); // Ensure model is initialized, reading file if necessary
-    flushTo(Files.newOutputStream(getPath()));
-  }
-
-  private void flushTo(OutputStream destination) throws IOException {
-    POM_WRITER.write(new OutputStreamWriter(destination,
-        Charset.forName(getModel().getModelEncoding())), getModel());
+    Files.createDirectories(getPath().getParent());
+    try (Writer writer = Files.newBufferedWriter(getPath(), StandardCharsets.UTF_8)) {
+      POM_WRITER.write(writer, getModel());
+    }
   }
 
   private static Optional<String> getMavenCoords(BuildRule buildRule) {
