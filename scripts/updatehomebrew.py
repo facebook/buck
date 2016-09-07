@@ -66,7 +66,7 @@ def build_bottle(version_tag, tap_repo_location):
     subprocess.check_call(
         [
             'mv',
-            'buck-{version_name}.yosemite.bottle.tar.gz'.format(
+            'buck-{version_name}.el_capitan.bottle.tar.gz'.format(
                 version_name=version_tag[1:]),
             dest_name,
         ],
