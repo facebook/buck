@@ -745,6 +745,30 @@ class BuildFileProcessor(object):
         # Lookup the value and record it in this build file's context.
         build_env.used_env_vars[name] = value
 
+    def _get_callers_frame(self, skip=None):
+        """
+        Get the stack frame from where the function was called.
+        """
+        if skip is None:
+            skip = []
+        skip = set([__name__] + skip)
+        # Look up the caller's stack frame, skipping specified names.
+        frame = inspect.currentframe()
+        # Use 'get' as '__name__' may not exist if 'eval' was used ('get' will return None then).
+        while frame.f_globals.get('__name__') in skip:
+            frame = frame.f_back
+
+        return frame
+
+    def _is_in_dir(self, filepath, directory):
+        """
+        Returns true if 'filepath' is in 'directory'.
+        """
+        path = os.path.abspath(filepath)
+        # Make 'directory' end with '/' (os.sep) to detect that '/a/foo.py' is not in '/a/f' etc.
+        directory = os.path.join(os.path.abspath(directory), '')
+        return os.path.commonprefix([path, directory]) == directory
+
     def _include_defs(self, name, implicit_includes=None):
         """
         Pull the named include into the current caller's context.
@@ -767,9 +791,7 @@ class BuildFileProcessor(object):
 
         # Look up the caller's stack frame and merge the include's globals
         # into it's symbol table.
-        frame = inspect.currentframe()
-        while frame.f_globals['__name__'] in (__name__, '_functools'):
-            frame = frame.f_back
+        frame = self._get_callers_frame(skip=['_functools'])
         self._merge_globals(mod, frame.f_globals)
 
         # Pull in the include's accounting of its own referenced includes
@@ -924,7 +946,12 @@ class BuildFileProcessor(object):
                 # which is how '__import__' works.
                 name = name.split('.')[0]
 
-            if name in self._import_whitelist:
+            # Get the name of the file where import is used. The import will be always allowed
+            # if the file is not in the project root directory.
+            frame = self._get_callers_frame()
+            filename = inspect.getframeinfo(frame).filename
+
+            if name in self._import_whitelist or not self._is_in_dir(filename, self._project_root):
                 # Importing a module may cause more '__import__' calls if the module uses other
                 # modules. Such calls should not be blocked if the top-level import was allowed.
                 with self._allow_unsafe_import():

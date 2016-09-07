@@ -680,3 +680,12 @@ class BuckTest(unittest.TestCase):
             AttributeError,
             build_file_processor.process,
             build_file.root, build_file.prefix, build_file.path, set())
+
+    def test_is_in_dir(self):
+        build_file_processor = self.create_build_file_processor()
+        assert build_file_processor._is_in_dir('foo/bar.py', 'foo')
+        assert build_file_processor._is_in_dir('foo/bar.py', 'foo/')
+        assert build_file_processor._is_in_dir('/foo/bar.py', '/')
+        assert not build_file_processor._is_in_dir('foo.py', 'foo')
+        assert not build_file_processor._is_in_dir('foo/bar.py', 'foo/bar')
+        assert not build_file_processor._is_in_dir('foo/bars', 'foo/bar')
