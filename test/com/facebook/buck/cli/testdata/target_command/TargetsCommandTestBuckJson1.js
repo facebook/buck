@@ -19,6 +19,7 @@
   "javacJar": null,
   "javaVersion": null,
   "mavenCoords":null,
+  "mavenPomTemplate":null,
   "name" : "test-library",
   "postprocessClassesCommands" : [ ],
   "proguardConfig" : null,

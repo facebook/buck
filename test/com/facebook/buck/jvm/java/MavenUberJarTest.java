@@ -27,6 +27,7 @@ import com.facebook.buck.python.PythonLibraryBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -67,7 +68,8 @@ public class MavenUberJarTest {
         (JavaLibrary) javaLibraryBuilder.build(ruleResolver),
         javaLibraryBuilder.createBuildRuleParams(ruleResolver, filesystem),
         new SourcePathResolver(ruleResolver),
-        Optional.of("com.facebook.buck.jvm.java:java:jar:42"));
+        Optional.of("com.facebook.buck.jvm.java:java:jar:42"),
+        Optional.<SourcePath>absent());
     assertThat(buildRule.getDeps(), Matchers.not(Matchers.hasItem(pythonLibrary)));
   }
 }

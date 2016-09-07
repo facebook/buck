@@ -17,6 +17,7 @@
 package com.facebook.buck.testutil;
 
 import com.facebook.buck.io.DefaultProjectFilesystemDelegate;
+import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.timing.Clock;
@@ -204,6 +205,29 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   private final Map<Path, Path> symLinks;
   private final Set<Path> directories;
   private final Clock clock;
+
+  /**
+   * @return A project filesystem in a temp directory that will be deleted recursively on jvm exit.
+   */
+  public static ProjectFilesystem createRealTempFilesystem() {
+    final Path tempDir;
+    try {
+      tempDir = Files.createTempDirectory("pfs");
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          MoreFiles.deleteRecursively(tempDir);
+        } catch (IOException e) { // NOPMD
+          // Swallow. At least we tried, right?
+        }
+      }
+    }));
+    return new FakeProjectFilesystem(tempDir);
+  }
 
   public static ProjectFilesystem createJavaOnlyFilesystem() {
     return createJavaOnlyFilesystem("/opt/src/buck");
