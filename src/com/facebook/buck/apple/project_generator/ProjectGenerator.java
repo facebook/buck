@@ -1084,7 +1084,7 @@ public class ProjectGenerator {
       Optional<TargetNode<AppleBundleDescription.Arg>> bundleLoaderNode)
       throws IOException {
     PBXNativeTarget target;
-    if (targetNode.getBuildTarget().getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
+    if (isFrameworkTarget(targetNode)) {
       target = generateAppleBundleTarget(
           project,
           targetNode.castArg(AppleLibraryDescription.Arg.class).get(),
@@ -1536,6 +1536,10 @@ public class ProjectGenerator {
     }
 
     return target;
+  }
+
+  private boolean isFrameworkTarget(TargetNode<?> targetNode) {
+    return targetNode.getBuildTarget().getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR);
   }
 
   private boolean shouldIncludeBuildTargetIntoFocusedProject(BuildTarget buildTarget) {
@@ -2737,8 +2741,7 @@ public class ProjectGenerator {
           if (productType.isPresent()) {
             return productType.get();
           }
-        } else if (binaryNode.getBuildTarget().getFlavors().contains(
-            AppleDescriptions.FRAMEWORK_FLAVOR)) {
+        } else if (isFrameworkTarget(binaryNode)) {
           return ProductType.FRAMEWORK;
         } else {
           switch (extension) {
