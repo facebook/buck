@@ -311,6 +311,7 @@ class NewNativeTargetProjectMutator {
     traverseGroupsTreeAndHandleSources(
         sourcesGroup,
         sourcesBuildPhase,
+        headersBuildPhase,
         RuleUtils.createGroupsFromSourcePaths(
             new Function<SourcePath, Path>() {
               @Override
@@ -358,6 +359,7 @@ class NewNativeTargetProjectMutator {
   private void traverseGroupsTreeAndHandleSources(
       final PBXGroup sourcesGroup,
       final PBXSourcesBuildPhase sourcesBuildPhase,
+      final PBXHeadersBuildPhase headersBuildPhase,
       Iterable<GroupedSource> groupedSources) {
     GroupedSource.Visitor visitor = new GroupedSource.Visitor() {
       @Override
@@ -373,6 +375,7 @@ class NewNativeTargetProjectMutator {
         addSourcePathToHeadersBuildPhase(
             publicHeader,
             sourcesGroup,
+            headersBuildPhase,
             HeaderVisibility.PUBLIC);
       }
 
@@ -381,6 +384,7 @@ class NewNativeTargetProjectMutator {
         addSourcePathToHeadersBuildPhase(
             privateHeader,
             sourcesGroup,
+            headersBuildPhase,
             HeaderVisibility.PRIVATE);
       }
 
@@ -397,6 +401,7 @@ class NewNativeTargetProjectMutator {
         traverseGroupsTreeAndHandleSources(
             newSourceGroup,
             sourcesBuildPhase,
+            headersBuildPhase,
             sourceGroup);
       }
     };
@@ -446,6 +451,7 @@ class NewNativeTargetProjectMutator {
   private void addSourcePathToHeadersBuildPhase(
       SourcePath headerPath,
       PBXGroup headersGroup,
+      PBXHeadersBuildPhase headersBuildPhase,
       HeaderVisibility visibility) {
     PBXFileReference fileReference = headersGroup.getOrCreateFileReferenceBySourceTreePath(
         new SourceTreePath(
@@ -454,6 +460,7 @@ class NewNativeTargetProjectMutator {
             Optional.<String>absent()));
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
     if (visibility != HeaderVisibility.PRIVATE) {
+      headersBuildPhase.getFiles().add(buildFile);
       NSDictionary settings = new NSDictionary();
       settings.put(
           "ATTRIBUTES",
