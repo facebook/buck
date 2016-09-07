@@ -112,22 +112,7 @@ public class SymlinkTreeTest {
   }
 
   @Test
-  public void testSymlinkTreeBuildStepsAreEmpty() throws IOException {
-
-    // Create the fake build contexts.
-    BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
-    FakeBuildableContext buildableContext = new FakeBuildableContext();
-
-    // Verify the build steps are as expected.
-    ImmutableList<Step> actualBuildSteps =
-        symlinkTreeBuildRule.getBuildSteps(
-            buildContext,
-            buildableContext);
-    assertThat(actualBuildSteps, Matchers.empty());
-  }
-
-  @Test
-  public void testSymlinkTreePostBuildSteps() throws IOException {
+  public void testSymlinkTreeBuildSteps() throws IOException {
 
     // Create the fake build contexts.
     BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
@@ -147,7 +132,7 @@ public class SymlinkTreeTest {
                 outputPath,
                 resolver.getMappedPaths(links)));
     ImmutableList<Step> actualBuildSteps =
-        symlinkTreeBuildRule.getPostBuildSteps(
+        symlinkTreeBuildRule.getBuildSteps(
             buildContext,
             buildableContext);
     assertEquals(expectedBuildSteps, actualBuildSteps.subList(1, actualBuildSteps.size()));

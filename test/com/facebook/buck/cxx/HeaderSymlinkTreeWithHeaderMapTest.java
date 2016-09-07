@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
@@ -48,7 +47,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -117,19 +115,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
   }
 
   @Test
-  public void testSymlinkTreeBuildStepsAreEmpty() throws IOException {
-    BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
-    FakeBuildableContext buildableContext = new FakeBuildableContext();
-
-    ImmutableList<Step> actualBuildSteps =
-        symlinkTreeBuildRule.getBuildSteps(
-            buildContext,
-            buildableContext);
-    assertThat(actualBuildSteps, Matchers.empty());
-  }
-
-  @Test
-  public void testSymlinkTreePostBuildSteps() throws IOException {
+  public void testSymlinkTreeBuildSteps() throws IOException {
     BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     FakeBuildableContext buildableContext = new FakeBuildableContext();
@@ -157,7 +143,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
                         .relativize(symlinkTreeRoot)
                         .resolve("directory/then/file"))));
     ImmutableList<Step> actualBuildSteps =
-        symlinkTreeBuildRule.getPostBuildSteps(
+        symlinkTreeBuildRule.getBuildSteps(
             buildContext,
             buildableContext);
     assertEquals(expectedBuildSteps, actualBuildSteps.subList(1, actualBuildSteps.size()));

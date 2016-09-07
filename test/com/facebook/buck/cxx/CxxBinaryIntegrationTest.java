@@ -45,14 +45,15 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 
 import org.hamcrest.Matchers;
 import org.ini4j.Ini;
@@ -73,6 +74,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.Set;
+
 
 public class CxxBinaryIntegrationTest {
 
@@ -142,7 +144,10 @@ public class CxxBinaryIntegrationTest {
     String bt;
     for (BuildTarget buildTarget : buildLog.getAllTargets()) {
       bt = buildTarget.toString();
-      if (bt.equals(inferAnalysisTarget.toString()) ||
+      if (buildTarget.getFlavors()
+              .contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR) ||
+          buildTarget.getFlavors().contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR) ||
+          bt.equals(inferAnalysisTarget.toString()) ||
           bt.equals(captureBuildTarget.toString()) ||
           bt.equals(inferReportTarget.toString()) ||
           bt.equals(aggregatedDepsTarget.toString())) {
@@ -253,16 +258,24 @@ public class CxxBinaryIntegrationTest {
       buildLog.assertTargetBuiltLocally(t);
     }
 
-    Set <String> builtFromCacheTargets = Sets.newHashSet(
-        Iterables.transform(
-            buildLog.getAllTargets(), new Function<BuildTarget, String>() {
-              @Override
-              public String apply(BuildTarget input) {
-                return input.toString();
-              }
-            })
-    );
-    builtFromCacheTargets.removeAll(locallyBuiltTargets);
+    Set<String> builtFromCacheTargets =
+        FluentIterable.from(buildLog.getAllTargets())
+            // Filter out header symlink tree rules, as they are always built locally.
+            .filter(
+                new Predicate<BuildTarget>() {
+                  @Override
+                  public boolean apply(BuildTarget target) {
+                    return (
+                        !target.getFlavors()
+                            .contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR) &&
+                        !target.getFlavors()
+                            .contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR));
+                  }
+                })
+            .transform(Functions.toStringFunction())
+            // Filter out any rules that are explicitly built locally.
+            .filter(Predicates.not(Predicates.in(locallyBuiltTargets)))
+            .toSet();
 
     // check that all the other targets are fetched from the cache
     for (String t : builtFromCacheTargets) {

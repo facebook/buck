@@ -58,7 +58,7 @@ public class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
   // We generate the symlink tree and the header map using post-build steps for reasons explained in
   // the superclass.
   @Override
-  public ImmutableList<Step> getPostBuildSteps(
+  public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
     LOG.debug("Generating post-build steps to write header map to %s", headerMapPath);
@@ -74,7 +74,7 @@ public class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
       headerMapEntries.put(key, buckOut.relativize(getRoot().resolve(key)));
     }
     return ImmutableList.<Step>builder()
-        .addAll(super.getPostBuildSteps(context, buildableContext))
+        .addAll(super.getBuildSteps(context, buildableContext))
         .add(new HeaderMapStep(getProjectFilesystem(), headerMapPath, headerMapEntries.build()))
         .build();
   }
