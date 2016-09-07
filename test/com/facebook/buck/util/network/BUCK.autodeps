@@ -1,11 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY 46982c8b8a94014ac0f177015b4e461ce008cc59 #@#
+#@# GENERATED FILE: DO NOT MODIFY 6f647ac757cad62c4ec1c332b7563dcdf63cf571 #@#
 {
   "network" : {
     "deps" : [
       "//src-gen:thrift",
       "//src/com/facebook/buck/slb:slb",
       "//src/com/facebook/buck/util:io",
-      "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util/network:network",
       "//test/com/facebook/buck/util:testutil",
       "//third-party/java/guava:guava",

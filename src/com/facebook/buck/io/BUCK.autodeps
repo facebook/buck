@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 7d0dc3de778e736e726fe6ac5fd6255d4b6c1264 #@#
+#@# GENERATED FILE: DO NOT MODIFY 3c6859e09e8a7f8e429450e5f60c33ad61cda899 #@#
 {
   "BuckPaths" : {
     "deps" : [
@@ -76,14 +76,12 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",
-      "//src/com/facebook/buck/util/concurrent:concurrent",
-      "//third-party/java/immutables:processor"
+      "//src/com/facebook/buck/util/concurrent:concurrent"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:io",
-      "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava"
     ]
   }

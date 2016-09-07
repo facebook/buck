@@ -1,8 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY bf762933701a4f1bb106db5a1eaf0da12c57789d #@#
+#@# GENERATED FILE: DO NOT MODIFY e168b5d397bca5375cc966d0c7f666bbb378523e #@#
 {
   "concurrent" : {
     "deps" : [
-      "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/util/concurrent:concurrent",
       "//test/com/facebook/buck/util/concurrent:testutil",
       "//third-party/java/guava:guava",
