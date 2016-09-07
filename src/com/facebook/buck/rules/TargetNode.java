@@ -125,15 +125,25 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
    * most of what is now `BuildRuleParams` to `DescriptionParams` and set them up
    * while building the target graph.
    */
-  public boolean isVisibleTo(TargetNode<?> other) {
-    // Targets in the same build file are always visible to each other.
-    if (getBuildTarget().getCellPath().equals(other.getBuildTarget().getCellPath()) &&
-        getBuildTarget().getBaseName().equals(other.getBuildTarget().getBaseName())) {
+  public boolean isVisibleTo(TargetGraph graph, TargetNode<?> viewer) {
+
+    // if i am in a restricted visibility group that the viewer isn't, the viewer can't see me.
+    // this check *must* take priority even over the sibling check, because if it didn't then that
+    // would introduce siblings as a way to "leak" visibility out of restricted groups.
+    for (TargetGroup targetGroup : graph.getGroupsContainingTarget(viewer.getBuildTarget())) {
+      if (targetGroup.restrictsOutboundVisibility() &&
+          !targetGroup.containsTarget(getBuildTarget())) {
+        return false;
+      }
+    }
+
+    if (getBuildTarget().getCellPath().equals(viewer.getBuildTarget().getCellPath()) &&
+        getBuildTarget().getBaseName().equals(viewer.getBuildTarget().getBaseName())) {
       return true;
     }
 
     for (VisibilityPattern pattern : visibilityPatterns) {
-      if (pattern.apply(other)) {
+      if (pattern.checkVisibility(graph, viewer, this)) {
         return true;
       }
     }
@@ -141,11 +151,11 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     return false;
   }
 
-  public void checkVisibility(TargetNode<?> other) {
-    if (!isVisibleTo(other)) {
+  public void isVisibleToOrThrow(TargetGraph graphContext, TargetNode<?> viewer) {
+    if (!isVisibleTo(graphContext, viewer)) {
       throw new HumanReadableException(
           "%s depends on %s, which is not visible",
-          other,
+          viewer,
           getBuildTarget());
     }
   }

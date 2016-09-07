@@ -54,7 +54,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetGroup;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -2394,10 +2393,14 @@ public class ParserTest {
         executorService,
         ImmutableSet.of(barTarget));
 
-    assertThat(targetGraph.getGroups().size(), is(2));
-    for (TargetGroup group : targetGraph.getGroups()) {
-      assertThat(group.containsTarget(fooTarget), is(true));
-    }
+    assertThat(targetGraph.getGroupsContainingTarget(fooTarget).size(), is(2));
+
+    assertThat(
+        targetGraph.get(fooTarget).isVisibleTo(targetGraph, targetGraph.get(barTarget)),
+        is(true));
+    assertThat(
+        targetGraph.get(barTarget).isVisibleTo(targetGraph, targetGraph.get(fooTarget)),
+        is(false));
   }
 
   @Test

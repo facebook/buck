@@ -17,5 +17,6 @@ java_library(name='foo')
 
 target_group(
     name = 'group_one',
-    targets = [ '//:foo' ]
+    targets = [ '//:foo' ],
+    restrict_outbound_visibility = True
 )

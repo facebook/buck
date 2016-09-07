@@ -262,7 +262,7 @@ class FineGrainedJavaDependencySuggester {
         depProviders = FluentIterable.from(depProviders).filter(new Predicate<TargetNode<?>>() {
           @Override
           public boolean apply(TargetNode<?> provider) {
-            return provider.isVisibleTo(suggestedNode);
+            return provider.isVisibleTo(graph, suggestedNode);
           }
         }).toSet();
         TargetNode<?> depProvider;

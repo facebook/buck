@@ -26,6 +26,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 
 import java.util.HashMap;
@@ -44,7 +45,7 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
       ImmutableSet.<TargetGroup>of());
 
   private final ImmutableMap<BuildTarget, TargetNode<?>> targetsToNodes;
-  private final ImmutableSet<TargetGroup> groups;
+  private final ImmutableSetMultimap<BuildTarget, TargetGroup> groupsByBuildTarget;
 
   public TargetGraph(
       MutableDirectedGraph<TargetNode<?>> graph,
@@ -52,7 +53,17 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
       ImmutableSet<TargetGroup> groups) {
     super(graph);
     this.targetsToNodes = index;
-    this.groups = groups;
+
+    ImmutableSetMultimap.Builder<BuildTarget, TargetGroup> builder =
+        ImmutableSetMultimap.builder();
+    for (TargetGroup group : groups) {
+      for (BuildTarget target : group) {
+        if (targetsToNodes.containsKey(target)) {
+          builder.put(target, group);
+        }
+      }
+    }
+    this.groupsByBuildTarget = builder.build();
 
     verifyVisibilityIntegrity();
   }
@@ -60,7 +71,7 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
   private void verifyVisibilityIntegrity() {
     for (TargetNode<?> node : getNodes()) {
       for (TargetNode<?> dep : getOutgoingNodesFor(node)) {
-        dep.checkVisibility(node);
+        dep.isVisibleToOrThrow(this, node);
       }
     }
   }
@@ -110,8 +121,8 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
         });
   }
 
-  public ImmutableSet<TargetGroup> getGroups() {
-    return groups;
+  public ImmutableSet<TargetGroup> getGroupsContainingTarget(BuildTarget target) {
+    return groupsByBuildTarget.get(target);
   }
 
   @Override
@@ -161,7 +172,10 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
       }
     }.start();
 
-    return new TargetGraph(subgraph, ImmutableMap.copyOf(index), groups);
+    return new TargetGraph(
+        subgraph,
+        ImmutableMap.copyOf(index),
+        groupsByBuildTarget.inverse().keySet());
   }
 
   @SuppressWarnings("serial")

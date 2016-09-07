@@ -18,9 +18,11 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
 
 public class VisibilityPatternParser {
   private static final String VISIBILITY_PUBLIC = "PUBLIC";
+  private static final String VISIBILITY_GROUP = "GROUP";
 
   private static final BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
       BuildTargetPatternParser.forVisibilityArgument();
@@ -30,6 +32,8 @@ public class VisibilityPatternParser {
       String buildTargetPattern) {
     if (VISIBILITY_PUBLIC.equals(buildTargetPattern)) {
       return PublicVisibilityPattern.INSTANCE;
+    } else if (VISIBILITY_GROUP.equals(buildTargetPattern)) {
+      return GroupVisibilityPattern.INSTANCE;
     } else {
       return new BuildTargetVisibilityPattern(buildTargetPatternParser.parse(
           cellNames,
@@ -38,35 +42,62 @@ public class VisibilityPatternParser {
   }
 
   @VisibleForTesting
-  static class BuildTargetVisibilityPattern extends VisibilityPattern {
-    private final BuildTargetPattern buildTargetPattern;
+  static class BuildTargetVisibilityPattern implements VisibilityPattern {
+    private final BuildTargetPattern viewerPattern;
 
-    public BuildTargetVisibilityPattern(BuildTargetPattern buildTargetPattern) {
-      this.buildTargetPattern = buildTargetPattern;
+    public BuildTargetVisibilityPattern(BuildTargetPattern viewerPattern) {
+      this.viewerPattern = viewerPattern;
     }
 
+    // TODO(csarbora) let this account for specifying groups as targets in visibility too
     @Override
-    public boolean apply(TargetNode<?> input) {
-      return buildTargetPattern.apply(input.getBuildTarget());
+    public boolean checkVisibility(
+        TargetGraph graphContext,
+        TargetNode<?> viewer,
+        TargetNode<?> viewed) {
+      return viewerPattern.apply(viewer.getBuildTarget());
     }
 
     @Override
     public String getRepresentation() {
-      return buildTargetPattern.getCellFreeRepresentation();
+      return viewerPattern.getCellFreeRepresentation();
     }
   }
 
-  private static class PublicVisibilityPattern extends VisibilityPattern {
+  private static class PublicVisibilityPattern implements VisibilityPattern {
     public static final PublicVisibilityPattern INSTANCE = new PublicVisibilityPattern();
 
     @Override
-    public boolean apply(TargetNode<?> input) {
+    public boolean checkVisibility(
+        TargetGraph graphContext,
+        TargetNode<?> viewer,
+        TargetNode<?> viewed) {
       return true;
     }
 
     @Override
     public String getRepresentation() {
       return VISIBILITY_PUBLIC;
+    }
+  }
+
+  // TODO(csarbora): warn if GROUP and not actually in a group
+  private static class GroupVisibilityPattern implements VisibilityPattern {
+    public static final GroupVisibilityPattern INSTANCE = new GroupVisibilityPattern();
+
+    @Override
+    public boolean checkVisibility(
+        TargetGraph graphContext,
+        TargetNode<?> viewer,
+        TargetNode<?> viewed) {
+      return !Sets.intersection(
+          graphContext.getGroupsContainingTarget(viewer.getBuildTarget()),
+          graphContext.getGroupsContainingTarget(viewed.getBuildTarget())).isEmpty();
+    }
+
+    @Override
+    public String getRepresentation() {
+      return VISIBILITY_GROUP;
     }
   }
 }

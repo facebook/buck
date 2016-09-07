@@ -23,6 +23,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -30,6 +31,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 
@@ -61,6 +63,10 @@ public class TargetNodeVisibilityTest {
           filesystem.getRootPath(),
           "//src/com/facebook/something2",
           "nonPublic").build();
+  private static final TargetGraph GRAPH = new TargetGraph(
+      new MutableDirectedGraph<TargetNode<?>>(),
+      ImmutableMap.<BuildTarget, TargetNode<?>>of(),
+      ImmutableSet.<TargetGroup>of());
 
   private static final String VISIBLETO_PUBLIC = "PUBLIC";
   private static final String VISIBLETO_ORCA = orcaTarget.getFullyQualifiedName();
@@ -72,8 +78,8 @@ public class TargetNodeVisibilityTest {
     TargetNode<?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
     TargetNode<?> orcaRule = createTargetNode(orcaTarget);
 
-    assertTrue(publicTargetNode.isVisibleTo(orcaRule));
-    assertFalse(orcaRule.isVisibleTo(publicTargetNode));
+    assertTrue(publicTargetNode.isVisibleTo(GRAPH, orcaRule));
+    assertFalse(orcaRule.isVisibleTo(GRAPH, publicTargetNode));
   }
 
   @Test
@@ -85,14 +91,14 @@ public class TargetNodeVisibilityTest {
     TargetNode<?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
 
     assertTrue(shouldBeVisibleMessage(nonPublicTargetNode1, orcaTarget),
-        nonPublicTargetNode1.isVisibleTo(orcaRule));
+        nonPublicTargetNode1.isVisibleTo(GRAPH, orcaRule));
     assertTrue(shouldBeVisibleMessage(nonPublicTargetNode2, orcaTarget),
-        nonPublicTargetNode2.isVisibleTo(orcaRule));
-    assertFalse(orcaRule.isVisibleTo(nonPublicTargetNode1));
-    assertFalse(orcaRule.isVisibleTo(nonPublicTargetNode2));
+        nonPublicTargetNode2.isVisibleTo(GRAPH, orcaRule));
+    assertFalse(orcaRule.isVisibleTo(GRAPH, nonPublicTargetNode1));
+    assertFalse(orcaRule.isVisibleTo(GRAPH, nonPublicTargetNode2));
 
-    assertTrue(publicTargetNode.isVisibleTo(nonPublicTargetNode1));
-    assertFalse(nonPublicTargetNode1.isVisibleTo(publicTargetNode));
+    assertTrue(publicTargetNode.isVisibleTo(GRAPH, nonPublicTargetNode1));
+    assertFalse(nonPublicTargetNode1.isVisibleTo(GRAPH, publicTargetNode));
   }
 
   @Test
@@ -102,7 +108,7 @@ public class TargetNodeVisibilityTest {
     TargetNode<?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
 
     try {
-      nonPublicTargetNode1.checkVisibility(publicTargetNode);
+      nonPublicTargetNode1.isVisibleToOrThrow(GRAPH, publicTargetNode);
       fail("checkVisibility() should throw an exception");
     } catch (RuntimeException e) {
       assertEquals(
@@ -122,13 +128,13 @@ public class TargetNodeVisibilityTest {
     TargetNode<?> orcaRule = createTargetNode(orcaTarget);
 
     assertTrue(shouldBeVisibleMessage(nonPublicTargetNode1, orcaTarget),
-        nonPublicTargetNode1.isVisibleTo(orcaRule));
+        nonPublicTargetNode1.isVisibleTo(GRAPH, orcaRule));
     assertTrue(shouldBeVisibleMessage(nonPublicTargetNode2, orcaTarget),
-        nonPublicTargetNode2.isVisibleTo(orcaRule));
-    assertTrue(publicTargetNode.isVisibleTo(orcaRule));
-    assertFalse(orcaRule.isVisibleTo(nonPublicTargetNode1));
-    assertFalse(orcaRule.isVisibleTo(nonPublicTargetNode2));
-    assertFalse(orcaRule.isVisibleTo(publicTargetNode));
+        nonPublicTargetNode2.isVisibleTo(GRAPH, orcaRule));
+    assertTrue(publicTargetNode.isVisibleTo(GRAPH, orcaRule));
+    assertFalse(orcaRule.isVisibleTo(GRAPH, nonPublicTargetNode1));
+    assertFalse(orcaRule.isVisibleTo(GRAPH, nonPublicTargetNode2));
+    assertFalse(orcaRule.isVisibleTo(GRAPH, publicTargetNode));
   }
 
   @Test
@@ -139,11 +145,11 @@ public class TargetNodeVisibilityTest {
     TargetNode<?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
     TargetNode<?> orcaRule = createTargetNode(orcaTarget);
 
-    publicTargetNode.checkVisibility(orcaRule);
-    nonPublicTargetNode1.checkVisibility(orcaRule);
+    publicTargetNode.isVisibleToOrThrow(GRAPH, orcaRule);
+    nonPublicTargetNode1.isVisibleToOrThrow(GRAPH, orcaRule);
 
     try {
-      nonPublicTargetNode2.checkVisibility(orcaRule);
+      nonPublicTargetNode2.isVisibleToOrThrow(GRAPH, orcaRule);
       fail("checkVisibility() should throw an exception");
     } catch (RuntimeException e) {
       assertEquals(
@@ -170,17 +176,17 @@ public class TargetNodeVisibilityTest {
 
     // Build rule that visible to targets in or under directory src/com/facebook
     TargetNode<?> directoryTargetNode = createTargetNode(libTarget, "//src/com/facebook/...");
-    assertTrue(directoryTargetNode.isVisibleTo(targetInSpecifiedDirectory));
-    assertTrue(directoryTargetNode.isVisibleTo(targetUnderSpecifiedDirectory));
-    assertFalse(directoryTargetNode.isVisibleTo(targetInOtherDirectory));
-    assertFalse(directoryTargetNode.isVisibleTo(targetInParentDirectory));
+    assertTrue(directoryTargetNode.isVisibleTo(GRAPH, targetInSpecifiedDirectory));
+    assertTrue(directoryTargetNode.isVisibleTo(GRAPH, targetUnderSpecifiedDirectory));
+    assertFalse(directoryTargetNode.isVisibleTo(GRAPH, targetInOtherDirectory));
+    assertFalse(directoryTargetNode.isVisibleTo(GRAPH, targetInParentDirectory));
 
     // Build rule that's visible to all targets, equals to PUBLIC.
     TargetNode<?> pubicTargetNode = createTargetNode(libTarget, "//...");
-    assertTrue(pubicTargetNode.isVisibleTo(targetInSpecifiedDirectory));
-    assertTrue(pubicTargetNode.isVisibleTo(targetUnderSpecifiedDirectory));
-    assertTrue(pubicTargetNode.isVisibleTo(targetInOtherDirectory));
-    assertTrue(pubicTargetNode.isVisibleTo(targetInParentDirectory));
+    assertTrue(pubicTargetNode.isVisibleTo(GRAPH, targetInSpecifiedDirectory));
+    assertTrue(pubicTargetNode.isVisibleTo(GRAPH, targetUnderSpecifiedDirectory));
+    assertTrue(pubicTargetNode.isVisibleTo(GRAPH, targetInOtherDirectory));
+    assertTrue(pubicTargetNode.isVisibleTo(GRAPH, targetInParentDirectory));
   }
 
   private String shouldBeVisibleMessage(TargetNode<?> rule, BuildTarget target) {

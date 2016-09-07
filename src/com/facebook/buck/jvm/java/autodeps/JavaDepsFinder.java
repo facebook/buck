@@ -194,7 +194,7 @@ public class JavaDepsFinder {
 
   public DepsForBuildFiles findDepsForBuildFiles(final TargetGraph graph, Console console) {
     DependencyInfo dependencyInfo = findDependencyInfoForGraph(graph);
-    return findDepsForBuildFiles(dependencyInfo, console);
+    return findDepsForBuildFiles(graph, dependencyInfo, console);
   }
 
   public DependencyInfo findDependencyInfoForGraph(final TargetGraph graph) {
@@ -256,7 +256,10 @@ public class JavaDepsFinder {
     return dependencyInfo;
   }
 
-  private DepsForBuildFiles findDepsForBuildFiles(DependencyInfo dependencyInfo, Console console) {
+  private DepsForBuildFiles findDepsForBuildFiles(
+      final TargetGraph graph,
+      final DependencyInfo dependencyInfo,
+      final Console console) {
     // For the rules that expect to have their deps generated, look through all of their required
     // symbols and try to find the build rule that provides each symbols. Store these build rules in
     // the depsForBuildFiles data structure.
@@ -271,7 +274,7 @@ public class JavaDepsFinder {
           new Predicate<TargetNode<?>>() {
             @Override
             public boolean apply(TargetNode<?> provider) {
-              return provider.isVisibleTo(rule) &&
+              return provider.isVisibleTo(graph, rule) &&
                   !providedDeps.contains(provider.getBuildTarget());
             }
           };
@@ -340,7 +343,7 @@ public class JavaDepsFinder {
               Set<TargetNode<?>> rulesThatExportCandidate = dependencyInfo.ruleToRulesThatExportIt
                   .get(candidate);
               for (TargetNode<?> ruleThatExportsCandidate : rulesThatExportCandidate) {
-                if (ruleThatExportsCandidate.isVisibleTo(rule)) {
+                if (ruleThatExportsCandidate.isVisibleTo(graph, rule)) {
                   newCandidates.add(ruleThatExportsCandidate);
                 }
               }
