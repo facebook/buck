@@ -378,6 +378,8 @@ public class CxxLibraryDescription implements
     arg.tests = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.supportedPlatformsRegex = Optional.absent();
     arg.linkStyle = Optional.absent();
+    arg.bridgingHeader = Optional.absent();
+    arg.moduleName = Optional.absent();
     return arg;
   }
 
@@ -922,7 +924,11 @@ public class CxxLibraryDescription implements
     public Optional<Boolean> linkWhole;
     public Optional<Boolean> canBeAsset;
     public Optional<NativeLinkable.Linkage> preferredLinkage;
+
+    // These fields are passed through to SwiftLibrary for mixed C/Swift targets; they are not
+    // used otherwise.
     public Optional<SourcePath> bridgingHeader;
+    public Optional<String> moduleName;
   }
 
 }

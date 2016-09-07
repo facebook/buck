@@ -65,7 +65,7 @@ class SwiftDescriptions {
     output.libraries = args.libraries;
     output.deps = args.deps;
     output.supportedPlatformsRegex = args.supportedPlatformsRegex;
-    output.moduleName = Optional.of(buildTarget.getShortName());
+    output.moduleName = args.moduleName.or(Optional.of(buildTarget.getShortName()));
     output.enableObjcInterop = Optional.of(true);
     output.bridgingHeader = args.bridgingHeader;
     output.preferredLinkage = args.preferredLinkage;
