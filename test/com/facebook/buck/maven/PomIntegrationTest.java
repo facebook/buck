@@ -16,38 +16,56 @@
 
 package com.facebook.buck.maven;
 
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.HasMavenCoordinates;
 import com.facebook.buck.jvm.java.MavenPublishable;
+import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import org.apache.maven.model.Dependency;
+import org.apache.maven.model.Developer;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
-import org.easymock.EasyMockSupport;
 import org.junit.Rule;
 import org.junit.Test;
 import org.xml.sax.SAXException;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.Nullable;
 import javax.xml.transform.TransformerException;
 
-public class PomIntegrationTest extends EasyMockSupport {
+public class PomIntegrationTest {
 
   private static final MavenXpp3Writer MAVEN_XPP_3_WRITER = new MavenXpp3Writer();
   private static final MavenXpp3Reader MAVEN_XPP_3_READER = new MavenXpp3Reader();
@@ -55,73 +73,32 @@ public class PomIntegrationTest extends EasyMockSupport {
 
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
+  private final BuildRuleResolver ruleResolver = new BuildRuleResolver(
+      TargetGraph.EMPTY,
+      new DefaultTargetNodeToBuildRuleTransformer());
+  private final ProjectFilesystem filesystem = FakeProjectFilesystem.createRealTempFilesystem();
 
   @Test
   public void testMultipleInvocation() throws Exception{
-
     // Setup: deps: com.example:with-deps:jar:1.0 -> com.othercorp:no-deps:jar:1.0
-    HasMavenCoordinates dep = mockMavenPublishable(
+    BuildRule dep = createMavenPublishable(
+        "//example:dep",
         "com.othercorp:no-deps:1.0",
-        ImmutableSortedSet.<HasMavenCoordinates>of());
+        null);
 
-    MavenPublishable item = mockMavenPublishable(
+    MavenPublishable item = createMavenPublishable(
+        "//example:has-deps",
         "com.example:with-deps:1.0",
-        ImmutableSortedSet.of(dep));
+        null,
+        dep);
 
     Path pomPath = tmp.getRoot().resolve("pom.xml");
-    File pomFile = pomPath.toFile();
-    assertFalse(pomFile.exists());
+    assertFalse(Files.exists(pomPath));
 
     // Basic case
     Pom.generatePomFile(item, pomPath);
 
-    Model pomModel = parseAndVerifyPomFile(pomFile);
-
-    // Corrupt dependency data and ensure buck restores that
-    removeDependencies(pomModel, pomFile);
-
-    Pom.generatePomFile(item, pomPath);
-
-    pomModel = parseAndVerifyPomFile(pomFile);
-
-    // Add extra pom data and ensure buck preserves that
-    pomModel.setUrl(URL);
-    serializePom(pomModel, pomFile);
-
-    Pom.generatePomFile(item, pomPath);
-
-    pomModel = parseAndVerifyPomFile(pomFile);
-    assertEquals(URL, pomModel.getUrl());
-  }
-
-  private MavenPublishable mockMavenPublishable(
-      String mavenCoords,
-      ImmutableSortedSet<HasMavenCoordinates> deps) {
-    MavenPublishable mavenPublishable = createNiceMock(MavenPublishable.class);
-    expect(mavenPublishable.getMavenCoords())
-        .andReturn(Optional.fromNullable(mavenCoords))
-        .anyTimes();
-    expect(mavenPublishable.getMavenDeps()).andReturn(deps).anyTimes();
-    replay(mavenPublishable);
-    return mavenPublishable;
-  }
-
-  private static void serializePom(Model pomModel, File destination) throws IOException {
-    MAVEN_XPP_3_WRITER.write(new FileWriter(destination), pomModel);
-  }
-
-  private static void removeDependencies(Model model, File pomFile)
-      throws IOException, SAXException, TransformerException {
-    model.setDependencies(Collections.<Dependency>emptyList());
-    serializePom(model, pomFile);
-  }
-
-  /**
-   * assert deps: com.example:with-deps:jar:1.0 -> com.othercorp:no-deps:jar:1.0
-   */
-  private static Model parseAndVerifyPomFile(File pomFile) throws Exception {
-    assertTrue(pomFile.isFile());
-    Model pomModel = MAVEN_XPP_3_READER.read(new FileReader(pomFile));
+    Model pomModel = parse(pomPath);
     assertEquals("com.example", pomModel.getGroupId());
     assertEquals("with-deps", pomModel.getArtifactId());
     assertEquals("1.0", pomModel.getVersion());
@@ -131,6 +108,141 @@ public class PomIntegrationTest extends EasyMockSupport {
     assertEquals("com.othercorp", dependency.getGroupId());
     assertEquals("no-deps", dependency.getArtifactId());
     assertEquals("1.0", dependency.getVersion());
-    return pomModel;
+
+    // Corrupt dependency data and ensure buck restores that
+    removeDependencies(pomModel, pomPath);
+
+    Pom.generatePomFile(item, pomPath);
+    pomModel = parse(pomPath);
+
+    // Add extra pom data and ensure buck preserves that
+    pomModel.setUrl(URL);
+    serializePom(pomModel, pomPath);
+
+    Pom.generatePomFile(item, pomPath);
+
+    pomModel = parse(pomPath);
+    assertEquals(URL, pomModel.getUrl());
+  }
+
+  @Test
+  public void shouldUseTemplateIfProvided() throws Exception {
+    MavenPublishable withoutTemplate = createMavenPublishable(
+        "//example:no-template",
+        "example.com:project:1.0.0",
+        null);
+    Model noTemplate = parse(Pom.generatePomFile(withoutTemplate));
+
+    MavenPublishable withTemplate = createMavenPublishable(
+        "//example:template",
+        "example.com:project:1.0.0",
+        TestDataHelper.getTestDataDirectory(getClass()).resolve("poms/template-pom.xml"));
+    Model templated = parse(Pom.generatePomFile(withTemplate));
+
+    // Template sets developers and an example dep. Check that these aren't in the non-templated
+    // version
+    assertTrue(noTemplate.getDevelopers().isEmpty());
+    assertTrue(noTemplate.getDependencies().isEmpty());
+
+    // Now check the same fields in the templated version.
+    Developer seenDev = Iterables.getOnlyElement(templated.getDevelopers());
+    assertEquals("susan", seenDev.getId());
+    assertEquals("Susan The Developer", seenDev.getName());
+    assertEquals(ImmutableList.of("Owner"), seenDev.getRoles());
+
+    Dependency seenDep = Iterables.getOnlyElement(templated.getDependencies());
+    assertEquals("com.google.guava", seenDep.getGroupId());
+    assertEquals("guava", seenDep.getArtifactId());
+    assertEquals("19.0", seenDep.getVersion());
+  }
+
+  private MavenPublishable createMavenPublishable(
+      String target,
+      String mavenCoords,
+      @Nullable Path pomTemplate,
+      BuildRule... deps) {
+    return ruleResolver.addToIndex(
+        new PublishedViaMaven(
+            target, filesystem,
+            ruleResolver,
+            mavenCoords,
+            pomTemplate,
+            deps));
+  }
+
+  private static void serializePom(Model pomModel, Path destination) throws IOException {
+    try (BufferedWriter writer = Files.newBufferedWriter(destination, StandardCharsets.UTF_8)) {
+      MAVEN_XPP_3_WRITER.write(writer, pomModel);
+    }
+  }
+
+  private static void removeDependencies(Model model, Path pomFile)
+      throws IOException, SAXException, TransformerException {
+    model.setDependencies(Collections.<Dependency>emptyList());
+    serializePom(model, pomFile);
+  }
+
+  private static Model parse(Path pomFile) throws Exception {
+    assertTrue(Files.isRegularFile(pomFile));
+
+    try (Reader reader= Files.newBufferedReader(pomFile,StandardCharsets.UTF_8)) {
+      return MAVEN_XPP_3_READER.read(reader);
+    }
+  }
+
+  private static class PublishedViaMaven extends AbstractBuildRule implements MavenPublishable {
+    @Nullable
+    @AddToRuleKey
+    private final Path pomTemplate;
+    @AddToRuleKey
+    private final String coords;
+
+    public PublishedViaMaven(
+        String target,
+        ProjectFilesystem filesystem,
+        BuildRuleResolver ruleResolver,
+        String coords,
+        @Nullable Path pomTemplate,
+        BuildRule... deps) {
+      super(
+          new FakeBuildRuleParamsBuilder(target)
+              .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
+              .setProjectFilesystem(filesystem)
+              .build(),
+          new SourcePathResolver(ruleResolver));
+      this.coords = coords;
+      this.pomTemplate = pomTemplate;
+    }
+
+    @Override
+    public Iterable<HasMavenCoordinates> getMavenDeps() {
+      return FluentIterable.from(getDeps()).filter(HasMavenCoordinates.class);
+    }
+
+    @Override
+    public Iterable<BuildRule> getPackagedDependencies() {
+      return getDeclaredDeps();
+    }
+
+    @Override
+    public Optional<Path> getPomTemplate() {
+      return Optional.fromNullable(pomTemplate);
+    }
+
+    @Override
+    public Optional<String> getMavenCoords() {
+      return Optional.of(coords);
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext context, BuildableContext buildableContext) {
+      return ImmutableList.of();
+    }
+
+    @Override
+    public Path getPathToOutput() {
+      return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.jar");
+    }
   }
 }

@@ -50,16 +50,19 @@ import javax.annotation.Nullable;
 public class MavenUberJar extends AbstractBuildRule implements MavenPublishable {
 
   private final Optional<String> mavenCoords;
+  private final Optional<SourcePath> mavenPomTemplate;
   private final TraversedDeps traversedDeps;
 
   private MavenUberJar(
       TraversedDeps traversedDeps,
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Optional<String> mavenCoords) {
+      Optional<String> mavenCoords,
+      Optional<SourcePath> mavenPomTemplate) {
     super(params, resolver);
     this.traversedDeps = traversedDeps;
     this.mavenCoords = mavenCoords;
+    this.mavenPomTemplate = mavenPomTemplate;
   }
 
   private static BuildRuleParams adjustParams(BuildRuleParams params, TraversedDeps traversedDeps) {
@@ -81,13 +84,15 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
       JavaLibrary rootRule,
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Optional<String> mavenCoords) {
+      Optional<String> mavenCoords,
+      Optional<SourcePath> mavenPomTemplate) {
     TraversedDeps traversedDeps = TraversedDeps.traverse(ImmutableSet.of(rootRule));
     return new MavenUberJar(
         traversedDeps,
         adjustParams(params, traversedDeps),
         resolver,
-        mavenCoords);
+        mavenCoords,
+        mavenPomTemplate);
   }
 
   @Override
@@ -134,6 +139,11 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
   }
 
   @Override
+  public Optional<Path> getPomTemplate() {
+    return mavenPomTemplate.transform(getResolver().getAbsolutePathFunction());
+  }
+
+  @Override
   public Iterable<HasMavenCoordinates> getMavenDeps() {
     return traversedDeps.mavenDeps;
   }
@@ -146,22 +156,26 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
   public static class SourceJar extends JavaSourceJar implements MavenPublishable {
 
     private final TraversedDeps traversedDeps;
+    private final Optional<SourcePath> mavenPomTemplate;
 
     public SourceJar(
         BuildRuleParams params,
         SourcePathResolver resolver,
         ImmutableSortedSet<SourcePath> srcs,
         Optional<String> mavenCoords,
+        Optional<SourcePath> mavenPomTemplate,
         TraversedDeps traversedDeps) {
       super(params, resolver, srcs, mavenCoords);
       this.traversedDeps = traversedDeps;
+      this.mavenPomTemplate = mavenPomTemplate;
     }
 
     public static SourceJar create(
         BuildRuleParams params,
         final SourcePathResolver resolver,
         ImmutableSortedSet<SourcePath> topLevelSrcs,
-        Optional<String> mavenCoords) {
+        Optional<String> mavenCoords,
+        Optional<SourcePath> mavenPomTemplate) {
       TraversedDeps traversedDeps = TraversedDeps.traverse(params.getDeps());
 
       params = adjustParams(params, traversedDeps);
@@ -184,7 +198,13 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
           resolver,
           sourcePaths,
           mavenCoords,
+          mavenPomTemplate,
           traversedDeps);
+    }
+
+    @Override
+    public Optional<Path> getPomTemplate() {
+      return mavenPomTemplate.transform(getResolver().getAbsolutePathFunction());
     }
 
     @Override
