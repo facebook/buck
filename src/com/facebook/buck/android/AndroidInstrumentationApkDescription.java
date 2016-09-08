@@ -154,6 +154,7 @@ public class AndroidInstrumentationApkDescription
         /* trimResourceIds */ false,
         nativePlatforms,
         /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
+        /* nativeLibraryMergeGlue */ Optional.<BuildTarget>absent(),
         AndroidBinary.RelinkerMode.DISABLED,
         dxExecutorService,
         apkUnderTest.getManifestEntries(),

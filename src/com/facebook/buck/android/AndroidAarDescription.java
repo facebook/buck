@@ -208,6 +208,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
             ImmutableSet.<NdkCxxPlatforms.TargetCpuType>of(),
             cxxBuckConfig,
             /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
+            /* nativeLibraryMergeGlue */ Optional.<BuildTarget>absent(),
             AndroidBinary.RelinkerMode.DISABLED);
     Optional<CopyNativeLibraries> nativeLibrariesOptional =
         packageableGraphEnhancer.enhance(packageableCollection).getCopyNativeLibraries();

@@ -97,8 +97,10 @@ class NativeLibraryMergeEnhancer {
       SourcePathResolver pathResolver,
       BuildRuleParams buildRuleParams,
       Map<String, List<Pattern>> mergeMap,
+      Optional<BuildTarget> nativeLibraryMergeGlue,
       ImmutableList<NativeLinkable> linkables,
       ImmutableList<NativeLinkable> linkablesAssets) {
+    nativeLibraryMergeGlue.isPresent();
 
     // Sort by build target here to ensure consistent behavior.
     Iterable<NativeLinkable> allLinkables = FluentIterable.from(

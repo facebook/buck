@@ -80,6 +80,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             ImmutableSet.<NdkCxxPlatforms.TargetCpuType>of(),
             CxxPlatformUtils.DEFAULT_CONFIG,
             /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
+            /* nativeLibraryMergeGlue */ Optional.<BuildTarget>absent(),
             AndroidBinary.RelinkerMode.DISABLED
         );
 
@@ -156,6 +157,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             ImmutableSet.of(NdkCxxPlatforms.TargetCpuType.ARMV7),
             CxxPlatformUtils.DEFAULT_CONFIG,
             /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
+            /* nativeLibraryMergeGlue */ Optional.<BuildTarget>absent(),
             AndroidBinary.RelinkerMode.DISABLED
         );
 

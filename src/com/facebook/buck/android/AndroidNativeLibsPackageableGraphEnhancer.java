@@ -60,6 +60,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   private final ImmutableSet<NdkCxxPlatforms.TargetCpuType> cpuFilters;
   private final CxxBuckConfig cxxBuckConfig;
   private final Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap;
+  private final Optional<BuildTarget> nativeLibraryMergeGlue;
   private final RelinkerMode relinkerMode;
 
   /**
@@ -75,6 +76,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       ImmutableSet<NdkCxxPlatforms.TargetCpuType> cpuFilters,
       CxxBuckConfig cxxBuckConfig,
       Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap,
+      Optional<BuildTarget> nativeLibraryMergeGlue,
       RelinkerMode relinkerMode) {
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.pathResolver = new SourcePathResolver(ruleResolver);
@@ -84,6 +86,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     this.cpuFilters = cpuFilters;
     this.cxxBuckConfig = cxxBuckConfig;
     this.nativeLibraryMergeMap = nativeLibraryMergeMap;
+    this.nativeLibraryMergeGlue = nativeLibraryMergeGlue;
     this.relinkerMode = relinkerMode;
   }
 
@@ -137,6 +140,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
           pathResolver,
           buildRuleParams,
           nativeLibraryMergeMap.get(),
+          nativeLibraryMergeGlue,
           nativeLinkables,
           nativeLinkablesAssets);
       nativeLinkables = enhancement.getMergedLinkables();

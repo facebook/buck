@@ -140,6 +140,7 @@ public class AndroidBinaryGraphEnhancer {
       boolean trimResourceIds,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap,
+      Optional<BuildTarget> nativeLibraryMergeGlue,
       RelinkerMode relinkerMode,
       ListeningExecutorService dxExecutorService,
       ManifestEntries manifestEntries,
@@ -181,6 +182,7 @@ public class AndroidBinaryGraphEnhancer {
             cpuFilters,
             cxxBuckConfig,
             nativeLibraryMergeMap,
+            nativeLibraryMergeGlue,
             relinkerMode);
     this.apkModuleGraph = apkModuleGraph;
   }
