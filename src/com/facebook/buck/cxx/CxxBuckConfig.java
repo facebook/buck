@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleScheduleInfo;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
+import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
@@ -265,6 +266,8 @@ public class CxxBuckConfig {
     return Optional.of(
         RuleScheduleInfo.builder()
             .setJobsMultiplier(linkWeight.get().intValue())
+            .setResourceAmounts(
+                ResourceAmountsEstimator.DEFAULT_AMOUNTS.withCpu(linkWeight.get().intValue()))
             .build());
   }
 

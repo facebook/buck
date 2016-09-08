@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.util.concurrent.ResourceAmounts;
+import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
 import org.immutables.value.Value;
@@ -38,4 +40,8 @@ abstract class AbstractRuleScheduleInfo {
     return 1;
   }
 
+  @Value.Default
+  public ResourceAmounts getResourceAmounts() {
+    return ResourceAmountsEstimator.DEFAULT_AMOUNTS.withCpu(getJobsMultiplier());
+  }
 }

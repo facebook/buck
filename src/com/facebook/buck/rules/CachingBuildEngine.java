@@ -49,7 +49,6 @@ import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.MoreFutures;
-import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.zip.Unzip;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -309,7 +308,7 @@ public class CachingBuildEngine implements BuildEngine {
                 }
               }
             },
-            ResourceAmounts.of(ruleScheduleInfo.getJobsMultiplier(), 0, 0, 0));
+            ruleScheduleInfo.getResourceAmounts());
       }
     };
   }
