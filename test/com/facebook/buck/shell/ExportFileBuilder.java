@@ -41,4 +41,10 @@ public class ExportFileBuilder extends AbstractNodeBuilder<ExportFileDescription
     arg.out = Optional.of(out);
     return this;
   }
+
+  public ExportFileBuilder setMode(ExportFileDescription.Mode mode) {
+    arg.mode = Optional.of(mode);
+    return this;
+  }
+
 }

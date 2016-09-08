@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -23,9 +24,11 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitInputsInferringDescription;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -55,7 +58,41 @@ public class ExportFileDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return new ExportFile(params, new SourcePathResolver(resolver), args);
+    BuildTarget target = params.getBuildTarget();
+
+    Mode mode = args.mode.or(ExportFileDescription.Mode.COPY);
+
+    String name;
+    if (args.out.isPresent()) {
+      if (mode == ExportFileDescription.Mode.REFERENCE) {
+        throw new HumanReadableException(
+            "%s: must not set `out` for `export_file` when using `REFERENCE` mode",
+            params.getBuildTarget());
+      }
+      name = args.out.get();
+    } else {
+      name = target.getShortNameAndFlavorPostfix();
+    }
+
+    SourcePath src;
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    if (args.src.isPresent()) {
+      if (mode == ExportFileDescription.Mode.REFERENCE &&
+          !pathResolver.getFilesystem(args.src.get()).equals(params.getProjectFilesystem())) {
+        throw new HumanReadableException(
+            "%s: must use `COPY` mode for `export_file` when source (%s) uses a different cell",
+            target,
+            args.src.get());
+      }
+      src = args.src.get();
+    } else {
+      src =
+          new PathSourcePath(
+              params.getProjectFilesystem(),
+              target.getBasePath().resolve(target.getShortNameAndFlavorPostfix()));
+    }
+
+    return new ExportFile(params, pathResolver, name, mode, src);
   }
 
   /**
@@ -73,9 +110,30 @@ public class ExportFileDescription implements
     return inputs.build();
   }
 
+  /**
+   * Controls how `export_file` exports it's wrapped source.
+   */
+  public enum Mode {
+
+    /**
+     * Forward the wrapped {@link SourcePath} reference without any build time overhead (e.g.
+     * copying, caching, etc).
+     */
+    REFERENCE,
+
+    /**
+     * Create and export a copy of the wrapped {@link SourcePath} (incurring the cost of copying and
+     * caching this copy at build time).
+     */
+    COPY,
+
+  }
+
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public Optional<SourcePath> src;
     public Optional<String> out;
+    public Optional<Mode> mode;
   }
+
 }

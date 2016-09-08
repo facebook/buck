@@ -16,14 +16,14 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
@@ -31,8 +31,10 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
@@ -75,38 +77,36 @@ import java.nio.file.Path;
  * of the file to be saved.
  */
 // TODO(shs96c): Extend to also allow exporting a rule.
-public class ExportFile extends AbstractBuildRule implements HasOutputName {
+public class ExportFile extends AbstractBuildRule implements HasOutputName, HasRuntimeDeps {
 
   @AddToRuleKey
   private final String name;
   @AddToRuleKey
+  private final ExportFileDescription.Mode mode;
+  @AddToRuleKey
   private final SourcePath src;
-  @AddToRuleKey(stringify = true)
-  private final Path out;
 
-  @VisibleForTesting
-  ExportFile(BuildRuleParams params, SourcePathResolver resolver, ExportFileDescription.Arg args) {
-    super(params, resolver);
-    BuildTarget target = params.getBuildTarget();
-
-    this.name = args.out.or(target.getShortNameAndFlavorPostfix());
-
-    if (args.src.isPresent()) {
-      this.src = args.src.get();
-    } else {
-      this.src = new PathSourcePath(
-          params.getProjectFilesystem(),
-          target.getBasePath().resolve(target.getShortNameAndFlavorPostfix()));
-    }
-
-    this.out =
-        getProjectFilesystem().getBuckPaths().getGenDir()
-            .resolve(target.getBasePath()).resolve(this.name);
+  ExportFile(
+      BuildRuleParams buildRuleParams,
+      SourcePathResolver resolver,
+      String name,
+      ExportFileDescription.Mode mode,
+      SourcePath src) {
+    super(buildRuleParams, resolver);
+    this.name = name;
+    this.mode = mode;
+    this.src = src;
   }
 
   @VisibleForTesting
   ImmutableCollection<Path> getSource() {
     return getResolver().filterInputsToCompareToOutput(src);
+  }
+
+  private Path getCopiedPath() {
+    Preconditions.checkState(mode == ExportFileDescription.Mode.COPY);
+    return getProjectFilesystem().getBuckPaths().getGenDir()
+        .resolve(getBuildTarget().getBasePath()).resolve(name);
   }
 
   @Override
@@ -117,35 +117,53 @@ public class ExportFile extends AbstractBuildRule implements HasOutputName {
     // This file is copied rather than symlinked so that when it is included in an archive zip and
     // unpacked on another machine, it is an ordinary file in both scenarios.
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
-    builder.add(new MkdirStep(getProjectFilesystem(), out.getParent()));
-    builder.add(new RmStep(getProjectFilesystem(), out, /* force */ true, /* recurse */ true));
-    if (getResolver().getFilesystem(src).isDirectory(getResolver().getRelativePath(src))) {
-      builder.add(
-          CopyStep.forDirectory(
-              getProjectFilesystem(),
-              getResolver().getAbsolutePath(src),
-              out,
-              CopyStep.DirectoryMode.CONTENTS_ONLY));
-    } else {
-      builder.add(
-          CopyStep.forFile(
-              getProjectFilesystem(),
-              getResolver().getAbsolutePath(src),
-              out));
+    if (mode == ExportFileDescription.Mode.COPY) {
+      Path out = getCopiedPath();
+      builder.add(new MkdirStep(getProjectFilesystem(), out.getParent()));
+      builder.add(new RmStep(getProjectFilesystem(), out, /* force */ true, /* recurse */ true));
+      if (getResolver().getFilesystem(src).isDirectory(getResolver().getRelativePath(src))) {
+        builder.add(
+            CopyStep.forDirectory(
+                getProjectFilesystem(),
+                getResolver().getAbsolutePath(src),
+                out,
+                CopyStep.DirectoryMode.CONTENTS_ONLY));
+      } else {
+        builder.add(
+            CopyStep.forFile(
+                getProjectFilesystem(),
+                getResolver().getAbsolutePath(src),
+                out));
+      }
+      buildableContext.recordArtifact(out);
     }
 
-    buildableContext.recordArtifact(out);
     return builder.build();
   }
 
   @Override
   public Path getPathToOutput() {
-    return out;
+    // In reference mode, we just return the relative path to the source, as we've already verified
+    // that our filesystem matches that of the source.  In copy mode, we return the path we've
+    // allocated for the copy.
+    return mode == ExportFileDescription.Mode.REFERENCE ?
+        getResolver().getRelativePath(src) :
+        getCopiedPath();
   }
 
   @Override
   public String getOutputName() {
     return name;
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    // When using reference mode, we need to make sure that any build rule that builds the source
+    // is built when we are, so accomplish this by exporting it as a runtime dep.
+    return ImmutableSortedSet.copyOf(
+        mode == ExportFileDescription.Mode.REFERENCE ?
+            getResolver().filterBuildRuleInputs(src) :
+            ImmutableList.<BuildRule>of());
   }
 
 }

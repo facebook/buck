@@ -19,6 +19,7 @@ import static com.facebook.buck.testutil.MoreAsserts.assertIterablesEquals;
 import static java.util.Collections.singleton;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
@@ -40,6 +41,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
@@ -50,6 +52,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -62,8 +65,11 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.easymock.EasyMock;
+import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -76,6 +82,9 @@ public class ExportFileTest {
   private ProjectFilesystem projectFilesystem;
   private BuildContext context;
   private BuildTarget target;
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   @Before
   public void createFixtures() {
@@ -247,6 +256,52 @@ public class ExportFileTest {
     RuleKey refreshed = ruleKeyFactory.build(rule);
 
     assertNotEquals(original, refreshed);
+  }
+
+  @Test
+  public void referenceModeUsesUnderlyingSourcePath() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraph.EMPTY,
+            new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePath src = new FakeSourcePath(projectFilesystem, "source");
+    ExportFile exportFile =
+        (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
+            .setMode(ExportFileDescription.Mode.REFERENCE)
+            .setSrc(src)
+            .build(resolver, projectFilesystem);
+    assertThat(exportFile.getPathToOutput(), Matchers.equalTo(pathResolver.getRelativePath(src)));
+  }
+
+  @Test
+  public void referenceModeRequiresSameFilesystem() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraph.EMPTY,
+            new DefaultTargetNodeToBuildRuleTransformer());
+    ProjectFilesystem differentFilesystem = new FakeProjectFilesystem();
+    SourcePath src = new FakeSourcePath(differentFilesystem, "source");
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(Matchers.containsString("must use `COPY` mode"));
+    ExportFileBuilder.newExportFileBuilder(target)
+        .setMode(ExportFileDescription.Mode.REFERENCE)
+        .setSrc(src)
+        .build(resolver, projectFilesystem);
+  }
+
+  @Test
+  public void referenceModeDoesNotAcceptOutParameter() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraph.EMPTY,
+            new DefaultTargetNodeToBuildRuleTransformer());
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(Matchers.containsString("must not set `out`"));
+    ExportFileBuilder.newExportFileBuilder(target)
+        .setOut("out")
+        .setMode(ExportFileDescription.Mode.REFERENCE)
+        .build(resolver, projectFilesystem);
   }
 
   private BuildContext getBuildContext() {
