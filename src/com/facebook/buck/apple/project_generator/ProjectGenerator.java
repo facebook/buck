@@ -1642,7 +1642,27 @@ public class ProjectGenerator {
           CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
               defaultCxxPlatform,
               appendedConfig);
-      configs = Optional.of(ImmutableSortedMap.copyOf(defaultConfig));
+
+      if (isFrameworkTarget(targetNode)) {
+        ImmutableMap.Builder<String, ImmutableMap<String, String>> configBuilder =
+            ImmutableMap.builder();
+        for (Map.Entry<String, ImmutableMap<String, String>> entry : defaultConfig.entrySet()) {
+          ImmutableMap.Builder<String, String> frameworkConfigs = ImmutableMap.builder();
+          frameworkConfigs.putAll(entry.getValue());
+
+          frameworkConfigs.put("DYLIB_INSTALL_NAME_BASE", "@rpath");
+          frameworkConfigs.put("SKIP_INSTALL", "YES");
+          frameworkConfigs.put(
+              "LD_RUNPATH_SEARCH_PATHS",
+              "$(inherited) @executable_path/Frameworks @loader_path/Frameworks");
+          frameworkConfigs.put("DEFINES_MODULE", "YES");
+
+          configBuilder.put(entry.getKey(), frameworkConfigs.build());
+        }
+        configs = Optional.of(ImmutableSortedMap.copyOf(configBuilder.build()));
+      } else {
+        configs = Optional.of(ImmutableSortedMap.copyOf(defaultConfig));
+      }
     }
     return configs;
   }
