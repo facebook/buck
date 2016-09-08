@@ -85,9 +85,22 @@ python_library(
   ],
 )
 
+def interpreter_override_args():
+  """Determine interpreter override arguments based on a buck config.
+
+  For example, `--config user.buck_pex_interpreter=python2` will generate a pex
+  which invokes `python2` instead of the default, `python<major>.<minor>`.
+  """
+  val = read_config('user', 'buck_pex_interpreter', '')
+  if val != '':
+    return ['--python-shebang', '/usr/bin/env ' + val]
+  else:
+    return []
+
 python_binary(
   name='buck',
   main='buck.py',
+  build_args=interpreter_override_args(),
   deps=[
     ':bucklib',
     ':subprocutils',
@@ -97,6 +110,7 @@ python_binary(
 python_binary(
   name='buckd',
   main='buckd.py',
+  build_args=interpreter_override_args(),
   deps=[
     ':bucklib',
     ':subprocutils',

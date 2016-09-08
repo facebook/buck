@@ -205,7 +205,7 @@ public class PythonBinaryDescription implements
         preloadLibraries);
   }
 
-  protected PythonBinary createPackageRule(
+  PythonBinary createPackageRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,

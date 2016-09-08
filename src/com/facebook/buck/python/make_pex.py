@@ -87,6 +87,7 @@ def main():
     parser.add_option('--no-zip-safe', action='store_false', dest='zip_safe', default=True)
     parser.add_option('--python', default='')
     parser.add_option('--python-version', default='')
+    parser.add_option('--python-shebang', default=None)
     parser.add_option('--preload', action='append', default=[])
     options, args = parser.parse_args()
     if len(args) == 1:
@@ -125,6 +126,9 @@ def main():
         path=output if options.directory else None,
         interpreter=interpreter,
     )
+
+    if options.python_shebang is not None:
+        pex_builder.set_shebang(options.python_shebang)
 
     # Set whether this PEX as zip-safe, meaning everything will stayed zipped up
     # and we'll rely on python's zip-import mechanism to load modules from
