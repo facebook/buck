@@ -40,7 +40,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class DependeciesOptimizerTest {
+public class DependenciesOptimizerTest {
 
   @Test
   public void ordering() {

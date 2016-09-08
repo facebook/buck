@@ -22,6 +22,8 @@ import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPropertyLvalue;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckValue;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckValueArray;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckVisitor;
+import com.google.common.base.Function;
+import com.google.common.collect.Ordering;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -30,6 +32,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+
+import javax.annotation.Nullable;
 
 /**
  * A utility class for sorting buck dependencies alphabetically.
@@ -81,13 +85,8 @@ public class DependenciesOptimizer {
   private static void sortArray(BuckValueArray array) {
     BuckArrayElements arrayElements = array.getArrayElements();
     PsiElement[] arrayValues = arrayElements.getChildren();
-    Arrays.sort(arrayValues, new Comparator<PsiElement>() {
-          @Override
-          public int compare(PsiElement e1, PsiElement e2) {
-            return compareDependencyStrings(e1.getText(), e2.getText());
-          }
-        }
-    );
+    Arrays.sort(arrayValues, PSI_SORT_ORDER);
+
     PsiElement[] oldValues = new PsiElement[arrayValues.length];
     for (int i = 0; i < arrayValues.length; ++i) {
       oldValues[i] = arrayValues[i].copy();
@@ -134,4 +133,26 @@ public class DependenciesOptimizer {
     return baseString.compareTo(anotherString);
   }
 
+  private static final Ordering<String> SORT_ORDER = Ordering.from(
+      new Comparator<String>() {
+        @Override
+        public int compare(String o1, String o2) {
+          return compareDependencyStrings(o1, o2);
+        }
+      });
+
+  private static final Ordering<PsiElement> PSI_SORT_ORDER = SORT_ORDER.onResultOf(
+      new Function<PsiElement, String>() {
+        @Override
+        public String apply(@Nullable PsiElement psiElement) {
+          return psiElement.getText();
+        }
+      });
+
+  /**
+   * Returns the preferred sort order of dependencies.
+   */
+  public static Ordering<String> sortOrder() {
+    return SORT_ORDER;
+  }
 }
