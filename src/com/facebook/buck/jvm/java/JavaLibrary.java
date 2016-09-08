@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
@@ -74,7 +73,7 @@ public interface JavaLibrary extends BuildRule, HasClasspathEntries,
    * dependencies of these rules.
    */
   @Override
-  public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries();
+  ImmutableSet<Path> getTransitiveClasspaths();
 
   /**
    * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to

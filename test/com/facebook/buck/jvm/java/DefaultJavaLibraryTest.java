@@ -86,7 +86,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -328,14 +327,11 @@ public class DefaultJavaLibraryTest {
 
     Path root = libraryOne.getProjectFilesystem().getRootPath();
     assertEquals(
-        ImmutableSetMultimap.of(
-            getJavaLibrary(libraryOne),
+        ImmutableSet.of(
             root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget, filesystem)),
-            getJavaLibrary(libraryTwo),
             root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryTwoTarget, filesystem)),
-            getJavaLibrary(parent),
             root.resolve(DefaultJavaLibrary.getOutputJarPath(parentTarget, filesystem))),
-        ((HasClasspathEntries) parent).getTransitiveClasspathEntries());
+        ((HasClasspathEntries) parent).getTransitiveClasspaths());
   }
 
   @Test
@@ -392,8 +388,8 @@ public class DefaultJavaLibraryTest {
       }
 
       @Override
-      public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
-        return ImmutableSetMultimap.of();
+      public ImmutableSet<Path> getTransitiveClasspaths() {
+        return ImmutableSet.of();
       }
 
       @Override
@@ -559,27 +555,15 @@ public class DefaultJavaLibraryTest {
     assertEquals(
         "A java_binary that depends on //:parent should include libone.jar, libtwo.jar and " +
             "parent.jar.",
-        ImmutableSetMultimap.<JavaLibrary, Path>builder()
-            .put(
-                getJavaLibrary(included),
-                root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem)))
-            .put(
-                getJavaLibrary(notIncluded),
-                root.resolve(DefaultJavaLibrary.getOutputJarPath(nonIncludedTarget, filesystem)))
-            .putAll(
-                getJavaLibrary(libraryOne),
-                root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem)),
-                root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget, filesystem)))
-            .putAll(
-                getJavaLibrary(libraryTwo),
+        ImmutableSet.<Path>builder()
+            .add(
                 root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem)),
                 root.resolve(DefaultJavaLibrary.getOutputJarPath(nonIncludedTarget, filesystem)),
                 root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget, filesystem)),
-                root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryTwoTarget, filesystem)))
-            .put(getJavaLibrary(parent),
+                root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryTwoTarget, filesystem)),
                 root.resolve(DefaultJavaLibrary.getOutputJarPath(parentTarget, filesystem)))
             .build(),
-        getJavaLibrary(parent).getTransitiveClasspathEntries());
+        getJavaLibrary(parent).getTransitiveClasspaths());
 
     assertThat(
         getJavaLibrary(parent).getTransitiveClasspathDeps(),

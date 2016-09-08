@@ -179,19 +179,16 @@ public class JavaLibraryClasspathProviderTest {
   }
 
   @Test
-  public void getTransitiveClasspathEntries() throws Exception {
+  public void getTransitiveClasspaths() throws Exception {
     JavaLibrary aLib = (JavaLibrary) a;
     assertEquals(
-        ImmutableSetMultimap.builder()
-            .put(a, getFullOutput(a))
-            .put(a, getFullOutput(c))  // a exports c
-            .put(c, getFullOutput(e))  // c exports e
-            .put(a, getFullOutput(e))  // so a transitively has e
-            .put(c, getFullOutput(c))
-            .put(e, getFullOutput(e))
+        ImmutableSet.builder()
+            .add(getFullOutput(a))
+            .add(getFullOutput(c))  // a exports c
+            .add(getFullOutput(e))  // c exports e
             // b is non-java so b and d do not appear
             .build(),
-        aLib.getTransitiveClasspathEntries());
+        aLib.getTransitiveClasspaths());
   }
 
   @Test

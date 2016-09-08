@@ -35,7 +35,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
@@ -84,9 +83,10 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
-  public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
-    return JavaLibraryClasspathProvider.getClasspathEntriesFromLibraries(
-        this.getTransitiveClasspathDeps());
+  public ImmutableSet<Path> getTransitiveClasspaths() {
+    return ImmutableSet.copyOf(
+        JavaLibraryClasspathProvider.getClasspathEntriesFromLibraries(
+            this.getTransitiveClasspathDeps()).values());
   }
 
   @Override

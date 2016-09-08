@@ -567,7 +567,7 @@ public class JavaTest
         // By the end of the build, all the transitive Java library dependencies *must* be available
         // on disk, so signal this requirement via the {@link HasRuntimeDeps} interface.
         .addAll(
-            FluentIterable.from(getTransitiveClasspathEntries().keySet())
+            FluentIterable.from(getTransitiveClasspathDeps())
                 .filter(BuildRule.class)
                 .filter(Predicates.not(Predicates.<BuildRule>equalTo(this))))
         // It's possible that the user added some tool as a dependency, so make sure we promote
@@ -613,7 +613,7 @@ public class JavaTest
               @Override
               public StepExecutionResult execute(ExecutionContext context) throws IOException {
                 ImmutableSet<Path> classpathEntries = ImmutableSet.<Path>builder()
-                    .addAll(getTransitiveClasspathEntries().values())
+                    .addAll(getTransitiveClasspaths())
                     .addAll(additionalClasspathEntries)
                     .addAll(getBootClasspathEntries(context))
                     .build();

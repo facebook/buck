@@ -40,7 +40,6 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.InstallableApk;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.ManifestEntries;
@@ -56,6 +55,7 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.XzStep;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
@@ -1200,10 +1200,10 @@ public class AndroidBinary
   }
 
   @Override
-  public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
+  public ImmutableSet<Path> getTransitiveClasspaths() {
     // This is used primarily for buck audit classpath.
-    return JavaLibraryClasspathProvider.getClasspathEntriesFromLibraries(
-        getTransitiveClasspathDeps());
+    return ImmutableSet.copyOf(JavaLibraryClasspathProvider.getClasspathEntriesFromLibraries(
+        getTransitiveClasspathDeps()).values());
   }
 
   @Override

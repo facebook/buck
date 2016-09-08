@@ -93,7 +93,7 @@ public class JarBackedJavac extends Jsr199Javac {
                     Set<Path> paths = new HashSet<>();
                     Optional<BuildRule> rule = resolver.getRule(input);
                     if (rule instanceof JavaLibrary) {
-                      paths.addAll(((JavaLibrary) rule).getTransitiveClasspathEntries().values());
+                      paths.addAll(((JavaLibrary) rule).getTransitiveClasspaths());
                     } else {
                       paths.add(resolver.getAbsolutePath(input));
                     }

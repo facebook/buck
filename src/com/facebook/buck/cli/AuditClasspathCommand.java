@@ -186,7 +186,7 @@ public class AuditClasspathCommand extends AbstractCommand {
       BuildRule rule = Preconditions.checkNotNull(resolver.requireRule(target));
       HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
       if (hasClasspathEntries != null) {
-        classpathEntries.addAll(hasClasspathEntries.getTransitiveClasspathEntries().values());
+        classpathEntries.addAll(hasClasspathEntries.getTransitiveClasspaths());
       } else {
         throw new HumanReadableException(rule.getFullyQualifiedName() + " is not a java-based" +
             " build target");
@@ -219,7 +219,7 @@ public class AuditClasspathCommand extends AbstractCommand {
       targetClasspaths.putAll(
           target.getFullyQualifiedName(),
           Iterables.transform(
-              hasClasspathEntries.getTransitiveClasspathEntries().values(),
+              hasClasspathEntries.getTransitiveClasspaths(),
               Functions.toStringFunction()));
     }
 

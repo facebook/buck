@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 
 import java.nio.file.Path;
 
@@ -27,9 +26,9 @@ import java.nio.file.Path;
 public interface HasClasspathEntries {
 
   /**
-   * @return A map of rule names to classpath entries for this rule and its dependencies.
+   * @return Classpath entries for this rule and its dependencies.
    */
-  ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries();
+  ImmutableSet<Path> getTransitiveClasspaths();
 
   /**
    * @return A set of rules contributing classpath entries for this rule and its dependencies.
@@ -39,7 +38,7 @@ public interface HasClasspathEntries {
   /**
    * Returns the classpaths for only this rule, not its deps.
    *
-   * Used to generate the value of {@link #getTransitiveClasspathEntries()}.
+   * Used to generate the value of {@link #getTransitiveClasspaths()}.
    */
   ImmutableSet<Path> getImmediateClasspaths();
 }

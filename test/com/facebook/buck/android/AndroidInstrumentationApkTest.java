@@ -23,7 +23,6 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
-import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -39,7 +38,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -61,13 +59,10 @@ public class AndroidInstrumentationApkTest {
         BuildTargetFactory.newInstance("//java/com/example:lib2"),
         pathResolver,
         /* deps */ ImmutableSortedSet.of((BuildRule) javaLibrary1)) {
+
       @Override
-      public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
-        ImmutableSetMultimap.Builder<JavaLibrary, Path> builder =
-            ImmutableSetMultimap.builder();
-        builder.put(javaLibrary1, javaLibrary1.getPathToOutput());
-        builder.put(this, this.getPathToOutput());
-        return builder.build();
+      public ImmutableSet<Path> getTransitiveClasspaths() {
+        return ImmutableSet.of(javaLibrary1.getPathToOutput(), this.getPathToOutput());
       }
     };
 
@@ -79,12 +74,8 @@ public class AndroidInstrumentationApkTest {
         pathResolver,
         /* deps */ ImmutableSortedSet.of((BuildRule) javaLibrary3)) {
       @Override
-      public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
-        ImmutableSetMultimap.Builder<JavaLibrary, Path> builder =
-            ImmutableSetMultimap.builder();
-        builder.put(javaLibrary3, javaLibrary3.getPathToOutput());
-        builder.put(this, this.getPathToOutput());
-        return builder.build();
+      public ImmutableSet<Path> getTransitiveClasspaths() {
+        return ImmutableSet.of(javaLibrary3.getPathToOutput(), this.getPathToOutput());
       }
     };
 

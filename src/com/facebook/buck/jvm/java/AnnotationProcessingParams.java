@@ -204,7 +204,7 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
               inputs.add(new BuildTargetSourcePath(entry.getBuildTarget()));
             }
           }
-          searchPathElements.addAll(hasClasspathEntries.getTransitiveClasspathEntries().values());
+          searchPathElements.addAll(hasClasspathEntries.getTransitiveClasspaths());
         } else {
           throw new HumanReadableException(
               "%1$s: Error adding '%2$s' to annotation_processing_deps: " +

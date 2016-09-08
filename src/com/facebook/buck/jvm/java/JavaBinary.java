@@ -132,10 +132,10 @@ public class JavaBinary extends AbstractBuildRule
 
       includePaths = ImmutableSortedSet.<Path>naturalOrder()
           .add(stagingRoot)
-          .addAll(getTransitiveClasspathEntries().values())
+          .addAll(getTransitiveClasspaths())
           .build();
     } else {
-      includePaths = ImmutableSortedSet.copyOf(getTransitiveClasspathEntries().values());
+      includePaths = ImmutableSortedSet.copyOf(getTransitiveClasspaths());
     }
 
     Path outputFile = getPathToOutput();
@@ -155,8 +155,8 @@ public class JavaBinary extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
-    return transitiveClasspathEntries;
+  public ImmutableSet<Path> getTransitiveClasspaths() {
+    return ImmutableSet.copyOf(transitiveClasspathEntries.values());
   }
 
   @Override
