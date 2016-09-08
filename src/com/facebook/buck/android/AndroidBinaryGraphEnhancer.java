@@ -200,6 +200,13 @@ public class AndroidBinaryGraphEnhancer {
     AndroidPackageableCollection.ResourceDetails resourceDetails =
         packageableCollection.getResourceDetails();
 
+    Optional<CopyNativeLibraries> copyNativeLibraries = nativeLibsEnhancer.getCopyNativeLibraries(
+        packageableCollection);
+    if (copyNativeLibraries.isPresent()) {
+      ruleResolver.addToIndex(copyNativeLibraries.get());
+      enhancedDeps.add(copyNativeLibraries.get());
+    }
+
     ImmutableSortedSet<BuildRule> resourceRules =
         getTargetsAsRules(resourceDetails.getResourcesWithNonEmptyResDir());
 
@@ -398,13 +405,6 @@ public class AndroidBinaryGraphEnhancer {
     // correctly capture deps when a prebuilt_jar forwards the output from another build rule.
     enhancedDeps.addAll(
         pathResolver.filterBuildRuleInputs(packageableCollection.getPathsToThirdPartyJars()));
-
-    Optional<CopyNativeLibraries> copyNativeLibraries = nativeLibsEnhancer.getCopyNativeLibraries(
-        packageableCollection);
-    if (copyNativeLibraries.isPresent()) {
-      ruleResolver.addToIndex(copyNativeLibraries.get());
-      enhancedDeps.add(copyNativeLibraries.get());
-    }
 
     Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi = Optional.absent();
     if (!exopackageModes.isEmpty()) {
