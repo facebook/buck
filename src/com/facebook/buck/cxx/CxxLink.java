@@ -97,8 +97,9 @@ public class CxxLink
       BuildContext context,
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
-    if (linker instanceof HasLinkerMap) {
-      buildableContext.recordArtifact(((HasLinkerMap) linker).linkerMapPath(output));
+    Optional<Path> linkerMapPath = getLinkerMapPath();
+    if (linkerMapPath.isPresent()) {
+      buildableContext.recordArtifact(linkerMapPath.get());
     }
     Path scratchDir =
         BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s-tmp");
@@ -160,6 +161,14 @@ public class CxxLink
   @Override
   public boolean isCacheable() {
     return cacheable;
+  }
+
+  public Optional<Path> getLinkerMapPath() {
+    if (linker instanceof HasLinkerMap) {
+      return Optional.of(((HasLinkerMap) linker).linkerMapPath(output));
+    } else {
+      return Optional.absent();
+    }
   }
 
   public Linker getLinker() {

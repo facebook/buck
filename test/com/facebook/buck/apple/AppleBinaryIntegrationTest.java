@@ -855,6 +855,35 @@ public class AppleBinaryIntegrationTest {
         Matchers.equalTo(false));
   }
 
+  @Test
+  public void multiarchBinaryShouldCopyLinkMapOfComponents()
+      throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    BuildTarget singleArchI386Target =
+        BuildTargetFactory.newInstance("//:DemoApp#iphonesimulator-i386");
+    BuildTarget singleArchX8664Target =
+        BuildTargetFactory.newInstance("//:DemoApp#iphonesimulator-x86_64");
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//:DemoApp#iphonesimulator-i386,iphonesimulator-x86_64");
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "multiarch_binary_linkmap", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
+    assertTrue(
+        "Has link map for i386 arch.",
+        Files.exists(
+            workspace.getPath(
+                BuildTargets.getGenPath(filesystem, target, "%s-LinkMap").resolve(
+                    singleArchI386Target.getShortNameAndFlavorPostfix() + "-LinkMap.txt"))));
+    assertTrue(
+        "Has link map for x86_64 arch.",
+        Files.exists(
+            workspace.getPath(
+                BuildTargets.getGenPath(filesystem, target, "%s-LinkMap").resolve(
+                    singleArchX8664Target.getShortNameAndFlavorPostfix() + "-LinkMap.txt"))));
+  }
+
   private static void assertIsSymbolicLink(
       Path link,
       Path target) throws IOException {

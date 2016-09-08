@@ -19,7 +19,6 @@ package com.facebook.buck.apple;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -150,13 +149,10 @@ public class MultiarchFileTest {
         FakeBuildContext.NOOP_CONTEXT,
         new FakeBuildableContext());
 
-    assertThat(steps, hasSize(2));
-    Step step = Iterables.getLast(steps);
+    ShellStep step = Iterables.getLast(Iterables.filter(steps, ShellStep.class));
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
-    assertThat(step, instanceOf(ShellStep.class));
-    ImmutableList<String> command =
-        ((ShellStep) step).getShellCommand(executionContext);
+    ImmutableList<String> command = step.getShellCommand(executionContext);
     assertThat(
         command,
         Matchers.contains(

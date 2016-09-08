@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.CxxBinary;
+import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -28,12 +30,16 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.CopyStep;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.SortedSet;
 
 /**
@@ -68,18 +74,49 @@ public class MultiarchFile extends AbstractBuildRule implements ProvidesLinkedBi
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
 
-    ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
-    commandBuilder.addAll(lipo.getCommandPrefix(getResolver()));
-    commandBuilder.add("-create", "-output", getProjectFilesystem().resolve(output).toString());
-    for (SourcePath thinBinary : thinBinaries) {
-      commandBuilder.add(getResolver().getAbsolutePath(thinBinary).toString());
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    steps.add(new MkdirStep(getProjectFilesystem(), output.getParent()));
+
+    {
+      ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
+      commandBuilder.addAll(lipo.getCommandPrefix(getResolver()));
+      commandBuilder.add("-create", "-output", getProjectFilesystem().resolve(output).toString());
+      for (SourcePath thinBinary : thinBinaries) {
+        commandBuilder.add(getResolver().getAbsolutePath(thinBinary).toString());
+      }
+      steps.add(
+          new DefaultShellStep(
+              getProjectFilesystem().getRootPath(),
+              commandBuilder.build(),
+              lipo.getEnvironment(getResolver())));
     }
-    return ImmutableList.<Step>of(
-        new MkdirStep(getProjectFilesystem(), output.getParent()),
-        new DefaultShellStep(
-            getProjectFilesystem().getRootPath(),
-            commandBuilder.build(),
-            lipo.getEnvironment(getResolver())));
+
+    {
+      // Copy link maps.
+      Path linkMapDir = Paths.get(output + "-LinkMap");
+      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), linkMapDir));
+
+      for (SourcePath thinBinary : thinBinaries) {
+        Optional<BuildRule> maybeRule = getResolver().getRule(thinBinary);
+        if (maybeRule.isPresent()) {
+          BuildRule rule = maybeRule.get();
+          if (rule instanceof CxxBinary) {
+            rule = ((CxxBinary) rule).getLinkRule();
+          }
+          if (rule instanceof CxxLink) {
+            Optional<Path> maybeLinkerMapPath = ((CxxLink) rule).getLinkerMapPath();
+            if (maybeLinkerMapPath.isPresent()) {
+              Path source = maybeLinkerMapPath.get();
+              Path dest = linkMapDir.resolve(source.getFileName());
+              steps.add(CopyStep.forFile(getProjectFilesystem(), source, dest));
+              buildableContext.recordArtifact(dest);
+            }
+          }
+        }
+      }
+    }
+
+    return steps.build();
   }
 
   @Override
