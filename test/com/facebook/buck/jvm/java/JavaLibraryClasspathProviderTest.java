@@ -71,7 +71,7 @@ public class JavaLibraryClasspathProviderTest {
     basePath = filesystem.getRootPath();
 
     // Create our target graph. All nodes are JavaLibrary except b
-    // (exports c) az   (no exports)
+    // (exports c) az (no exports)
     //            /  \
     //(non java) b    c (exports e)
     //           |    |
@@ -114,10 +114,8 @@ public class JavaLibraryClasspathProviderTest {
     z = makeRule("//foo:z",
         ImmutableSet.of("foo", "a.java"),
         ImmutableSet.of(b, c),
-        ImmutableSet.<BuildRule>of(),
         ruleResolver,
         filesystem);
-
   }
 
   @Test
@@ -193,9 +191,7 @@ public class JavaLibraryClasspathProviderTest {
             .put(e, getFullOutput(e))
             // b is non-java so b and d do not appear
             .build(),
-        JavaLibraryClasspathProvider.getTransitiveClasspathEntries(
-            aLib, resolver, Optional.of(sourcePathFunction.apply(aLib.getPathToOutput())))
-    );
+        aLib.getTransitiveClasspathEntries());
   }
 
   @Test

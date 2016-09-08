@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
-import java.util.Set;
 
 public class JavaLibraryClasspathProvider {
 
@@ -57,42 +56,6 @@ public class JavaLibraryClasspathProvider {
     }
 
     return outputClasspathBuilder.build();
-  }
-
-  public static ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries(
-      JavaLibrary javaLibraryRule,
-      SourcePathResolver resolver,
-      Optional<SourcePath> outputJar) {
-    final ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
-        ImmutableSetMultimap.builder();
-    ImmutableSetMultimap<JavaLibrary, Path> classpathEntriesForDeps =
-        getClasspathEntries(javaLibraryRule.getDepsForTransitiveClasspathEntries());
-
-    ImmutableSetMultimap<JavaLibrary, Path> classpathEntriesForExportedsDeps;
-    if (javaLibraryRule instanceof ExportDependencies) {
-      classpathEntriesForExportedsDeps =
-          getClasspathEntries(((ExportDependencies) javaLibraryRule).getExportedDeps());
-    } else {
-      classpathEntriesForExportedsDeps = ImmutableSetMultimap.of();
-    }
-
-    classpathEntries.putAll(classpathEntriesForDeps);
-
-    // If we have any exported deps, add an entry mapping ourselves to to their classpaths,
-    // so when suggesting libraries to add we know that adding this library would pull in
-    // it's deps.
-    if (!classpathEntriesForExportedsDeps.isEmpty()) {
-      classpathEntries.putAll(
-          javaLibraryRule,
-          classpathEntriesForExportedsDeps.values());
-    }
-
-    // Only add ourselves to the classpath if there's a jar to be built.
-    if (outputJar.isPresent()) {
-      classpathEntries.put(javaLibraryRule, resolver.getAbsolutePath(outputJar.get()));
-    }
-
-    return classpathEntries.build();
   }
 
   public static ImmutableSet<JavaLibrary> getTransitiveClasspathDeps(
@@ -139,6 +102,14 @@ public class JavaLibraryClasspathProvider {
   }
 
   /**
+   * Get transitive classpath entries for named rules.
+   */
+  public static ImmutableSetMultimap<JavaLibrary, Path> getClasspathEntries(
+      Iterable<BuildRule> deps) {
+    return getClasspathEntriesFromLibraries(getClasspathDeps(deps));
+  }
+
+  /**
    * Include the classpath entries from all JavaLibraryRules that have a direct line of lineage
    * to this rule through other JavaLibraryRules. For example, in the following dependency graph:
    *
@@ -154,23 +125,6 @@ public class JavaLibraryClasspathProvider {
    * that depend on B. However, if C depended on E as well as F and G, then E would be included in
    * A's classpath.
    */
-  public static ImmutableSetMultimap<JavaLibrary, Path> getClasspathEntries(
-      Set<BuildRule> deps) {
-    final ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
-        ImmutableSetMultimap.builder();
-    for (BuildRule dep : deps) {
-      JavaLibrary library = null;
-      if (dep instanceof JavaLibrary) {
-        library = (JavaLibrary) dep;
-      }
-
-      if (library != null) {
-        classpathEntries.putAll(library.getTransitiveClasspathEntries());
-      }
-    }
-    return classpathEntries.build();
-  }
-
   public static ImmutableSet<JavaLibrary> getClasspathDeps(Iterable<BuildRule> deps) {
     ImmutableSet.Builder<JavaLibrary> classpathDeps = ImmutableSet.builder();
     for (BuildRule dep : deps) {
@@ -179,5 +133,20 @@ public class JavaLibraryClasspathProvider {
       }
     }
     return classpathDeps.build();
+  }
+
+  /**
+   * Given libraries that may contribute classpaths, visit them and collect the classpaths.
+   *
+   * This is used to generate transitive classpaths from library discovered in a previous traversal.
+   */
+  public static ImmutableSetMultimap<JavaLibrary, Path> getClasspathEntriesFromLibraries(
+      Iterable<JavaLibrary> libraries) {
+    ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
+        ImmutableSetMultimap.builder();
+    for (JavaLibrary library : libraries) {
+      classpathEntries.putAll(library, library.getImmediateClasspaths());
+    }
+    return classpathEntries.build();
   }
 }

@@ -36,4 +36,10 @@ public interface HasClasspathEntries {
    */
   ImmutableSet<JavaLibrary> getTransitiveClasspathDeps();
 
+  /**
+   * Returns the classpaths for only this rule, not its deps.
+   *
+   * Used to generate the value of {@link #getTransitiveClasspathEntries()}.
+   */
+  ImmutableSet<Path> getImmediateClasspaths();
 }

@@ -179,7 +179,8 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
 
   @Override
   public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
-    return JavaLibraryClasspathProvider.getClasspathEntries(getDeps());
+    return JavaLibraryClasspathProvider.getClasspathEntriesFromLibraries(
+        getTransitiveClasspathDeps());
   }
 
   @Override
@@ -187,4 +188,8 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     return JavaLibraryClasspathProvider.getClasspathDeps(getDeps());
   }
 
+  @Override
+  public ImmutableSet<Path> getImmediateClasspaths() {
+    return ImmutableSet.of();
+  }
 }

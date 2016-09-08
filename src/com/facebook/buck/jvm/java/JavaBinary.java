@@ -164,6 +164,11 @@ public class JavaBinary extends AbstractBuildRule
     return transitiveClasspathEntries.keySet();
   }
 
+  @Override
+  public ImmutableSet<Path> getImmediateClasspaths() {
+    return ImmutableSet.of();
+  }
+
   private Path getOutputDirectory() {
     return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s").getParent();
   }

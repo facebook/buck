@@ -300,10 +300,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
           @Override
           public ImmutableSetMultimap<JavaLibrary, Path> get() {
-            return JavaLibraryClasspathProvider.getTransitiveClasspathEntries(
-                DefaultJavaLibrary.this,
-                getResolver(),
-                sourcePathForOutputJar());
+            return JavaLibraryClasspathProvider.getClasspathEntriesFromLibraries(
+                getTransitiveClasspathDeps());
           }
         });
 
@@ -397,6 +395,24 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Override
   public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
     return transitiveClasspathDepsSupplier.get();
+  }
+
+  @Override
+  public ImmutableSet<Path> getImmediateClasspaths() {
+    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
+
+    // Add any exported deps.
+    ImmutableSetMultimap<JavaLibrary, Path> classpathEntriesForExportedsDeps =
+        JavaLibraryClasspathProvider.getClasspathEntries(getExportedDeps());
+    builder.addAll(classpathEntriesForExportedsDeps.values());
+
+    // Add ourselves to the classpath if there's a jar to be built.
+    Optional<SourcePath> sourcePathForOutputJar = sourcePathForOutputJar();
+    if (sourcePathForOutputJar.isPresent()) {
+      builder.add(getResolver().getAbsolutePath(sourcePathForOutputJar.get()));
+    }
+
+    return builder.build();
   }
 
   /**

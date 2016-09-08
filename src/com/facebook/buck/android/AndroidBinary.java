@@ -1202,14 +1202,19 @@ public class AndroidBinary
   @Override
   public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
     // This is used primarily for buck audit classpath.
-    return JavaLibraryClasspathProvider.getClasspathEntries(ImmutableSet.copyOf(
-        getResolver().filterBuildRuleInputs(enhancementResult.getClasspathEntriesToDex())));
+    return JavaLibraryClasspathProvider.getClasspathEntriesFromLibraries(
+        getTransitiveClasspathDeps());
   }
 
   @Override
   public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
     return JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.copyOf(
         getResolver().filterBuildRuleInputs(enhancementResult.getClasspathEntriesToDex())));
+  }
+
+  @Override
+  public ImmutableSet<Path> getImmediateClasspaths() {
+    return ImmutableSet.of();
   }
 
   @Override
