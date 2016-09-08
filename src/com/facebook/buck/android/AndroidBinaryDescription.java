@@ -231,6 +231,7 @@ public class AndroidBinaryDescription
         nativePlatforms,
         args.nativeLibraryMergeMap,
         args.nativeLibraryMergeGlue,
+        args.nativeLibraryMergeCodeGenerator,
         args.enableRelinker.or(false) ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
         dxExecutorService,
         args.manifestEntries.get(),
@@ -406,6 +407,7 @@ public class AndroidBinaryDescription
     public Optional<Boolean> compressAssetLibraries;
     public Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap;
     public Optional<BuildTarget> nativeLibraryMergeGlue;
+    public Optional<BuildTarget> nativeLibraryMergeCodeGenerator;
     public Optional<Boolean> enableRelinker;
     public Optional<ManifestEntries> manifestEntries;
     public Optional<BuildConfigFields> buildConfigValues;

@@ -86,6 +86,7 @@ public class AndroidBinaryGraphEnhancer {
   private final ImmutableSortedSet<BuildRule> originalDeps;
   private final BuildRuleParams buildRuleParams;
   private final boolean trimResourceIds;
+  private final Optional<BuildTarget> nativeLibraryMergeCodeGenerator;
   private final ManifestEntries manifestEntries;
   private final BuildRuleResolver ruleResolver;
   private final SourcePathResolver pathResolver;
@@ -141,6 +142,7 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap,
       Optional<BuildTarget> nativeLibraryMergeGlue,
+      Optional<BuildTarget> nativeLibraryMergeCodeGenerator,
       RelinkerMode relinkerMode,
       ListeningExecutorService dxExecutorService,
       ManifestEntries manifestEntries,
@@ -174,6 +176,8 @@ public class AndroidBinaryGraphEnhancer {
     this.dxExecutorService = dxExecutorService;
     this.xzCompressionLevel = xzCompressionLevel;
     this.trimResourceIds = trimResourceIds;
+    this.nativeLibraryMergeCodeGenerator = nativeLibraryMergeCodeGenerator;
+    this.nativeLibraryMergeCodeGenerator.getClass();
     this.nativeLibsEnhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
             ruleResolver,
