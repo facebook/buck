@@ -109,6 +109,12 @@ public class JavaLibraryClasspathProvider {
       classpathDeps.add(javaLibrary);
     }
 
+    // Or if there are exported dependencies, to be consistent with getTransitiveClasspathEntries.
+    if (javaLibrary instanceof ExportDependencies &&
+        !((ExportDependencies) javaLibrary).getExportedDeps().isEmpty()) {
+      classpathDeps.add(javaLibrary);
+    }
+
     return classpathDeps.build();
   }
 

@@ -56,6 +56,7 @@ public class JavaLibraryClasspathProviderTest {
   private BuildRule c;
   private BuildRule d;
   private BuildRule e;
+  private BuildRule z;
   private SourcePathResolver resolver;
   private Path basePath;
   private Function<Path, SourcePath> sourcePathFunction;
@@ -70,7 +71,7 @@ public class JavaLibraryClasspathProviderTest {
     basePath = filesystem.getRootPath();
 
     // Create our target graph. All nodes are JavaLibrary except b
-    //              a   (exports c)
+    // (exports c) az   (no exports)
     //            /  \
     //(non java) b    c (exports e)
     //           |    |
@@ -107,6 +108,13 @@ public class JavaLibraryClasspathProviderTest {
         ImmutableSet.of("foo", "a.java"),
         ImmutableSet.of(b, c),
         ImmutableSet.of(c),
+        ruleResolver,
+        filesystem);
+
+    z = makeRule("//foo:z",
+        ImmutableSet.of("foo", "a.java"),
+        ImmutableSet.of(b, c),
+        ImmutableSet.<BuildRule>of(),
         ruleResolver,
         filesystem);
 
@@ -192,23 +200,24 @@ public class JavaLibraryClasspathProviderTest {
 
   @Test
   public void getTransitiveClasspathDeps() throws Exception {
-    JavaLibrary aLib = (JavaLibrary) a;
+    JavaLibrary lib = (JavaLibrary) z;
     assertEquals(
+        "root does not appear if output jar not present.",
         ImmutableSet.of(
             c, e
         ),
         JavaLibraryClasspathProvider.getTransitiveClasspathDeps(
-            aLib,
-            Optional.<SourcePath>absent()) // a does not appear if outputJar not present
-    );
+            lib,
+            Optional.<SourcePath>absent()));
 
     assertEquals(
+        "root does appear if output jar present.",
         ImmutableSet.of(
-            a, c, e
+            z, c, e
         ),
         JavaLibraryClasspathProvider.getTransitiveClasspathDeps(
-            aLib,
-            Optional.of(sourcePathFunction.apply(aLib.getPathToOutput())))
+            lib,
+            Optional.of(sourcePathFunction.apply(lib.getPathToOutput())))
     );
   }
 
