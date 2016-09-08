@@ -79,7 +79,8 @@ class FilePathGenerator:
             self,
             package_path,
             depth,
-            component_generator):
+            component_generator,
+            extension):
         if depth == 0:
             return ''
         if self._file_samples_dirty:
@@ -98,7 +99,8 @@ class FilePathGenerator:
                 root,
                 depth,
                 self._sizes_by_depth_in_package,
-                component_generator)
+                component_generator,
+                extension)
         parent_dir[os.path.basename(path).lower()] = None
         return path
 
@@ -110,13 +112,18 @@ class FilePathGenerator:
         return components[::-1]
 
     def _generate_path(
-            self, package_key, root, depth, sizes_by_depth,
-            component_generator):
+            self,
+            package_key,
+            root,
+            depth,
+            sizes_by_depth,
+            component_generator,
+            extension=None):
         assert depth >= 1
         parent_path, parent_dir = self._generate_parent(
                 package_key, root, depth - 1, sizes_by_depth,
                 component_generator)
-        name = self._generate_name(parent_dir, component_generator)
+        name = self._generate_name(parent_dir, component_generator, extension)
         return os.path.join(parent_path, name), parent_dir
 
     def _generate_parent(
@@ -146,9 +153,11 @@ class FilePathGenerator:
             del self._available_directories[key]
         return path, directory
 
-    def _generate_name(self, directory, generator):
+    def _generate_name(self, directory, generator, extension=None):
         for i in range(1000):
             name = generator.generate_string()
+            if extension is not None:
+                name += extension
             if (name.lower() not in directory and
                     name.lower() != self.BUILD_FILE_NAME.lower()):
                 return name

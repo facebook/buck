@@ -123,6 +123,7 @@ class PathSetGenerator:
         self._component_generator = StringGenerator()
         self._lengths = collections.Counter()
         self._component_counts = collections.Counter()
+        self._extensions = collections.Counter()
 
     def add_sample(self, base_path, sample):
         self._lengths.update([len(sample)])
@@ -135,6 +136,11 @@ class PathSetGenerator:
                 path, component = os.path.split(path)
                 components.append(component)
             self._component_counts.update([len(components)])
+            if not components:
+                self._extensions.update([''])
+            else:
+                components[0], extension = os.path.splitext(components[0])
+                self._extensions.update([extension])
             for component in components:
                 self._component_generator.add_sample(base_path, component)
 
@@ -143,15 +149,18 @@ class PathSetGenerator:
             length = force_length
         else:
             length = weighted_choice(self._lengths)
-        output = [self._generate_path(base_path) for i in range(length)]
+        extension = weighted_choice(self._extensions)
+        output = [self._generate_path(base_path, extension)
+                  for i in range(length)]
         return GeneratedField(output, [])
 
-    def _generate_path(self, base_path):
+    def _generate_path(self, base_path, extension):
         component_count = weighted_choice(self._component_counts)
         path = self._context.file_path_generator.generate_path_in_package(
                 base_path,
                 component_count,
-                self._component_generator)
+                self._component_generator,
+                extension)
         full_path = os.path.join(
                 self._context.output_repository,
                 base_path,
