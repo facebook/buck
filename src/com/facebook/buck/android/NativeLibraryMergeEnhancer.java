@@ -396,10 +396,6 @@ class NativeLibraryMergeEnhancer {
     }
   }
 
-  /**
-   * Our own implementation of NativeLinkable, which is consumed by
-   * later phases of graph enhancement.  It represents a single merged library.
-   */
   @Value.Immutable
   @BuckStyleImmutable
   abstract static class AbstractNativeLibraryMergeEnhancementResult {
@@ -408,6 +404,10 @@ class NativeLibraryMergeEnhancer {
     public abstract ImmutableList<NativeLinkable> getMergedLinkablesAssets();
   }
 
+  /**
+   * Our own implementation of NativeLinkable, which is consumed by
+   * later phases of graph enhancement.  It represents a single merged library.
+   */
   private static class MergedLibNativeLinkable implements NativeLinkable {
     private final CxxBuckConfig cxxBuckConfig;
     private final BuildRuleResolver ruleResolver;
