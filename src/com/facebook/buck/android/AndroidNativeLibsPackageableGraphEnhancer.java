@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -41,6 +42,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+
+import org.immutables.value.Value;
 
 import java.util.List;
 import java.util.Map;
@@ -84,6 +87,12 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     this.relinkerMode = relinkerMode;
   }
 
+  @Value.Immutable
+  @BuckStyleImmutable
+  interface AbstractAndroidNativeLibsGraphEnhancementResult {
+    Optional<CopyNativeLibraries> getCopyNativeLibraries();
+  }
+
   // Populates an immutable map builder with all given linkables set to the given cpu type.
   // Returns true iff linkables is not empty.
   private boolean populateMapWithLinkables(
@@ -110,8 +119,12 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     return hasNativeLibs;
   }
 
-  public Optional<CopyNativeLibraries> getCopyNativeLibraries(
+  public AndroidNativeLibsGraphEnhancementResult enhance(
       AndroidPackageableCollection packageableCollection) throws NoSuchBuildTargetException {
+    @SuppressWarnings("PMD.PrematureDeclaration")
+    AndroidNativeLibsGraphEnhancementResult.Builder resultBuilder =
+        AndroidNativeLibsGraphEnhancementResult.builder();
+
     ImmutableList<NativeLinkable> nativeLinkables =
         packageableCollection.getNativeLinkables();
     ImmutableList<NativeLinkable> nativeLinkablesAssets =
@@ -184,7 +197,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     if (packageableCollection.getNativeLibsDirectories().isEmpty() &&
         nativeLinkableLibs.isEmpty() &&
         nativeLinkableLibsAssets.isEmpty()) {
-      return Optional.absent();
+      return AndroidNativeLibsGraphEnhancementResult.builder().build();
     }
 
     if (relinkerMode == RelinkerMode.ENABLED &&
@@ -247,14 +260,17 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                 .addAll(strippedLibsAssetsMap.keySet())
                 .build()),
             /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
-    return Optional.of(
-        new CopyNativeLibraries(
-            paramsForCopyNativeLibraries,
-            pathResolver,
-            packageableCollection.getNativeLibsDirectories(),
-            ImmutableSet.copyOf(strippedLibsMap.values()),
-            ImmutableSet.copyOf(strippedLibsAssetsMap.values()),
-            cpuFilters));
+    return resultBuilder
+        .setCopyNativeLibraries(
+            Optional.of(
+                new CopyNativeLibraries(
+                    paramsForCopyNativeLibraries,
+                    pathResolver,
+                    packageableCollection.getNativeLibsDirectories(),
+                    ImmutableSet.copyOf(strippedLibsMap.values()),
+                    ImmutableSet.copyOf(strippedLibsAssetsMap.values()),
+                    cpuFilters)))
+        .build();
   }
 
   // Note: this method produces rules that will be shared between multiple apps,

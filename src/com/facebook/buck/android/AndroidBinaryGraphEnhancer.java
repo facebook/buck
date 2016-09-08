@@ -200,8 +200,10 @@ public class AndroidBinaryGraphEnhancer {
     AndroidPackageableCollection.ResourceDetails resourceDetails =
         packageableCollection.getResourceDetails();
 
-    Optional<CopyNativeLibraries> copyNativeLibraries = nativeLibsEnhancer.getCopyNativeLibraries(
-        packageableCollection);
+    AndroidNativeLibsGraphEnhancementResult nativeLibsEnhancementResult =
+        nativeLibsEnhancer.enhance(packageableCollection);
+    Optional<CopyNativeLibraries> copyNativeLibraries =
+        nativeLibsEnhancementResult.getCopyNativeLibraries();
     if (copyNativeLibraries.isPresent()) {
       ruleResolver.addToIndex(copyNativeLibraries.get());
       enhancedDeps.add(copyNativeLibraries.get());
