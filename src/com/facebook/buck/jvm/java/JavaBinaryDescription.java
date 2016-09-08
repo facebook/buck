@@ -43,7 +43,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -102,10 +101,12 @@ public class JavaBinaryDescription implements
     }
 
     // Construct the build rule to build the binary JAR.
-    ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries =
-        JavaLibraryClasspathProvider.getClasspathEntries(binaryParams.getDeps());
+    ImmutableSet<JavaLibrary> transitiveClasspathDeps =
+        JavaLibraryClasspathProvider.getClasspathDeps(binaryParams.getDeps());
+    ImmutableSet<Path> transitiveClasspaths =
+        JavaLibraryClasspathProvider.getClasspathsFromLibraries(transitiveClasspathDeps);
     BuildRule rule = new JavaBinary(
-        binaryParams.appendExtraDeps(transitiveClasspathEntries.keys()),
+        binaryParams.appendExtraDeps(transitiveClasspathDeps),
         pathResolver,
         javaOptions.getJavaRuntimeLauncher(),
         args.mainClass.orNull(),
@@ -113,7 +114,8 @@ public class JavaBinaryDescription implements
         args.mergeManifests.or(true),
         args.metaInfDirectory.orNull(),
         args.blacklist.or(ImmutableSet.<Pattern>of()),
-        transitiveClasspathEntries);
+        transitiveClasspathDeps,
+        transitiveClasspaths);
 
     // If we're packaging native libraries, construct the rule to build the fat JAR, which packages
     // up the original binary JAR and any required native libraries.

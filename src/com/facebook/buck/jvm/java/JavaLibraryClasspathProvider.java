@@ -102,14 +102,6 @@ public class JavaLibraryClasspathProvider {
   }
 
   /**
-   * Get transitive classpath entries for named rules.
-   */
-  public static ImmutableSetMultimap<JavaLibrary, Path> getClasspathEntries(
-      Iterable<BuildRule> deps) {
-    return getClasspathEntriesFromLibraries(getClasspathDeps(deps));
-  }
-
-  /**
    * Include the classpath entries from all JavaLibraryRules that have a direct line of lineage
    * to this rule through other JavaLibraryRules. For example, in the following dependency graph:
    *
@@ -140,12 +132,10 @@ public class JavaLibraryClasspathProvider {
    *
    * This is used to generate transitive classpaths from library discovered in a previous traversal.
    */
-  public static ImmutableSetMultimap<JavaLibrary, Path> getClasspathEntriesFromLibraries(
-      Iterable<JavaLibrary> libraries) {
-    ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
-        ImmutableSetMultimap.builder();
+  public static ImmutableSet<Path> getClasspathsFromLibraries(Iterable<JavaLibrary> libraries) {
+    ImmutableSet.Builder<Path> classpathEntries = ImmutableSet.builder();
     for (JavaLibrary library : libraries) {
-      classpathEntries.putAll(library, library.getImmediateClasspaths());
+      classpathEntries.addAll(library.getImmediateClasspaths());
     }
     return classpathEntries.build();
   }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.jvm.java.JavaLibraryClasspathProvider.getClasspathDeps;
 import static com.facebook.buck.model.HasBuildTarget.TO_TARGET;
 
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
@@ -24,7 +25,6 @@ import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
-import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
@@ -111,8 +111,7 @@ public class AndroidInstrumentationApkDescription
     ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex = FluentIterable.from(
         ImmutableSet.<JavaLibrary>builder()
             .addAll(apkUnderTest.getRulesToExcludeFromDex())
-            .addAll(JavaLibraryClasspathProvider.getClasspathEntries(
-                apkUnderTest.getClasspathDeps()).keySet())
+            .addAll(getClasspathDeps(apkUnderTest.getClasspathDeps()))
             .build())
         .toSortedSet(HasBuildTarget.BUILD_TARGET_COMPARATOR);
 

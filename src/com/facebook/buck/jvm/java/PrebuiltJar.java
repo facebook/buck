@@ -110,9 +110,8 @@ public class PrebuiltJar extends AbstractBuildRule
         Suppliers.memoize(new Supplier<ImmutableSet<Path>>() {
           @Override
           public ImmutableSet<Path> get() {
-            return ImmutableSet.copyOf(
-                JavaLibraryClasspathProvider.getClasspathEntriesFromLibraries(
-                    getTransitiveClasspathDeps()).values());
+            return JavaLibraryClasspathProvider.getClasspathsFromLibraries(
+                getTransitiveClasspathDeps());
           }
         });
 

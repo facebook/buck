@@ -84,9 +84,8 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
 
   @Override
   public ImmutableSet<Path> getTransitiveClasspaths() {
-    return ImmutableSet.copyOf(
-        JavaLibraryClasspathProvider.getClasspathEntriesFromLibraries(
-            this.getTransitiveClasspathDeps()).values());
+    return JavaLibraryClasspathProvider.getClasspathsFromLibraries(
+        this.getTransitiveClasspathDeps());
   }
 
   @Override

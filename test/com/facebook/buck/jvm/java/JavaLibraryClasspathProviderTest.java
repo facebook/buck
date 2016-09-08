@@ -135,30 +135,24 @@ public class JavaLibraryClasspathProviderTest {
   }
 
   @Test
-  public void getClasspathEntries() throws Exception {
+  public void getClasspathFromLibraries() throws Exception {
     assertEquals(
-        ImmutableSetMultimap.builder()
-            .put(a, getFullOutput(a))
-            .put(a, getFullOutput(c))  // a exports c
-            .put(c, getFullOutput(e))  // c exports e
-            .put(a, getFullOutput(e))  // so a transitively has e
-            .put(c, getFullOutput(c))
-            .put(e, getFullOutput(e))
+        ImmutableSet.of(
+            getFullOutput(a),
+            getFullOutput(c),
+            getFullOutput(e)),
             // b is non-java so b and d do not appear
-            .build(),
-        JavaLibraryClasspathProvider.getClasspathEntries(ImmutableSet.of(a))
-    );
+        JavaLibraryClasspathProvider.getClasspathsFromLibraries(
+            JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.of(a))));
 
     assertEquals(
-        ImmutableSetMultimap.of(
-            c, getFullOutput(c),
-            c, getFullOutput(e), // c exports e
-            e, getFullOutput(e),
-            d, getFullOutput(d)
-            // b is non-java so b and d do not appear
+        ImmutableSet.of(
+            getFullOutput(c),
+            getFullOutput(e), // c exports e
+            getFullOutput(d)
         ),
-        JavaLibraryClasspathProvider.getClasspathEntries(ImmutableSet.of(c, d))
-    );
+        JavaLibraryClasspathProvider.getClasspathsFromLibraries(
+            JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.of(c, d))));
   }
 
   @Test
