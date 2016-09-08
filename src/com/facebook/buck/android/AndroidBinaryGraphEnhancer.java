@@ -55,6 +55,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -81,6 +82,10 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableFlavor.of("compile_uber_r_dot_java");
   private static final Flavor DEX_UBER_R_DOT_JAVA_FLAVOR =
       ImmutableFlavor.of("dex_uber_r_dot_java");
+  private static final Flavor GENERATE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR =
+      ImmutableFlavor.of("generate_native_lib_merge_map_generated_code");
+  private static final Flavor COMPILE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR =
+      ImmutableFlavor.of("compile_native_lib_merge_map_generated_code");
 
   private final BuildTarget originalBuildTarget;
   private final ImmutableSortedSet<BuildRule> originalDeps;
@@ -177,7 +182,6 @@ public class AndroidBinaryGraphEnhancer {
     this.xzCompressionLevel = xzCompressionLevel;
     this.trimResourceIds = trimResourceIds;
     this.nativeLibraryMergeCodeGenerator = nativeLibraryMergeCodeGenerator;
-    this.nativeLibraryMergeCodeGenerator.getClass();
     this.nativeLibsEnhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
             ruleResolver,
@@ -194,6 +198,8 @@ public class AndroidBinaryGraphEnhancer {
   AndroidGraphEnhancementResult createAdditionalBuildables() throws NoSuchBuildTargetException {
     ImmutableSortedSet.Builder<BuildRule> enhancedDeps = ImmutableSortedSet.naturalOrder();
     enhancedDeps.addAll(originalDeps);
+
+    ImmutableList.Builder<BuildRule> additionalJavaLibrariesBuilder = ImmutableList.builder();
 
     AndroidPackageableCollector collector =
         new AndroidPackageableCollector(
@@ -213,6 +219,62 @@ public class AndroidBinaryGraphEnhancer {
     if (copyNativeLibraries.isPresent()) {
       ruleResolver.addToIndex(copyNativeLibraries.get());
       enhancedDeps.add(copyNativeLibraries.get());
+    }
+
+    Optional<ImmutableSortedMap<String, String>> sonameMergeMap =
+        nativeLibsEnhancementResult.getSonameMergeMap();
+    if (sonameMergeMap.isPresent() && nativeLibraryMergeCodeGenerator.isPresent()) {
+      BuildRule generatorRule = ruleResolver.getRule(nativeLibraryMergeCodeGenerator.get());
+
+      BuildTarget writeMapTarget = createBuildTargetWithFlavor(
+          GENERATE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR);
+      GenerateCodeForMergedLibraryMap generateCodeForMergedLibraryMap =
+          new GenerateCodeForMergedLibraryMap(
+              buildRuleParams.copyWithChanges(
+                  writeMapTarget,
+                  /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(generatorRule)),
+                  /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                  pathResolver,
+                  sonameMergeMap.get(),
+                  generatorRule);
+      ruleResolver.addToIndex(generateCodeForMergedLibraryMap);
+
+      BuildTarget compileMergedNativeLibGenCode =
+          createBuildTargetWithFlavor(COMPILE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR);
+      BuildRuleParams paramsForCompileGenCode = buildRuleParams.copyWithChanges(
+          compileMergedNativeLibGenCode,
+          Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(generateCodeForMergedLibraryMap)),
+          /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+      DefaultJavaLibrary compileMergedNativeLibMapGenCode = new DefaultJavaLibrary(
+          paramsForCompileGenCode,
+          pathResolver,
+          ImmutableSet.of(
+              new BuildTargetSourcePath(
+                  generateCodeForMergedLibraryMap.getBuildTarget(),
+                  generateCodeForMergedLibraryMap.getPathToOutput())),
+          /* resources */ ImmutableSet.<SourcePath>of(),
+          javacOptions.getGeneratedSourceFolderName(),
+          /* proguardConfig */ Optional.<SourcePath>absent(),
+          /* postprocessClassesCommands */ ImmutableList.<String>of(),
+          /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
+          /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
+          // We just use the full output jar as the ABI jar.
+          // Because no Java libraries depend on us, there is no risk of wasteful rebuilding.
+          new BuildTargetSourcePath(compileMergedNativeLibGenCode),
+          /* trackClassUsage */ false,
+          /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+          new JavacToJarStepFactory(
+              // Kind of a hack: override language level to 7 to allow string switch.
+              // This can be removed once no one who uses this feature sets the level
+              // to 6 in their .buckconfig.
+              javacOptions.withSourceLevel("7").withTargetLevel("7"),
+              JavacOptionsAmender.IDENTITY),
+          /* resourcesRoot */ Optional.<Path>absent(),
+          /* mavenCoords */ Optional.<String>absent(),
+          ImmutableSortedSet.<BuildTarget>of(),
+          /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of());
+      ruleResolver.addToIndex(compileMergedNativeLibMapGenCode);
+      additionalJavaLibrariesBuilder.add(compileMergedNativeLibMapGenCode);
     }
 
     ImmutableSortedSet<BuildRule> resourceRules =
@@ -315,8 +377,6 @@ public class AndroidBinaryGraphEnhancer {
       ruleResolver.addToIndex(packageStringAssets.get());
       enhancedDeps.add(packageStringAssets.get());
     }
-
-    ImmutableList.Builder<BuildRule> additionalJavaLibrariesBuilder = ImmutableList.builder();
 
     // BuildConfig deps should not be added for instrumented APKs because BuildConfig.class has
     // already been added to the APK under test.

@@ -41,6 +41,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.immutables.value.Value;
@@ -94,6 +95,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   @BuckStyleImmutable
   interface AbstractAndroidNativeLibsGraphEnhancementResult {
     Optional<CopyNativeLibraries> getCopyNativeLibraries();
+    Optional<ImmutableSortedMap<String, String>> getSonameMergeMap();
   }
 
   // Populates an immutable map builder with all given linkables set to the given cpu type.
@@ -139,12 +141,14 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
           ruleResolver,
           pathResolver,
           buildRuleParams,
+          nativePlatforms,
           nativeLibraryMergeMap.get(),
           nativeLibraryMergeGlue,
           nativeLinkables,
           nativeLinkablesAssets);
       nativeLinkables = enhancement.getMergedLinkables();
       nativeLinkablesAssets = enhancement.getMergedLinkablesAssets();
+      resultBuilder.setSonameMergeMap(enhancement.getSonameMapping());
     }
 
     // Iterate over all the {@link AndroidNativeLinkable}s from the collector and grab the shared

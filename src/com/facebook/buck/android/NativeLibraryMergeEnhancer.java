@@ -56,6 +56,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
@@ -97,10 +98,12 @@ class NativeLibraryMergeEnhancer {
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       BuildRuleParams buildRuleParams,
+      ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms,
       Map<String, List<Pattern>> mergeMap,
       Optional<BuildTarget> nativeLibraryMergeGlue,
       ImmutableList<NativeLinkable> linkables,
-      ImmutableList<NativeLinkable> linkablesAssets) {
+      ImmutableList<NativeLinkable> linkablesAssets)
+      throws NoSuchBuildTargetException {
 
     // Sort by build target here to ensure consistent behavior.
     Iterable<NativeLinkable> allLinkables = FluentIterable.from(
@@ -113,6 +116,12 @@ class NativeLibraryMergeEnhancer {
             mergeMap,
             allLinkables,
             linkableAssetSet);
+
+    ImmutableSortedMap<String, String> sonameMap = makeSonameMap(
+        // sonames can *theoretically* differ per-platform, but right now they don't on Android,
+        // so just pick the first platform and use that to get all the sonames.
+        nativePlatforms.values().iterator().next().getCxxPlatform(),
+        linkableMembership);
 
     Iterable<MergedNativeLibraryConstituents> orderedConstituents = getOrderedMergedConstituents(
         buildRuleParams,
@@ -156,6 +165,7 @@ class NativeLibraryMergeEnhancer {
                     return linkableAssetSet.containsAll(linkable.constituents.getLinkables());
                   }
                 }))
+        .setSonameMapping(sonameMap)
         .build();
   }
 
@@ -235,6 +245,26 @@ class NativeLibraryMergeEnhancer {
       }
     }
     return linkableMembership;
+  }
+
+  private static ImmutableSortedMap<String, String> makeSonameMap(
+      CxxPlatform anyAndroidCxxPlatform,
+      Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership)
+      throws NoSuchBuildTargetException {
+    ImmutableSortedMap.Builder<String, String> builder = ImmutableSortedMap.naturalOrder();
+
+    for (Map.Entry<NativeLinkable, MergedNativeLibraryConstituents> entry :
+        linkableMembership.entrySet()) {
+      if (!entry.getValue().getSoname().isPresent()) {
+        continue;
+      }
+      String mergedName = entry.getValue().getSoname().get();
+      for (String origName : entry.getKey().getSharedLibraries(anyAndroidCxxPlatform).keySet()) {
+        builder.put(origName, mergedName);
+      }
+    }
+
+    return builder.build();
   }
 
   /**
@@ -418,6 +448,8 @@ class NativeLibraryMergeEnhancer {
     public abstract ImmutableList<NativeLinkable> getMergedLinkables();
 
     public abstract ImmutableList<NativeLinkable> getMergedLinkablesAssets();
+
+    public abstract ImmutableSortedMap<String, String> getSonameMapping();
   }
 
   /**

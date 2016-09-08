@@ -144,3 +144,9 @@ cxx_library(
   ],
   visibility = ['PUBLIC'],
 )
+
+sh_binary(
+  name = 'codegen',
+  main = 'codegen.sh',
+  visibility = ['PUBLIC'],
+)

@@ -417,6 +417,27 @@ public class AndroidBinaryIntegrationTest {
     assertThat(info.symbols.global, not(Matchers.hasItem("glue_1")));
     assertThat(info.symbols.global, Matchers.hasItem("glue_2"));
     assertThat(info.dtNeeded, Matchers.hasItem("libprebuilt_for_F.so"));
+
+    Path disassembly = workspace.buildAndReturnOutput(
+        "//apps/sample:disassemble_app_with_merged_libs_gencode");
+    List<String> disassembledLines = filesystem.readLines(disassembly);
+
+    Pattern fieldPattern = Pattern.compile(
+        "^\\.field public static final ([^:]+):Ljava/lang/String; = \"([^\"]+)\"$");
+    ImmutableMap.Builder<String, String> mapBuilder = ImmutableMap.builder();
+    for (String line : disassembledLines) {
+      Matcher m = fieldPattern.matcher(line);
+      if (!m.matches()) {
+        continue;
+      }
+      mapBuilder.put(m.group(1), m.group(2));
+    }
+
+    assertThat(mapBuilder.build(), Matchers.equalTo(ImmutableMap.of(
+        "lib1a_so", "lib1_so",
+        "lib1b_so", "lib1_so",
+        "lib2e_so", "lib2_so",
+        "lib2f_so", "lib2_so")));
   }
 
   @Test

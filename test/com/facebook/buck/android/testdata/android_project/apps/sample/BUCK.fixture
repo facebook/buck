@@ -352,6 +352,16 @@ android_binary(
     'lib2.so': ['.*/merge:[EF]'],
   },
   native_library_merge_glue = '//native/merge:glue_1',
+  native_library_merge_code_generator = '//native/merge:codegen',
+)
+
+genrule(
+  name = 'disassemble_app_with_merged_libs_gencode',
+  bash = ' && '.join([
+      '$(exe //third-party/smali:baksmali) -o $TMP $(location :app_with_merged_libs)',
+      'cat $TMP/com/gen/*.smali > $OUT',
+      ]),
+  out = 'disassembled_gencode.smali',
 )
 
 android_binary(
