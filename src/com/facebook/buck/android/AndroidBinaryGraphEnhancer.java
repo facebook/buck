@@ -109,6 +109,7 @@ public class AndroidBinaryGraphEnhancer {
   private final ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex;
   private final ImmutableSet<BuildTarget> resourcesToExclude;
   private final boolean skipCrunchPngs;
+  private final boolean includesVectorDrawables;
   private final JavacOptions javacOptions;
   private final EnumSet<ExopackageMode> exopackageModes;
   private final Keystore keystore;
@@ -137,6 +138,7 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex,
       ImmutableSet<BuildTarget> resourcesToExclude,
       boolean skipCrunchPngs,
+      boolean includesVectorDrawables,
       JavacOptions javacOptions,
       EnumSet<ExopackageMode> exopackageModes,
       Keystore keystore,
@@ -173,6 +175,7 @@ public class AndroidBinaryGraphEnhancer {
     this.buildTargetsToExcludeFromDex = buildTargetsToExcludeFromDex;
     this.resourcesToExclude = resourcesToExclude;
     this.skipCrunchPngs = skipCrunchPngs;
+    this.includesVectorDrawables = includesVectorDrawables;
     this.javacOptions = javacOptions;
     this.exopackageModes = exopackageModes;
     this.keystore = keystore;
@@ -343,6 +346,7 @@ public class AndroidBinaryGraphEnhancer {
         packageType,
         shouldBuildStringSourceMap,
         skipCrunchPngs,
+        includesVectorDrawables,
         bannedDuplicateResourceTypes,
         manifestEntries);
     ruleResolver.addToIndex(aaptPackageResources);

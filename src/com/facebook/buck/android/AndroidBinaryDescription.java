@@ -221,6 +221,7 @@ public class AndroidBinaryDescription
         ImmutableSet.copyOf(args.noDx.or(ImmutableSet.<BuildTarget>of())),
         /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
         args.skipCrunchPngs.or(false),
+        args.includesVectorDrawables.or(false),
         javacOptions,
         exopackageModes,
         (Keystore) keystore,
@@ -382,6 +383,7 @@ public class AndroidBinaryDescription
     public Optional<SourcePath> proguardConfig;
     public Optional<String> resourceCompression;
     public Optional<Boolean> skipCrunchPngs;
+    public Optional<Boolean> includesVectorDrawables;
     public Optional<List<String>> primaryDexPatterns;
     public Optional<SourcePath> primaryDexClassesFile;
     public Optional<SourcePath> primaryDexScenarioFile;

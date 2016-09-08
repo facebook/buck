@@ -70,6 +70,7 @@ public class TrimUberRDotJavaTest {
         null,
         false,
         false,
+        /* includesVectorDrawables */ false,
         EnumSet.noneOf(RType.class),
         null);
 

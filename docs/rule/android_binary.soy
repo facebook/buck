@@ -147,6 +147,17 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
 {/call}
 
 {call buck.arg}
+  {param name : 'includes_vector_drawables' /}
+  {param default : 'False' /}
+  {param desc}
+  When calling AAPT during the packaging process, pass the <code>
+  --no-version-vectors</code> flag which ensures that any vector drawables
+  which make use of the Android support library are backwards compatible
+  with Android 4.4 and earlier.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name : 'manifest_entries' /}
   {{param default : '{}' /}}
   {param desc}

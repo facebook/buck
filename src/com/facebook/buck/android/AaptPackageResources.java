@@ -81,6 +81,8 @@ public class AaptPackageResources extends AbstractBuildRule
   @AddToRuleKey
   private final ManifestEntries manifestEntries;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
+  @AddToRuleKey
+  private final boolean includesVectorDrawables;
 
   AaptPackageResources(
       BuildRuleParams params,
@@ -93,6 +95,7 @@ public class AaptPackageResources extends AbstractBuildRule
       PackageType packageType,
       boolean shouldBuildStringSourceMap,
       boolean skipCrunchPngs,
+      boolean includesVectorDrawables,
       EnumSet<RType> bannedDuplicateResourceTypes,
       ManifestEntries manifestEntries) {
     super(params, resolver);
@@ -104,6 +107,7 @@ public class AaptPackageResources extends AbstractBuildRule
     this.packageType = packageType;
     this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
     this.skipCrunchPngs = skipCrunchPngs;
+    this.includesVectorDrawables = includesVectorDrawables;
     this.bannedDuplicateResourceTypes = bannedDuplicateResourceTypes;
     this.manifestEntries = manifestEntries;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
@@ -187,6 +191,7 @@ public class AaptPackageResources extends AbstractBuildRule
              * debug mode that never results in distorted images.
              */
             !skipCrunchPngs /* && packageType.isCrunchPngFiles() */,
+            includesVectorDrawables,
             manifestEntries));
 
     // If we had an empty res directory, we won't generate an R.txt file.  This ensures that it

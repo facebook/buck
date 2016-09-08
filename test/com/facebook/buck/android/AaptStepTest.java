@@ -53,6 +53,7 @@ public class AaptStepTest {
   private AaptStep buildAaptStep(
       Optional<Path> pathToGeneratedProguardConfig,
       boolean isCrunchFiles,
+      boolean includesVectorDrawables,
       ManifestEntries manifestEntries) {
     return new AaptStep(
         /* workingDirectory */ basePath,
@@ -63,6 +64,7 @@ public class AaptStepTest {
         /* pathToRDotDText */ basePath.resolve("r"),
         pathToGeneratedProguardConfig,
         isCrunchFiles,
+        includesVectorDrawables,
         manifestEntries
     );
   }
@@ -89,7 +91,8 @@ public class AaptStepTest {
 
   @Test
   public void shouldEmitVerbosityFlagWithVerboseContext() throws Exception {
-    AaptStep aaptStep = buildAaptStep(Optional.<Path>absent(), false, ManifestEntries.empty());
+    AaptStep aaptStep =
+        buildAaptStep(Optional.<Path>absent(), false, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -98,7 +101,8 @@ public class AaptStepTest {
 
   @Test
   public void shouldNotEmitVerbosityFlagWithQuietContext() throws Exception {
-    AaptStep aaptStep = buildAaptStep(Optional.<Path>absent(), false, ManifestEntries.empty());
+    AaptStep aaptStep =
+        buildAaptStep(Optional.<Path>absent(), false, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.SILENT);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -108,7 +112,8 @@ public class AaptStepTest {
   @Test
   public void shouldEmitGFlagIfProguardConfigPresent() throws Exception {
     Path proguardConfig = basePath.resolve("mock_proguard.txt");
-    AaptStep aaptStep = buildAaptStep(Optional.of(proguardConfig), false, ManifestEntries.empty());
+    AaptStep aaptStep =
+        buildAaptStep(Optional.of(proguardConfig), false, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -122,7 +127,8 @@ public class AaptStepTest {
 
   @Test
   public void shouldEmitNoCrunchFlagIfNotCrunch() throws Exception {
-    AaptStep aaptStep = buildAaptStep(Optional.<Path>absent(), false, ManifestEntries.empty());
+    AaptStep aaptStep =
+        buildAaptStep(Optional.<Path>absent(), false,  false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -132,12 +138,35 @@ public class AaptStepTest {
 
   @Test
   public void shouldNotEmitNoCrunchFlagIfCrunch() throws Exception {
-    AaptStep aaptStep = buildAaptStep(Optional.<Path>absent(), true, ManifestEntries.empty());
+    AaptStep aaptStep =
+        buildAaptStep(Optional.<Path>absent(), true, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
 
     assertFalse(command.contains("--no-crunch"));
+  }
+
+  @Test
+  public void shouldEmitNoVersionVectorsFlagIfRequested() throws Exception {
+    AaptStep aaptStep =
+        buildAaptStep(Optional.<Path>absent(), false, true, ManifestEntries.empty());
+    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
+
+    ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
+
+    assertTrue(command.contains("--no-version-vectors"));
+  }
+
+  @Test
+  public void shouldNotEmitNoVersionVectorsFlagIfNotRequested() throws Exception {
+    AaptStep aaptStep =
+        buildAaptStep(Optional.<Path>absent(), false, false, ManifestEntries.empty());
+    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
+
+    ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
+
+    assertFalse(command.contains("--no-version-vectors"));
   }
 
   @Test
@@ -149,7 +178,7 @@ public class AaptStepTest {
         .setVersionName("eleven")
         .setDebugMode(true)
         .build();
-    AaptStep aaptStep = buildAaptStep(Optional.<Path>absent(), true, entries);
+    AaptStep aaptStep = buildAaptStep(Optional.<Path>absent(), true, false, entries);
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
 
@@ -172,7 +201,8 @@ public class AaptStepTest {
 
   @Test
   public void shouldNotEmitFailOnInsertWithoutManifestEntries() throws Exception {
-    AaptStep aaptStep = buildAaptStep(Optional.<Path>absent(), true, ManifestEntries.empty());
+    AaptStep aaptStep =
+        buildAaptStep(Optional.<Path>absent(), true, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
     assertFalse(command.contains("--error-on-failed-insert"));

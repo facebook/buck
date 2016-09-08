@@ -144,6 +144,7 @@ public class AndroidInstrumentationApkDescription
         FluentIterable.from(rulesToExcludeFromDex).transform(TO_TARGET).toSet(),
         resourcesToExclude,
         /* skipCrunchPngs */ false,
+        args.includesVectorDrawables.or(false),
         javacOptions,
         EnumSet.noneOf(ExopackageMode.class),
         apkUnderTest.getKeystore(),
@@ -199,5 +200,6 @@ public class AndroidInstrumentationApkDescription
     public SourcePath manifest;
     public BuildTarget apk;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<Boolean> includesVectorDrawables = Optional.absent();
   }
 }

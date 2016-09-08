@@ -74,6 +74,7 @@ public class AaptPackageResourcesTest {
             PackageType.DEBUG,
             /* shouldBuildStringSourceMap */ false,
             /* skipCrunchPngs */ false,
+            /* includesVectorDrawables */ false,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             /* manifestEntries */ ManifestEntries.empty());
 

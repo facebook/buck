@@ -72,6 +72,7 @@ public class AaptStep extends ShellStep {
   private final Optional<Path> pathToGeneratedProguardConfig;
 
   private final boolean isCrunchPngFiles;
+  private final boolean includesVectorDrawables;
   private final ManifestEntries manifestEntries;
 
   public AaptStep(
@@ -83,6 +84,7 @@ public class AaptStep extends ShellStep {
       Path pathToRDotTxtDir,
       Optional<Path> pathToGeneratedProguardConfig,
       boolean isCrunchPngFiles,
+      boolean includesVectorDrawables,
       ManifestEntries manifestEntries) {
     super(workingDirectory);
     this.androidManifest = androidManifest;
@@ -92,6 +94,7 @@ public class AaptStep extends ShellStep {
     this.pathToRDotTxtDir = pathToRDotTxtDir;
     this.pathToGeneratedProguardConfig = pathToGeneratedProguardConfig;
     this.isCrunchPngFiles = isCrunchPngFiles;
+    this.includesVectorDrawables = includesVectorDrawables;
     this.manifestEntries = manifestEntries;
   }
 
@@ -163,6 +166,10 @@ public class AaptStep extends ShellStep {
     if (manifestEntries.hasAny()) {
       // Force AAPT to error if the command line version clashes with the hardcoded manifest
       builder.add("--error-on-failed-insert");
+    }
+
+    if (includesVectorDrawables) {
+      builder.add("--no-version-vectors");
     }
 
     return builder.build();
