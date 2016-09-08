@@ -301,33 +301,24 @@ public class AndroidBinaryGraphEnhancer {
       enhancedDeps.add(packageStringAssets.get());
     }
 
+    ImmutableList.Builder<BuildRule> additionalJavaLibrariesBuilder = ImmutableList.builder();
+
     // BuildConfig deps should not be added for instrumented APKs because BuildConfig.class has
     // already been added to the APK under test.
-    ImmutableList<DexProducedFromJavaLibrary> preDexBuildConfigs;
-    ImmutableList<SourcePath> buildConfigJarFiles;
-    if (packageType == PackageType.INSTRUMENTED) {
-      preDexBuildConfigs = ImmutableList.of();
-      buildConfigJarFiles = ImmutableList.of();
-    } else {
-      ImmutableList.Builder<DexProducedFromJavaLibrary> preDexBuildConfigsBuilder =
-          ImmutableList.builder();
-      ImmutableList.Builder<SourcePath> buildConfigJarFilesBuilder = ImmutableList.builder();
+    if (packageType != PackageType.INSTRUMENTED) {
       addBuildConfigDeps(
-          shouldPreDex,
           packageableCollection,
           enhancedDeps,
-          preDexBuildConfigsBuilder,
-          buildConfigJarFilesBuilder);
-      preDexBuildConfigs = preDexBuildConfigsBuilder.build();
-      buildConfigJarFiles = buildConfigJarFilesBuilder.build();
+          additionalJavaLibrariesBuilder);
     }
 
+    ImmutableList<BuildRule> additionalJavaLibraries = additionalJavaLibrariesBuilder.build();
     ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexedLibraries =
         ImmutableMultimap.of();
     if (shouldPreDex) {
       preDexedLibraries = createPreDexRulesForLibraries(
           // TODO(dreiss): Put R.java here.
-          preDexBuildConfigs,
+          additionalJavaLibraries,
           packageableCollection);
     }
 
@@ -447,7 +438,14 @@ public class AndroidBinaryGraphEnhancer {
         .setClasspathEntriesToDex(
             ImmutableSet.<SourcePath>builder()
                 .addAll(packageableCollection.getClasspathEntriesToDex())
-                .addAll(buildConfigJarFiles)
+                .addAll(
+                    FluentIterable.from(additionalJavaLibraries)
+                    .transform(new Function<BuildRule, SourcePath>() {
+                      @Override
+                      public SourcePath apply(BuildRule rule) {
+                        return new BuildTargetSourcePath(rule.getBuildTarget());
+                      }
+                    }).toList())
                 .build())
         .setFinalDeps(enhancedDeps.build())
         .setAPKModuleGraph(apkModuleGraph)
@@ -460,11 +458,9 @@ public class AndroidBinaryGraphEnhancer {
    * the list of {@link AndroidPackageableCollection#getClasspathEntriesToDex}.
    */
   private void addBuildConfigDeps(
-      boolean shouldPreDex,
       AndroidPackageableCollection packageableCollection,
       ImmutableSortedSet.Builder<BuildRule> enhancedDeps,
-      ImmutableList.Builder<DexProducedFromJavaLibrary> preDexRules,
-      ImmutableList.Builder<SourcePath> buildConfigJarFilesBuilder) {
+      ImmutableList.Builder<BuildRule> compilationRulesBuilder) {
     BuildConfigFields buildConfigConstants = BuildConfigFields.fromFields(
         ImmutableList.of(
             BuildConfigFields.Field.of(
@@ -513,21 +509,7 @@ public class AndroidBinaryGraphEnhancer {
           buildConfigJar,
           "%s must have an output file.",
           buildConfigJavaLibrary);
-      buildConfigJarFilesBuilder.add(
-          new BuildTargetSourcePath(buildConfigJavaLibrary.getBuildTarget()));
-
-      if (shouldPreDex) {
-        DexProducedFromJavaLibrary buildConfigDex = new DexProducedFromJavaLibrary(
-            buildConfigParams.copyWithChanges(
-                createBuildTargetWithFlavor(ImmutableFlavor.of("dex_" + flavor.getName())),
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(buildConfigJavaLibrary)),
-                /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
-            pathResolver,
-            buildConfigJavaLibrary);
-        ruleResolver.addToIndex(buildConfigDex);
-        enhancedDeps.add(buildConfigDex);
-        preDexRules.add(buildConfigDex);
-      }
+      compilationRulesBuilder.add(buildConfigJavaLibrary);
     }
   }
 
@@ -567,12 +549,21 @@ public class AndroidBinaryGraphEnhancer {
 
   @VisibleForTesting
   ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> createPreDexRulesForLibraries(
-      Iterable<DexProducedFromJavaLibrary> preDexRulesNotInThePackageableCollection,
+      Iterable<BuildRule> additionalJavaLibrariesToDex,
       AndroidPackageableCollection packageableCollection) {
+    Iterable<BuildTarget> additionalJavaLibraryTargets =
+        FluentIterable.from(additionalJavaLibrariesToDex).transform(
+            new Function<BuildRule, BuildTarget>() {
+              @Override
+              public BuildTarget apply(BuildRule input) {
+                return input.getBuildTarget();
+              }
+            });
     ImmutableMultimap.Builder<APKModule, DexProducedFromJavaLibrary> preDexDeps =
         ImmutableMultimap.builder();
-    preDexDeps.putAll(apkModuleGraph.getRootAPKModule(), preDexRulesNotInThePackageableCollection);
-    for (BuildTarget buildTarget : packageableCollection.getJavaLibrariesToDex()) {
+    for (BuildTarget buildTarget : Iterables.concat(
+        packageableCollection.getJavaLibrariesToDex(),
+        additionalJavaLibraryTargets)) {
       Preconditions.checkState(
           !buildTargetsToExcludeFromDex.contains(buildTarget),
           "JavaLibrary should have been excluded from target to dex: %s", buildTarget);

@@ -196,8 +196,8 @@ public class AndroidBinaryGraphEnhancerTest {
 
     ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexedLibraries =
         graphEnhancer.createPreDexRulesForLibraries(
-            /* preDexRulesNotInThePackageableCollection */
-              ImmutableList.<DexProducedFromJavaLibrary>of(),
+              /* additionalJavaLibrariesToDex */
+              ImmutableList.<BuildRule>of(),
             collection);
 
     BuildTarget fakeUberRDotJavaCompileTarget = BuildTargetFactory.newInstance(
