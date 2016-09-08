@@ -26,6 +26,9 @@ prebuilt_jar(
 prebuilt_jar(
   name = 'java-thrift',
   binary_jar = 'java-thrift-dependencies.jar',
+  deps = [
+    '//third-party/java/slf4j:slf4j-api',
+  ],
   visibility = [
     '//src/com/facebook/buck/eden/...',
   ],
