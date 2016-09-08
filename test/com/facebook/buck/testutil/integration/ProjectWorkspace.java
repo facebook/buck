@@ -253,8 +253,7 @@ public class ProjectWorkspace {
     return runBuckCommand(totalArgs);
   }
 
-  public Path buildAndReturnOutput(String... args) throws IOException {
-
+  public Map<String, Path> buildMultipleAndReturnOutputs(String... args) throws IOException {
     // Add in `--show-output` to the build, so we can parse the output paths after the fact.
     ImmutableList<String> buildArgs =
         ImmutableList.<String>builder()
@@ -276,17 +275,30 @@ public class ProjectWorkspace {
     assertThat(lines.get(0), Matchers.equalTo("The outputs are:"));
     lines = lines.subList(1, lines.size());
 
+    Splitter lineSplitter = Splitter.on(' ').trimResults();
+    ImmutableMap.Builder<String, Path> builder = ImmutableMap.builder();
+    for (String line : lines) {
+      List<String> fields = lineSplitter.splitToList(line);
+      assertThat(fields, Matchers.hasSize(2));
+      builder.put(fields.get(0), getPath(fields.get(1)));
+    }
+
+    return builder.build();
+  }
+
+  public Path buildAndReturnOutput(String... args) throws IOException {
+    Map<String, Path> outputs = buildMultipleAndReturnOutputs(args);
+
     // Verify we only have a single output.
     assertThat(
         String.format(
             "expected only a single build target in command `%s`: %s",
             ImmutableList.copyOf(args),
-            lines),
-        lines,
+            outputs),
+        outputs.entrySet(),
         Matchers.hasSize(1));
 
-    String path = Splitter.on(' ').trimResults().splitToList(lines.get(0)).get(1);
-    return getPath(path);
+    return outputs.values().iterator().next();
   }
 
   public ProcessExecutor.Result runJar(Path jar,
