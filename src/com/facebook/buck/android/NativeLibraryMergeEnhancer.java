@@ -91,6 +91,7 @@ class NativeLibraryMergeEnhancer {
   private NativeLibraryMergeEnhancer() {
   }
 
+  @SuppressWarnings("PMD.PrematureDeclaration")
   static NativeLibraryMergeEnhancementResult enhance(
       CxxBuckConfig cxxBuckConfig,
       BuildRuleResolver ruleResolver,
@@ -100,7 +101,6 @@ class NativeLibraryMergeEnhancer {
       Optional<BuildTarget> nativeLibraryMergeGlue,
       ImmutableList<NativeLinkable> linkables,
       ImmutableList<NativeLinkable> linkablesAssets) {
-    nativeLibraryMergeGlue.isPresent();
 
     // Sort by build target here to ensure consistent behavior.
     Iterable<NativeLinkable> allLinkables = FluentIterable.from(
@@ -118,11 +118,23 @@ class NativeLibraryMergeEnhancer {
         buildRuleParams,
         linkableMembership);
 
+    Optional<NativeLinkable> glueLinkable = Optional.absent();
+    if (nativeLibraryMergeGlue.isPresent()) {
+      BuildRule rule = ruleResolver.getRule(nativeLibraryMergeGlue.get());
+      if (!(rule instanceof NativeLinkable)) {
+        throw new RuntimeException(
+            "Native library merge glue " + rule.getBuildTarget() +
+                " for application " + buildRuleParams.getBuildTarget() + " is not linkable.");
+      }
+      glueLinkable = Optional.of(((NativeLinkable) rule));
+    }
+
     Set<MergedLibNativeLinkable> mergedLinkables = createLinkables(
         cxxBuckConfig,
         ruleResolver,
         pathResolver,
         buildRuleParams,
+        glueLinkable,
         orderedConstituents);
 
     return NativeLibraryMergeEnhancementResult.builder()
@@ -296,6 +308,7 @@ class NativeLibraryMergeEnhancer {
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       BuildRuleParams buildRuleParams,
+      Optional<NativeLinkable> glueLinkable,
       Iterable<MergedNativeLibraryConstituents> orderedConstituents) {
     // Map from original linkables to the Linkables they have been merged into.
     final Map<NativeLinkable, MergedLibNativeLinkable> mergeResults = new HashMap<>();
@@ -329,7 +342,8 @@ class NativeLibraryMergeEnhancer {
           buildRuleParams,
           constituents,
           orderedDeps,
-          orderedExportedDeps);
+          orderedExportedDeps,
+          glueLinkable);
 
       for (NativeLinkable lib : preMergeLibs) {
         // Track what was merged into this so later linkables can find us as a dependency.
@@ -416,9 +430,11 @@ class NativeLibraryMergeEnhancer {
     private final SourcePathResolver pathResolver;
     private final BuildRuleParams baseBuildRuleParams;
     private final MergedNativeLibraryConstituents constituents;
+    private final Optional<NativeLinkable> glueLinkable;
     private final Map<NativeLinkable, MergedLibNativeLinkable> mergedDepMap;
     private final BuildTarget buildTarget;
     private final boolean canUseOriginal;
+    // Note: update constructBuildTarget whenever updating new fields.
 
     MergedLibNativeLinkable(
         CxxBuckConfig cxxBuckConfig,
@@ -427,12 +443,14 @@ class NativeLibraryMergeEnhancer {
         BuildRuleParams baseBuildRuleParams,
         MergedNativeLibraryConstituents constituents,
         List<MergedLibNativeLinkable> orderedDeps,
-        List<MergedLibNativeLinkable> orderedExportedDeps) {
+        List<MergedLibNativeLinkable> orderedExportedDeps,
+        Optional<NativeLinkable> glueLinkable) {
       this.cxxBuckConfig = cxxBuckConfig;
       this.ruleResolver = ruleResolver;
       this.pathResolver = pathResolver;
       this.baseBuildRuleParams = baseBuildRuleParams;
       this.constituents = constituents;
+      this.glueLinkable = glueLinkable;
 
       Iterable<MergedLibNativeLinkable> allDeps =
           Iterables.concat(orderedDeps, orderedExportedDeps);
@@ -455,7 +473,8 @@ class NativeLibraryMergeEnhancer {
           baseBuildRuleParams,
           constituents,
           orderedDeps,
-          orderedExportedDeps);
+          orderedExportedDeps,
+          glueLinkable);
     }
 
     /**
@@ -503,7 +522,8 @@ class NativeLibraryMergeEnhancer {
         BuildRuleParams baseBuildRuleParams,
         MergedNativeLibraryConstituents constituents,
         List<MergedLibNativeLinkable> orderedDeps,
-        List<MergedLibNativeLinkable> orderedExportedDeps) {
+        List<MergedLibNativeLinkable> orderedExportedDeps,
+        Optional<NativeLinkable> glueLinkable) {
       BuildTarget initialTarget;
       if (!constituents.getSoname().isPresent()) {
         // No soname means this is library isn't really merged.
@@ -542,6 +562,13 @@ class NativeLibraryMergeEnhancer {
       hasher.putString("__EXPORT__^", Charsets.UTF_8);
       for (MergedLibNativeLinkable dep : orderedExportedDeps) {
         hasher.putString(dep.getBuildTarget().toString(), Charsets.UTF_8);
+        hasher.putChar('^');
+      }
+
+      // Glue can vary per-app, so include that in the hash as well.
+      if (glueLinkable.isPresent()) {
+        hasher.putString("__GLUE__^", Charsets.UTF_8);
+        hasher.putString(glueLinkable.get().getBuildTarget().toString(), Charsets.UTF_8);
         hasher.putChar('^');
       }
 
@@ -641,7 +668,12 @@ class NativeLibraryMergeEnhancer {
         throws NoSuchBuildTargetException {
       final Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
       ImmutableList.Builder<NativeLinkableInput> builder = ImmutableList.builder();
-      for (NativeLinkable linkable : constituents.getLinkables()) {
+      ImmutableList<NativeLinkable> usingGlue = ImmutableList.of();
+      if (glueLinkable.isPresent() && constituents.getSoname().isPresent()) {
+        usingGlue = ImmutableList.of(glueLinkable.get());
+      }
+
+      for (NativeLinkable linkable : Iterables.concat(usingGlue, constituents.getLinkables())) {
         if (linkable instanceof NativeLinkTarget) {
           // If this constituent is a NativeLinkTarget, use its input to get raw objects and
           // linker flags.

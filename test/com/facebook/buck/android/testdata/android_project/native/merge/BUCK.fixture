@@ -126,3 +126,21 @@ cxx_library(
   deps = [
   ],
 )
+
+cxx_library(
+  name = 'glue_1',
+  srcs = ['glue_1.c'],
+  force_static = True,
+  deps = [
+  ],
+  visibility = ['PUBLIC'],
+)
+
+cxx_library(
+  name = 'glue_2',
+  srcs = ['glue_2.c'],
+  force_static = True,
+  deps = [
+  ],
+  visibility = ['PUBLIC'],
+)

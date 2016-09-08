@@ -75,6 +75,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -366,7 +367,11 @@ public class AndroidBinaryIntegrationTest {
         ".buckconfig",
         "#cpu_abis",
         "cpu_abis = x86");
-    Path apkPath = workspace.buildAndReturnOutput("//apps/sample:app_with_merged_libs");
+    Map<String, Path> paths = workspace.buildMultipleAndReturnOutputs(
+        "//apps/sample:app_with_merged_libs",
+        "//apps/sample:app_with_alternate_merge_glue"
+    );
+    Path apkPath = paths.get("//apps/sample:app_with_merged_libs");
 
     ZipInspector zipInspector = new ZipInspector(apkPath);
     zipInspector.assertFileDoesNotExist("lib/x86/lib1a.so");
@@ -377,6 +382,8 @@ public class AndroidBinaryIntegrationTest {
     info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1.so");
     assertThat(info.symbols.global, Matchers.hasItem("A"));
     assertThat(info.symbols.global, Matchers.hasItem("B"));
+    assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
     assertThat(info.dtNeeded, Matchers.hasItem("libnative_merge_C.so"));
     assertThat(info.dtNeeded, Matchers.hasItem("libnative_merge_D.so"));
     assertThat(info.dtNeeded, not(Matchers.hasItem("libnative_merge_B.so")));
@@ -384,11 +391,15 @@ public class AndroidBinaryIntegrationTest {
     info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/libnative_merge_C.so");
     assertThat(info.symbols.global, Matchers.hasItem("C"));
     assertThat(info.symbols.global, Matchers.hasItem("static_func_C"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_1")));
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
     assertThat(info.dtNeeded, Matchers.hasItem("libnative_merge_D.so"));
     assertThat(info.dtNeeded, Matchers.hasItem("libprebuilt_for_C.so"));
 
     info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/libnative_merge_D.so");
     assertThat(info.symbols.global, Matchers.hasItem("D"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_1")));
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
     assertThat(info.dtNeeded, Matchers.hasItem("lib2.so"));
     assertThat(info.dtNeeded, not(Matchers.hasItem("libnative_merge_E.so")));
     assertThat(info.dtNeeded, not(Matchers.hasItem("libnative_merge_F.so")));
@@ -397,6 +408,14 @@ public class AndroidBinaryIntegrationTest {
     assertThat(info.symbols.global, Matchers.hasItem("E"));
     assertThat(info.symbols.global, Matchers.hasItem("F"));
     assertThat(info.symbols.global, Matchers.hasItem("static_func_F"));
+    assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
+    assertThat(info.dtNeeded, Matchers.hasItem("libprebuilt_for_F.so"));
+
+    Path otherPath = paths.get("//apps/sample:app_with_alternate_merge_glue");
+    info = syms.getSymbolsAndDtNeeded(otherPath, "lib/x86/lib2.so");
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_1")));
+    assertThat(info.symbols.global, Matchers.hasItem("glue_2"));
     assertThat(info.dtNeeded, Matchers.hasItem("libprebuilt_for_F.so"));
   }
 
@@ -431,6 +450,13 @@ public class AndroidBinaryIntegrationTest {
     } catch (RuntimeException e) {
       assertThat(e.getMessage(), Matchers.containsString("Dependency cycle"));
       assertThat(e.getCause().getMessage(), Matchers.containsString("Cycle found:"));
+    }
+
+    try {
+      workspace.runBuckBuild("//apps/sample:app_with_invalid_native_lib_merge_glue");
+      Assert.fail("No exception from trying invalid glue.");
+    } catch (RuntimeException e) {
+      assertThat(e.getMessage(), Matchers.matchesPattern(".*glue.*is not linkable.*"));
     }
   }
 
