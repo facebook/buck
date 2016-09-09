@@ -6,7 +6,6 @@
       <directory url="file://$PROJECT_DIR$/buck-out/android" includeSubdirectories="true" />
       <directory url="file://$PROJECT_DIR$/buck-out/bin" includeSubdirectories="true" />
       <directory url="file://$PROJECT_DIR$/buck-out/gen" includeSubdirectories="true" />
-      <directory url="file://$PROJECT_DIR$/src/com/facebook/buck/intellij/plugin" includeSubdirectories="true" />
     </excludeFromCompile>
     <resourceExtensions />
     <wildcardResourcePatterns>
