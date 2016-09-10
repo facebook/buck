@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -133,6 +134,7 @@ public class AndroidPrebuiltAarDescription
         /* prebuiltJar */ prebuiltJar,
         /* unzipRule */ unzipAar,
         /* javacOptions */ javacOptions,
+        new JavacToJarStepFactory(javacOptions, new BootClasspathAppender()),
         /* exportedDeps */ javaDeps,
         abiJar));
   }

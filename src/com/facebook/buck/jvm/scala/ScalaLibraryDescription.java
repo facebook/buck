@@ -37,7 +37,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -121,19 +120,11 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
                 /* trackClassUsage */ false,
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
                 new ScalacToJarStepFactory(
-                    scalaBuckConfig.getScalac(resolver),
-                    ImmutableList.<String>builder()
-                        .addAll(scalaBuckConfig.getCompilerFlags())
-                        .addAll(args.extraArguments.get())
-                        .addAll(
-                            Iterables.transform(
-                                resolver.getAllRules(scalaBuckConfig.getCompilerPlugins()),
-                                new Function<BuildRule, String>() {
-                                  @Override public String apply(BuildRule input) {
-                                    return "-Xplugin:" + input.getPathToOutput();
-                                  }
-                                }))
-                        .build()),
+                    scalac,
+                    ScalacToJarStepFactory.collectScalacArguments(
+                        scalaBuckConfig,
+                        resolver,
+                        args.extraArguments.get())),
                 args.resourcesRoot,
                 args.manifestFile,
                 args.mavenCoords,
