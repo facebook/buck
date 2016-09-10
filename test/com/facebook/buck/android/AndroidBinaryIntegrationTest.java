@@ -243,7 +243,7 @@ public class AndroidBinaryIntegrationTest {
         buildInfo.getValues(DexProducedFromJavaLibrary.REFERENCED_RESOURCES);
     assertTrue(resourcesFromMetadata.isPresent());
     assertEquals(
-        ImmutableSet.of("title", "top_layout"),
+        ImmutableSet.of("com.sample.top_layout", "com.sample2.title"),
         ImmutableSet.copyOf(resourcesFromMetadata.get()));
   }
 
