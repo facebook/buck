@@ -1,3 +1,17 @@
+FORK_TESTS = [
+  'JavaTestFork1Test.java',
+  'JavaTestFork2Test.java',
+]
+
+java_test(
+  name = 'fork-mode',
+  srcs = FORK_TESTS,
+  fork_mode = 'per_test',
+  deps = [
+    ':junit'
+  ],
+)
+
 java_test(
   name = 'spinning',
   srcs = [

@@ -131,10 +131,13 @@ public class JavaTest
   private static final Logger LOG = Logger.get(JavaTest.class);
 
   @Nullable
-  private JUnitStep junit;
+  private ImmutableList<JUnitStep> junits;
 
   @AddToRuleKey
   private final boolean runTestSeparately;
+
+  @AddToRuleKey
+  private final ForkMode forkMode;
 
   public JavaTest(
       BuildRuleParams params,
@@ -158,6 +161,7 @@ public class JavaTest
       Optional<Long> testRuleTimeoutMs,
       ImmutableMap<String, String> env,
       boolean runTestSeparately,
+      ForkMode forkMode,
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel) {
     super(
@@ -188,6 +192,7 @@ public class JavaTest
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.env = env;
     this.runTestSeparately = runTestSeparately;
+    this.forkMode = forkMode;
     this.stdOutLogLevel = stdOutLogLevel;
     this.stdErrLogLevel = stdErrLogLevel;
     this.pathToTestLogs = getPathToTestOutputDirectory().resolve("logs.txt");
@@ -218,9 +223,9 @@ public class JavaTest
       ExecutionContext executionContext,
       TestRunningOptions options,
       Optional<Path> outDir,
-      Optional<Path> robolectricLogPath) {
+      Optional<Path> robolectricLogPath,
+      Set<String> testClassNames) {
 
-    Set<String> testClassNames = getClassNamesForSources();
     Iterable<String> reorderedTestClasses =
         reorderClasses(testClassNames, options.isShufflingTests());
 
@@ -281,13 +286,30 @@ public class JavaTest
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     Path pathToTestOutput = getPathToTestOutputDirectory();
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToTestOutput));
-    junit =
-        getJUnitStep(
+    if (forkMode() == ForkMode.PER_TEST) {
+      ImmutableList.Builder<JUnitStep> junitsBuilder = ImmutableList.builder();
+      for (String testClass: testClassNames) {
+        junitsBuilder.add(
+          getJUnitStep(
+              executionContext,
+              options,
+              Optional.of(pathToTestOutput),
+              Optional.of(pathToTestLogs),
+              Collections.singleton(testClass))
+        );
+      }
+      junits = junitsBuilder.build();
+    } else {
+      junits = ImmutableList.of(
+          getJUnitStep(
             executionContext,
             options,
             Optional.of(pathToTestOutput),
-            Optional.of(pathToTestLogs));
-    steps.add(junit);
+            Optional.of(pathToTestLogs),
+            testClassNames)
+      );
+    }
+    steps.addAll(junits);
     return steps.build();
   }
 
@@ -425,16 +447,18 @@ public class JavaTest
               getPathToTestOutputDirectory().resolve(path));
           if (!isUsingTestSelectors && !Files.isRegularFile(testResultFile)) {
             String message;
-            if (Preconditions.checkNotNull(junit).hasTimedOut()) {
-              message = "test timed out before generating results file";
-            } else {
-              message = "test exited before generating results file";
+            for (JUnitStep junit: Preconditions.checkNotNull(junits)) {
+              if (junit.hasTimedOut()) {
+                message = "test timed out before generating results file";
+              } else {
+                message = "test exited before generating results file";
+              }
+              summaries.add(
+                  getTestClassFailedSummary(
+                      testClass,
+                      message,
+                      testRuleTimeoutMs.or(0L)));
             }
-            summaries.add(
-                getTestClassFailedSummary(
-                    testClass,
-                    message,
-                    testRuleTimeoutMs.or(0L)));
           // Not having a test result file at all (which only happens when we are using test
           // selectors) is interpreted as meaning a test didn't run at all, so we'll completely
           // ignore it.  This is another result of the fact that JUnit is the only thing that can
@@ -566,6 +590,10 @@ public class JavaTest
     return runTestSeparately;
   }
 
+  public ForkMode forkMode() {
+    return forkMode;
+  }
+
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -596,7 +624,9 @@ public class JavaTest
             executionContext,
             options,
             Optional.<Path>absent(),
-            Optional.<Path>absent());
+            Optional.<Path>absent(),
+            getClassNamesForSources()
+            );
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("junit")

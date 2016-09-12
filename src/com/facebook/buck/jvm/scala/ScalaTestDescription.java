@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.scala;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
@@ -156,6 +157,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                 args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
                 args.env.get(),
                 args.runTestSeparately.or(false),
+                args.forkMode.or(ForkMode.NONE),
                 args.stdOutLogLevel,
                 args.stdErrLogLevel));
 
@@ -187,6 +189,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
     public Optional<ImmutableList<String>> vmArgs;
     public Optional<TestType> testType;
     public Optional<Boolean> runTestSeparately;
+    public Optional<ForkMode> forkMode;
     public Optional<Level> stdErrLogLevel;
     public Optional<Level> stdOutLogLevel;
     public Optional<Boolean> useCxxLibraries;

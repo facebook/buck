@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static com.facebook.buck.rules.BuildableProperties.Kind.TEST;
 
+import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -118,6 +119,7 @@ public class RobolectricTest extends JavaTest {
       Optional<Long> testRuleTimeoutMs,
       ImmutableMap<String, String> env,
       boolean runTestSeparately,
+      ForkMode forkMode,
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel) {
     super(
@@ -142,6 +144,7 @@ public class RobolectricTest extends JavaTest {
         testRuleTimeoutMs,
         env,
         runTestSeparately,
+        forkMode,
         stdOutLogLevel,
         stdErrLogLevel);
     this.optionalDummyRDotJava = optionalDummyRDotJava;

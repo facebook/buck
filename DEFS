@@ -195,7 +195,7 @@ def standard_java_library(
         **kwargs
     )
 
-def standard_java_test(run_test_separately = False):
+def standard_java_test(run_test_separately = False, fork_mode = 'none'):
     srcs = glob(['*.java'])
     test_srcs = []
     testutil_srcs = []
@@ -229,4 +229,5 @@ def standard_java_test(run_test_separately = False):
             '-Xmx256M',
           ],
           run_test_separately = run_test_separately,
+          fork_mode = fork_mode,
         )

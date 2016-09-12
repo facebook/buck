@@ -102,6 +102,7 @@ java_library(
     'CalculateAbi.java',
     'DefaultJavaLibrary.java',
     'DefaultSuggestBuildRules.java',
+    'ForkMode.java',
     'JarArchiveDependencySupplier.java',
     'JarFattener.java',
     'JavaBinary.java',

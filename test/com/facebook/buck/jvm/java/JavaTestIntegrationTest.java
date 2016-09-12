@@ -216,4 +216,15 @@ public class JavaTestIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:jtest");
     result.assertSuccess();
   }
+
+  @Test
+  public void testForkMode() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "slow_tests",
+        temp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:fork-mode");
+    result.assertSuccess();
+  }
 }

@@ -143,6 +143,7 @@ public class JavaTestDescription implements
                 args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
                 args.env.get(),
                 args.getRunTestSeparately(),
+                args.getForkMode(),
                 args.stdOutLogLevel,
                 args.stdErrLogLevel));
 
@@ -175,6 +176,7 @@ public class JavaTestDescription implements
     public Optional<ImmutableList<String>> vmArgs;
     public Optional<TestType> testType;
     public Optional<Boolean> runTestSeparately;
+    public Optional<ForkMode> forkMode;
     public Optional<Level> stdErrLogLevel;
     public Optional<Level> stdOutLogLevel;
     public Optional<Boolean> useCxxLibraries;
@@ -183,6 +185,9 @@ public class JavaTestDescription implements
 
     public boolean getRunTestSeparately() {
       return runTestSeparately.or(false);
+    }
+    public ForkMode getForkMode() {
+      return forkMode.or(ForkMode.NONE);
     }
   }
 

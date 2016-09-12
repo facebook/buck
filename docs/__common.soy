@@ -1007,11 +1007,36 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   {param name: 'run_test_separately' /}
   {param default : 'False' /}
   {param desc}
-  If set to <code>true</code>, the test(s) in this rule are run separately
+  If set to <code>True</code>, the test(s) in this rule are run separately
   from all other tests. (This is useful
   for integration tests which access a physical device or other limited
   resource.)
   <p>If unset, the test(s) in this rule in parallel with all other tests.</p>
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .fork_mode}
+{call buck.arg}
+  {param name: 'fork_mode' /}
+  {param default : 'none' /}
+  {param desc}
+  Controls whether tests will all be run in the same process or a process will be
+  started for each set of tests in a class.
+
+  (This is mainly useful when porting Java tests to Buck from Apache Ant which
+  allows JUnit tasks to set a <code>fork="yes"</code> property. It should not be
+  used for new tests since it encourages tests to not cleanup after themselves and
+  increases the tests' computational resources and running time.)
+
+  <dl>
+    <dt><code>none</code></dt>
+    <dd>All tests will run in the same process.</dd>
+    <dt><code>per_test</code></dt>
+    <dd>A process will be started for each test class in which all tests of that test class
+        will run.</dd>
+  </dl>
   {/param}
 {/call}
 {/template}

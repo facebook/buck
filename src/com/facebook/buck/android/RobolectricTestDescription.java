@@ -162,6 +162,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                 args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
                 args.env.get(),
                 args.getRunTestSeparately(),
+                args.getForkMode(),
                 args.stdOutLogLevel,
                 args.stdErrLogLevel));
 
