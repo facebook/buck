@@ -16,91 +16,24 @@
 
 package com.facebook.buck.util.network;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
- * Common functionality for uploading log entries in batches.
+ * Implemented by classes providing the functionality to upload log data in batches.
  */
-public abstract class BatchingLogger implements RemoteLogger {
+public interface BatchingLogger {
+  /**
+   * @param logLine data to upload.
+   * @return {@link Optional#absent()} if the data has merely been buffered, a
+   *         {@link ListenableFuture} representing the upload otherwise.
+   */
+  Optional<ListenableFuture<Void>> log(String logLine);
 
-  public static final int DEFAULT_MIN_BATCH_SIZE = 1024 * 128; // This is pretty arbitrary.
-
-  protected static class BatchEntry {
-    private final String line;
-
-    public BatchEntry(String line) {
-      this.line = line;
-    }
-
-    public String getLine() {
-      return line;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-      if (!(other instanceof BatchEntry)) {
-        return false;
-      }
-
-      BatchEntry that = (BatchEntry) other;
-      return line.equals(that.line);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(line);
-    }
-
-    @Override
-    public String toString() {
-      return String.format("BatchEntry(%s)", line);
-    }
-  }
-
-  private ImmutableList.Builder<BatchEntry> batch;
-  private int currentBatchSize;
-  private final int minBatchSize;
-
-  public BatchingLogger(int minBatchSize) {
-    this.batch = ImmutableList.builder();
-    this.currentBatchSize = 0;
-    this.minBatchSize = minBatchSize;
-  }
-
-  public BatchingLogger() {
-    this(DEFAULT_MIN_BATCH_SIZE);
-  }
-
-  @Override
-  public final Optional<ListenableFuture<Void>> log(String logLine) {
-    batch.add(new BatchEntry(logLine));
-    currentBatchSize += logLine.length();
-    if (currentBatchSize >= minBatchSize) {
-      return Optional.of(sendBatch());
-    }
-    return Optional.absent();
-  }
-
-  @Override
-  public final ListenableFuture<Void> close() {
-    return sendBatch();
-  }
-
-  private ListenableFuture<Void> sendBatch() {
-    ImmutableList<BatchEntry> toSend = batch.build();
-    batch = ImmutableList.builder();
-    currentBatchSize = 0;
-    if (toSend.isEmpty()) {
-      return Futures.immediateFuture(null);
-    } else {
-      return logMultiple(toSend);
-    }
-  }
-
-  protected abstract ListenableFuture<Void> logMultiple(ImmutableCollection<BatchEntry> data);
+  /**
+   * Signals to upload whatever remaining information is buffered.
+   *
+   * @return future representing the forced upload.
+   */
+  ListenableFuture<Void> close();
 }

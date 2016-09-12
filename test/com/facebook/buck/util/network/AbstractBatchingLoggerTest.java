@@ -28,9 +28,9 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BatchingLoggerTest {
+public class AbstractBatchingLoggerTest {
 
-  private static class TestBatchingLogger extends BatchingLogger {
+  private static class TestBatchingLogger extends AbstractBatchingLogger {
     private List<ImmutableCollection<BatchEntry>> uploadedBatches = new ArrayList<>();
 
     public TestBatchingLogger(int minBatchSize) {
@@ -53,8 +53,10 @@ public class BatchingLoggerTest {
   public void testBatchingLogger() {
     String shortData = "data";
     String longData = "datdatdatdatdatdatdataaaaaaadata";
-    BatchingLogger.BatchEntry shortDataBatch = new BatchingLogger.BatchEntry(shortData);
-    BatchingLogger.BatchEntry longDataBatch = new BatchingLogger.BatchEntry(longData);
+    AbstractBatchingLogger.BatchEntry shortDataBatch = new AbstractBatchingLogger.BatchEntry(
+        shortData);
+    AbstractBatchingLogger.BatchEntry longDataBatch = new AbstractBatchingLogger.BatchEntry(
+        longData);
     TestBatchingLogger testBatchingLogger = new TestBatchingLogger(longData.length() + 1);
 
     testBatchingLogger.log(longData);

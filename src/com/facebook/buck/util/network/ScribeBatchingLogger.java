@@ -25,7 +25,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 /**
  * Uploads log entries to the given scribe category.
  */
-public class ScribeBatchingLogger extends BatchingLogger {
+public class ScribeBatchingLogger extends AbstractBatchingLogger {
 
   private final ScribeLogger scribeLogger;
   private final String category;

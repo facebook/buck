@@ -19,8 +19,8 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.util.network.BatchingLogger;
 import com.facebook.buck.util.network.HiveRowFormatter;
-import com.facebook.buck.util.network.RemoteLogger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
@@ -32,17 +32,17 @@ import com.google.common.eventbus.Subscribe;
 public class HttpArtifactCacheListener implements BuckEventListener {
 
   private final ObjectMapper jsonConverter;
-  private final RemoteLogger logger;
+  private final BatchingLogger logger;
   private final ImmutableMap<String, String> environmentInfo;
 
   public HttpArtifactCacheListener(
-      RemoteLogger logger,
+      BatchingLogger logger,
       ObjectMapper jsonConverter) {
     this(logger, jsonConverter, ImmutableMap.<String, String>of());
   }
 
   public HttpArtifactCacheListener(
-      RemoteLogger logger,
+      BatchingLogger logger,
       ObjectMapper jsonConverter,
       ImmutableMap<String, String> environmentInfo) {
     this.jsonConverter = jsonConverter;
