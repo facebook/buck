@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.log.LogConfigSetup;
+import com.google.common.base.Optional;
 
 import java.io.IOException;
 
@@ -32,15 +33,15 @@ public class VersionCommand implements Command {
    * @return The version of Buck currently running
    */
   private String getBuckVersion() {
-    return (getBuckRepoHasChanges() ? "*" : "") + getBuckGitCommitHash();
+    return (getBuckRepoHasChanges() ? "*" : "") + getBuckGitCommitHash().or("N/A");
   }
 
   private boolean getBuckRepoHasChanges() {
     return "1".equals(System.getProperty(BUCK_GIT_DIRTY_KEY, "1"));
   }
 
-  private String getBuckGitCommitHash() {
-    return System.getProperty(BUCK_GIT_COMMIT_KEY, "N/A");
+  public Optional<String> getBuckGitCommitHash() {
+    return Optional.fromNullable(System.getProperty(BUCK_GIT_COMMIT_KEY));
   }
 
   @Override

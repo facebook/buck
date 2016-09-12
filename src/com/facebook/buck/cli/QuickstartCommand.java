@@ -211,6 +211,7 @@ public class QuickstartCommand extends AbstractCommand {
       }
     }
 
+    // Convert BUCK.tmpl files to BUCK files.
     java.nio.file.Files.walkFileTree(destination, new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(
@@ -227,6 +228,17 @@ public class QuickstartCommand extends AbstractCommand {
     params.getConsole().getStdOut().print(
         params.getCell().getFilesystem().readFileIfItExists(origin.resolve("README.md")).get());
     params.getConsole().getStdOut().flush();
+
+    // Generate a .buckversion file for this version of buck.
+    Optional<String> version = new VersionCommand().getBuckGitCommitHash();
+    if (version.isPresent()) {
+      File buckversionFile = new File(projectDir + "/.buckversion");
+      Files.append(version.get(), buckversionFile, StandardCharsets.UTF_8);
+    } else {
+      params.getConsole().getStdErr().print(
+          "WARNING: Cannot determine a sha1 to use to create and populate a .buckversion file.");
+      params.getConsole().getStdErr().flush();
+    }
 
     return 0;
   }

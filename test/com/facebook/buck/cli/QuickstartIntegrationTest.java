@@ -28,6 +28,7 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,6 +52,25 @@ public class QuickstartIntegrationTest {
   @Rule
   public TemporaryPaths destDir = new TemporaryPaths();
 
+
+  private void verifyHasBuckVersionFile(Path projectDir, ProcessResult result) throws IOException {
+
+    Optional<String> expectedGitHash = new VersionCommand().getBuckGitCommitHash();
+
+    if (expectedGitHash.isPresent()) {
+      Path buckversionFile = projectDir.resolve(".buckversion");
+      assertTrue("Should create a .buckversion file in the  workspace's root directory",
+          buckversionFile.toFile().exists());
+
+      String actualGitHash = new String(
+          Files.readAllBytes(buckversionFile), StandardCharsets.UTF_8);
+      assertEquals(".buckversion should have the git hash", expectedGitHash, actualGitHash);
+    } else {
+      assertTrue("stderr should say something about not creating a buckversion file.",
+          result.getStderr().contains(".buckversion"));
+    }
+  }
+
   /**
    * Test that project is created when it is given various parameters.
    */
@@ -72,6 +92,8 @@ public class QuickstartIntegrationTest {
         destDir);
     destinationWorkspace.setUp();
     destinationWorkspace.verify(); // Verifies the project was generated as expected.
+
+    verifyHasBuckVersionFile(destDir.getRoot(), result);
 
     Path readme = destDir.getRoot().resolve("README.md");
     assertTrue("`buck quickstart` should create a README file.", Files.isRegularFile(readme));
@@ -99,7 +121,10 @@ public class QuickstartIntegrationTest {
     destinationWorkspace.runBuckCommand("build", "app").assertSuccess();
 
     Path buckOut = destinationWorkspace.getPath("buck-out");
-    assertTrue("`buck build` should create a buck-out directory.", Files.isDirectory(buckOut));
+    assertTrue("`buck build app` should create a buck-out directory.", Files.isDirectory(buckOut));
+
+    Path apkOut = destinationWorkspace.getPath("buck-out/gen/apps/myapp/app.apk");
+    assertTrue("`buck build app` should create an apk file.", Files.exists(apkOut));
   }
 
   @Test
@@ -122,6 +147,8 @@ public class QuickstartIntegrationTest {
         destDir);
     destinationWorkspace.setUp();
     destinationWorkspace.verify(); // Verifies the project was generated as expected.
+
+    verifyHasBuckVersionFile(destDir.getRoot(), result);
 
     Path readme = destDir.getRoot().resolve("README.md");
     assertTrue("`buck quickstart` should create a README file.", Files.isRegularFile(readme));
