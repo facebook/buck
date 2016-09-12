@@ -998,5 +998,19 @@ public class BuckConfig {
             .or(ResourceAmountsEstimator.DEFAULT_NETWORK_IO_AMOUNT));
   }
 
+  public ResourceAmounts getMaximumResourceAmounts() {
+    ResourceAmounts estimated = ResourceAmountsEstimator.getEstimatedAmounts();
+    return ResourceAmounts.of(
+        getNumThreads(estimated.getCpu()),
+        getInteger(
+            BuckConfig.RESOURCES_SECTION_HEADER,
+            "max_memory_resource").or(estimated.getMemory()),
+        getInteger(
+            BuckConfig.RESOURCES_SECTION_HEADER,
+            "max_disk_io_resource").or(estimated.getDiskIO()),
+        getInteger(
+            BuckConfig.RESOURCES_SECTION_HEADER,
+            "max_network_io_resource").or(estimated.getNetworkIO()));
+  }
 
 }
