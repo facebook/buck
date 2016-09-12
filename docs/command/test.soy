@@ -127,6 +127,15 @@ contains a <code>tests = ['...']</code> field to specify its tests.</p>
 {/call}
 
 {call buck.param}
+  {param name: 'dry-run' /}
+  {param desc}
+  Print the test rules that will be matched by command line arguments such as
+  {sp}<code>--include</code> and <code>--exclude</code>, but exit before
+  building or running tests.
+  {/param}
+{/call}
+
+{call buck.param}
   {param name: 'num-threads' /}
   {param desc}
   The number of threads that buck should use when executing the

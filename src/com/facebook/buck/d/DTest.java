@@ -138,7 +138,8 @@ public class DTest extends AbstractBuildRule implements
   @Override
   public Callable<TestResults> interpretTestResults(
       final ExecutionContext executionContext,
-      boolean isUsingTestSelectors) {
+      boolean isUsingTestSelectors,
+      final boolean isDryRun) {
     return new Callable<TestResults>() {
       @Override
       public TestResults call() throws Exception {
@@ -210,14 +211,18 @@ public class DTest extends AbstractBuildRule implements
       ExecutionContext executionContext,
       TestRunningOptions options,
       TestReportingCallback testReportingCallback) {
-    return ImmutableList.of(
-        new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToTestOutputDirectory()),
-        new DTestStep(
-            getProjectFilesystem(),
-            getShellCommand(),
-            getPathToTestExitCode(),
-            testRuleTimeoutMs,
-            getPathToTestOutput()));
+    if (options.isDryRun()) {
+      return ImmutableList.of();
+    } else {
+      return ImmutableList.of(
+          new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToTestOutputDirectory()),
+          new DTestStep(
+              getProjectFilesystem(),
+              getShellCommand(),
+              getPathToTestExitCode(),
+              testRuleTimeoutMs,
+              getPathToTestOutput()));
+    }
   }
 
   @Override

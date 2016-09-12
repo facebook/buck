@@ -44,6 +44,7 @@ import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
@@ -64,6 +65,7 @@ import com.google.common.collect.Lists;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.channels.Channels;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -129,6 +131,11 @@ public class TestCommand extends BuildCommand {
       hidden = true)
   @SuppressWarnings("PMD.UnusedPrivateField")
   private boolean isIgnoreFailingDependencies;
+
+  @Option(
+      name = "--dry-run",
+      usage = "Print tests that match the given command line options, but don't run them.")
+  private boolean isDryRun;
 
   @Option(
       name = "--shuffle",
@@ -206,6 +213,10 @@ public class TestCommand extends BuildCommand {
     return targetDeviceOptions.getTargetDeviceOptions();
   }
 
+  public boolean isDryRun() {
+    return isDryRun;
+  }
+
   public boolean isMatchedByLabelOptions(BuckConfig buckConfig, Set<Label> labels) {
     return testLabelOptions.isMatchedByLabelOptions(buckConfig, labels);
   }
@@ -245,6 +256,7 @@ public class TestCommand extends BuildCommand {
         .setTestSelectorList(testSelectorOptions.getTestSelectorList())
         .setShouldExplainTestSelectorList(testSelectorOptions.shouldExplain())
         .setResultsCacheEnabled(isResultsCacheEnabled(params.getBuckConfig()))
+        .setDryRun(isDryRun)
         .setShufflingTests(isShufflingTests)
         .setPathToXmlTestOutput(Optional.fromNullable(pathToXmlTestOutput))
         .setPathToJavaAgent(Optional.fromNullable(pathToJavaAgent))
@@ -473,6 +485,10 @@ public class TestCommand extends BuildCommand {
         testRules = filterTestRules(params.getBuckConfig(), explicitBuildTargets, testRules);
       }
 
+      if (isDryRun()) {
+        printMatchingTestRules(params.getConsole(), testRules);
+      }
+
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
               new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
@@ -541,6 +557,21 @@ public class TestCommand extends BuildCommand {
   @Override
   public boolean isReadOnly() {
     return false;
+  }
+
+  private void printMatchingTestRules(Console console, Iterable<TestRule> testRules) {
+    PrintStream out = console.getStdOut();
+    ImmutableList<TestRule> list = ImmutableList.copyOf(testRules);
+    out.println(String.format("MATCHING TEST RULES (%d):", list.size()));
+    out.println("");
+    if (list.isEmpty()) {
+      out.println("  (none)");
+    } else {
+      for (TestRule testRule : testRules) {
+        out.println("  " + testRule.getBuildTarget());
+      }
+    }
+    out.println("");
   }
 
   @VisibleForTesting

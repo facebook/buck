@@ -1,0 +1,22 @@
+
+java_test(
+  name = 'test',
+  test_type = 'testng',
+  srcs = glob(['*.java']),
+  deps = [
+    ':testng',
+  ],
+)
+
+prebuilt_jar(
+  name = 'testng',
+  binary_jar = 'testng.jar',
+  deps = [
+    ':hamcrest',
+  ],
+)
+
+prebuilt_jar(
+  name = 'hamcrest',
+  binary_jar = 'hamcrest.jar',
+)

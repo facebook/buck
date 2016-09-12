@@ -117,6 +117,11 @@ public class ShTest
       ExecutionContext executionContext,
       TestRunningOptions options,
       TestReportingCallback testReportingCallback) {
+    if (options.isDryRun()) {
+      // Stop now if we are a dry-run: sh-tests have no concept of dry-run inside the test itself.
+      return ImmutableList.of();
+    }
+
     Step mkdirClean = new MakeCleanDirectoryStep(
         getProjectFilesystem(),
         getPathToTestOutputDirectory());
@@ -151,26 +156,43 @@ public class ShTest
   @Override
   public Callable<TestResults> interpretTestResults(
       final ExecutionContext context,
-      boolean isUsingTestSelectors) {
+      boolean isUsingTestSelectors,
+      boolean isDryRun) {
 
-    return new Callable<TestResults>() {
-      @Override
-      public TestResults call() throws Exception {
-        Optional<String> resultsFileContents =
-            getProjectFilesystem().readFileIfItExists(getPathToTestOutputResult());
-        ObjectMapper mapper = context.getObjectMapper();
-        TestResultSummary testResultSummary = mapper.readValue(resultsFileContents.get(),
-            TestResultSummary.class);
-        TestCaseSummary testCaseSummary = new TestCaseSummary(
-            getBuildTarget().getFullyQualifiedName(),
-            ImmutableList.of(testResultSummary));
-        return TestResults.of(
-            getBuildTarget(),
-            ImmutableList.of(testCaseSummary),
-            contacts,
-            FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
-      }
-    };
+    if (isDryRun) {
+      // Again, shortcut to returning no results, because sh-tests have no concept of a dry-run.
+      return new Callable<TestResults>() {
+        @Override
+        public TestResults call() throws Exception {
+          return TestResults.of(
+              getBuildTarget(),
+              ImmutableList.<TestCaseSummary>of(),
+              contacts,
+              FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
+        }
+      };
+    } else {
+      return new Callable<TestResults>() {
+
+        @Override
+        public TestResults call() throws Exception {
+          Optional<String> resultsFileContents =
+              getProjectFilesystem().readFileIfItExists(getPathToTestOutputResult());
+          ObjectMapper mapper = context.getObjectMapper();
+          TestResultSummary testResultSummary = mapper.readValue(resultsFileContents.get(),
+              TestResultSummary.class);
+          TestCaseSummary testCaseSummary = new TestCaseSummary(
+              getBuildTarget().getFullyQualifiedName(),
+              ImmutableList.of(testResultSummary));
+          return TestResults.of(
+              getBuildTarget(),
+              ImmutableList.of(testCaseSummary),
+              contacts,
+              FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
+        }
+
+      };
+    }
   }
 
   @Override

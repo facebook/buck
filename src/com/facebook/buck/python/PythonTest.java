@@ -155,21 +155,24 @@ public class PythonTest
   @Override
   public Callable<TestResults> interpretTestResults(
       final ExecutionContext executionContext,
-      boolean isUsingTestSelectors) {
+      boolean isUsingTestSelectors,
+      final boolean isDryRun) {
     return new Callable<TestResults>() {
       @Override
       public TestResults call() throws Exception {
         ImmutableList.Builder<TestCaseSummary> summaries = ImmutableList.builder();
-        Optional<String> resultsFileContents =
-            getProjectFilesystem().readFileIfItExists(
-                getPathToTestOutputResult());
-        ObjectMapper mapper = executionContext.getObjectMapper();
-        TestResultSummary[] testResultSummaries = mapper.readValue(
-            resultsFileContents.get(),
-            TestResultSummary[].class);
-        summaries.add(new TestCaseSummary(
-            getBuildTarget().getFullyQualifiedName(),
-            ImmutableList.copyOf(testResultSummaries)));
+        if (!isDryRun) {
+          Optional<String> resultsFileContents =
+              getProjectFilesystem().readFileIfItExists(
+                  getPathToTestOutputResult());
+          ObjectMapper mapper = executionContext.getObjectMapper();
+          TestResultSummary[] testResultSummaries = mapper.readValue(
+              resultsFileContents.get(),
+              TestResultSummary[].class);
+          summaries.add(new TestCaseSummary(
+              getBuildTarget().getFullyQualifiedName(),
+              ImmutableList.copyOf(testResultSummaries)));
+        }
         return TestResults.of(
             getBuildTarget(),
             summaries.build(),

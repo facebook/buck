@@ -246,6 +246,7 @@ public class JavaTest
         .setRobolectricLogPath(robolectricLogPath)
         .setExtraJvmArgs(properVmArgs)
         .addAllTestClasses(reorderedTestClasses)
+        .setDryRun(options.isDryRun())
         .setTestSelectorList(testSelectorList)
         .build();
 
@@ -392,7 +393,8 @@ public class JavaTest
   @Override
   public Callable<TestResults> interpretTestResults(
       final ExecutionContext context,
-      final boolean isUsingTestSelectors) {
+      final boolean isUsingTestSelectors,
+      final boolean isDryRun) {
     final ImmutableSet<String> contacts = getContacts();
     return new Callable<TestResults>() {
 
@@ -414,6 +416,9 @@ public class JavaTest
           String testSelectorSuffix = "";
           if (isUsingTestSelectors) {
             testSelectorSuffix += ".test_selectors";
+          }
+          if (isDryRun) {
+            testSelectorSuffix += ".dry_run";
           }
           String path = String.format("%s%s.xml", testClass, testSelectorSuffix);
           Path testResultFile = getProjectFilesystem().getPathForRelativePath(
