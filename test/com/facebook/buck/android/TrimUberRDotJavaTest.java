@@ -100,7 +100,7 @@ public class TrimUberRDotJavaTest {
             .putMetadata(DexProducedFromJavaLibrary.CLASSNAMES_TO_HASHES, "{}")
             .putMetadata(
                 DexProducedFromJavaLibrary.REFERENCED_RESOURCES,
-                ImmutableList.of("my_first_resource"))));
+                ImmutableList.of("com.test.my_first_resource"))));
 
     TrimUberRDotJava trimUberRDotJava = new TrimUberRDotJava(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:trim"))

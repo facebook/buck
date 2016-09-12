@@ -1654,8 +1654,8 @@ public class Main {
             CstType fieldClass = item.getDefiningClass();
             CstString fieldName = item.getRef().getNat().getName();
             if (fieldClass.getClassType().getDescriptor().contains("/R$")) {
-                // We ignore the name of the containing class for simplicity.
-                resourceNames.add(fieldName.getString());
+                // Add the packageName of the class for better accuracy.
+                resourceNames.add(fieldClass.getPackageName() + "." + fieldName.getString());
             }
         }
     }
