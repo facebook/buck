@@ -19,6 +19,8 @@ package com.facebook.buck.jvm.kotlin;
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.ForkMode;
+import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -38,6 +40,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -46,6 +49,7 @@ import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 public class KotlinTestDescription implements Description<KotlinTestDescription.Arg> {
 
@@ -94,9 +98,9 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
         kotlinBuckConfig.getKotlinCompiler().get(),
         args.extraKotlincArguments.get());
 
-    JavaTest test =
+    JavaLibrary testsLibrary =
         resolver.addToIndex(
-            new JavaTest(
+            new DefaultJavaLibrary(
                 params.appendExtraDeps(
                     Iterables.concat(
                         BuildRules.getExportedRules(
@@ -104,7 +108,8 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
                                 params.getDeclaredDeps().get(),
                                 resolver.getAllRules(args.providedDeps.get()))),
                         pathResolver.filterBuildRuleInputs(
-                            defaultJavacOptions.getInputs(pathResolver)))),
+                            defaultJavacOptions.getInputs(pathResolver))))
+                    .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR),
                 pathResolver,
                 args.srcs.get(),
                 ResourceValidator.validateResources(
@@ -112,19 +117,35 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
                     params.getProjectFilesystem(),
                     args.resources.get()),
                 defaultJavacOptions.getGeneratedSourceFolderName(),
+                /* proguardConfig */ Optional.<SourcePath>absent(),
+                /* postprocessClassesCommands */ ImmutableList.<String>of(),
+                /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),
+                /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
+                new BuildTargetSourcePath(abiJarTarget),
+                /* trackClassUsage */ false,
+                /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+                stepFactory,
+                /* resourcesRoot */ Optional.<Path>absent(),
+                /* mavenCoords */ Optional.<String>absent(),
+                /* tests */ ImmutableSortedSet.<BuildTarget>of(),
+                /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()
+            ));
+
+    JavaTest test =
+        resolver.addToIndex(
+            new JavaTest(
+                params.copyWithDeps(
+                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(testsLibrary)),
+                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                pathResolver,
+                testsLibrary,
+                /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
                 args.labels.get(),
                 args.contacts.get(),
-                Optional.<SourcePath>absent(), /*Proguard config*/
-                new BuildTargetSourcePath(abiJarTarget),
-                false,
-                ImmutableSet.<Path>of(), /* additionalClasspathEntries */
                 args.testType.or(TestType.JUNIT),
-                stepFactory,
                 javaOptions.getJavaRuntimeLauncher(),
                 args.vmArgs.get(),
-                ImmutableMap.<String, String>of(), /* native libs environment */
-                Optional.<Path>absent(), /* resources root */
-                Optional.<String>absent(), /* maven coords */
+                /* nativeLibsEnvironment */ ImmutableMap.<String, String>of(),
                 args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
                 args.env.get(),
                 args.getRunTestSeparately(),

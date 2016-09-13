@@ -37,9 +37,13 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -48,6 +52,8 @@ import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
+
 
 public class JavaTestDescription implements
     Description<JavaTestDescription.Arg>,
@@ -108,17 +114,36 @@ public class JavaTestDescription implements
 
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
-    JavaTest test =
+    BuildRuleParams testsLibraryParams = params.copyWithDeps(
+            Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(params.getDeclaredDeps().get())
+                    .addAll(FluentIterable.from(params.getDeclaredDeps().get())
+                        .filter(JavaTest.class)
+                        .transform(
+                            new Function<JavaTest, BuildRule>() {
+                              @Override
+                              public BuildRule apply(JavaTest input) {
+                                return input.getCompiledTestsLibrary();
+                              }
+                            }))
+                    .build()
+            ),
+            params.getExtraDeps()
+        );
+    testsLibraryParams = testsLibraryParams.appendExtraDeps(Iterables.concat(
+            BuildRules.getExportedRules(
+                Iterables.concat(
+                    testsLibraryParams.getDeclaredDeps().get(),
+                    resolver.getAllRules(args.providedDeps.get()))),
+            pathResolver.filterBuildRuleInputs(
+                javacOptions.getInputs(pathResolver))))
+        .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+
+    JavaLibrary testsLibrary =
         resolver.addToIndex(
-            new JavaTest(
-                params.appendExtraDeps(
-                    Iterables.concat(
-                        BuildRules.getExportedRules(
-                            Iterables.concat(
-                                params.getDeclaredDeps().get(),
-                                resolver.getAllRules(args.providedDeps.get()))),
-                        pathResolver.filterBuildRuleInputs(
-                            javacOptions.getInputs(pathResolver)))),
+            new DefaultJavaLibrary(
+                testsLibraryParams,
                 pathResolver,
                 args.srcs.get(),
                 ResourceValidator.validateResources(
@@ -126,35 +151,73 @@ public class JavaTestDescription implements
                     params.getProjectFilesystem(),
                     args.resources.get()),
                 javacOptions.getGeneratedSourceFolderName(),
-                args.labels.get(),
-                args.contacts.get(),
                 args.proguardConfig.transform(
                     SourcePaths.toSourcePath(params.getProjectFilesystem())),
+                /* postprocessClassesCommands */ ImmutableList.<String>of(),
+                /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),
+                /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
                 new BuildTargetSourcePath(abiJarTarget),
                 javacOptions.trackClassUsage(),
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-                args.testType.or(TestType.JUNIT),
                 new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
-                javaOptions.getJavaRuntimeLauncher(),
-                args.vmArgs.get(),
-                cxxLibraryEnhancement.nativeLibsEnvironment,
                 args.resourcesRoot,
                 args.mavenCoords,
-                args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
-                args.env.get(),
-                args.getRunTestSeparately(),
-                args.getForkMode(),
-                args.stdOutLogLevel,
-                args.stdErrLogLevel));
+                /* tests */ ImmutableSortedSet.<BuildTarget>of(),
+                /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()
+            ));
+
+  JavaTest javaTest =
+      resolver.addToIndex(
+          new JavaTest(
+              params.copyWithDeps(
+                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(testsLibrary)),
+                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+              pathResolver,
+              testsLibrary,
+              /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+              args.labels.get(),
+              args.contacts.get(),
+              args.testType.or(TestType.JUNIT),
+              javaOptions.getJavaRuntimeLauncher(),
+              args.vmArgs.get(),
+              cxxLibraryEnhancement.nativeLibsEnvironment,
+              args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
+              args.env.get(),
+              args.getRunTestSeparately(),
+              args.getForkMode(),
+              args.stdOutLogLevel,
+              args.stdErrLogLevel));
 
     resolver.addToIndex(
         CalculateAbi.of(
             abiJarTarget,
             pathResolver,
             params,
-            new BuildTargetSourcePath(test.getBuildTarget())));
+            new BuildTargetSourcePath(testsLibrary.getBuildTarget())));
 
-    return test;
+    return javaTest;
+  }
+
+  public static ImmutableSet<BuildRule> validateAndGetSourcesUnderTest(
+      ImmutableSet<BuildTarget> sourceUnderTestTargets,
+      BuildTarget owner,
+      BuildRuleResolver resolver) {
+    ImmutableSet.Builder<BuildRule> sourceUnderTest = ImmutableSet.builder();
+    for (BuildTarget target : sourceUnderTestTargets) {
+      BuildRule rule = resolver.getRule(target);
+      if (!(rule instanceof JavaLibrary)) {
+        // In this case, the source under test specified in the build file was not a Java library
+        // rule. Since EMMA requires the sources to be in Java, we will throw this exception and
+        // not continue with the tests.
+        throw new HumanReadableException(
+            "Specified source under test for %s is not a Java library: %s (%s).",
+            owner,
+            rule.getFullyQualifiedName(),
+            rule.getType());
+      }
+      sourceUnderTest.add(rule);
+    }
+    return sourceUnderTest.build();
   }
 
   @Override

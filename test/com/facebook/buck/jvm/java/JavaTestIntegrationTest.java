@@ -206,6 +206,17 @@ public class JavaTestIntegrationTest {
   }
 
   @Test
+  public void dependencyOnAnotherTest() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "depend_on_another_test",
+        temp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:a");
+    result.assertSuccess();
+  }
+
+  @Test
   public void testWithJni() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(

@@ -27,6 +27,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeExportDependenciesRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -46,11 +47,12 @@ public class JavaTestDescriptionTest {
             new FakeExportDependenciesRule("//:exporting_rule", pathResolver, exportedRule));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRule javaTest = JavaTestBuilder.createBuilder(target)
+    JavaTest javaTest = (JavaTest) JavaTestBuilder.createBuilder(target)
         .addDep(exportingRule.getBuildTarget())
         .build(resolver);
 
-    assertThat(javaTest.getDeps(), Matchers.<BuildRule>hasItem(exportedRule));
+    ImmutableSortedSet<BuildRule> deps = javaTest.getCompiledTestsLibrary().getDeps();
+    assertThat(deps, Matchers.<BuildRule>hasItem(exportedRule));
   }
 
   @Test
@@ -66,11 +68,12 @@ public class JavaTestDescriptionTest {
             new FakeExportDependenciesRule("//:exporting_rule", pathResolver, exportedRule));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRule javaTest = JavaTestBuilder.createBuilder(target)
+    JavaTest javaTest = (JavaTest) JavaTestBuilder.createBuilder(target)
         .addProvidedDep(exportingRule.getBuildTarget())
         .build(resolver);
 
-    assertThat(javaTest.getDeps(), Matchers.<BuildRule>hasItem(exportedRule));
+    ImmutableSortedSet<BuildRule> deps = javaTest.getCompiledTestsLibrary().getDeps();
+    assertThat(deps, Matchers.<BuildRule>hasItem(exportedRule));
   }
 
 }

@@ -1,0 +1,30 @@
+java_test(
+  name = 'a',
+  srcs = ['A.java'],
+  deps = [ ':b', ':junit' ],
+)
+
+java_test(
+  name = 'b',
+  srcs = [ 'B.java' ],
+  deps = [ ':junit' ],
+)
+
+prebuilt_jar(
+  name = 'junit',
+  binary_jar = 'junit-4.11.jar',
+  deps = [
+    ':hamcrest-core',
+    ':hamcrest-library',
+  ],
+)
+
+prebuilt_jar(
+  name = 'hamcrest-core',
+  binary_jar = 'hamcrest-core-1.3.jar',
+)
+
+prebuilt_jar(
+  name = 'hamcrest-library',
+  binary_jar = 'hamcrest-library-1.3.jar',
+)

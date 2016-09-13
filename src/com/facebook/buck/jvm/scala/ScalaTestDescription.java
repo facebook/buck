@@ -20,6 +20,8 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.ForkMode;
+import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
@@ -43,6 +45,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -51,6 +54,7 @@ import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 public class ScalaTestDescription implements Description<ScalaTestDescription.Arg>,
     ImplicitDepsInferringDescription<ScalaTestDescription.Arg> {
@@ -118,16 +122,17 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
 
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
-    JavaTest test =
+    JavaLibrary testsLibrary =
         resolver.addToIndex(
-            new JavaTest(
+            new DefaultJavaLibrary(
                 params.appendExtraDeps(
                     Iterables.concat(
                         BuildRules.getExportedRules(
                             Iterables.concat(
                                 params.getDeclaredDeps().get(),
                                 resolver.getAllRules(args.providedDeps.get()))),
-                        scalac.getDeps(pathResolver))),
+                        scalac.getDeps(pathResolver)))
+                    .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR),
                 pathResolver,
                 args.srcs.get(),
                 ResourceValidator.validateResources(
@@ -135,13 +140,13 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                     params.getProjectFilesystem(),
                     args.resources.get()),
                 /* generatedSourceFolderName */ Optional.<Path>absent(),
-                args.labels.get(),
-                args.contacts.get(),
                 /* proguardConfig */ Optional.<SourcePath>absent(),
+                /* postprocessClassesCommands */ ImmutableList.<String>of(),
+                /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),
+                /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
                 new BuildTargetSourcePath(abiJarTarget),
                 /* trackClassUsage */ false,
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-                args.testType.or(TestType.JUNIT),
                 new ScalacToJarStepFactory(
                     scalac,
                     ImmutableList.<String>builder()
@@ -149,11 +154,26 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                         .addAll(args.extraArguments.get())
                         .build()
                 ),
-                javaOptions.getJavaRuntimeLauncher(),
-                args.vmArgs.get(),
-                /* sourcesUnderTest */ cxxLibraryEnhancement.nativeLibsEnvironment,
                 args.resourcesRoot,
                 args.mavenCoords,
+                /* tests */ ImmutableSortedSet.<BuildTarget>of(),
+                /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()));
+
+    JavaTest scalaTest =
+        resolver.addToIndex(
+            new JavaTest(
+                params.copyWithDeps(
+                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(testsLibrary)),
+                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                pathResolver,
+                testsLibrary,
+                /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+                args.labels.get(),
+                args.contacts.get(),
+                args.testType.or(TestType.JUNIT),
+                javaOptions.getJavaRuntimeLauncher(),
+                args.vmArgs.get(),
+                cxxLibraryEnhancement.nativeLibsEnvironment,
                 args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
                 args.env.get(),
                 args.runTestSeparately.or(false),
@@ -166,9 +186,9 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
             abiJarTarget,
             pathResolver,
             params,
-            new BuildTargetSourcePath(test.getBuildTarget())));
+            new BuildTargetSourcePath(testsLibrary.getBuildTarget())));
 
-    return test;
+    return scalaTest;
   }
 
   @Override

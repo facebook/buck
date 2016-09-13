@@ -114,7 +114,7 @@ public class JavaTestRuleTest {
 
     assertThat(
         rule.getRuntimeDeps(),
-        Matchers.<BuildRule>contains(firstOrderDep, transitiveDep));
+        Matchers.<BuildRule>hasItems(rule.getCompiledTestsLibrary(), firstOrderDep, transitiveDep));
   }
 
   private JavaTest newRule(ImmutableList<String> vmArgs) throws NoSuchBuildTargetException {

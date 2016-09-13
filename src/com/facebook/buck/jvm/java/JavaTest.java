@@ -21,8 +21,10 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -33,7 +35,6 @@ import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -77,7 +78,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -85,8 +85,11 @@ import javax.annotation.Nullable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class JavaTest
-    extends DefaultJavaLibrary
-    implements TestRule, HasRuntimeDeps, HasPostBuildSteps, ExternalTestRunnerRule {
+    extends AbstractBuildRule
+    implements TestRule, HasClasspathEntries, HasRuntimeDeps, HasPostBuildSteps,
+        ExternalTestRunnerRule {
+
+  public static final Flavor COMPILED_TESTS_LIBRARY_FLAVOR = ImmutableFlavor.of("testsjar");
 
   // TODO(#9027062): Migrate this to a PackagedResource so we don't make assumptions
   // about the ant build.
@@ -96,6 +99,9 @@ public class JavaTest
               "buck.testrunner_classes",
               new File("build/testrunner/classes").getAbsolutePath()));
 
+  private final JavaLibrary compiledTestsLibrary;
+
+  private final ImmutableSet<Path> additionalClasspathEntries;
   @AddToRuleKey
   private final JavaRuntimeLauncher javaRuntimeLauncher;
 
@@ -110,8 +116,6 @@ public class JavaTest
   private final ImmutableSet<Label> labels;
 
   private final ImmutableSet<String> contacts;
-
-  private final ImmutableSet<Path> additionalClasspathEntries;
 
   private final Optional<Level> stdOutLogLevel;
   private final Optional<Level> stdErrLogLevel;
@@ -142,52 +146,28 @@ public class JavaTest
   public JavaTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Set<SourcePath> srcs,
-      Set<SourcePath> resources,
-      Optional<Path> generatedSourceFolder,
+      JavaLibrary compiledTestsLibrary,
+      ImmutableSet<Path> additionalClasspathEntries,
       Set<Label> labels,
       Set<String> contacts,
-      Optional<SourcePath> proguardConfig,
-      SourcePath abiJar,
-      boolean trackClassUsage,
-      ImmutableSet<Path> addtionalClasspathEntries,
       TestType testType,
-      CompileToJarStepFactory compileStepFactory,
       JavaRuntimeLauncher javaRuntimeLauncher,
       List<String> vmArgs,
       Map<String, String> nativeLibsEnvironment,
-      Optional<Path> resourcesRoot,
-      Optional<String> mavenCoords,
       Optional<Long> testRuleTimeoutMs,
       ImmutableMap<String, String> env,
       boolean runTestSeparately,
       ForkMode forkMode,
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel) {
-    super(
-        params,
-        resolver,
-        srcs,
-        resources,
-        generatedSourceFolder,
-        proguardConfig,
-        ImmutableList.<String>of(),
-        /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),
-        /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
-        abiJar,
-        trackClassUsage,
-        addtionalClasspathEntries,
-        compileStepFactory,
-        resourcesRoot,
-        mavenCoords,
-        /* tests */ ImmutableSortedSet.<BuildTarget>of(),
-        /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of());
+    super(params, resolver);
+    this.compiledTestsLibrary = compiledTestsLibrary;
+    this.additionalClasspathEntries = additionalClasspathEntries;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.vmArgs = ImmutableList.copyOf(vmArgs);
     this.nativeLibsEnvironment = ImmutableMap.copyOf(nativeLibsEnvironment);
     this.labels = ImmutableSet.copyOf(labels);
     this.contacts = ImmutableSet.copyOf(contacts);
-    this.additionalClasspathEntries = addtionalClasspathEntries;
     this.testType = testType;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.env = env;
@@ -262,6 +242,13 @@ public class JavaTest
         env,
         javaRuntimeLauncher,
         args);
+  }
+
+  /**
+   * Returns the underlying java library containing the compiled tests.
+   */
+  public JavaLibrary getCompiledTestsLibrary() {
+    return compiledTestsLibrary;
   }
 
   /**
@@ -488,6 +475,34 @@ public class JavaTest
     return compiledClassFileFinder.getClassNamesForSources();
   }
 
+  @Override
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context, BuildableContext buildableContext) {
+    // Nothing to build, this is a test-only rule
+    return ImmutableList.of();
+  }
+
+  @Nullable
+  @Override
+  public Path getPathToOutput() {
+    return compiledTestsLibrary.getPathToOutput();
+  }
+
+  @Override
+  public ImmutableSet<Path> getTransitiveClasspaths() {
+    return compiledTestsLibrary.getTransitiveClasspaths();
+  }
+
+  @Override
+  public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
+    return compiledTestsLibrary.getTransitiveClasspathDeps();
+  }
+
+  @Override
+  public ImmutableSet<Path> getImmediateClasspaths() {
+    return compiledTestsLibrary.getImmediateClasspaths();
+  }
+
   @VisibleForTesting
   static class CompiledClassFileFinder {
 
@@ -502,7 +517,7 @@ public class JavaTest
         outputPath = null;
       }
       classNamesForSources = getClassNamesForSources(
-          rule.getJavaSrcs(),
+          rule.compiledTestsLibrary.getJavaSrcs(),
           outputPath,
           rule.getProjectFilesystem());
     }
@@ -600,13 +615,12 @@ public class JavaTest
         // By the end of the build, all the transitive Java library dependencies *must* be available
         // on disk, so signal this requirement via the {@link HasRuntimeDeps} interface.
         .addAll(
-            FluentIterable.from(getTransitiveClasspathDeps())
-                .filter(BuildRule.class)
+            FluentIterable.from(compiledTestsLibrary.getTransitiveClasspathDeps())
                 .filter(Predicates.not(Predicates.<BuildRule>equalTo(this))))
         // It's possible that the user added some tool as a dependency, so make sure we promote
         // this rules first-order deps to runtime deps, so that these potential tools are available
         // when this test runs.
-        .addAll(getDeps())
+        .addAll(compiledTestsLibrary.getDeps())
         .build();
   }
 
@@ -648,7 +662,7 @@ public class JavaTest
               @Override
               public StepExecutionResult execute(ExecutionContext context) throws IOException {
                 ImmutableSet<Path> classpathEntries = ImmutableSet.<Path>builder()
-                    .addAll(getTransitiveClasspaths())
+                    .addAll(compiledTestsLibrary.getTransitiveClasspaths())
                     .addAll(additionalClasspathEntries)
                     .addAll(getBootClasspathEntries(context))
                     .build();

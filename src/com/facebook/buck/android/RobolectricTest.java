@@ -21,10 +21,9 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static com.facebook.buck.rules.BuildableProperties.Kind.TEST;
 
 import com.facebook.buck.jvm.java.ForkMode;
+import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
-import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuildRule;
@@ -102,19 +101,14 @@ public class RobolectricTest extends JavaTest {
   protected RobolectricTest(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
-      Set<SourcePath> srcs,
-      Set<SourcePath> resources,
+      JavaLibrary compiledTestsLibrary,
+      ImmutableSet<Path> additionalClasspathEntries,
       Set<Label> labels,
       Set<String> contacts,
-      Optional<SourcePath> proguardConfig,
-      SourcePath abiJar,
-      ImmutableSet<Path> additionalClasspathEntries,
-      JavacOptions javacOptions,
+      TestType testType,
       JavaOptions javaOptions,
       List<String> vmArgs,
       Map<String, String> nativeLibsEnvironment,
-      Optional<Path> resourcesRoot,
-      Optional<String> mavenCoords,
       Optional<DummyRDotJava> optionalDummyRDotJava,
       Optional<Long> testRuleTimeoutMs,
       ImmutableMap<String, String> env,
@@ -125,22 +119,14 @@ public class RobolectricTest extends JavaTest {
     super(
         buildRuleParams,
         resolver,
-        srcs,
-        resources,
-        javacOptions.getGeneratedSourceFolderName(),
+        compiledTestsLibrary,
+        additionalClasspathEntries,
         labels,
         contacts,
-        proguardConfig,
-        abiJar,
-        javacOptions.trackClassUsage(),
-        additionalClasspathEntries,
-        TestType.JUNIT,
-        new JavacToJarStepFactory(javacOptions, new BootClasspathAppender()),
+        testType,
         javaOptions.getJavaRuntimeLauncher(),
         vmArgs,
         nativeLibsEnvironment,
-        resourcesRoot,
-        mavenCoords,
         testRuleTimeoutMs,
         env,
         runTestSeparately,

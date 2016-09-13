@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.jvm.java.JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidBinaryBuilder;
@@ -27,6 +28,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
@@ -105,15 +107,16 @@ public class AuditClasspathCommandTest {
         .addSrc(Paths.get("src/com/facebook/test/ProjectTests.java"))
         .build();
 
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        ImmutableSet.of(
+            javaLibraryNode,
+            androidLibraryNode,
+            keystoreNode,
+            testAndroidNode,
+            testJavaNode));
     auditClasspathCommand.printClasspath(
         params,
-        TargetGraphFactory.newInstance(
-            ImmutableSet.of(
-                javaLibraryNode,
-                androidLibraryNode,
-                keystoreNode,
-                testAndroidNode,
-                testJavaNode)),
+        targetGraph,
         ImmutableSet.<BuildTarget>of());
 
     // Still empty.
@@ -126,13 +129,7 @@ public class AuditClasspathCommandTest {
     // - independent targets in the same BUCK file are not included in the output
     auditClasspathCommand.printClasspath(
         params,
-        TargetGraphFactory.newInstance(
-            ImmutableSet.of(
-                javaLibraryNode,
-                androidLibraryNode,
-                keystoreNode,
-                testAndroidNode,
-                testJavaNode)),
+        targetGraph,
         ImmutableSet.of(
             testAndroidTarget));
 
@@ -180,14 +177,16 @@ public class AuditClasspathCommandTest {
             androidLibraryTarget,
             testJavaTarget));
 
+    BuildTarget testJavaCompiledJar = testJavaTarget.withFlavors(COMPILED_TESTS_LIBRARY_FLAVOR);
+
     expectedPaths.add(
         root.resolve(
             BuildTargets
                 .getGenPath(
                     params.getCell().getFilesystem(),
-                    testJavaTarget,
+                    testJavaCompiledJar,
                     "lib__%s__output")
-                .resolve(testJavaTarget.getShortName() + ".jar"))
+                .resolve(testJavaCompiledJar.getShortNameAndFlavorPostfix() + ".jar"))
             .toString());
     expectedClasspath = Joiner.on("\n").join(expectedPaths) + "\n";
     assertEquals(expectedClasspath, console.getTextWrittenToStdOut());

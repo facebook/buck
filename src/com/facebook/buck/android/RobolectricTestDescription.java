@@ -20,10 +20,15 @@ import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
+import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
+import com.facebook.buck.jvm.java.JavacToJarStepFactory;
+import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -38,14 +43,17 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 public class RobolectricTestDescription implements Description<RobolectricTestDescription.Arg> {
 
@@ -129,35 +137,75 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
-    RobolectricTest test =
+    // Rewrite dependencies on tests to actually depend on the code which backs the test.
+    BuildRuleParams testsLibraryParams = params.copyWithDeps(
+        Suppliers.ofInstance(
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(params.getDeclaredDeps().get())
+                .addAll(FluentIterable.from(params.getDeclaredDeps().get())
+                    .filter(JavaTest.class)
+                    .transform(
+                        new Function<JavaTest, BuildRule>() {
+                          @Override
+                          public BuildRule apply(JavaTest input) {
+                            return input.getCompiledTestsLibrary();
+                          }
+                        }))
+                .build()
+        ),
+        params.getExtraDeps()
+    );
+    testsLibraryParams = testsLibraryParams.appendExtraDeps(Iterables.concat(
+        BuildRules.getExportedRules(
+            Iterables.concat(
+                testsLibraryParams.getDeclaredDeps().get(),
+                resolver.getAllRules(args.providedDeps.get()))),
+        pathResolver.filterBuildRuleInputs(
+            javacOptions.getInputs(pathResolver))))
+        .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+
+
+    JavaLibrary testsLibrary =
         resolver.addToIndex(
-            new RobolectricTest(
-                params.appendExtraDeps(
-                    Iterables.concat(
-                        BuildRules.getExportedRules(
-                            Iterables.concat(
-                                params.getDeclaredDeps().get(),
-                                resolver.getAllRules(args.providedDeps.get()))),
-                        pathResolver.filterBuildRuleInputs(
-                            javacOptions.getInputs(pathResolver)))),
+            new DefaultJavaLibrary(
+                testsLibraryParams,
                 pathResolver,
                 args.srcs.get(),
                 validateResources(
                     pathResolver,
                     params.getProjectFilesystem(),
                     args.resources.get()),
-                args.labels.get(),
-                args.contacts.get(),
+                javacOptions.getGeneratedSourceFolderName(),
                 args.proguardConfig.transform(
                     SourcePaths.toSourcePath(params.getProjectFilesystem())),
+                /* postprocessClassesCommands */ ImmutableList.<String>of(),
+                /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),
+                /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
                 new BuildTargetSourcePath(abiJarTarget),
+                javacOptions.trackClassUsage(),
                 additionalClasspathEntries,
-                javacOptions,
+                new JavacToJarStepFactory(javacOptions, new BootClasspathAppender()),
+                args.resourcesRoot,
+                args.mavenCoords,
+                /* tests */ ImmutableSortedSet.<BuildTarget>of(),
+                /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()));
+
+
+    RobolectricTest robolectricTest =
+        resolver.addToIndex(
+            new RobolectricTest(
+                params.copyWithDeps(
+                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(testsLibrary)),
+                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                pathResolver,
+                testsLibrary,
+                additionalClasspathEntries,
+                args.labels.get(),
+                args.contacts.get(),
+                TestType.JUNIT,
                 javaOptions,
                 vmArgs,
                 cxxLibraryEnhancement.nativeLibsEnvironment,
-                args.resourcesRoot,
-                args.mavenCoords,
                 dummyRDotJava,
                 args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
                 args.env.get(),
@@ -171,9 +219,9 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             abiJarTarget,
             pathResolver,
             params,
-            new BuildTargetSourcePath(test.getBuildTarget())));
+            new BuildTargetSourcePath(testsLibrary.getBuildTarget())));
 
-    return test;
+    return robolectricTest;
   }
 
   @SuppressFieldNotInitialized

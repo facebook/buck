@@ -39,6 +39,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaBinary;
 import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildFileTree;
@@ -318,6 +319,7 @@ public class Project {
             projectRule instanceof AndroidResource ||
             projectRule instanceof JavaBinary ||
             projectRule instanceof JavaLibrary ||
+            projectRule instanceof JavaTest ||
             projectRule instanceof CxxLibrary ||
             projectRule instanceof NdkLibrary,
         "project_config() does not know how to process a src_target of type %s (%s).",
@@ -816,7 +818,15 @@ public class Project {
       @Nullable final BuildRule srcTarget) {
 
     final Path basePathForRule = rule.getBuildTarget().getBasePath();
-    new AbstractBreadthFirstTraversal<BuildRule>(rule.getDeps()) {
+
+    Set<BuildRule> targetsToWalk;
+    if (rule instanceof JavaTest) {
+      targetsToWalk = ((JavaTest) rule).getCompiledTestsLibrary().getDeps();
+    } else {
+      targetsToWalk = rule.getDeps();
+    }
+
+    new AbstractBreadthFirstTraversal<BuildRule>(targetsToWalk) {
 
       private final LinkedHashSet<SerializableDependentModule> librariesToAdd =
           Sets.newLinkedHashSet();

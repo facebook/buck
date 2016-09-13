@@ -31,7 +31,7 @@ import com.facebook.buck.rules.TargetGraph;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-public class RoboletrictTestDescriptionTest {
+public class RobolectricTestDescriptionTest {
 
   @Test
   public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
@@ -46,11 +46,13 @@ public class RoboletrictTestDescriptionTest {
             new FakeExportDependenciesRule("//:exporting_rule", pathResolver, exportedRule));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRule roboletricTest = RobolectricTestBuilder.createBuilder(target)
-        .addDep(exportingRule.getBuildTarget())
-        .build(resolver);
+    RobolectricTest roboletricTest =
+        (RobolectricTest) RobolectricTestBuilder.createBuilder(target)
+            .addDep(exportingRule.getBuildTarget())
+            .build(resolver);
 
-    assertThat(roboletricTest.getDeps(), Matchers.<BuildRule>hasItem(exportedRule));
+    assertThat(roboletricTest.getCompiledTestsLibrary().getDeps(),
+        Matchers.<BuildRule>hasItem(exportedRule));
   }
 
   @Test
@@ -66,11 +68,13 @@ public class RoboletrictTestDescriptionTest {
             new FakeExportDependenciesRule("//:exporting_rule", pathResolver, exportedRule));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRule roboletricTest = RobolectricTestBuilder.createBuilder(target)
-        .addProvidedDep(exportingRule.getBuildTarget())
-        .build(resolver);
+    RobolectricTest roboletricTest =
+        (RobolectricTest) RobolectricTestBuilder.createBuilder(target)
+            .addProvidedDep(exportingRule.getBuildTarget())
+            .build(resolver);
 
-    assertThat(roboletricTest.getDeps(), Matchers.<BuildRule>hasItem(exportedRule));
+    assertThat(roboletricTest.getCompiledTestsLibrary().getDeps(),
+        Matchers.<BuildRule>hasItem(exportedRule));
   }
 
 }

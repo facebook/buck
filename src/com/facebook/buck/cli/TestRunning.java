@@ -630,7 +630,9 @@ public class TestRunning {
       if (test instanceof JavaTest) {
         // Look at the transitive dependencies for `tests` attribute that refers to this test.
         JavaTest javaTest = (JavaTest) test;
-        ImmutableSet<JavaLibrary> transitiveDeps = javaTest.getTransitiveClasspathDeps();
+
+        ImmutableSet<JavaLibrary> transitiveDeps =
+            javaTest.getCompiledTestsLibrary().getTransitiveClasspathDeps();
         for (JavaLibrary dep: transitiveDeps) {
           if (dep instanceof JavaLibraryWithTests) {
             ImmutableSortedSet<BuildTarget> depTests = ((JavaLibraryWithTests) dep).getTests();
