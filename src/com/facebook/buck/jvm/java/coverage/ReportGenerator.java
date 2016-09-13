@@ -173,9 +173,12 @@ public class ReportGenerator {
 
                 String[] classesDirs = classesPath.split(":");
                 for (String classesDir : classesDirs) {
-                        for (File clazz : FileUtils.getFiles(new File(classesDir),
-                            coverageIncludes, coverageExcludes)) {
+                        File classesDirFile = new File(classesDir);
+                        if (classesDirFile.exists()) {
+                            for (File clazz : FileUtils.getFiles(classesDirFile,
+                                coverageIncludes, coverageExcludes)) {
                                 analyzer.analyzeAll(clazz);
+                            }
                         }
                 }
 
