@@ -52,7 +52,7 @@ public class AppleConfig {
   private static final Logger LOG = Logger.get(AppleConfig.class);
 
   private static final Pattern XCODE_BUILD_NUMBER_PATTERN =
-      Pattern.compile("Build version ([A-Z0-9]+)");
+      Pattern.compile("Build version ([a-zA-Z0-9]+)");
 
   private final BuckConfig delegate;
 
