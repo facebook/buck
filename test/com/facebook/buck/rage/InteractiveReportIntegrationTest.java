@@ -76,7 +76,7 @@ public class InteractiveReportIntegrationTest {
         new ByteArrayInputStream("0,1\nreport text\n".getBytes("UTF-8")));
 
     Path reportFile = workspace.asCell().getFilesystem().resolve(
-        report.getReportLocalLocation().get());
+        report.getReportSubmitLocation());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);
     zipInspector.assertFileExists("report.json");
@@ -90,7 +90,7 @@ public class InteractiveReportIntegrationTest {
         traceWorkspace,
         new ByteArrayInputStream("1\nreport text\n".getBytes("UTF-8")));
     Path reportFile = traceWorkspace.asCell().getFilesystem().resolve(
-        report.getReportLocalLocation().get());
+        report.getReportSubmitLocation());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);
     assertEquals(5, zipInspector.getZipFileEntries().size());
@@ -102,7 +102,7 @@ public class InteractiveReportIntegrationTest {
         traceWorkspace,
         new ByteArrayInputStream("0,1\nreport text\n".getBytes("UTF-8")));
     Path reportFile = traceWorkspace.asCell().getFilesystem().resolve(
-        report.getReportLocalLocation().get());
+        report.getReportSubmitLocation());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);
     assertEquals(6, zipInspector.getZipFileEntries().size());

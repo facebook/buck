@@ -37,8 +37,9 @@ public interface DefectReporter {
   @BuckStyleImmutable
   interface AbstractDefectSubmitResult {
     String getReportSubmitLocation();
-    Optional<Path> getReportLocalLocation();
     Optional<String> getReportSubmitMessage();
+    Optional<String> getReportSubmitErrorMessage();
+    Optional<Boolean> getUploadSuccess();
   }
 
   @Value.Immutable

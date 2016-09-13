@@ -16,19 +16,20 @@
 
 package com.facebook.buck.rage;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.TestBuildEnvironmentDescription;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
@@ -206,10 +207,7 @@ public class RageCommandIntegrationTest {
           .build();
       ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
       ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-      DefectReporter reporter = new DefaultDefectReporter(
-          filesystem,
-          objectMapper,
-          rageConfig);
+      DefectReporter reporter = new DefaultDefectReporter(filesystem, objectMapper, rageConfig);
       AutomatedReport automatedReport = new AutomatedReport(
           reporter,
           filesystem,
@@ -219,8 +217,12 @@ public class RageCommandIntegrationTest {
           rageConfig,
           EMPTY_EXTRA_INFO_HELPER);
 
-      expectedException.expect(HumanReadableException.class);
-      automatedReport.collectAndSubmitResult();
+      DefectSubmitResult submitReport = automatedReport.collectAndSubmitResult().get();
+      // If upload fails it should store the zip locally and inform the user.
+      assertFalse(submitReport.getReportSubmitErrorMessage().get().isEmpty());
+      ZipInspector zipInspector = new ZipInspector(
+          filesystem.resolve(submitReport.getReportSubmitLocation()));
+      assertEquals(zipInspector.getZipFileEntries().size(), 5);
     }
   }
 

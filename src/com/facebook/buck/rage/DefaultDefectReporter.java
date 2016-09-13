@@ -19,7 +19,6 @@ package com.facebook.buck.rage;
 import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
@@ -95,31 +94,36 @@ public class DefaultDefectReporter implements DefectReporter {
     }
   }
 
-
   @Override
   public DefectSubmitResult submitReport(DefectReport defectReport) throws IOException {
+    DefectSubmitResult.Builder defectSubmitResult = DefectSubmitResult.builder();
     if (rageConfig.getReportUploadUri().isPresent()) {
       URI uri = rageConfig.getReportUploadUri().get();
-      String response = uploadReport(defectReport, uri);
-      return DefectSubmitResult.builder()
-          .setReportSubmitLocation(uri.toString())
-          .setReportSubmitMessage(response)
-          .build();
-    } else {
-      filesystem.mkdirs(filesystem.getBuckPaths().getBuckOut());
-      Path defectReportPath = filesystem.createTempFile(
-          filesystem.getBuckPaths().getBuckOut(),
-          "defect_report",
-          ".zip");
-      try (OutputStream outputStream = filesystem.newFileOutputStream(defectReportPath)) {
-        writeReport(defectReport, outputStream);
+      try {
+        String response = uploadReport(defectReport, uri);
+        return defectSubmitResult
+            .setReportSubmitLocation(uri.toString())
+            .setReportSubmitMessage(response)
+            .setUploadSuccess(true)
+            .build();
+      } catch (IOException e) {
+        defectSubmitResult.setReportSubmitErrorMessage(e.getMessage());
+        defectSubmitResult.setUploadSuccess(false);
       }
-      return DefectSubmitResult.builder()
-          .setReportSubmitLocation(defectReportPath.toString())
-          .setReportLocalLocation(defectReportPath)
-          .build();
     }
-  }
+
+    filesystem.mkdirs(filesystem.getBuckPaths().getBuckOut());
+    Path defectReportPath = filesystem.createTempFile(
+        filesystem.getBuckPaths().getBuckOut(),
+        "defect_report",
+        ".zip");
+    try (OutputStream outputStream = filesystem.newFileOutputStream(defectReportPath)) {
+      writeReport(defectReport, outputStream);
+    }
+    return defectSubmitResult
+        .setReportSubmitLocation(defectReportPath.toString())
+        .build();
+}
 
   private void writeReport(
       DefectReport defectReport,
@@ -156,16 +160,19 @@ public class DefaultDefectReporter implements DefectReporter {
         outputStream.flush();
       }
       if (connection.getResponseCode() != 200) {
-        throw new IOException(connection.getResponseMessage());
+        throw new IOException(
+            String.format("Connection to %s returned code %d and message: %s", uri.toString(),
+            connection.getResponseCode(),
+            connection.getResponseMessage()));
       }
       try (InputStream inputStream = connection.getInputStream()) {
         return CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8));
       }
     } catch (IOException e) {
-      throw new HumanReadableException(
-          "Failed uploading report to [%s] because [%s].",
-          uri,
-          e.getMessage());
+      throw new IOException(
+          String.format("Failed uploading report to [%s] because [%s].",
+              uri,
+              e.getMessage()));
     } finally {
       connection.disconnect();
     }

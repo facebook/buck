@@ -99,14 +99,21 @@ public class RageCommand extends AbstractCommand {
       return 0;
     }
 
-    String uploadPrefix =
-        (defectSubmitResult.get().getReportSubmitLocation().startsWith("http://")) ?
-            ("Uploading report to") :
-            ("Report saved to");
-
-    stdOut.printf("%s %s\n", uploadPrefix, defectSubmitResult.get().getReportSubmitLocation());
-    if (defectSubmitResult.get().getReportSubmitMessage().isPresent()) {
-      stdOut.println(defectSubmitResult.get().getReportSubmitMessage().get());
+    String reportLocation = defectSubmitResult.get().getReportSubmitLocation();
+    if (defectSubmitResult.get().getUploadSuccess().isPresent()) {
+      if (defectSubmitResult.get().getUploadSuccess().get()) {
+        stdOut.printf(
+            "Uploading report to %s\n%s",
+            reportLocation,
+            defectSubmitResult.get().getReportSubmitMessage().get());
+      } else {
+        stdOut.printf(
+            "%s\nReport saved at %s\n",
+            defectSubmitResult.get().getReportSubmitErrorMessage().get(),
+            reportLocation);
+      }
+    } else {
+      stdOut.printf("Report saved at %s\n", reportLocation);
     }
     return 0;
   }
