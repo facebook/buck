@@ -2681,7 +2681,6 @@ public class CachingBuildEngineTest {
               pathResolver,
               RuleScheduleInfo.builder()
                   .setJobsMultiplier(2)
-                  .setResourceAmounts(ResourceAmounts.of(2, 0, 0, 0))
                   .build());
       ControlledRule rule2 =
           new ControlledRule(
@@ -2691,7 +2690,6 @@ public class CachingBuildEngineTest {
               pathResolver,
               RuleScheduleInfo.builder()
                   .setJobsMultiplier(2)
-                  .setResourceAmounts(ResourceAmounts.of(2, 0, 0, 0))
                   .build());
       ListeningMultiSemaphore semaphore = new ListeningMultiSemaphore(
           ResourceAmounts.of(3, 0, 0, 0),

@@ -311,7 +311,6 @@ public class CachingBuildEngine implements BuildEngine {
 
         // Otherwise, build the rule.  We re-submit via the service so that we schedule
         // it with the custom weight assigned to this rules steps.
-        RuleScheduleInfo ruleScheduleInfo = getRuleScheduleInfo(rule);
         return service.submit(
             new Callable<BuildResult>() {
               @Override
@@ -331,7 +330,7 @@ public class CachingBuildEngine implements BuildEngine {
                 }
               }
             },
-            getResourceAmountsForScheduleInfo(ruleScheduleInfo));
+            getRuleResourceAmounts(rule));
       }
     };
   }
@@ -1681,21 +1680,32 @@ public class CachingBuildEngine implements BuildEngine {
     return Optional.absent();
   }
 
-  private static RuleScheduleInfo getRuleScheduleInfo(BuildRule rule) {
-    if (rule instanceof OverrideScheduleRule) {
-      return ((OverrideScheduleRule) rule).getRuleScheduleInfo();
+  private ResourceAmounts getRuleResourceAmounts(BuildRule rule) {
+    if (resourceAwareSchedulingInfo.isResourceAwareSchedulingEnabled()) {
+      return getResourceAmountsForRuleOrDefaultAmounts(rule);
+    } else {
+      return getResourceAmountsForRuleWithCustomScheduleInfo(rule);
     }
-    return RuleScheduleInfo.DEFAULT;
   }
 
-  private ResourceAmounts getResourceAmountsForScheduleInfo(RuleScheduleInfo ruleScheduleInfo) {
-    ResourceAmounts amounts;
-    if (resourceAwareSchedulingInfo.isResourceAwareSchedulingEnabled()) {
-      amounts = ruleScheduleInfo.getResourceAmounts();
+  private ResourceAmounts getResourceAmountsForRuleOrDefaultAmounts(BuildRule rule) {
+    Preconditions.checkArgument(resourceAwareSchedulingInfo.isResourceAwareSchedulingEnabled());
+    if (resourceAwareSchedulingInfo.getAmountsPerRuleType().containsKey(rule.getType())) {
+      return resourceAwareSchedulingInfo.getAmountsPerRuleType().get(rule.getType());
     } else {
-      amounts = ResourceAmounts.of(ruleScheduleInfo.getJobsMultiplier(), 0, 0, 0);
+      return resourceAwareSchedulingInfo.getDefaultResourceAmounts();
     }
-    return amounts;
+  }
+
+  private ResourceAmounts getResourceAmountsForRuleWithCustomScheduleInfo(BuildRule rule) {
+    Preconditions.checkArgument(!resourceAwareSchedulingInfo.isResourceAwareSchedulingEnabled());
+    RuleScheduleInfo ruleScheduleInfo;
+    if (rule instanceof OverrideScheduleRule) {
+      ruleScheduleInfo = ((OverrideScheduleRule) rule).getRuleScheduleInfo();
+    } else {
+      ruleScheduleInfo = RuleScheduleInfo.DEFAULT;
+    }
+    return ResourceAmounts.of(ruleScheduleInfo.getJobsMultiplier(), 0, 0, 0);
   }
 
   /**

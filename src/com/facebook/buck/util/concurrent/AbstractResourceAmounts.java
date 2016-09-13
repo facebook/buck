@@ -31,6 +31,11 @@ abstract class AbstractResourceAmounts {
   @Value.Parameter
   public abstract int getNetworkIO();
 
+  /**
+   * If you add or remove resource types above please make sure you update the number below.
+   */
+  public static final int RESOURCE_TYPE_COUNT = 4;
+
   public static final ResourceAmounts ZERO = ResourceAmounts.of(0, 0, 0, 0);
 
   public ResourceAmounts append(ResourceAmounts amounts) {

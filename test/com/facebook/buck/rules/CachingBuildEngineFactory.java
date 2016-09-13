@@ -46,7 +46,7 @@ public class CachingBuildEngineFactory {
   private WeightedListeningExecutorService executorService;
   private BuildRuleResolver buildRuleResolver;
   private ResourceAwareSchedulingInfo resourceAwareSchedulingInfo =
-      ResourceAwareSchedulingInfo.of(false);
+      ResourceAwareSchedulingInfo.NON_AWARE_SCHEDULING_INFO;
 
   public CachingBuildEngineFactory(BuildRuleResolver buildRuleResolver) {
     this.cachingBuildEngineDelegate =

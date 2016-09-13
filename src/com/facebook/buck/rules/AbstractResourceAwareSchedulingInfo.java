@@ -15,12 +15,29 @@
  */
 package com.facebook.buck.rules;
 
+import com.facebook.buck.util.concurrent.ResourceAmounts;
+import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractResourceAwareSchedulingInfo {
+
+  public static final ResourceAwareSchedulingInfo NON_AWARE_SCHEDULING_INFO =
+      ResourceAwareSchedulingInfo.of(
+          false,
+          ResourceAmountsEstimator.DEFAULT_AMOUNTS,
+          ImmutableMap.<String, ResourceAmounts>of());
+
   public abstract boolean isResourceAwareSchedulingEnabled();
+
+  public abstract ResourceAmounts getDefaultResourceAmounts();
+
+  /**
+   * Map from the value of {@link BuildRule#getType()} to the required resources.
+   */
+  public abstract ImmutableMap<String, ResourceAmounts> getAmountsPerRuleType();
 }
