@@ -79,6 +79,9 @@ public class InteractiveReport extends AbstractReport {
         interestingBuildLogs.add(entry);
       }
     }
+    if (interestingBuildLogs.isEmpty()) {
+      return ImmutableSet.of();
+    }
 
     // Sort the interesting builds based on time, reverse order so the most recent is first.
     Collections.sort(interestingBuildLogs, new Comparator<BuildLogEntry>() {

@@ -72,10 +72,14 @@ public abstract class AbstractReport {
       throws IOException, InterruptedException;
   protected abstract Optional<UserReport> getUserReport() throws IOException;
 
-  public final DefectSubmitResult collectAndSubmitResult()
+  public final Optional<DefectSubmitResult> collectAndSubmitResult()
       throws IOException, InterruptedException {
 
     ImmutableSet<BuildLogEntry> highlightedBuilds = promptForBuildSelection();
+    if (highlightedBuilds.isEmpty()) {
+      return Optional.absent();
+    }
+
     Optional<UserReport> userReport = getUserReport();
     Optional<SourceControlInfo> sourceControlInfo = getSourceControlInfo();
 
@@ -130,7 +134,7 @@ public abstract class AbstractReport {
         .build();
 
     output.println("Writing report, please wait..");
-    return defectReporter.submitReport(defectReport);
+    return Optional.of(defectReporter.submitReport(defectReport));
   }
 
   @Value.Immutable

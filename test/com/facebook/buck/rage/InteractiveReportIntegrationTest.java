@@ -134,6 +134,6 @@ public class InteractiveReportIntegrationTest {
             VcsInfoCollector.create(new NoOpCmdLineInterface()),
             rageConfig,
             extraInfoCollector);
-    return interactiveReport.collectAndSubmitResult();
+    return interactiveReport.collectAndSubmitResult().get();
   }
 }

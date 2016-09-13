@@ -125,7 +125,7 @@ public class RageCommandIntegrationTest {
           VcsInfoCollector.create(new NoOpCmdLineInterface()),
           rageConfig,
           EMPTY_EXTRA_INFO_HELPER);
-      DefectSubmitResult defectSubmitResult = automatedReport.collectAndSubmitResult();
+      DefectSubmitResult defectSubmitResult = automatedReport.collectAndSubmitResult().get();
 
       assertThat(
           defectSubmitResult.getReportSubmitMessage(),
