@@ -51,8 +51,8 @@ public class LimitedThreadPoolExecutor extends ThreadPoolExecutor {
       BlockingQueue<Runnable> workQueue,
       ConcurrencyLimit concurrencyLimit) {
     super(
-        /* corePoolSize */ concurrencyLimit.threadLimit,
-        /* maximumPoolSize */ concurrencyLimit.threadLimit,
+        /* corePoolSize */ concurrencyLimit.managedThreadCount,
+        /* maximumPoolSize */ concurrencyLimit.managedThreadCount,
         /* keepAliveTime */ 0L, TimeUnit.MILLISECONDS,
         /* workQueue */ workQueue,
         /* threadFactory */ threadFactory,

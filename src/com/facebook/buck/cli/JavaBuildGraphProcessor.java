@@ -140,7 +140,8 @@ final class JavaBuildGraphProcessor {
           params.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
           params.getObjectMapper(),
           buildRuleResolver,
-          params.getBuckConfig().getKeySeed());
+          params.getBuckConfig().getKeySeed(),
+          params.getBuckConfig().getResourceAwareSchedulingInfo());
 
       // Create a BuildEngine because we store symbol information as build artifacts.
       BuckEventBus eventBus = params.getBuckEventBus();

@@ -35,16 +35,28 @@ public class ConcurrencyLimit {
    * tasks, I/O blocking tasks, etc.
    */
   public final int managedThreadCount;
+  /**
+   * Default resource amounts that job would require.
+   */
+  public final ResourceAmounts defaultAmounts;
+  /**
+   * Maximum resource amounts that are available on the system for all jobs to share.
+   */
+  public final ResourceAmounts maximumAmounts;
 
   public ConcurrencyLimit(
       int threadLimit,
       double loadLimit,
       ResourceAllocationFairness resourceAllocationFairness,
-      int managedThreadCount) {
+      int managedThreadCount,
+      ResourceAmounts defaultAmounts,
+      ResourceAmounts maximumAmounts) {
     this.threadLimit = threadLimit;
     this.loadLimit = loadLimit;
     this.resourceAllocationFairness = resourceAllocationFairness;
     this.managedThreadCount = managedThreadCount;
+    this.defaultAmounts = defaultAmounts;
+    this.maximumAmounts = maximumAmounts;
 
     Preconditions.checkArgument(
         threadLimit <= managedThreadCount,

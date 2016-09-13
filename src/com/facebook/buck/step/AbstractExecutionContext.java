@@ -124,7 +124,9 @@ abstract class AbstractExecutionContext implements Closeable {
         /* threadLimit */ Runtime.getRuntime().availableProcessors(),
         /* loadLimit */ Double.POSITIVE_INFINITY,
         ResourceAllocationFairness.FAIR,
-        ResourceAmountsEstimator.DEFAULT_MANAGED_THREAD_COUNT);
+        ResourceAmountsEstimator.DEFAULT_MANAGED_THREAD_COUNT,
+        ResourceAmountsEstimator.DEFAULT_AMOUNTS,
+        ResourceAmountsEstimator.DEFAULT_MAXIMUM_AMOUNTS);
   }
 
   @Value.Default

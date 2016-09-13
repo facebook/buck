@@ -52,6 +52,21 @@ public class WeightedListeningExecutorService extends AbstractListeningExecutorS
     this.delegate = delegate;
   }
 
+  /**
+   * Creates a new service that has different default resource amounts. Useful when you need to
+   * propagate explicit default amounts when you submit the job through execute(),
+   * Futures.transform() and similar calls.
+   * @param newDefaultAmounts new default amounts
+   * @return Service that uses the same semaphore and delegate but with the given default resource
+   * amounts.
+   */
+  public WeightedListeningExecutorService withDefaultAmounts(ResourceAmounts newDefaultAmounts) {
+    if (newDefaultAmounts.equals(defaultValues)) {
+      return this;
+    }
+    return new WeightedListeningExecutorService(semaphore, newDefaultAmounts, delegate);
+  }
+
   private <T> ListenableFuture<T> submitWithSemaphore(
       final Callable<T> callable,
       final ResourceAmounts amounts) {

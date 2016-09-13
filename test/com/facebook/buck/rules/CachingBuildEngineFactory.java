@@ -45,6 +45,8 @@ public class CachingBuildEngineFactory {
   private CachingBuildEngineDelegate cachingBuildEngineDelegate;
   private WeightedListeningExecutorService executorService;
   private BuildRuleResolver buildRuleResolver;
+  private ResourceAwareSchedulingInfo resourceAwareSchedulingInfo =
+      ResourceAwareSchedulingInfo.of(false);
 
   public CachingBuildEngineFactory(BuildRuleResolver buildRuleResolver) {
     this.cachingBuildEngineDelegate =
@@ -111,6 +113,12 @@ public class CachingBuildEngineFactory {
     return this;
   }
 
+  public CachingBuildEngineFactory setResourceAwareSchedulingInfo(
+      ResourceAwareSchedulingInfo resourceAwareSchedulingInfo) {
+    this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
+    return this;
+  }
+
   public CachingBuildEngine build() {
     if (ruleKeyFactoriesFunction.isPresent()) {
       return new CachingBuildEngine(
@@ -121,7 +129,8 @@ public class CachingBuildEngineFactory {
           maxDepFileCacheEntries,
           artifactCacheSizeLimit,
           new SourcePathResolver(buildRuleResolver),
-          ruleKeyFactoriesFunction.get());
+          ruleKeyFactoriesFunction.get(),
+          resourceAwareSchedulingInfo);
     }
 
     return new CachingBuildEngine(
@@ -134,7 +143,8 @@ public class CachingBuildEngineFactory {
         inputFileSizeLimit,
         objectMapper,
         buildRuleResolver,
-        0);
+        0,
+        resourceAwareSchedulingInfo);
   }
 
   private static WeightedListeningExecutorService toWeighted(ListeningExecutorService service) {

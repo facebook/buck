@@ -295,7 +295,9 @@ public class TestCommand extends BuildCommand {
         getNumTestThreads(params.getBuckConfig()),
         params.getBuckConfig().getLoadLimit(),
         params.getBuckConfig().getResourceAllocationFairness(),
-        getNumTestManagedThreads(params.getBuckConfig()));
+        getNumTestManagedThreads(params.getBuckConfig()),
+        params.getBuckConfig().getDefaultResourceAmounts(),
+        params.getBuckConfig().getMaximumResourceAmounts());
     try (
         CommandThreadManager testPool = new CommandThreadManager(
             "Test-Run",
@@ -500,7 +502,8 @@ public class TestCommand extends BuildCommand {
               params.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
               params.getObjectMapper(),
               actionGraphAndResolver.getResolver(),
-              params.getBuckConfig().getKeySeed());
+              params.getBuckConfig().getKeySeed(),
+              params.getBuckConfig().getResourceAwareSchedulingInfo());
       try (Build build = createBuild(
           params.getBuckConfig(),
           actionGraphAndResolver.getActionGraph(),

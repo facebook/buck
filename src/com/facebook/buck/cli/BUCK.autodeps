@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 736360df092aebf438ae2af2ea2a6e158a77600f #@#
+#@# GENERATED FILE: DO NOT MODIFY 6e10ed5516b5d115d3de4f042d988279b2962130 #@#
 {
   "cli" : {
     "deps" : [
@@ -121,7 +121,6 @@
     "deps" : [
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/parser:rule_pattern",
-      "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/util/environment:env-filter",
       "//src/com/facebook/buck/util/network/hostname:hostname"
     ],
@@ -134,6 +133,7 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:interfaces",
+      "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/slb:slb",
       "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:constants",

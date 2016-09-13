@@ -184,6 +184,7 @@ java_immutables_library(
   name = 'rules',
   srcs = [
     'AbstractBuildRuleKeys.java',
+    'AbstractResourceAwareSchedulingInfo.java',
     'AbstractRuleScheduleInfo.java',
     'AssociatedTargetNodePredicate.java',
     'BinaryWrapperRule.java',
@@ -212,6 +213,7 @@ java_immutables_library(
   ],
   immutable_types = [
     'BuildRuleKeys',
+    'ResourceAwareSchedulingInfo',
     'RuleScheduleInfo',
   ],
   tests = [

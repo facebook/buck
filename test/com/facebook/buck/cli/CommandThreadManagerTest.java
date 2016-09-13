@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
+import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,7 +43,9 @@ public class CommandThreadManagerTest {
         /* threadLimit */ 1,
         /* loadLimit */ Double.POSITIVE_INFINITY,
         ResourceAllocationFairness.FAIR,
-        /* managedThreadCount */ 1);
+        /* managedThreadCount */ 1,
+        ResourceAmountsEstimator.DEFAULT_AMOUNTS,
+        ResourceAmountsEstimator.DEFAULT_MAXIMUM_AMOUNTS.withCpu(1));
 
     try (CommandThreadManager pool =
              new CommandThreadManager(

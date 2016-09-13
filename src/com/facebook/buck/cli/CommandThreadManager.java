@@ -24,7 +24,6 @@ import com.facebook.buck.util.concurrent.LimitedThreadPoolExecutor;
 import com.facebook.buck.util.concurrent.LinkedBlockingStack;
 import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;
 import com.facebook.buck.util.concurrent.MostExecutors;
-import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -69,9 +68,9 @@ public class CommandThreadManager implements AutoCloseable {
     this.executor =
         new WeightedListeningExecutorService(
             new ListeningMultiSemaphore(
-                ResourceAmounts.of(concurrencyLimit.threadLimit, 0, 0, 0),
+                concurrencyLimit.maximumAmounts,
                 concurrencyLimit.resourceAllocationFairness),
-            /* defaultPermits */ ResourceAmounts.of(1, 0, 0, 0),
+            /* defaultPermits */ concurrencyLimit.defaultAmounts,
             listeningDecorator(
                 new LimitedThreadPoolExecutor(
                     new ThreadFactoryBuilder()

@@ -35,6 +35,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.ResourceAwareSchedulingInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
@@ -974,6 +975,10 @@ public class BuckConfig {
         false);
   }
 
+  public ResourceAwareSchedulingInfo getResourceAwareSchedulingInfo() {
+    return ResourceAwareSchedulingInfo.of(isResourceAwareSchedulingEnabled());
+  }
+
   public int getManagedThreadCount() {
     if (!isResourceAwareSchedulingEnabled()) {
       return getNumThreads();
@@ -1012,5 +1017,4 @@ public class BuckConfig {
             BuckConfig.RESOURCES_SECTION_HEADER,
             "max_network_io_resource").or(estimated.getNetworkIO()));
   }
-
 }

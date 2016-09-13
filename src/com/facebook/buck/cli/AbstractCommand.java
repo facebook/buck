@@ -270,7 +270,9 @@ public abstract class AbstractCommand implements Command {
         buckConfig.getNumThreads(),
         loadLimit,
         buckConfig.getResourceAllocationFairness(),
-        buckConfig.getManagedThreadCount());
+        buckConfig.getManagedThreadCount(),
+        buckConfig.getDefaultResourceAmounts(),
+        buckConfig.getMaximumResourceAmounts());
   }
 
   protected ImmutableList<String> getOptions() {
