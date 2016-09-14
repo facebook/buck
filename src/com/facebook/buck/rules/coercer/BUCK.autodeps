@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY 43318b59311bb62009c612bdafb9a5447947618c #@#
+#@# GENERATED FILE: DO NOT MODIFY a82b5a51ed72fc681b13e856e4a70196cbb5f04e #@#
 {
   "coercer" : {
     "deps" : [
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/util:exceptions",
       "//third-party/java/immutables:processor"

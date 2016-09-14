@@ -1,9 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY e652af1285ff58a36796c4e108568904c43769d3 #@#
+#@# GENERATED FILE: DO NOT MODIFY 719ddf300ec7c16a69a5ec8dfe8703ce9db9b07e #@#
 {
   "haskell" : {
     "deps" : [
       "//src/com/facebook/buck/file:rules",
       "//src/com/facebook/buck/graph:graph",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:exceptions",

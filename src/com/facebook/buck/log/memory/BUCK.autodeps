@@ -1,8 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY 7dbb5f2d932f40c9564243bbbd541a99cc98e355 #@#
+#@# GENERATED FILE: DO NOT MODIFY f1dd930abbfd69f4893447430ba8ab186d5a485d #@#
 {
   "memory" : {
     "deps" : [
-      "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/event/listener:listener",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:object_mapper",

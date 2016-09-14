@@ -1,9 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY 0727c75b37339653fdd16c08aa4e241ed35ed3cb #@#
+#@# GENERATED FILE: DO NOT MODIFY 9ef4f48c9b6f8ab85876d5426e7d3ff71a7a6a5f #@#
 {
   "lua" : {
     "deps" : [
       "//src/com/facebook/buck/file:rules",
       "//src/com/facebook/buck/graph:graph",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/python:rules",
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/rules/args:args",

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 958a222a54c0834dc98fc1678e398553026edaeb #@#
+#@# GENERATED FILE: DO NOT MODIFY 93991900f2e0ba0c48ae56f73dd4c6a1a46a765d #@#
 {
   "integration" : {
     "deps" : [
@@ -8,6 +8,7 @@
       "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/config:config",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/io:watchman",

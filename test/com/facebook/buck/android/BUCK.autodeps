@@ -1,8 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY ad645fcbc81f941bc42c256a52c3b21aeabfdb95 #@#
+#@# GENERATED FILE: DO NOT MODIFY 0520abdb284648642fcd1f8e8bfc31a5966efcff #@#
 {
   "aar-integration" : {
     "deps" : [
       "//src/com/facebook/buck/android:rules",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/zip:unzip",
@@ -66,6 +67,7 @@
       "//src/com/facebook/buck/android:utils",
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
       "//src/com/facebook/buck/cxx:rules",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
@@ -95,6 +97,7 @@
       "//src/com/facebook/buck/android/aapt:aapt",
       "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/dalvik:dalvik",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
@@ -158,6 +161,7 @@
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/dalvik:steps",
       "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/core:classhash",

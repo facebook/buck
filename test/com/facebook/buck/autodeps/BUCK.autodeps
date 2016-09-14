@@ -1,10 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY 8e7cbe48dcf73f2d9e17dbe62950a8f130637d37 #@#
+#@# GENERATED FILE: DO NOT MODIFY 09a4b0e6b3251f2a3f9378838661703e1d85d0d5 #@#
 {
   "autodeps" : {
     "deps" : [
       "//src/com/facebook/buck/autodeps:autodeps",
       "//src/com/facebook/buck/autodeps:model",
-      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/util:object_mapper",
       "//test/com/facebook/buck/model:testutil",

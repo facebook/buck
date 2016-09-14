@@ -1,9 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY ce96d6bdc9153c9720bd5c3706acb715791d573f #@#
+#@# GENERATED FILE: DO NOT MODIFY 497135d7912c0b9282ec78050ae6582d2f0a37ad #@#
 {
   "testutil" : {
     "deps" : [
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/io:DefaultProjectFilesystemDelegate",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/util:tristate",
       "//src/com/facebook/buck/util/environment:platform",

@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY 79b3ac45aa2d5856a895c4f921d543e7974aa0c1 #@#
+#@# GENERATED FILE: DO NOT MODIFY a98d8aa5e733ac4b3ef0da78daea5dc363f19191 #@#
 {
   "swift" : {
     "deps" : [
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/step/fs:fs",

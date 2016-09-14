@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 2e57b26fb003ba91b30d618e621dc8bb49e8853a #@#
+#@# GENERATED FILE: DO NOT MODIFY d72c7ad98d585b8b22762045968ebfe93432e739 #@#
 {
   "platform" : {
     "deps" : [
@@ -20,6 +20,7 @@
       "//src/com/facebook/buck/file:rules",
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/halide:halide",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/js:js",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/model:macros",

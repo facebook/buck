@@ -17,6 +17,7 @@
 package com.facebook.buck.apple.project_generator;
 
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Charsets;
@@ -260,7 +261,7 @@ class WorkspaceGenerator {
       StreamResult result = new StreamResult(outputStream);
       transformer.transform(source, result);
       String contentsToWrite = outputStream.toString();
-      if (MorePaths.fileContentsDiffer(
+      if (MoreProjectFilesystems.fileContentsDiffer(
           new ByteArrayInputStream(contentsToWrite.getBytes(Charsets.UTF_8)),
           serializedWorkspace,
           projectFilesystem)) {

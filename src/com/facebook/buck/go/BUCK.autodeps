@@ -1,10 +1,11 @@
-#@# GENERATED FILE: DO NOT MODIFY cf39a075369ecf5bb17665135cf762a3b2ee07c1 #@#
+#@# GENERATED FILE: DO NOT MODIFY b16787da07e9dc062149e390279dc40ec2777ea1 #@#
 {
   "go" : {
     "deps" : [
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/file:rules",
       "//src/com/facebook/buck/graph:graph",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/rules:command_tool",

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY d6aa44c5632a337974e66c047e0fe53f6f5095bd #@#
+#@# GENERATED FILE: DO NOT MODIFY c2fa2549cbb9046be2266d0a1b97793891d0716a #@#
 {
   "rage" : {
     "deps" : [
@@ -8,7 +8,6 @@
       "//src/com/facebook/buck/rage:config",
       "//src/com/facebook/buck/rage:rage",
       "//src/com/facebook/buck/rules:types",
-      "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util:tristate",

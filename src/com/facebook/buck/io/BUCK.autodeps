@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 3c6859e09e8a7f8e429450e5f60c33ad61cda899 #@#
+#@# GENERATED FILE: DO NOT MODIFY 7f8c803af7d847a040c8b8ce3f95abf4300f9938 #@#
 {
   "BuckPaths" : {
     "deps" : [
@@ -15,6 +15,16 @@
     "exported_deps" : [
       "//src/com/facebook/buck/io:ProjectFilesystemDelegate",
       "//src/com/facebook/buck/util/sha1:sha1"
+    ]
+  },
+  "MorePaths.java" : {
+    "deps" : [
+      "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util/environment:platform",
+      "//third-party/java/jsr:jsr305"
+    ],
+    "exported_deps" : [
+      "//third-party/java/guava:guava"
     ]
   },
   "ProjectFilesystemDelegate" : {
@@ -49,10 +59,10 @@
   },
   "io" : {
     "deps" : [
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:ProjectFilesystemDelegateFactory",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:constants",
-      "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util/concurrent:concurrent",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/zip:stream",

@@ -1,9 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY 1e263eafaf1e6904e3782f945a2c00f3df368063 #@#
+#@# GENERATED FILE: DO NOT MODIFY a89713194670cd7923ff25c8601cb97941314e29 #@#
 {
   "crosscell" : {
     "deps" : [
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/event/listener:BroadcastEventListener",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/json:json",
       "//src/com/facebook/buck/model:model",

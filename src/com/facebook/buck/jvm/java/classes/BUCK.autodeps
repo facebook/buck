@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY dfd00a3f06e9d79c307f9bc49453cb46ed669792 #@#
+#@# GENERATED FILE: DO NOT MODIFY 111eab292a033963a8a47b1499800884e2661521 #@#
 {
   "classes" : {
     "deps" : [
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/util:util"
     ],
     "exported_deps" : [

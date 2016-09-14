@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 009201938877526b2a058ce43306f5775a2e89a2 #@#
+#@# GENERATED FILE: DO NOT MODIFY 3638a999055b7d9ccebf99ec261541409e9050ad #@#
 {
   "testutil" : {
     "deps" : [
@@ -17,6 +17,7 @@
   "util" : {
     "deps" : [
       "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/io:watchman",
       "//src/com/facebook/buck/model:build_id",

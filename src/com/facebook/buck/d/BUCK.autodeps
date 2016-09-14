@@ -1,8 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 02834f29414d4e2289858ee98950607b291b7a0f #@#
+#@# GENERATED FILE: DO NOT MODIFY 47d2e726599e0820f41385308e5e88dd62ff9ba5 #@#
 {
   "d" : {
     "deps" : [
       "//src/com/facebook/buck/graph:graph",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/rules:command_tool",

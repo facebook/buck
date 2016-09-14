@@ -23,6 +23,20 @@ java_library(
   ]
 )
 
+# This is its own rule that should have limited dependencies
+# because it is meant to have widespread utility.
+MORE_PATHS_SRCS = [
+  'MorePaths.java',
+]
+java_library(
+  name = 'MorePaths.java',
+  srcs = MORE_PATHS_SRCS,
+  autodeps = True,
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
 PROJECT_FILESYSTEM_DELEGATE_FACTORY_SRCS = [
   'ProjectFilesystemDelegateFactory.java',
 ]
@@ -87,6 +101,7 @@ java_immutables_library(
     BUCK_PATHS_SRCS +
     DEFAULT_FILESYSTEM_DELEGATE_SRCS +
     FINDER_SRCS +
+    MORE_PATHS_SRCS +
     PROJECT_FILESYSTEM_DELEGATE_FACTORY_SRCS +
     PROJECT_FILESYSTEM_DELEGATE_SRCS +
     WATCHMAN_SRCS)

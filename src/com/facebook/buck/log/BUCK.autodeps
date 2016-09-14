@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY ad39127dd6db86f79b715c3739b2a3d49a4f7cd2 #@#
+#@# GENERATED FILE: DO NOT MODIFY b70c0f6928c5dbb2be729bb2d74ea32ce0c41dcd #@#
 {
   "log" : {
     "deps" : [
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/log:appendablelogrecord",

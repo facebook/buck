@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY e50f7716fbe3693957e3d6cb8503dcfc7d89f35b #@#
+#@# GENERATED FILE: DO NOT MODIFY fffa6dd093b1c854a39814ee9230321623825fb5 #@#
 {
   "config" : {
     "deps" : [ ],
@@ -13,6 +13,7 @@
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/groups:groups",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:io",

@@ -19,7 +19,7 @@ package com.facebook.buck.apple.project_generator;
 import com.facebook.buck.apple.SchemeActionType;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
@@ -226,7 +226,7 @@ class SchemeGenerator {
     try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
       serializeScheme(scheme, outputStream);
       String contentsToWrite = outputStream.toString();
-      if (MorePaths.fileContentsDiffer(
+      if (MoreProjectFilesystems.fileContentsDiffer(
           new ByteArrayInputStream(contentsToWrite.getBytes(Charsets.UTF_8)),
           schemePath,
           projectFilesystem)) {

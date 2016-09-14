@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 8c0e3d4794369ea1b12c9c38f566d7e268699b02 #@#
+#@# GENERATED FILE: DO NOT MODIFY 4354eddf8826edebd78e5d10fdba8967e7965071 #@#
 {
   "dalvik" : {
     "deps" : [
@@ -6,6 +6,7 @@
       "//src/com/facebook/buck/dalvik:dalvik",
       "//src/com/facebook/buck/dalvik:dalvik_stats_tool",
       "//src/com/facebook/buck/dalvik:steps",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/java/classes:classes",
       "//src/com/facebook/buck/model:model",

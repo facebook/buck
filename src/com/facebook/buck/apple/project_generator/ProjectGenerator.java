@@ -76,6 +76,7 @@ import com.facebook.buck.halide.HalideCompile;
 import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
 import com.facebook.buck.log.Logger;
@@ -1816,7 +1817,7 @@ public class ProjectGenerator {
       }
       String xcconfigContents = stringBuilder.toString();
 
-      if (MorePaths.fileContentsDiffer(
+      if (MoreProjectFilesystems.fileContentsDiffer(
           new ByteArrayInputStream(xcconfigContents.getBytes(Charsets.UTF_8)),
           xcconfigPath,
           projectFilesystem)) {
@@ -2133,7 +2134,7 @@ public class ProjectGenerator {
     Path serializedProject = xcodeprojDir.resolve("project.pbxproj");
     String contentsToWrite = rootObject.toXMLPropertyList();
     // Before we write any files, check if the file contents have changed.
-    if (MorePaths.fileContentsDiffer(
+    if (MoreProjectFilesystems.fileContentsDiffer(
         new ByteArrayInputStream(contentsToWrite.getBytes(Charsets.UTF_8)),
         serializedProject,
         projectFilesystem)) {

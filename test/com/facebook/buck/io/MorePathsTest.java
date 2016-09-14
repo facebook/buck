@@ -86,7 +86,7 @@ public class MorePathsTest {
 
     Path pathToDesiredLinkUnderProjectRoot = Paths.get("gamma.txt");
     Path pathToExistingFileUnderProjectRoot = Paths.get("biz.txt");
-    Path relativePath = MorePaths.createRelativeSymlink(
+    Path relativePath = MoreProjectFilesystems.createRelativeSymlink(
         pathToDesiredLinkUnderProjectRoot,
         pathToExistingFileUnderProjectRoot,
         projectFilesystem);
@@ -114,7 +114,7 @@ public class MorePathsTest {
     tmp.newFolder("alpha", "beta");
     Path pathToDesiredLinkUnderProjectRoot = Paths.get("alpha/beta/gamma.txt");
     Path pathToExistingFileUnderProjectRoot = Paths.get("biz.txt");
-    Path relativePath = MorePaths.createRelativeSymlink(
+    Path relativePath = MoreProjectFilesystems.createRelativeSymlink(
         pathToDesiredLinkUnderProjectRoot,
         pathToExistingFileUnderProjectRoot,
         projectFilesystem);
@@ -143,7 +143,7 @@ public class MorePathsTest {
     tmp.newFolder("alpha", "beta");
     Path pathToDesiredLinkUnderProjectRoot = Paths.get("alpha/beta/gamma.txt");
     Path pathToExistingFileUnderProjectRoot = Paths.get("foo/bar/baz/biz.txt");
-    Path relativePath = MorePaths.createRelativeSymlink(
+    Path relativePath = MoreProjectFilesystems.createRelativeSymlink(
         pathToDesiredLinkUnderProjectRoot,
         pathToExistingFileUnderProjectRoot,
         projectFilesystem);

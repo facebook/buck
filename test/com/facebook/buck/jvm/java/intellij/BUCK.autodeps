@@ -1,8 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY e30d2342c2a927b1759e4023f56ccafeda26ed8e #@#
+#@# GENERATED FILE: DO NOT MODIFY 723b3b51c6b981495b7461ce31d6ea62477d329a #@#
 {
   "intellij" : {
     "deps" : [
       "//src/com/facebook/buck/android:rules",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/core:packagefinder",
       "//src/com/facebook/buck/jvm/java:autodeps",

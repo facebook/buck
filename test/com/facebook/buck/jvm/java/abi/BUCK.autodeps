@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY 70cf8531576e28c9b76175707e27a2b807fd75a6 #@#
+#@# GENERATED FILE: DO NOT MODIFY 7ae4ef54e5dd2b19df00c98397a39795ce2017ae #@#
 {
   "abi" : {
     "deps" : [
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/java/abi:abi",
       "//src/com/facebook/buck/util/sha1:sha1",

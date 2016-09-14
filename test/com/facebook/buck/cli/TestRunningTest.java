@@ -31,7 +31,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.CacheResult;
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
@@ -116,7 +116,7 @@ public class TestRunningTest {
   public void testGeneratedSourceFile() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path pathToGenFile = filesystem.getBuckPaths().getGenDir().resolve("GeneratedFile.java");
-    assertTrue(MorePaths.isGeneratedFile(filesystem, pathToGenFile));
+    assertTrue(MoreProjectFilesystems.isGeneratedFile(filesystem, pathToGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToGenFile);
     SourcePathResolver resolver = new SourcePathResolver(
@@ -149,7 +149,7 @@ public class TestRunningTest {
   public void testNonGeneratedSourceFile() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path pathToNonGenFile = Paths.get("package/src/SourceFile1.java");
-    assertFalse(MorePaths.isGeneratedFile(filesystem, pathToNonGenFile));
+    assertFalse(MoreProjectFilesystems.isGeneratedFile(filesystem, pathToNonGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
     SourcePathResolver resolver = new SourcePathResolver(
@@ -180,7 +180,7 @@ public class TestRunningTest {
   public void testNonGeneratedSourceFileWithoutPathElements() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path pathToNonGenFile = Paths.get("package/src/SourceFile1.java");
-    assertFalse(MorePaths.isGeneratedFile(filesystem, pathToNonGenFile));
+    assertFalse(MoreProjectFilesystems.isGeneratedFile(filesystem, pathToNonGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
     SourcePathResolver resolver = new SourcePathResolver(
@@ -210,7 +210,7 @@ public class TestRunningTest {
   public void testUnifiedSourceFile() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path pathToNonGenFile = Paths.get("java/package/SourceFile1.java");
-    assertFalse(MorePaths.isGeneratedFile(filesystem, pathToNonGenFile));
+    assertFalse(MoreProjectFilesystems.isGeneratedFile(filesystem, pathToNonGenFile));
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
     SourcePathResolver resolver = new SourcePathResolver(

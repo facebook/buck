@@ -1,8 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 0ab64dbc8fff37325c57b5f5a35ec9b88bb0206b #@#
+#@# GENERATED FILE: DO NOT MODIFY 8b6de0709d04981da517d783d229d8125e64a4e6 #@#
 {
   "ocaml" : {
     "deps" : [
       "//src/com/facebook/buck/graph:graph",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/step/fs:fs",

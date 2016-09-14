@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 8d4ca9ec9f98d7523de6f5cfa60850b1ed3e948d #@#
+#@# GENERATED FILE: DO NOT MODIFY 2edf1dfdd6e661020a0cc452a5e441b62987d937 #@#
 {
   "assumptions" : {
     "deps" : [
@@ -28,7 +28,7 @@
   "unit" : {
     "deps" : [
       "//src/com/facebook/buck/go:go",
-      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/junit:junit"

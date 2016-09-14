@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY f526a99a7f33c69c6f5e11ad05041c014d3d71e6 #@#
+#@# GENERATED FILE: DO NOT MODIFY 6a005d37a05d20193f7ac1f3b06bb5953c734248 #@#
 {
   "classes" : {
     "deps" : [
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/java/classes:classes",
       "//third-party/java/guava:guava",

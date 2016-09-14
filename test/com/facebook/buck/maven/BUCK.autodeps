@@ -1,10 +1,11 @@
-#@# GENERATED FILE: DO NOT MODIFY 72115175b4991432fd6c2c2b12a2116307857512 #@#
+#@# GENERATED FILE: DO NOT MODIFY 0620bf424a354a13cc16b10addb5119770dd2398 #@#
 {
   "maven" : {
     "deps" : [
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/file:downloader",
       "//src/com/facebook/buck/file:file",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/io:watchman",
@@ -19,20 +20,22 @@
       "//src/com/facebook/buck/python:config",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules/coercer:coercer",
+      "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/util:object_mapper",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/event:testutil",
       "//test/com/facebook/buck/jvm/java:testutil",
       "//test/com/facebook/buck/maven:testutil",
       "//test/com/facebook/buck/model:testutil",
+      "//test/com/facebook/buck/rules:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
       "//third-party/java/aether:aether-api",
       "//third-party/java/args4j:args4j",
-      "//third-party/java/easymock:easymock",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/jackson:jackson-databind",
+      "//third-party/java/jsr:jsr305",
       "//third-party/java/junit:junit",
       "//third-party/java/maven:maven-model"
     ],

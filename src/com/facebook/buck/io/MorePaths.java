@@ -31,16 +31,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
+/**
+ * Common functions that are done with a {@link Path}. If a function is going to take a
+ * {@link ProjectFilesystem}, then it should be in {@link MoreProjectFilesystems} instead.
+ */
 public class MorePaths {
 
   /** Utility class: do not instantiate. */
@@ -158,26 +157,6 @@ public class MorePaths {
   }
 
   /**
-   * Creates a symlink at
-   * {@code projectFilesystem.getRootPath().resolve(pathToDesiredLinkUnderProjectRoot)} that
-   * points to {@code projectFilesystem.getRootPath().resolve(pathToExistingFileUnderProjectRoot)}
-   * using a relative symlink.
-   *
-   * @param pathToDesiredLinkUnderProjectRoot must reference a file, not a directory.
-   * @param pathToExistingFileUnderProjectRoot must reference a file, not a directory.
-   * @return the relative path from the new symlink that was created to the existing file.
-   */
-  public static Path createRelativeSymlink(
-      Path pathToDesiredLinkUnderProjectRoot,
-      Path pathToExistingFileUnderProjectRoot,
-      ProjectFilesystem projectFilesystem) throws IOException {
-    return createRelativeSymlink(
-        pathToDesiredLinkUnderProjectRoot,
-        pathToExistingFileUnderProjectRoot,
-        projectFilesystem.getRootPath());
-  }
-
-  /**
    * Creates a symlink at {@code pathToProjectRoot.resolve(pathToDesiredLinkUnderProjectRoot)} that
    * points to {@code pathToProjectRoot.resolve(pathToExistingFileUnderProjectRoot)} using a
    * relative symlink. Both params must be relative to the project root.
@@ -239,15 +218,6 @@ public class MorePaths {
   }
 
   /**
-   * @return Whether the input path directs to a file in the buck generated files folder.
-   */
-  public static boolean isGeneratedFile(
-      ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot) {
-    return pathRelativeToProjectRoot.startsWith(filesystem.getBuckPaths().getGenDir());
-  }
-
-  /**
    * Expands "~/foo" into "/home/zuck/foo". Returns regular paths unmodified.
    */
   public static Path expandHomeDir(Path path) {
@@ -261,29 +231,6 @@ public class MorePaths {
     return homePath.resolve(path.subpath(1, path.getNameCount()));
   }
 
-  public static boolean fileContentsDiffer(
-      InputStream contents,
-      Path path,
-      ProjectFilesystem projectFilesystem) throws IOException {
-    try {
-      // Hash the contents of the file at path so we don't have to pull the whole thing into memory.
-      MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
-      byte[] pathDigest;
-      try (InputStream is = projectFilesystem.newFileInputStream(path)) {
-          pathDigest = inputStreamDigest(is, sha1);
-      }
-      // Hash 'contents' and see if the two differ.
-      sha1.reset();
-      byte[] contentsDigest = inputStreamDigest(contents, sha1);
-      return !Arrays.equals(pathDigest, contentsDigest);
-    } catch (NoSuchFileException e) {
-      // If the file doesn't exist, we need to create it.
-      return true;
-    } catch (NoSuchAlgorithmException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   public static ByteSource asByteSource(final Path path) {
     return new ByteSource() {
       @Override
@@ -291,20 +238,6 @@ public class MorePaths {
         return Files.newInputStream(path);
       }
     };
-  }
-
-  private static byte[] inputStreamDigest(InputStream inputStream, MessageDigest messageDigest)
-      throws IOException {
-    try (DigestInputStream dis = new DigestInputStream(inputStream, messageDigest)) {
-      byte[] buf = new byte[4096];
-      while (true) {
-        // Read the contents of the existing file so we can hash it.
-        if (dis.read(buf) == -1) {
-          break;
-        }
-      }
-      return dis.getMessageDigest().digest();
-    }
   }
 
   public static String getFileExtension(Path path) {
@@ -357,5 +290,4 @@ public class MorePaths {
       }
     };
   }
-
 }

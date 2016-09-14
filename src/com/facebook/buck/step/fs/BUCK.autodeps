@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY 14ca6a926a75d30c349409c08468430d5e0fda59 #@#
+#@# GENERATED FILE: DO NOT MODIFY 256fd40486bdb6ea8fd30a82d51cb03567effb73 #@#
 {
   "fs" : {
     "deps" : [
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:escaper",
       "//third-party/java/stringtemplate:stringtemplate",

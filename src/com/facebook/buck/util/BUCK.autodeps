@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 72bbe7afa77171dc1db2b3b396bb7238e1afce23 #@#
+#@# GENERATED FILE: DO NOT MODIFY d1ddc4b4b2f1fa4af8b11814c66bb9fd59aa86fb #@#
 {
   "constants" : {
     "deps" : [
@@ -67,6 +67,7 @@
   },
   "watchman" : {
     "deps" : [
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:exceptions"
     ],

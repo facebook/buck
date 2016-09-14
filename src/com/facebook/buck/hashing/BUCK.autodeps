@@ -1,7 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 4a7b2ef5123dbd5c1a6cd19e1beda91106a9e6a3 #@#
+#@# GENERATED FILE: DO NOT MODIFY 59bd342a5b2832dfa4fe1d1c62676579a3bbb457 #@#
 {
   "hashing" : {
-    "deps" : [ ],
+    "deps" : [
+      "//src/com/facebook/buck/io:MorePaths.java"
+    ],
     "exported_deps" : [
       "//src/com/facebook/buck/io:io",
       "//third-party/java/guava:guava"

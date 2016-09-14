@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 2014f7c676c24c4e6a38474cfc586787a8c0069a #@#
+#@# GENERATED FILE: DO NOT MODIFY 097239442a6d6e23e5181780483bbf644e30a743 #@#
 {
   "builders" : {
     "deps" : [
@@ -26,6 +26,7 @@
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",

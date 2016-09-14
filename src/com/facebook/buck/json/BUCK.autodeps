@@ -1,8 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY ec0aff29ea734dbeac8bb5e9ce9b4e58a6d48c34 #@#
+#@# GENERATED FILE: DO NOT MODIFY 982c03f8dc8dd553cdcb745259ca78ffc66c0be8 #@#
 {
   "json" : {
     "deps" : [
       "//src/com/facebook/buck/bser:bser",
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:util",
