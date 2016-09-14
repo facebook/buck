@@ -21,6 +21,7 @@ import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.ClientSideSlbConfig;
 import com.facebook.buck.timing.Clock;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -70,6 +71,23 @@ public class SlbBuckConfig {
       Clock clock,
       BuckEventBus eventBus,
       CommandThreadFactory threadFactory) {
+    return new ClientSideSlb(createConfig(clock, eventBus, threadFactory));
+  }
+
+  public Optional<ClientSideSlb> tryCreatingHttpClientSideSlb(
+      Clock clock,
+      BuckEventBus eventBus,
+      CommandThreadFactory threadFactory) {
+    ClientSideSlbConfig config = createConfig(clock, eventBus, threadFactory);
+    return ClientSideSlb.isSafeToCreate(config)
+        ? Optional.of(new ClientSideSlb(config))
+        : Optional.<ClientSideSlb>absent();
+  }
+
+  private ClientSideSlbConfig createConfig(
+        Clock clock,
+        BuckEventBus eventBus,
+        CommandThreadFactory threadFactory) {
     ClientSideSlbConfig.Builder configBuilder = ClientSideSlbConfig.builder()
         .setSchedulerService(Executors.newSingleThreadScheduledExecutor(threadFactory))
         .setClock(clock)
@@ -110,6 +128,6 @@ public class SlbBuckConfig {
           buckConfig.getFloat(parentSection, MAX_ERROR_PERCENTAGE).get());
     }
 
-    return new ClientSideSlb(configBuilder.build());
+    return configBuilder.build();
   }
 }

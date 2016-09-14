@@ -45,6 +45,13 @@ public class ClientSideSlb implements HttpLoadBalancer {
   private final ScheduledFuture<?> backgroundHealthChecker;
   private final BuckEventBus eventBus;
 
+  public static boolean isSafeToCreate(ClientSideSlbConfig config) {
+    return config.getPingEndpoint() != null &&
+        config.getServerPool() != null &&
+        config.getServerPool().size() > 0 &&
+        config.getEventBus() != null;
+  }
+
   // Use the Builder.
   public ClientSideSlb(ClientSideSlbConfig config) {
     this(config, new OkHttpClient.Builder()
