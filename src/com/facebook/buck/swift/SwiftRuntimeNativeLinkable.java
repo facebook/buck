@@ -80,7 +80,11 @@ final class SwiftRuntimeNativeLinkable implements NativeLinkable {
               "-Xlinker",
               "-rpath",
               "-Xlinker",
-              "@executable_path/Frameworks"));
+              "@executable_path/Frameworks",
+              "-Xlinker",
+              "-rpath",
+              "-Xlinker",
+              "@loader_path/Frameworks"));
       swiftRuntimePaths = appleCxxPlatform.getSwiftRuntimePaths();
     } else {
       // Static linking requires force-loading Swift libs, since the dependency
