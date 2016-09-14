@@ -42,6 +42,32 @@ Provide build information about build targets and outputs.
   {/call}
 
   {call buck.param}
+    {param name: 'config <section.property>[,...]' /}
+    {param nodash: true /}
+    {param desc}
+    Outputs values from .buckconfig (and .buckconfig.local) for the specified
+    sections and properties. Use <code>--tab</code> to get tab-delimited
+    details. For example, to get the C and C++ compiler, one might run one of
+    {literal}
+    <pre class="prettyprint lang-py">
+buck audit config invalid_section.novalue cxx.cc cxx.cxx
+buck audit config --tab invalid_section.novalue cxx.cc cxx.cxx
+</pre>
+<pre class="prettyprint lang-py">
+[cxx]
+    cc = /usr/bin/gcc
+    cxx = /usr/bin/g++
+</pre>
+<pre class="prettyprint lang-py">
+invalid_section.novalue&#9;
+cxx.cc&#9;/usr/bin/gcc
+cxx.cxx&#9;/usr/bin/g++
+</pre>
+    {/literal}
+    {/param}
+  {/call}
+
+  {call buck.param}
     {param name: 'dependencies <targets>' /}
     {param nodash: true /}
     {param desc}
