@@ -163,7 +163,11 @@ public class GnuLinker implements Linker {
 
   @Override
   public Iterable<String> getIgnoreUndefinedSymbolsFlags() {
-    return Linkers.iXlinker("--unresolved-symbols=ignore-all");
+    return Linkers.iXlinker(
+        // ld.gold doesn't appear to fully implement `--unresolved-symbols=ignore-all` for shared
+        // libraries, so also always set `--allow-shlib-undefined`.
+        "--allow-shlib-undefined",
+        "--unresolved-symbols=ignore-all");
   }
 
   @Override
