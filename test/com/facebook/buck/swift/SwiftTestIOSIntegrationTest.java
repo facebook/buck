@@ -23,6 +23,7 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.ApplePlatform;
+import com.facebook.buck.apple.AppleTestIntegrationTest;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -35,6 +36,7 @@ import org.junit.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class SwiftTestIOSIntegrationTest {
   @Rule
@@ -50,6 +52,13 @@ public class SwiftTestIOSIntegrationTest {
         "swift_test",
         tmp);
     workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(AppleTestIntegrationTest.class).resolve("xctool"),
+        Paths.get("xctool"));
+    workspace.writeContentsToPath(
+        "[apple]\n  xctool_path = xctool/bin/xctool\n",
+        ".buckconfig.local");
+
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = workspace.newBuildTarget("//:MixedTest#iphonesimulator-x86_64");
