@@ -124,6 +124,11 @@ class BuckTool(object):
 
     def launch_buck(self, build_id):
         with Tracing('BuckRepo.launch_buck'):
+            if not is_java8_or_9():
+                print("::: Buck requires Java 8 or higher, but the environment is set up " +
+                      "to use Java 7 or lower. Continuing anyway, but Buck might crash.",
+                      file=sys.stderr)
+
             if self._command_line.command == "clean" and not self._command_line.is_help():
                 self.kill_buckd()
 
