@@ -158,6 +158,6 @@ public class ListeningMultiSemaphore {
   }
 
   private boolean fairnessAllowsReordering() {
-    return fairness == ResourceAllocationFairness.FAIR;
+    return fairness == ResourceAllocationFairness.FAST;
   }
 }
