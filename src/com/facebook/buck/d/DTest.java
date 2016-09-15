@@ -46,8 +46,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.ObjectInputStream;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
@@ -146,11 +147,9 @@ public class DTest extends AbstractBuildRule implements
         ResultType resultType = ResultType.FAILURE;
 
         // Successful exit indicates success.
-        try {
-          int exitCode = Integer.parseInt(
-              new String(Files.readAllBytes(
-                  getProjectFilesystem().resolve(
-                      getPathToTestExitCode()))));
+        try (ObjectInputStream objectIn = new ObjectInputStream(new FileInputStream(
+                getProjectFilesystem().resolve(getPathToTestExitCode()).toFile()))) {
+          int exitCode = objectIn.readInt();
           if (exitCode == 0) {
             resultType = ResultType.SUCCESS;
           }

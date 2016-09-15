@@ -17,33 +17,20 @@
 package com.facebook.buck.d;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.BgProcessKiller;
-import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProcessExecutor;
-import com.google.common.base.Function;
-import com.google.common.base.MoreObjects;
+import com.facebook.buck.step.AbstractTestStep;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.file.Path;
 
 /**
  * Runs a D test command, remembering its exit code and streaming its output to
  * a given output file.
  */
-public class DTestStep implements Step {
+public class DTestStep extends AbstractTestStep {
 
-  private final ProjectFilesystem filesystem;
-  private final ImmutableList<String> command;
-  private final Path exitCode;
-  private final Path output;
-  private final Optional<Long> testRuleTimeoutMs;
+  private static final String NAME = "d test";
 
   public DTestStep(
       ProjectFilesystem filesystem,
@@ -51,95 +38,24 @@ public class DTestStep implements Step {
       Path exitCode,
       Optional<Long> testRuleTimeoutMs,
       Path output) {
-    this.filesystem = filesystem;
-    this.command = command;
-    this.exitCode = exitCode;
-    this.testRuleTimeoutMs = testRuleTimeoutMs;
-    this.output = output;
+    super(
+        NAME,
+        filesystem,
+        Optional.<Path>absent(),
+        command,
+        Optional.<ImmutableMap<String, String>>absent(),
+        exitCode,
+        testRuleTimeoutMs,
+        output);
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
-    // Build the process, redirecting output to the provided output file.  In general,
-    // it's undesirable that both stdout and stderr are being redirected to the same
-    // input stream.  However, due to the nature of OS pipe buffering, we can't really
-    // maintain the natural interleaving of multiple output streams in a way that we
-    // can correctly associate both stdout/stderr streams to the one correct test out
-    // of the many that ran.  So, our best bet is to just combine them all into stdout,
-    // so they get properly interleaved with the test start and end messages that we
-    // use when we parse the test output.
-    ProcessBuilder builder = new ProcessBuilder();
-    builder.command(command);
-    builder.redirectOutput(filesystem.resolve(output).toFile());
-    builder.redirectErrorStream(true);
-
-    Process process;
-    try {
-      process = BgProcessKiller.startProcess(builder);
-    } catch (IOException e) {
-      context.logError(e, "Error starting command %s", command);
-      return StepExecutionResult.ERROR;
-    }
-
-    // Run the test process, saving the exit code.
-    ProcessExecutor executor = context.getProcessExecutor();
-    ImmutableSet<ProcessExecutor.Option> options = ImmutableSet.of(
-        ProcessExecutor.Option.EXPECTING_STD_OUT);
-    ProcessExecutor.Result result = executor.execute(
-        process,
-        options,
-        /* stdin */ Optional.<String>absent(),
-        /* timeOutMs */ testRuleTimeoutMs,
-        /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
-
-    if (result.isTimedOut()) {
-      throw new HumanReadableException(
-          "Timed out after %d ms running test command %s",
-          testRuleTimeoutMs.or(-1L),
-          command);
-    }
-
-    // Since test binaries return a non-zero exit code when unittests fail, save the exit code
-    // to a file rather than signalling a step failure.
-    try (FileOutputStream stream = new FileOutputStream(filesystem.resolve(exitCode).toFile())) {
-      stream.write((Integer.toString(result.getExitCode())).getBytes());
-    } catch (IOException e) {
-      context.logError(e, "Error saving exit code to %s", exitCode);
-      return StepExecutionResult.ERROR;
-    }
-
-    return StepExecutionResult.SUCCESS;
+  public boolean equals(Object o) {
+    return (o instanceof DTestStep) && super.equals(o);
   }
 
   @Override
-  public String getShortName() {
-    return "d test";
+  public int hashCode() {
+    return super.hashCode();
   }
-
-  @Override
-  public String getDescription(ExecutionContext context) {
-    return "d test";
-  }
-
-  public ImmutableList<String> getCommand() {
-    return command;
-  }
-
-  public Path getExitCode() {
-    return exitCode;
-  }
-
-  public Path getOutput() {
-    return output;
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("command", command)
-        .add("exitCode", exitCode)
-        .add("output", output)
-        .toString();
-  }
-
 }
