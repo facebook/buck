@@ -23,7 +23,7 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.ApplePlatform;
-import com.facebook.buck.apple.AppleTestIntegrationTest;
+import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -53,7 +53,7 @@ public class SwiftTestIOSIntegrationTest {
         tmp);
     workspace.setUp();
     workspace.copyRecursively(
-        TestDataHelper.getTestDataDirectory(AppleTestIntegrationTest.class).resolve("xctool"),
+        TestDataHelper.getTestDataDirectory(AppleTestBuilder.class).resolve("xctool"),
         Paths.get("xctool"));
     workspace.writeContentsToPath(
         "[apple]\n  xctool_path = xctool/bin/xctool\n",
