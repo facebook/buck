@@ -1014,7 +1014,7 @@ public class BuckConfig {
       return getNumThreads();
     }
     return config.getLong(RESOURCES_SECTION_HEADER, "managed_thread_count")
-        .or((long) ResourceAmountsEstimator.DEFAULT_MANAGED_THREAD_COUNT)
+        .or((long) getNumThreads() + getDefaultMaximumNumberOfThreads())
         .intValue();
   }
 
