@@ -25,6 +25,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSource;
+import com.google.common.io.ByteStreams;
 
 import org.objectweb.asm.ClassReader;
 
@@ -68,12 +69,12 @@ public class StubJar {
     @Override
     public void visit(Path relativizedPath, InputStream stream) throws IOException {
       String fileName = MorePaths.pathWithUnixSeparators(relativizedPath);
-      if (!fileName.endsWith(".class")) {
-        return;
+      if (fileName.endsWith(".class")) {
+        ByteSource stubClassBytes = getStubClassBytes(stream, fileName);
+        writer.writeEntry(fileName, stubClassBytes);
+      } else if (!"META-INF/MANIFEST.MF".equals(fileName)) {
+        writer.writeEntry(fileName, ByteSource.wrap(ByteStreams.toByteArray(stream)));
       }
-
-      ByteSource stubClassBytes = getStubClassBytes(stream, fileName);
-      writer.writeEntry(fileName, stubClassBytes);
     }
 
     private ByteSource getStubClassBytes(InputStream stream,

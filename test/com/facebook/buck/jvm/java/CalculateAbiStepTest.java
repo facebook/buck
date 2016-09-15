@@ -27,6 +27,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.testutil.integration.ZipInspector;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Rule;
@@ -71,7 +72,11 @@ public class CalculateAbiStepTest {
     // investigate why the value is different.
     // NOTE: If this starts failing on CI for no obvious reason it's possible that the offset
     // calculation in ZipConstants.getFakeTime() does not account for DST correctly.
-    assertEquals("51787f5a1c004c81fb7fc893227787e0f266def1", seenHash);
+    assertEquals("6866a1f2e236dd85c7ed9b7c291c0cc61d6451d3", seenHash);
+
+    // Assert that the abiJar contains non-class resources (like txt files).
+    ZipInspector inspector = new ZipInspector(abiJar);
+    inspector.assertFileExists("LICENSE.txt");
   }
 
   @Test
