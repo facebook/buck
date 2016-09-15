@@ -413,7 +413,8 @@ public class TestRunningTest {
             createMock(TestRuleKeyFileHelper.class),
             true,
             false,
-            /* hasEnvironmentOverrides */ false));
+            /* hasEnvironmentOverrides */ false,
+            /* isDryRun */ false));
   }
 
   @Test
@@ -448,7 +449,8 @@ public class TestRunningTest {
             createMock(TestRuleKeyFileHelper.class),
             /* results cache enabled */ true,
             /* running with test selectors */ false,
-            /* hasEnvironmentOverrides */ false));
+            /* hasEnvironmentOverrides */ false,
+            /* isDryRun */ false));
 
     verify(cachingBuildEngine);
   }
@@ -484,7 +486,8 @@ public class TestRunningTest {
             createMock(TestRuleKeyFileHelper.class),
             /* results cache enabled */ true,
             /* running with test selectors */ false,
-            /* hasEnvironmentOverrides */ false));
+            /* hasEnvironmentOverrides */ false,
+            /* isDryRun */ false));
 
     verify(cachingBuildEngine);
   }
@@ -530,7 +533,8 @@ public class TestRunningTest {
             testRuleKeyFileHelper,
             /* results cache enabled */ true,
             /* running with test selectors */ false,
-            /* hasEnvironmentOverrides */ false));
+            /* hasEnvironmentOverrides */ false,
+            /* isDryRun */ false));
 
     verify(cachingBuildEngine, testRuleKeyFileHelper);
   }
@@ -575,7 +579,8 @@ public class TestRunningTest {
             testRuleKeyFileHelper,
             /* results cache enabled */ true,
             /* running with test selectors */ false,
-            /* hasEnvironmentOverrides */ false));
+            /* hasEnvironmentOverrides */ false,
+            /* isDryRun */ false));
     assertTrue(
         "Test will be rerun when environment overrides are present",
         TestRunning.isTestRunRequiredForTest(
@@ -585,7 +590,64 @@ public class TestRunningTest {
             testRuleKeyFileHelper,
             /* results cache enabled */ true,
             /* running with test selectors */ false,
-            /* hasEnvironmentOverrides */ true));
+            /* hasEnvironmentOverrides */ true,
+            /* isDryRun */ false));
+
+    verify(cachingBuildEngine, testRuleKeyFileHelper);
+  }
+
+  @Test
+  public void testRunAlwaysRequiredForDryRuns() throws Exception {
+    ExecutionContext executionContext = TestExecutionContext.newBuilder()
+        .setDebugEnabled(false)
+        .build();
+
+    FakeTestRule testRule = new FakeTestRule(
+        ImmutableSet.of(Label.of("windows")),
+        BuildTargetFactory.newInstance("//:lulz"),
+        new SourcePathResolver(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY,
+                new DefaultTargetNodeToBuildRuleTransformer())),
+        ImmutableSortedSet.<BuildRule>of()) {
+
+      @Override
+      public boolean hasTestResultFiles() {
+        return true;
+      }
+    };
+
+    TestRuleKeyFileHelper testRuleKeyFileHelper = createNiceMock(TestRuleKeyFileHelper.class);
+    expect(testRuleKeyFileHelper.isRuleKeyInDir(testRule)).andReturn(true).times(1);
+
+    CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
+    BuildResult result = BuildResult.success(testRule, MATCHING_RULE_KEY, CacheResult.miss());
+    expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
+        .andReturn(result).times(1);
+    replay(cachingBuildEngine, testRuleKeyFileHelper);
+
+    assertFalse(
+        "Test will normally not be rerun",
+        TestRunning.isTestRunRequiredForTest(
+            testRule,
+            cachingBuildEngine,
+            executionContext,
+            testRuleKeyFileHelper,
+            /* results cache enabled */ true,
+            /* running with test selectors */ false,
+            /* hasEnvironmentOverrides */ false,
+            /* isDryRun */ false));
+    assertTrue(
+        "Test will be rerun when dry run is specified",
+        TestRunning.isTestRunRequiredForTest(
+            testRule,
+            cachingBuildEngine,
+            executionContext,
+            testRuleKeyFileHelper,
+            /* results cache enabled */ true,
+            /* running with test selectors */ false,
+            /* hasEnvironmentOverrides */ false,
+            /* isDryRun */ true));
 
     verify(cachingBuildEngine, testRuleKeyFileHelper);
   }

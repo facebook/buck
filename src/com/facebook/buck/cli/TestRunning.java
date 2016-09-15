@@ -187,7 +187,8 @@ public class TestRunning {
           testRuleKeyFileHelper,
           options.isResultsCacheEnabled(),
           !options.getTestSelectorList().isEmpty(),
-          !options.getEnvironmentOverrides().isEmpty());
+          !options.getEnvironmentOverrides().isEmpty(),
+          options.isDryRun());
 
       final Map<String, UUID> testUUIDMap = new HashMap<>();
       final AtomicReference<TestStatusMessageEvent.Started> currentTestStatusMessageEvent =
@@ -587,7 +588,8 @@ public class TestRunning {
       TestRuleKeyFileHelper testRuleKeyFileHelper,
       boolean isResultsCacheEnabled,
       boolean isRunningWithTestSelectors,
-      boolean hasEnvironmentOverrides)
+      boolean hasEnvironmentOverrides,
+      boolean isDryRun)
       throws IOException, ExecutionException, InterruptedException {
     boolean isTestRunRequired;
     BuildResult result;
@@ -602,6 +604,9 @@ public class TestRunning {
       isTestRunRequired = true;
     } else if (hasEnvironmentOverrides) {
       // This is rather obtuse, ideally the environment overrides can be hashed and compared...
+      isTestRunRequired = true;
+    } else if (isDryRun) {
+      // Test result caching does not work for dry runs, as the result file used is different.
       isTestRunRequired = true;
     } else if (((result = cachingBuildEngine.getBuildRuleResult(
         test.getBuildTarget())) != null) &&
