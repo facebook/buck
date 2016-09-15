@@ -401,6 +401,12 @@ public class OCamlRuleBuilder {
                 .addAll(
                     FluentIterable.from(cLinkableInput.getArgs())
                         .transformAndConcat(Arg.getDepsFunction(pathResolver)))
+                .addAll(
+                    pathResolver.filterBuildRuleInputs(
+                        ocamlBuckConfig.getCCompiler().resolve(resolver).getInputs()))
+                .addAll(
+                    pathResolver.filterBuildRuleInputs(
+                        ocamlBuckConfig.getCxxCompiler().resolve(resolver).getInputs()))
                 .build()),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 

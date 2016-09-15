@@ -242,6 +242,7 @@ public class OCamlBuildRulesGenerator {
                 .addAll(
                     FluentIterable.from(ocamlContext.getCLinkableInput().getArgs())
                         .transformAndConcat(Arg.getDepsFunction(pathResolver)))
+                .addAll(cxxCompiler.getDeps(pathResolver))
                 .build()),
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>of()));
@@ -289,6 +290,7 @@ public class OCamlBuildRulesGenerator {
                         .append(ocamlContext.getCLinkableInput().getArgs())
                         .transformAndConcat(Arg.getDepsFunction(pathResolver))
                         .filter(Predicates.not(Predicates.instanceOf(OCamlBuild.class))))
+                .addAll(cxxCompiler.getDeps(pathResolver))
                 .build()),
     Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
@@ -466,6 +468,7 @@ public class OCamlBuildRulesGenerator {
                 .addAll(params.getDeclaredDeps().get())
                 .addAll(deps)
                 .addAll(ocamlContext.getNativeCompileDeps())
+                .addAll(cCompiler.getDeps(pathResolver))
                 .build()),
         params.getExtraDeps());
 
@@ -567,6 +570,7 @@ public class OCamlBuildRulesGenerator {
                 .addAll(params.getDeclaredDeps().get())
                 .addAll(deps)
                 .addAll(ocamlContext.getBytecodeCompileDeps())
+                .addAll(cCompiler.getDeps(pathResolver))
                 .build()),
         params.getExtraDeps());
 
