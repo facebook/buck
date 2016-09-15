@@ -289,9 +289,10 @@ public class DefaultJavaLibraryIntegrationTest {
     assertEquals(
         jarContents.build(),
         ImmutableSet.of(
-          "META-INF/MANIFEST.MF",
-          "swag.txt",
-          "yolo.txt"));
+            "META-INF/",
+            "META-INF/MANIFEST.MF",
+            "swag.txt",
+            "yolo.txt"));
 
     workspace.verify();
   }

@@ -16,18 +16,21 @@
 
 package com.facebook.buck.jvm.java;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.jar.Attributes.Name.IMPLEMENTATION_VERSION;
 import static java.util.jar.Attributes.Name.MANIFEST_VERSION;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -46,6 +49,7 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,12 +58,14 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import java.util.jar.Attributes;
+import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 public class JarDirectoryStepTest {
 
@@ -210,10 +216,10 @@ public class JarDirectoryStepTest {
     Path output = tmp.resolve("output.jar");
     JarDirectoryStep step = new JarDirectoryStep(
         new ProjectFilesystem(tmp),
-        Paths.get("output.jar"),
+        output,
         ImmutableSortedSet.of(Paths.get("input.jar")),
         /* main class */ null,
-        Paths.get("manifest"),
+        tmp.resolve("manifest"),
         /* merge manifest */ true,
         /* blacklist */ ImmutableSet.<Pattern>of());
     ExecutionContext context = TestExecutionContext.newInstance();
@@ -279,7 +285,10 @@ public class JarDirectoryStepTest {
     Manifest seenManifest = jarDirectoryAndReadManifest(fromJar, fromUser, true);
 
     Manifest expectedManifest = new Manifest(fromJar);
-    expectedManifest.getEntries().putAll(fromUser.getEntries());
+    Attributes attrs = new Attributes();
+    attrs.putValue("Not-Seen", "ever");
+    attrs.putValue("cake", "cheese");
+    expectedManifest.getEntries().put("example", attrs);
     assertEquals(expectedManifest.getEntries(), seenManifest.getEntries());
   }
 
@@ -368,6 +377,93 @@ public class JarDirectoryStepTest {
         assertEquals(entry.getName(), dosEpoch, new Date(entry.getTime()));
       }
     }
+  }
+
+  /**
+   * From the constructor of {@link JarInputStream}:
+   * <p>
+   * This implementation assumes the META-INF/MANIFEST.MF entry
+   * should be either the first or the second entry (when preceded
+   * by the dir META-INF/). It skips the META-INF/ and then
+   * "consumes" the MANIFEST.MF to initialize the Manifest object.
+   * <p>
+   * A simple implementation of {@link JarDirectoryStep} would iterate over all entries to be
+   * included, adding them to the output jar, while merging manifest files, writing the merged
+   * manifest as the last item in the jar. That will generate jars the {@code JarInputStream} won't
+   * be able to find the manifest for.
+   */
+  @Test
+  public void manifestShouldBeSecondEntryInJar() throws IOException {
+    Path manifestPath = Paths.get(JarFile.MANIFEST_NAME);
+
+    // Create a directory with a manifest in it and more than two files.
+    Path dir = folder.newFolder();
+    Manifest dirManifest = new Manifest();
+    Attributes attrs = new Attributes();
+    attrs.putValue("From-Dir", "cheese");
+    dirManifest.getEntries().put("Section", attrs);
+
+    Files.createDirectories(dir.resolve(manifestPath).getParent());
+    try (OutputStream out = Files.newOutputStream(dir.resolve(manifestPath))) {
+      dirManifest.write(out);
+    }
+    Files.write(dir.resolve("A.txt"), "hello world".getBytes(UTF_8));
+    Files.write(dir.resolve("B.txt"), "hello world".getBytes(UTF_8));
+    Files.write(dir.resolve("aa.txt"), "hello world".getBytes(UTF_8));
+    Files.write(dir.resolve("bb.txt"), "hello world".getBytes(UTF_8));
+
+    // Create a jar with a manifest and more than two other files.
+    Path inputJar = folder.newFile("example.jar");
+    try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(inputJar))) {
+      byte[] data = "hello world".getBytes(UTF_8);
+      ZipEntry entry = new ZipEntry("C.txt");
+      zos.putNextEntry(entry);
+      zos.write(data, 0, data.length);
+      zos.closeEntry();
+
+      entry = new ZipEntry("cc.txt");
+      zos.putNextEntry(entry);
+      zos.write(data, 0, data.length);
+      zos.closeEntry();
+
+      entry = new ZipEntry("META-INF/");
+      zos.putNextEntry(entry);
+      zos.closeEntry();
+
+      // Note: at end of the stream. Technically invalid.
+      entry = new ZipEntry(JarFile.MANIFEST_NAME);
+      zos.putNextEntry(entry);
+      Manifest zipManifest = new Manifest();
+      attrs = new Attributes();
+      attrs.putValue("From-Zip", "peas");
+      zipManifest.getEntries().put("Section", attrs);
+      zipManifest.write(zos);
+      zos.closeEntry();
+    }
+
+    // Merge and check that the manifest includes everything
+    Path output = folder.newFile("output.jar");
+    JarDirectoryStep step = new JarDirectoryStep(
+        new FakeProjectFilesystem(folder.getRoot()),
+        output,
+        ImmutableSortedSet.of(dir, inputJar),
+        null,
+        null);
+    int exitCode = step.execute(TestExecutionContext.newInstance()).getExitCode();
+
+    assertEquals(0, exitCode);
+
+    Manifest manifest;
+    try (InputStream is = Files.newInputStream(output);
+         JarInputStream jis = new JarInputStream(is)) {
+      manifest = jis.getManifest();
+    }
+
+    assertNotNull(manifest);
+    Attributes readAttributes = manifest.getAttributes("Section");
+    assertEquals(2, readAttributes.size());
+    assertEquals("cheese", readAttributes.getValue("From-Dir"));
+    assertEquals("peas", readAttributes.getValue("From-Zip"));
   }
 
   private Manifest createManifestWithExampleSection(Map<String, String> attributes) {
