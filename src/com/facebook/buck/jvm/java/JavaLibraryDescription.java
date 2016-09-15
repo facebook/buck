@@ -164,6 +164,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
                 new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
                 args.resourcesRoot,
+                args.manifestFile,
                 args.mavenCoords,
                 args.tests.get(),
                 javacOptions.getClassesToRemoveFromJar()));
@@ -197,6 +198,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
 
     @Hint(isInput = false)
     public Optional<Path> resourcesRoot;
+    public Optional<SourcePath> manifestFile;
     public Optional<String> mavenCoords;
     public Optional<SourcePath> mavenPomTemplate;
 

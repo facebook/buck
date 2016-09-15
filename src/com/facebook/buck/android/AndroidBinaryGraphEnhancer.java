@@ -273,6 +273,7 @@ public class AndroidBinaryGraphEnhancer {
               javacOptions.withSourceLevel("7").withTargetLevel("7"),
               JavacOptionsAmender.IDENTITY),
           /* resourcesRoot */ Optional.<Path>absent(),
+          /* manifest file */ Optional.<SourcePath>absent(),
           /* mavenCoords */ Optional.<String>absent(),
           ImmutableSortedSet.<BuildTarget>of(),
           /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of());
@@ -447,6 +448,7 @@ public class AndroidBinaryGraphEnhancer {
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
         /* resourcesRoot */ Optional.<Path>absent(),
+        /* manifest file */ Optional.<SourcePath>absent(),
         /* mavenCoords */ Optional.<String>absent(),
         ImmutableSortedSet.<BuildTarget>of(),
         /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of());

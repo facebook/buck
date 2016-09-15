@@ -18,6 +18,7 @@
   "javac": null,
   "javacJar": null,
   "javaVersion": null,
+  "manifestFile": null,
   "mavenCoords":null,
   "mavenPomTemplate":null,
   "name" : "test-library",

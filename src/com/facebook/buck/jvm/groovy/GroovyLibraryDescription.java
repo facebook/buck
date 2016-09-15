@@ -113,6 +113,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
                         pathResolver,
                         args)),
                 Optional.<Path>absent(),
+                /* manifest file */ Optional.<SourcePath>absent(),
                 Optional.<String>absent(),
                 ImmutableSortedSet.<BuildTarget>of(),
                 /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()));

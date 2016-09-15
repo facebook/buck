@@ -186,6 +186,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                 additionalClasspathEntries,
                 new JavacToJarStepFactory(javacOptions, new BootClasspathAppender()),
                 args.resourcesRoot,
+                args.manifestFile,
                 args.mavenCoords,
                 /* tests */ ImmutableSortedSet.<BuildTarget>of(),
                 /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()));

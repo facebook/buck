@@ -102,6 +102,7 @@ public class KotlinLibraryDescription implements Description<KotlinLibraryDescri
                     kotlinBuckConfig.getKotlinCompiler().get(),
                     args.extraKotlincArguments.get()),
                 Optional.<Path>absent(),
+                /* manifest file */ Optional.<SourcePath>absent(),
                 Optional.<String>absent(),
                 ImmutableSortedSet.<BuildTarget>of(),
                 /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()));
