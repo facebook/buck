@@ -57,6 +57,10 @@ public class ListeningMultiSemaphore {
    * @return Future that will be completed once resource will be acquired.
    */
   public synchronized ListenableFuture<Void> acquire(ResourceAmounts resources) {
+    if (resources.equals(ResourceAmounts.ZERO)) {
+      return Futures.immediateFuture(null);
+    }
+
     resources = capResourceAmounts(resources);
     if (!checkIfResourcesAvailable(resources)) {
       SettableFuture<Void> pendingFuture = SettableFuture.create();
@@ -74,6 +78,10 @@ public class ListeningMultiSemaphore {
    *                  match one you used during resource acquiring.
    */
   public void release(ResourceAmounts resources) {
+    if (resources.equals(ResourceAmounts.ZERO)) {
+      return;
+    }
+
     resources = capResourceAmounts(resources);
     decreaseUsedResources(resources);
     processPendingFutures(getPendingItemsThatCanBeProcessed());

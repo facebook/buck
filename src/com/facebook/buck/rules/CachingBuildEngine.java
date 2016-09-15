@@ -1682,18 +1682,9 @@ public class CachingBuildEngine implements BuildEngine {
 
   private ResourceAmounts getRuleResourceAmounts(BuildRule rule) {
     if (resourceAwareSchedulingInfo.isResourceAwareSchedulingEnabled()) {
-      return getResourceAmountsForRuleOrDefaultAmounts(rule);
+      return resourceAwareSchedulingInfo.getResourceAmountsForRule(rule);
     } else {
       return getResourceAmountsForRuleWithCustomScheduleInfo(rule);
-    }
-  }
-
-  private ResourceAmounts getResourceAmountsForRuleOrDefaultAmounts(BuildRule rule) {
-    Preconditions.checkArgument(resourceAwareSchedulingInfo.isResourceAwareSchedulingEnabled());
-    if (resourceAwareSchedulingInfo.getAmountsPerRuleType().containsKey(rule.getType())) {
-      return resourceAwareSchedulingInfo.getAmountsPerRuleType().get(rule.getType());
-    } else {
-      return resourceAwareSchedulingInfo.getDefaultResourceAmounts();
     }
   }
 

@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
@@ -40,4 +41,25 @@ abstract class AbstractResourceAwareSchedulingInfo {
    * Map from the value of {@link BuildRule#getType()} to the required resources.
    */
   public abstract ImmutableMap<String, ResourceAmounts> getAmountsPerRuleType();
+
+  public ResourceAmounts getResourceAmountsForRule(BuildRule rule) {
+    if (isRuleResourceFree(rule)) {
+      return ResourceAmounts.ZERO;
+    } else {
+      return getResourceAmountsForRuleOrDefaultAmounts(rule);
+    }
+  }
+
+  private boolean isRuleResourceFree(BuildRule rule) {
+    return (rule instanceof NoopBuildRule);
+  }
+
+  private ResourceAmounts getResourceAmountsForRuleOrDefaultAmounts(BuildRule rule) {
+    Preconditions.checkArgument(isResourceAwareSchedulingEnabled());
+    if (getAmountsPerRuleType().containsKey(rule.getType())) {
+      return getAmountsPerRuleType().get(rule.getType());
+    } else {
+      return getDefaultResourceAmounts();
+    }
+  }
 }
