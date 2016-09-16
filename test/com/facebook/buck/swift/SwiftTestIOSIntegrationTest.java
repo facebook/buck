@@ -21,11 +21,15 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.apple.AppleDebugFormat;
+import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -67,10 +71,16 @@ public class SwiftTestIOSIntegrationTest {
         target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path binaryOutput = tmp.getRoot()
-        .resolve(filesystem.getBuckPaths().getGenDir())
-        .resolve("MixedTest#apple-test-bundle,dwarf,iphonesimulator-x86_64,no-include-frameworks")
-        .resolve("MixedTest.xctest")
+    Path binaryOutput = workspace.getPath(
+        BuildTargets.getGenPath(
+            filesystem,
+            BuildTarget.builder(target)
+                .addFlavors(
+                    ImmutableFlavor.of("iphonesimulator-x86_64"),
+                    ImmutableFlavor.of("apple-test-bundle"),
+                    AppleDebugFormat.DWARF.getFlavor(),
+                    AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                .build(), "%.xctest"))
         .resolve("MixedTest");
     assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
 
