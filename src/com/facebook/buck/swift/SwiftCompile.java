@@ -83,6 +83,7 @@ class SwiftCompile
   private final boolean hasMainEntry;
   private final boolean enableObjcInterop;
   private final Optional<SourcePath> bridgingHeader;
+  private final SwiftBuckConfig swiftBuckConfig;
 
   private final Iterable<CxxPreprocessorInput> cxxPreprocessorInputs;
 
@@ -97,6 +98,7 @@ class SwiftCompile
 
   SwiftCompile(
       CxxPlatform cxxPlatform,
+      SwiftBuckConfig swiftBuckConfig,
       BuildRuleParams params,
       SourcePathResolver resolver,
       Tool swiftCompiler,
@@ -106,6 +108,7 @@ class SwiftCompile
       Optional<Boolean> enableObjcInterop,
       Optional<SourcePath> bridgingHeader) throws NoSuchBuildTargetException {
     super(params, resolver);
+    this.swiftBuckConfig = swiftBuckConfig;
     this.cxxPreprocessorInputs =
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, params.getDeps());
     this.swiftCompiler = swiftCompiler;
@@ -153,6 +156,11 @@ class SwiftCompile
                 return getResolver().getAbsolutePath(input).toString();
               }
             })));
+
+    Optional<Iterable<String>> configFlags = swiftBuckConfig.getFlags();
+    if (configFlags.isPresent()) {
+      compilerCommand.addAll(configFlags.get());
+    }
     compilerCommand.add(
         "-c",
         enableObjcInterop ? "-enable-objc-interop" : "",
