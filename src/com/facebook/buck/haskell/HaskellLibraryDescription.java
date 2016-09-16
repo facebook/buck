@@ -154,7 +154,9 @@ public class HaskellLibraryDescription implements
             baseParams.getProjectFilesystem(),
             target,
             cxxPlatform.getFlavor(),
-            CxxSourceRuleFactory.PicType.PDC),
+            depType == Linker.LinkableDepType.STATIC ?
+                CxxSourceRuleFactory.PicType.PDC :
+                CxxSourceRuleFactory.PicType.PIC),
         compileRule.getObjects());
   }
 
@@ -172,7 +174,12 @@ public class HaskellLibraryDescription implements
             baseTarget.getFlavors(),
             Sets.union(Type.FLAVOR_VALUES, cxxPlatforms.getFlavors()))
             .isEmpty());
-    BuildTarget target = baseTarget.withFlavors(Type.STATIC.getFlavor(), cxxPlatform.getFlavor());
+    BuildTarget target =
+        baseTarget.withFlavors(
+            depType == Linker.LinkableDepType.STATIC ?
+                Type.STATIC.getFlavor() :
+                Type.STATIC_PIC.getFlavor(),
+            cxxPlatform.getFlavor());
     Optional<Archive> archive = resolver.getRuleOptionalWithType(target, Archive.class);
     if (archive.isPresent()) {
       return archive.get();
@@ -298,7 +305,7 @@ public class HaskellLibraryDescription implements
             baseTarget.getFlavors(),
             Sets.union(Type.FLAVOR_VALUES, cxxPlatforms.getFlavors()))
             .isEmpty());
-    BuildTarget target = baseTarget.withFlavors(Type.STATIC.getFlavor(), cxxPlatform.getFlavor());
+    BuildTarget target = baseTarget.withFlavors(Type.SHARED.getFlavor(), cxxPlatform.getFlavor());
     Optional<HaskellLinkRule> linkRule =
         resolver.getRuleOptionalWithType(target, HaskellLinkRule.class);
     if (linkRule.isPresent()) {
