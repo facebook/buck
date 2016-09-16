@@ -119,6 +119,8 @@ The following sections are recognized by Buck:
     'ndk',
     'project',
     'python',
+    'resources',
+    'resources_per_rule',
     'rust',
     'test',
     'thrift',
@@ -2056,6 +2058,152 @@ your <code>.buckjavaargs</code> file</a>:
           separate, shared libraries.  This is prefererred for faster build-time speed.
         </li>
     </ul>
+  {/param}
+{/call}
+
+{call buckconfig.section}
+  {param name: 'resources' /}
+  {param description}
+    The settings to control how Buck uses resources to schedule the work.
+    When resource-aware scheduler is enabled, Buck will create more threads in attempt to
+    run resource-independent work in parallel. Number of build threads is still controlled
+    by <code>num_threads</code> option. Buck will also create a number of additional 
+    threads that will be used for tasks that don't require CPU: network fetches,
+    disk operations, etc. Total number of threads that Buck will operate is controlled by
+    <code>managed_thread_count</code> option, that is, it includes build threads and
+    additional threads.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'resources' /}
+  {param name: 'resource_aware_scheduling_enabled' /}
+  {param example_value: 'true' /}
+  {param description}
+    When set to <code>true</code>, Buck will attempt to use resource-aware scheduler.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'resources' /}
+  {param name: 'managed_thread_count' /}
+  {param example_value: '40' /}
+  {param description}
+    Buck will use <code>num_threads</code> threads for CPU intensive tasks 
+    (e.g. local building) and it will use <code>managed_thread_count - num_threads</code>
+    for other purposes. Thus, <code>managed_thread_count</code> value must be greater or
+    equal to  <code>num_threads</code> value. If you don't specify this value, Buck will
+    create built-in number of additional threads which equals to the number of CPU cores
+    on the machine. These additional threads will be used for non-CPU work like
+    networking, disk I/O and etc. But if one of the <code>num_threads</code> threads is
+    free then Buck will probably use it for non-CPU stuff as well.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'resources' /}
+  {param name: 'default_cpu_amount' /}
+  {param example_value: '1' /}
+  {param description}
+    Amount of CPU resource required by arbitrary job which has no specific setting for its
+    resource amounts. By default is 1 - a single CPU is required for the job to be completed.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'resources' /}
+  {param name: 'default_memory_amount' /}
+  {param example_value: '1' /}
+  {param description}
+    Amount of memory resource required by arbitrary job which has no specific setting for
+    its resource amounts. By default is 1 - a single memory resource is required for the
+    job to be completed. A single memory resource is an abstract value, currently it 
+    equals to 100 Mb.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'resources' /}
+  {param name: 'default_disk_io_amount' /}
+  {param example_value: '1' /}
+  {param description}
+    Amount of disk I/O resource required by arbitrary job which has no specific setting for
+    its resource amounts. A single disk resource is an abstract value. Think about it as
+    like SSD can handle 50 parallel disk jobs with weight 1, while HDD can handle only
+    20. Thus, if job needs to read or write a lot of data, it is better to assign a higher
+    value for its disk I/O amount. This will reduce the risk to have several similar jobs
+    running concurrently and performing huge disk I/O operations, slowing down build itself
+    and system performance.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'resources' /}
+  {param name: 'default_network_io_amount' /}
+  {param example_value: '1' /}
+  {param description}
+    A single network resource is an abstract value. Think about it as Ethernet can handle 
+    50 parallel network jobs with weight 1. Slower network interfaces can handle less
+    amount of jobs. If job needs to send  or receive a lot of data, it is better to assign
+    a higher value for its network I/O amount. 
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'resources' /}
+  {param name: 'max_memory_resource' /}
+  {param example_value: '30' /}
+  {param description}
+    Maximum memory resource available to Buck. By default is size of Java heap divided by
+    100 Mb. A single memory resource is an abstract value, currently it equals to 100 Mb.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'resources' /}
+  {param name: 'max_disk_io_resource' /}
+  {param example_value: '30' /}
+  {param description}
+    Maximum disk I/O resource available to Buck. By default the value is 50. Think about 
+    it as like SSD can handle 50 parallel disk jobs with weight 1, while HDD can handle only
+    20. Thus, if job needs to read or write a lot of data, it should require higher disk I/O
+    resource.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'resources' /}
+  {param name: 'max_network_io_resource' /}
+  {param example_value: '30' /}
+  {param description}
+    Maximum disk I/O resource available to Buck. By default the value is 30. Think about it
+    as Ethernet can handle 50 parallel network jobs with weight 1.
+    Slower network interfaces can handle less amount of jobs. If job needs to send or 
+    receive a lot of data, it should require higher network I/O resource.
+  {/param}
+{/call}
+
+{call buckconfig.section}
+  {param name: 'resources_per_rule' /}
+  {param description}
+    <p>
+      This section contains required resource amounts for various build rules. If amount for
+      some build rule is not specified in this section, then amount of 1 (CPU), 1 (Memory),
+      0 (disk i/o) and 0 (network i/o) is used. Amounts are used in local building, so in most
+      cases build rule will require 0 for network I/O unless it fetches any data from network.
+      Rule's name is constructed by converting the camel-style class name of the <code>BuildRule</code> 
+      in Buck's source code (e.g. <code>MyBuildRule</code>) into 
+      lower underscored name (e.g. <code>my_build_rule</code>).
+    </p>
+    {literal}<pre class="prettyprint lang-ini">
+[resources_per_rule]
+  cxx_link = 1, 1, 5, 0
+  android_binary = 8, 30, 30, 0
+     </pre>{/literal}
+    <p>
+      Buck will use the defined resource amounts during the build process in order to attempt
+      to use all available resources.
+    </p>
   {/param}
 {/call}
 
