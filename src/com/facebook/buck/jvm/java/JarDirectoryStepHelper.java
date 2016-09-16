@@ -36,8 +36,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileVisitOption;
@@ -76,13 +74,32 @@ public class JarDirectoryStepHelper {
       Iterable<Pattern> blacklist,
       ExecutionContext context) throws IOException {
 
-    // Write the manifest, as appropriate.
-    Manifest manifest = new Manifest();
-    manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+    Set<String> alreadyAddedEntries = Sets.newHashSet(alreadyAddedEntriesToOutputFile);
+
+    // Write the manifest first.
+    JarEntry metaInf = new JarEntry("META-INF/");
+    // We want deterministic JARs, so avoid mtimes. -1 is timzeone independent, 0 is not.
+    metaInf.setTime(ZipConstants.getFakeTime());
+    outputFile.putNextEntry(metaInf);
+    outputFile.closeEntry();
+    alreadyAddedEntries.add("META-INF/");
+
+    Manifest manifest = createManifest(
+        filesystem,
+        entriesToJar,
+        mainClass,
+        manifestFile,
+        mergeManifests);
+    JarEntry manifestEntry = new JarEntry(JarFile.MANIFEST_NAME);
+    // We want deterministic JARs, so avoid mtimes. -1 is timzeone independent, 0 is not.
+    manifestEntry.setTime(ZipConstants.getFakeTime());
+    outputFile.putNextEntry(manifestEntry);
+    manifest.write(outputFile);
+    outputFile.closeEntry();
+    alreadyAddedEntries.add(JarFile.MANIFEST_NAME);
 
     Path absoluteOutputPath = filesystem.getPathForRelativePath(pathToOutputFile);
 
-    Set<String> alreadyAddedEntries = Sets.newHashSet(alreadyAddedEntriesToOutputFile);
     for (Path entry : entriesToJar) {
       Path file = filesystem.getPathForRelativePath(entry);
       if (Files.isRegularFile(file)) {
@@ -95,7 +112,6 @@ public class JarDirectoryStepHelper {
             file,
             pathToOutputFile,
             outputFile,
-            manifest,
             alreadyAddedEntries,
             context.getBuckEventBus(),
             blacklist);
@@ -112,44 +128,13 @@ public class JarDirectoryStepHelper {
       }
     }
 
-    // Read the user supplied manifest file, allowing it to overwrite existing entries in the
-    // uber manifest we've built.
-    if (manifestFile.isPresent()) {
-      try (InputStream manifestStream = Files.newInputStream(
-          filesystem.getPathForRelativePath(manifestFile.get()))) {
-        Manifest userSupplied = new Manifest(manifestStream);
-
-        // In the common case, we want to use the merged manifests. In the uncommon case, we just
-        // want to use the one the user gave us.
-        if (mergeManifests) {
-          merge(manifest, userSupplied);
-        } else {
-          manifest = userSupplied;
-        }
-      }
+    if (mainClass.isPresent() && !mainClassPresent(mainClass.get(), alreadyAddedEntries)) {
+      context.getStdErr().print(
+          String.format(
+              "ERROR: Main class %s does not exist.\n",
+              mainClass.get()));
+      return 1;
     }
-
-    // The process of merging the manifests means that existing entries are
-    // overwritten. To ensure that our main_class is set as expected, we
-    // write it here.
-    if (mainClass.isPresent()) {
-      if (!mainClassPresent(mainClass.get(), alreadyAddedEntries)) {
-        context.getStdErr().print(
-            String.format(
-                "ERROR: Main class %s does not exist.\n",
-                mainClass.get()));
-        return 1;
-      }
-
-      manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, mainClass.get());
-    }
-
-    JarEntry manifestEntry = new JarEntry(JarFile.MANIFEST_NAME);
-
-    // We want deterministic JARs, so avoid mtimes. -1 is timzeone independent, 0 is not.
-    manifestEntry.setTime(ZipConstants.getFakeTime());
-    outputFile.putNextEntry(manifestEntry);
-    manifest.write(outputFile);
 
     return 0;
   }
@@ -195,6 +180,61 @@ public class JarDirectoryStepHelper {
         context);
   }
 
+  private static Manifest createManifest(
+      ProjectFilesystem filesystem,
+      ImmutableSortedSet<Path> entriesToJar,
+      Optional<String> mainClass,
+      Optional<Path> manifestFile,
+      boolean mergeManifests) throws IOException {
+    Manifest manifest = new Manifest();
+    manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+
+    if (mergeManifests) {
+      for (Path entry : entriesToJar) {
+        entry = filesystem.getPathForRelativePath(entry);
+        Manifest readManifest;
+        if (Files.isDirectory(entry)) {
+          Path manifestPath = entry.resolve(JarFile.MANIFEST_NAME);
+          if (!Files.exists(manifestPath)) {
+            continue;
+          }
+          try (InputStream inputStream = Files.newInputStream(manifestPath)) {
+            readManifest = new Manifest(inputStream);
+          }
+        } else {
+          // Assume a zip or jar file.
+          try (ZipFile zipFile = new ZipFile(entry.toFile())) {
+            ZipEntry manifestEntry = zipFile.getEntry(JarFile.MANIFEST_NAME);
+            if (manifestEntry == null) {
+              continue;
+            }
+            try (InputStream inputStream = zipFile.getInputStream(manifestEntry)) {
+              readManifest = new Manifest(inputStream);
+            }
+          }
+        }
+        merge(manifest, readManifest);
+      }
+    }
+
+    // Even if not merging manifests, we should include the one the user gave us. We do this last
+    // so that values from the user overwrite values from merged manifests.
+    if (manifestFile.isPresent()) {
+      Path path = filesystem.getPathForRelativePath(manifestFile.get());
+      try (InputStream stream = Files.newInputStream(path)) {
+        Manifest readManifest = new Manifest(stream);
+        merge(manifest, readManifest);
+      }
+    }
+
+    // We may have merged manifests and over-written the user-supplied main class. Add it back.
+    if (mainClass.isPresent()) {
+      manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, mainClass.get());
+    }
+
+    return manifest;
+  }
+
   private static boolean mainClassPresent(
       String mainClass,
       Set<String> alreadyAddedEntries) {
@@ -211,32 +251,28 @@ public class JarDirectoryStepHelper {
    * @param inputFile is assumed to be a zip
    * @param outputFile the path where output is being written to
    * @param jar is the stream to write to
-   * @param manifest that should get a copy of (@code jar}'s manifest entries.
    * @param alreadyAddedEntries is used to avoid duplicate entries.
    */
   private static void copyZipEntriesToJar(
       Path inputFile,
       Path outputFile,
       final CustomZipOutputStream jar,
-      Manifest manifest,
       Set<String> alreadyAddedEntries,
       BuckEventBus eventBus,
       Iterable<Pattern> blacklist) throws IOException {
     try (ZipFile zip = new ZipFile(inputFile.toFile())) {
-      zipEntryLoop:
       for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements(); ) {
         ZipEntry entry = entries.nextElement();
         String entryName = entry.getName();
 
-        if (entryName.equals(JarFile.MANIFEST_NAME)) {
-          Manifest readManifest = readManifest(zip, entry);
-          merge(manifest, readManifest);
+        // We already read the manifest. No need to read it again
+        if (JarFile.MANIFEST_NAME.equals(entryName)) {
           continue;
         }
 
         // Check if the entry belongs to the blacklist and it should be excluded from the Jar.
         if (shouldEntryBeRemovedFromJar(eventBus, entryName, blacklist)) {
-          continue zipEntryLoop;
+          continue;
         }
 
         // We're in the process of merging a bunch of different jar files. These typically contain
@@ -289,17 +325,6 @@ public class JarDirectoryStepHelper {
     return entry.isDirectory() ? Level.FINE : Level.INFO;
   }
 
-  private static Manifest readManifest(ZipFile zip, ZipEntry manifestMfEntry) throws IOException {
-    try (
-        ByteArrayOutputStream output = new ByteArrayOutputStream((int) manifestMfEntry.getSize());
-        InputStream stream = zip.getInputStream(manifestMfEntry)
-    ) {
-      ByteStreams.copy(stream, output);
-      ByteArrayInputStream rawManifest = new ByteArrayInputStream(output.toByteArray());
-      return new Manifest(rawManifest);
-    }
-  }
-
   /**
    * @param directory that must not contain symlinks with loops.
    * @param jar is the file being written.
@@ -326,6 +351,12 @@ public class JarDirectoryStepHelper {
               throws IOException {
             String relativePath =
                 MorePaths.pathWithUnixSeparators(MorePaths.relativize(directory, file));
+
+            // Skip re-reading the manifest
+            if (JarFile.MANIFEST_NAME.equals(relativePath)) {
+              return FileVisitResult.CONTINUE;
+            }
+
             // Check if the entry belongs to the blacklist and it should be excluded from the Jar.
             if (shouldEntryBeRemovedFromJar(eventBus, relativePath, blacklist)) {
               return FileVisitResult.CONTINUE;
@@ -418,7 +449,12 @@ public class JarDirectoryStepHelper {
     Map<String, Attributes> entries = from.getEntries();
     if (entries != null) {
       for (Map.Entry<String, Attributes> entry : entries.entrySet()) {
-        into.getEntries().put(entry.getKey(), entry.getValue());
+        Attributes existing = into.getAttributes(entry.getKey());
+        if (existing == null) {
+          existing = new Attributes();
+          into.getEntries().put(entry.getKey(), existing);
+        }
+        existing.putAll(entry.getValue());
       }
     }
   }
