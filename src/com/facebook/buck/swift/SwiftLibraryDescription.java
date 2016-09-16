@@ -106,16 +106,19 @@ public class SwiftLibraryDescription implements
 
 
   private final CxxBuckConfig cxxBuckConfig;
+  private final SwiftBuckConfig swiftBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
   private final CxxPlatform defaultCxxPlatform;
 
   public SwiftLibraryDescription(
       CxxBuckConfig cxxBuckConfig,
+      SwiftBuckConfig swiftBuckConfig,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform) {
     this.cxxBuckConfig = cxxBuckConfig;
+    this.swiftBuckConfig = swiftBuckConfig;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
     this.defaultCxxPlatform = defaultCxxPlatform;
@@ -220,6 +223,7 @@ public class SwiftLibraryDescription implements
               .toSortedSet(Ordering.natural()));
       return new SwiftCompile(
           cxxPlatform,
+          swiftBuckConfig,
           params,
           new SourcePathResolver(resolver),
           swiftCompiler.get(),

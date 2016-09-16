@@ -61,7 +61,6 @@ import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.DownloadConfig;
-import com.facebook.buck.cxx.PrebuiltCxxLibraryGroupDescription;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxGenruleDescription;
@@ -72,6 +71,7 @@ import com.facebook.buck.cxx.CxxTestDescription;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.InferBuckConfig;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
+import com.facebook.buck.cxx.PrebuiltCxxLibraryGroupDescription;
 import com.facebook.buck.d.DBinaryDescription;
 import com.facebook.buck.d.DBuckConfig;
 import com.facebook.buck.d.DLibraryDescription;
@@ -145,6 +145,7 @@ import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.ShBinaryDescription;
 import com.facebook.buck.shell.ShTestDescription;
 import com.facebook.buck.shell.WorkerToolDescription;
+import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.thrift.ThriftBuckConfig;
 import com.facebook.buck.thrift.ThriftCxxEnhancer;
@@ -498,6 +499,8 @@ public class KnownBuildRuleTypes {
 
     LuaConfig luaConfig = new LuaBuckConfig(config, executableFinder);
 
+    SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
+
     CxxBinaryDescription cxxBinaryDescription =
         new CxxBinaryDescription(
             cxxBuckConfig,
@@ -515,6 +518,7 @@ public class KnownBuildRuleTypes {
     SwiftLibraryDescription swiftLibraryDescription =
         new SwiftLibraryDescription(
             cxxBuckConfig,
+            swiftBuckConfig,
             cxxPlatforms,
             platformFlavorsToAppleCxxPlatforms,
             defaultCxxPlatform);

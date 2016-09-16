@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.InferBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.FakeProcess;
@@ -173,6 +174,7 @@ public class FakeAppleRuleDescriptions {
   public static final SwiftLibraryDescription SWIFT_LIBRARY_DESCRIPTION =
       new SwiftLibraryDescription(
           CxxPlatformUtils.DEFAULT_CONFIG,
+          new SwiftBuckConfig(DEFAULT_BUCK_CONFIG),
           DEFAULT_APPLE_FLAVOR_DOMAIN,
           DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
           DEFAULT_IPHONEOS_X86_64_PLATFORM.getCxxPlatform());
