@@ -25,12 +25,16 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Represents a directed graph with unweighted edges. For a given source and sink node pair, there
@@ -51,21 +55,35 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
    * Represents the edges in the graph.
    * Keys are source nodes; values are corresponding sync nodes.
    */
-  private final HashMultimap<T, T> outgoingEdges;
+  private final SetMultimap<T, T> outgoingEdges;
 
   /**
    * Represents the edges in the graph.
    * Keys are sink nodes; values are corresponding source nodes.
    */
-  private final HashMultimap<T, T> incomingEdges;
+  private final SetMultimap<T, T> incomingEdges;
+
+  private MutableDirectedGraph(
+      Set<T> nodes,
+      SetMultimap<T, T> outgoingEdges,
+      SetMultimap<T, T> incomingEdges) {
+    this.nodes = nodes;
+    this.outgoingEdges = outgoingEdges;
+    this.incomingEdges = incomingEdges;
+  }
 
   /**
    * Creates a new graph with no nodes or edges.
    */
   public MutableDirectedGraph() {
-    this.nodes = Sets.newHashSet();
-    this.outgoingEdges = HashMultimap.create();
-    this.incomingEdges = HashMultimap.create();
+    this(new HashSet<T>(), HashMultimap.<T, T>create(), HashMultimap.<T, T>create());
+  }
+
+  public static <T> MutableDirectedGraph<T> createConcurrent() {
+    return new MutableDirectedGraph<>(
+        Collections.newSetFromMap(new ConcurrentHashMap<T, Boolean>()),
+        Multimaps.synchronizedSetMultimap(HashMultimap.<T, T>create()),
+        Multimaps.synchronizedSetMultimap(HashMultimap.<T, T>create()));
   }
 
   /** @return the number of nodes in the graph */
