@@ -689,3 +689,31 @@ class BuckTest(unittest.TestCase):
         assert not build_file_processor._is_in_dir('foo.py', 'foo')
         assert not build_file_processor._is_in_dir('foo/bar.py', 'foo/bar')
         assert not build_file_processor._is_in_dir('foo/bars', 'foo/bar')
+
+    def test_wrap_access_prints_warnings(self):
+        self.enable_build_file_sandboxing = True
+        path = os.path.normpath(os.path.join(self.project_root, 'foo.py'))
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=("open('{0}', 'r')".format(path.replace('\\', '\\\\')),))
+        py_file = ProjectFile(self.project_root, path='foo.py', contents=('foo',))
+        self.write_files(build_file, py_file)
+        build_file_processor = self.create_build_file_processor()
+        diagnostics = set()
+        build_file_processor.process(build_file.root, build_file.prefix, build_file.path,
+                                     diagnostics)
+        expected_message = (
+            "Access to a non-tracked file detected! {0} is not a ".format(path) +
+            "known dependency and it should be added using 'add_build_file_dep' " +
+            "function before trying to access the file, e.g.\n" +
+            "'add_build_file_dep({0!r})'\n".format(py_file.name) +
+            "The 'add_build_file_dep' function is documented at " +
+            "https://buckbuild.com/function/add_build_file_dep.html\n"
+        )
+        self.assertEqual(
+            set([Diagnostic(
+                message=expected_message,
+                level='warning',
+                source='sandboxing')]),
+            diagnostics)

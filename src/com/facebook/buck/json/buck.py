@@ -769,6 +769,14 @@ class BuildFileProcessor(object):
         directory = os.path.join(os.path.abspath(directory), '')
         return os.path.commonprefix([path, directory]) == directory
 
+    def _called_from_project_file(self):
+        """
+        Returns true if the function was called from a project file.
+        """
+        frame = self._get_callers_frame()
+        filename = inspect.getframeinfo(frame).filename
+        return self._is_in_dir(filename, self._project_root)
+
     def _include_defs(self, name, implicit_includes=None):
         """
         Pull the named include into the current caller's context.
@@ -839,6 +847,17 @@ class BuildFileProcessor(object):
         self._build_env_stack.pop()
         if self._build_env_stack:
             self._update_functions(self._build_env_stack[-1])
+
+    def _emit_warning(self, message, source):
+        """
+        Add a warning to the current build_env's diagnostics.
+        """
+        if self._build_env_stack:
+            self._build_env_stack[-1].diagnostics.add(
+                Diagnostic(
+                    message=message,
+                    level='warning',
+                    source=source))
 
     def _block_unsafe_function(self, module, name):
         # Returns a function that ignores any arguments and raises AttributeError.
@@ -946,12 +965,8 @@ class BuildFileProcessor(object):
                 # which is how '__import__' works.
                 name = name.split('.')[0]
 
-            # Get the name of the file where import is used. The import will be always allowed
-            # if the file is not in the project root directory.
-            frame = self._get_callers_frame()
-            filename = inspect.getframeinfo(frame).filename
-
-            if name in self._import_whitelist or not self._is_in_dir(filename, self._project_root):
+            # The import will be always allowed if it was not called from a project file.
+            if name in self._import_whitelist or not self._called_from_project_file():
                 # Importing a module may cause more '__import__' calls if the module uses other
                 # modules. Such calls should not be blocked if the top-level import was allowed.
                 with self._allow_unsafe_import():
@@ -993,6 +1008,81 @@ class BuildFileProcessor(object):
         finally:
             # Restore previous '__builtin__.__import__'
             __builtin__.__import__ = previous_import
+
+    def _file_access_wrapper(self, real):
+        """
+        Return wrapper around function so that accessing a file produces warning if it is
+        not a known dependency.
+        """
+
+        @functools.wraps(real)
+        def wrapper(filename, *arg, **kwargs):
+            # Restore original 'open' because it is used by 'inspect.currentframe()' in
+            # '_called_from_project_file()'
+            with self._wrap_file_access(wrap=False):
+                if self._called_from_project_file():
+                    path = os.path.abspath(filename)
+                    if path not in self._build_env_stack[-1].includes:
+                        dep_path = '//' + os.path.relpath(path, self._project_root)
+                        warning_message = (
+                            "Access to a non-tracked file detected! {0} is not a ".format(path) +
+                            "known dependency and it should be added using 'add_build_file_dep' " +
+                            "function before trying to access the file, e.g.\n" +
+                            "'add_build_file_dep('{0}')'\n".format(dep_path) +
+                            "The 'add_build_file_dep' function is documented at " +
+                            "https://buckbuild.com/function/add_build_file_dep.html\n"
+                        )
+                        self._emit_warning(warning_message, 'sandboxing')
+
+                return real(filename, *arg, **kwargs)
+
+        # Save the real function for restoration.
+        wrapper._real = real
+
+        return wrapper
+
+    @contextmanager
+    def _wrap_fun_for_file_access(self, obj, attr, wrap=True):
+        """
+        Wrap a function to check if accessed files are known dependencies.
+        """
+        real = getattr(obj, attr)
+        if wrap:
+            # Don't wrap again
+            if not hasattr(real, "_real"):
+                wrapped = self._file_access_wrapper(real)
+                setattr(obj, attr, wrapped)
+        elif hasattr(real, "_real"):
+            # Restore real function if it was wrapped
+            setattr(obj, attr, real._real)
+
+        try:
+            yield
+        finally:
+            setattr(obj, attr, real)
+
+    @contextmanager
+    def _wrap_file_access(self, wrap=True):
+        """
+        Wrap 'open' so that they it checks if accessed files are known dependencies.
+        If 'wrap' is equal to False, restore original function instead.
+        """
+        with self._wrap_fun_for_file_access(__builtin__, 'open', wrap):
+            yield
+
+    @contextmanager
+    def _build_file_sandboxing(self):
+        """
+        Creates a context that sandboxes build file processing.
+        """
+
+        if not self._enable_build_file_sandboxing:
+            yield
+            return
+
+        with self._wrap_file_access():
+            with self._allow_unsafe_import(False):
+                yield
 
     def _process(self, build_env, path, implicit_includes=None):
         """
@@ -1043,8 +1133,9 @@ class BuildFileProcessor(object):
 
         # We don't open this file as binary, as we assume it's a textual source
         # file.
-        with open(path, 'r') as f:
-            contents = f.read()
+        with self._wrap_file_access(wrap=False):
+            with open(path, 'r') as f:
+                contents = f.read()
 
         # Enable absolute imports.  This prevents the compiler from trying to
         # do a relative import first, and warning that this module doesn't
@@ -1052,8 +1143,8 @@ class BuildFileProcessor(object):
         future_features = __future__.absolute_import.compiler_flag
         code = compile(contents, path, 'exec', future_features, 1)
 
-        # Execute code with overriden import
-        with self._allow_unsafe_import(False):
+        # Execute code with build file sandboxing
+        with self._build_file_sandboxing():
             exec(code, module.__dict__)
 
         # Restore the previous build context.
@@ -1165,9 +1256,10 @@ class BuildFileProcessor(object):
         :param autodeps_file: Absolute path to the expected .autodeps file.
         :raises InvalidSignatureError:
         """
-        with open(autodeps_file, 'r') as stream:
-            signature_line = stream.readline()
-            contents = stream.read()
+        with self._wrap_file_access(wrap=False):
+            with open(autodeps_file, 'r') as stream:
+                signature_line = stream.readline()
+                contents = stream.read()
 
         match = GENDEPS_SIGNATURE.match(signature_line)
         if not match:
