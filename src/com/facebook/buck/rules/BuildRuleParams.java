@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
@@ -85,6 +86,10 @@ public class BuildRuleParams {
 
   public BuildRuleParams appendExtraDeps(Iterable<? extends BuildRule> additional) {
     return appendExtraDeps(Suppliers.ofInstance(additional));
+  }
+
+  public BuildRuleParams appendExtraDeps(BuildRule... additional) {
+    return appendExtraDeps(Suppliers.ofInstance(ImmutableList.copyOf(additional)));
   }
 
   public BuildRuleParams copyWithDeps(

@@ -133,4 +133,11 @@ public class HaskellBinaryIntegrationTest {
     assertThat(result.getStdout(), Matchers.equalTo("good bye"));
   }
 
+  @Test
+  public void buildError() throws IOException {
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckBuild("//:error#default," + getLinkFlavor());
+    result.assertFailure();
+  }
+
 }

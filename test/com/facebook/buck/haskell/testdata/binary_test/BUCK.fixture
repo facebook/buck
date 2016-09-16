@@ -73,3 +73,11 @@ haskell_binary(
     ':c_header',
   ],
 )
+
+haskell_binary(
+  name = 'error',
+  main = 'Error',
+  srcs = [
+    'Error.hs',
+  ],
+)
