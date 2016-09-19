@@ -20,6 +20,7 @@ import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
+import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.SchemeActionType;
@@ -30,6 +31,8 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.json.BuildFileParseException;
@@ -46,6 +49,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.BuildTargetParser;
@@ -63,6 +67,7 @@ import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
+import com.facebook.buck.rules.TargetGroup;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
@@ -1243,12 +1248,78 @@ public class ProjectCommand extends BuildCommand {
       }
     }
 
+    projectGraph = propagateLinkFlavor(projectGraph, projectGraph.getAll(graphRootsOrSourceTargets));
+
     return TargetGraphAndTargets.create(
         graphRoots,
         projectGraph,
         associatedProjectPredicate,
         isWithTests,
         explicitTestTargets);
+  }
+
+  private TargetGraph propagateLinkFlavor(
+      final TargetGraph projectGraph,
+      Iterable<TargetNode<?>> rootNodes) {
+    final MutableDirectedGraph<TargetNode<?>> flavoredGraph =
+        new MutableDirectedGraph<>();
+    final Map<BuildTarget, TargetNode<?>> targetsToNodes = new HashMap<>();
+    final ImmutableSet.Builder<TargetGroup> groups = ImmutableSet.builder();
+
+    new AbstractBreadthFirstTraversal<TargetNode<?>>(rootNodes) {
+      @Override
+      public ImmutableSet<TargetNode<?>>visit(TargetNode<?> node) {
+        flavoredGraph.addNode(node);
+        for (TargetNode<?> dep : projectGraph.getNodeDepencies(node)) {
+          flavoredGraph.addEdge(node, dep);
+        }
+
+        // check if this is an apple library with a framework parent
+        if (node.getType() == AppleLibraryDescription.TYPE &&
+            hasFrameworkFlavoredParent(flavoredGraph, node)) {
+          TargetNode<?> flavoredNode = node.withFlavors(
+              ImmutableSet.<Flavor>builder().addAll(node.getBuildTarget().getFlavors())
+                  .add(AppleDescriptions.FRAMEWORK_FLAVOR)
+                  .build());
+
+          flavoredGraph.addNode(flavoredNode);
+          for (TargetNode<?> ourParent : flavoredGraph.getIncomingNodesFor(node)) {
+            flavoredGraph.addEdge(ourParent, flavoredNode);
+          }
+          flavoredGraph.removeNode(node);
+          targetsToNodes.put(BuildTarget.of(
+              flavoredNode.getBuildTarget().getUnflavoredBuildTarget()),
+              flavoredNode);
+
+          Map<BuildTarget, Iterable<BuildTarget>> replacements = new HashMap<>();
+          replacements.put(node.getBuildTarget(), ImmutableList.of(flavoredNode.getBuildTarget()));
+          for (TargetGroup group : projectGraph.getGroupsContainingTarget(node.getBuildTarget())) {
+            groups.add(group.withReplacedTargets(replacements));
+          }
+        } else {
+          targetsToNodes.put(
+              BuildTarget.of(node.getBuildTarget().getUnflavoredBuildTarget()),
+              node);
+          groups.addAll(projectGraph.getGroupsContainingTarget(node.getBuildTarget()));
+        }
+
+        return projectGraph.getNodeDepencies(node);
+      }
+    }.start();
+
+    return new TargetGraph(flavoredGraph, ImmutableMap.copyOf(targetsToNodes), groups.build());
+  }
+
+  private boolean hasFrameworkFlavoredParent(
+      MutableDirectedGraph<TargetNode<?>> graph,
+      TargetNode<?> node) {
+    for (TargetNode<?> parent : graph.getIncomingNodesFor(node)) {
+      if (parent.getType() == AppleLibraryDescription.TYPE &&
+          parent.getBuildTarget().getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public static ImmutableSet<BuildTarget> replaceWorkspacesWithSourceTargetsIfPossible(
