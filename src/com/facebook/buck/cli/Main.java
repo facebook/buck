@@ -632,6 +632,18 @@ public final class Main {
           commandMode,
           watchmanFreshInstanceAction,
           args);
+    } catch (IOException e) {
+      if (e.getMessage().startsWith("No space left on device")) {
+        (new Console(
+            Verbosity.STANDARD_INFORMATION,
+            stdOut,
+            stdErr,
+            new Ansi(
+                AnsiEnvironmentChecking.environmentSupportsAnsiEscapes(
+                    platform, clientEnvironment)))).printBuildFailure(e.getMessage());
+      } else {
+        LOG.error(e);
+      }
     } catch (HumanReadableException e) {
       Console console = new Console(
           Verbosity.STANDARD_INFORMATION,
