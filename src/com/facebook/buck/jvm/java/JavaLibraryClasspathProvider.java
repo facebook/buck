@@ -23,7 +23,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
@@ -79,22 +78,6 @@ public class JavaLibraryClasspathProvider {
     }
 
     return classpathDeps.build();
-  }
-
-  public static ImmutableSetMultimap<JavaLibrary, Path> getDeclaredClasspathEntries(
-      JavaLibrary javaLibraryRule) {
-    final ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
-        ImmutableSetMultimap.builder();
-
-    Iterable<JavaLibrary> javaLibraryDeps = getJavaLibraryDeps(
-        javaLibraryRule.getDepsForTransitiveClasspathEntries());
-
-    for (JavaLibrary rule : javaLibraryDeps) {
-      for (Path path : rule.getOutputClasspaths()) {
-        classpathEntries.put(rule, rule.getProjectFilesystem().resolve(path));
-      }
-    }
-    return classpathEntries.build();
   }
 
   static FluentIterable<JavaLibrary> getJavaLibraryDeps(Iterable<BuildRule> deps) {

@@ -48,7 +48,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -58,7 +57,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -124,8 +122,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   private final Supplier<ImmutableSet<Path>>
       transitiveClasspathsSupplier;
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
-  private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
-      declaredClasspathEntriesSupplier;
 
   private final SourcePath abiJar;
   private final boolean trackClassUsage;
@@ -322,15 +318,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
               }
             });
 
-    this.declaredClasspathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
-          @Override
-          public ImmutableSetMultimap<JavaLibrary, Path> get() {
-            return JavaLibraryClasspathProvider.getDeclaredClasspathEntries(
-                DefaultJavaLibrary.this);
-          }
-        });
-
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
     this.generatedSourceFolder = generatedSourceFolder;
     this.classesToRemoveFromJar = classesToRemoveFromJar;
@@ -423,16 +410,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     return builder.build();
   }
 
-  /**
-   * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
-   * compile the {@code srcs} associated with this rule.  This set only contains the classpath
-   * entries for those rules that are declared as direct dependencies of this rule.
-   */
-  @VisibleForTesting
-  ImmutableSetMultimap<JavaLibrary, Path> getDeclaredClasspathEntries() {
-    return declaredClasspathEntriesSupplier.get();
-  }
-
   @Override
   public ImmutableSet<Path> getOutputClasspaths() {
     return outputClasspathEntriesSupplier.get();
@@ -458,12 +435,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    // Only override the bootclasspath if this rule is supposed to compile Android code.
-    ImmutableSetMultimap<JavaLibrary, Path> declaredClasspathEntries =
-        ImmutableSetMultimap.<JavaLibrary, Path>builder()
-            .putAll(getDeclaredClasspathEntries())
-            .putAll(this, additionalClasspathEntries)
-            .build();
+    FluentIterable<JavaLibrary> declaredClasspathDeps =
+        JavaLibraryClasspathProvider.getJavaLibraryDeps(getDepsForTransitiveClasspathEntries());
 
 
     // Always create the output directory, even if there are no .java files to compile because there
@@ -475,7 +448,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     SuggestBuildRules suggestBuildRule =
         DefaultSuggestBuildRules.createSuggestBuildFunction(
             JAR_RESOLVER,
-            declaredClasspathEntries.keySet(),
+            declaredClasspathDeps.toSet(),
             ImmutableSet.<JavaLibrary>builder()
                 .addAll(getTransitiveClasspathDeps())
                 .add(this)
@@ -495,8 +468,23 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         .filter(Predicates.notNull())
         .toSet();
 
+    final ProjectFilesystem projectFilesystem = getProjectFilesystem();
+    Iterable<Path> declaredClasspaths = declaredClasspathDeps.transformAndConcat(
+        new Function<JavaLibrary, Iterable<Path>>() {
+          @Override
+          public Iterable<Path> apply(JavaLibrary input) {
+            return input.getOutputClasspaths();
+          }
+        }).transform(new Function<Path, Path>() {
+      @Override
+      public Path apply(Path input) {
+        return projectFilesystem.resolve(input);
+      }
+    });
+    // Only override the bootclasspath if this rule is supposed to compile Android code.
     ImmutableSortedSet<Path> declared = ImmutableSortedSet.<Path>naturalOrder()
-        .addAll(declaredClasspathEntries.values())
+        .addAll(declaredClasspaths)
+        .addAll(additionalClasspathEntries)
         .addAll(provided)
         .build();
 

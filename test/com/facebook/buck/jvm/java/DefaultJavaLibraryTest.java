@@ -372,9 +372,10 @@ public class DefaultJavaLibraryTest {
     // libraryOne responds like an ordinary prebuilt_jar with no dependencies. We have to use a
     // FakeJavaLibraryRule so that we can override the behavior of getAbiKey().
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    SourcePathResolver resolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+    BuildRuleResolver ruleResolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
     FakeJavaLibrary libraryOne = new FakeJavaLibrary(libraryOneTarget, resolver) {
 
       @Override
@@ -397,10 +398,6 @@ public class DefaultJavaLibraryTest {
         return ImmutableSet.of();
       }
     };
-
-    BuildRuleResolver ruleResolver = new BuildRuleResolver(
-        TargetGraph.EMPTY,
-        new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(libraryOne);
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
@@ -419,12 +416,6 @@ public class DefaultJavaLibraryTest {
         .toList();
     assertEquals("There should be only one javac step.", 1, javacSteps.size());
     JavacStep javacStep = javacSteps.get(0);
-    assertEquals(
-        "The classpath to use when compiling //:libtwo according to getDeclaredClasspathEntries()" +
-            " should contain only bar.jar.",
-        ImmutableSet.of(libraryOne.getProjectFilesystem().resolve("java/src/com/libone/bar.jar")),
-        ImmutableSet.copyOf(
-            ((DefaultJavaLibrary) libraryTwo).getDeclaredClasspathEntries().values()));
     assertEquals(
         "The classpath for the javac step to compile //:libtwo should contain only bar.jar.",
         ImmutableSet.of(libraryOne.getProjectFilesystem().resolve("java/src/com/libone/bar.jar")),

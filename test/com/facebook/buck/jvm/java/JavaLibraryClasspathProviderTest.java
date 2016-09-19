@@ -35,7 +35,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -205,19 +204,6 @@ public class JavaLibraryClasspathProviderTest {
         JavaLibraryClasspathProvider.getTransitiveClasspathDeps(
             lib,
             Optional.of(sourcePathFunction.apply(lib.getPathToOutput())))
-    );
-  }
-
-  @Test
-  public void getDeclaredClasspathEntries() throws Exception {
-    JavaLibrary aLib = (JavaLibrary) a;
-    assertEquals(
-        ImmutableSetMultimap.builder()
-            .put(c, getFullOutput(c))
-            .put(c, getFullOutput(e))  // c exports e
-            // b is non-java so b and d do not appear
-            .build(),
-        JavaLibraryClasspathProvider.getDeclaredClasspathEntries(aLib)
     );
   }
 
