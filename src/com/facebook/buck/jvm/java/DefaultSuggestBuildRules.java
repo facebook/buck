@@ -117,7 +117,7 @@ final class DefaultSuggestBuildRules implements SuggestBuildRules {
     }
 
     ImmutableSet<Path> classPaths =
-        ((JavaLibrary) transitiveNotDeclaredRule).getOutputClasspathEntries();
+        ((JavaLibrary) transitiveNotDeclaredRule).getOutputClasspaths();
     boolean containsMissingBuildRule = false;
     // Open the output jar for every jar contained as the output of transitiveNotDeclaredDep.  With
     // the exception of rules that export their dependencies, this will result in a single

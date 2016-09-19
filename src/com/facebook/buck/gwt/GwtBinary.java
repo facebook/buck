@@ -214,7 +214,7 @@ public class GwtBinary extends AbstractBuildRule {
       }
 
       JavaLibrary javaLibrary = (JavaLibrary) dep;
-      for (Path path : javaLibrary.getOutputClasspathEntries()) {
+      for (Path path : javaLibrary.getOutputClasspaths()) {
         classpathEntries.add(path);
       }
     }

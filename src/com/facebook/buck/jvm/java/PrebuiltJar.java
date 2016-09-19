@@ -205,7 +205,7 @@ public class PrebuiltJar extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableSet<Path> getOutputClasspathEntries() {
+  public ImmutableSet<Path> getOutputClasspaths() {
     return ImmutableSet.of(getResolver().getAbsolutePath(getBinaryJar()));
   }
 

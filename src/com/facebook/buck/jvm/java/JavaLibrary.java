@@ -22,7 +22,6 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
@@ -66,20 +65,6 @@ public interface JavaLibrary extends BuildRule, HasClasspathEntries,
   // TODO(natthu): This can probably be avoided by using a JavaPackageable interface similar to
   // AndroidPackageable.
   public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries();
-
-  /**
-   * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
-   * build a jar associated with this rule.  Contains the classpath entries for the transitive
-   * dependencies of these rules.
-   */
-  @Override
-  ImmutableSet<Path> getTransitiveClasspaths();
-
-  /**
-   * @return The set of entries to pass to {@code javac}'s {@code -classpath} flag in order to
-   * compile rules that depend on this rule.
-   */
-  public ImmutableSet<Path> getOutputClasspathEntries();
 
   public ImmutableSortedSet<Path> getJavaSrcs();
 

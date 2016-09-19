@@ -383,7 +383,7 @@ public class DefaultJavaLibraryTest {
       }
 
       @Override
-      public ImmutableSet<Path> getOutputClasspathEntries() {
+      public ImmutableSet<Path> getOutputClasspaths() {
         return ImmutableSet.of(Paths.get("java/src/com/libone/bar.jar"));
       }
 
@@ -527,19 +527,19 @@ public class DefaultJavaLibraryTest {
             "classpath when compiling itself.",
         ImmutableSet.of(
             root.resolve(DefaultJavaLibrary.getOutputJarPath(nonIncludedTarget, filesystem))),
-        getJavaLibrary(notIncluded).getOutputClasspathEntries());
+        getJavaLibrary(notIncluded).getOutputClasspaths());
 
     assertEquals(
         ImmutableSet.of(
             root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem))),
-        getJavaLibrary(included).getOutputClasspathEntries());
+        getJavaLibrary(included).getOutputClasspaths());
 
     assertEquals(
         ImmutableSet.of(
             root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem)),
             root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget, filesystem)),
             root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem))),
-        getJavaLibrary(libraryOne).getOutputClasspathEntries());
+        getJavaLibrary(libraryOne).getOutputClasspaths());
 
     assertEquals(
         "//:libtwo exports its deps, so a java_library that depends on //:libtwo should include " +
@@ -550,7 +550,7 @@ public class DefaultJavaLibraryTest {
             root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryOneTarget, filesystem)),
             root.resolve(DefaultJavaLibrary.getOutputJarPath(libraryTwoTarget, filesystem)),
             root.resolve(DefaultJavaLibrary.getOutputJarPath(includedTarget, filesystem))),
-        getJavaLibrary(libraryTwo).getOutputClasspathEntries());
+        getJavaLibrary(libraryTwo).getOutputClasspaths());
 
     assertEquals(
         "A java_binary that depends on //:parent should include libone.jar, libtwo.jar and " +
@@ -581,7 +581,7 @@ public class DefaultJavaLibraryTest {
             "-classpath when compiling itself.",
         ImmutableSet.of(
             root.resolve(DefaultJavaLibrary.getOutputJarPath(parentTarget, filesystem))),
-        getJavaLibrary(parent).getOutputClasspathEntries());
+        getJavaLibrary(parent).getOutputClasspaths());
   }
 
   /**

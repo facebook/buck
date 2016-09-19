@@ -1213,6 +1213,12 @@ public class AndroidBinary
   }
 
   @Override
+  public ImmutableSet<Path> getOutputClasspaths() {
+    // The apk has no exported deps or classpath contributions of its own
+    return ImmutableSet.of();
+  }
+
+  @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
     if (ExopackageMode.enabledForNativeLibraries(exopackageModes)) {

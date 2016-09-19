@@ -171,6 +171,12 @@ public class JavaBinary extends AbstractBuildRule
     return ImmutableSet.of();
   }
 
+  @Override
+  public ImmutableSet<Path> getOutputClasspaths() {
+    // A binary has no exported deps or classpath contributions of its own
+    return ImmutableSet.of();
+  }
+
   private Path getOutputDirectory() {
     return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s").getParent();
   }

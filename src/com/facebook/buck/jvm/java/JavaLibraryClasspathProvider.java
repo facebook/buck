@@ -48,7 +48,7 @@ public class JavaLibraryClasspathProvider {
     }
 
     for (JavaLibrary rule : javaExportedLibraryDeps) {
-      outputClasspathBuilder.addAll(rule.getOutputClasspathEntries());
+      outputClasspathBuilder.addAll(rule.getOutputClasspaths());
     }
 
     if (outputJar.isPresent()) {
@@ -72,7 +72,7 @@ public class JavaLibraryClasspathProvider {
       classpathDeps.add(javaLibrary);
     }
 
-    // Or if there are exported dependencies, to be consistent with getTransitiveClasspathEntries.
+    // Or if there are exported dependencies, to be consistent with getTransitiveClasspaths.
     if (javaLibrary instanceof ExportDependencies &&
         !((ExportDependencies) javaLibrary).getExportedDeps().isEmpty()) {
       classpathDeps.add(javaLibrary);
@@ -90,7 +90,7 @@ public class JavaLibraryClasspathProvider {
         javaLibraryRule.getDepsForTransitiveClasspathEntries());
 
     for (JavaLibrary rule : javaLibraryDeps) {
-      for (Path path : rule.getOutputClasspathEntries()) {
+      for (Path path : rule.getOutputClasspaths()) {
         classpathEntries.put(rule, rule.getProjectFilesystem().resolve(path));
       }
     }

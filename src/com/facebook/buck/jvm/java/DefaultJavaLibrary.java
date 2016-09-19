@@ -434,7 +434,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableSet<Path> getOutputClasspathEntries() {
+  public ImmutableSet<Path> getOutputClasspaths() {
     return outputClasspathEntriesSupplier.get();
   }
 
@@ -489,7 +489,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
             new Function<JavaLibrary, Collection<Path>>() {
               @Override
               public Collection<Path> apply(JavaLibrary input) {
-                return input.getOutputClasspathEntries();
+                return input.getOutputClasspaths();
               }
             })
         .filter(Predicates.notNull())

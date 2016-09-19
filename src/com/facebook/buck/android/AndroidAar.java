@@ -190,4 +190,10 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
   public ImmutableSet<Path> getImmediateClasspaths() {
     return ImmutableSet.of();
   }
+
+  @Override
+  public ImmutableSet<Path> getOutputClasspaths() {
+    // The aar has no exported deps or classpath contributions of its own
+    return ImmutableSet.of();
+  }
 }

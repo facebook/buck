@@ -73,7 +73,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
-  public ImmutableSet<Path> getOutputClasspathEntries() {
+  public ImmutableSet<Path> getOutputClasspaths() {
     return ImmutableSet.of();
   }
 

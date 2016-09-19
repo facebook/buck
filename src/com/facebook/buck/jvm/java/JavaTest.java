@@ -503,6 +503,11 @@ public class JavaTest
     return compiledTestsLibrary.getImmediateClasspaths();
   }
 
+  @Override
+  public ImmutableSet<Path> getOutputClasspaths() {
+    return compiledTestsLibrary.getOutputClasspaths();
+  }
+
   @VisibleForTesting
   static class CompiledClassFileFinder {
 
