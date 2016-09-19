@@ -40,6 +40,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -297,8 +298,18 @@ public class OfflineScribeLogger extends ScribeLogger {
           return;
         }
 
-        InputStream logFileStream =
-            new BufferedInputStream(new FileInputStream(logFile), BUFFER_SIZE);
+        InputStream logFileStream = null;
+        try {
+          logFileStream = new BufferedInputStream(new FileInputStream(logFile), BUFFER_SIZE);
+        } catch (FileNotFoundException e) {
+          LOG.info(
+              e,
+              "There was a problem getting stream for logfile: %s. Likely logfile was resent and" +
+              "deleted by a concurrent Buck command.",
+              logPath);
+          continue;
+        }
+
         it = new ObjectMapper().readValues(
             new JsonFactory().createParser(logFileStream),
             ScribeData.class);
