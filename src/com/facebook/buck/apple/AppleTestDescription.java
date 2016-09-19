@@ -51,6 +51,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.zip.UnzipStep;
@@ -226,6 +227,7 @@ public class AppleTestDescription implements
         .withAppendedFlavors(extraFlavorsBuilder.build())
         .withAppendedFlavors(debugFormat.getFlavor());
     BuildRule library = createTestLibraryRule(
+        targetGraph,
         params,
         resolver,
         args,
@@ -233,7 +235,7 @@ public class AppleTestDescription implements
         testHostInfo.transform(TestHostInfo.GET_BLACKLIST_FUNCTION)
             .or(ImmutableSet.<BuildTarget>of()),
         libraryTarget);
-    if (!createBundle) {
+    if (!createBundle || SwiftLibraryDescription.isSwiftTarget(libraryTarget)) {
       return library;
     }
 
@@ -350,6 +352,7 @@ public class AppleTestDescription implements
   }
 
   private <A extends Arg> BuildRule createTestLibraryRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args,
@@ -365,6 +368,7 @@ public class AppleTestDescription implements
       library = existingLibrary.get();
     } else {
       library = appleLibraryDescription.createLibraryBuildRule(
+          targetGraph,
           params.copyWithBuildTarget(libraryTarget),
           resolver,
           args,

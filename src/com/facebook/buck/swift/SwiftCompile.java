@@ -21,6 +21,7 @@ import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_MAIN_FILENAME;
 import static com.facebook.buck.swift.SwiftUtil.normalizeSwiftModuleName;
 import static com.facebook.buck.swift.SwiftUtil.toSwiftHeaderName;
 
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -40,6 +41,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.MoreIterables;
@@ -79,6 +81,8 @@ class SwiftCompile
   private final ImmutableSortedSet<SourcePath> srcs;
 
   private final Path headerPath;
+  private final CxxPlatform cxxPlatform;
+  private final ImmutableSet<FrameworkPath> frameworks;
 
   private final boolean hasMainEntry;
   private final boolean enableObjcInterop;
@@ -102,12 +106,15 @@ class SwiftCompile
       BuildRuleParams params,
       SourcePathResolver resolver,
       Tool swiftCompiler,
+      ImmutableSet<FrameworkPath> frameworks,
       String moduleName,
       Path outputPath,
       Iterable<SourcePath> srcs,
       Optional<Boolean> enableObjcInterop,
       Optional<SourcePath> bridgingHeader) throws NoSuchBuildTargetException {
     super(params, resolver);
+    this.cxxPlatform = cxxPlatform;
+    this.frameworks = frameworks;
     this.swiftBuckConfig = swiftBuckConfig;
     this.cxxPreprocessorInputs =
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, params.getDeps());
@@ -142,6 +149,19 @@ class SwiftCompile
           getResolver().getRelativePath(bridgingHeader.get()).toString());
     }
 
+    final Function<FrameworkPath, Path> frameworkPathToSearchPath =
+        CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, getResolver());
+
+    compilerCommand.addAll(
+        FluentIterable.from(frameworks)
+        .transform(frameworkPathToSearchPath)
+        .transformAndConcat(new Function<Path, Iterable<? extends String>>() {
+          @Override
+          public Iterable<? extends String> apply(Path searchPath) {
+            return ImmutableSet.of("-F", searchPath.toString());
+          }
+        }));
+
     compilerCommand.addAll(
         MoreIterables.zipAndConcat(Iterables.cycle("-Xcc"),
             getSwiftIncludeArgs()));
@@ -162,6 +182,7 @@ class SwiftCompile
       compilerCommand.addAll(configFlags.get());
     }
     compilerCommand.add(
+        "-enable-testing",
         "-c",
         enableObjcInterop ? "-enable-objc-interop" : "",
         hasMainEntry ? "" : "-parse-as-library",

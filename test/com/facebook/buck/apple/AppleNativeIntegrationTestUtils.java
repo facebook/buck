@@ -19,8 +19,11 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
@@ -71,7 +74,13 @@ public class AppleNativeIntegrationTestUtils {
         sdkPaths.get(anySdk),
         buckConfig,
         new AppleConfig(buckConfig),
-        Optional.<ProcessExecutor>absent());
+        Optional.of(
+            new ProcessExecutor(
+                new Console(
+                    Verbosity.SILENT,
+                    new CapturingPrintStream(),
+                    new CapturingPrintStream(),
+                    Ansi.withoutTty()))));
     return
         appleCxxPlatform.getSwift().isPresent() &&
         appleCxxPlatform.getSwiftStdlibTool().isPresent();
