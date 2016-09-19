@@ -135,6 +135,7 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
                                 }))
                         .build()),
                 args.resourcesRoot,
+                args.manifestFile,
                 args.mavenCoords,
                 args.tests.get(),
                 /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()));
@@ -173,6 +174,7 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
 
     @Hint(isInput = false)
     public Optional<Path> resourcesRoot;
+    public Optional<SourcePath> manifestFile;
     public Optional<String> mavenCoords;
 
     @Hint(isDep = false)

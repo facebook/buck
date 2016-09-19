@@ -69,6 +69,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
         /* resourcesRoot */ Optional.<Path>absent(),
+        /* manifest file */ Optional.<SourcePath>absent(),
         /* mavenCoords */ Optional.<String>absent(),
         /* tests */ ImmutableSortedSet.<BuildTarget>of(),
         /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of());

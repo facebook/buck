@@ -107,6 +107,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @AddToRuleKey(stringify = true)
   private final Optional<Path> resourcesRoot;
   @AddToRuleKey
+  private final Optional<SourcePath> manifestFile;
+  @AddToRuleKey
   private final Optional<String> mavenCoords;
   private final Optional<Path> outputJar;
   @AddToRuleKey
@@ -190,6 +192,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSet<Path> additionalClasspathEntries,
       CompileToJarStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
+      Optional<SourcePath> manifestFile,
       Optional<String> mavenCoords,
       ImmutableSortedSet<BuildTarget> tests,
       ImmutableSet<Pattern> classesToRemoveFromJar) {
@@ -216,6 +219,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         additionalClasspathEntries,
         compileStepFactory,
         resourcesRoot,
+        manifestFile,
         mavenCoords,
         tests,
         classesToRemoveFromJar);
@@ -237,6 +241,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSet<Path> additionalClasspathEntries,
       CompileToJarStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
+      Optional<SourcePath> manifestFile,
       Optional<String> mavenCoords,
       ImmutableSortedSet<BuildTarget> tests,
       ImmutableSet<Pattern> classesToRemoveFromJar) {
@@ -272,6 +277,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         .transform(getProjectFilesystem().getAbsolutifier())
         .toSet();
     this.resourcesRoot = resourcesRoot;
+    this.manifestFile = manifestFile;
     this.mavenCoords = mavenCoords;
     this.tests = tests;
 
@@ -279,7 +285,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.trackClassUsage = trackClassUsage;
     this.abiClasspath = abiClasspath;
     this.deps = params.getDeps();
-    if (!srcs.isEmpty() || !resources.isEmpty()) {
+    if (!srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent()) {
       this.outputJar = Optional.of(getOutputJarPath(getBuildTarget(), getProjectFilesystem()));
     } else {
       this.outputJar = Optional.absent();
@@ -519,7 +525,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
             getProjectFilesystem(),
             getOutputJarDirPath(target, getProjectFilesystem())));
 
-    // Only run javac if there are .java files to compile.
+    // Only run javac if there are .java files to compile or we need to shovel the manifest file
+    // into the built jar.
     if (!getJavaSrcs().isEmpty()) {
       ClassUsageFileWriter usedClassesFileWriter;
       if (trackClassUsage) {
@@ -559,7 +566,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           postprocessClassesCommands,
           ImmutableSortedSet.of(outputDirectory),
           /* mainClass */ Optional.<String>absent(),
-          /* manifestFile */ Optional.<Path>absent(),
+          manifestFile.transform(getResolver().getAbsolutePathFunction()),
           outputJar.get(),
           usedClassesFileWriter,
           /* output params */
@@ -582,7 +589,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
                 output,
                 ImmutableSortedSet.of(outputDirectory),
                 /* mainClass */ null,
-                /* manifestFile */ null,
+                manifestFile.transform(getResolver().getAbsolutePathFunction()).orNull(),
                 true,
                 classesToRemoveFromJar));
       }

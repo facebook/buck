@@ -161,6 +161,7 @@ public class JavaTestDescription implements
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
                 new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
                 args.resourcesRoot,
+                args.manifestFile,
                 args.mavenCoords,
                 /* tests */ ImmutableSortedSet.<BuildTarget>of(),
                 /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()

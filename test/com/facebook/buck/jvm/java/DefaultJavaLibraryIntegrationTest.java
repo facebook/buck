@@ -41,9 +41,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.Zip;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.BuckConstant;
@@ -66,6 +66,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitOption;
@@ -79,6 +80,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.jar.Attributes;
+import java.util.jar.JarInputStream;
+import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -817,6 +821,30 @@ public class DefaultJavaLibraryIntegrationTest {
     ZipInspector zipInspector = new ZipInspector(jarPath);
     zipInspector.assertFileDoesNotExist("ImmutableC.java");
     zipInspector.assertFileExists("ImmutableC.class");
+  }
+
+  @Test
+  public void shouldIncludeUserSuppliedManifestIfProvided() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "manifest",
+        tmp);
+    workspace.setUp();
+
+    Manifest m = new Manifest();
+    Attributes attrs = new Attributes();
+    attrs.putValue("Data", "cheese");
+    m.getEntries().put("Example", attrs);
+    m.write(System.out);
+
+    Path path = workspace.buildAndReturnOutput("//:library");
+
+    try (InputStream is = Files.newInputStream(path);
+    JarInputStream jis = new JarInputStream(is)) {
+      Manifest manifest = jis.getManifest();
+      String value = manifest.getEntries().get("Example").getValue("Data");
+      assertEquals("cheese", value);
+    }
   }
 
   /**

@@ -131,6 +131,7 @@ public class KnownBuildRuleTypesTest {
     arg.annotationProcessorOnly = Optional.absent();
     arg.postprocessClassesCommands = Optional.of(ImmutableList.<String>of());
     arg.resourcesRoot = Optional.absent();
+    arg.manifestFile = Optional.absent();
     arg.providedDeps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.exportedDeps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());

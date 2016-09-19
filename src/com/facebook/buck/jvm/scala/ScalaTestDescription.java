@@ -155,6 +155,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                         .build()
                 ),
                 args.resourcesRoot,
+                args.manifestFile,
                 args.mavenCoords,
                 /* tests */ ImmutableSortedSet.<BuildTarget>of(),
                 /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()));
