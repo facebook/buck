@@ -8,7 +8,7 @@
 # will likely be changed in non-compatible ways
 #
 # Whenever you change this file please run the following command to refresh the java source code:
-# $ thrift --gen java  -out src-gen/ src/com/facebook/buck/distributed/thrift/buck_dist.thrift
+# $ thrift --gen java  -out src-gen/ src/com/facebook/buck/distributed/thrift/stampede.thrift
 
 namespace java com.facebook.buck.distributed.thrift
 
@@ -88,6 +88,13 @@ struct BuildJob {
   4: optional BuckVersion buckVersion;
 }
 
+struct Announcement {
+  1: optional string errorMessage;
+  2: optional string solutionMessage;
+  3: optional list<string> buckVersions;
+  4: optional list<string> repositories;
+}
+
 ##############################################################################
 ## Request/Response structs
 ##############################################################################
@@ -164,6 +171,15 @@ struct SetBuckVersionRequest {
   2: optional BuckVersion buckVersion;
 }
 
+# Used to obtain announcements for users regarding current issues with Buck and solutions.
+struct AnnouncementRequest {
+  1: optional string buckVersion;
+  2: optional string repository;
+}
+
+struct AnnouncementResponse {
+  1: optional list<Announcement> announcements;
+}
 
 ##############################################################################
 ## Top-Level Buck-Frontend HTTP body thrift Request/Response format
@@ -182,6 +198,7 @@ enum FrontendRequestType {
   STORE_BUILD_GRAPH = 10,
   FETCH_BUILD_GRAPH = 11,
   SET_BUCK_VERSION = 12,
+  ANNOUNCEMENT = 13,
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -198,8 +215,9 @@ struct FrontendRequest {
   11: optional StoreBuildGraphRequest storeBuildGraphRequest;
   12: optional FetchBuildGraphRequest fetchBuildGraphRequest;
   13: optional SetBuckVersionRequest setBuckVersionRequest;
+  14: optional AnnouncementRequest announcementRequest;
 
-  // Next Free ID: 13
+  // Next Free ID: 15
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -215,8 +233,9 @@ struct FrontendResponse {
   16: optional CreateBuildResponse createBuildResponse;
   17: optional FetchSourceFilesResponse fetchSourceFilesResponse;
   18: optional FetchBuildGraphResponse fetchBuildGraphResponse;
+  19: optional AnnouncementResponse announcementResponse;
 
-  // Next Free ID: 19
+  // Next Free ID: 20
 
   // [100-199] Values are reserved for the buck cache request types.
 }

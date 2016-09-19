@@ -22,7 +22,8 @@ public enum FrontendRequestType implements org.apache.thrift.TEnum {
   FETCH_SRC_FILES(9),
   STORE_BUILD_GRAPH(10),
   FETCH_BUILD_GRAPH(11),
-  SET_BUCK_VERSION(12);
+  SET_BUCK_VERSION(12),
+  ANNOUNCEMENT(13);
 
   private final int value;
 
@@ -65,6 +66,8 @@ public enum FrontendRequestType implements org.apache.thrift.TEnum {
         return FETCH_BUILD_GRAPH;
       case 12:
         return SET_BUCK_VERSION;
+      case 13:
+        return ANNOUNCEMENT;
       default:
         return null;
     }
