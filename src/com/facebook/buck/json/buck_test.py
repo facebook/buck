@@ -508,6 +508,17 @@ class TestMemoized(unittest.TestCase):
         self.assertEqual(initial, cached)
         self.assertNotEqual(initial, different_keyword_values)
 
+    def test_custom_cachekey(self):
+        decorated = self._makeone(
+            lambda foo, bar='baz', _retval=itertools.count(): next(_retval),
+            keyfunc=lambda foo, **kwargs: foo,
+        )
+        initial = decorated(42, bar='spam')
+        cached = decorated(42, bar='ignored')
+        different_foo = decorated(81, bar='spam')
+        self.assertEqual(initial, cached)
+        self.assertNotEqual(initial, different_foo)
+
 
 if __name__ == '__main__':
     unittest.main()

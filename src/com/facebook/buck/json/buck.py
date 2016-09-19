@@ -205,7 +205,7 @@ def add_rule(rule, build_env):
     build_env.rules[rule_name] = rule
 
 
-def memoized(deepcopy=True):
+def memoized(deepcopy=True, keyfunc=None):
     '''Decorator. Caches a function's return value each time it is called.
     If called later with the same arguments, the cached value is returned
     (not reevaluated).
@@ -223,12 +223,15 @@ def memoized(deepcopy=True):
             # poor-man's cache key; the keyword args are sorted to avoid dictionary ordering
             # issues (insertion and deletion order matters). Nested dictionaries will still cause
             # cache misses.
-            args_key = repr(args) + repr(sorted(kwargs.items()))
+            if keyfunc is None:
+                cache_key = repr(args) + repr(sorted(kwargs.items()))
+            else:
+                cache_key = keyfunc(*args, **kwargs)
             _sentinel = object()
-            value = cache.get(args_key, _sentinel)
+            value = cache.get(cache_key, _sentinel)
             if value is _sentinel:
                 value = func(*args, **kwargs)
-                cache[args_key] = value
+                cache[cache_key] = value
             # Return a copy to ensure callers mutating the result don't poison the cache.
             if deepcopy:
                 value = copy.deepcopy(value)
