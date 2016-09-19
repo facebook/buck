@@ -1,0 +1,9 @@
+Buck version: 55bda87065cf13bc62add87b978c5eae1396a0b8
+Xcode version: Xcode 8.0 Build version 8A218a
+xctool commit: c5d98ef3fee4467e163498fdeb59ac1cf38ec2b3
+fbxctest commit: 59a8753f08ded04bbde911045b3b31fe97ab1f72
+
+1. Download and build xctool from https://github.com/facebook/xctool.
+2. You will need to move the lib folder to the directory of fbxctest.
+3. Download and build fbxctest from https://github.com/facebook/FBSimulatorControl.
+4. Move the contents of the build to /bin of the xctool dir and upload that one.

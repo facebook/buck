@@ -1,27 +1,10 @@
+with allow_unsafe_import():
+    from sys import platform as os_platform
+
 APPLE_TEST_INTEGRATION_TEST_SRCS = [
   'AppleTestIntegrationTest.java',
   'AppleBundleIntegrationTest.java',
 ]
-
-java_test(
-  name = 'apple',
-  srcs = glob(['*Test.java'], excludes=APPLE_TEST_INTEGRATION_TEST_SRCS),
-  autodeps = True,
-  resources = glob(['testdata/**']),
-)
-
-# These are separate from the rest of the tests so we can run
-# them separately, avoiding the 20 second timeout in the iOS simulator.
-java_test(
-  name = 'apple_test_integration',
-  run_test_separately = True,
-  srcs = APPLE_TEST_INTEGRATION_TEST_SRCS,
-  autodeps = True,
-  deps = [
-    '//src/com/facebook/buck/util:constants',
-  ],
-  resources = glob(['testdata/**']),
-)
 
 java_library(
   name = 'testutil',
@@ -31,3 +14,25 @@ java_library(
     '//test/...',
   ],
 )
+# These are separate from the rest of the tests so we can run
+# them separately, avoiding the 20 second timeout in the iOS simulator.
+
+# fbxctest resources are too long (over 256 chars) for Windows to handle.
+if os_platform == 'darwin':
+    java_test(
+      name = 'apple_test_integration',
+      run_test_separately = True,
+      srcs = APPLE_TEST_INTEGRATION_TEST_SRCS,
+      autodeps = True,
+      deps = [
+        '//src/com/facebook/buck/util:constants',
+      ],
+      resources = glob(['testdata/**'])
+    )
+
+    java_test(
+      name = 'apple',
+      srcs = glob(['*Test.java'], excludes=APPLE_TEST_INTEGRATION_TEST_SRCS),
+      autodeps = True,
+      resources = glob(['testdata/**']),
+    )
