@@ -81,7 +81,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         additionalClasspathEntries,
         new JavacToJarStepFactory(javacOptions, new BootClasspathAppender()),
         resourcesRoot,
-        manifestFile,
+        Optional.<SourcePath>absent(),
         mavenCoords,
         tests,
         javacOptions.getClassesToRemoveFromJar());
