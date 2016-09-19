@@ -90,10 +90,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
 
   @Override
   public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
-    return JavaLibraryClasspathProvider.getTransitiveClasspathDeps(
-        this,
-        Optional.<SourcePath>of(new BuildTargetSourcePath(getBuildTarget(),
-            getPathToOutput())));
+    return JavaLibraryClasspathProvider.getTransitiveClasspathDeps(this);
   }
 
   @Override

@@ -35,6 +35,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.HashCode;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -45,9 +46,6 @@ import java.nio.file.Paths;
 
 import javax.annotation.Nullable;
 
-/**
- * Tests for the classpath provider facilities.
- */
 public class JavaLibraryClasspathProviderTest {
 
   private BuildRule a;
@@ -59,11 +57,13 @@ public class JavaLibraryClasspathProviderTest {
   private SourcePathResolver resolver;
   private Path basePath;
   private Function<Path, SourcePath> sourcePathFunction;
+  private ProjectFilesystem filesystem;
+  private BuildRuleResolver ruleResolver;
 
   @Before
   public void setUp() throws Exception {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver ruleResolver = new BuildRuleResolver(
+    filesystem = new FakeProjectFilesystem();
+    ruleResolver = new BuildRuleResolver(
         TargetGraph.EMPTY,
         new DefaultTargetNodeToBuildRuleTransformer());
     resolver = new SourcePathResolver(ruleResolver);
@@ -186,25 +186,39 @@ public class JavaLibraryClasspathProviderTest {
 
   @Test
   public void getTransitiveClasspathDeps() throws Exception {
-    JavaLibrary lib = (JavaLibrary) z;
+    JavaLibrary noOutput = makeRule(
+        "//no:output",
+        ImmutableSet.<String>of(),
+        ImmutableSet.of(z),
+        ruleResolver,
+        filesystem);
+
     assertEquals(
         "root does not appear if output jar not present.",
         ImmutableSet.of(
-            c, e
+            c, e, z
         ),
-        JavaLibraryClasspathProvider.getTransitiveClasspathDeps(
-            lib,
-            Optional.<SourcePath>absent()));
+        JavaLibraryClasspathProvider.getTransitiveClasspathDeps(noOutput));
 
     assertEquals(
         "root does appear if output jar present.",
         ImmutableSet.of(
             z, c, e
         ),
-        JavaLibraryClasspathProvider.getTransitiveClasspathDeps(
-            lib,
-            Optional.of(sourcePathFunction.apply(lib.getPathToOutput())))
-    );
+        JavaLibraryClasspathProvider.getTransitiveClasspathDeps((JavaLibrary) z));
+
+    BuildRule mavenCoord = new JavaLibraryBuilder(
+        BuildTargetFactory.newInstance("//has:output"),
+        filesystem,
+        HashCode.fromString("aaaa"))
+        .setMavenCoords("com.example:buck:1.0")
+        .addDep(z.getBuildTarget())
+        .build(ruleResolver);
+
+    assertEquals(
+        "Does appear if no output jar but maven coordinate present.",
+        ImmutableSet.of(z, c, e, mavenCoord),
+        JavaLibraryClasspathProvider.getTransitiveClasspathDeps((JavaLibrary) mavenCoord));
   }
 
   @Test

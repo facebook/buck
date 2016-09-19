@@ -313,8 +313,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
               @Override
               public ImmutableSet<JavaLibrary> get() {
                 return JavaLibraryClasspathProvider.getTransitiveClasspathDeps(
-                    DefaultJavaLibrary.this,
-                    sourcePathForOutputJar());
+                    DefaultJavaLibrary.this);
               }
             });
 
