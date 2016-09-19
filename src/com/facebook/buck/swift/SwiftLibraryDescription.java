@@ -227,6 +227,7 @@ public class SwiftLibraryDescription implements
           params,
           new SourcePathResolver(resolver),
           swiftCompiler.get(),
+          args.frameworks.get(),
           args.moduleName.or(buildTarget.getShortName()),
           BuildTargets.getGenPath(
               params.getProjectFilesystem(),
