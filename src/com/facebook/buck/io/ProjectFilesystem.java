@@ -1045,7 +1045,7 @@ public class ProjectFilesystem {
    * Returns true if the file under {@code path} exists and is a symbolic
    * link, false otherwise.
    */
-  public boolean isSymLink(Path path) throws IOException {
+  public boolean isSymLink(Path path) {
     return Files.isSymbolicLink(getPathForRelativePath(path));
   }
 

@@ -808,7 +808,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
-  public boolean isSymLink(Path path) throws IOException {
+  public boolean isSymLink(Path path) {
     return symLinks.containsKey(path);
   }
 
