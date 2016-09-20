@@ -23,6 +23,8 @@ import com.google.common.io.ByteSource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 
 /**
@@ -50,7 +52,7 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
           public InputStream openStream() throws IOException {
             // No need to wrap with BufferedInputStream because ByteSource uses ByteStreams.copy(),
             // which already buffers.
-            return java.nio.file.Files.newInputStream(fileToHash);
+            return Files.newInputStream(fileToHash);
           }
         };
     HashCode hashCode = source.hash(Hashing.sha1());
@@ -66,5 +68,21 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
       return root.resolve(pathRelativeToProjectRoot);
     }
     return root.resolve(pathRelativeToProjectRoot.toString());
+  }
+
+  @Override
+  public boolean isExecutable(Path child) {
+    child = getPathForRelativePath(child);
+    return Files.isExecutable(child);
+  }
+
+  @Override
+  public boolean isSymlink(Path path) {
+    return Files.isSymbolicLink(getPathForRelativePath(path));
+  }
+
+  @Override
+  public boolean exists(Path pathRelativeToProjectRoot, LinkOption... options) {
+    return Files.exists(getPathForRelativePath(pathRelativeToProjectRoot), options);
   }
 }

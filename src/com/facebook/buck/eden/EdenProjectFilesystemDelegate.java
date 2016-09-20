@@ -26,6 +26,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.io.IOException;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 
 public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDelegate {
@@ -83,5 +84,20 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   @Override
   public Path getPathForRelativePath(Path pathRelativeToProjectRootOrJustAbsolute) {
     return delegate.getPathForRelativePath(pathRelativeToProjectRootOrJustAbsolute);
+  }
+
+  @Override
+  public boolean isExecutable(Path child) {
+    return delegate.isExecutable(child);
+  }
+
+  @Override
+  public boolean isSymlink(Path path) {
+    return delegate.isSymlink(path);
+  }
+
+  @Override
+  public boolean exists(Path pathRelativeToProjectRoot, LinkOption... options) {
+    return delegate.exists(pathRelativeToProjectRoot, options);
   }
 }

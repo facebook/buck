@@ -456,7 +456,7 @@ public class ProjectFilesystem {
   }
 
   public boolean exists(Path pathRelativeToProjectRoot, LinkOption... options) {
-    return Files.exists(getPathForRelativePath(pathRelativeToProjectRoot), options);
+    return delegate.exists(pathRelativeToProjectRoot, options);
   }
 
   public long getFileSize(Path pathRelativeToProjectRoot) throws IOException {
@@ -626,7 +626,7 @@ public class ProjectFilesystem {
    * Allows {@link Files#isExecutable} to be faked in tests.
    */
   public boolean isExecutable(Path child) {
-    return Files.isExecutable(resolve(child));
+    return delegate.isExecutable(child);
   }
 
   /**
@@ -1046,7 +1046,7 @@ public class ProjectFilesystem {
    * link, false otherwise.
    */
   public boolean isSymLink(Path path) {
-    return Files.isSymbolicLink(getPathForRelativePath(path));
+    return delegate.isSymlink(path);
   }
 
   /**
