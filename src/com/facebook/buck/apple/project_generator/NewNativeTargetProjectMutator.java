@@ -27,8 +27,10 @@ import com.facebook.buck.apple.RuleUtils;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.XcodeScriptDescriptionArg;
+import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFrameworksBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
@@ -481,6 +483,14 @@ class NewNativeTargetProjectMutator {
     PBXFrameworksBuildPhase frameworksBuildPhase = new PBXFrameworksBuildPhase();
     target.getBuildPhases().add(frameworksBuildPhase);
 
+    PBXCopyFilesBuildPhase embedFrameworksBuildPhase = new PBXCopyFilesBuildPhase(
+        CopyFilePhaseDestinationSpec.builder()
+            .setDestination(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS)
+            .build());
+    if (targetShouldEmbedFrameworks()) {
+      target.getBuildPhases().add(embedFrameworksBuildPhase);
+    }
+
     for (FrameworkPath framework : frameworks) {
       SourceTreePath sourceTreePath;
       if (framework.getSourceTreePath().isPresent()) {
@@ -496,11 +506,33 @@ class NewNativeTargetProjectMutator {
       PBXFileReference fileReference =
           sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(sourceTreePath);
       frameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
+      embedFrameworksBuildPhase.getFiles().add(embeddedFrameworkBuildFile(fileReference));
     }
 
     for (PBXFileReference archive : archives) {
       frameworksBuildPhase.getFiles().add(new PBXBuildFile(archive));
+      if (archive.getExplicitFileType().equals(Optional.of("wrapper.framework"))) {
+        embedFrameworksBuildPhase.getFiles().add(embeddedFrameworkBuildFile(archive));
+      }
     }
+  }
+
+  private PBXBuildFile embeddedFrameworkBuildFile(PBXFileReference fileReference) {
+    PBXBuildFile buildFile = new PBXBuildFile(fileReference);
+    NSDictionary settings = new NSDictionary();
+    settings.put("ATTRIBUTES", new String[] {"CodeSignOnCopy", "RemoveHeadersOnCopy"});
+    buildFile.setSettings(Optional.of(settings));
+
+    return buildFile;
+  }
+
+  private boolean targetShouldEmbedFrameworks() {
+    return productType == ProductType.APPLICATION ||
+        productType == ProductType.APP_EXTENSION ||
+        productType == ProductType.BUNDLE ||
+        productType == ProductType.UI_TEST ||
+        productType == ProductType.UNIT_TEST ||
+        productType == ProductType.WATCH_APPLICATION;
   }
 
   private void addResourcesFileReference(PBXGroup targetGroup) {
