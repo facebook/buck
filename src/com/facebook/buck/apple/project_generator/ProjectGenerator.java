@@ -1802,14 +1802,14 @@ public class ProjectGenerator {
         combinedOverrideConfigs.put(entry.getKey(), settingPrefix + " " + entry.getValue());
       }
 
-      ImmutableSortedMap<String, String> mergedMap = MoreMaps.mergeSorted(
+      ImmutableSortedMap<String, String> mergedSettings = MoreMaps.mergeSorted(
           targetLevelInlineSettings,
           combinedOverrideConfigs);
       Path xcconfigPath = configurationNameToXcconfigPath.apply(configurationEntry.getKey());
       projectFilesystem.mkdirs(Preconditions.checkNotNull(xcconfigPath).getParent());
 
       StringBuilder stringBuilder = new StringBuilder();
-      for (Map.Entry<String, String> entry : mergedMap.entrySet()) {
+      for (Map.Entry<String, String> entry : mergedSettings.entrySet()) {
         stringBuilder.append(entry.getKey());
         stringBuilder.append(" = ");
         stringBuilder.append(entry.getValue());
