@@ -1276,6 +1276,7 @@ public class ProjectGenerator {
         .put("TARGET_NAME", buildTargetName)
         .put("SRCROOT", pathRelativizer.outputPathToBuildTargetPath(buildTarget).toString())
         .put("COPY_PHASE_STRIP", "NO");  // this produces warnings on xcode8 and up
+
     if (productType == ProductType.UI_TEST && isFocusedOnTarget) {
       if (bundleLoaderNode.isPresent()) {
         BuildTarget testTarget = bundleLoaderNode.get().getBuildTarget();
@@ -1390,6 +1391,10 @@ public class ProjectGenerator {
       defaultSettingsBuilder.put("EXECUTABLE_PREFIX", "lib");
     }
 
+    // Binaries should always search their embedded Frameworks folder
+    defaultSettingsBuilder
+        .put("LD_RUNPATH_SEARCH_PATHS", "$(inherited) @executable_path/Frameworks");
+
     ImmutableMap.Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
 
     ImmutableSet<Path> recursiveHeaderSearchPaths = collectRecursiveHeaderSearchPaths(targetNode);
@@ -1411,6 +1416,7 @@ public class ProjectGenerator {
             "FRAMEWORK_SEARCH_PATHS",
             Joiner.on(' ').join(
                 collectRecursiveFrameworkSearchPaths(ImmutableList.of(targetNode))));
+
     if (isFocusedOnTarget) {
       appendConfigsBuilder
           .put(
@@ -1644,31 +1650,25 @@ public class ProjectGenerator {
     if (!configs.isPresent() ||
         (configs.isPresent() && configs.get().isEmpty()) ||
         targetNode.getType().equals(CxxLibraryDescription.TYPE)) {
+      ImmutableMap<String, String> targetConfigs = appendedConfig;
+      if (isFrameworkTarget(targetNode)) {
+        ImmutableMap.Builder<String, String> configBuilder = ImmutableMap.builder();
+        configBuilder.put("DEFINES_MODULE", "YES")
+            .put("DYLIB_INSTALL_NAME_BASE", "@rpath")
+            .put("SKIP_INSTALL", "YES")
+            .put("LD_RUNPATH_SEARCH_PATHS",
+                Joiner.on(' ').join(
+                    "$(inherited)",
+                    "@executable_path/Frameworks",
+                    "@loader_path/Frameworks"));
+        targetConfigs = MoreMaps.merge(targetConfigs, configBuilder.build());
+      }
+
       ImmutableMap<String, ImmutableMap<String, String>> defaultConfig =
           CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
               defaultCxxPlatform,
-              appendedConfig);
-
-      if (isFrameworkTarget(targetNode)) {
-        ImmutableMap.Builder<String, ImmutableMap<String, String>> configBuilder =
-            ImmutableMap.builder();
-        for (Map.Entry<String, ImmutableMap<String, String>> entry : defaultConfig.entrySet()) {
-          ImmutableMap.Builder<String, String> frameworkConfigs = ImmutableMap.builder();
-          frameworkConfigs.putAll(entry.getValue());
-
-          frameworkConfigs.put("DYLIB_INSTALL_NAME_BASE", "@rpath");
-          frameworkConfigs.put("SKIP_INSTALL", "YES");
-          frameworkConfigs.put(
-              "LD_RUNPATH_SEARCH_PATHS",
-              "$(inherited) @executable_path/Frameworks @loader_path/Frameworks");
-          frameworkConfigs.put("DEFINES_MODULE", "YES");
-
-          configBuilder.put(entry.getKey(), frameworkConfigs.build());
-        }
-        configs = Optional.of(ImmutableSortedMap.copyOf(configBuilder.build()));
-      } else {
-        configs = Optional.of(ImmutableSortedMap.copyOf(defaultConfig));
-      }
+              targetConfigs);
+      configs = Optional.of(ImmutableSortedMap.copyOf(defaultConfig));
     }
     return configs;
   }
