@@ -28,7 +28,9 @@ import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.project_generator.ProjectGenerator;
 import com.facebook.buck.apple.project_generator.WorkspaceAndProjectGenerator;
 import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
@@ -1274,8 +1276,9 @@ public class ProjectCommand extends BuildCommand {
           flavoredGraph.addEdge(node, dep);
         }
 
-        // check if this is an apple library with a framework parent
+        // check if this is a non static apple library with a framework parent
         if (node.getType() == AppleLibraryDescription.TYPE &&
+            !prefersStaticLinking(node) &&
             hasFrameworkFlavoredParent(flavoredGraph, node)) {
           TargetNode<?> flavoredNode = node.withFlavors(
               ImmutableSet.<Flavor>builder().addAll(node.getBuildTarget().getFlavors())
@@ -1310,12 +1313,26 @@ public class ProjectCommand extends BuildCommand {
     return new TargetGraph(flavoredGraph, ImmutableMap.copyOf(targetsToNodes), groups.build());
   }
 
+  @SuppressWarnings(value = "unchecked")
+  private boolean prefersStaticLinking(TargetNode<?> node) {
+    if (node.getType() != AppleLibraryDescription.TYPE) {
+      return false;
+    }
+
+    Optional<NativeLinkable.Linkage> preferredLinkage =
+        ((TargetNode<? extends CxxLibraryDescription.Arg>)node)
+            .getConstructorArg()
+            .preferredLinkage;
+    return preferredLinkage.isPresent() && preferredLinkage.get() == NativeLinkable.Linkage.STATIC;
+  }
+
   private boolean hasFrameworkFlavoredParent(
       MutableDirectedGraph<TargetNode<?>> graph,
       TargetNode<?> node) {
     for (TargetNode<?> parent : graph.getIncomingNodesFor(node)) {
       if (parent.getType() == AppleLibraryDescription.TYPE &&
-          parent.getBuildTarget().getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
+          (parent.getBuildTarget().getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR) ||
+          (prefersStaticLinking(parent) && hasFrameworkFlavoredParent(graph, parent)))) {
         return true;
       }
     }
