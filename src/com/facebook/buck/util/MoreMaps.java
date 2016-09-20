@@ -19,6 +19,7 @@ package com.facebook.buck.util;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -55,4 +56,9 @@ public class MoreMaps {
     return ImmutableMap.copyOf(mutableMap);
   }
 
+  public static <K, V> ImmutableSortedMap<K, V> mergeSorted(Map<K, V> first, Map<K, V> second) {
+    Map<K, V> mutableMap = new HashMap<>(first);
+    mutableMap.putAll(second);
+    return ImmutableSortedMap.copyOf(mutableMap);
+  }
 }

@@ -104,6 +104,7 @@ import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.PackagedResource;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -1801,15 +1802,14 @@ public class ProjectGenerator {
         combinedOverrideConfigs.put(entry.getKey(), settingPrefix + " " + entry.getValue());
       }
 
-      Iterable<Map.Entry<String, String>> entries = Iterables.concat(
-          targetLevelInlineSettings.entrySet(),
-          combinedOverrideConfigs.entrySet());
-
+      ImmutableSortedMap<String, String> mergedSettings = MoreMaps.mergeSorted(
+          targetLevelInlineSettings,
+          combinedOverrideConfigs);
       Path xcconfigPath = configurationNameToXcconfigPath.apply(configurationEntry.getKey());
       projectFilesystem.mkdirs(Preconditions.checkNotNull(xcconfigPath).getParent());
 
       StringBuilder stringBuilder = new StringBuilder();
-      for (Map.Entry<String, String> entry : entries) {
+      for (Map.Entry<String, String> entry : mergedSettings.entrySet()) {
         stringBuilder.append(entry.getKey());
         stringBuilder.append(" = ");
         stringBuilder.append(entry.getValue());
