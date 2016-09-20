@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.GraphTraversable;
@@ -88,8 +89,10 @@ public final class AppleBuildRules {
     return XCODE_TARGET_TEST_BUNDLE_EXTENSIONS.contains(extension);
   }
 
-  public static String getOutputFileNameFormatForLibrary(boolean isSharedLibrary) {
-    if (isSharedLibrary) {
+  public static String getOutputFileNameFormatForLibrary(ProductType productType) {
+    if (productType == ProductType.FRAMEWORK) {
+      return "%s.framework";
+    } else if (productType == ProductType.DYNAMIC_LIBRARY) {
       return "lib%s.dylib";
     } else {
       return "lib%s.a";

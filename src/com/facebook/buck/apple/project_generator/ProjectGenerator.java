@@ -1109,21 +1109,15 @@ public class ProjectGenerator {
       ImmutableSet<AppleAssetCatalogDescription.Arg> directAssetCatalogs,
       Optional<TargetNode<AppleBundleDescription.Arg>> bundleLoaderNode)
       throws IOException {
-    boolean isShared = targetNode
-        .getBuildTarget()
-        .getFlavors()
-        .contains(CxxDescriptionEnhancer.SHARED_FLAVOR);
-    ProductType productType = isShared ?
-        ProductType.DYNAMIC_LIBRARY :
-        ProductType.STATIC_LIBRARY;
+    ProductType productType = getLibraryProductType(targetNode);
     PBXNativeTarget target = generateBinaryTarget(
         project,
         Optional.<TargetNode<AppleBundleDescription.Arg>>absent(),
         targetNode,
         productType,
-        AppleBuildRules.getOutputFileNameFormatForLibrary(isShared),
+        AppleBuildRules.getOutputFileNameFormatForLibrary(productType),
         Optional.<Path>absent(),
-        /* includeFrameworks */ isShared,
+        productType != ProductType.STATIC_LIBRARY,
         ImmutableSet.<AppleResourceDescription.Arg>of(),
         directResources,
         ImmutableSet.<AppleAssetCatalogDescription.Arg>of(),
@@ -1132,6 +1126,17 @@ public class ProjectGenerator {
         bundleLoaderNode);
     LOG.debug("Generated Cxx library target %s", target);
     return target;
+  }
+
+  private ProductType getLibraryProductType(TargetNode<?> targetNode) {
+    ImmutableSet<Flavor> flavors = targetNode.getBuildTarget().getFlavors();
+    if (flavors.contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
+      return ProductType.FRAMEWORK;
+    } else if (flavors.contains(CxxDescriptionEnhancer.SHARED_FLAVOR)) {
+      return ProductType.DYNAMIC_LIBRARY;
+    } else {
+      return ProductType.STATIC_LIBRARY;
+    }
   }
 
   private PBXNativeTarget generateBinaryTarget(
@@ -2667,10 +2672,7 @@ public class ProjectGenerator {
         targetNode.getType().equals(CxxLibraryDescription.TYPE) ||
         targetNode.getType().equals(HalideLibraryDescription.TYPE)) {
       String productOutputFormat = AppleBuildRules.getOutputFileNameFormatForLibrary(
-          targetNode
-              .getBuildTarget()
-              .getFlavors()
-              .contains(CxxDescriptionEnhancer.SHARED_FLAVOR));
+          getLibraryProductType(targetNode));
       productOutputName = String.format(productOutputFormat, productName);
     } else if (targetNode.getType().equals(AppleBundleDescription.TYPE) ||
         targetNode.getType().equals(AppleTestDescription.TYPE)) {
@@ -2722,7 +2724,7 @@ public class ProjectGenerator {
         PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
         Paths.get(getBuiltProductsRelativeTargetOutputPath(test)).resolve(
             String.format(
-                AppleBuildRules.getOutputFileNameFormatForLibrary(false),
+                AppleBuildRules.getOutputFileNameFormatForLibrary(ProductType.STATIC_LIBRARY),
                 getProductNameForBuildTarget(test.getBuildTarget()))),
         Optional.<String>absent());
     return project.getMainGroup()
