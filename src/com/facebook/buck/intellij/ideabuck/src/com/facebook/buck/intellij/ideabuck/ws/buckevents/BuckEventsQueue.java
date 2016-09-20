@@ -18,12 +18,16 @@ package com.facebook.buck.intellij.ideabuck.ws.buckevents;
 
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers.BuckEventsConsumerFactory;
+import com.facebook.buck.intellij.ideabuck.ws.buckevents.handlers.BuckEventHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.diagnostic.Logger;
 
 import java.io.IOException;
 
 public class BuckEventsQueue implements BuckEventsQueueInterface {
+
+    private static final Logger LOG = Logger.getInstance(BuckEventsQueue.class);
 
     private final BuckEventsConsumerFactory mFactory;
     private ObjectMapper mObjectMapper;
@@ -46,12 +50,17 @@ public class BuckEventsQueue implements BuckEventsQueueInterface {
             public void run() {
                 synchronized (BuckEventsQueue.this.mFactory) {
                     try {
-                        mBuckEventsAdapter.get(
-                            event.getEventName()).handleEvent(
-                            rawMessage,
-                            event,
-                            mFactory,
-                            mObjectMapper);
+                        String eventName = event.getEventName();
+                        BuckEventHandler buckEventHandler = mBuckEventsAdapter.get(eventName);
+                        if (buckEventHandler == null) {
+                            LOG.warn("Unhandled event '" + eventName + "': " + rawMessage);
+                        } else {
+                            buckEventHandler.handleEvent(
+                                rawMessage,
+                                event,
+                                mFactory,
+                                mObjectMapper);
+                        }
                     } catch (IOException e) {
                         // TODO(cosmin1123) Handle exception
                         e.printStackTrace();
