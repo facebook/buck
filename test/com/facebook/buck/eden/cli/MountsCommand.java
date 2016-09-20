@@ -17,27 +17,37 @@
 package com.facebook.buck.eden.cli;
 
 import com.facebook.buck.eden.EdenClient;
+import com.facebook.buck.eden.EdenMount;
 import com.facebook.eden.thrift.MountInfo;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
 import com.google.common.base.Optional;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class MountsCommand implements Command {
   @Override
   public int run() throws EdenError, IOException, TException {
-    Optional<EdenClient> client = EdenClient.newInstance();
-    if (!client.isPresent()) {
+    Optional<EdenClient> clientOptional = EdenClient.newInstance();
+    if (!clientOptional.isPresent()) {
       System.err.println("Could not connect to Eden");
       return 1;
     }
 
-    List<MountInfo> mountInfos = client.get().getMountInfos();
+    EdenClient client = clientOptional.get();
+    List<MountInfo> mountInfos = client.getMountInfos();
     System.out.printf("Number of mounts: %d\n", mountInfos.size());
     for (MountInfo info : mountInfos) {
       System.out.println(info.mountPoint);
+      EdenMount mount = client.getMountFor(Paths.get(info.mountPoint));
+      List<Path> bindMounts = mount.getBindMounts();
+      System.out.printf("    Number of bind mounts: %d\n", bindMounts.size());
+      for (Path bindMount : bindMounts) {
+        System.out.printf("    %s\n", bindMount);
+      }
     }
 
     return 0;

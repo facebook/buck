@@ -16,6 +16,7 @@
 
 package com.facebook.buck.eden;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.EdenService;
@@ -24,6 +25,7 @@ import com.facebook.thrift.TException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
@@ -88,6 +90,17 @@ public class EdenMount {
     } else {
       throw result.getError();
     }
+  }
+
+  public ImmutableList<Path> getBindMounts() {
+    List<String> bindMounts;
+    try {
+      bindMounts = client.get().getBindMounts(mountPoint);
+    } catch (TException e) {
+      throw new RuntimeException(e);
+    }
+
+    return FluentIterable.from(bindMounts).transform(MorePaths.TO_PATH).toList();
   }
 
   /**

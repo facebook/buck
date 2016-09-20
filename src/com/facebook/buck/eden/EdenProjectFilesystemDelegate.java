@@ -24,6 +24,7 @@ import com.facebook.thrift.TException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.nio.file.LinkOption;
@@ -36,6 +37,8 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   /** Delegate to forward requests to for files that are outside of the {@link #mount}. */
   private final ProjectFilesystemDelegate delegate;
 
+  private final ImmutableList<Path> bindMounts;
+
   public EdenProjectFilesystemDelegate(EdenMount mount) {
     this(mount, new DefaultProjectFilesystemDelegate(mount.getProjectRoot()));
   }
@@ -44,6 +47,7 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   EdenProjectFilesystemDelegate(EdenMount mount, ProjectFilesystemDelegate delegate) {
     this.mount = mount;
     this.delegate = delegate;
+    this.bindMounts = mount.getBindMounts();
   }
 
   @Override
@@ -57,9 +61,7 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
     Preconditions.checkArgument(path.isAbsolute());
     Optional<Path> entry = mount.getPathRelativeToProjectRoot(path);
 
-    // TODO(t12516031): Generalize this to check if entry is under any of the Eden client's bind
-    // mounts rather than hardcoding a test for buck-out/.
-    if (entry.isPresent() && !entry.get().toString().contains("buck-out")) {
+    if (entry.isPresent() && !isUnderBindMount(entry.get())) {
       try {
         return mount.getSha1(entry.get());
       } catch (TException e) {
@@ -79,6 +81,15 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
     }
 
     return delegate.computeSha1(path);
+  }
+
+  private boolean isUnderBindMount(Path pathRelativeToProjectRoot) {
+    for (Path bindMount : bindMounts) {
+      if (pathRelativeToProjectRoot.startsWith(bindMount)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
