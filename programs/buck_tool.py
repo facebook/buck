@@ -306,7 +306,7 @@ class BuckTool(object):
             self._buck_project.update_buckd_run_count(0)
 
             # Give Java some time to create the listening socket.
-            for i in range(0, 100):
+            for i in range(0, 300):
                 if not os.path.exists(buck_socket_path):
                     time.sleep(0.01)
 
