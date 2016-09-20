@@ -833,6 +833,10 @@ public class BuckConfig {
         .intValue();
   }
 
+  public Optional<ImmutableList<String>> getAllowedJavaSpecificationVersions() {
+    return getOptionalListWithoutComments("project", "allowed_java_specification_versions");
+  }
+
   /**
    * @return the maximum load limit that Buck should stay under on the system.
    */

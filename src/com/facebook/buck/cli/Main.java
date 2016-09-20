@@ -120,6 +120,7 @@ import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -743,6 +744,20 @@ public final class Main {
         platform,
         clientEnvironment,
         new DefaultCellPathResolver(filesystem.getRootPath(), config));
+    Optional<ImmutableList<String>> allowedJavaSpecificiationVersions =
+        buckConfig.getAllowedJavaSpecificationVersions();
+    if (allowedJavaSpecificiationVersions.isPresent()) {
+      String specificationVersion = System.getProperty("java.specification.version");
+      boolean javaSpecificationVersionIsAllowed = allowedJavaSpecificiationVersions
+          .get()
+          .contains(specificationVersion);
+      if (!javaSpecificationVersionIsAllowed) {
+        throw new HumanReadableException(
+            "Current Java version '%s' is not in the allowed java specification versions:\n%s",
+            specificationVersion,
+            Joiner.on(", ").join(allowedJavaSpecificiationVersions.get()));
+      }
+    }
 
     // Setup the console.
     Verbosity verbosity = VerbosityParser.parse(args);
