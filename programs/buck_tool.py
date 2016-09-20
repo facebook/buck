@@ -424,10 +424,11 @@ def is_java8_or_9():
     try:
         cmd = ['java', '-Xms64m', '-version']
         output = check_output(cmd, stderr=subprocess.STDOUT)
-        version_line = output.strip().splitlines()[0]
-        m = re.compile('(openjdk|java) version "(1\.(8|9)\.|9).*').match(version_line)
-        _java8_or_9 = bool(m)
-        return _java8_or_9
+        for version_line in output.strip().splitlines():
+            m = re.compile('(openjdk|java) version "(1\.(8|9)\.|9).*').match(version_line)
+            if bool(m):
+                return True
+        return False
     except CalledProcessError as e:
         print(e.output, file=sys.stderr)
         raise e
