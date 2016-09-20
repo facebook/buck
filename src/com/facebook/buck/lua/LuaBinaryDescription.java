@@ -82,6 +82,7 @@ import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -562,17 +563,26 @@ public class LuaBinaryDescription implements
                         return input.isEmpty() ? input : Pattern.quote(input);
                       }
                     })));
-    ImmutableSortedMap.Builder<String, SourcePath> builder = ImmutableSortedMap.naturalOrder();
+    Map<String, SourcePath> librariesPaths = new HashMap<>();
     for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {
       String name = ent.getKey();
-      builder.put(name, ent.getValue());
+
+      if (librariesPaths.containsKey(name) && librariesPaths.get(name) != ent.getValue()) {
+        throw new HumanReadableException(
+            "Library %s has multiple possible paths: %s and %s",
+            name,
+            ent.getValue(),
+            librariesPaths.get(name));
+      }
+
+      librariesPaths.put(name, ent.getValue());
       Matcher matcher = versionedExtension.matcher(name);
       String versionLessName = matcher.replaceAll(cxxPlatform.getSharedLibraryExtension());
       if (!versionLessName.equals(ent.getKey()) && !libraries.containsKey(versionLessName)) {
-        builder.put(versionLessName, ent.getValue());
+        librariesPaths.put(versionLessName, ent.getValue());
       }
     }
-    return builder.build();
+    return ImmutableSortedMap.copyOf(librariesPaths);
   }
 
   private Tool getInPlaceBinary(
