@@ -216,6 +216,10 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
           errorTextTemplate
               .replaceAll("\\{cache_name}",
                   Matcher.quoteReplacement(name))
+              .replaceAll("\\\\t",
+                  Matcher.quoteReplacement("\t"))
+              .replaceAll("\\\\n",
+                  Matcher.quoteReplacement("\n"))
               .replaceAll("\\{error_message}",
                   Matcher.quoteReplacement(String.format(format, args)))));
     }
