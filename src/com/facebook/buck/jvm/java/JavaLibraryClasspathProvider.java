@@ -57,17 +57,15 @@ public class JavaLibraryClasspathProvider {
     return outputClasspathBuilder.build();
   }
 
-  public static ImmutableSet<JavaLibrary> getTransitiveClasspathDeps(
-      JavaLibrary javaLibrary,
-      Optional<SourcePath> outputJar) {
+  public static ImmutableSet<JavaLibrary> getTransitiveClasspathDeps(JavaLibrary javaLibrary) {
     ImmutableSet.Builder<JavaLibrary> classpathDeps = ImmutableSet.builder();
 
     classpathDeps.addAll(
         getClasspathDeps(
             javaLibrary.getDepsForTransitiveClasspathEntries()));
 
-    // Only add ourselves to the classpath if there's a jar to be built.
-    if (outputJar.isPresent()) {
+    // Only add ourselves to the classpath if there's a jar to be built or if we're a maven dep.
+    if (javaLibrary.getPathToOutput() != null || javaLibrary.getMavenCoords().isPresent()) {
       classpathDeps.add(javaLibrary);
     }
 
