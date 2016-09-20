@@ -20,6 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cli.SlbBuckConfig;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.TestBuildEnvironmentDescription;
 import com.facebook.buck.testutil.TestConsole;
@@ -28,6 +32,8 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.timing.Clock;
+import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ObjectMappers;
@@ -39,6 +45,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 
 import org.eclipse.jetty.server.Request;
@@ -58,6 +65,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class RageCommandIntegrationTest {
+
+  private static final String UPLOAD_PATH = "/rage";
 
   @Rule
   public TemporaryPaths temporaryFolder = new TemporaryPaths();
@@ -91,6 +100,7 @@ public class RageCommandIntegrationTest {
     final AtomicReference<String> requestMethod = new AtomicReference<>();
     final AtomicReference<String> requestPath = new AtomicReference<>();
     final AtomicReference<byte[]> requestBody = new AtomicReference<>();
+    final String successMessage = "Upload successful";
     try (HttpdForTests httpd = new HttpdForTests()) {
       httpd.addHandler(
           new AbstractHandler() {
@@ -106,18 +116,22 @@ public class RageCommandIntegrationTest {
               httpServletResponse.setStatus(200);
               try (DataOutputStream out =
                        new DataOutputStream(httpServletResponse.getOutputStream())) {
-                out.writeBytes("Upload successful");
+                out.writeBytes(successMessage);
               }
             }
           });
       httpd.start();
 
-      RageConfig rageConfig = RageConfig.builder()
-          .setReportUploadUri(httpd.getUri("/rage"))
-          .build();
+
+      RageConfig rageConfig = createRageConfig(httpd);
       ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
       ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-      DefectReporter reporter = new DefaultDefectReporter(filesystem, objectMapper, rageConfig);
+      Clock clock = new DefaultClock();
+      DefectReporter reporter = new DefaultDefectReporter(filesystem,
+          objectMapper,
+          rageConfig,
+          BuckEventBusFactory.newInstance(clock),
+          clock);
       AutomatedReport automatedReport = new AutomatedReport(
           reporter,
           filesystem,
@@ -130,13 +144,13 @@ public class RageCommandIntegrationTest {
 
       assertThat(
           defectSubmitResult.getReportSubmitMessage(),
-          Matchers.equalTo(Optional.of("Upload successful")));
+          Matchers.equalTo(Optional.of(successMessage)));
       assertThat(
           requestMethod.get(),
           Matchers.equalTo("POST"));
       assertThat(
           requestPath.get(),
-          Matchers.equalTo("/rage"));
+          Matchers.equalTo(UPLOAD_PATH));
 
       filesystem.mkdirs(filesystem.getBuckPaths().getBuckOut());
       Path report =
@@ -202,12 +216,16 @@ public class RageCommandIntegrationTest {
           });
       httpd.start();
 
-      RageConfig rageConfig = RageConfig.builder()
-          .setReportUploadUri(httpd.getUri("/rage"))
-          .build();
+      RageConfig rageConfig = createRageConfig(httpd);
       ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
       ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-      DefectReporter reporter = new DefaultDefectReporter(filesystem, objectMapper, rageConfig);
+      Clock clock = new DefaultClock();
+      DefectReporter reporter = new DefaultDefectReporter(
+          filesystem,
+          objectMapper,
+          rageConfig,
+          BuckEventBusFactory.newInstance(clock),
+          clock);
       AutomatedReport automatedReport = new AutomatedReport(
           reporter,
           filesystem,
@@ -224,6 +242,22 @@ public class RageCommandIntegrationTest {
           filesystem.resolve(submitReport.getReportSubmitLocation()));
       assertEquals(zipInspector.getZipFileEntries().size(), 5);
     }
+  }
+
+  private RageConfig createRageConfig(HttpdForTests httpd) {
+    final String section = "rage";
+    final String uploadPathField = "report_upload_path";
+    final String uri = "http://localhost:" + httpd.getRootUri().getPort();
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(ImmutableMap.of(
+            section,
+            ImmutableMap.of(uploadPathField, UPLOAD_PATH, "slb_server_pool", uri)
+        ))
+        .build();
+    return RageConfig.builder()
+        .setReportUploadPath(buckConfig.getValue(section, uploadPathField).get())
+        .setFrontendConfig(new SlbBuckConfig(buckConfig, section))
+        .build();
   }
 
   private static class CapturingDefectReporter implements DefectReporter {

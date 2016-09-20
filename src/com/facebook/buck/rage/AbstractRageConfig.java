@@ -16,18 +16,38 @@
 
 package com.facebook.buck.rage;
 
+import com.facebook.buck.cli.SlbBuckConfig;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.immutables.value.Value;
 
-import java.net.URI;
-
 @Value.Immutable
 @BuckStyleImmutable
-interface AbstractRageConfig {
-  Optional<URI> getReportUploadUri();
-  Optional<Long> getReportMaxSizeBytes();
-  ImmutableList<String> getExtraInfoCommand();
+abstract class AbstractRageConfig {
+
+  // Defaults
+  public static final long HTTP_TIMEOUT_MILLIS = 15 * 1000;
+  public static final String UPLOAD_PATH = "/rage/upload";
+  public static final int HTTP_MAX_UPLOAD_RETRIES = 2;
+
+  public abstract Optional<Long> getReportMaxSizeBytes();
+  public abstract ImmutableList<String> getExtraInfoCommand();
+  public abstract Optional<SlbBuckConfig> getFrontendConfig();
+
+  @Value.Default
+  public String getReportUploadPath() {
+    return UPLOAD_PATH;
+  }
+
+  @Value.Default
+  public long getHttpTimeout() {
+    return HTTP_TIMEOUT_MILLIS;
+  }
+
+  @Value.Default
+  public int getMaxUploadRetries() {
+    return HTTP_MAX_UPLOAD_RETRIES;
+  }
 }

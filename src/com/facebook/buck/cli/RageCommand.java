@@ -71,9 +71,15 @@ public class RageCommand extends AbstractCommand {
         new DefaultExtraInfoCollector(rageConfig, filesystem, processExecutor);
 
     AbstractReport report;
+    DefaultDefectReporter reporter = new DefaultDefectReporter(
+        filesystem,
+        params.getObjectMapper(),
+        rageConfig,
+        params.getBuckEventBus(),
+        params.getClock());
     if (params.getConsole().getAnsi().isAnsiTerminal() && !nonInteractive) {
       report = new InteractiveReport(
-          new DefaultDefectReporter(filesystem, params.getObjectMapper(), rageConfig),
+          reporter,
           filesystem,
           stdOut,
           params.getStdIn(),
@@ -83,7 +89,7 @@ public class RageCommand extends AbstractCommand {
           extraInfoCollector);
     } else {
       report = new AutomatedReport(
-          new DefaultDefectReporter(filesystem, params.getObjectMapper(), rageConfig),
+          reporter,
           filesystem,
           stdOut,
           params.getBuildEnvironmentDescription(),

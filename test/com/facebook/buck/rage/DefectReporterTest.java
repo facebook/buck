@@ -18,9 +18,12 @@ package com.facebook.buck.rage;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.timing.Clock;
+import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.TriState;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
@@ -63,10 +66,13 @@ public class DefectReporterTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     RageConfig config = RageConfig.builder()
         .build();
+    Clock clock = new DefaultClock();
     DefectReporter reporter = new DefaultDefectReporter(
         filesystem,
         ObjectMappers.newDefaultInstance(),
-        config);
+        config,
+        BuckEventBusFactory.newInstance(clock),
+        clock);
 
     Path fileToBeIncluded = Paths.get("FileToBeIncluded.txt");
     filesystem.touch(fileToBeIncluded);
@@ -91,10 +97,13 @@ public class DefectReporterTest {
     ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
     RageConfig config = RageConfig.builder()
         .build();
+    Clock clock = new DefaultClock();
     DefectReporter reporter = new DefaultDefectReporter(
         filesystem,
         objectMapper,
-        config);
+        config,
+        BuckEventBusFactory.newInstance(clock),
+        clock);
 
     DefectSubmitResult defectSubmitResult = reporter.submitReport(
         DefectReport.builder()

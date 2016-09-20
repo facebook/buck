@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 47d2e726599e0820f41385308e5e88dd62ff9ba5 #@#
+#@# GENERATED FILE: DO NOT MODIFY a6847b60ac6aa434effdb8cc9840ca8ad3c7f9c9 #@#
 {
   "d" : {
     "deps" : [
@@ -11,7 +11,6 @@
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/test/result/type:type",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/environment:platform",
       "//third-party/java/immutables:processor"

@@ -18,12 +18,22 @@ package com.facebook.buck.rage;
 
 import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
 
+import com.facebook.buck.cli.SlbBuckConfig;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.CommandThreadFactory;
+import com.facebook.buck.slb.ClientSideSlb;
+import com.facebook.buck.slb.HttpResponse;
+import com.facebook.buck.slb.HttpService;
+import com.facebook.buck.slb.LoadBalancedService;
+import com.facebook.buck.slb.RetryingHttpService;
+import com.facebook.buck.timing.Clock;
 import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -35,11 +45,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okio.BufferedSink;
 
 /**
  * Takes care of actually writing out the report.
@@ -48,19 +63,26 @@ public class DefaultDefectReporter implements DefectReporter {
 
   private static final String REPORT_FILE_NAME = "report.json";
   private static final String DIFF_FILE_NAME = "changes.diff";
-  private static final int UPLOAD_TIMEOUT_MILLIS = 15 * 1000;
+  private static final int HTTP_SUCCESS_CODE = 200;
 
   private final ProjectFilesystem filesystem;
   private final ObjectMapper objectMapper;
   private final RageConfig rageConfig;
+  private final BuckEventBus buckEventBus;
+  private final Clock clock;
 
   public DefaultDefectReporter(
       ProjectFilesystem filesystem,
       ObjectMapper objectMapper,
-      RageConfig rageConfig) {
+      RageConfig rageConfig,
+      BuckEventBus buckEventBus,
+      Clock clock
+  ) {
     this.filesystem = filesystem;
     this.objectMapper = objectMapper;
     this.rageConfig = rageConfig;
+    this.buckEventBus = buckEventBus;
+    this.clock = clock;
   }
 
   private void addFilesToArchive(
@@ -97,18 +119,21 @@ public class DefaultDefectReporter implements DefectReporter {
   @Override
   public DefectSubmitResult submitReport(DefectReport defectReport) throws IOException {
     DefectSubmitResult.Builder defectSubmitResult = DefectSubmitResult.builder();
-    if (rageConfig.getReportUploadUri().isPresent()) {
-      URI uri = rageConfig.getReportUploadUri().get();
-      try {
-        String response = uploadReport(defectReport, uri);
-        return defectSubmitResult
-            .setReportSubmitLocation(uri.toString())
-            .setReportSubmitMessage(response)
-            .setUploadSuccess(true)
-            .build();
-      } catch (IOException e) {
-        defectSubmitResult.setReportSubmitErrorMessage(e.getMessage());
-        defectSubmitResult.setUploadSuccess(false);
+
+    Optional<SlbBuckConfig>  frontendConfig = rageConfig.getFrontendConfig();
+    if (frontendConfig.isPresent()) {
+      Optional<ClientSideSlb> slb =
+          frontendConfig.get().tryCreatingHttpClientSideSlb(
+              clock,
+              buckEventBus,
+              new CommandThreadFactory("RemoteLog.HttpLoadBalancer"));
+      if (slb.isPresent()) {
+        try {
+          return uploadReport(defectReport, defectSubmitResult, slb.get());
+        } catch (IOException e) {
+          defectSubmitResult.setReportSubmitErrorMessage(e.getMessage());
+          defectSubmitResult.setUploadSuccess(false);
+        }
       }
     }
 
@@ -146,35 +171,61 @@ public class DefaultDefectReporter implements DefectReporter {
     }
   }
 
-  private String uploadReport(DefectReport defectReport, URI uri) throws IOException {
-    HttpURLConnection connection = (HttpURLConnection) uri.toURL().openConnection();
-    connection.setUseCaches(false);
-    connection.setDoOutput(true);
-    connection.setConnectTimeout(UPLOAD_TIMEOUT_MILLIS);
-    connection.setReadTimeout(UPLOAD_TIMEOUT_MILLIS);
-    connection.setRequestMethod("POST");
-    connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+  private DefectSubmitResult uploadReport(
+      final DefectReport defectReport,
+      DefectSubmitResult.Builder defectSubmitResult,
+      ClientSideSlb slb) throws IOException {
+    long timeout = rageConfig.getHttpTimeout();
+    OkHttpClient httpClient = new OkHttpClient.Builder()
+        .connectTimeout(timeout, TimeUnit.MILLISECONDS)
+        .readTimeout(timeout, TimeUnit.MILLISECONDS)
+        .writeTimeout(timeout, TimeUnit.MILLISECONDS)
+        .build();
+    HttpService httpService = new RetryingHttpService(buckEventBus,
+        new LoadBalancedService(slb, httpClient, buckEventBus),
+        rageConfig.getMaxUploadRetries());
+
     try {
-      try (OutputStream outputStream = connection.getOutputStream()) {
-        writeReport(defectReport, outputStream);
-        outputStream.flush();
+      Request.Builder requestBuilder = new Request.Builder();
+      requestBuilder.post(
+          new RequestBody() {
+            @Override
+            public MediaType contentType() {
+              return MediaType.parse("application/x-www-form-urlencoded");
+            }
+
+            @Override
+            public void writeTo(BufferedSink bufferedSink) throws IOException {
+              writeReport(defectReport, bufferedSink.outputStream());
+            }
+          });
+
+      HttpResponse response = httpService.makeRequest(
+          rageConfig.getReportUploadPath(),
+          requestBuilder);
+      String responseBody;
+      try (InputStream inputStream = response.getBody()) {
+        responseBody = CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8));
       }
-      if (connection.getResponseCode() != 200) {
+
+      if (response.code() == HTTP_SUCCESS_CODE) {
+        return defectSubmitResult
+            .setReportSubmitLocation(response.requestUrl())
+            .setReportSubmitMessage(responseBody)
+            .setUploadSuccess(true)
+            .build();
+      } else {
         throw new IOException(
-            String.format("Connection to %s returned code %d and message: %s", uri.toString(),
-            connection.getResponseCode(),
-            connection.getResponseMessage()));
-      }
-      try (InputStream inputStream = connection.getInputStream()) {
-        return CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8));
+            String.format(
+                "Connection to %s returned code %d and message: %s",
+                response.requestUrl(),
+                response.code(),
+                responseBody));
       }
     } catch (IOException e) {
-      throw new IOException(
-          String.format("Failed uploading report to [%s] because [%s].",
-              uri,
-              e.getMessage()));
+      throw new IOException(String.format("Failed uploading report because [%s].", e.getMessage()));
     } finally {
-      connection.disconnect();
+      httpService.close();
     }
   }
 }

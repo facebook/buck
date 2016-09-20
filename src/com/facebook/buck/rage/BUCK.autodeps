@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 92e537d407d3095fd3bdd25d5fa9f11c42c9c910 #@#
+#@# GENERATED FILE: DO NOT MODIFY 4211240afdec9468732cd2535782c66157d9d454 #@#
 {
   "config" : {
     "deps" : [
@@ -17,6 +17,7 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/log:log",
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/slb:slb",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/unit:unit",
@@ -24,16 +25,20 @@
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/rage:config",
+      "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/environment:environment",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
       "//third-party/java/guava:guava",
       "//third-party/java/jackson:jackson-annotations",
-      "//third-party/java/jackson:jackson-databind"
+      "//third-party/java/jackson:jackson-databind",
+      "//third-party/java/okhttp:okhttp",
+      "//third-party/java/okio:okio"
     ]
   }
 }

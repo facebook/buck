@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY a98d8aa5e733ac4b3ef0da78daea5dc363f19191 #@#
+#@# GENERATED FILE: DO NOT MODIFY e489bf81f2d1d73666773d21b7844d23b2b33470 #@#
 {
   "swift" : {
     "deps" : [
@@ -12,6 +12,7 @@
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/apple:platform",
+      "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/model:model",
