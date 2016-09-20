@@ -758,12 +758,13 @@ public class ExopackageInstaller {
     String pmPathPrefix = "package:";
 
     String pmPath = null;
-    if (lineIter.hasNext()) {
-      pmPath = lineIter.next();
-      if (pmPath.startsWith("WARNING: linker: ")) {
-        // Ignore silly linker warnings about non-PIC code on emulators
-        pmPath = lineIter.hasNext() ? lineIter.next() : null;
+    while (pmPath.startsWith("WARNING: linker: ")) {
+      // Ignore silly linker warnings about non-PIC code on emulators
+      if(!lineIter.hasNext()) {
+        pmPath = null;
+        break;
       }
+      pmPath = lineIter.next();
     }
 
     if (pmPath == null || !pmPath.startsWith(pmPathPrefix)) {
