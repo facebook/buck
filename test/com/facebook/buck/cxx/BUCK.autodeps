@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 9efe299c03a88dd285e089539285b36f3a6d96a2 #@#
+#@# GENERATED FILE: DO NOT MODIFY bf5943e6a7c5a0b4a17a6cf4c21dbd562667d68f #@#
 {
   "cxx" : {
     "deps" : [
@@ -59,6 +59,7 @@
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/rules/args:args",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
+      "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/testutil:testutil"
     ],
     "exported_deps" : [

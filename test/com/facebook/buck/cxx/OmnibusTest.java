@@ -25,30 +25,25 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.StringArg;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.nio.file.Path;
 import java.util.Map;
 
 public class OmnibusTest {
 
   @Test
   public void includedDeps() throws NoSuchBuildTargetException {
-    NativeLinkable a = new Node("//:a");
-    NativeLinkable b = new Node("//:b");
-    NativeLinkTarget root = new Root("//:root", ImmutableList.of(a, b));
+    NativeLinkable a = new OmnibusNode("//:a");
+    NativeLinkable b = new OmnibusNode("//:b");
+    NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(a, b));
 
     // Verify the spec.
     Omnibus.OmnibusSpec spec =
@@ -107,9 +102,9 @@ public class OmnibusTest {
 
   @Test
   public void excludedAndIncludedDeps() throws NoSuchBuildTargetException {
-    NativeLinkable a = new Node("//:a");
-    NativeLinkable b = new SharedOnlyNode("//:b");
-    NativeLinkTarget root = new Root("//:root", ImmutableList.of(a, b));
+    NativeLinkable a = new OmnibusNode("//:a");
+    NativeLinkable b = new OmnibusSharedOnlyNode("//:b");
+    NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(a, b));
 
     // Verify the spec.
     Omnibus.OmnibusSpec spec =
@@ -172,10 +167,10 @@ public class OmnibusTest {
 
   @Test
   public void excludedDepExcludesTransitiveDep() throws NoSuchBuildTargetException {
-    NativeLinkable a = new Node("//:a");
-    NativeLinkable b = new Node("//:b");
-    NativeLinkable c = new SharedOnlyNode("//:c", ImmutableList.of(b));
-    NativeLinkTarget root = new Root("//:root", ImmutableList.of(a, c));
+    NativeLinkable a = new OmnibusNode("//:a");
+    NativeLinkable b = new OmnibusNode("//:b");
+    NativeLinkable c = new OmnibusSharedOnlyNode("//:c", ImmutableList.of(b));
+    NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(a, c));
 
     // Verify the spec.
     Omnibus.OmnibusSpec spec =
@@ -242,10 +237,10 @@ public class OmnibusTest {
 
   @Test
   public void depOfExcludedRoot() throws NoSuchBuildTargetException {
-    NativeLinkable a = new Node("//:a");
-    NativeLinkTarget root = new Root("//:root", ImmutableList.of(a));
-    NativeLinkable b = new Node("//:b");
-    NativeLinkable excludedRoot = new Node("//:excluded_root", ImmutableList.of(b));
+    NativeLinkable a = new OmnibusNode("//:a");
+    NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(a));
+    NativeLinkable b = new OmnibusNode("//:b");
+    NativeLinkable excludedRoot = new OmnibusNode("//:excluded_root", ImmutableList.of(b));
 
     // Verify the spec.
     Omnibus.OmnibusSpec spec =
@@ -311,9 +306,9 @@ public class OmnibusTest {
 
   @Test
   public void commondDepOfIncludedAndExcludedRoots() throws NoSuchBuildTargetException {
-    NativeLinkable a = new Node("//:a");
-    NativeLinkTarget root = new Root("//:root", ImmutableList.of(a));
-    NativeLinkable excludedRoot = new Node("//:excluded_root", ImmutableList.of(a));
+    NativeLinkable a = new OmnibusNode("//:a");
+    NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(a));
+    NativeLinkable excludedRoot = new OmnibusNode("//:excluded_root", ImmutableList.of(a));
 
     // Verify the spec.
     Omnibus.OmnibusSpec spec =
@@ -374,13 +369,13 @@ public class OmnibusTest {
   @Test
   public void unusedStaticDepsAreNotIncludedInBody() throws NoSuchBuildTargetException {
     NativeLinkable a =
-        new Node(
+        new OmnibusNode(
             "//:a",
             ImmutableList.<NativeLinkable>of(),
             ImmutableList.<NativeLinkable>of(),
             NativeLinkable.Linkage.STATIC);
-    NativeLinkable b = new Node("//:b");
-    NativeLinkTarget root = new Root("//:root", ImmutableList.of(a, b));
+    NativeLinkable b = new OmnibusNode("//:b");
+    NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(a, b));
 
     // Verify the spec.
     Omnibus.OmnibusSpec spec =
@@ -449,145 +444,6 @@ public class OmnibusTest {
           Arg.stringify(link.getArgs()),
           Matchers.hasItems(Arg.stringify(input.getArgs()).toArray(new String[1])));
     }
-  }
-
-  private static class Node implements NativeLinkable {
-
-    private final BuildTarget target;
-    private final Iterable<? extends NativeLinkable> deps;
-    private final Iterable<? extends NativeLinkable> exportedDeps;
-    private final Linkage linkage;
-
-    public Node(
-        String target,
-        Iterable<? extends NativeLinkable> deps,
-        Iterable<? extends NativeLinkable> exportedDeps,
-        Linkage linkage) {
-      this.target = BuildTargetFactory.newInstance(target);
-      this.deps = deps;
-      this.exportedDeps = exportedDeps;
-      this.linkage = linkage;
-    }
-
-    public Node(
-        String target,
-        Iterable<? extends NativeLinkable> deps,
-        Iterable<? extends NativeLinkable> exportedDeps) {
-      this(target, deps, exportedDeps, Linkage.ANY);
-    }
-
-    public Node(
-        String target,
-        Iterable<? extends NativeLinkable> deps) {
-      this(target, deps, ImmutableList.<NativeLinkable>of());
-    }
-
-    public Node(String target) {
-      this(target, ImmutableList.<NativeLinkable>of(), ImmutableList.<NativeLinkable>of());
-    }
-
-    @Override
-    public BuildTarget getBuildTarget() {
-      return target;
-    }
-
-    @Override
-    public Iterable<? extends NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
-      return deps;
-    }
-
-    @Override
-    public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
-        CxxPlatform cxxPlatform) {
-      return exportedDeps;
-    }
-
-    @Override
-    public NativeLinkableInput getNativeLinkableInput(
-        CxxPlatform cxxPlatform,
-        Linker.LinkableDepType type) {
-      return NativeLinkableInput.builder()
-          .addArgs(new StringArg(getBuildTarget().toString()))
-          .build();
-    }
-
-    @Override
-    public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-      return linkage;
-    }
-
-    @Override
-    public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
-      return ImmutableMap.<String, SourcePath>of(
-          getBuildTarget().toString(),
-          new FakeSourcePath(getBuildTarget().toString()));
-    }
-
-  }
-
-  private static class SharedOnlyNode extends Node {
-
-    public SharedOnlyNode(
-        String target,
-        Iterable<? extends NativeLinkable> deps) {
-      super(target, deps);
-    }
-
-    public SharedOnlyNode(String target) {
-      super(target);
-    }
-
-    @Override
-    public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-      return Linkage.SHARED;
-    }
-
-  }
-
-  private static class Root extends Node implements NativeLinkTarget {
-
-    public Root(
-        String target,
-        Iterable<? extends NativeLinkable> deps,
-        Iterable<? extends NativeLinkable> exportedDeps) {
-      super(target, deps, exportedDeps);
-    }
-
-    public Root(
-        String target,
-        Iterable<? extends NativeLinkable> deps) {
-      super(target, deps);
-    }
-
-    public Root(String target) {
-      super(target);
-    }
-
-    @Override
-    public NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform) {
-      return NativeLinkTargetMode.library(getBuildTarget().toString());
-    }
-
-    @Override
-    public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
-        CxxPlatform cxxPlatform) {
-      return Iterables.concat(
-          getNativeLinkableDeps(cxxPlatform),
-          getNativeLinkableExportedDeps(cxxPlatform));
-    }
-
-    @Override
-    public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform) {
-      return NativeLinkableInput.builder()
-          .addArgs(new StringArg(getBuildTarget().toString()))
-          .build();
-    }
-
-    @Override
-    public Optional<Path> getNativeLinkTargetOutputPath(CxxPlatform cxxPlatform) {
-      return Optional.absent();
-    }
-
   }
 
   private ImmutableMap<String, SourcePath> toSonameMap(OmnibusLibraries libraries) {

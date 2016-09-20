@@ -107,16 +107,21 @@ abstract class AbstractOmnibusRoots {
 
     private ImmutableMap<BuildTarget, NativeLinkable> buildExcluded() {
       final Map<BuildTarget, NativeLinkable> excluded = new LinkedHashMap<>();
-
       excluded.putAll(excludedRoots);
 
-      // Recursively expand the excluded nodes including any preloaded deps, as we'll need this full
-      // list to know which roots to exclude from omnibus linking.
-      new AbstractBreadthFirstTraversal<NativeLinkable>(excludedRoots.values()) {
+      // Find all excluded nodes reachable from the included roots.
+      Map<BuildTarget, NativeLinkable> includedRootDeps = new LinkedHashMap<>();
+      for (NativeLinkTarget target : includedRoots.values()) {
+        for (NativeLinkable linkable : target.getNativeLinkTargetDeps(cxxPlatform)) {
+          includedRootDeps.put(linkable.getBuildTarget(), linkable);
+        }
+      }
+      new AbstractBreadthFirstTraversal<NativeLinkable>(includedRootDeps.values()) {
         @Override
-        public Iterable<NativeLinkable> visit(NativeLinkable linkable) {
-          if (includedRoots.containsKey(linkable.getBuildTarget())) {
+        public Iterable<NativeLinkable> visit(NativeLinkable linkable) throws RuntimeException {
+          if (linkable.getPreferredLinkage(cxxPlatform) == NativeLinkable.Linkage.SHARED) {
             excluded.put(linkable.getBuildTarget(), linkable);
+            return ImmutableSet.of();
           }
           return Iterables.concat(
               linkable.getNativeLinkableDeps(cxxPlatform),
@@ -124,7 +129,25 @@ abstract class AbstractOmnibusRoots {
         }
       }.start();
 
-      return ImmutableMap.copyOf(excluded);
+      // Prepare the final map of excluded roots, starting with the pre-defined ones.
+      final Map<BuildTarget, NativeLinkable> updatedExcludedRoots = new LinkedHashMap<>();
+      updatedExcludedRoots.putAll(excludedRoots);
+
+      // Recursively expand the excluded nodes including any preloaded deps, as we'll need this full
+      // list to know which roots to exclude from omnibus linking.
+      new AbstractBreadthFirstTraversal<NativeLinkable>(excluded.values()) {
+        @Override
+        public Iterable<NativeLinkable> visit(NativeLinkable linkable) {
+          if (includedRoots.containsKey(linkable.getBuildTarget())) {
+            updatedExcludedRoots.put(linkable.getBuildTarget(), linkable);
+          }
+          return Iterables.concat(
+              linkable.getNativeLinkableDeps(cxxPlatform),
+              linkable.getNativeLinkableExportedDeps(cxxPlatform));
+        }
+      }.start();
+
+      return ImmutableMap.copyOf(updatedExcludedRoots);
     }
 
     private ImmutableMap<BuildTarget, NativeLinkTarget> buildIncluded(
