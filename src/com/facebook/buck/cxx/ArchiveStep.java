@@ -23,6 +23,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.CommandSplitter;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -35,6 +36,8 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
@@ -107,11 +110,14 @@ public class ArchiveStep implements Step {
       ExecutionContext context,
       final ImmutableList<String> command)
       throws IOException, InterruptedException {
-    ProcessBuilder builder = new ProcessBuilder();
-    builder.directory(filesystem.getRootPath().toFile());
-    builder.environment().putAll(environment);
-    builder.command(command);
-    ProcessExecutor.Result result = context.getProcessExecutor().execute(builder.start());
+    Map<String, String> env = new HashMap<>(System.getenv());
+    env.putAll(environment);
+    ProcessExecutorParams params = ProcessExecutorParams.builder()
+        .setDirectory(filesystem.getRootPath())
+        .setEnvironment(env)
+        .setCommand(command)
+        .build();
+    ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(params);
     if (result.getExitCode() != 0 && result.getStderr().isPresent()) {
       context.getBuckEventBus().post(ConsoleEvent.create(Level.SEVERE, result.getStderr().get()));
     }

@@ -53,6 +53,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.CommandMode;
@@ -330,13 +331,14 @@ public class ProjectWorkspace {
 
   private ProcessExecutor.Result doRunCommand(List<String> command)
       throws IOException, InterruptedException {
-    String[] commandArray = command.toArray(new String[command.size()]);
-    Process process = Runtime.getRuntime().exec(commandArray);
+    ProcessExecutorParams params = ProcessExecutorParams.builder()
+        .setCommand(command)
+        .build();
     ProcessExecutor executor = new ProcessExecutor(new TestConsole());
     String currentDir = System.getProperty("user.dir");
     try {
       System.setProperty("user.dir", destPath.toAbsolutePath().toString());
-      return executor.execute(process);
+      return executor.launchAndExecute(params);
     } finally {
       System.setProperty("user.dir", currentDir);
     }

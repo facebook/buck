@@ -17,9 +17,9 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -32,6 +32,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Abstract implementation of {@link Step} that ...
@@ -76,35 +78,34 @@ public abstract class AbstractTestStep implements Step {
     // of the many that ran.  So, our best bet is to just combine them all into stdout,
     // so they get properly interleaved with the test start and end messages that we
     // use when we parse the test output.
-    ProcessBuilder builder = new ProcessBuilder();
-    builder.command(command);
-    if (workingDirectory.isPresent()) {
-      builder.directory(filesystem.resolve(workingDirectory.get()).toFile());
-    }
+    Map<String, String> environment = new HashMap<>(System.getenv());
     if (env.isPresent()) {
-      builder.environment().putAll(env.get());
+      environment.putAll(env.get());
     }
-    builder.redirectOutput(filesystem.resolve(output).toFile());
-    builder.redirectErrorStream(true);
+    ProcessExecutorParams params = ProcessExecutorParams.builder()
+        .setCommand(command)
+        .setDirectory(workingDirectory)
+        .setEnvironment(environment)
+        .setRedirectOutput(ProcessBuilder.Redirect.to(filesystem.resolve(output).toFile()))
+        .setRedirectErrorStream(true)
+        .build();
 
-    Process process;
+    ProcessExecutor.Result result;
     try {
-      process = BgProcessKiller.startProcess(builder);
+      // Run the test process, saving the exit code.
+      ProcessExecutor executor = context.getProcessExecutor();
+      ImmutableSet<ProcessExecutor.Option> options = ImmutableSet.of(
+          ProcessExecutor.Option.EXPECTING_STD_OUT);
+      result = executor.launchAndExecute(
+          params,
+          options,
+          /* stdin */ Optional.<String>absent(),
+          testRuleTimeoutMs,
+          /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
     } catch (IOException e) {
       context.logError(e, "Error starting command %s", command);
       return StepExecutionResult.ERROR;
     }
-
-    // Run the test process, saving the exit code.
-    ProcessExecutor executor = context.getProcessExecutor();
-    ImmutableSet<ProcessExecutor.Option> options = ImmutableSet.of(
-        ProcessExecutor.Option.EXPECTING_STD_OUT);
-    ProcessExecutor.Result result = executor.execute(
-        process,
-        options,
-        /* stdin */ Optional.<String>absent(),
-        /* timeOutMs */ testRuleTimeoutMs,
-        /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
 
     if (result.isTimedOut()) {
       throw new HumanReadableException(

@@ -29,8 +29,8 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -42,7 +42,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Map;
 
 class GroovycStep implements Step {
   private final Tool groovyc;
@@ -79,19 +78,16 @@ class GroovycStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    ProcessBuilder processBuilder = new ProcessBuilder(createCommand());
-
-    Map<String, String> env = processBuilder.environment();
-    env.clear();
-    env.putAll(context.getEnvironment());
-
-    processBuilder.directory(filesystem.getRootPath().toAbsolutePath().toFile());
     int exitCode = -1;
     try {
+      ProcessExecutorParams params = ProcessExecutorParams.builder()
+          .setCommand(createCommand())
+          .setEnvironment(context.getEnvironment())
+          .setDirectory(filesystem.getRootPath().toAbsolutePath())
+          .build();
       writePathToSourcesList(sourceFilePaths);
       ProcessExecutor processExecutor = context.getProcessExecutor();
-      Process p = BgProcessKiller.startProcess(processBuilder);
-      exitCode = processExecutor.execute(p).getExitCode();
+      exitCode = processExecutor.launchAndExecute(params).getExitCode();
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
     }

@@ -86,11 +86,11 @@ public class FakeProcessExecutor extends ProcessExecutor {
   }
 
   @Override
-  Process launchProcessInternal(ProcessExecutorParams params) throws IOException {
+  public LaunchedProcess launchProcess(ProcessExecutorParams params) throws IOException {
     try {
       FakeProcess fakeProcess = processFunction.apply(params);
       launchedProcesses.add(params);
-      return fakeProcess;
+      return new LaunchedProcessImpl(fakeProcess);
     } catch (IllegalArgumentException e) {
       throw new IOException(
           String.format(

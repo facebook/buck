@@ -39,11 +39,11 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.OCamlSource;
 import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -572,11 +572,12 @@ public class OCamlRuleBuilder {
       options.add(ProcessExecutor.Option.EXPECTING_STD_OUT);
       Console console = new Console(Verbosity.SILENT, stdout, stderr, Ansi.withoutTty());
       ProcessExecutor exe = new ProcessExecutor(console);
-      ProcessBuilder processBuilder = new ProcessBuilder(cmd);
-      processBuilder.directory(baseDir.toFile());
-      Process p = BgProcessKiller.startProcess(processBuilder);
-      ProcessExecutor.Result result = exe.execute(
-          p,
+      ProcessExecutorParams params = ProcessExecutorParams.builder()
+          .setCommand(cmd)
+          .setDirectory(baseDir)
+          .build();
+      ProcessExecutor.Result result = exe.launchAndExecute(
+          params,
           options.build(),
         /* stdin */ Optional.<String>absent(),
         /* timeOutMs */ Optional.<Long>absent(),

@@ -25,7 +25,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
@@ -51,7 +50,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
-import java.util.Map;
 
 public class ExternalJavac implements Javac {
 
@@ -206,18 +204,15 @@ public class ExternalJavac implements Javac {
       return 1;
     }
 
-    ProcessBuilder processBuilder = new ProcessBuilder(command.build());
-
-    Map<String, String> env = processBuilder.environment();
-    env.clear();
-    env.putAll(context.getEnvironment());
-
-    processBuilder.directory(filesystem.getRootPath().toAbsolutePath().toFile());
     // Run the command
     int exitCode = -1;
     try {
-      Process p = BgProcessKiller.startProcess(processBuilder);
-      ProcessExecutor.Result result = context.getProcessExecutor().execute(p);
+      ProcessExecutorParams params = ProcessExecutorParams.builder()
+          .setCommand(command.build())
+          .setEnvironment(context.getEnvironment())
+          .setDirectory(filesystem.getRootPath().toAbsolutePath())
+          .build();
+      ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(params);
       exitCode = result.getExitCode();
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
