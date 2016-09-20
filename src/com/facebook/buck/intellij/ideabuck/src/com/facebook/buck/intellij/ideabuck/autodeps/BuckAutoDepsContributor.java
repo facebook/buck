@@ -19,7 +19,7 @@ package com.facebook.buck.intellij.ideabuck.autodeps;
 import com.facebook.buck.intellij.ideabuck.actions.BuckAuditOwner;
 import com.facebook.buck.intellij.ideabuck.config.BuckSettingsProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.util.concurrent.FutureCallback;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
@@ -34,11 +34,13 @@ import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
 
+
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -46,28 +48,27 @@ import javax.annotation.Nullable;
 public class BuckAutoDepsContributor implements PsiDocumentManager.Listener {
   private static final Logger LOG = Logger.getInstance(BuckAutoDepsContributor.class);
   private Project mProject;
-  Pattern importPattern = Pattern.compile("import.*;");
+  Pattern importPattern = Pattern.compile(
+      "import\\s+([a-z][A-Za-z0-9_]*(\\.[A-Za-z0-9]+)+)($|\\s|;)?");
   ObjectMapper mObjectMapper = new ObjectMapper();
 
   public BuckAutoDepsContributor(Project project) {
     mProject = project;
   }
 
-  public String getImportedClassFromImportLine(String importClassLine) {
-    return importClassLine.substring(
-        importClassLine.indexOf(" ") + 1,
-        importClassLine.length() - 1);
-  }
-
-  public Optional<VirtualFile> getVirtualFileFromImportLine(String importClassLine) {
+  @Nullable
+  public VirtualFile getVirtualFileFromClassname(String classname) {
     GlobalSearchScope scope = GlobalSearchScope.allScope(mProject);
 
-    PsiClass psiClass = JavaPsiFacade.getInstance(mProject).
-        findClass(getImportedClassFromImportLine(importClassLine), scope);
-
-    return psiClass == null ?
-        Optional.<VirtualFile>absent() :
-        Optional.fromNullable(psiClass.getContainingFile().getVirtualFile());
+    PsiClass psiClass = JavaPsiFacade.getInstance(mProject).findClass(classname, scope);
+    if (psiClass == null) {
+      return null;
+    }
+    PsiFile psiFile = psiClass.getContainingFile();
+    if (psiFile == null) {
+      return null;
+    }
+    return psiFile.getVirtualFile();
   }
 
   @Override
@@ -80,13 +81,22 @@ public class BuckAutoDepsContributor implements PsiDocumentManager.Listener {
 
           @Override
           public void documentChanged(DocumentEvent documentEvent) {
-            if (BuckSettingsProvider.getInstance().getState().enableAutoDeps) {
-              String newLine = documentEvent.getNewFragment().toString();
-              if (importPattern.matcher(newLine).matches()) {
-                addDependency(
-                    getVirtualFileFromImportLine(newLine),
-                    Optional.fromNullable(FileDocumentManager.getInstance().getFile(document)));
+            if (!BuckSettingsProvider.getInstance().getState().enableAutoDeps) {
+              return; // autodeps off, don't bother
+            }
+            VirtualFile documentFile = FileDocumentManager.getInstance().getFile(document);
+            if (documentFile == null) {
+              return; // Don't understand where this document is located
+            }
+            CharSequence fragment = documentEvent.getNewFragment();
+            Matcher matcher = importPattern.matcher(fragment);
+            while (matcher.find()) {
+              String classname = matcher.group(1);
+              VirtualFile classFile = getVirtualFileFromClassname(classname);
+              if (classFile == null) {
+                continue; // looks like an import, but we don't recognize where to get it
               }
+              addDependency(classFile, documentFile);
             }
           }
         });
@@ -98,19 +108,14 @@ public class BuckAutoDepsContributor implements PsiDocumentManager.Listener {
 
   }
 
-  public void addDependency(
-      final Optional<VirtualFile> importClass,
-      final Optional<VirtualFile> currentClass) {
-    if (!importClass.isPresent() || !currentClass.isPresent()) {
-      return;
-    }
+  public void addDependency(final VirtualFile importClass, final VirtualFile currentClass) {
     BuckAuditOwner.execute(
         mProject,
         new FutureCallback<String>() {
           @Override
           public void onSuccess(@Nullable String buckTargetResult) {
             try {
-              String currentClassPath = currentClass.get().getPath();
+              String currentClassPath = currentClass.getPath();
               Map<String, List<String>> pathAndTargetData =
                   mObjectMapper.readValue(buckTargetResult, Map.class);
               String importTargetName = "";
@@ -131,13 +136,27 @@ public class BuckAutoDepsContributor implements PsiDocumentManager.Listener {
                 }
               }
 
-              BuckDeps.addDeps(
-                  mProject,
-                  importPath,
-                  currentPath,
-                  importTargetName,
-                  currentTargetName
-              );
+              // Make sure we found both ends of the dependency to add.
+              // TODO(ideabuck):  Consider if a single file is part of more than one target.
+              if (!Strings.isNullOrEmpty(currentTargetName) &&
+                  !Strings.isNullOrEmpty(currentPath) &&
+                  !Strings.isNullOrEmpty(importTargetName) &&
+                  !Strings.isNullOrEmpty(importPath)) {
+                BuckDeps.addDeps(
+                    mProject,
+                    importPath,
+                    currentPath,
+                    importTargetName,
+                    currentTargetName
+                );
+                BuckDeps.addVisibility(
+                    mProject,
+                    importPath,
+                    currentPath,
+                    importTargetName,
+                    currentTargetName
+                );
+              }
             } catch (IOException e) {
               LOG.error(e.toString());
             }
@@ -147,7 +166,7 @@ public class BuckAutoDepsContributor implements PsiDocumentManager.Listener {
           public void onFailure(Throwable throwable) {
           }
         },
-        importClass.get().getPath(),
-        currentClass.get().getPath());
+        importClass.getPath(),
+        currentClass.getPath());
   }
 }
