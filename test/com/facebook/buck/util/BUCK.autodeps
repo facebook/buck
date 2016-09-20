@@ -1,11 +1,13 @@
-#@# GENERATED FILE: DO NOT MODIFY 3638a999055b7d9ccebf99ec261541409e9050ad #@#
+#@# GENERATED FILE: DO NOT MODIFY 674b4038c55923f069cede7ba7943ffc8228f56a #@#
 {
   "testutil" : {
     "deps" : [
+      "//src/com/facebook/buck/model:build_id",
       "//test/com/facebook/buck/testutil:testutil",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/log:log",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/immutables:immutables",

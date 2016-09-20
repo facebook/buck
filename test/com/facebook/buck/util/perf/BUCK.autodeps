@@ -1,0 +1,16 @@
+#@# GENERATED FILE: DO NOT MODIFY d907ea1ed1d800bf83a79253c9b70a4041e68314 #@#
+{
+  "perf" : {
+    "deps" : [
+      "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/log:log",
+      "//src/com/facebook/buck/util/perf:perf",
+      "//test/com/facebook/buck/event:testutil",
+      "//test/com/facebook/buck/util:testutil",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

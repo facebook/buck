@@ -1,0 +1,13 @@
+#@# GENERATED FILE: DO NOT MODIFY 4e95f746054a7bfd157ee567f80640cf016f7671 #@#
+{
+  "perf" : {
+    "deps" : [
+      "//src/com/facebook/buck/log:api"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/log:log",
+      "//third-party/java/guava:guava"
+    ]
+  }
+}

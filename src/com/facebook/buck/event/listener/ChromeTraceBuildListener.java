@@ -19,6 +19,7 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.cli.CommandEvent;
+import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEvent;
@@ -50,6 +51,7 @@ import com.facebook.buck.util.BestCompressionGZIPOutputStream;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.unit.SizeUnit;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -644,6 +646,24 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         ChromeTraceEvent.Phase.END,
         finished.getArgs(),
         finished);
+  }
+
+  @Subscribe
+  public void memoryPerfStats(PerfStatsTracking.MemoryPerfStatsEvent memory) {
+    writeChromeTraceEvent(
+        "perf",
+        "memory",
+        ChromeTraceEvent.Phase.COUNTER,
+        ImmutableMap.of(
+            "used_memory_mb", Long.toString(
+                SizeUnit.BYTES.toMegabytes(
+                    memory.getTotalMemoryBytes() - memory.getFreeMemoryBytes())),
+            "free_memory_mb", Long.toString(
+                SizeUnit.BYTES.toMegabytes(memory.getFreeMemoryBytes())),
+            "total_memory_mb", Long.toString(
+                SizeUnit.BYTES.toMegabytes(memory.getTotalMemoryBytes()))
+        ),
+        memory);
   }
 
   @Subscribe

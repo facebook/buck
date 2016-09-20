@@ -93,6 +93,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.Libc;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.PkillProcessManager;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
@@ -999,7 +1000,10 @@ public final class Main {
                  counterAggregatorExecutor,
                  buildEventBus,
                  buckConfig.getCountersFirstFlushIntervalMillis(),
-                 buckConfig.getCountersFlushIntervalMillis())) {
+                 buckConfig.getCountersFlushIntervalMillis());
+             PerfStatsTracking perfStatsTracking = new PerfStatsTracking(
+                 buildEventBus,
+                 invocationInfo)) {
 
           LOG.debug(invocationInfo.toLogLine(args));
 

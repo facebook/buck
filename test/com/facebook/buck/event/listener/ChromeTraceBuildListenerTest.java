@@ -59,6 +59,7 @@ import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
@@ -212,6 +213,7 @@ public class ChromeTraceBuildListenerTest {
         ImmutableList.of("arg1", "arg2"),
         /* isDaemon */ true);
     eventBus.post(commandEventStarted);
+    eventBus.post(new PerfStatsTracking.MemoryPerfStatsEvent(1024 * 1024L, 3 * 1024 * 1024L));
     ArtifactCacheConnectEvent.Started artifactCacheConnectEventStarted =
         ArtifactCacheConnectEvent.started();
     eventBus.post(artifactCacheConnectEventStarted);
@@ -333,6 +335,15 @@ public class ChromeTraceBuildListenerTest {
         "party",
         ChromeTraceEvent.Phase.BEGIN,
         ImmutableMap.of("command_args", "arg1 arg2"));
+
+    assertNextResult(
+        resultListCopy,
+        "memory",
+        ChromeTraceEvent.Phase.COUNTER,
+        ImmutableMap.of(
+            "used_memory_mb", "2",
+            "free_memory_mb", "1",
+            "total_memory_mb", "3"));
 
     assertNextResult(
         resultListCopy,
