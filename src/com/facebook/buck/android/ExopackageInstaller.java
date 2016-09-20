@@ -760,7 +760,6 @@ public class ExopackageInstaller {
     String pmPath = null;
     if (lineIter.hasNext()) {
       pmPath = lineIter.next();
-      LOG.warn(pmPath);
       while (pmPath.startsWith("WARNING: linker: ")) {
         // Ignore silly linker warnings about non-PIC code on emulators
         if(!lineIter.hasNext()) {
