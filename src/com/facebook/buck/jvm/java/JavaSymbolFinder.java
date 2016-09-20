@@ -31,6 +31,7 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.util.Console;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -255,10 +256,10 @@ public class JavaSymbolFinder {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(javacOptions);
 
     for (Path candidatePath : getCandidatePaths(symbol, srcRoots)) {
-      String content = projectFilesystem.readFileIfItExists(
-          projectFilesystem.getPathForRelativeExistingPath(candidatePath)).get();
-      Set<String> symbols = parser.getExportedSymbolsFromString(content);
-      if (symbols.contains(symbol)) {
+      Optional<String> content = projectFilesystem.readFileIfItExists(
+          projectFilesystem.getPathForRelativeExistingPath(candidatePath));
+      if (content.isPresent() &&
+          parser.getExportedSymbolsFromString(content.get()).contains(symbol)) {
         definingPaths.add(candidatePath);
       }
     }
