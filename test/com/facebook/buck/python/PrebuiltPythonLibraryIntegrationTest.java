@@ -18,13 +18,11 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.CapturingPrintStream;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 
@@ -50,13 +48,7 @@ public class PrebuiltPythonLibraryIntegrationTest {
     // EGGs are versioned to the version of Python they were built it, but the EGG for this test
     // doesn't actually matter.
     String version = new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder())
-        .getPythonEnvironment(
-            new ProcessExecutor(
-                new Console(
-                    Verbosity.SILENT,
-                    new CapturingPrintStream(),
-                    new CapturingPrintStream(),
-                    Ansi.withoutTty())))
+        .getPythonEnvironment(new ProcessExecutor(new TestConsole(Verbosity.SILENT)))
         .getPythonVersion()
         .getVersionString();
     if (!version.startsWith("2.6")) {

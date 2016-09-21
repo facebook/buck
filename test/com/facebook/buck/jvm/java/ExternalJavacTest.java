@@ -48,7 +48,6 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -126,8 +125,7 @@ public class ExternalJavacTest extends EasyMockSupport {
     builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
     ExternalJavac compiler = new ExternalJavac(javac) {
       @Override
-      ProcessExecutor createProcessExecutor(
-          PrintStream stdout, PrintStream stderr) {
+      ProcessExecutor createProcessExecutor() {
         return executor;
       }
     };
@@ -176,7 +174,7 @@ public class ExternalJavacTest extends EasyMockSupport {
     builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
     ExternalJavac compiler = new ExternalJavac(javac) {
       @Override
-      ProcessExecutor createProcessExecutor(PrintStream stdout, PrintStream stderr) {
+      ProcessExecutor createProcessExecutor() {
         return executor;
       }
     };

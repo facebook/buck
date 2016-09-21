@@ -21,12 +21,10 @@ import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleSdk;
 import com.facebook.buck.apple.AppleSdkPaths;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PackagedResource;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -39,11 +37,9 @@ import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
@@ -189,14 +185,9 @@ public class QuickstartCommand extends AbstractCommand {
 
       case IOS: {
         ImmutableMap<AppleSdk, AppleSdkPaths> appleSdkPaths;
-        try (
-            PrintStream stdout = new PrintStream(new ByteArrayOutputStream());
-            PrintStream stderr = new PrintStream(new ByteArrayOutputStream())) {
-          AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
-          appleSdkPaths = appleConfig.getAppleSdkPaths(
-              new ProcessExecutor(
-                  new Console(Verbosity.SILENT, stdout, stderr, Ansi.withoutTty())));
-        }
+        AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
+        appleSdkPaths = appleConfig.getAppleSdkPaths(
+            new ProcessExecutor(Console.createNullConsole()));
         if (appleSdkPaths == null || appleSdkPaths.isEmpty()) {
           throw new HumanReadableException(
               "Could not find any Apple SDK, check your Xcode installation.");

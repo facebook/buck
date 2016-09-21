@@ -19,6 +19,7 @@ package com.facebook.buck.util;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.io.ByteStreams;
 
 import java.io.PrintStream;
 
@@ -30,6 +31,15 @@ public class Console {
   private final DirtyPrintStreamDecorator stdOut;
   private final DirtyPrintStreamDecorator stdErr;
   private final Ansi ansi;
+
+  /**
+   * Returns a {@link Console} that simply discards written bytes.
+   */
+  public static Console createNullConsole() {
+    PrintStream stdout = new PrintStream(ByteStreams.nullOutputStream());
+    PrintStream stderr = new PrintStream(ByteStreams.nullOutputStream());
+    return new Console(Verbosity.SILENT, stdout, stderr, Ansi.withoutTty());
+  }
 
   public Console(
       Verbosity verbosity,

@@ -23,11 +23,9 @@ import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
-import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
@@ -39,9 +37,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.regex.Matcher;
@@ -120,15 +116,8 @@ public abstract class CxxToolProvider<T> {
             .addCommand("--version")
             .build();
     ProcessExecutor.Result result;
-    try (
-        PrintStream stdout = new PrintStream(new ByteArrayOutputStream());
-        PrintStream stderr = new PrintStream(new ByteArrayOutputStream())) {
-      ProcessExecutor processExecutor = new ProcessExecutor(
-          new Console(
-              Verbosity.SILENT,
-              stdout,
-              stderr,
-              Ansi.withoutTty()));
+    try {
+      ProcessExecutor processExecutor = new ProcessExecutor(Console.createNullConsole());
       result = processExecutor.launchAndExecute(
           params,
           EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),

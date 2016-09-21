@@ -24,12 +24,10 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
@@ -46,9 +44,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Path;
 
 public class ExternalJavac implements Javac {
@@ -69,10 +65,8 @@ public class ExternalJavac implements Javac {
                 .setCommand(ImmutableList.of(pathToJavac.toString(), "-version"))
                 .build();
             ProcessExecutor.Result result;
-            try (
-                PrintStream stdout = new PrintStream(new ByteArrayOutputStream());
-                PrintStream stderr = new PrintStream(new ByteArrayOutputStream())) {
-              result = createProcessExecutor(stdout, stderr).launchAndExecute(params);
+            try {
+              result = createProcessExecutor().launchAndExecute(params);
             } catch (InterruptedException | IOException e) {
               throw new RuntimeException(e);
             }
@@ -117,13 +111,8 @@ public class ExternalJavac implements Javac {
   }
 
   @VisibleForTesting
-  ProcessExecutor createProcessExecutor(PrintStream stdout, PrintStream stderr) {
-    return new ProcessExecutor(
-              new Console(
-                  Verbosity.SILENT,
-                  stdout,
-                  stderr,
-                  Ansi.withoutTty()));
+  ProcessExecutor createProcessExecutor() {
+    return new ProcessExecutor(Console.createNullConsole());
   }
 
   @Override

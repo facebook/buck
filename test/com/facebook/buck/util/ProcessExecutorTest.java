@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -38,8 +39,7 @@ public class ProcessExecutorTest {
     CapturingPrintStream stdOut = new CapturingPrintStream();
     CapturingPrintStream stdErr = new CapturingPrintStream();
     Ansi ansi = Ansi.forceTty();
-    Console console = new Console(
-        Verbosity.ALL, stdOut, stdErr, ansi);
+    Console console = new Console(Verbosity.ALL, stdOut, stdErr, ansi);
     ProcessExecutor executor = new ProcessExecutor(console);
     String cmd = Platform.detect() == Platform.WINDOWS ?
         "cmd /C echo Hello" : "echo Hello";
@@ -90,9 +90,7 @@ public class ProcessExecutorTest {
 
   @Test
   public void testProcessTimeoutHandlerIsInvoked() throws IOException, InterruptedException {
-    Console console = new Console(
-        Verbosity.ALL, new CapturingPrintStream(), new CapturingPrintStream(), Ansi.withoutTty());
-    ProcessExecutor executor = new ProcessExecutor(console);
+    ProcessExecutor executor = new ProcessExecutor(new TestConsole(Verbosity.ALL));
 
     final AtomicBoolean called = new AtomicBoolean(false);
     Function<Process, Void> handler = new Function<Process, Void>() {
@@ -121,9 +119,7 @@ public class ProcessExecutorTest {
 
   @Test
   public void testProcessTimeoutHandlerThrowsException() throws IOException, InterruptedException {
-    Console console = new Console(
-        Verbosity.ALL, new CapturingPrintStream(), new CapturingPrintStream(), Ansi.withoutTty());
-    ProcessExecutor executor = new ProcessExecutor(console);
+    ProcessExecutor executor = new ProcessExecutor(new TestConsole(Verbosity.ALL));
 
     Function<Process, Void> handler = new Function<Process, Void>() {
       @Override

@@ -38,13 +38,10 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.OCamlSource;
-import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -60,7 +57,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -564,29 +560,22 @@ public class OCamlRuleBuilder {
   private static Optional<String> executeProcessAndGetStdout(
       Path baseDir,
       ImmutableList<String> cmd) throws IOException, InterruptedException {
-    try (
-        CapturingPrintStream stdout = new CapturingPrintStream();
-        CapturingPrintStream stderr = new CapturingPrintStream()) {
-
-      ImmutableSet.Builder<ProcessExecutor.Option> options = ImmutableSet.builder();
-      options.add(ProcessExecutor.Option.EXPECTING_STD_OUT);
-      Console console = new Console(Verbosity.SILENT, stdout, stderr, Ansi.withoutTty());
-      ProcessExecutor exe = new ProcessExecutor(console);
-      ProcessExecutorParams params = ProcessExecutorParams.builder()
-          .setCommand(cmd)
-          .setDirectory(baseDir)
-          .build();
-      ProcessExecutor.Result result = exe.launchAndExecute(
-          params,
-          options.build(),
+    ImmutableSet.Builder<ProcessExecutor.Option> options = ImmutableSet.builder();
+    options.add(ProcessExecutor.Option.EXPECTING_STD_OUT);
+    ProcessExecutor exe = new ProcessExecutor(Console.createNullConsole());
+    ProcessExecutorParams params = ProcessExecutorParams.builder()
+        .setCommand(cmd)
+        .setDirectory(baseDir)
+        .build();
+    ProcessExecutor.Result result = exe.launchAndExecute(
+        params,
+        options.build(),
         /* stdin */ Optional.<String>absent(),
         /* timeOutMs */ Optional.<Long>absent(),
         /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
-      if (result.getExitCode() != 0) {
-        throw new HumanReadableException(stderr.getContentsAsString(StandardCharsets.UTF_8));
-      }
-
-      return result.getStdout();
+    if (result.getExitCode() != 0) {
+      throw new HumanReadableException(result.getStderr().get());
     }
+    return result.getStdout();
   }
 }

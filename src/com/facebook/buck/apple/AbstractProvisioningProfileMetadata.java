@@ -26,12 +26,9 @@ import com.dd.plist.PropertyListParser;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -116,11 +113,7 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
 
   public static ProvisioningProfileMetadata fromProvisioningProfilePath(Path profilePath)
       throws IOException, InterruptedException {
-    CapturingPrintStream stdout = new CapturingPrintStream();
-    CapturingPrintStream stderr = new CapturingPrintStream();
-
-    Console console = new Console(Verbosity.SILENT, stdout, stderr, Ansi.withoutTty());
-    ProcessExecutor processExecutor = new ProcessExecutor(console);
+    ProcessExecutor processExecutor = new ProcessExecutor(Console.createNullConsole());
     Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
 
     // Extract the XML from its signed message wrapper.

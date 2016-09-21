@@ -22,11 +22,9 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
-import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -34,9 +32,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -49,15 +45,6 @@ public class InferBuckConfig implements RuleKeyAppendable {
   private Supplier<VersionedTool> inferVersion;
 
   private static final String INFER_SECTION_PREFIX = "infer";
-
-  private ProcessExecutor createProcessExecutor(PrintStream stdout, PrintStream stderr) {
-    return new ProcessExecutor(
-        new Console(
-            Verbosity.SILENT,
-            stdout,
-            stderr,
-            Ansi.withoutTty()));
-  }
 
   private static Optional<Path> getPathFromConfig(BuckConfig config, String name) {
     return config.getPath(INFER_SECTION_PREFIX, name);
@@ -102,10 +89,8 @@ public class InferBuckConfig implements RuleKeyAppendable {
                 .setCommand(ImmutableList.of(topLevel.toString(), "--version"))
                 .build();
             ProcessExecutor.Result result;
-            try (
-                PrintStream stdout = new PrintStream(new ByteArrayOutputStream());
-                PrintStream stderr = new PrintStream(new ByteArrayOutputStream())) {
-              result = createProcessExecutor(stdout, stderr).launchAndExecute(params);
+            try  {
+              result = new ProcessExecutor(Console.createNullConsole()).launchAndExecute(params);
               if (result.getExitCode() != 0) {
                 throw new RuntimeException("Failed getting infer version: " + result.getStderr());
               }
