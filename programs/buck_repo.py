@@ -66,7 +66,7 @@ JAVA_CLASSPATHS = [
     "third-party/java/jsr/jsr305.jar",
     "third-party/java/kxml2/kxml2-2.3.0.jar",
     "third-party/java/nailgun/nailgun-server-0.9.2-SNAPSHOT.jar",
-    "third-party/java/nuprocess/nuprocess-1.0.5-SNAPSHOT.jar",
+    "third-party/java/nuprocess/nuprocess-1.1.0.jar",
     "third-party/java/ObjCBridge/ObjCBridge.jar",
     "third-party/java/okhttp/okhttp-3.3.0.jar",
     "third-party/java/okio/okio-1.8.0.jar",
