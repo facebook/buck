@@ -1,4 +1,7 @@
 # GwtBinaryIntegrationTest tends to time out when run in parallel
 # on underpowered systems. Run it separately in serial at the end
 # of the test run.
-standard_java_test(run_test_separately = True)
+standard_java_test(
+  run_test_separately = True,
+  vm_args = [ '-Xmx512m' ],
+)

@@ -195,7 +195,9 @@ def standard_java_library(
         **kwargs
     )
 
-def standard_java_test(run_test_separately = False, fork_mode = 'none'):
+def standard_java_test(run_test_separately = False, vm_args = None, fork_mode = 'none'):
+    if vm_args is None:
+        vm_args = ['-Xmx256M']
     srcs = glob(['*.java'])
     test_srcs = []
     testutil_srcs = []
@@ -225,9 +227,7 @@ def standard_java_test(run_test_separately = False, fork_mode = 'none'):
           srcs = test_srcs,
           autodeps = True,
           resources = glob(['testdata/**'], include_dotfiles=True),
-          vm_args = [
-            '-Xmx256M',
-          ],
+          vm_args = vm_args,
           run_test_separately = run_test_separately,
           fork_mode = fork_mode,
         )

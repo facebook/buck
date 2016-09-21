@@ -6,4 +6,5 @@ java_test(
   # Unfortunately the scala compiler is _really_ slow.
   run_test_separately = True,
   test_rule_timeout_ms = 180000,
+  vm_args = [ '-Xmx512m' ],
 )
