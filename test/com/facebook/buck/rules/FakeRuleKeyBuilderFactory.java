@@ -48,8 +48,7 @@ public class FakeRuleKeyBuilderFactory
     this(ruleKeys, new NullFileHashCache());
   }
 
-  @Override
-  public RuleKeyBuilder<RuleKey> newInstance(final BuildRule buildRule) {
+  private RuleKeyBuilder<RuleKey> newInstance(final BuildRule buildRule) {
     SourcePathResolver resolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
      );

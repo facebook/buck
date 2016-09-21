@@ -57,8 +57,7 @@ public abstract class ReflectiveRuleKeyBuilderFactory<T extends RuleKeyBuilder<U
    */
   protected abstract T newBuilder(BuildRule rule);
 
-  @Override
-  public T newInstance(BuildRule buildRule) {
+  protected T newInstance(BuildRule buildRule) {
     T builder = newBuilder(buildRule);
     builder.setReflectively("buck.seed", seed);
     builder.setReflectively("name", buildRule.getBuildTarget().getFullyQualifiedName());
