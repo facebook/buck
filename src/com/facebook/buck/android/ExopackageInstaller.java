@@ -60,7 +60,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.Iterator;
 
 import javax.annotation.Nullable;
 
@@ -754,15 +753,14 @@ public class ExopackageInstaller {
   @VisibleForTesting
   static Optional<PackageInfo> parsePathAndPackageInfo(String packageName, String rawOutput) {
     Iterable<String> lines = Splitter.on(LINE_ENDING).omitEmptyStrings().split(rawOutput);
-    Iterator<String> lineIter = lines.iterator();
     String pmPathPrefix = "package:";
 
     String pmPath = null;
-    if (lineIter.hasNext()) {
-      pmPath = lineIter.next();
-      if (pmPath.startsWith("WARNING: linker: ")) {
-        // Ignore silly linker warnings about non-PIC code on emulators
-        pmPath = lineIter.hasNext() ? lineIter.next() : null;
+    for (String line : lines) {
+      // Ignore silly linker warnings about non-PIC code on emulators
+      if (!line.startsWith("WARNING: linker: ")) {
+        pmPath = line;
+        break;
       }
     }
 
