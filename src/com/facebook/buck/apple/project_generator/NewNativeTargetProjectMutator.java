@@ -115,6 +115,7 @@ class NewNativeTargetProjectMutator {
   private ImmutableSet<SourcePath> privateHeaders = ImmutableSet.of();
   private Optional<SourcePath> prefixHeader = Optional.absent();
   private Optional<SourcePath> infoPlist = Optional.absent();
+  private Optional<SourcePath> bridgingHeader = Optional.absent();
   private ImmutableSet<FrameworkPath> frameworks = ImmutableSet.of();
   private ImmutableSet<PBXFileReference> archives = ImmutableSet.of();
   private ImmutableSet<AppleResourceDescription.Arg> recursiveResources = ImmutableSet.of();
@@ -196,6 +197,11 @@ class NewNativeTargetProjectMutator {
 
   public NewNativeTargetProjectMutator setInfoPlist(Optional<SourcePath> infoPlist) {
     this.infoPlist = infoPlist;
+    return this;
+  }
+
+  public NewNativeTargetProjectMutator setBridgingHeader(Optional<SourcePath> bridgingHeader) {
+    this.bridgingHeader = bridgingHeader;
     return this;
   }
 
@@ -331,6 +337,14 @@ class NewNativeTargetProjectMutator {
           pathRelativizer.outputPathToSourcePath(infoPlist.get()),
           Optional.<String>absent());
       sourcesGroup.getOrCreateFileReferenceBySourceTreePath(infoPlistSourceTreePath);
+    }
+
+    if (bridgingHeader.isPresent()) {
+      SourceTreePath bridgingHeaderSourceTreePath = new SourceTreePath(
+          PBXReference.SourceTree.GROUP,
+          pathRelativizer.outputPathToSourcePath(bridgingHeader.get()),
+          Optional.<String>absent());
+      sourcesGroup.getOrCreateFileReferenceBySourceTreePath(bridgingHeaderSourceTreePath);
     }
 
     if (!sourcesBuildPhase.getFiles().isEmpty()) {

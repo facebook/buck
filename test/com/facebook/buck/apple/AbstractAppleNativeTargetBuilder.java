@@ -171,5 +171,10 @@ public abstract class AbstractAppleNativeTargetBuilder<
     return getThis();
   }
 
+  public BUILDER setBridgingHeader(Optional<SourcePath> bridgingHeader) {
+    arg.bridgingHeader = bridgingHeader;
+    return getThis();
+  }
+
   protected abstract BUILDER getThis();
 }

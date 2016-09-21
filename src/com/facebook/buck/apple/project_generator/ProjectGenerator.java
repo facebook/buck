@@ -940,7 +940,7 @@ public class ProjectGenerator {
     }
   }
 
-  PBXNativeTarget generateAppleBundleTarget(
+  private PBXNativeTarget generateAppleBundleTarget(
       PBXProject project,
       TargetNode<? extends HasAppleBundleFields> targetNode,
       TargetNode<? extends AppleNativeTargetDescriptionArg> binaryNode,
@@ -1174,6 +1174,8 @@ public class ProjectGenerator {
       mutator.setInfoPlist(Optional.of(bundleArg.getInfoPlist()));
     }
 
+    mutator.setBridgingHeader(arg.bridgingHeader);
+
     Optional<TargetNode<AppleNativeTargetDescriptionArg>> appleTargetNode =
         targetNode.castArg(AppleNativeTargetDescriptionArg.class);
     if (appleTargetNode.isPresent() && isFocusedOnTarget) {
@@ -1318,6 +1320,13 @@ public class ProjectGenerator {
     if (infoPlistOptional.isPresent()) {
       Path infoPlistPath = pathRelativizer.outputDirToRootRelative(infoPlistOptional.get());
       extraSettingsBuilder.put("INFOPLIST_FILE", infoPlistPath.toString());
+    }
+    if (arg.bridgingHeader.isPresent()) {
+      Path bridgingHeaderPath = pathRelativizer.outputDirToRootRelative(
+          sourcePathResolver.apply(arg.bridgingHeader.get()));
+      extraSettingsBuilder.put(
+          "SWIFT_OBJC_BRIDGING_HEADER",
+          Joiner.on('/').join("$(SRCROOT)", bridgingHeaderPath.toString()));
     }
     Optional<SourcePath> prefixHeaderOptional = targetNode.getConstructorArg().prefixHeader;
     if (prefixHeaderOptional.isPresent()) {
