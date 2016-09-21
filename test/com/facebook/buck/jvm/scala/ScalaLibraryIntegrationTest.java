@@ -49,7 +49,7 @@ public class ScalaLibraryIntegrationTest {
     workspace.setUp();
   }
 
-  @Test
+  @Test(timeout = (2 * 60 * 1000))
   public void shouldCompileScalaClass() throws Exception {
     assertThat(
         workspace.runBuckCommand(
@@ -59,7 +59,7 @@ public class ScalaLibraryIntegrationTest {
         Matchers.containsString("Hello WORLD!"));
   }
 
-  @Test
+  @Test(timeout = (2 * 60 * 1000))
   public void shouldWorkWithLocalCompiler() throws Exception {
     try {
       new ScalaBuckConfig(FakeBuckConfig.builder().build()).getScalac(
@@ -74,7 +74,7 @@ public class ScalaLibraryIntegrationTest {
         Matchers.containsString("Hello WORLD!"));
   }
 
-  @Test
+  @Test(timeout = (2 * 60 * 1000))
   public void scalacShouldAffectRuleKey() throws Exception {
     String firstRuleKey = workspace.runBuckCommand(
         "targets",

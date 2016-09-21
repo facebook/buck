@@ -32,7 +32,7 @@ public class GwtBinaryIntegrationTest {
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
 
-  @Test(timeout = (2 * 60 * 1000)) // two minutes because CI times out on heavily loaded machines
+  @Test(timeout = (2 * 60 * 1000))
   public void shouldBeAbleToBuildAGwtBinary() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,

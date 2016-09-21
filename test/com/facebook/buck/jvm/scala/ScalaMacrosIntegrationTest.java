@@ -41,7 +41,7 @@ public class ScalaMacrosIntegrationTest {
     workspace.setUp();
   }
 
-  @Test
+  @Test(timeout = (2 * 60 * 1000))
   public void testRun() throws IOException {
     assertThat(
         workspace.runBuckCommand("run", "//:bin").assertSuccess().getStdout(),

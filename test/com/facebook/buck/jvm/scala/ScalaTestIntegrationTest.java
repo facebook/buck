@@ -42,7 +42,7 @@ public class ScalaTestIntegrationTest {
     workspace.setUp();
   }
 
-  @Test
+  @Test(timeout = (2 * 60 * 1000))
   public void testTest() throws IOException {
     // This test should pass.
     ProjectWorkspace.ProcessResult result1 = workspace.runBuckCommand("test", "//:test-success");
@@ -58,7 +58,7 @@ public class ScalaTestIntegrationTest {
         containsString("not work"));
   }
 
-  @Test
+  @Test(timeout = (2 * 60 * 1000))
   public void testTestTimeout() throws IOException {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:test-spinning");
     result.assertSpecialExitCode("test should fail", 42);
