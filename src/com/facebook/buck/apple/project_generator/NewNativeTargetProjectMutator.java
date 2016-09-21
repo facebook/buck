@@ -515,7 +515,6 @@ class NewNativeTargetProjectMutator {
       PBXFileReference fileReference =
           sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(sourceTreePath);
       frameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
-      embedFrameworksBuildPhase.getFiles().add(embeddedFrameworkBuildFile(fileReference));
     }
 
     for (PBXFileReference archive : archives) {
