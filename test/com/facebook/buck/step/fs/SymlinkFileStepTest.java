@@ -23,9 +23,12 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.util.BgProcessKiller;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 
 import org.junit.Rule;
@@ -83,15 +86,15 @@ public class SymlinkFileStepTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     // Run `ln -s /path/that/does/not/exist dummy` in /tmp.
-    ProcessBuilder builder = new ProcessBuilder();
-    builder.command("ln", "-s", "/path/that/does/not/exist", "my_symlink");
-    File tmp = tmpDir.getRoot();
-    builder.directory(tmp);
-    Process process = BgProcessKiller.startProcess(builder);
-    process.waitFor();
+    ProcessExecutorParams params = ProcessExecutorParams.builder()
+        .setCommand(ImmutableList.<String>of("ln", "-s", "/path/that/does/not/exist", "my_symlink"))
+        .setDirectory(tmpDir.getRoot().toPath())
+        .build();
+    ProcessExecutor executor = new ProcessExecutor(Console.createNullConsole());
+    executor.launchAndExecute(params);
 
     // Verify that the symlink points to a non-existent file.
-    Path symlink = Paths.get(tmp.getAbsolutePath(), "my_symlink");
+    Path symlink = Paths.get(tmpDir.getRoot().getAbsolutePath(), "my_symlink");
     assertFalse("exists() should reflect the existence of what the symlink points to",
         symlink.toFile().exists());
     assertTrue("even though exists() is false, isSymbolicLink should be true",

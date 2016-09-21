@@ -17,7 +17,9 @@ package com.facebook.buck.android.relinker;
 
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.util.BgProcessKiller;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.CharStreams;
@@ -161,17 +163,18 @@ public class Symbols {
         .add(lib.toString())
         .build();
 
-    Process p =
-        BgProcessKiller.startProcess(
-            new ProcessBuilder(args)
-            .redirectError(ProcessBuilder.Redirect.INHERIT));
-
+    ProcessExecutorParams params = ProcessExecutorParams.builder()
+        .setCommand(args)
+        .setRedirectError(ProcessBuilder.Redirect.INHERIT)
+        .build();
+    ProcessExecutor executor = new ProcessExecutor(Console.createNullConsole());
+    ProcessExecutor.LaunchedProcess p = executor.launchProcess(params);
     BufferedReader output = new BufferedReader(new InputStreamReader(p.getInputStream()));
     CharStreams.readLines(output, lineProcessor);
-    p.waitFor();
+    int exitCode = executor.waitForLaunchedProcess(p).getExitCode();
 
-    if (p.exitValue() != 0) {
-      throw new RuntimeException("Objdump exited with value: " + p.exitValue());
+    if (exitCode != 0) {
+      throw new RuntimeException("Objdump exited with value: " + exitCode);
     }
   }
 }

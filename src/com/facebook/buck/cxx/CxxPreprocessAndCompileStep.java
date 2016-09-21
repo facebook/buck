@@ -22,11 +22,13 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.BgProcessKiller;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.LineProcessorRunnable;
 import com.facebook.buck.util.ManagedRunnable;
 import com.facebook.buck.util.MoreThrowables;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -42,6 +44,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 
 import javax.annotation.Nullable;
@@ -121,16 +125,12 @@ public class CxxPreprocessAndCompileStep implements Step {
   /**
    * Apply common settings for our subprocesses.
    *
-   * @return Half-configured ProcessBuilder
+   * @return Half-configured ProcessExecutorParams.Builder
    */
-  private ProcessBuilder makeSubprocessBuilder(ExecutionContext context) {
-    ProcessBuilder builder = new ProcessBuilder();
-    builder.directory(filesystem.getRootPath().toAbsolutePath().toFile());
-    builder.redirectError(ProcessBuilder.Redirect.PIPE);
-
-    builder.environment().clear();
-    builder.environment().putAll(context.getEnvironment());
-
+  private ProcessExecutorParams.Builder makeSubprocessBuilder(
+      ExecutionContext context,
+      Map<String, String> additionalEnvironment) {
+    Map<String, String> env = new HashMap<>(context.getEnvironment());
     // A forced compilation directory is set in the constructor.  Now, we can't actually force
     // the compiler to embed this into the binary -- all we can do set the PWD environment to
     // variations of the actual current working directory (e.g. /actual/dir or
@@ -143,7 +143,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     //   2) in the case where we're using post-linkd debug path replacement, we reserve room
     //      to expand the path later.
     //
-    builder.environment().put(
+    env.put(
         "PWD",
         // We only need to expand the working directory if compiling, as we override it in the
         // preprocessed otherwise.
@@ -153,9 +153,14 @@ public class CxxPreprocessAndCompileStep implements Step {
 
     // Set `TMPDIR` to `scratchDir` so the compiler/preprocessor uses this dir for it's temp and
     // intermediate files.
-    builder.environment().put("TMPDIR", filesystem.resolve(scratchDir).toString());
+    env.put("TMPDIR", filesystem.resolve(scratchDir).toString());
+    // Add additional environment variables.
+    env.putAll(additionalEnvironment);
 
-    return builder;
+    return ProcessExecutorParams.builder()
+        .setDirectory(filesystem.getRootPath().toAbsolutePath())
+        .setRedirectError(ProcessBuilder.Redirect.PIPE)
+        .setEnvironment(env);
   }
 
   private Path getDepTemp() {
@@ -229,32 +234,36 @@ public class CxxPreprocessAndCompileStep implements Step {
     Preconditions.checkState(preprocessorCommand.isPresent());
     Preconditions.checkState(compilerCommand.isPresent());
     ByteArrayOutputStream preprocessError = new ByteArrayOutputStream();
-    ProcessBuilder preprocessBuilder = makeSubprocessBuilder(context);
-    preprocessBuilder.command(
-        ImmutableList.<String>builder()
-            .addAll(preprocessorCommand.get().getCommandPrefix())
-            .addAll(makePreprocessArguments(context.getAnsi().isAnsiTerminal()))
-            .build());
-    preprocessBuilder.environment().putAll(preprocessorCommand.get().getEnvironment());
-    preprocessBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
+    ProcessExecutorParams preprocessParams = makeSubprocessBuilder(
+            context,
+            preprocessorCommand.get().getEnvironment())
+        .setCommand(
+            ImmutableList.<String>builder()
+                .addAll(preprocessorCommand.get().getCommandPrefix())
+                .addAll(makePreprocessArguments(context.getAnsi().isAnsiTerminal()))
+                .build())
+        .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
+        .build();
 
     ByteArrayOutputStream compileError = new ByteArrayOutputStream();
-    ProcessBuilder compileBuilder = makeSubprocessBuilder(context);
-    compileBuilder.command(
-        ImmutableList.<String>builder()
-            .addAll(compilerCommand.get().getCommandPrefix())
-            .addAll(
-                makeCompileArguments(
-                    "-",
-                    inputType.getPreprocessedLanguage(),
-                    /* preprocessable */ false,
-                    context.getAnsi().isAnsiTerminal()))
-            .build());
-    compileBuilder.environment().putAll(compilerCommand.get().getEnvironment());
-    compileBuilder.redirectInput(ProcessBuilder.Redirect.PIPE);
+    ProcessExecutorParams compileParams = makeSubprocessBuilder(
+            context,
+            compilerCommand.get().getEnvironment())
+        .setCommand(
+            ImmutableList.<String>builder()
+                .addAll(compilerCommand.get().getCommandPrefix())
+                .addAll(
+                    makeCompileArguments(
+                        "-",
+                        inputType.getPreprocessedLanguage(),
+                        /* preprocessable */ false,
+                        context.getAnsi().isAnsiTerminal()))
+                .build())
+        .setRedirectInput(ProcessBuilder.Redirect.PIPE)
+        .build();
 
-    Process preprocess = null;
-    Process compile = null;
+    ProcessExecutor.LaunchedProcess preprocess = null;
+    ProcessExecutor.LaunchedProcess compile = null;
     LineProcessorRunnable errorProcessorPreprocess = null;
     LineProcessorRunnable errorProcessorCompile = null;
     LineProcessorRunnable lineDirectiveMunger = null;
@@ -262,16 +271,17 @@ public class CxxPreprocessAndCompileStep implements Step {
     CxxErrorTransformerFactory errorStreamTransformerFactory =
         createErrorTransformerFactory(context);
 
+    ProcessExecutor executor = new ProcessExecutor(Console.createNullConsole());
     try {
       if (LOG.isDebugEnabled()) {
         LOG.debug(
             "Running command (pwd=%s): %s",
-            preprocessBuilder.directory(),
+            preprocessParams.getDirectory(),
             getDescription(context));
       }
 
-      preprocess = BgProcessKiller.startProcess(preprocessBuilder);
-      compile = BgProcessKiller.startProcess(compileBuilder);
+      preprocess = executor.launchProcess(preprocessParams);
+      compile = executor.launchProcess(compileParams);
 
       errorProcessorPreprocess = errorStreamTransformerFactory.createTransformerThread(
           context,
@@ -292,8 +302,8 @@ public class CxxPreprocessAndCompileStep implements Step {
 
       lineDirectiveMunger.start();
 
-      int compileStatus = compile.waitFor();
-      int preprocessStatus = preprocess.waitFor();
+      int compileStatus = executor.waitForLaunchedProcess(compile).getExitCode();
+      int preprocessStatus = executor.waitForLaunchedProcess(preprocess).getExitCode();
 
       safeCloseProcessor(errorProcessorPreprocess);
       safeCloseProcessor(errorProcessorCompile);
@@ -339,13 +349,13 @@ public class CxxPreprocessAndCompileStep implements Step {
       return 0;
     } finally {
       if (preprocess != null) {
-        preprocess.destroy();
-        preprocess.waitFor();
+        executor.destroyLaunchedProcess(preprocess);
+        executor.waitForLaunchedProcess(preprocess);
       }
 
       if (compile != null) {
-        compile.destroy();
-        compile.waitFor();
+        executor.destroyLaunchedProcess(compile);
+        executor.waitForLaunchedProcess(compile);
       }
 
       safeCloseProcessor(errorProcessorPreprocess);
@@ -355,7 +365,8 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   private int executeOther(ExecutionContext context) throws Exception {
-    ProcessBuilder builder = makeSubprocessBuilder(context);
+    ProcessExecutorParams.Builder builder =
+        makeSubprocessBuilder(context, ImmutableMap.<String, String>of());
 
     if (useArgfile) {
       filesystem.writeLinesToPath(
@@ -363,13 +374,13 @@ public class CxxPreprocessAndCompileStep implements Step {
               getArguments(context.getAnsi().isAnsiTerminal()),
               Escaper.ARGFILE_ESCAPER),
           getArgfile());
-      builder.command(
+      builder.setCommand(
           ImmutableList.<String>builder()
               .addAll(getCommandPrefix())
               .add("@" + getArgfile())
               .build());
     } else {
-      builder.command(
+      builder.setCommand(
           ImmutableList.<String>builder()
               .addAll(getCommandPrefix())
               .addAll(getArguments(context.getAnsi().isAnsiTerminal()))
@@ -377,16 +388,18 @@ public class CxxPreprocessAndCompileStep implements Step {
     }
     // If we're preprocessing, file output goes through stdout, so we can postprocess it.
     if (operation == Operation.PREPROCESS) {
-      builder.redirectOutput(ProcessBuilder.Redirect.PIPE);
+      builder.setRedirectOutput(ProcessBuilder.Redirect.PIPE);
     }
+    ProcessExecutorParams params = builder.build();
 
     LOG.debug(
         "Running command (pwd=%s): %s",
-        builder.directory(),
+        params.getDirectory(),
         getDescription(context));
 
     // Start the process.
-    Process process = BgProcessKiller.startProcess(builder);
+    ProcessExecutor executor = new ProcessExecutor(Console.createNullConsole());
+    ProcessExecutor.LaunchedProcess process = executor.launchProcess(params);
 
     // We buffer error messages in memory, as these are typically small.
     ByteArrayOutputStream error = new ByteArrayOutputStream();
@@ -411,19 +424,19 @@ public class CxxPreprocessAndCompileStep implements Step {
             outputProcessor.start();
             outputProcessor.waitFor();
           } catch (Throwable thrown) {
-            process.destroy();
+            executor.destroyLaunchedProcess(process);
             throw thrown;
           }
         }
         errorProcessor.waitFor();
       } catch (Throwable thrown) {
-        process.destroy();
+        executor.destroyLaunchedProcess(process);
         throw thrown;
       }
-      exitCode = process.waitFor();
+      exitCode = executor.waitForLaunchedProcess(process).getExitCode();
     } finally {
-      process.destroy();
-      process.waitFor();
+      executor.destroyLaunchedProcess(process);
+      executor.waitForLaunchedProcess(process);
     }
 
     // If we generated any error output, print that to the console.
