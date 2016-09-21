@@ -198,6 +198,9 @@ public class ProjectGenerator {
 
     /** Don't use header maps as header search paths */
     DISABLE_HEADER_MAPS,
+
+    /** Don't create symbolic links to headers when creating header maps */
+    DISABLE_HEADERS_SYMLINKS,
   }
 
   /**
@@ -1910,22 +1913,30 @@ public class ProjectGenerator {
           newHashCode);
       projectFilesystem.deleteRecursivelyIfExists(headerSymlinkTreeRoot);
       projectFilesystem.mkdirs(headerSymlinkTreeRoot);
-      for (Map.Entry<Path, Path> entry : resolvedContents.entrySet()) {
-        Path link = entry.getKey();
-        Path existing = entry.getValue();
-        projectFilesystem.createParentDirs(link);
-        projectFilesystem.createSymLink(link, existing, /* force */ false);
+      if (!options.contains(Option.DISABLE_HEADERS_SYMLINKS)) {
+        for (Map.Entry<Path, Path> entry : resolvedContents.entrySet()) {
+          Path link = entry.getKey();
+          Path existing = entry.getValue();
+          projectFilesystem.createParentDirs(link);
+          projectFilesystem.createSymLink(link, existing, /* force */ false);
+        }
       }
       projectFilesystem.writeContentsToPath(newHashCode, hashCodeFilePath);
 
       HeaderMap.Builder headerMapBuilder = new HeaderMap.Builder();
       for (Map.Entry<Path, SourcePath> entry : contents.entrySet()) {
-        headerMapBuilder.add(
-            entry.getKey().toString(),
-            Paths.get("../../")
-                .resolve(projectCell.getRoot().getFileName())
-                .resolve(headerSymlinkTreeRoot)
-                .resolve(entry.getKey()));
+        if (!options.contains(Option.DISABLE_HEADERS_SYMLINKS)) {
+          headerMapBuilder.add(
+              entry.getKey().toString(),
+              Paths.get("../../")
+                  .resolve(projectCell.getRoot().getFileName())
+                  .resolve(headerSymlinkTreeRoot)
+                  .resolve(entry.getKey()));
+        } else {
+          headerMapBuilder.add(
+              entry.getKey().toString(),
+              projectFilesystem.resolve(pathResolver.apply(entry.getValue())));
+        }
       }
       projectFilesystem.writeBytesToPath(headerMapBuilder.build().getBytes(), headerMapLocation);
     }

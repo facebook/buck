@@ -487,6 +487,10 @@ public class BuckConfig {
         .or(ProjectTestsMode.WITH_TESTS);
   }
 
+  public boolean xcodeProjectWithoutHeadersSymLinks() {
+    return getBooleanValue("project", "xcode_project_without_headers_symlinks", false);
+  }
+
   public boolean getRestartAdbOnFailure() {
     return Boolean.parseBoolean(getValue("adb", "adb_restart_on_failure").or("true"));
   }

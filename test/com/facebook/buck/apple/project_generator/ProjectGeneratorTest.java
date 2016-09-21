@@ -522,6 +522,50 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testCxxLibraryWithoutHeadersSymLinks() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    TargetNode<?> node = new CxxLibraryBuilder(buildTarget)
+        .setExportedHeaders(
+            ImmutableSortedSet.<SourcePath>of(
+                new FakeSourcePath("foo/dir1/bar.h")))
+        .setHeaders(
+            ImmutableSortedSet.<SourcePath>of(
+                new FakeSourcePath("foo/dir1/foo.h"),
+                new FakeSourcePath("foo/dir2/baz.h")))
+        .setSrcs(ImmutableSortedSet.<SourceWithFlags>of())
+        .build();
+
+    ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
+    optionsBuilder.add(ProjectGenerator.Option.DISABLE_HEADERS_SYMLINKS);
+    ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions = optionsBuilder.build();
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node),
+        projectGeneratorOptions);
+
+    projectGenerator.createXcodeProjects();
+
+    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(2));
+
+    assertThat(
+        headerSymlinkTrees.get(0).toString(),
+        is(equalTo("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers")));
+    assertThatHeaderMapWithoutSymLinksContains(
+        Paths.get("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-public-headers"),
+        ImmutableMap.of("foo/dir1/bar.h", "foo/dir1/bar.h"));
+
+    assertThat(
+        headerSymlinkTrees.get(1).toString(),
+        is(equalTo("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers")));
+    assertThatHeaderMapWithoutSymLinksContains(
+        Paths.get("buck-out/gen/_project/CwkbTNOBmbhf7TdVehLAj7vKmzI-private-headers"),
+        ImmutableMap.<String, String>builder()
+            .put("foo/dir1/foo.h", "foo/dir1/foo.h")
+            .put("foo/dir2/baz.h", "foo/dir2/baz.h")
+            .build());
+  }
+
+  @Test
   public void testCxxLibraryWithListsOfHeadersAndCustomNamespace() throws IOException {
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?> node = new CxxLibraryBuilder(buildTarget)
@@ -989,6 +1033,29 @@ public class ProjectGeneratorTest {
           equalTo(Paths.get("../../")
                       .resolve(projectCell.getRoot().getFileName())
                       .resolve(link).toString()));
+    }
+  }
+
+  private void assertThatHeaderMapWithoutSymLinksContains(
+      Path root,
+      ImmutableMap<String, String> content)
+      throws IOException {
+    // Read the tree's header map.
+    byte[] headerMapBytes;
+    try (InputStream headerMapInputStream =
+             projectFilesystem.newFileInputStream(root.resolve(".hmap"))) {
+      headerMapBytes = ByteStreams.toByteArray(headerMapInputStream);
+    }
+    HeaderMap headerMap = HeaderMap.deserialize(headerMapBytes);
+    assertNotNull(headerMap);
+    assertThat(headerMap.getNumEntries(), equalTo(content.size()));
+    for (Map.Entry<String, String> entry : content.entrySet()) {
+      String key = entry.getKey();
+      Path target = Paths.get(entry.getValue()).toAbsolutePath();
+      // Check the header map
+      assertThat(
+          headerMap.lookup(key),
+          equalTo(target.toString()));
     }
   }
 
