@@ -71,5 +71,7 @@
     <orderEntry type="library" name="eden" level="project" />
     <orderEntry type="library" name="java-thrift-dependencies" level="project" />
     <orderEntry type="library" name="xz-java-1.5" level="project" />
+    <orderEntry type="library" name="jna-4.2.0" level="project" />
+    <orderEntry type="library" name="jna-platform-4.2.0" level="project" />
   </component>
 </module>
