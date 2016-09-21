@@ -70,8 +70,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -95,19 +93,21 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
@@ -4491,6 +4491,45 @@ public class ProjectGeneratorTest {
       assertFalse(buildPhase instanceof PBXCopyFilesBuildPhase);
     }
     assertThat(target.getBuildPhases().size(), Matchers.equalTo(1));
+  }
+
+  @Test
+  public void testGeneratedProjectStructureAndSettingsWithBridgingHeader() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .setSrcs(Optional.of(ImmutableSortedSet.<SourceWithFlags>of()))
+        .setBridgingHeader(Optional.<SourcePath>of(new FakeSourcePath("BridgingHeader/header1.h")))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node));
+
+    projectGenerator.createXcodeProjects();
+
+    // check if bridging header file existing in the project structure
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXGroup targetGroup =
+        project.getMainGroup().getOrCreateChildGroupByName(buildTarget.getFullyQualifiedName());
+    PBXGroup sourcesGroup = targetGroup.getOrCreateChildGroupByName("Sources");
+
+    assertThat(sourcesGroup.getChildren(), hasSize(1));
+
+    PBXFileReference fileRefBridgingHeader =
+        (PBXFileReference) Iterables.get(sourcesGroup.getChildren(), 0);
+    assertEquals("header1.h", fileRefBridgingHeader.getName());
+
+    // check for bridging header build setting
+    PBXTarget target =
+        assertTargetExistsAndReturnTarget(project, "//foo:lib");
+    ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target, "Debug");
+    assertEquals("$(SRCROOT)/../BridgingHeader/header1.h",
+        buildSettings.get("SWIFT_OBJC_BRIDGING_HEADER"));
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
