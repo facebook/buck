@@ -139,7 +139,7 @@ class XctestRunTestsStep implements Step {
           outputWrapperStream.close();
           ByteStreams.copy(launchedProcess.getInputStream(), outputStream);
         }
-        exitCode = executor.waitForLaunchedProcess(launchedProcess);
+        exitCode = executor.waitForLaunchedProcess(launchedProcess).getExitCode();
 
         // There's no way to distinguish a test failure from an xctest issue. We don't
         // want to fail the step on a test failure, so return 0 for any xctest exit code.

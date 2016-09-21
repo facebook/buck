@@ -208,14 +208,20 @@ public class ProcessExecutor {
    * After this method returns, the {@code launchedProcess} can no longer be passed
    * to any methods of this object.
    */
-  public int waitForLaunchedProcess(LaunchedProcess launchedProcess) throws InterruptedException {
+  public Result waitForLaunchedProcess(
+      LaunchedProcess launchedProcess) throws InterruptedException {
     Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
-    return ((LaunchedProcessImpl) launchedProcess).process.waitFor();
+    int exitCode = ((LaunchedProcessImpl) launchedProcess).process.waitFor();
+    return new Result(
+        exitCode,
+        false,
+        Optional.<String>absent(),
+        Optional.<String>absent()
+    );
   }
 
   /**
-   * As {@link #waitForLaunchedProcess(LaunchedProcess)} but with a timeout
-   * in milliseconds
+   * As {@link #waitForLaunchedProcess(LaunchedProcess)} but with a timeout in milliseconds.
    */
   public Result waitForLaunchedProcessWithTimeout(LaunchedProcess launchedProcess,
       long millis,
@@ -235,7 +241,7 @@ public class ProcessExecutor {
   /**
    * @return whether the process has finished executing or not.
    */
-  private boolean finished(Process process) {
+  private static boolean finished(Process process) {
     try {
       process.exitValue();
       return true;

@@ -442,7 +442,7 @@ class XctoolRunTestsStep implements Step {
          BufferedReader ebr = new BufferedReader(esr)) {
       XctoolOutputParsing.streamOutputFromReader(br, listTestsOnlyHandler);
       stderr = CharStreams.toString(ebr).trim();
-      listTestsResult = processExecutor.waitForLaunchedProcess(launchedProcess);
+      listTestsResult = processExecutor.waitForLaunchedProcess(launchedProcess).getExitCode();
     }
 
     if (listTestsResult != 0) {
@@ -546,7 +546,7 @@ class XctoolRunTestsStep implements Step {
         processExitCode = processResult.getExitCode();
       }
     } else {
-      processExitCode = processExecutor.waitForLaunchedProcess(launchedProcess);
+      processExitCode = processExecutor.waitForLaunchedProcess(launchedProcess).getExitCode();
     }
     if (processExitCode == 0 || processExitCode == 1) {
       // Test failure is denoted by xctool returning 1. Unfortunately, there's no way
