@@ -340,7 +340,7 @@ public class ArtifactCaches {
     HttpService storeService;
     switch (config.getLoadBalancingType()) {
       case CLIENT_SLB:
-        HttpLoadBalancer clientSideSlb = config.getSlbConfig().createHttpClientSideSlb(
+        HttpLoadBalancer clientSideSlb = config.getSlbConfig().createClientSideSlb(
             new DefaultClock(),
             buckEventBus,
             new CommandThreadFactory("ArtifactCaches.HttpLoadBalancer"));

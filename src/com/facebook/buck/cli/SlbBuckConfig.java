@@ -67,14 +67,14 @@ public class SlbBuckConfig {
     return builder.build();
   }
 
-  public ClientSideSlb createHttpClientSideSlb(
+  public ClientSideSlb createClientSideSlb(
       Clock clock,
       BuckEventBus eventBus,
       CommandThreadFactory threadFactory) {
     return new ClientSideSlb(createConfig(clock, eventBus, threadFactory));
   }
 
-  public Optional<ClientSideSlb> tryCreatingHttpClientSideSlb(
+  public Optional<ClientSideSlb> tryCreatingClientSideSlb(
       Clock clock,
       BuckEventBus eventBus,
       CommandThreadFactory threadFactory) {

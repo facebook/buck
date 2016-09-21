@@ -46,10 +46,10 @@ public abstract class DistBuildFactory {
   public static FrontendService newFrontendService(
       CommandRunnerParams params) {
     DistBuildConfig config = new DistBuildConfig(params.getBuckConfig());
-    ClientSideSlb slb = config.getFrontendConfig().createHttpClientSideSlb(
+    ClientSideSlb slb = config.getFrontendConfig().createClientSideSlb(
         params.getClock(),
         params.getBuckEventBus(),
-        new CommandThreadFactory("DistBuildService"));
+        new CommandThreadFactory("StampedeNetworkThreadPool"));
     OkHttpClient client = config.createOkHttpClient();
 
     return new FrontendService(

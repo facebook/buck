@@ -55,7 +55,7 @@ public class RageConfigTest {
         config.getReportUploadPath(),
         Matchers.equalTo(RageConfig.UPLOAD_PATH));
     assertThat(
-        config.getFrontendConfig().get().tryCreatingHttpClientSideSlb(
+        config.getFrontendConfig().get().tryCreatingClientSideSlb(
             clock,
             eventBus,
             threadFactory),
@@ -77,7 +77,7 @@ public class RageConfigTest {
         config.getReportUploadPath(),
         Matchers.equalTo(testPath));
     assertThat(
-        config.getFrontendConfig().get().tryCreatingHttpClientSideSlb(
+        config.getFrontendConfig().get().tryCreatingClientSideSlb(
             clock,
             eventBus,
             threadFactory),

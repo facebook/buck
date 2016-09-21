@@ -123,7 +123,7 @@ public class DefaultDefectReporter implements DefectReporter {
     Optional<SlbBuckConfig>  frontendConfig = rageConfig.getFrontendConfig();
     if (frontendConfig.isPresent()) {
       Optional<ClientSideSlb> slb =
-          frontendConfig.get().tryCreatingHttpClientSideSlb(
+          frontendConfig.get().tryCreatingClientSideSlb(
               clock,
               buckEventBus,
               new CommandThreadFactory("RemoteLog.HttpLoadBalancer"));

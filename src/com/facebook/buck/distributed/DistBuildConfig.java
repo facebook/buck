@@ -25,17 +25,17 @@ import okhttp3.OkHttpClient;
 
 public class DistBuildConfig {
 
-  private static final String CACHE_SECTION_NAME = "distributed_build";
+  public static final String STAMPEDE_SECTION = "stampede";
 
-  private static final String FRONTEND_REQUEST_TIMEOUT_MILLIS = "thrift_over_http_timeout_millis";
-  private static final long DEFAULT_DEFAULT_REQUEST_TIMEOUT_MILLIS = 3000;
+  private static final String FRONTEND_REQUEST_TIMEOUT_MILLIS = "stampede_timeout_millis";
+  private static final long DEFAULT_DEFAULT_REQUEST_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(60);
 
   private final SlbBuckConfig frontendConfig;
   private final BuckConfig buckConfig;
 
   public DistBuildConfig(BuckConfig config) {
     this.buckConfig = config;
-    this.frontendConfig = new SlbBuckConfig(config, CACHE_SECTION_NAME);
+    this.frontendConfig = new SlbBuckConfig(config, STAMPEDE_SECTION);
   }
 
   public SlbBuckConfig getFrontendConfig() {
@@ -43,7 +43,7 @@ public class DistBuildConfig {
   }
 
   public long getFrontendRequestTimeoutMillis() {
-    return buckConfig.getLong(CACHE_SECTION_NAME, FRONTEND_REQUEST_TIMEOUT_MILLIS)
+    return buckConfig.getLong(STAMPEDE_SECTION, FRONTEND_REQUEST_TIMEOUT_MILLIS)
         .or(DEFAULT_DEFAULT_REQUEST_TIMEOUT_MILLIS);
   }
 
