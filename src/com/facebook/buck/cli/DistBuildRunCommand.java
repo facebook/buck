@@ -18,7 +18,7 @@ package com.facebook.buck.cli;
 
 import com.android.common.annotations.Nullable;
 import com.facebook.buck.distributed.BuildJobStateSerializer;
-import com.facebook.buck.distributed.DistBuildExecutor;
+import com.facebook.buck.distributed.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -71,7 +71,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
       try (CommandThreadManager pool = new CommandThreadManager(
           getClass().getName(),
           getConcurrencyLimit(params.getBuckConfig()))) {
-        DistBuildExecutor distBuildExecutor = DistBuildFactory.createDistBuildExecutor(
+        DistBuildSlaveExecutor distBuildExecutor = DistBuildFactory.createDistBuildExecutor(
             jobState,
             params,
             pool.getExecutor(),

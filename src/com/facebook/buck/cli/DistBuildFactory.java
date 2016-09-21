@@ -17,10 +17,10 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.distributed.DistBuildConfig;
-import com.facebook.buck.distributed.DistBuildExecutor;
+import com.facebook.buck.distributed.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.DistBuildExecutorArgs;
 import com.facebook.buck.distributed.DistBuildService;
-import com.facebook.buck.distributed.DistributedBuildState;
+import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.FileContentsProviders;
 import com.facebook.buck.distributed.FrontendService;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -59,13 +59,13 @@ public abstract class DistBuildFactory {
             params.getBuckEventBus())));
   }
 
-  public static DistBuildExecutor createDistBuildExecutor(
+  public static DistBuildSlaveExecutor createDistBuildExecutor(
       BuildJobState jobState,
       CommandRunnerParams params,
       WeightedListeningExecutorService executorService,
       DistBuildService service) throws IOException, InterruptedException {
-    DistributedBuildState state = DistributedBuildState.load(jobState, params.getCell());
-    DistBuildExecutor executor = new DistBuildExecutor(
+    DistBuildState state = DistBuildState.load(jobState, params.getCell());
+    DistBuildSlaveExecutor executor = new DistBuildSlaveExecutor(
         DistBuildExecutorArgs.builder()
             .setBuckEventBus(params.getBuckEventBus())
             .setPlatform(params.getPlatform())

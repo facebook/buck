@@ -50,13 +50,13 @@ import java.util.Map;
 /**
  * Saves and loads the {@link TargetNode}s needed for the build.
  */
-public class DistributedBuildTargetGraphCodec {
+public class DistBuildTargetGraphCodec {
 
   private final ObjectMapper objectMapper;
   private final ParserTargetNodeFactory<TargetNode<?>> parserTargetNodeFactory;
   private final Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode;
 
-  public DistributedBuildTargetGraphCodec(
+  public DistBuildTargetGraphCodec(
       ObjectMapper objectMapper,
       ParserTargetNodeFactory<TargetNode<?>> parserTargetNodeFactory,
       Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode) {

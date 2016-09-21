@@ -109,8 +109,8 @@ public class DistributedBuildStateTest {
         .setBuckConfig(buckConfig)
         .build();
 
-    BuildJobState dump = DistributedBuildState.dump(
-        new DistributedBuildCellIndexer(rootCellWhenSaving),
+    BuildJobState dump = DistBuildState.dump(
+        new DistBuildCellIndexer(rootCellWhenSaving),
         emptyActionGraph(),
         createDefaultCodec(rootCellWhenSaving, Optional.<Parser>absent()),
         createTargetGraph(filesystem));
@@ -119,8 +119,8 @@ public class DistributedBuildStateTest {
     Cell rootCellWhenLoading = new TestCellBuilder()
         .setFilesystem(createJavaOnlyFilesystem("/loading"))
         .build();
-    DistributedBuildState distributedBuildState =
-        DistributedBuildState.load(dump, rootCellWhenLoading);
+    DistBuildState distributedBuildState =
+        DistBuildState.load(dump, rootCellWhenLoading);
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
     assertThat(cells, Matchers.aMapWithSize(1));
     assertThat(
@@ -157,10 +157,10 @@ public class DistributedBuildStateTest {
         ImmutableSet.of(
             BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib")));
 
-    DistributedBuildTargetGraphCodec targetGraphCodec =
+    DistBuildTargetGraphCodec targetGraphCodec =
         createDefaultCodec(cell, Optional.of(parser));
-    BuildJobState dump = DistributedBuildState.dump(
-        new DistributedBuildCellIndexer(cell),
+    BuildJobState dump = DistBuildState.dump(
+        new DistBuildCellIndexer(cell),
         emptyActionGraph(),
         targetGraphCodec,
         targetGraph);
@@ -168,8 +168,8 @@ public class DistributedBuildStateTest {
     Cell rootCellWhenLoading = new TestCellBuilder()
         .setFilesystem(createJavaOnlyFilesystem("/loading"))
         .build();
-    DistributedBuildState distributedBuildState =
-        DistributedBuildState.load(dump, rootCellWhenLoading);
+    DistBuildState distributedBuildState =
+        DistBuildState.load(dump, rootCellWhenLoading);
     TargetGraph reconstructedGraph = distributedBuildState.createTargetGraph(targetGraphCodec);
     assertThat(reconstructedGraph.getNodes(), Matchers.hasSize(1));
     TargetNode<JavaLibraryDescription.Arg> reconstructedJavaLibrary =
@@ -204,14 +204,14 @@ public class DistributedBuildStateTest {
         .setBuckConfig(buckConfig)
         .build();
 
-    BuildJobState dump = DistributedBuildState.dump(
-        new DistributedBuildCellIndexer(cell),
+    BuildJobState dump = DistBuildState.dump(
+        new DistBuildCellIndexer(cell),
         emptyActionGraph(),
         createDefaultCodec(cell, Optional.<Parser>absent()),
         createTargetGraph(filesystem));
 
     expectedException.expect(IllegalStateException.class);
-    DistributedBuildState.load(dump, cell);
+    DistBuildState.load(dump, cell);
   }
 
   @Test
@@ -242,8 +242,8 @@ public class DistributedBuildStateTest {
         .setBuckConfig(buckConfig)
         .build();
 
-    BuildJobState dump = DistributedBuildState.dump(
-        new DistributedBuildCellIndexer(rootCellWhenSaving),
+    BuildJobState dump = DistBuildState.dump(
+        new DistBuildCellIndexer(rootCellWhenSaving),
         emptyActionGraph(),
         createDefaultCodec(rootCellWhenSaving, Optional.<Parser>absent()),
         createCrossCellTargetGraph(cell1Filesystem, cell2Filesystem));
@@ -251,19 +251,19 @@ public class DistributedBuildStateTest {
     Cell rootCellWhenLoading = new TestCellBuilder()
         .setFilesystem(createJavaOnlyFilesystem("/loading"))
         .build();
-    DistributedBuildState distributedBuildState =
-        DistributedBuildState.load(dump, rootCellWhenLoading);
+    DistBuildState distributedBuildState =
+        DistBuildState.load(dump, rootCellWhenLoading);
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
     assertThat(cells, Matchers.aMapWithSize(2));
   }
 
-  private DistributedBuildFileHashes emptyActionGraph() throws IOException {
+  private DistBuildFileHashes emptyActionGraph() throws IOException {
     ActionGraph actionGraph = new ActionGraph(ImmutableList.<BuildRule>of());
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleResolver);
     ProjectFilesystem projectFilesystem = createJavaOnlyFilesystem("/opt/buck");
-    return new DistributedBuildFileHashes(
+    return new DistBuildFileHashes(
         actionGraph,
         sourcePathResolver,
         DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem),
@@ -272,7 +272,7 @@ public class DistributedBuildStateTest {
         /* keySeed */ 0);
   }
 
-  private static DistributedBuildTargetGraphCodec createDefaultCodec(
+  private static DistBuildTargetGraphCodec createDefaultCodec(
       final Cell cell,
       final Optional<Parser> parser) {
     final ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
@@ -299,14 +299,14 @@ public class DistributedBuildStateTest {
       nodeToRawNode = Functions.constant(ImmutableMap.<String, Object>of());
     }
 
-    DistributedBuildTypeCoercerFactory typeCoercerFactory =
-        new DistributedBuildTypeCoercerFactory(objectMapper);
+    DistBuildTypeCoercerFactory typeCoercerFactory =
+        new DistBuildTypeCoercerFactory(objectMapper);
     ParserTargetNodeFactory<TargetNode<?>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             new ConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory));
 
-    return new DistributedBuildTargetGraphCodec(
+    return new DistBuildTargetGraphCodec(
         objectMapper,
         parserTargetNodeFactory,
         nodeToRawNode);

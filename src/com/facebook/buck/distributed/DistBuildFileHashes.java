@@ -69,7 +69,7 @@ import javax.annotation.concurrent.GuardedBy;
  * Responsible for extracting file hash and {@link RuleKey} information from the {@link ActionGraph}
  * and presenting it as a Thrift data structure.
  */
-public class DistributedBuildFileHashes {
+public class DistBuildFileHashes {
 
   private static final Function<BuildJobStateFileHashEntry, HashCode>
       HASH_CODE_FROM_FILE_HASH_ENTRY =
@@ -88,7 +88,7 @@ public class DistributedBuildFileHashes {
   private final ListenableFuture<ImmutableMap<BuildRule, RuleKey>>
       ruleKeys;
 
-  public DistributedBuildFileHashes(
+  public DistBuildFileHashes(
       ActionGraph actionGraph,
       final SourcePathResolver sourcePathResolver,
       final FileHashCache rootCellFileHashCache,

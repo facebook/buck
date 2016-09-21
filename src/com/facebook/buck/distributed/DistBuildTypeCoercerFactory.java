@@ -23,8 +23,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * Type coercers that don't check whether the paths they're coercing actually exist.
  */
-public class DistributedBuildTypeCoercerFactory extends AbstractTypeCoercerFactory {
-  public DistributedBuildTypeCoercerFactory(ObjectMapper mapper) {
+public class DistBuildTypeCoercerFactory extends AbstractTypeCoercerFactory {
+  public DistBuildTypeCoercerFactory(ObjectMapper mapper) {
     super(mapper, new PathTypeCoercer(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY));
   }
 }

@@ -40,13 +40,13 @@ import javax.annotation.Nonnull;
  * Implementation of {@link CachingBuildEngineDelegate} for use when building from a state file
  * in distributed build.
  */
-public class DistributedCachingBuildEngineDelegate implements CachingBuildEngineDelegate {
+public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegate {
   private final LoadingCache<ProjectFilesystem, FileHashCache> fileHashCacheLoader;
   private final LoadingCache<ProjectFilesystem, DefaultRuleKeyBuilderFactory> ruleKeyFactories;
 
-  public DistributedCachingBuildEngineDelegate(
+  public DistBuildCachingEngineDelegate(
       SourcePathResolver sourcePathResolver,
-      final DistributedBuildState remoteState,
+      final DistBuildState remoteState,
       final FileContentsProvider provider) {
     this.fileHashCacheLoader = CacheBuilder.newBuilder()
         .build(new CacheLoader<ProjectFilesystem, FileHashCache>() {
@@ -63,7 +63,7 @@ public class DistributedCachingBuildEngineDelegate implements CachingBuildEngine
                 ImmutableList.of(remoteCache, cellCache, buckOutCache));
           }
         });
-    ruleKeyFactories = DistributedBuildFileHashes.createRuleKeyFactories(
+    ruleKeyFactories = DistBuildFileHashes.createRuleKeyFactories(
         sourcePathResolver,
         CacheBuilder.newBuilder().build(new CacheLoader<ProjectFilesystem, FileHashLoader>() {
           @Override

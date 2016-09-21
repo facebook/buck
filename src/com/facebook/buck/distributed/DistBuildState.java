@@ -49,13 +49,13 @@ import java.util.Map;
 /**
  * Saves and restores the state of a build to/from a thrift data structure.
  */
-public class DistributedBuildState {
+public class DistBuildState {
 
   private final BuildJobState remoteState;
   private final ImmutableBiMap<Integer, Cell> cells;
   private final Map<ProjectFilesystem, BuildJobStateFileHashes> fileHashes;
 
-  private DistributedBuildState(
+  private DistBuildState(
       BuildJobState remoteState,
       final ImmutableBiMap<Integer, Cell> cells) {
     this.remoteState = remoteState;
@@ -76,9 +76,9 @@ public class DistributedBuildState {
   }
 
   public static BuildJobState dump(
-      DistributedBuildCellIndexer distributedBuildCellIndexer,
-      DistributedBuildFileHashes fileHashes,
-      DistributedBuildTargetGraphCodec targetGraphCodec,
+      DistBuildCellIndexer distributedBuildCellIndexer,
+      DistBuildFileHashes fileHashes,
+      DistBuildTargetGraphCodec targetGraphCodec,
       TargetGraph targetGraph) throws IOException, InterruptedException {
     BuildJobState jobState = new BuildJobState();
     jobState.setFileHashes(fileHashes.getFileHashes());
@@ -90,9 +90,9 @@ public class DistributedBuildState {
     return jobState;
   }
 
-  public static DistributedBuildState load(BuildJobState jobState, Cell rootCell)
+  public static DistBuildState load(BuildJobState jobState, Cell rootCell)
       throws IOException, InterruptedException {
-    return new DistributedBuildState(jobState, createCells(jobState, rootCell));
+    return new DistBuildState(jobState, createCells(jobState, rootCell));
   }
 
   public BuildJobState getRemoteState() {
@@ -183,10 +183,10 @@ public class DistributedBuildState {
   }
 
   public Cell getRootCell() {
-    return Preconditions.checkNotNull(cells.get(DistributedBuildCellIndexer.ROOT_CELL_INDEX));
+    return Preconditions.checkNotNull(cells.get(DistBuildCellIndexer.ROOT_CELL_INDEX));
   }
 
-  public TargetGraph createTargetGraph(DistributedBuildTargetGraphCodec codec)
+  public TargetGraph createTargetGraph(DistBuildTargetGraphCodec codec)
       throws IOException, InterruptedException {
     return codec.createTargetGraph(
         remoteState.getTargetGraph(),
@@ -198,7 +198,7 @@ public class DistributedBuildState {
         fileHashes.get(projectFilesystem),
         "Don't have file hashes for filesystem %s.",
         projectFilesystem);
-    return DistributedBuildFileHashes.createFileHashCache(projectFilesystem, remoteFileHashes);
+    return DistBuildFileHashes.createFileHashCache(projectFilesystem, remoteFileHashes);
   }
 
   public FileHashLoader createMaterializingLoader(
@@ -208,7 +208,7 @@ public class DistributedBuildState {
         fileHashes.get(projectFilesystem),
         "Don't have file hashes for filesystem %s.",
         projectFilesystem);
-    return DistributedBuildFileHashes.createMaterializingLoader(
+    return DistBuildFileHashes.createMaterializingLoader(
         projectFilesystem,
         remoteFileHashes,
         provider);

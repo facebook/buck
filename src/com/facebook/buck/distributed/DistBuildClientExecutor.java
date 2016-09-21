@@ -36,10 +36,9 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-// TODO(ruibm): Currently this class only implements dummy behaviour to mock the distbuild.
-public class DistributedBuild {
+public class DistBuildClientExecutor {
 
-  private static final Logger LOG = Logger.get(DistributedBuild.class);
+  private static final Logger LOG = Logger.get(DistBuildClientExecutor.class);
   private static final DateFormat DATE_FORMAT = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]");
   private static final int MAX_BUILD_DURATION_MILLIS = 10000; // hack. remove.
 
@@ -48,7 +47,7 @@ public class DistributedBuild {
   private final BuckVersion buckVersion;
   private int millisBetweenStatusPoll;
 
-  public DistributedBuild(
+  public DistBuildClientExecutor(
       BuildJobState buildJobState,
       DistBuildService distBuildService,
       int millisBetweenStatusPoll,

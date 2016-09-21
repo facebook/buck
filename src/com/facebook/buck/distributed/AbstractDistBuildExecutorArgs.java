@@ -38,7 +38,7 @@ import java.util.Map;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractDistBuildExecutorArgs {
-  public abstract DistributedBuildState getState();
+  public abstract DistBuildState getState();
 
   public abstract ObjectMapper getObjectMapper();
 

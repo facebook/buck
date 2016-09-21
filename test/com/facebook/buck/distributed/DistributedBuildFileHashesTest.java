@@ -130,7 +130,7 @@ public class DistributedBuildFileHashesTest {
 
     ProjectFilesystem readProjectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem(
         "/read_hashes");
-    FileHashCache fileHashCache = DistributedBuildFileHashes.createFileHashCache(
+    FileHashCache fileHashCache = DistBuildFileHashes.createFileHashCache(
         readProjectFilesystem,
         fileHashes.get(0));
 
@@ -153,7 +153,7 @@ public class DistributedBuildFileHashesTest {
 
     ProjectFilesystem materializeProjectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem(
         "/read_hashes");
-    FileHashLoader materializer = DistributedBuildFileHashes.createMaterializingLoader(
+    FileHashLoader materializer = DistBuildFileHashes.createMaterializingLoader(
         materializeProjectFilesystem,
         fileHashes.get(0),
         new FileContentsProviders.InlineContentsProvider());
@@ -174,7 +174,7 @@ public class DistributedBuildFileHashesTest {
 
     ProjectFilesystem readProjectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem(
         "/read_hashes");
-    FileHashCache fileHashCache = DistributedBuildFileHashes.createFileHashCache(
+    FileHashCache fileHashCache = DistBuildFileHashes.createFileHashCache(
         readProjectFilesystem,
         fileHashes.get(0));
 
@@ -269,7 +269,7 @@ public class DistributedBuildFileHashesTest {
 
       ProjectFilesystem readProjectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem(
           "/read_hashes");
-      FileHashCache fileHashCache = DistributedBuildFileHashes.createFileHashCache(
+      FileHashCache fileHashCache = DistBuildFileHashes.createFileHashCache(
           readProjectFilesystem,
           recordedHashes.get(0));
 
@@ -425,7 +425,7 @@ public class DistributedBuildFileHashesTest {
     protected final BuildRuleResolver buildRuleResolver;
     protected final SourcePathResolver sourcePathResolver;
     protected final FakeIndexer cellIndexer;
-    protected final DistributedBuildFileHashes distributedBuildFileHashes;
+    protected final DistBuildFileHashes distributedBuildFileHashes;
 
     public Fixture(ProjectFilesystem first, ProjectFilesystem second) throws Exception {
       eventBus = BuckEventBusFactory.newInstance();
@@ -443,7 +443,7 @@ public class DistributedBuildFileHashesTest {
       actionGraph = new ActionGraph(buildRuleResolver.getBuildRules());
       cellIndexer = new FakeIndexer();
 
-      distributedBuildFileHashes = new DistributedBuildFileHashes(
+      distributedBuildFileHashes = new DistBuildFileHashes(
           actionGraph,
           sourcePathResolver,
           createFileHashCache(),

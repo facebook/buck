@@ -49,7 +49,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-public class DistBuildExecutor {
+public class DistBuildSlaveExecutor {
   private final DistBuildExecutorArgs args;
 
   @Nullable
@@ -59,9 +59,9 @@ public class DistBuildExecutor {
   private ActionGraphAndResolver actionGraphAndResolver;
 
   @Nullable
-  private DistributedCachingBuildEngineDelegate cachingBuildEngineDelegate;
+  private DistBuildCachingEngineDelegate cachingBuildEngineDelegate;
 
-  public DistBuildExecutor(DistBuildExecutorArgs args) {
+  public DistBuildSlaveExecutor(DistBuildExecutorArgs args) {
     this.args = args;
   }
 
@@ -137,7 +137,7 @@ public class DistBuildExecutor {
       return targetGraph;
     }
 
-    DistributedBuildTargetGraphCodec codec = createGraphCodec();
+    DistBuildTargetGraphCodec codec = createGraphCodec();
     targetGraph = Preconditions.checkNotNull(codec.createTargetGraph(
         args.getState().getRemoteState().getTargetGraph(),
         Functions.forMap(args.getState().getCells())));
@@ -160,7 +160,7 @@ public class DistBuildExecutor {
     return actionGraphAndResolver;
   }
 
-  private DistributedCachingBuildEngineDelegate createBuildEngineDelegate()
+  private DistBuildCachingEngineDelegate createBuildEngineDelegate()
       throws IOException, InterruptedException {
     if (cachingBuildEngineDelegate != null) {
       return cachingBuildEngineDelegate;
@@ -168,7 +168,7 @@ public class DistBuildExecutor {
 
     createActionGraphAndResolver();
     cachingBuildEngineDelegate =
-        new DistributedCachingBuildEngineDelegate(
+        new DistBuildCachingEngineDelegate(
             new SourcePathResolver(
                 Preconditions.checkNotNull(actionGraphAndResolver).getResolver()),
             args.getState(),
@@ -180,15 +180,15 @@ public class DistBuildExecutor {
     return AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
   }
 
-  private DistributedBuildTargetGraphCodec createGraphCodec() {
-    DistributedBuildTypeCoercerFactory typeCoercerFactory =
-        new DistributedBuildTypeCoercerFactory(args.getObjectMapper());
+  private DistBuildTargetGraphCodec createGraphCodec() {
+    DistBuildTypeCoercerFactory typeCoercerFactory =
+        new DistBuildTypeCoercerFactory(args.getObjectMapper());
     ParserTargetNodeFactory<TargetNode<?>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             new ConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory));
 
-    DistributedBuildTargetGraphCodec targetGraphCodec = new DistributedBuildTargetGraphCodec(
+    DistBuildTargetGraphCodec targetGraphCodec = new DistBuildTargetGraphCodec(
         args.getObjectMapper(),
         parserTargetNodeFactory,
         new Function<TargetNode<?>, Map<String, Object>>() {

@@ -23,12 +23,12 @@ import com.facebook.buck.command.Build;
 import com.facebook.buck.distributed.BuckVersionUtil;
 import com.facebook.buck.distributed.BuildJobStateSerializer;
 import com.facebook.buck.distributed.DistBuildService;
-import com.facebook.buck.distributed.DistributedBuild;
-import com.facebook.buck.distributed.DistributedBuildCellIndexer;
-import com.facebook.buck.distributed.DistributedBuildFileHashes;
-import com.facebook.buck.distributed.DistributedBuildState;
-import com.facebook.buck.distributed.DistributedBuildTargetGraphCodec;
-import com.facebook.buck.distributed.DistributedBuildTypeCoercerFactory;
+import com.facebook.buck.distributed.DistBuildState;
+import com.facebook.buck.distributed.DistBuildClientExecutor;
+import com.facebook.buck.distributed.DistBuildCellIndexer;
+import com.facebook.buck.distributed.DistBuildFileHashes;
+import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
+import com.facebook.buck.distributed.DistBuildTypeCoercerFactory;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.event.BuckEventBus;
@@ -400,15 +400,15 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private BuildJobState computeDistributedBuildJobState(
-      DistributedBuildTargetGraphCodec targetGraphCodec,
+      DistBuildTargetGraphCodec targetGraphCodec,
       final CommandRunnerParams params,
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
       ActionGraphAndResolver actionGraphAndResolver,
       final WeightedListeningExecutorService executorService)
       throws InterruptedException, IOException {
-    DistributedBuildCellIndexer cellIndexer =
-        new DistributedBuildCellIndexer(params.getCell());
-    DistributedBuildFileHashes distributedBuildFileHashes = new DistributedBuildFileHashes(
+    DistBuildCellIndexer cellIndexer =
+        new DistBuildCellIndexer(params.getCell());
+    DistBuildFileHashes distributedBuildFileHashes = new DistBuildFileHashes(
         actionGraphAndResolver.getActionGraph(),
         new SourcePathResolver(actionGraphAndResolver.getResolver()),
         params.getFileHashCache(),
@@ -416,7 +416,7 @@ public class BuildCommand extends AbstractCommand {
         executorService,
         params.getBuckConfig().getKeySeed());
 
-    return DistributedBuildState.dump(
+    return DistBuildState.dump(
         cellIndexer,
         distributedBuildFileHashes,
         targetGraphCodec,
@@ -432,13 +432,13 @@ public class BuildCommand extends AbstractCommand {
       throws IOException, InterruptedException, ActionGraphCreationException {
     ProjectFilesystem filesystem = params.getCell().getFilesystem();
 
-    DistributedBuildTypeCoercerFactory typeCoercerFactory =
-        new DistributedBuildTypeCoercerFactory(params.getObjectMapper());
+    DistBuildTypeCoercerFactory typeCoercerFactory =
+        new DistBuildTypeCoercerFactory(params.getObjectMapper());
     ParserTargetNodeFactory<TargetNode<?>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             new ConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory));
-    DistributedBuildTargetGraphCodec targetGraphCodec = new DistributedBuildTargetGraphCodec(
+    DistBuildTargetGraphCodec targetGraphCodec = new DistBuildTargetGraphCodec(
         params.getObjectMapper(),
         parserTargetNodeFactory,
         new Function<TargetNode<?>, Map<String, Object>>() {
@@ -475,7 +475,7 @@ public class BuildCommand extends AbstractCommand {
     } else {
       BuckVersion buckVersion = getBuckVersion();
       try (DistBuildService service = DistBuildFactory.newDistBuildService(params)) {
-        DistributedBuild build = new DistributedBuild(
+        DistBuildClientExecutor build = new DistBuildClientExecutor(
             jobState,
             service,
             1000 /* millisBetweenStatusPoll */,

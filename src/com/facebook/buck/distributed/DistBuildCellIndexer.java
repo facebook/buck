@@ -35,7 +35,7 @@ import java.util.Map;
 /**
  * Keeps track of {@link Cell}s encountered while serializing the distributed build state.
  */
-public class DistributedBuildCellIndexer implements Function<Path, Integer> {
+public class DistBuildCellIndexer implements Function<Path, Integer> {
 
   public static final Integer ROOT_CELL_INDEX = 0;
 
@@ -43,7 +43,7 @@ public class DistributedBuildCellIndexer implements Function<Path, Integer> {
   final Map<Path, Integer> index;
   final Map<Integer, BuildJobStateCell> state;
 
-  public DistributedBuildCellIndexer(Cell rootCell) {
+  public DistBuildCellIndexer(Cell rootCell) {
     this.rootCell = rootCell;
     this.index = new HashMap<>();
     this.state = new HashMap<>();
