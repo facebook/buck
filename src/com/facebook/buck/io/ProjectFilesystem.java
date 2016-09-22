@@ -570,6 +570,7 @@ public class ProjectFilesystem {
    * Allows {@link Files#walkFileTree} to be faked in tests.
    */
   public void walkFileTree(Path root, FileVisitor<Path> fileVisitor) throws IOException {
+    root = getPathForRelativePath(root);
     Files.walkFileTree(root, wrapWithIgnoringFileVisitor(fileVisitor));
   }
 
@@ -648,7 +649,7 @@ public class ProjectFilesystem {
 
   public ImmutableCollection<Path> getDirectoryContents(Path pathToUse)
       throws IOException {
-    Path path = pathToUse.isAbsolute() ? pathToUse : getPathForRelativePath(pathToUse);
+    Path path = getPathForRelativePath(pathToUse);
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
       return FluentIterable.from(stream)
           .filter(new Predicate<Path>() {
@@ -670,8 +671,7 @@ public class ProjectFilesystem {
 
   public ImmutableCollection<Path> getZipMembers(Path archivePath)
       throws IOException {
-    Path archiveAbsolutePath =
-        archivePath.isAbsolute() ? archivePath : getPathForRelativePath(archivePath);
+    Path archiveAbsolutePath = getPathForRelativePath(archivePath);
     try (ZipFile zip = new ZipFile(archiveAbsolutePath.toFile())) {
       return ImmutableList.copyOf(
           Iterators.transform(
@@ -977,6 +977,7 @@ public class ProjectFilesystem {
   }
 
   public void copy(Path source, Path target, CopySourceMode sourceMode) throws IOException {
+    source = getPathForRelativePath(source);
     switch (sourceMode) {
       case FILE:
         Files.copy(
@@ -1107,7 +1108,7 @@ public class ProjectFilesystem {
   }
 
   public Manifest getJarManifest(Path path) throws IOException {
-    Path absolutePath = resolve(path);
+    Path absolutePath = getPathForRelativePath(path);
     try (JarFile jarFile = new JarFile(absolutePath.toFile())) {
       return jarFile.getManifest();
     }
