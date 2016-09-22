@@ -91,9 +91,13 @@ public abstract class AbstractBuildRule implements BuildRule {
   }
 
   private String getTypeForClass() {
+    Class<?> clazz = getClass();
+    if (clazz.isAnonymousClass()) {
+      clazz = clazz.getSuperclass();
+    }
     return CaseFormat
         .UPPER_CAMEL
-        .to(CaseFormat.LOWER_UNDERSCORE, getClass().getSimpleName())
+        .to(CaseFormat.LOWER_UNDERSCORE, clazz.getSimpleName())
         .intern();
   }
 
