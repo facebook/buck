@@ -110,10 +110,13 @@ public class RageCommandIntegrationTest {
                 Request request,
                 HttpServletRequest httpServletRequest,
                 HttpServletResponse httpServletResponse) throws IOException, ServletException {
+              httpServletResponse.setStatus(200);
+              if (request.getUri().getPath().equals("/status.php")) {
+                return;
+              }
               requestPath.set(request.getUri().getPath());
               requestMethod.set(request.getMethod());
               requestBody.set(ByteStreams.toByteArray(httpServletRequest.getInputStream()));
-              httpServletResponse.setStatus(200);
               try (DataOutputStream out =
                        new DataOutputStream(httpServletResponse.getOutputStream())) {
                 out.writeBytes(successMessage);
@@ -146,11 +149,11 @@ public class RageCommandIntegrationTest {
           defectSubmitResult.getReportSubmitMessage(),
           Matchers.equalTo(Optional.of(successMessage)));
       assertThat(
-          requestMethod.get(),
-          Matchers.equalTo("POST"));
-      assertThat(
           requestPath.get(),
           Matchers.equalTo(UPLOAD_PATH));
+      assertThat(
+          requestMethod.get(),
+          Matchers.equalTo("POST"));
 
       filesystem.mkdirs(filesystem.getBuckPaths().getBuckOut());
       Path report =
