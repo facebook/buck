@@ -57,6 +57,8 @@ import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class PythonUtil {
@@ -159,6 +161,13 @@ public class PythonUtil {
           NativeLinkTarget target = ((CxxPythonExtension) rule).getNativeLinkTarget(pythonPlatform);
           extensions.put(target.getBuildTarget(), extension);
           omnibusRoots.addIncludedRoot(target);
+          List<BuildRule> cxxpydeps = new ArrayList<>();
+          for (BuildRule dep : rule.getDeps()) {
+            if (dep instanceof CxxPythonExtension) {
+              cxxpydeps.add(dep);
+            }
+          }
+          deps = cxxpydeps;
         } else if (rule instanceof PythonPackagable) {
           PythonPackagable packagable = (PythonPackagable) rule;
           PythonPackageComponents comps =
