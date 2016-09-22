@@ -184,12 +184,8 @@ public class ProcessExecutor {
     if (params.getRedirectErrorStream().isPresent()) {
       pb.redirectErrorStream(params.getRedirectErrorStream().get());
     }
-    try {
-      return new LaunchedProcessImpl(BgProcessKiller.startProcess(pb));
-    } catch (IOException ex) {
-      stdErrStream.println("Failed to launch " + params);
-      throw ex;
-    }
+
+    return new LaunchedProcessImpl(BgProcessKiller.startProcess(pb));
   }
 
   /**
