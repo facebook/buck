@@ -101,7 +101,7 @@ public class VersionControlStatsGeneratorTest {
     AbstractVersionControlStats vcStats = eventCapture.getValue().getVersionControlStats();
     assertThat(
         WORKING_DIRECTORY_CHANGES.size(),
-        is(equalTo(vcStats.getNumberOfWorkingDirectoryChanges())));
+        is(equalTo(vcStats.getPathsChangedInWorkingDirectory().size())));
     assertThat(CURRENT_REVISION_ID, is(equalTo(vcStats.getCurrentRevisionId())));
     assertThat(
         BRANCHED_FROM_MASTER_REVISION_ID,

@@ -24,7 +24,7 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 interface AbstractVersionControlStats {
-  int getNumberOfWorkingDirectoryChanges();
+  ImmutableSet<String> getPathsChangedInWorkingDirectory();
   String getCurrentRevisionId();
   ImmutableSet<String> getBaseBookmarks();
   String getBranchedFromMasterRevisionId();

@@ -69,7 +69,7 @@ public class VersionControlStatsGenerator {
       return;
     }
 
-    int workingDirectoryChanges = vcCmdLineInterface.changedFiles(".").size();
+    ImmutableSet<String> changedFiles = vcCmdLineInterface.changedFiles(".");
 
     String currentRevisionId = vcCmdLineInterface.currentRevisionId();
     String latestMasterRevisionId = vcCmdLineInterface.revisionId("master");
@@ -88,7 +88,7 @@ public class VersionControlStatsGenerator {
         branchedFromMasterRevisionId) * 1000;
 
     VersionControlStats versionControlStats = VersionControlStats.builder()
-        .setNumberOfWorkingDirectoryChanges(workingDirectoryChanges)
+        .setPathsChangedInWorkingDirectory(changedFiles)
         .setCurrentRevisionId(currentRevisionId)
         .setBranchedFromMasterRevisionId(branchedFromMasterRevisionId)
         .setBranchedFromMasterTsMillis(branchedFromMasterTsMillis)
