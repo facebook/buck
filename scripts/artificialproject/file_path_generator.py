@@ -104,6 +104,19 @@ class FilePathGenerator:
         parent_dir[os.path.basename(path).lower()] = None
         return path
 
+    def register_path(self, path):
+        directory = self._root
+        existed = True
+        for component in self._split_path_into_components(path):
+            if component not in directory:
+                directory[component] = {}
+                existed = False
+            directory = directory[component]
+            if directory is None:
+                raise GenerationFailedException()
+        if existed:
+            raise GenerationFailedException()
+
     def _split_path_into_components(self, path):
         components = []
         while path:

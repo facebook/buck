@@ -1,5 +1,6 @@
 import collections
 import itertools
+import os
 import sys
 
 from artificialproject.field_generators import (
@@ -133,6 +134,15 @@ class TargetDataGenerator:
             generated_field = generator.generate(base_path)
             result[field] = generated_field.value
             all_deps.update(generated_field.deps)
+        if self._type == 'ndk_library':
+            makefile_path = os.path.join(base_path, 'Android.mk')
+            self._context.file_path_generator.register_path(makefile_path)
+            makefile_path = os.path.join(
+                    self._context.output_repository,
+                    makefile_path)
+            os.makedirs(os.path.dirname(makefile_path), exist_ok=True)
+            with open(makefile_path, 'a'):
+                pass
         result['.all_deps'] = all_deps
         return result
 
