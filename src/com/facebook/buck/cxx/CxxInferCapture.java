@@ -32,10 +32,12 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.Escaper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -91,7 +93,6 @@ public class CxxInferCapture
   }
 
   private ImmutableList<String> getFrontendCommand() {
-    // TODO(martinoluca): Add support for extra arguments (and add them to the rulekey)
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
     return commandBuilder
         .add(this.inferConfig.getInferTopLevel().toString())
@@ -100,6 +101,13 @@ public class CxxInferCapture
         .add("--out", resultsDir.toString())
         .add("--")
         .add("clang")
+        .add("@" + getArgfile())
+        .build();
+  }
+
+  private ImmutableList<String> getCompilerArgs() {
+    ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
+    return commandBuilder
         .add("-MD", "-MF", getTempDepFilePath().toString())
         .addAll(
             CxxToolFlags.concat(preprocessorFlags, getSearchPathFlags(), compilerFlags)
@@ -115,11 +123,13 @@ public class CxxInferCapture
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList<String> frontendCommand = getFrontendCommand();
+
     buildableContext.recordArtifact(this.getPathToOutput());
 
     return ImmutableList.<Step>builder()
         .add(new MkdirStep(getProjectFilesystem(), resultsDir))
         .add(new MkdirStep(getProjectFilesystem(), output.getParent()))
+        .add(new WriteArgFileStep())
         .add(
             new DefaultShellStep(
                 getProjectFilesystem().getRootPath(),
@@ -180,6 +190,10 @@ public class CxxInferCapture
     return inputs.build();
   }
 
+  private Path getArgfile() {
+    return output.getFileSystem().getPath(output.getParent().resolve("argfile.txt").toString());
+  }
+
   private Path getDepFilePath() {
     return output.getFileSystem().getPath(output.toString() + ".dep");
   }
@@ -226,6 +240,28 @@ public class CxxInferCapture
     @Override
     public String getDescription(ExecutionContext context) {
       return "Parse depfiles and write them in a Buck compatible format";
+    }
+  }
+
+  private class WriteArgFileStep implements Step {
+
+    @Override
+    public StepExecutionResult execute(ExecutionContext context)
+        throws IOException, InterruptedException {
+      getProjectFilesystem().writeLinesToPath(
+          Iterables.transform(getCompilerArgs(), Escaper.ARGFILE_ESCAPER),
+          getArgfile());
+      return StepExecutionResult.SUCCESS;
+    }
+
+    @Override
+    public String getShortName() {
+      return "write-argfile";
+    }
+
+    @Override
+    public String getDescription(ExecutionContext context) {
+      return "Write argfile for clang";
     }
   }
 

@@ -9,10 +9,8 @@ function get_infer_argument {
 }
 
 function get_clang_argument {
-    # retrieves the value of an argument passed to clang, after the -- token
     OPT="$1"
     shift
-    while [ "$1" != "--" ]; do shift; done
     while [ -n "$1" ] && [ "$1" != "$OPT" ]; do shift; done
     echo $2
 }
@@ -49,16 +47,24 @@ case $LAST_ARG in
         echo '[{"file":"aFile.c", "type":"NULL_DEREFERENCE", "line":123}]' > "$OUT/report.json"
         ;;
     *)
+        # capture case: check it's an argfile
+        ARGFILE=${LAST_ARG/"@"}
+        [ -f "$ARGFILE" ] || { echo "argfile $ARGFILE passed in input does not exist"; exit 1; }
+
+        # load argfile's content and check it has the expected content
+        CONTENT=(`cat $ARGFILE`)
+        LAST_ARG_CONTENT=$(echo ${CONTENT[${#CONTENT[@]} - 1]})
+
         # capture case: check that the source file is passed at the end
-        [ -f "$LAST_ARG" ] || { echo "last argument \"$LAST_ARG\" should be source file"; exit 1; }
+        [ -f "$LAST_ARG_CONTENT" ] || { echo "last argument \"$LAST_ARG_CONTENT\" should be source file"; exit 1; }
 
         # Check that a depfile is specified in clang
-        DEPFILE="$(get_clang_argument "-MF" "$@")"
+        DEPFILE="$(get_clang_argument "-MF" "${CONTENT[@]}")"
         [ -n "$DEPFILE" ] || { echo "No depfile specified in clang command"; exit 1; }
 
-        FILENAME=`basename $LAST_ARG`
+        FILENAME=`basename $LAST_ARG_CONTENT`
         mkdir -p $OUT/captured/${FILENAME}_captured
-        SOURCE_FILENAME=${LAST_ARG}
+        SOURCE_FILENAME=${LAST_ARG_CONTENT}
         touch $OUT/captured/${FILENAME}_captured/$FILENAME.cfg
         cp "${SOURCE_FILENAME}.dep.mock" $DEPFILE
         ;;
