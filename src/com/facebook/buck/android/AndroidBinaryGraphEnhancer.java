@@ -91,6 +91,7 @@ public class AndroidBinaryGraphEnhancer {
   private final ImmutableSortedSet<BuildRule> originalDeps;
   private final BuildRuleParams buildRuleParams;
   private final boolean trimResourceIds;
+  private final Optional<String> keepResourcePattern;
   private final Optional<BuildTarget> nativeLibraryMergeCodeGenerator;
   private final ManifestEntries manifestEntries;
   private final BuildRuleResolver ruleResolver;
@@ -146,6 +147,7 @@ public class AndroidBinaryGraphEnhancer {
       Optional<SourcePath> buildConfigValuesFile,
       Optional<Integer> xzCompressionLevel,
       boolean trimResourceIds,
+      Optional<String> keepResourcePattern,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap,
       Optional<BuildTarget> nativeLibraryMergeGlue,
@@ -184,6 +186,7 @@ public class AndroidBinaryGraphEnhancer {
     this.dxExecutorService = dxExecutorService;
     this.xzCompressionLevel = xzCompressionLevel;
     this.trimResourceIds = trimResourceIds;
+    this.keepResourcePattern = keepResourcePattern;
     this.nativeLibraryMergeCodeGenerator = nativeLibraryMergeCodeGenerator;
     this.nativeLibsEnhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
@@ -418,7 +421,8 @@ public class AndroidBinaryGraphEnhancer {
         paramsForTrimUberRDotJava,
         pathResolver,
         aaptPackageResources,
-        preDexedLibrariesForResourceIdFiltering);
+        preDexedLibrariesForResourceIdFiltering,
+        keepResourcePattern);
     ruleResolver.addToIndex(trimUberRDotJava);
 
     // Create rule to compile uber R.java sources.
