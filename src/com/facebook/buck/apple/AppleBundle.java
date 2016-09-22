@@ -54,6 +54,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.swift.SwiftPlatform;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -141,7 +142,7 @@ public class AppleBundle
   private final Optional<Tool> codesignAllocatePath;
 
   @AddToRuleKey
-  private final Optional<Tool> swiftStdlibTool;
+  private final Optional<SwiftPlatform> swiftPlatform;
 
   // Need to use String here as RuleKeyBuilder requires that paths exist to compute hashes.
   @AddToRuleKey
@@ -224,7 +225,7 @@ public class AppleBundle
           CodeSignIdentityStore.fromIdentities(ImmutableList.<CodeSignIdentity>of());
     }
     this.codesignAllocatePath = appleCxxPlatform.getCodesignAllocate();
-    this.swiftStdlibTool = appleCxxPlatform.getSwiftStdlibTool();
+    this.swiftPlatform = appleCxxPlatform.getSwiftPlatform();
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -674,9 +675,11 @@ public class AppleBundle
       ImmutableList.Builder<Step> stepsBuilder) {
     // It's apparently safe to run this even on a non-swift bundle (in that case, no libs
     // are copied over).
-    if (swiftStdlibTool.isPresent()) {
+    if (swiftPlatform.isPresent()) {
       ImmutableList.Builder<String> swiftStdlibCommand = ImmutableList.builder();
-      swiftStdlibCommand.addAll(swiftStdlibTool.get().getCommandPrefix(getResolver()));
+      swiftStdlibCommand.addAll(swiftPlatform.get()
+          .getSwiftStdlibTool()
+          .getCommandPrefix(getResolver()));
       swiftStdlibCommand.add(
           "--scan-executable",
           bundleBinaryPath.toString(),

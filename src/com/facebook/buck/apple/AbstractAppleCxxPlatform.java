@@ -20,13 +20,13 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.swift.SwiftPlatform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
-import java.util.Set;
 
 /**
  * Adds Apple-specific tools to {@link CxxPlatform}.
@@ -36,6 +36,8 @@ import java.util.Set;
 abstract class AbstractAppleCxxPlatform implements FlavorConvertible {
 
   public abstract CxxPlatform getCxxPlatform();
+
+  public abstract Optional<SwiftPlatform> getSwiftPlatform();
 
   public abstract AppleSdk getAppleSdk();
 
@@ -52,10 +54,6 @@ abstract class AbstractAppleCxxPlatform implements FlavorConvertible {
   public abstract Optional<Path> getStubBinary();
   public abstract Tool getLldb();
   public abstract Optional<Tool> getCodesignAllocate();
-  public abstract Optional<Tool> getSwift();
-  public abstract Optional<Tool> getSwiftStdlibTool();
-  public abstract Set<Path> getSwiftRuntimePaths();
-  public abstract Set<Path> getSwiftStaticRuntimePaths();
 
   // Short Xcode version code, e.g. 0721
   public abstract Optional<String> getXcodeVersion();

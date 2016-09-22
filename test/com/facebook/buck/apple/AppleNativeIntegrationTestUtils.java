@@ -72,8 +72,7 @@ public class AppleNativeIntegrationTestUtils {
         new AppleConfig(buckConfig),
         Optional.of(new ProcessExecutor(Console.createNullConsole())));
     return
-        appleCxxPlatform.getSwift().isPresent() &&
-        appleCxxPlatform.getSwiftStdlibTool().isPresent();
+        appleCxxPlatform.getSwiftPlatform().isPresent();
   }
 
 }

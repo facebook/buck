@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import static com.sun.imageio.plugins.jpeg.JPEG.version;
+
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListFormatException;
@@ -39,6 +41,8 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
+import com.facebook.buck.swift.SwiftPlatform;
+import com.facebook.buck.swift.SwiftPlatforms;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
@@ -48,7 +52,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import org.xml.sax.SAXException;
@@ -366,7 +369,6 @@ public class AppleCxxPlatforms {
             new ConstantToolProvider(clangXxPath),
             CxxToolProvider.Type.CLANG);
 
-
     CxxPlatform cxxPlatform = CxxPlatforms.build(
         targetFlavor,
         config,
@@ -396,25 +398,18 @@ public class AppleCxxPlatforms {
         Optional.of(debugPathSanitizer),
         macros);
 
-    ApplePlatform platform = targetSdk.getApplePlatform();
-
-    ImmutableList<String> swiftParams = ImmutableList.of(
-        "-frontend",
-        "-sdk",
-        sdkPaths.getSdkPath().toString(),
-        "-target",
+    ApplePlatform applePlatform = targetSdk.getApplePlatform();
+    Optional<SwiftPlatform> swiftPlatform = getSwiftPlatform(
+        applePlatform.getName(),
         targetArchitecture + "-apple-" +
-        platform.getSwiftName().or(platform.getName()) + targetSdk.getVersion());
-
-    ImmutableList<String> swiftStdlibToolParams = ImmutableList.of(
-        "--copy",
-        "--verbose",
-        "--strip-bitcode",
-        "--platform",
-        platform.getName());
+            applePlatform.getSwiftName().or(applePlatform.getName()) + targetSdk.getVersion(),
+        sdkPaths,
+        toolSearchPaths,
+        executableFinder);
 
     platformBuilder
         .setCxxPlatform(cxxPlatform)
+        .setSwiftPlatform(swiftPlatform)
         .setAppleSdk(targetSdk)
         .setAppleSdkPaths(sdkPaths)
         .setMinVersion(minVersion)
@@ -428,37 +423,53 @@ public class AppleCxxPlatforms {
         .setStubBinary(stubBinaryPath)
         .setLldb(lldb)
         .setCodesignAllocate(
-            getOptionalTool("codesign_allocate", toolSearchPaths, executableFinder, version))
-        .setSwift(
-            getOptionalToolWithParams(
-                "swift",
-                toolSearchPaths,
-                executableFinder,
-                version,
-                swiftParams))
-        .setSwiftStdlibTool(
-            getOptionalToolWithParams(
-                "swift-stdlib-tool",
-                toolSearchPaths,
-                executableFinder,
-                version,
-                swiftStdlibToolParams));
-    for (Path toolchainPath : sdkPaths.getToolchainPaths()) {
-      Path swiftRuntimePath = toolchainPath
-          .resolve("usr/lib/swift")
-          .resolve(platform.getName());
-      if (Files.isDirectory(swiftRuntimePath)) {
-        platformBuilder.addSwiftRuntimePaths(swiftRuntimePath);
-      }
-      Path swiftStaticRuntimePath = toolchainPath
-          .resolve("usr/lib/swift_static")
-          .resolve(platform.getName());
-      if (Files.isDirectory(swiftStaticRuntimePath)) {
-        platformBuilder.addSwiftStaticRuntimePaths(swiftStaticRuntimePath);
-      }
-    }
+            getOptionalTool("codesign_allocate", toolSearchPaths, executableFinder, version));
 
     return platformBuilder.build();
+  }
+
+  private static Optional<SwiftPlatform> getSwiftPlatform(
+      String platformName,
+      String targetArchitectureName,
+      AbstractAppleSdkPaths sdkPaths,
+      ImmutableList<Path> toolSearchPaths,
+      ExecutableFinder executableFinder) {
+    ImmutableList<String> swiftParams = ImmutableList.of(
+        "-frontend",
+        "-sdk",
+        sdkPaths.getSdkPath().toString(),
+        "-target",
+        targetArchitectureName);
+
+    ImmutableList<String> swiftStdlibToolParams = ImmutableList.of(
+        "--copy",
+        "--verbose",
+        "--strip-bitcode",
+        "--platform",
+        platformName);
+
+    Optional<Tool> swift = getOptionalToolWithParams(
+        "swift",
+        toolSearchPaths,
+        executableFinder,
+        version,
+        swiftParams);
+    Optional<Tool> swiftStdLibTool = getOptionalToolWithParams(
+        "swift-stdlib-tool",
+        toolSearchPaths,
+        executableFinder,
+        version,
+        swiftStdlibToolParams);
+    if (swift.isPresent() && swiftStdLibTool.isPresent()) {
+      return Optional.of(
+          SwiftPlatforms.build(
+              platformName,
+              sdkPaths.getToolchainPaths(),
+              swift.get(),
+              swiftStdLibTool.get()));
+    } else {
+      return Optional.absent();
+    }
   }
 
   private static Optional<Tool> getOptionalTool(
@@ -480,7 +491,7 @@ public class AppleCxxPlatforms {
       ExecutableFinder executableFinder,
       final String version,
       final ImmutableList<String> params) {
-    return getOptionalToolPath(tool, toolSearchPaths, executableFinder)
+    return executableFinder.getOptionalToolPath(tool, toolSearchPaths)
         .transform(new Function<Path, Tool>() {
           @Override
           public VersionedTool apply(Path input) {
@@ -498,21 +509,10 @@ public class AppleCxxPlatforms {
       String tool,
       ImmutableList<Path> toolSearchPaths,
       ExecutableFinder executableFinder) {
-    Optional<Path> result = getOptionalToolPath(tool, toolSearchPaths, executableFinder);
+    Optional<Path> result = executableFinder.getOptionalToolPath(tool, toolSearchPaths);
     if (!result.isPresent()) {
       throw new HumanReadableException("Cannot find tool %s in paths %s", tool, toolSearchPaths);
     }
     return result.get();
-  }
-
-    private static Optional<Path> getOptionalToolPath(
-      String tool,
-      ImmutableList<Path> toolSearchPaths,
-      ExecutableFinder executableFinder) {
-
-      return executableFinder.getOptionalExecutable(
-          Paths.get(tool),
-          toolSearchPaths,
-          ImmutableSet.<String>of());
   }
 }

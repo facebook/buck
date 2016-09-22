@@ -19,7 +19,6 @@ package com.facebook.buck.swift;
 import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPANION_FLAVOR;
 import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR;
 
-import com.facebook.buck.apple.AppleCxxPlatform;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxLink;
@@ -35,7 +34,6 @@ import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -76,7 +74,7 @@ class SwiftLibrary
   private final Iterable<? extends BuildRule> exportedDeps;
   private final ImmutableSet<FrameworkPath> frameworks;
   private final ImmutableSet<FrameworkPath> libraries;
-  private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
+  private final SwiftPlatform swiftPlatform;
   private final Optional<Pattern> supportedPlatformsRegex;
   private final Linkage linkage;
 
@@ -87,7 +85,7 @@ class SwiftLibrary
       Iterable<? extends BuildRule> exportedDeps,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
-      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
+      SwiftPlatform swiftPlatform,
       Optional<Pattern> supportedPlatformsRegex,
       Linkage linkage) {
     super(params, pathResolver);
@@ -95,7 +93,7 @@ class SwiftLibrary
     this.exportedDeps = exportedDeps;
     this.frameworks = frameworks;
     this.libraries = libraries;
-    this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
+    this.swiftPlatform = swiftPlatform;
     this.supportedPlatformsRegex = supportedPlatformsRegex;
     this.linkage = linkage;
   }
@@ -124,8 +122,7 @@ class SwiftLibrary
     }
     return FluentIterable.from(exportedDeps)
         .filter(NativeLinkable.class)
-        .append(new SwiftRuntimeNativeLinkable(
-            appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor())));
+        .append(new SwiftRuntimeNativeLinkable(swiftPlatform));
   }
 
   @Override

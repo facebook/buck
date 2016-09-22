@@ -18,7 +18,6 @@ package com.facebook.buck.swift;
 
 import static com.facebook.buck.model.UnflavoredBuildTarget.BUILD_TARGET_PREFIX;
 
-import com.facebook.buck.apple.AppleCxxPlatform;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
@@ -43,10 +42,10 @@ final class SwiftRuntimeNativeLinkable implements NativeLinkable {
   private static final BuildTarget PSEUDO_BUILD_TARGET = BuildTarget
       .builder(Paths.get(SWIFT_RUNTIME), BUILD_TARGET_PREFIX + SWIFT_RUNTIME, SWIFT_RUNTIME)
       .build();
-  private final AppleCxxPlatform appleCxxPlatform;
+  private final SwiftPlatform swiftPlatform;
 
-  SwiftRuntimeNativeLinkable(AppleCxxPlatform appleCxxPlatform) {
-    this.appleCxxPlatform = appleCxxPlatform;
+  SwiftRuntimeNativeLinkable(SwiftPlatform swiftPlatform) {
+    this.swiftPlatform = swiftPlatform;
   }
 
   @Override
@@ -71,7 +70,7 @@ final class SwiftRuntimeNativeLinkable implements NativeLinkable {
 
     ImmutableSet<Path> swiftRuntimePaths = type == Linker.LinkableDepType.SHARED ?
         ImmutableSet.<Path>of() :
-        appleCxxPlatform.getSwiftStaticRuntimePaths();
+        swiftPlatform.getSwiftStaticRuntimePaths();
 
     // Fall back to shared if static isn't supported on this platform.
     if (type == Linker.LinkableDepType.SHARED || swiftRuntimePaths.isEmpty()) {
@@ -85,7 +84,7 @@ final class SwiftRuntimeNativeLinkable implements NativeLinkable {
               "-rpath",
               "-Xlinker",
               "@loader_path/Frameworks"));
-      swiftRuntimePaths = appleCxxPlatform.getSwiftRuntimePaths();
+      swiftRuntimePaths = swiftPlatform.getSwiftRuntimePaths();
     } else {
       // Static linking requires force-loading Swift libs, since the dependency
       // discovery mechanism is disabled otherwise.
