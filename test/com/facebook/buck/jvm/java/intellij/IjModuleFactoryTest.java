@@ -26,6 +26,7 @@ import com.facebook.buck.android.AndroidBinaryBuilder;
 import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidPrebuiltAarBuilder;
+import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -566,6 +567,11 @@ public class IjModuleFactoryTest {
           public Path getAndroidManifestPath(
               TargetNode<AndroidBinaryDescription.Arg> targetNode) {
             return ((FakeSourcePath) targetNode.getConstructorArg().manifest).getRelativePath();
+          }
+
+          @Override
+          public Optional<Path> getLibraryAndroidManifestPath(TargetNode<AndroidLibraryDescription.Arg> targetNode) {
+            return Optional.absent();
           }
 
           @Override

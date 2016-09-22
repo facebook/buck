@@ -464,9 +464,7 @@ public class IjProjectTemplateDataPreparer {
     Optional<Path> androidManifestPath = androidFacet.getManifestPath();
     Path manifestPath;
     if (androidManifestPath.isPresent()) {
-      manifestPath = androidManifestPath.get()
-          .relativize(moduleBasePath.toAbsolutePath())
-          .resolve(androidManifestPath.get().getFileName());
+      manifestPath = moduleBasePath.toAbsolutePath().relativize(androidManifestPath.get());
     } else {
       manifestPath = moduleBasePath
                       .relativize(

@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.intellij;
 
 import com.facebook.buck.android.AndroidBinaryDescription;
+import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.android.AndroidPrebuiltAar;
 import com.facebook.buck.android.AndroidResourceDescription;
@@ -56,6 +57,7 @@ public class IjProject {
   private final ProjectFilesystem projectFilesystem;
   private final IjModuleGraph.AggregationMode aggregationMode;
   private final IjProjectConfig projectConfig;
+  private final IntellijConfig intellijConfig;
 
   public IjProject(
       TargetGraphAndTargets targetGraphAndTargets,
@@ -74,6 +76,7 @@ public class IjProject {
     this.projectFilesystem = projectFilesystem;
     this.aggregationMode = aggregationMode;
     this.projectConfig = IjProjectBuckConfig.create(buckConfig);
+    this.intellijConfig = new IntellijConfig(buckConfig);
   }
 
   /**
@@ -143,6 +146,12 @@ public class IjProject {
           @Override
           public Path getAndroidManifestPath(TargetNode<AndroidBinaryDescription.Arg> targetNode) {
             return sourcePathResolver.getAbsolutePath(targetNode.getConstructorArg().manifest);
+          }
+
+          @Override
+          public Optional<Path> getLibraryAndroidManifestPath(TargetNode<AndroidLibraryDescription.Arg> targetNode) {
+            Optional<SourcePath> manifestPath = targetNode.getConstructorArg().manifest;
+            return manifestPath.transform(sourcePathResolver.getAbsolutePathFunction()).or(intellijConfig.getAndroidManifest());
           }
 
           @Override
