@@ -19,6 +19,7 @@ from artificialproject.random import weighted_choice
 Context = collections.namedtuple('Context', [
     'input_target_data',
     'gen_targets_by_type',
+    'gen_targets_with_output_by_type',
     'output_repository',
     'file_path_generator',
 ])

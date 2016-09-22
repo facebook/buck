@@ -99,7 +99,11 @@ class BuildTargetSetGenerator:
             target_data = self._context.input_target_data[target]
             self._types.update([target_data['buck.type']])
 
-    def generate(self, base_path, force_length=None):
+    def generate(
+            self,
+            base_path,
+            force_length=None,
+            only_targets_with_output=False):
         if force_length is not None:
             length = force_length
         else:
@@ -110,7 +114,10 @@ class BuildTargetSetGenerator:
             type_counts.update([weighted_choice(types)])
         output = []
         for type, count in type_counts.items():
-            options = self._context.gen_targets_by_type[type]
+            if only_targets_with_output:
+                options = self._context.gen_targets_with_output_by_type[type]
+            else:
+                options = self._context.gen_targets_by_type[type]
             if count > len(options):
                 raise GenerationFailedException()
             output.extend(random.sample(options, count))
@@ -199,7 +206,9 @@ class SourcePathSetGenerator:
             else:
                 path_count += 1
         build_targets = self._build_target_set_generator.generate(
-                base_path, force_length=build_target_count)
+                base_path,
+                force_length=build_target_count,
+                only_targets_with_output=True)
         paths = self._path_set_generator.generate(
                 base_path, force_length=path_count)
         assert len(build_targets.value) == build_target_count, (
