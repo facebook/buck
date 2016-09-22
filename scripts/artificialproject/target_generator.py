@@ -68,6 +68,7 @@ class TargetDataGenerator:
             'android_react_native_library.entry_path': source_path,
             'android_react_native_library.package': string,
             'cxx_library.srcs': sources_with_flags,
+            'export_file.src': source_path,
             'gen_aidl.aidl': source_path,
             'gen_aidl.import_path': string,
             'keystore.properties': source_path,
@@ -93,6 +94,8 @@ class TargetDataGenerator:
     def add_sample(self, sample):
         target_type = sample['buck.type']
         base_path = sample['buck.base_path']
+        if target_type == 'export_file' and sample['src'] is None:
+            sample['src'] = sample['name']
         for field, value in sample.items():
             if '.' in field or field == 'name':
                 continue
