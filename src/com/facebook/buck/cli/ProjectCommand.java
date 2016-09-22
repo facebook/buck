@@ -253,6 +253,11 @@ public class ProjectCommand extends BuildCommand {
   private boolean skipBuild = false;
 
   @Option(
+      name = "--build",
+      usage = "Also build all the targets in the project.")
+  private boolean build = true;
+
+  @Option(
       name = "--focus",
       depends = "--build-with-buck",
       usage = "Space separated list of build target full qualified names that should be part of " +
@@ -605,7 +610,8 @@ public class ProjectCommand extends BuildCommand {
       return 0;
     }
 
-    if (skipBuild) {
+    boolean skipBuilds = skipBuild || !build;
+    if (skipBuilds) {
       ConsoleEvent.severe(
           "Please remember to buck build --deep the targets you intent to work with.");
       return 0;
