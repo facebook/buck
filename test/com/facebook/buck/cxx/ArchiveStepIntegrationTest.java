@@ -35,7 +35,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.commons.compress.archivers.ar.ArArchiveEntry;
@@ -47,6 +46,7 @@ import org.junit.Test;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -215,7 +215,12 @@ public class ArchiveStepIntegrationTest {
     // Create a really large input file so it's obvious that the archive is thin.
     Path input = filesystem.getRootPath().getFileSystem().getPath("bar/blah.dat");
     filesystem.mkdirs(input.getParent());
-    filesystem.writeContentsToPath(Strings.repeat("hello\n", 5 * 1024 * 1024), input);
+    byte[] largeInputFile = new byte[1024 * 1024];
+    byte[] fillerToRepeat = "hello\n".getBytes(StandardCharsets.US_ASCII);
+    for (int i = 0; i < largeInputFile.length; i++) {
+      largeInputFile[i] = fillerToRepeat[i % fillerToRepeat.length];
+    }
+    filesystem.writeBytesToPath(largeInputFile, input);
 
     // Build an archive step.
     ArchiveStep archiveStep =
