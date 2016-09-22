@@ -22,6 +22,7 @@ import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.swift.SwiftPlatform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
@@ -34,6 +35,14 @@ import java.nio.file.Path;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractAppleCxxPlatform implements FlavorConvertible {
+
+  public static final Function<String, String> SWIFT_VERSION_TO_TOOLCHAIN_IDENTIFIER =
+      new Function<String, String>() {
+        @Override
+        public String apply(String version) {
+          return "com.apple.dt.toolchain.Swift_" + version.replaceAll("\\D", "_");
+        }
+      };
 
   public abstract CxxPlatform getCxxPlatform();
 

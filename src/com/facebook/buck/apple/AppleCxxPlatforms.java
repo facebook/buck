@@ -16,8 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import static com.sun.imageio.plugins.jpeg.JPEG.version;
-
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListFormatException;
@@ -87,7 +85,8 @@ public class AppleCxxPlatforms {
       AppleSdkPaths sdkPaths,
       BuckConfig buckConfig,
       AppleConfig appleConfig,
-      Optional<ProcessExecutor> processExecutor) {
+      Optional<ProcessExecutor> processExecutor,
+      Optional<AppleToolchain> swiftToolChain) {
     return buildWithExecutableChecker(
         targetSdk,
         minVersion,
@@ -96,7 +95,8 @@ public class AppleCxxPlatforms {
         buckConfig,
         appleConfig,
         new ExecutableFinder(),
-        processExecutor);
+        processExecutor,
+        swiftToolChain);
   }
 
   @VisibleForTesting
@@ -108,7 +108,8 @@ public class AppleCxxPlatforms {
       BuckConfig buckConfig,
       AppleConfig appleConfig,
       ExecutableFinder executableFinder,
-      Optional<ProcessExecutor> processExecutor) {
+      Optional<ProcessExecutor> processExecutor,
+      Optional<AppleToolchain> swiftToolChain) {
     AppleCxxPlatform.Builder platformBuilder = AppleCxxPlatform.builder();
 
     ImmutableList.Builder<Path> toolSearchPathsBuilder = ImmutableList.builder();
@@ -399,12 +400,17 @@ public class AppleCxxPlatforms {
         macros);
 
     ApplePlatform applePlatform = targetSdk.getApplePlatform();
+    ImmutableList.Builder<Path> searchPathBuilder = ImmutableList.builder();
+    if (swiftToolChain.isPresent()) {
+      searchPathBuilder.add(swiftToolChain.get().getPath().resolve(USR_BIN));
+    }
     Optional<SwiftPlatform> swiftPlatform = getSwiftPlatform(
         applePlatform.getName(),
         targetArchitecture + "-apple-" +
             applePlatform.getSwiftName().or(applePlatform.getName()) + targetSdk.getVersion(),
+        version,
         sdkPaths,
-        toolSearchPaths,
+        searchPathBuilder.addAll(toolSearchPaths).build(),
         executableFinder);
 
     platformBuilder
@@ -431,6 +437,7 @@ public class AppleCxxPlatforms {
   private static Optional<SwiftPlatform> getSwiftPlatform(
       String platformName,
       String targetArchitectureName,
+      String version,
       AbstractAppleSdkPaths sdkPaths,
       ImmutableList<Path> toolSearchPaths,
       ExecutableFinder executableFinder) {
@@ -460,6 +467,7 @@ public class AppleCxxPlatforms {
         executableFinder,
         version,
         swiftStdlibToolParams);
+
     if (swift.isPresent() && swiftStdLibTool.isPresent()) {
       return Optional.of(
           SwiftPlatforms.build(

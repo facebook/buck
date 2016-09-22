@@ -150,7 +150,8 @@ public class AppleCxxPlatformsTest {
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
             new FakeExecutableFinder(paths),
-            Optional.<ProcessExecutor>absent());
+            Optional.<ProcessExecutor>absent(),
+            Optional.<AppleToolchain>absent());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -264,7 +265,8 @@ public class AppleCxxPlatformsTest {
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
             new FakeExecutableFinder(paths),
-            Optional.<ProcessExecutor>absent());
+            Optional.<ProcessExecutor>absent(),
+            Optional.<AppleToolchain>absent());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -372,7 +374,8 @@ public class AppleCxxPlatformsTest {
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
             new FakeExecutableFinder(paths),
-            Optional.<ProcessExecutor>absent());
+            Optional.<ProcessExecutor>absent(),
+            Optional.<AppleToolchain>absent());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -481,7 +484,8 @@ public class AppleCxxPlatformsTest {
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
             new FakeExecutableFinder(paths),
-            Optional.<ProcessExecutor>absent());
+            Optional.<ProcessExecutor>absent(),
+            Optional.<AppleToolchain>absent());
 
     assertEquals(
         ImmutableFlavor.of("__in__va_id_-cha_rs"),
@@ -544,7 +548,8 @@ public class AppleCxxPlatformsTest {
                         "cxxppflags", "-DCXXTHING"))).build(),
             new FakeAppleConfig(),
             new FakeExecutableFinder(paths),
-            Optional.<ProcessExecutor>absent());
+            Optional.<ProcessExecutor>absent(),
+            Optional.<AppleToolchain>absent());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -595,7 +600,8 @@ public class AppleCxxPlatformsTest {
         FakeBuckConfig.builder().build(),
         new FakeAppleConfig(),
         new FakeExecutableFinder(ImmutableSet.<Path>of()),
-        Optional.<ProcessExecutor>absent());
+        Optional.<ProcessExecutor>absent(),
+        Optional.<AppleToolchain>absent());
   }
 
   @Test
@@ -647,7 +653,8 @@ public class AppleCxxPlatformsTest {
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
             new FakeExecutableFinder(paths),
-            Optional.<ProcessExecutor>absent());
+            Optional.<ProcessExecutor>absent(),
+            Optional.<AppleToolchain>absent());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -709,7 +716,8 @@ public class AppleCxxPlatformsTest {
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
             new FakeExecutableFinder(paths),
-            Optional.<ProcessExecutor>absent());
+            Optional.<ProcessExecutor>absent(),
+            Optional.<AppleToolchain>absent());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -771,7 +779,8 @@ public class AppleCxxPlatformsTest {
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
             new FakeExecutableFinder(paths),
-            Optional.<ProcessExecutor>absent());
+            Optional.<ProcessExecutor>absent(),
+            Optional.<AppleToolchain>absent());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -924,7 +933,8 @@ public class AppleCxxPlatformsTest {
         FakeBuckConfig.builder().build(),
         new FakeAppleConfig(),
         new AlwaysFoundExecutableFinder(),
-        Optional.<ProcessExecutor>absent());
+        Optional.<ProcessExecutor>absent(),
+        Optional.<AppleToolchain>absent());
   }
 
   // The important aspects we check for in rule keys is that the host platform and the path
