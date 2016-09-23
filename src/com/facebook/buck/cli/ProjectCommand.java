@@ -364,6 +364,10 @@ public class ProjectCommand extends BuildCommand {
     return buckConfig.xcodeProjectWithoutHeadersSymLinks();
   }
 
+  private boolean getSkipBuildFromConfig(BuckConfig buckConfig) {
+    return buckConfig.getBooleanValue("project", "skip_build", false);
+  }
+
   private List<String> getInitialTargets(BuckConfig buckConfig) {
     Optional<String> initialTargets = buckConfig.getValue("project", "initial_targets");
     return initialTargets.isPresent()
@@ -614,7 +618,7 @@ public class ProjectCommand extends BuildCommand {
       return 0;
     }
 
-    boolean skipBuilds = skipBuild || !build;
+    boolean skipBuilds = skipBuild || getSkipBuildFromConfig(params.getBuckConfig()) || !build;
     if (skipBuilds) {
       ConsoleEvent.severe(
           "Please remember to buck build --deep the targets you intent to work with.");
