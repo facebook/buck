@@ -254,6 +254,7 @@ public class ArtifactCaches {
 
     } catch (IOException e) {
       throw new HumanReadableException(
+          e,
           "Failure initializing artifact cache directory: %s",
           cacheDir);
     }

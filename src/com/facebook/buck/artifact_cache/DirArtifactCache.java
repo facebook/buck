@@ -78,7 +78,11 @@ public class DirArtifactCache implements ArtifactCache {
     this.maxCacheSizeBytes = maxCacheSizeBytes;
     this.doStore = doStore;
     this.bytesSinceLastDeleteOldFiles = 0L;
-    filesystem.mkdirs(cacheDir);
+
+    // Check first, as mkdirs will fail if the path is a symlink.
+    if (!filesystem.isDirectory(cacheDir)) {
+      filesystem.mkdirs(cacheDir);
+    }
   }
 
   @Override
