@@ -264,7 +264,7 @@ def build_all_targets(
         log_as_perftest=log_as_perftest)
 
 
-def check_cache_results(result, expected_keys, message, exception_message):
+def check_cache_results(result, expected_keys, message, exception_message, last_result):
     suspect_keys = [
         x
         for x in result.cache_results.keys()
@@ -289,7 +289,7 @@ def main():
     clean(args.repo_under_test)
     log('=== Warming up cache ===')
     cwd = os.path.join(args.repo_under_test, args.project_under_test)
-    build_all_targets(
+    last_result = build_all_targets(
         args,
         cwd,
         'readwrite',
@@ -315,7 +315,8 @@ def main():
                             'Building was unable to reuse the cache from a '
                             'previous run. This suggests one of the rule keys '
                             'contains an absolute path.',
-                            'Failed to reuse cache across directories!!!')
+                            'Failed to reuse cache across directories!!!',
+                            last_result)
 
         log('== Ensure noop build does nothing. ==')
         result = build_all_targets(
@@ -325,7 +326,8 @@ def main():
             run_clean=False)
         check_cache_results(result, ['LOCAL_KEY_UNCHANGED_HIT'],
                             'Doing a noop build not hit all of its keys.',
-                            'Doing a noop build not hit all of its keys.')
+                            'Doing a noop build not hit all of its keys.',
+                            last_result)
 
     finally:
         log('Renaming %s to %s' % (cwd_root, args.repo_under_test))
