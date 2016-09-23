@@ -136,15 +136,20 @@ class TargetDataGenerator:
             all_deps.update(generated_field.deps)
         if self._type == 'ndk_library':
             makefile_path = os.path.join(base_path, 'Android.mk')
-            self._context.file_path_generator.register_path(makefile_path)
-            makefile_path = os.path.join(
-                    self._context.output_repository,
-                    makefile_path)
-            os.makedirs(os.path.dirname(makefile_path), exist_ok=True)
-            with open(makefile_path, 'a'):
-                pass
+            self._register_and_create_file_at_path(makefile_path)
+        elif self._type == 'prebuilt_cxx_library':
+            library_path = os.path.join(base_path, 'lib', 'lib{}.a'.format(
+                result['name']))
+            self._register_and_create_file_at_path(library_path)
         result['.all_deps'] = all_deps
         return result
+
+    def _register_and_create_file_at_path(self, path):
+        self._context.file_path_generator.register_path(path)
+        path = os.path.join(self._context.output_repository, path)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'a'):
+            pass
 
 
 class TargetGenerator:
