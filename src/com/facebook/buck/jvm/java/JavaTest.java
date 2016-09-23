@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasPostBuildSteps;
@@ -87,7 +88,7 @@ import javax.annotation.Nullable;
 public class JavaTest
     extends AbstractBuildRule
     implements TestRule, HasClasspathEntries, HasRuntimeDeps, HasPostBuildSteps,
-        ExternalTestRunnerRule {
+        ExternalTestRunnerRule, ExportDependencies {
 
   public static final Flavor COMPILED_TESTS_LIBRARY_FLAVOR = ImmutableFlavor.of("testsjar");
 
@@ -506,6 +507,11 @@ public class JavaTest
   @Override
   public ImmutableSet<Path> getOutputClasspaths() {
     return compiledTestsLibrary.getOutputClasspaths();
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getExportedDeps() {
+    return ImmutableSortedSet.<BuildRule>of(compiledTestsLibrary);
   }
 
   @VisibleForTesting

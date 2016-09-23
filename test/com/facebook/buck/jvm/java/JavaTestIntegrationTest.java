@@ -17,20 +17,28 @@
 package com.facebook.buck.jvm.java;
 
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 
 public class JavaTestIntegrationTest {
 
@@ -237,5 +245,35 @@ public class JavaTestIntegrationTest {
     workspace.setUp();
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:fork-mode");
     result.assertSuccess();
+  }
+
+  @Test
+  public void testClasspath() throws IOException {
+    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "test_rule_classpath",
+        temp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "audit",
+        "classpath",
+        "//:top");
+    result.assertSuccess();
+    ImmutableSortedSet<Path> actualPaths = FluentIterable.from(Arrays.asList(result.getStdout()
+        .split("\\s+")))
+        .transform(new Function<String, Path>() {
+          @Override
+          public Path apply(String input) {
+            return temp.getRoot().relativize(Paths.get(input));
+          }
+        })
+        .toSortedSet(Ordering.natural());
+    ImmutableSortedSet<Path> expectedPaths = ImmutableSortedSet.of(
+        Paths.get("buck-out/gen/lib__top__output/top.jar"),
+        Paths.get("buck-out/gen/lib__direct_dep__output/direct_dep.jar"),
+        Paths.get("buck-out/gen/lib__mid_test#testsjar__output/mid_test#testsjar.jar"),
+        Paths.get("buck-out/gen/lib__transitive_lib__output/transitive_lib.jar")
+    );
+    assertEquals(expectedPaths, actualPaths);
   }
 }

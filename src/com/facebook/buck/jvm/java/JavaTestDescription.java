@@ -39,11 +39,9 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -118,26 +116,16 @@ public class JavaTestDescription implements
             Suppliers.ofInstance(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(params.getDeclaredDeps().get())
-                    .addAll(FluentIterable.from(params.getDeclaredDeps().get())
-                        .filter(JavaTest.class)
-                        .transform(
-                            new Function<JavaTest, BuildRule>() {
-                              @Override
-                              public BuildRule apply(JavaTest input) {
-                                return input.getCompiledTestsLibrary();
-                              }
-                            }))
+                    .addAll(BuildRules.getExportedRules(
+                        Iterables.concat(
+                            params.getDeclaredDeps().get(),
+                            resolver.getAllRules(args.providedDeps.get()))))
+                    .addAll(pathResolver.filterBuildRuleInputs(
+                        javacOptions.getInputs(pathResolver)))
                     .build()
             ),
             params.getExtraDeps()
-        );
-    testsLibraryParams = testsLibraryParams.appendExtraDeps(Iterables.concat(
-            BuildRules.getExportedRules(
-                Iterables.concat(
-                    testsLibraryParams.getDeclaredDeps().get(),
-                    resolver.getAllRules(args.providedDeps.get()))),
-            pathResolver.filterBuildRuleInputs(
-                javacOptions.getInputs(pathResolver))))
+        )
         .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     JavaLibrary testsLibrary =
