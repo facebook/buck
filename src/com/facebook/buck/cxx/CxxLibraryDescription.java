@@ -276,17 +276,6 @@ public class CxxLibraryDescription implements
             cxxPlatform.getFlavor(),
             linkType);
 
-    if (objects.isEmpty()) {
-      return new NoopBuildRule(
-          new BuildRuleParams(
-              sharedTarget,
-              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-              params.getProjectFilesystem(),
-              params.getCellRoots()),
-          pathResolver);
-    }
-
     String sharedLibrarySoname = CxxDescriptionEnhancer.getSharedLibrarySoname(
         soname,
         params.getBuildTarget(),

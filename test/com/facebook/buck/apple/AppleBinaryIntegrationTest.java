@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import static com.facebook.buck.cxx.CxxFlavorSanitizer.sanitize;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -43,6 +44,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -882,6 +884,25 @@ public class AppleBinaryIntegrationTest {
             workspace.getPath(
                 BuildTargets.getGenPath(filesystem, target, "%s-LinkMap").resolve(
                     singleArchX8664Target.getShortNameAndFlavorPostfix() + "-LinkMap.txt"))));
+  }
+
+  @Test
+  public void testBuildEmptySourceAppleBinaryDependsOnNonEmptyAppleLibrary() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "empty_source_targets",
+        tmp);
+    workspace.setUp();
+    BuildTarget target = workspace.newBuildTarget("//:real-none2#iphonesimulator-x86_64");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "run",
+        target.getFullyQualifiedName());
+    result.assertSuccess();
+    Assert.assertThat(
+        result.getStdout(),
+        equalTo("Hello"));
   }
 
   private static void assertIsSymbolicLink(
