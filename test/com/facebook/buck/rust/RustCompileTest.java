@@ -114,5 +114,10 @@ public class RustCompileTest {
             }
           });
     }
+
+    @Override
+    protected String getDefaultSource() {
+      return "main.rs";
+    }
   }
 }

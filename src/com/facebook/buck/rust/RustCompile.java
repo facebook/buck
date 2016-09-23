@@ -138,6 +138,13 @@ abstract class RustCompile extends AbstractBuildRule {
             getCrateRoot()));
   }
 
+  /**
+   * Return the default top-level source name for a crate of this type.
+   *
+   * @return The source filename for the top-level module.
+   */
+  protected abstract String getDefaultSource();
+
   @VisibleForTesting
   Path getCrateRoot() {
     ImmutableList<Path> candidates = ImmutableList.copyOf(
@@ -146,14 +153,15 @@ abstract class RustCompile extends AbstractBuildRule {
                 new Predicate<Path>() {
                   @Override
                   public boolean apply(Path path) {
-                    return path.endsWith("main.rs") ||
+                    return path.endsWith(getDefaultSource()) ||
                         path.endsWith(String.format("%s.rs", getBuildTarget().getShortName()));
                   }
                 }));
     if (candidates.size() != 1) {
       throw new HumanReadableException(
-          "srcs of %s must contain either main.rs or %s.rs!",
+          "srcs of %s must contain either %s or %s.rs!",
           getBuildTarget().getFullyQualifiedName(),
+          getDefaultSource(),
           getBuildTarget().getShortName());
     }
     // We end up creating a symlink tree to ensure that the crate only uses the files that it

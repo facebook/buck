@@ -53,6 +53,11 @@ public class RustLibrary extends RustCompile implements RustLinkable {
   }
 
   @Override
+  protected String getDefaultSource() {
+    return "lib.rs";
+  }
+
+  @Override
   public String getLinkTarget() {
     return getBuildTarget().getShortName();
   }

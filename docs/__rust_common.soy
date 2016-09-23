@@ -26,7 +26,8 @@ Note: Buck is currently tested with (and therefore supports) version 1.11.0 of R
     The set of Rust source files to be compiled by this rule.
   </p>
   <p>
-    One of these files must be named <code>{lb}name{rb}.rs</code> or <code>main.rs</code>.  This
+    One of these files must be named <code>{lb}name{rb}.rs</code>,{sp}
+    <code>main.rs</code> (for binaries) or <code>lib.rs</code> (for libraries). This
     file will be passed to <code>rustc</code> as the crate root.
   </p>
   {/param}

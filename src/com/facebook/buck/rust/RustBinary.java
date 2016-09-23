@@ -55,6 +55,11 @@ public class RustBinary extends RustCompile implements BinaryBuildRule {
   }
 
   @Override
+  protected String getDefaultSource() {
+    return "main.rs";
+  }
+
+  @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
         .addArg(new SourcePathArg(getResolver(), new BuildTargetSourcePath(getBuildTarget())))
