@@ -19,7 +19,7 @@ java_library(
 sh_test(
   name = 'shutdown_test',
   test = 'shutdown_test.sh',
-  test_rule_timeout_ms = 5000,
+  test_rule_timeout_ms = 15000,
   args = [
     '$(exe :shutdown_binary)',
   ],
