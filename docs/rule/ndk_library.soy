@@ -31,6 +31,17 @@ objects.
 {/call}
 
 {call buck.arg}
+  {param name: 'srcs' /}
+  {{param default : '[**/*.{cpp,c,cc,cxx,h,hpp,mk}]' /}}
+  {param desc}
+  The set of files to compile for this rule.
+  If not provided, <code>buck</code> assumes
+  that all files with the following extensions are part of the build:
+  {sp}<code>c, cpp, cc, cxx, h, hpp, mk</code>.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'deps' /}
   {param default : '[]' /}
   {param desc}
@@ -74,11 +85,6 @@ root of the APK named <code>lib/</code> or <code>assets/lib/</code>.
 Unlike the default invocation of <code>ndk-build</code>,
 {sp}<code>buck</code> will put all intermediate files and build output
 into a subdirectory under <code>buck-out/gen</code>.
-<p>
-Also, because <code>ndk-build</code> and <code>Android.mk</code> do not
-expose the necessary dependency information, <code>buck</code> assumes
-that all files with the following extensions are part of the build:
-{sp}<code>c, cpp, cc, cxx, h, hpp, mk</code>.
 
 {/param}
 

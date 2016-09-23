@@ -330,6 +330,15 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
     Pair<String, Iterable<BuildRule>> makefilePair = generateMakefile(params, resolver);
+
+    ImmutableSortedSet<SourcePath> sources;
+    if (args.srcs.isPresent() && !args.srcs.get().isEmpty()) {
+      sources = args.srcs.get();
+    } else {
+      sources = findSources(
+          params.getProjectFilesystem(),
+          params.getBuildTarget().getBasePath());
+    }
     return new NdkLibrary(
         params.appendExtraDeps(
             ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -338,7 +347,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
         new SourcePathResolver(resolver),
         getGeneratedMakefilePath(params.getBuildTarget(), params.getProjectFilesystem()),
         makefilePair.getFirst(),
-        findSources(params.getProjectFilesystem(), params.getBuildTarget().getBasePath()),
+        sources,
         args.flags.get(),
         args.isAsset.or(false),
         ndkVersion,
@@ -353,6 +362,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
     public Optional<ImmutableList<String>> flags;
     public Optional<Boolean> isAsset;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<SourcePath>> srcs;
   }
 
 }

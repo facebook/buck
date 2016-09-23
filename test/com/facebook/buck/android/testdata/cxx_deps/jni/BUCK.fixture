@@ -6,4 +6,9 @@ ndk_library(
   deps = [
     '//bar:bar',
   ],
+  srcs = [
+    'foo.cpp',
+    'Android.mk',
+    'Application.mk',
+  ],
 )

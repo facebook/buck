@@ -59,4 +59,50 @@ public class NdkLibraryIntegrationTest {
         workspace2.getBuildLog().getRuleKey("//jni:foo"));
   }
 
+  @Test
+  public void sourceFilesChangeTargetHash() throws IOException {
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "cxx_deps", tmp1);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "targets",
+        "//jni:foo",
+        "--show-target-hash",
+        "--target-hash-file-mode=PATHS_ONLY");
+    result.assertSuccess();
+    String[] targetAndHash = result.getStdout().trim().split("\\s+");
+    assertEquals("//jni:foo", targetAndHash[0]);
+    String hashBefore = targetAndHash[1];
+
+    ProjectWorkspace.ProcessResult result2 = workspace.runBuckCommand(
+        "targets",
+        "//jni:foo",
+        "--show-target-hash",
+        "--target-hash-file-mode=PATHS_ONLY",
+        "--target-hash-modified-paths=" + workspace.resolve("jni/foo.cpp"));
+
+    result2.assertSuccess();
+    String[] targetAndHash2 = result2.getStdout().trim().split("\\s+");
+    assertEquals("//jni:foo", targetAndHash2[0]);
+    String hashAfter = targetAndHash2[1];
+
+    assertNotEquals(hashBefore, hashAfter);
+  }
+
+  @Test
+  public void ndkLibraryOwnsItsSources() throws IOException {
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "cxx_deps", tmp1);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        String.format("owner(%s)", workspace.resolve("jni/foo.cpp")));
+    result.assertSuccess();
+    assertEquals("//jni:foo", result.getStdout().trim());
+  }
+
 }
