@@ -31,8 +31,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
@@ -609,6 +609,58 @@ public class AppleLibraryIntegrationTest {
     MoreAsserts.assertContentsEqual(
         workspace.getPath(Paths.get("first").resolve(libraryPath)),
         workspace.getPath(Paths.get("second").resolve(libraryPath)));
+  }
+
+  @Test
+  public void testBuildEmptySourceAppleLibrary() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "empty_source_targets",
+        tmp);
+    workspace.setUp();
+    BuildTarget target = workspace.newBuildTarget("//:real-none#iphonesimulator-x86_64,shared");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    Path binaryOutput = workspace.getPath(
+        BuildTargets.getGenPath(
+            filesystem,
+            target,
+            "%s/libreal-none.dylib"));
+    assertThat(Files.exists(binaryOutput), is(true));
+  }
+
+  @Test
+  public void testBuildAppleLibraryThatHasSwift() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "empty_source_targets",
+        tmp);
+    workspace.setUp();
+    BuildTarget target = workspace.newBuildTarget("//:none-swift#iphonesimulator-x86_64,shared");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    Path binaryOutput = workspace.getPath(
+        BuildTargets.getGenPath(
+            filesystem,
+            target,
+            "%s/libnone-swift.dylib"));
+    assertThat(Files.exists(binaryOutput), is(true));
+
+    assertThat(
+        workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),
+        containsString("libswiftCore.dylib"));
   }
 
   private static void assertIsSymbolicLink(
