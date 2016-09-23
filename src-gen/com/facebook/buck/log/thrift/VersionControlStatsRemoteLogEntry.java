@@ -39,6 +39,8 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
   private static final org.apache.thrift.protocol.TField CURRENT_REVISION_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("currentRevisionId", org.apache.thrift.protocol.TType.STRING, (short)1);
   private static final org.apache.thrift.protocol.TField BASE_BOOKMARKS_FIELD_DESC = new org.apache.thrift.protocol.TField("baseBookmarks", org.apache.thrift.protocol.TType.LIST, (short)2);
   private static final org.apache.thrift.protocol.TField PATHS_CHANGED_FIELD_DESC = new org.apache.thrift.protocol.TField("pathsChanged", org.apache.thrift.protocol.TType.LIST, (short)3);
+  private static final org.apache.thrift.protocol.TField PATHS_CHANGED_SAMPLED_FIELD_DESC = new org.apache.thrift.protocol.TField("pathsChangedSampled", org.apache.thrift.protocol.TType.BOOL, (short)4);
+  private static final org.apache.thrift.protocol.TField UNSAMPLED_PATHS_CHANGED_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("unsampledPathsChangedCount", org.apache.thrift.protocol.TType.I32, (short)5);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -49,12 +51,16 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
   public String currentRevisionId; // optional
   public List<String> baseBookmarks; // optional
   public List<String> pathsChanged; // optional
+  public boolean pathsChangedSampled; // optional
+  public int unsampledPathsChangedCount; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
     CURRENT_REVISION_ID((short)1, "currentRevisionId"),
     BASE_BOOKMARKS((short)2, "baseBookmarks"),
-    PATHS_CHANGED((short)3, "pathsChanged");
+    PATHS_CHANGED((short)3, "pathsChanged"),
+    PATHS_CHANGED_SAMPLED((short)4, "pathsChangedSampled"),
+    UNSAMPLED_PATHS_CHANGED_COUNT((short)5, "unsampledPathsChangedCount");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -75,6 +81,10 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
           return BASE_BOOKMARKS;
         case 3: // PATHS_CHANGED
           return PATHS_CHANGED;
+        case 4: // PATHS_CHANGED_SAMPLED
+          return PATHS_CHANGED_SAMPLED;
+        case 5: // UNSAMPLED_PATHS_CHANGED_COUNT
+          return UNSAMPLED_PATHS_CHANGED_COUNT;
         default:
           return null;
       }
@@ -115,7 +125,10 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
   }
 
   // isset id assignments
-  private static final _Fields optionals[] = {_Fields.CURRENT_REVISION_ID,_Fields.BASE_BOOKMARKS,_Fields.PATHS_CHANGED};
+  private static final int __PATHSCHANGEDSAMPLED_ISSET_ID = 0;
+  private static final int __UNSAMPLEDPATHSCHANGEDCOUNT_ISSET_ID = 1;
+  private byte __isset_bitfield = 0;
+  private static final _Fields optionals[] = {_Fields.CURRENT_REVISION_ID,_Fields.BASE_BOOKMARKS,_Fields.PATHS_CHANGED,_Fields.PATHS_CHANGED_SAMPLED,_Fields.UNSAMPLED_PATHS_CHANGED_COUNT};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -127,6 +140,10 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
     tmpMap.put(_Fields.PATHS_CHANGED, new org.apache.thrift.meta_data.FieldMetaData("pathsChanged", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
             new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
+    tmpMap.put(_Fields.PATHS_CHANGED_SAMPLED, new org.apache.thrift.meta_data.FieldMetaData("pathsChangedSampled", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
+    tmpMap.put(_Fields.UNSAMPLED_PATHS_CHANGED_COUNT, new org.apache.thrift.meta_data.FieldMetaData("unsampledPathsChangedCount", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(VersionControlStatsRemoteLogEntry.class, metaDataMap);
   }
@@ -138,6 +155,7 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
    * Performs a deep copy on <i>other</i>.
    */
   public VersionControlStatsRemoteLogEntry(VersionControlStatsRemoteLogEntry other) {
+    __isset_bitfield = other.__isset_bitfield;
     if (other.isSetCurrentRevisionId()) {
       this.currentRevisionId = other.currentRevisionId;
     }
@@ -149,6 +167,8 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
       List<String> __this__pathsChanged = new ArrayList<String>(other.pathsChanged);
       this.pathsChanged = __this__pathsChanged;
     }
+    this.pathsChangedSampled = other.pathsChangedSampled;
+    this.unsampledPathsChangedCount = other.unsampledPathsChangedCount;
   }
 
   public VersionControlStatsRemoteLogEntry deepCopy() {
@@ -160,6 +180,10 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
     this.currentRevisionId = null;
     this.baseBookmarks = null;
     this.pathsChanged = null;
+    setPathsChangedSampledIsSet(false);
+    this.pathsChangedSampled = false;
+    setUnsampledPathsChangedCountIsSet(false);
+    this.unsampledPathsChangedCount = 0;
   }
 
   public String getCurrentRevisionId() {
@@ -264,6 +288,52 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
     }
   }
 
+  public boolean isPathsChangedSampled() {
+    return this.pathsChangedSampled;
+  }
+
+  public VersionControlStatsRemoteLogEntry setPathsChangedSampled(boolean pathsChangedSampled) {
+    this.pathsChangedSampled = pathsChangedSampled;
+    setPathsChangedSampledIsSet(true);
+    return this;
+  }
+
+  public void unsetPathsChangedSampled() {
+    __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __PATHSCHANGEDSAMPLED_ISSET_ID);
+  }
+
+  /** Returns true if field pathsChangedSampled is set (has been assigned a value) and false otherwise */
+  public boolean isSetPathsChangedSampled() {
+    return EncodingUtils.testBit(__isset_bitfield, __PATHSCHANGEDSAMPLED_ISSET_ID);
+  }
+
+  public void setPathsChangedSampledIsSet(boolean value) {
+    __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __PATHSCHANGEDSAMPLED_ISSET_ID, value);
+  }
+
+  public int getUnsampledPathsChangedCount() {
+    return this.unsampledPathsChangedCount;
+  }
+
+  public VersionControlStatsRemoteLogEntry setUnsampledPathsChangedCount(int unsampledPathsChangedCount) {
+    this.unsampledPathsChangedCount = unsampledPathsChangedCount;
+    setUnsampledPathsChangedCountIsSet(true);
+    return this;
+  }
+
+  public void unsetUnsampledPathsChangedCount() {
+    __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __UNSAMPLEDPATHSCHANGEDCOUNT_ISSET_ID);
+  }
+
+  /** Returns true if field unsampledPathsChangedCount is set (has been assigned a value) and false otherwise */
+  public boolean isSetUnsampledPathsChangedCount() {
+    return EncodingUtils.testBit(__isset_bitfield, __UNSAMPLEDPATHSCHANGEDCOUNT_ISSET_ID);
+  }
+
+  public void setUnsampledPathsChangedCountIsSet(boolean value) {
+    __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __UNSAMPLEDPATHSCHANGEDCOUNT_ISSET_ID, value);
+  }
+
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case CURRENT_REVISION_ID:
@@ -290,6 +360,22 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
       }
       break;
 
+    case PATHS_CHANGED_SAMPLED:
+      if (value == null) {
+        unsetPathsChangedSampled();
+      } else {
+        setPathsChangedSampled((Boolean)value);
+      }
+      break;
+
+    case UNSAMPLED_PATHS_CHANGED_COUNT:
+      if (value == null) {
+        unsetUnsampledPathsChangedCount();
+      } else {
+        setUnsampledPathsChangedCount((Integer)value);
+      }
+      break;
+
     }
   }
 
@@ -303,6 +389,12 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
 
     case PATHS_CHANGED:
       return getPathsChanged();
+
+    case PATHS_CHANGED_SAMPLED:
+      return isPathsChangedSampled();
+
+    case UNSAMPLED_PATHS_CHANGED_COUNT:
+      return getUnsampledPathsChangedCount();
 
     }
     throw new IllegalStateException();
@@ -321,6 +413,10 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
       return isSetBaseBookmarks();
     case PATHS_CHANGED:
       return isSetPathsChanged();
+    case PATHS_CHANGED_SAMPLED:
+      return isSetPathsChangedSampled();
+    case UNSAMPLED_PATHS_CHANGED_COUNT:
+      return isSetUnsampledPathsChangedCount();
     }
     throw new IllegalStateException();
   }
@@ -365,6 +461,24 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
         return false;
     }
 
+    boolean this_present_pathsChangedSampled = true && this.isSetPathsChangedSampled();
+    boolean that_present_pathsChangedSampled = true && that.isSetPathsChangedSampled();
+    if (this_present_pathsChangedSampled || that_present_pathsChangedSampled) {
+      if (!(this_present_pathsChangedSampled && that_present_pathsChangedSampled))
+        return false;
+      if (this.pathsChangedSampled != that.pathsChangedSampled)
+        return false;
+    }
+
+    boolean this_present_unsampledPathsChangedCount = true && this.isSetUnsampledPathsChangedCount();
+    boolean that_present_unsampledPathsChangedCount = true && that.isSetUnsampledPathsChangedCount();
+    if (this_present_unsampledPathsChangedCount || that_present_unsampledPathsChangedCount) {
+      if (!(this_present_unsampledPathsChangedCount && that_present_unsampledPathsChangedCount))
+        return false;
+      if (this.unsampledPathsChangedCount != that.unsampledPathsChangedCount)
+        return false;
+    }
+
     return true;
   }
 
@@ -386,6 +500,16 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
     list.add(present_pathsChanged);
     if (present_pathsChanged)
       list.add(pathsChanged);
+
+    boolean present_pathsChangedSampled = true && (isSetPathsChangedSampled());
+    list.add(present_pathsChangedSampled);
+    if (present_pathsChangedSampled)
+      list.add(pathsChangedSampled);
+
+    boolean present_unsampledPathsChangedCount = true && (isSetUnsampledPathsChangedCount());
+    list.add(present_unsampledPathsChangedCount);
+    if (present_unsampledPathsChangedCount)
+      list.add(unsampledPathsChangedCount);
 
     return list.hashCode();
   }
@@ -424,6 +548,26 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
     }
     if (isSetPathsChanged()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.pathsChanged, other.pathsChanged);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetPathsChangedSampled()).compareTo(other.isSetPathsChangedSampled());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetPathsChangedSampled()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.pathsChangedSampled, other.pathsChangedSampled);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetUnsampledPathsChangedCount()).compareTo(other.isSetUnsampledPathsChangedCount());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetUnsampledPathsChangedCount()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.unsampledPathsChangedCount, other.unsampledPathsChangedCount);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -477,6 +621,18 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
       }
       first = false;
     }
+    if (isSetPathsChangedSampled()) {
+      if (!first) sb.append(", ");
+      sb.append("pathsChangedSampled:");
+      sb.append(this.pathsChangedSampled);
+      first = false;
+    }
+    if (isSetUnsampledPathsChangedCount()) {
+      if (!first) sb.append(", ");
+      sb.append("unsampledPathsChangedCount:");
+      sb.append(this.unsampledPathsChangedCount);
+      first = false;
+    }
     sb.append(")");
     return sb.toString();
   }
@@ -496,6 +652,8 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
 
   private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
     try {
+      // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
+      __isset_bitfield = 0;
       read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
     } catch (org.apache.thrift.TException te) {
       throw new java.io.IOException(te);
@@ -564,6 +722,22 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 4: // PATHS_CHANGED_SAMPLED
+            if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
+              struct.pathsChangedSampled = iprot.readBool();
+              struct.setPathsChangedSampledIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 5: // UNSAMPLED_PATHS_CHANGED_COUNT
+            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+              struct.unsampledPathsChangedCount = iprot.readI32();
+              struct.setUnsampledPathsChangedCountIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -614,6 +788,16 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
           oprot.writeFieldEnd();
         }
       }
+      if (struct.isSetPathsChangedSampled()) {
+        oprot.writeFieldBegin(PATHS_CHANGED_SAMPLED_FIELD_DESC);
+        oprot.writeBool(struct.pathsChangedSampled);
+        oprot.writeFieldEnd();
+      }
+      if (struct.isSetUnsampledPathsChangedCount()) {
+        oprot.writeFieldBegin(UNSAMPLED_PATHS_CHANGED_COUNT_FIELD_DESC);
+        oprot.writeI32(struct.unsampledPathsChangedCount);
+        oprot.writeFieldEnd();
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -641,7 +825,13 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
       if (struct.isSetPathsChanged()) {
         optionals.set(2);
       }
-      oprot.writeBitSet(optionals, 3);
+      if (struct.isSetPathsChangedSampled()) {
+        optionals.set(3);
+      }
+      if (struct.isSetUnsampledPathsChangedCount()) {
+        optionals.set(4);
+      }
+      oprot.writeBitSet(optionals, 5);
       if (struct.isSetCurrentRevisionId()) {
         oprot.writeString(struct.currentRevisionId);
       }
@@ -663,12 +853,18 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
           }
         }
       }
+      if (struct.isSetPathsChangedSampled()) {
+        oprot.writeBool(struct.pathsChangedSampled);
+      }
+      if (struct.isSetUnsampledPathsChangedCount()) {
+        oprot.writeI32(struct.unsampledPathsChangedCount);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, VersionControlStatsRemoteLogEntry struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
-      BitSet incoming = iprot.readBitSet(3);
+      BitSet incoming = iprot.readBitSet(5);
       if (incoming.get(0)) {
         struct.currentRevisionId = iprot.readString();
         struct.setCurrentRevisionIdIsSet(true);
@@ -698,6 +894,14 @@ public class VersionControlStatsRemoteLogEntry implements org.apache.thrift.TBas
           }
         }
         struct.setPathsChangedIsSet(true);
+      }
+      if (incoming.get(3)) {
+        struct.pathsChangedSampled = iprot.readBool();
+        struct.setPathsChangedSampledIsSet(true);
+      }
+      if (incoming.get(4)) {
+        struct.unsampledPathsChangedCount = iprot.readI32();
+        struct.setUnsampledPathsChangedCountIsSet(true);
       }
     }
   }
