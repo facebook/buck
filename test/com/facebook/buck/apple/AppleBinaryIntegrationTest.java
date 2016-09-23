@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import static com.facebook.buck.cxx.CxxFlavorSanitizer.sanitize;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -554,14 +555,14 @@ public class AppleBinaryIntegrationTest {
             .resolve(target.getShortName() + ".app.dSYM")
             .resolve("Contents/Resources/DWARF")
             .resolve(target.getShortName()));
-    assertThat(Files.exists(output), Matchers.equalTo(true));
+    assertThat(Files.exists(output), equalTo(true));
     AppleDsymTestUtil.checkDsymFileHasDebugSymbolForMain(workspace, output);
 
     Path binaryOutput = workspace.getPath(
         BuildTargets.getGenPath(filesystem, appTarget, "%s")
             .resolve(target.getShortName() + ".app")
             .resolve(target.getShortName()));
-    assertThat(Files.exists(binaryOutput), Matchers.equalTo(true));
+    assertThat(Files.exists(binaryOutput), equalTo(true));
 
     ProcessExecutor.Result hasSymbol = workspace.runCommand("nm", binaryOutput.toString());
     String stdout = hasSymbol.getStdout().or("");
@@ -585,7 +586,7 @@ public class AppleBinaryIntegrationTest {
         BuildTargets.getGenPath(filesystem, appTarget, "%s")
             .resolve(target.getShortName() + ".app")
             .resolve(target.getShortName()));
-    assertThat(Files.exists(output), Matchers.equalTo(true));
+    assertThat(Files.exists(output), equalTo(true));
     ProcessExecutor.Result hasSymbol = workspace.runCommand("nm", output.toString());
     String stdout = hasSymbol.getStdout().or("");
     assertThat(stdout, containsString("t -[AppDelegate window]"));
@@ -639,9 +640,9 @@ public class AppleBinaryIntegrationTest {
                 "%s")
             .resolve("main.m.o"));
 
-    assertThat(Files.exists(binaryOutput), Matchers.equalTo(true));
-    assertThat(Files.exists(delegateFileOutput), Matchers.equalTo(true));
-    assertThat(Files.exists(mainFileOutput), Matchers.equalTo(true));
+    assertThat(Files.exists(binaryOutput), equalTo(true));
+    assertThat(Files.exists(delegateFileOutput), equalTo(true));
+    assertThat(Files.exists(mainFileOutput), equalTo(true));
   }
 
   @Test
@@ -693,9 +694,9 @@ public class AppleBinaryIntegrationTest {
                 "%s")
             .resolve("main.m.o"));
 
-    assertThat(Files.exists(binaryOutput), Matchers.equalTo(true));
-    assertThat(Files.exists(delegateFileOutput), Matchers.equalTo(false));
-    assertThat(Files.exists(mainFileOutput), Matchers.equalTo(false));
+    assertThat(Files.exists(binaryOutput), equalTo(true));
+    assertThat(Files.exists(delegateFileOutput), equalTo(false));
+    assertThat(Files.exists(mainFileOutput), equalTo(false));
   }
 
   @Test
@@ -747,9 +748,9 @@ public class AppleBinaryIntegrationTest {
                 "%s")
             .resolve("main.m.o"));
 
-    assertThat(Files.exists(binaryOutput), Matchers.equalTo(true));
-    assertThat(Files.exists(delegateFileOutput), Matchers.equalTo(false));
-    assertThat(Files.exists(mainFileOutput), Matchers.equalTo(false));
+    assertThat(Files.exists(binaryOutput), equalTo(true));
+    assertThat(Files.exists(delegateFileOutput), equalTo(false));
+    assertThat(Files.exists(mainFileOutput), equalTo(false));
   }
 
   @Test
@@ -772,7 +773,7 @@ public class AppleBinaryIntegrationTest {
                     .resolve(target.getShortName() + ".app.dSYM")
                     .resolve("Contents/Resources/DWARF")
                     .resolve(target.getShortName()))),
-        Matchers.equalTo(false));
+        equalTo(false));
     assertThat(
         Files.exists(
             workspace.getPath(
@@ -784,7 +785,7 @@ public class AppleBinaryIntegrationTest {
                     .resolve(target.getShortName() + ".app.dSYM")
                     .resolve("Contents/Resources/DWARF")
                     .resolve(target.getShortName()))),
-        Matchers.equalTo(false));
+        equalTo(false));
     assertThat(
         Files.exists(
             workspace.getPath(
@@ -792,7 +793,7 @@ public class AppleBinaryIntegrationTest {
                     .resolve(target.getShortName() + ".app.dSYM")
                     .resolve("Contents/Resources/DWARF")
                     .resolve(target.getShortName()))),
-        Matchers.equalTo(false));
+        equalTo(false));
 
     BuildTarget appTarget = target.withFlavors(
         AppleDebugFormat.NONE.getFlavor(),
@@ -801,7 +802,7 @@ public class AppleBinaryIntegrationTest {
         BuildTargets.getGenPath(filesystem, appTarget, "%s")
             .resolve(target.getShortName() + ".app")
             .resolve(target.getShortName()));
-    assertThat(Files.exists(binaryOutput), Matchers.equalTo(true));
+    assertThat(Files.exists(binaryOutput), equalTo(true));
 
     ProcessExecutor.Result hasSymbol = workspace.runCommand("nm", binaryOutput.toString());
     String stdout = hasSymbol.getStdout().or("");
@@ -829,7 +830,7 @@ public class AppleBinaryIntegrationTest {
             .resolve(appTarget.getShortName() + ".app.dSYM")
             .resolve("Contents/Resources/DWARF")
             .resolve(appTarget.getShortName()));
-    assertThat(Files.exists(dwarfPath), Matchers.equalTo(true));
+    assertThat(Files.exists(dwarfPath), equalTo(true));
     AppleDsymTestUtil.checkDsymFileHasDebugSymbolForMain(workspace, dwarfPath);
   }
 
@@ -853,7 +854,7 @@ public class AppleBinaryIntegrationTest {
                     .resolve(appTarget.getShortName() + ".app.dSYM")
                     .resolve("Contents/Resources/DWARF")
                     .resolve(appTarget.getShortName()))),
-        Matchers.equalTo(false));
+        equalTo(false));
   }
 
   @Test
