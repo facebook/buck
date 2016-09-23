@@ -56,12 +56,14 @@ def main():
         '--output-attributes', '.*',
     ], cwd=args.input_repo)
     project_data = json.loads(project_data_json.decode('utf8'))
+    targets_by_name = {}
     gen_targets_by_type = collections.defaultdict(list)
     gen_targets_with_output_by_type = collections.defaultdict(list)
     file_path_generator = FilePathGenerator()
     file_path_generator.analyze_project_data(project_data)
     context = Context(
             project_data,
+            targets_by_name,
             gen_targets_by_type,
             gen_targets_with_output_by_type,
             args.output_repo,
@@ -80,7 +82,6 @@ def main():
 
     rejected = 0
     count = 0
-    targets_by_name = {}
     target_size = args.output_repo_size
     candidates = []
     while True:

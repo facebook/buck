@@ -19,6 +19,7 @@ from artificialproject.random import weighted_choice
 
 Context = collections.namedtuple('Context', [
     'input_target_data',
+    'gen_target_data',
     'gen_targets_by_type',
     'gen_targets_with_output_by_type',
     'output_repository',
@@ -45,6 +46,9 @@ class TargetDataGenerator:
         def string(context):
             return StringGenerator()
 
+        def file_name(context):
+            return StringGenerator(respect_file_extensions=True)
+
         def visibility(context):
             return VisibilityGenerator()
 
@@ -58,7 +62,7 @@ class TargetDataGenerator:
 
         FIELDS = {
             '*.deps': build_target_set,
-            '*.out': nullable(string),
+            '*.out': nullable(file_name),
             '*.srcs': source_path_set,
             '*.visibility': visibility,
             'android_binary.keystore': build_target,

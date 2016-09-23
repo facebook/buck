@@ -48,15 +48,21 @@ class SingletonGenerator:
 
 
 class StringGenerator:
-    def __init__(self):
+    def __init__(self, respect_file_extensions=False):
+        self._respect_file_extensions = respect_file_extensions
         self._lengths = collections.Counter()
         self._first_chars = collections.Counter()
         self._other_chars = collections.Counter()
+        if self._respect_file_extensions:
+            self._extensions = collections.Counter()
 
     def add_sample(self, base_path, sample):
         self.add_string_sample(sample)
 
     def add_string_sample(self, sample):
+        if self._respect_file_extensions:
+            sample, extension = os.path.split(sample)
+            self._extensions.update([extension])
         self._lengths.update([len(sample)])
         if sample:
             self._first_chars.update(sample[0])
@@ -73,6 +79,8 @@ class StringGenerator:
             output += weighted_choice(self._first_chars)
         while len(output) < length:
             output += weighted_choice(self._other_chars)
+        if self._respect_file_extensions:
+            output += weighted_choice(self._extensions)
         return output
 
 
@@ -85,10 +93,13 @@ class VisibilityGenerator:
 
 
 class BuildTargetSetGenerator:
-    def __init__(self, context):
+    def __init__(self, context, process_output_extensions=False):
         self._context = context
+        self._process_output_extensions = process_output_extensions
         self._lengths = collections.Counter()
         self._types = collections.Counter()
+        if self._process_output_extensions:
+            self._output_extensions = collections.Counter()
 
     def add_sample(self, base_path, sample):
         self._lengths.update([len(sample)])
@@ -98,30 +109,41 @@ class BuildTargetSetGenerator:
                 target = '//' + base_path + target
             target_data = self._context.input_target_data[target]
             self._types.update([target_data['buck.type']])
+            if self._process_output_extensions:
+                extension = self._get_output_extension(target_data)
+                self._output_extensions.update([extension])
 
-    def generate(
-            self,
-            base_path,
-            force_length=None,
-            only_targets_with_output=False):
+    def generate(self, base_path, force_length=None):
         if force_length is not None:
             length = force_length
         else:
             length = weighted_choice(self._lengths)
-        type_counts = collections.Counter()
-        types = collections.Counter(self._types)
+        type_extension_counts = collections.Counter()
         for i in range(length):
-            type_counts.update([weighted_choice(types)])
+            type = weighted_choice(self._types)
+            if self._process_output_extensions:
+                extension = weighted_choice(self._output_extensions)
+            else:
+                extension = None
+            type_extension_counts.update([(type, extension)])
         output = []
-        for type, count in type_counts.items():
-            if only_targets_with_output:
+        for (type, extension), count in type_extension_counts.items():
+            if self._process_output_extensions:
                 options = self._context.gen_targets_with_output_by_type[type]
+                options = [x for x in options
+                           if self._get_output_extension(
+                               self._context.gen_target_data[x]) == extension]
             else:
                 options = self._context.gen_targets_by_type[type]
             if count > len(options):
                 raise GenerationFailedException()
             output.extend(random.sample(options, count))
         return GeneratedField(output, output)
+
+    def _get_output_extension(self, target_data):
+        if 'out' not in target_data or target_data['out'] is None:
+            return None
+        return os.path.splitext(target_data['out'])[1]
 
 
 class PathSetGenerator:
@@ -180,7 +202,8 @@ class PathSetGenerator:
 
 class SourcePathSetGenerator:
     def __init__(self, context):
-        self._build_target_set_generator = BuildTargetSetGenerator(context)
+        self._build_target_set_generator = BuildTargetSetGenerator(
+                context, process_output_extensions=True)
         self._path_set_generator = PathSetGenerator(context)
         self._lengths = collections.Counter()
         self._build_target_values = collections.Counter()
@@ -207,8 +230,7 @@ class SourcePathSetGenerator:
                 path_count += 1
         build_targets = self._build_target_set_generator.generate(
                 base_path,
-                force_length=build_target_count,
-                only_targets_with_output=True)
+                force_length=build_target_count)
         paths = self._path_set_generator.generate(
                 base_path, force_length=path_count)
         assert len(build_targets.value) == build_target_count, (
