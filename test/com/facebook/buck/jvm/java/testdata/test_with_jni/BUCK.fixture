@@ -58,3 +58,23 @@ java_test(
     ':hamcrest-jar',
   ],
 )
+
+cxx_library(
+  name = 'lib-broken',
+  srcs = ['broken.c'],
+)
+
+java_test(
+  name = 'jtest-skip-dep',
+  srcs = ['JTest.java'],
+  use_cxx_libraries = True,
+  cxx_library_whitelist = [
+    '//:jlib-native',
+  ],
+  deps = [
+    ':jlib',
+    ':lib-broken',
+    ':junit-jar',
+    ':hamcrest-jar',
+  ],
+)

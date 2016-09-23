@@ -125,6 +125,17 @@ A <code>java_test()</code> rule is used to define a set of
 {/call}
 
 {call buck.arg}
+  {param name: 'cxx_library_whitelist' /}
+  {param default: '[]' /}
+  {param status: 'FROZEN' /}
+  {param desc}
+  EXPERIMENTAL.
+  List of cxx_libraries to build, if use_cxx_libraries is true.
+  This can be useful if some dependencies are Android-only and won't build on the default platform.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'vm_args' /}
   {param default : '[]' /}
   {param desc}

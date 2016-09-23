@@ -128,6 +128,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         new JavaTestDescription.CxxLibraryEnhancement(
             params,
             args.useCxxLibraries,
+            args.cxxLibraryWhitelist,
             resolver,
             pathResolver,
             cxxPlatform);

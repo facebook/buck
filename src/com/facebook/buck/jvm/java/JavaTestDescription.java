@@ -40,6 +40,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -105,6 +106,7 @@ public class JavaTestDescription implements
     CxxLibraryEnhancement cxxLibraryEnhancement = new CxxLibraryEnhancement(
         params,
         args.useCxxLibraries,
+        args.cxxLibraryWhitelist,
         resolver,
         pathResolver,
         cxxPlatform);
@@ -232,6 +234,7 @@ public class JavaTestDescription implements
     public Optional<Level> stdErrLogLevel;
     public Optional<Level> stdOutLogLevel;
     public Optional<Boolean> useCxxLibraries;
+    public Optional<ImmutableSet<BuildTarget>> cxxLibraryWhitelist;
     public Optional<Long> testRuleTimeoutMs;
     public Optional<ImmutableMap<String, String>> env;
 
@@ -250,12 +253,23 @@ public class JavaTestDescription implements
     public CxxLibraryEnhancement(
         BuildRuleParams params,
         Optional<Boolean> useCxxLibraries,
+        final Optional<ImmutableSet<BuildTarget>> cxxLibraryWhitelist,
         BuildRuleResolver resolver,
         SourcePathResolver pathResolver,
         CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
       if (useCxxLibraries.or(false)) {
         SymlinkTree nativeLibsSymlinkTree =
             buildNativeLibsSymlinkTreeRule(params, pathResolver, cxxPlatform);
+        Predicate<BuildRule> shouldInclude = Predicates.alwaysTrue();
+        if (cxxLibraryWhitelist.isPresent() && !cxxLibraryWhitelist.get().isEmpty()) {
+          shouldInclude = new Predicate<BuildRule>() {
+            @Override
+            public boolean apply(BuildRule input) {
+              return cxxLibraryWhitelist.get().contains(
+                  input.getBuildTarget().withFlavors());
+            }
+          };
+        }
         updatedParams = params.appendExtraDeps(ImmutableList.<BuildRule>builder()
             .add(nativeLibsSymlinkTree)
             // Add all the native libraries as first-order dependencies.
@@ -263,7 +277,10 @@ public class JavaTestDescription implements
             // (1) They become runtime deps because JavaTest adds all first-order deps.
             // (2) They affect the JavaTest's RuleKey, so changing them will invalidate
             // the test results cache.
-            .addAll(pathResolver.filterBuildRuleInputs(nativeLibsSymlinkTree.getLinks().values()))
+            .addAll(
+                FluentIterable.from(
+                    pathResolver.filterBuildRuleInputs(nativeLibsSymlinkTree.getLinks().values()))
+                    .filter(shouldInclude))
             .build());
         nativeLibsEnvironment =
             ImmutableMap.of(

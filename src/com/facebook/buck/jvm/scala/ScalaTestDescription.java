@@ -113,6 +113,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
         new JavaTestDescription.CxxLibraryEnhancement(
             params,
             args.useCxxLibraries,
+            args.cxxLibraryWhitelist,
             resolver,
             pathResolver,
             cxxPlatform);
@@ -214,6 +215,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
     public Optional<Level> stdErrLogLevel;
     public Optional<Level> stdOutLogLevel;
     public Optional<Boolean> useCxxLibraries;
+    public Optional<ImmutableSet<BuildTarget>> cxxLibraryWhitelist;
     public Optional<Long> testRuleTimeoutMs;
     public Optional<ImmutableMap<String, String>> env;
   }
