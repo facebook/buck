@@ -122,6 +122,16 @@ public class CxxLibraryBuilder extends
     return this;
   }
 
+  public CxxLibraryBuilder setXcodePrivateHeadersSymlinks(boolean xcodePrivateHeadersSymlinks) {
+    arg.xcodePrivateHeadersSymlinks = Optional.of(xcodePrivateHeadersSymlinks);
+    return this;
+  }
+
+  public CxxLibraryBuilder setXcodePublicHeadersSymlinks(boolean xcodePublicHeadersSymlinks) {
+    arg.xcodePublicHeadersSymlinks = Optional.of(xcodePublicHeadersSymlinks);
+    return this;
+  }
+
   @Override
   protected CxxLibraryBuilder getThis() {
     return this;

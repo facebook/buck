@@ -538,6 +538,8 @@ public class ProjectGeneratorTest {
                 new FakeSourcePath("foo/dir1/foo.h"),
                 new FakeSourcePath("foo/dir2/baz.h")))
         .setSrcs(ImmutableSortedSet.<SourceWithFlags>of())
+        .setXcodePublicHeadersSymlinks(false)
+        .setXcodePrivateHeadersSymlinks(false)
         .build();
 
     ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();

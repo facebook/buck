@@ -913,6 +913,8 @@ public class CxxLibraryDescription implements
     public Optional<Boolean> linkWhole;
     public Optional<Boolean> canBeAsset;
     public Optional<NativeLinkable.Linkage> preferredLinkage;
+    public Optional<Boolean> xcodePublicHeadersSymlinks;
+    public Optional<Boolean> xcodePrivateHeadersSymlinks;
 
     // These fields are passed through to SwiftLibrary for mixed C/Swift targets; they are not
     // used otherwise.

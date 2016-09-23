@@ -1513,13 +1513,13 @@ public class ProjectGenerator {
     createHeaderSymlinkTree(
         sourcePathResolver,
         getPublicCxxHeaders(targetNode),
-        getPathToHeaderSymlinkTree(targetNode,
-            HeaderVisibility.PUBLIC));
+        getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC),
+        arg.xcodePublicHeadersSymlinks.or(true));
     createHeaderSymlinkTree(
         sourcePathResolver,
         getPrivateCxxHeaders(targetNode),
-        getPathToHeaderSymlinkTree(targetNode,
-            HeaderVisibility.PRIVATE));
+        getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE),
+        arg.xcodePrivateHeadersSymlinks.or(true));
 
     if (appleTargetNode.isPresent()) {
       // Use Core Data models from immediate dependencies only.
@@ -1889,7 +1889,8 @@ public class ProjectGenerator {
   private void createHeaderSymlinkTree(
       Function<SourcePath, Path> pathResolver,
       Map<Path, SourcePath> contents,
-      Path headerSymlinkTreeRoot) throws IOException {
+      Path headerSymlinkTreeRoot,
+      boolean shouldCreateHeadersSymlinks) throws IOException {
     LOG.verbose(
         "Building header symlink tree at %s with contents %s",
         headerSymlinkTreeRoot,
@@ -1921,7 +1922,7 @@ public class ProjectGenerator {
           newHashCode);
       projectFilesystem.deleteRecursivelyIfExists(headerSymlinkTreeRoot);
       projectFilesystem.mkdirs(headerSymlinkTreeRoot);
-      if (!options.contains(Option.DISABLE_HEADERS_SYMLINKS)) {
+      if (shouldCreateHeadersSymlinks) {
         for (Map.Entry<Path, Path> entry : resolvedContents.entrySet()) {
           Path link = entry.getKey();
           Path existing = entry.getValue();
@@ -1933,7 +1934,7 @@ public class ProjectGenerator {
 
       HeaderMap.Builder headerMapBuilder = new HeaderMap.Builder();
       for (Map.Entry<Path, SourcePath> entry : contents.entrySet()) {
-        if (!options.contains(Option.DISABLE_HEADERS_SYMLINKS)) {
+        if (shouldCreateHeadersSymlinks) {
           headerMapBuilder.add(
               entry.getKey().toString(),
               Paths.get("../../")
