@@ -140,6 +140,7 @@ import com.facebook.buck.python.PythonTestDescription;
 import com.facebook.buck.rust.RustBinaryDescription;
 import com.facebook.buck.rust.RustBuckConfig;
 import com.facebook.buck.rust.RustLibraryDescription;
+import com.facebook.buck.rust.PrebuiltRustLibraryDescription;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.ShBinaryDescription;
@@ -737,6 +738,7 @@ public class KnownBuildRuleTypes {
             defaultCxxPlatform));
     builder.register(new RustBinaryDescription(rustBuckConfig));
     builder.register(new RustLibraryDescription(rustBuckConfig));
+    builder.register(new PrebuiltRustLibraryDescription(rustBuckConfig));
     builder.register(new ScalaLibraryDescription(scalaConfig));
     builder.register(new ScalaTestDescription(
         scalaConfig,

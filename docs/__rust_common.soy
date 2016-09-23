@@ -2,7 +2,7 @@
 
 /***/
 {template .supported_language_version}
-Note: Buck is currently tested with (and therefore supports) version 1.1.0 of Rust.
+Note: Buck is currently tested with (and therefore supports) version 1.11.0 of Rust.
 {/template}
 
 /***/
@@ -11,7 +11,8 @@ Note: Buck is currently tested with (and therefore supports) version 1.1.0 of Ru
   {param name : 'deps' /}
   {param default : '[]' /}
   {param desc}
-  The set of dependencies of this rule.  Currently, this only supports rust_library rules.
+  The set of dependencies of this rule.  Currently, this supports rust_library
+  and prebuilt_rust_library rules.
  {/param}
 {/call}
 {/template}

@@ -29,7 +29,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class RustBinary extends RustLinkable implements BinaryBuildRule {
+public class RustBinary extends RustCompile implements BinaryBuildRule {
 
   public RustBinary(
       BuildRuleParams params,

@@ -25,7 +25,9 @@ import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class RustLibrary extends RustLinkable {
+import java.nio.file.Path;
+
+public class RustLibrary extends RustCompile implements RustLinkable {
   public RustLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
@@ -48,6 +50,21 @@ public class RustLibrary extends RustLinkable {
             params.getBuildTarget(),
             "%s/lib" + params.getBuildTarget().getShortName() + ".rlib"),
         compiler);
+  }
+
+  @Override
+  public String getLinkTarget() {
+    return getBuildTarget().getShortName();
+  }
+
+  @Override
+  public Path getLinkPath() {
+    return getPathToOutput();
+  }
+
+  @Override
+  public ImmutableSortedSet<Path> getDependencyPaths() {
+    return ImmutableSortedSet.of();
   }
 
   @Override

@@ -1,0 +1,77 @@
+{namespace prebuilt_rust_library}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'prebuilt_rust_library()' /}
+    {param prettify: true /}
+    {param description}
+      A prebuilt_rust_library() rule makes a pre-built Rust crate available as a dependency.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+<p>
+  A prebuilt_rust_library() specifies a pre-built Rust crate, and any dependencies
+  it may have on other crates (typically also prebuilt).
+</p>
+<p>
+  {call rust_common.supported_language_version /}
+</p>
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'rlib' /}
+  {param desc}
+  Path to the precompiled Rust crate - typically of the form 'libfoo.rlib', or
+  'libfoo-abc123def456.rlib' if it has symbol versioning metadata.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'crate' /}
+  {param default: 'name' /}
+  {param desc}
+  The name of the crate satisfied by this dependency. Defaults to 'name' if not
+  specified.
+  {/param}
+{/call}
+
+{call rust_common.deps_arg /}
+
+{/param} // close args
+
+{param examples}
+
+{literal}<pre class="prettyprint lang-py">
+prebuilt_rust_library(
+  name = 'dailygreet',
+  rlib = 'libdailygreet.rlib',
+  deps = [
+    ':jinsy',
+  ],
+)
+
+prebuilt_rust_library(
+  name = 'jinsy',
+  rlib = 'libarbiter-6337e9cb899bd295.rlib',
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

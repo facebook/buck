@@ -40,18 +40,16 @@ import org.junit.Test;
 
 import java.nio.file.Paths;
 
-public class RustLinkableTest {
+public class RustCompileTest {
   @Test(expected = HumanReadableException.class)
   public void noCrateRootInSrcs() {
-    RustLinkable linkable = new FakeRustLinkable(
-        "//:donotcare",
-        ImmutableSortedSet.<SourcePath>of());
+    RustCompile linkable = new FakeRustCompile("//:donotcare", ImmutableSortedSet.<SourcePath>of());
     linkable.getCrateRoot();
   }
 
   @Test
   public void crateRootMainInSrcs() {
-    RustLinkable linkable = new FakeRustLinkable(
+    RustCompile linkable = new FakeRustCompile(
         "//:donotcare",
         ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("main.rs")));
     assertThat(linkable.getCrateRoot().toString(), Matchers.endsWith("main.rs"));
@@ -59,7 +57,7 @@ public class RustLinkableTest {
 
   @Test
   public void crateRootTargetNameInSrcs() {
-    RustLinkable linkable = new FakeRustLinkable(
+    RustCompile linkable = new FakeRustCompile(
         "//:myname",
         ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("myname.rs")));
     assertThat(linkable.getCrateRoot().toString(), Matchers.endsWith("myname.rs"));
@@ -67,7 +65,7 @@ public class RustLinkableTest {
 
   @Test(expected = HumanReadableException.class)
   public void crateRootMainAndTargetNameInSrcs() {
-    RustLinkable linkable = new FakeRustLinkable(
+    RustCompile linkable = new FakeRustCompile(
         "//:myname",
         ImmutableSortedSet.<SourcePath>of(
             new FakeSourcePath("main.rs"),
@@ -75,8 +73,8 @@ public class RustLinkableTest {
     linkable.getCrateRoot();
   }
 
-  class FakeRustLinkable extends RustLinkable {
-    FakeRustLinkable(
+  class FakeRustCompile extends RustCompile {
+    FakeRustCompile(
         String target,
         ImmutableSortedSet<SourcePath> srcs) {
       super(

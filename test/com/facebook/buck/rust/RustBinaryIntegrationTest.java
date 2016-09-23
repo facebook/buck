@@ -150,4 +150,43 @@ public class RustBinaryIntegrationTest {
         workspace.runBuckBuild("//:greeter_fail").assertFailure().getStderr(),
         Matchers.containsString("file not found for module `messenger`"));
   }
+
+  @Test
+  public void binaryWithPrebuiltLibrary() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_prebuilt", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:hello").assertSuccess().getStdout(),
+        Matchers.allOf(
+            Matchers.containsString("Hello, world!"),
+            Matchers.containsString("plain old foo")));
+  }
+
+  @Test
+  public void binaryWithAliasedPrebuiltLibrary() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_prebuilt", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:hello_alias").assertSuccess().getStdout(),
+        Matchers.allOf(
+            Matchers.containsString("Hello, world!"),
+            Matchers.containsString("plain old foo")));
+  }
+
+  @Test
+  public void binaryWithPrebuiltLibraryWithDependency() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_prebuilt", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:hello_foobar").assertSuccess().getStdout(),
+        Matchers.allOf(Matchers.containsString("Hello, world!"),
+                       Matchers.containsString("this is foo, and here is my friend bar"),
+                       Matchers.containsString("plain old bar")));
+  }
 }
