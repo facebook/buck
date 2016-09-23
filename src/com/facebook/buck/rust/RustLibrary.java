@@ -16,21 +16,21 @@
 
 package com.facebook.buck.rust;
 
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 public class RustLibrary extends RustLinkable {
   public RustLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      ImmutableSet<SourcePath> srcs,
-      ImmutableSet<String> features,
+      ImmutableSortedSet<SourcePath> srcs,
+      ImmutableSortedSet<String> features,
       ImmutableList<String> rustcFlags,
       Tool compiler) {
     super(

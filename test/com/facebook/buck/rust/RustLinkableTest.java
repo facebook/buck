@@ -18,10 +18,10 @@ package com.facebook.buck.rust;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -33,7 +33,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
@@ -44,7 +43,9 @@ import java.nio.file.Paths;
 public class RustLinkableTest {
   @Test(expected = HumanReadableException.class)
   public void noCrateRootInSrcs() {
-    RustLinkable linkable = new FakeRustLinkable("//:donotcare", ImmutableSet.<SourcePath>of());
+    RustLinkable linkable = new FakeRustLinkable(
+        "//:donotcare",
+        ImmutableSortedSet.<SourcePath>of());
     linkable.getCrateRoot();
   }
 
@@ -52,7 +53,7 @@ public class RustLinkableTest {
   public void crateRootMainInSrcs() {
     RustLinkable linkable = new FakeRustLinkable(
         "//:donotcare",
-        ImmutableSet.<SourcePath>of(new FakeSourcePath("main.rs")));
+        ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("main.rs")));
     assertThat(linkable.getCrateRoot().toString(), Matchers.endsWith("main.rs"));
   }
 
@@ -60,7 +61,7 @@ public class RustLinkableTest {
   public void crateRootTargetNameInSrcs() {
     RustLinkable linkable = new FakeRustLinkable(
         "//:myname",
-        ImmutableSet.<SourcePath>of(new FakeSourcePath("myname.rs")));
+        ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("myname.rs")));
     assertThat(linkable.getCrateRoot().toString(), Matchers.endsWith("myname.rs"));
   }
 
@@ -68,7 +69,7 @@ public class RustLinkableTest {
   public void crateRootMainAndTargetNameInSrcs() {
     RustLinkable linkable = new FakeRustLinkable(
         "//:myname",
-        ImmutableSet.<SourcePath>of(
+        ImmutableSortedSet.<SourcePath>of(
             new FakeSourcePath("main.rs"),
             new FakeSourcePath("myname.rs")));
     linkable.getCrateRoot();
@@ -77,7 +78,7 @@ public class RustLinkableTest {
   class FakeRustLinkable extends RustLinkable {
     FakeRustLinkable(
         String target,
-        ImmutableSet<SourcePath> srcs) {
+        ImmutableSortedSet<SourcePath> srcs) {
       super(
           new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target)).build(),
           new SourcePathResolver(
@@ -86,7 +87,7 @@ public class RustLinkableTest {
                   new DefaultTargetNodeToBuildRuleTransformer())),
           srcs,
           /* flags */ ImmutableList.<String>of(),
-          /* features */ ImmutableSet.<String>of(),
+          /* features */ ImmutableSortedSet.<String>of(),
           Paths.get("somewhere"),
           new Tool() {
             @Override

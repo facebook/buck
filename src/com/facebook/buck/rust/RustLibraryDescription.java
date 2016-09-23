@@ -29,11 +29,9 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.List;
-import java.util.Set;
 
 public class RustLibraryDescription implements Description<RustLibraryDescription.Arg> {
 
@@ -64,16 +62,16 @@ public class RustLibraryDescription implements Description<RustLibraryDescriptio
     return new RustLibrary(
         params,
         new SourcePathResolver(resolver),
-        ImmutableSet.copyOf(args.srcs),
-        ImmutableSet.copyOf(args.features.get()),
+        ImmutableSortedSet.copyOf(args.srcs),
+        ImmutableSortedSet.copyOf(args.features.get()),
         ImmutableList.copyOf(args.rustcFlags.get()),
         rustBuckConfig.getRustCompiler().get());
   }
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
-    public ImmutableSet<SourcePath> srcs;
-    public Optional<Set<String>> features;
+    public ImmutableSortedSet<SourcePath> srcs;
+    public Optional<ImmutableSortedSet<String>> features;
     public Optional<List<String>> rustcFlags;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }

@@ -35,8 +35,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
@@ -44,20 +44,20 @@ abstract class RustLinkable extends AbstractBuildRule {
   @AddToRuleKey
   private final Tool compiler;
   @AddToRuleKey
-  private final ImmutableSet<SourcePath> srcs;
+  private final ImmutableSortedSet<SourcePath> srcs;
   @AddToRuleKey
   private final ImmutableList<String> flags;
   @AddToRuleKey
-  private final ImmutableSet<String> features;
+  private final ImmutableSortedSet<String> features;
   private final Path scratchDir;
   private final Path output;
 
   RustLinkable(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      ImmutableSet<SourcePath> srcs,
+      ImmutableSortedSet<SourcePath> srcs,
       ImmutableList<String> flags,
-      ImmutableSet<String> features,
+      ImmutableSortedSet<String> features,
       Path output,
       Tool compiler) {
     super(params, resolver);
@@ -86,7 +86,8 @@ abstract class RustLinkable extends AbstractBuildRule {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    ImmutableMap.Builder<String, Path> externalCratesBuilder = ImmutableMap.builder();
+    ImmutableSortedMap.Builder<String, Path> externalCratesBuilder =
+        ImmutableSortedMap.naturalOrder();
     for (BuildRule buildRule : getDeps()) {
       if (!(buildRule instanceof RustLibrary)) {
         throw new HumanReadableException(
