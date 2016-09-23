@@ -37,7 +37,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -633,7 +632,7 @@ public class AppleLibraryIntegrationTest {
             filesystem,
             target,
             "%s/libreal-none.dylib"));
-    assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
+    assertThat(Files.exists(binaryOutput), is(true));
   }
 
   @Test
@@ -657,7 +656,7 @@ public class AppleLibraryIntegrationTest {
             filesystem,
             target,
             "%s/libnone-swift.dylib"));
-    assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
+    assertThat(Files.exists(binaryOutput), is(true));
 
     assertThat(
         workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),
