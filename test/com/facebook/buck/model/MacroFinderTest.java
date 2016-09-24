@@ -40,19 +40,18 @@ public class MacroFinderTest {
         ImmutableList.of(
             MacroMatchResult.builder()
                 .setMacroType("macro1")
-                .setMacroInput("")
                 .setStartIndex(12)
                 .setEndIndex(21)
                 .build(),
             MacroMatchResult.builder()
                 .setMacroType("macro2")
-                .setMacroInput("arg")
+                .addMacroInput("arg")
                 .setStartIndex(26)
                 .setEndIndex(39)
                 .build(),
             MacroMatchResult.builder()
                 .setMacroType("macro1")
-                .setMacroInput("arg arg2")
+                .addMacroInput("arg", "arg2")
                 .setStartIndex(40)
                 .setEndIndex(58)
                 .build());
@@ -86,22 +85,20 @@ public class MacroFinderTest {
         FINDER.match(ImmutableSet.of("macro1"), "nothing to see here"),
         Matchers.equalTo(Optional.<MacroMatchResult>absent()));
     assertThat(
-        FINDER.match(ImmutableSet.of("macro1"), "$(macro1)"),
+        FINDER.match(ImmutableSet.of("macro1"), "$(macro1)").get(),
         Matchers.equalTo(
-            Optional.of(
-                MacroMatchResult.builder()
-                    .setMacroType("macro1")
-                    .setMacroInput("")
-                    .setStartIndex(0)
-                    .setEndIndex(9)
-                    .build())));
+            MacroMatchResult.builder()
+                .setMacroType("macro1")
+                .setStartIndex(0)
+                .setEndIndex(9)
+                .build()));
     assertThat(
         FINDER.match(ImmutableSet.of("macro1"), "$(macro1 arg)"),
         Matchers.equalTo(
             Optional.of(
                 MacroMatchResult.builder()
                     .setMacroType("macro1")
-                    .setMacroInput("arg")
+                    .addMacroInput("arg")
                     .setStartIndex(0)
                     .setEndIndex(13)
                     .build())));

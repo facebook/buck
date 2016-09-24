@@ -42,6 +42,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -205,10 +206,14 @@ public class ExecutableMacroExpanderTest {
             target,
             createCellRoots(filesystem),
             ruleResolver,
-            "//:rule"),
+            ImmutableList.of("//:rule")),
         Matchers.containsInAnyOrder(dep1, dep2));
     assertThat(
-        expander.expand(target, createCellRoots(filesystem), ruleResolver, "//:rule"),
+        expander.expand(
+            target,
+            createCellRoots(filesystem),
+            ruleResolver,
+            ImmutableList.of("//:rule")),
         Matchers.equalTo(
             String.format(
                 "%s %s",
@@ -237,7 +242,7 @@ public class ExecutableMacroExpanderTest {
             target,
             createCellRoots(params.getProjectFilesystem()),
             ruleResolver,
-            "//:rule"),
+            ImmutableList.of("//:rule")),
         Matchers.<Object>equalTo(tool));
   }
 

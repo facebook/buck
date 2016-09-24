@@ -63,7 +63,7 @@ public class ClasspathMacroExpander
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input)
+      ImmutableList<String> input)
       throws MacroException {
     return ImmutableList.<BuildRule>copyOf(
         getHasClasspathEntries(
@@ -79,7 +79,7 @@ public class ClasspathMacroExpander
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input) throws MacroException {
+      ImmutableList<String> input) throws MacroException {
     // javac is the canonical reader of classpaths, and its code for reading classpaths from
     // files is a little weird:
     // http://hg.openjdk.java.net/jdk7/jdk7/langtools/file/ce654f4ecfd8/src/share/classes/com/sun/tools/javac/main/CommandLine.java#l74
@@ -114,7 +114,7 @@ public class ClasspathMacroExpander
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input)
+      ImmutableList<String> input)
       throws MacroException {
     return FluentIterable.from(
             getHasClasspathEntries(resolve(target, cellNames, resolver, input))

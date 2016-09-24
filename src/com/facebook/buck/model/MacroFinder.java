@@ -17,6 +17,7 @@
 package com.facebook.buck.model;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -62,13 +63,17 @@ public class MacroFinder {
         throw new MacroException(
             String.format("expanding %s: no such macro \"%s\"", matcher.group(), matcher.group(1)));
       }
-      return Optional.of(
-          MacroMatchResult.builder()
-              .setMacroType(matcher.group(1))
-              .setMacroInput(Optional.fromNullable(matcher.group(2)).or(""))
-              .setStartIndex(0)
-              .setEndIndex(blob.length())
-              .build());
+      MacroMatchResult.Builder result = MacroMatchResult.builder();
+      result.setMacroType(matcher.group(1));
+      if (matcher.group(2) != null) {
+        result.addAllMacroInput(
+            Splitter.on(' ')
+                .trimResults()
+                .split(matcher.group(2)));
+      }
+      result.setStartIndex(0);
+      result.setEndIndex(blob.length());
+      return Optional.of(result.build());
     }
     return Optional.absent();
   }
@@ -102,9 +107,13 @@ public class MacroFinder {
               String.format("expanding %s: no such macro \"%s\"", matcher.group(), name));
         }
 
-        String input = Optional.fromNullable(matcher.group(2)).or("");
+        ImmutableList<String> args =
+            ImmutableList.copyOf(
+                Splitter.on(' ')
+                    .trimResults()
+                    .split(Optional.fromNullable(matcher.group(2)).or("")));
         try {
-          expanded.append(replacer.replace(input));
+          expanded.append(replacer.replace(args));
         } catch (MacroException e) {
           throw new MacroException(
               String.format("expanding %s: %s", matcher.group(), e.getMessage()),
@@ -136,14 +145,18 @@ public class MacroFinder {
       if (!macros.contains(name)) {
         throw new MacroException(String.format("no such macro \"%s\"", name));
       }
-      String input = Optional.fromNullable(matcher.group(2)).or("");
       MatchResult matchResult = matcher.toMatchResult();
-      results.add(MacroMatchResult.builder()
-          .setMacroType(name)
-          .setMacroInput(input)
-          .setStartIndex(matchResult.start())
-          .setEndIndex(matchResult.end())
-          .build());
+      MacroMatchResult.Builder result = MacroMatchResult.builder();
+      result.setMacroType(matcher.group(1));
+      if (matcher.group(2) != null) {
+        result.addAllMacroInput(
+            Splitter.on(' ')
+                .trimResults()
+                .split(matcher.group(2)));
+      }
+      result.setStartIndex(matchResult.start());
+      result.setEndIndex(matchResult.end());
+      results.add(result.build());
     }
 
     return results.build();

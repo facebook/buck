@@ -36,7 +36,7 @@ public class StringExpander implements MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input)
+      ImmutableList<String> input)
       throws MacroException {
     return toReturn;
   }
@@ -46,7 +46,7 @@ public class StringExpander implements MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input)
+      ImmutableList<String> input)
       throws MacroException {
     return ImmutableList.of();
   }
@@ -55,7 +55,7 @@ public class StringExpander implements MacroExpander {
   public ImmutableList<BuildTarget> extractParseTimeDeps(
       BuildTarget target,
       CellPathResolver cellNames,
-      String input)
+      ImmutableList<String> input)
       throws MacroException {
     return ImmutableList.of();
   }
@@ -65,7 +65,7 @@ public class StringExpander implements MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input)
+      ImmutableList<String> input)
       throws MacroException {
     return toReturn;
   }

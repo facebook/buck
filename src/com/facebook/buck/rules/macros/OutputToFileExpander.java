@@ -44,7 +44,7 @@ public class OutputToFileExpander implements MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input) throws MacroException {
+      ImmutableList<String> input) throws MacroException {
 
     try {
       String expanded;
@@ -63,7 +63,7 @@ public class OutputToFileExpander implements MacroExpander {
         throw new MacroException(String.format("no rule %s", target));
       }
       ProjectFilesystem filesystem = rule.get().getProjectFilesystem();
-      Path tempFile = createTempFile(filesystem, target, input);
+      Path tempFile = createTempFile(filesystem, target, input.get(0));
       filesystem.writeContentsToPath(expanded, tempFile);
       return "@" + filesystem.getAbsolutifier().apply(tempFile);
     } catch (IOException e) {
@@ -76,7 +76,7 @@ public class OutputToFileExpander implements MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input)
+      ImmutableList<String> input)
       throws MacroException {
     return delegate.extractBuildTimeDeps(target, cellNames, resolver, input);
   }
@@ -85,7 +85,7 @@ public class OutputToFileExpander implements MacroExpander {
   public ImmutableList<BuildTarget> extractParseTimeDeps(
       BuildTarget target,
       CellPathResolver cellNames,
-      String input)
+      ImmutableList<String> input)
       throws MacroException {
     return delegate.extractParseTimeDeps(target, cellNames, input);
   }
@@ -95,7 +95,7 @@ public class OutputToFileExpander implements MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input)
+      ImmutableList<String> input)
       throws MacroException {
     return delegate.extractRuleKeyAppendables(target, cellNames, resolver, input);
   }

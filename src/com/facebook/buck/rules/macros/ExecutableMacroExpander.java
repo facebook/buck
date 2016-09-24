@@ -67,7 +67,7 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input)
+      ImmutableList<String> input)
       throws MacroException {
     return getTool(resolve(target, cellNames, resolver, input));
   }

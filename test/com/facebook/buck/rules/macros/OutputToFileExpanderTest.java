@@ -67,7 +67,7 @@ public class OutputToFileExpanderTest {
         target,
         createCellRoots(filesystem),
         resolver,
-        "totally ignored");
+        ImmutableList.of("totally ignored"));
 
     assertTrue(result, result.startsWith("@"));
     Path output = Paths.get(result.substring(1));

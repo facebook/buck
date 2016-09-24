@@ -37,6 +37,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -142,7 +143,7 @@ public class LocationMacroExpanderTest {
             target,
             createCellRoots(new FakeProjectFilesystem()),
             resolver,
-            input),
+            ImmutableList.of(input)),
         Matchers.<Object>equalTo(
             new BuildTargetSourcePath(BuildTargetFactory.newInstance(input))));
   }

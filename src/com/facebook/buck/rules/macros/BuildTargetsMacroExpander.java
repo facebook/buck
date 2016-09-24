@@ -27,7 +27,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
@@ -48,9 +47,9 @@ public abstract class BuildTargetsMacroExpander implements MacroExpander {
   private ImmutableList<BuildTarget> parse(
       BuildTarget target,
       CellPathResolver cellNames,
-      String input) {
+      ImmutableList<String> input) {
     ImmutableList.Builder<BuildTarget> targets = ImmutableList.builder();
-    for (String str : Splitter.on(' ').omitEmptyStrings().split(input)) {
+    for (String str : input) {
       targets.add(
           BuildTargetParser.INSTANCE.parse(
               str,
@@ -64,7 +63,7 @@ public abstract class BuildTargetsMacroExpander implements MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input)
+      ImmutableList<String> input)
       throws MacroException {
     ImmutableList.Builder<BuildRule> rules = ImmutableList.builder();
     for (BuildTarget ruleTarget : parse(target, cellNames, input)) {
@@ -82,7 +81,7 @@ public abstract class BuildTargetsMacroExpander implements MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input)
+      ImmutableList<String> input)
       throws MacroException {
     return expand(
         resolver,
@@ -101,7 +100,7 @@ public abstract class BuildTargetsMacroExpander implements MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input)
+      ImmutableList<String> input)
       throws MacroException {
     return extractBuildTimeDeps(resolver, resolve(target, cellNames, resolver, input));
   }
@@ -110,7 +109,7 @@ public abstract class BuildTargetsMacroExpander implements MacroExpander {
   public ImmutableList<BuildTarget> extractParseTimeDeps(
       BuildTarget target,
       CellPathResolver cellNames,
-      String input) {
+      ImmutableList<String> input) {
     return parse(target, cellNames, input);
   }
 
@@ -119,7 +118,7 @@ public abstract class BuildTargetsMacroExpander implements MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input) throws MacroException {
+      ImmutableList<String> input) throws MacroException {
     return FluentIterable.from(parse(target, cellNames, input))
         .transform(
             new Function<BuildTarget, SourcePath>() {

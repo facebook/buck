@@ -108,7 +108,7 @@ public class MacroHandler {
           entry.getKey(),
           new MacroReplacer() {
             @Override
-            public String replace(String input) throws MacroException {
+            public String replace(ImmutableList<String> input) throws MacroException {
               return getExpander(entry.getKey()).expand(
                   target,
                   cellNames,

@@ -135,7 +135,7 @@ public class ClasspathMacroExpanderTest {
             forTarget,
             createCellRoots(filesystem),
             ruleResolver,
-            rule.getBuildTarget().toString());
+            ImmutableList.of(rule.getBuildTarget().toString()));
 
     assertThat(deps, Matchers.containsInAnyOrder(rule, dep));
   }
@@ -159,7 +159,7 @@ public class ClasspathMacroExpanderTest {
             forTarget,
             createCellRoots(filesystem),
             ruleResolver,
-            rule.getBuildTarget().toString()),
+            ImmutableList.of(rule.getBuildTarget().toString())),
         Matchers.<Object>equalTo(
             ImmutableSortedSet.of(
                 new BuildTargetSourcePath(rule.getBuildTarget()),
@@ -175,7 +175,7 @@ public class ClasspathMacroExpanderTest {
         rule.getBuildTarget(),
         createCellRoots(filesystem),
         buildRuleResolver,
-        ':' + rule.getBuildTarget().getShortName());
+        ImmutableList.of(':' + rule.getBuildTarget().getShortName()));
 
     assertEquals(expectedClasspath, classpath);
     assertEquals(String.format("'%s'", expectedClasspath), fileClasspath);

@@ -85,8 +85,8 @@ public class Config {
   private static MacroReplacer getMacroPreserver(final String name) {
     return new MacroReplacer() {
       @Override
-      public String replace(String input) throws MacroException {
-        return String.format("$(%s %s)", name, input);
+      public String replace(ImmutableList<String> input) throws MacroException {
+        return String.format("$(%s %s)", name, Joiner.on(' ').join(input));
       }
     };
   }
@@ -98,12 +98,18 @@ public class Config {
     MacroReplacer macroReplacer =
         new MacroReplacer() {
           @Override
-          public String replace(String input) throws MacroException {
-            List<String> parts = Splitter.on('.').limit(2).splitToList(input);
+          public String replace(ImmutableList<String> inputs) throws MacroException {
+            if (inputs.size() != 1) {
+              throw new HumanReadableException(
+                  "references must have a single argument of the form `<section>.<field>`," +
+                      " but was '%s'",
+                  inputs);
+            }
+            List<String> parts = Splitter.on('.').limit(2).splitToList(inputs.get(0));
             if (parts.size() != 2) {
               throw new HumanReadableException(
                   "references must have the form `<section>.<field>`, but was '%s'",
-                  input);
+                  parts);
             }
             return get(parts.get(0), parts.get(1), expandStack).or("");
           }

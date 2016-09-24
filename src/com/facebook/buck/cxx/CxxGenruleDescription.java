@@ -260,7 +260,7 @@ public class CxxGenruleDescription
         BuildTarget target,
         CellPathResolver cellNames,
         BuildRuleResolver resolver,
-        String input) throws MacroException {
+        ImmutableList<String> input) throws MacroException {
       SourcePathResolver pathResolver = new SourcePathResolver(resolver);
       return shquoteJoin(tool.getCommandPrefix(pathResolver));
     }
@@ -270,7 +270,7 @@ public class CxxGenruleDescription
         BuildTarget target,
         CellPathResolver cellNames,
         BuildRuleResolver resolver,
-        String input) throws MacroException {
+        ImmutableList<String> input) throws MacroException {
       SourcePathResolver pathResolver = new SourcePathResolver(resolver);
       return ImmutableList.copyOf(tool.getDeps(pathResolver));
     }
@@ -279,7 +279,7 @@ public class CxxGenruleDescription
     public ImmutableList<BuildTarget> extractParseTimeDeps(
         BuildTarget target,
         CellPathResolver cellNames,
-        String input)
+        ImmutableList<String> input)
         throws MacroException {
       // We already return all platform-specific parse-time deps from
       // `findDepsForTargetFromConstructorArgs`.
@@ -291,7 +291,7 @@ public class CxxGenruleDescription
         BuildTarget target,
         CellPathResolver cellNames,
         BuildRuleResolver resolver,
-        String input) throws MacroException {
+        ImmutableList<String> input) throws MacroException {
       return tool;
     }
 
@@ -321,7 +321,7 @@ public class CxxGenruleDescription
         BuildTarget target,
         CellPathResolver cellNames,
         BuildRuleResolver resolver,
-        String input)
+        ImmutableList<String> input)
         throws MacroException {
       return FluentIterable.from(super.resolve(target, cellNames, resolver, input))
           .filter(Predicates.instanceOf(CxxPreprocessorDep.class))
@@ -400,7 +400,7 @@ public class CxxGenruleDescription
         final BuildTarget target,
         final CellPathResolver cellNames,
         final BuildRuleResolver resolver,
-        final String input) throws MacroException {
+        final ImmutableList<String> input) throws MacroException {
       final Iterable<CxxPreprocessorInput> transitivePreprocessorInput =
           getCxxPreprocessorInput(resolve(target, cellNames, resolver, input));
       final PreprocessorFlags ppFlags = getPreprocessorFlags(transitivePreprocessorInput);
@@ -523,7 +523,7 @@ public class CxxGenruleDescription
         BuildTarget target,
         CellPathResolver cellNames,
         BuildRuleResolver resolver,
-        String input)
+        ImmutableList<String> input)
         throws MacroException {
       return FluentIterable.from(super.resolve(target, cellNames, resolver, input))
           .filter(Predicates.instanceOf(NativeLinkable.class))
@@ -580,7 +580,7 @@ public class CxxGenruleDescription
         final BuildTarget target,
         final CellPathResolver cellNames,
         final BuildRuleResolver resolver,
-        final String input) throws MacroException {
+        final ImmutableList<String> input) throws MacroException {
       return getLinkerArgs(resolver, resolve(target, cellNames, resolver, input));
     }
 

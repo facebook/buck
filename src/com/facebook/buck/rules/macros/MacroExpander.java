@@ -32,7 +32,7 @@ public interface MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input)
+      ImmutableList<String> input)
       throws MacroException;
 
   /**
@@ -45,7 +45,7 @@ public interface MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input)
+      ImmutableList<String> input)
       throws MacroException;
 
   /**
@@ -57,7 +57,7 @@ public interface MacroExpander {
   ImmutableList<BuildTarget> extractParseTimeDeps(
       BuildTarget target,
       CellPathResolver cellNames,
-      String input)
+      ImmutableList<String> input)
       throws MacroException;
 
   /**
@@ -67,6 +67,6 @@ public interface MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input)
+      ImmutableList<String> input)
       throws MacroException;
 }

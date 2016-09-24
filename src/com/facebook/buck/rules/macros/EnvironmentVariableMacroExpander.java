@@ -37,19 +37,27 @@ public class EnvironmentVariableMacroExpander implements MacroExpander {
     this.platform = platform;
   }
 
+  private String parse(ImmutableList<String> input) throws MacroException {
+    if (input.size() != 1) {
+      throw new MacroException(String.format("expected a single argument: %s", input));
+    }
+    return input.get(0);
+  }
+
   @Override
   public String expand(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input) throws MacroException {
+      ImmutableList<String> input) throws MacroException {
+    String var = parse(input);
     if (platform == Platform.WINDOWS) {
-      if ("pwd".equalsIgnoreCase(input)) {
-        input = "cd";
+      if ("pwd".equalsIgnoreCase(var)) {
+        var = "cd";
       }
-      return "%" + input + "%";
+      return "%" + var + "%";
     } else {
-      return "${" + input + "}";
+      return "${" + var + "}";
     }
   }
 
@@ -58,7 +66,7 @@ public class EnvironmentVariableMacroExpander implements MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input)
+      ImmutableList<String> input)
       throws MacroException {
     return ImmutableList.of();
   }
@@ -67,7 +75,8 @@ public class EnvironmentVariableMacroExpander implements MacroExpander {
   public ImmutableList<BuildTarget> extractParseTimeDeps(
       BuildTarget target,
       CellPathResolver cellNames,
-      String input) throws MacroException {
+      ImmutableList<String> input)
+      throws MacroException {
     return ImmutableList.of();
   }
 
@@ -76,7 +85,7 @@ public class EnvironmentVariableMacroExpander implements MacroExpander {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input)
+      ImmutableList<String> input)
       throws MacroException {
     return Optional.absent();
   }

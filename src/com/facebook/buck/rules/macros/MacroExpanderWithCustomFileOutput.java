@@ -20,12 +20,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.google.common.collect.ImmutableList;
 
 /**
  * {@link MacroExpander}s that also implement this interface can provide different output when
  * they are expanding to a file.
  */
 public interface MacroExpanderWithCustomFileOutput {
+
   /**
    * Expand the input given for the this macro to some string, which is intended to be written to
    * a file.
@@ -34,6 +36,7 @@ public interface MacroExpanderWithCustomFileOutput {
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      String input)
+      ImmutableList<String> input)
       throws MacroException;
+
 }
