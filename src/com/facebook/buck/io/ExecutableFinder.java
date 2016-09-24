@@ -28,6 +28,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -202,5 +203,14 @@ public class ExecutableFinder {
           .build();
     }
     return ImmutableSet.of("");
+  }
+
+  public Optional<Path> getOptionalToolPath(
+      String tool,
+      ImmutableList<Path> toolSearchPaths) {
+    return getOptionalExecutable(
+        Paths.get(tool),
+        toolSearchPaths,
+        ImmutableSet.<String>of());
   }
 }

@@ -44,7 +44,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -150,25 +149,26 @@ public class SwiftLibraryDescription implements
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
+    final BuildTarget buildTarget = params.getBuildTarget();
+    AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
+      cxxPlatformFlavorDomain,
+      defaultCxxPlatform,
+      appleCxxPlatformFlavorDomain,
+      buildTarget,
+      Optional.<MultiarchFileInfo>absent());
+    Optional<SwiftPlatform> swiftPlatformOptional = appleCxxPlatform.getSwiftPlatform();
+    if (!swiftPlatformOptional.isPresent()) {
+      throw new HumanReadableException("Platform %s is missing swift compiler", appleCxxPlatform);
+    }
+    SwiftPlatform swiftPlatform = swiftPlatformOptional.get();
+
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
-    final BuildTarget buildTarget = params.getBuildTarget();
     Optional<Map.Entry<Flavor, CxxPlatform>> platform = cxxPlatformFlavorDomain.getFlavorAndValue(
         buildTarget);
     final ImmutableSortedSet<Flavor> buildFlavors = buildTarget.getFlavors();
 
     if (!buildFlavors.contains(SWIFT_COMPANION_FLAVOR) && platform.isPresent()) {
-      AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
-          cxxPlatformFlavorDomain,
-          defaultCxxPlatform,
-          appleCxxPlatformFlavorDomain,
-          buildTarget,
-          Optional.<MultiarchFileInfo>absent());
-      Optional<Tool> swiftCompiler = appleCxxPlatform.getSwift();
-      if (!swiftCompiler.isPresent()) {
-        throw new HumanReadableException("Platform %s is missing swift compiler", appleCxxPlatform);
-      }
-
       final CxxPlatform cxxPlatform = platform.get().getValue();
 
       // See if we're building a particular "type" and "platform" of this library, and if so,
@@ -194,7 +194,7 @@ public class SwiftLibraryDescription implements
                 typeParams,
                 resolver,
                 target,
-                appleCxxPlatform,
+                swiftPlatform,
                 cxxPlatform,
                 args.soname);
           case STATIC:
@@ -226,7 +226,7 @@ public class SwiftLibraryDescription implements
           swiftBuckConfig,
           params,
           new SourcePathResolver(resolver),
-          swiftCompiler.get(),
+          swiftPlatform.getSwift(),
           args.frameworks.get(),
           args.moduleName.or(buildTarget.getShortName()),
           BuildTargets.getGenPath(
@@ -245,7 +245,7 @@ public class SwiftLibraryDescription implements
         ImmutableSet.<BuildRule>of(),
         args.frameworks.get(),
         args.libraries.get(),
-        appleCxxPlatformFlavorDomain,
+        swiftPlatform,
         args.supportedPlatformsRegex,
         args.preferredLinkage.or(NativeLinkable.Linkage.ANY));
   }
@@ -254,7 +254,7 @@ public class SwiftLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       BuildTarget buildTarget,
-      AppleCxxPlatform appleCxxPlatform,
+      SwiftPlatform swiftPlatform,
       CxxPlatform cxxPlatform,
       Optional<String> soname) throws NoSuchBuildTargetException {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
@@ -268,7 +268,7 @@ public class SwiftLibraryDescription implements
         sharedLibrarySoname);
 
     SwiftRuntimeNativeLinkable swiftRuntimeLinkable =
-        new SwiftRuntimeNativeLinkable(appleCxxPlatform);
+        new SwiftRuntimeNativeLinkable(swiftPlatform);
 
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder()
         .from(swiftRuntimeLinkable.getNativeLinkableInput(

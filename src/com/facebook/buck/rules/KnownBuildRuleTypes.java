@@ -158,13 +158,17 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.ZipDescription;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -173,6 +177,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 
 import javax.annotation.Nullable;
@@ -248,6 +253,7 @@ public class KnownBuildRuleTypes {
       ImmutableList<Path> extraPlatformPaths,
       BuckConfig buckConfig,
       AppleConfig appleConfig,
+      final SwiftBuckConfig swiftConfig,
       ProcessExecutor processExecutor)
       throws IOException {
     Optional<Path> appleDeveloperDirectory = appleDeveloperDirectorySupplier.get();
@@ -271,6 +277,31 @@ public class KnownBuildRuleTypes {
         toolchains,
         appleConfig);
 
+    Optional<String> swiftVersion = swiftConfig.getVersion();
+    Optional<AppleToolchain> swiftToolChain = Optional.absent();
+    if (swiftVersion.isPresent()) {
+      ImmutableSet<AppleToolchain> sdkToolChains = FluentIterable.from(sdkPaths.keySet())
+          .transformAndConcat(new Function<AppleSdk, Iterable<AppleToolchain>>() {
+            @Override
+            public Iterable<AppleToolchain> apply(AppleSdk input) {
+              return input.getToolchains();
+            }
+          })
+          .toSet();
+      Set<AppleToolchain> extraToolChains = Sets.difference(
+          ImmutableSet.copyOf(toolchains.values()),
+          sdkToolChains);
+      final Optional<String> swiftToolChainName = swiftVersion.transform(
+          AppleCxxPlatform.SWIFT_VERSION_TO_TOOLCHAIN_IDENTIFIER);
+      swiftToolChain = FluentIterable.from(extraToolChains)
+          .firstMatch(new Predicate<AppleToolchain>() {
+            @Override
+            public boolean apply(AppleToolchain input) {
+              return input.getIdentifier().equals(swiftToolChainName.get());
+            }
+          });
+    }
+
     for (Map.Entry<AppleSdk, AppleSdkPaths> entry : sdkPaths.entrySet()) {
       AppleSdk sdk = entry.getKey();
       AppleSdkPaths appleSdkPaths = entry.getValue();
@@ -285,7 +316,8 @@ public class KnownBuildRuleTypes {
             appleSdkPaths,
             buckConfig,
             appleConfig,
-            Optional.of(processExecutor));
+            Optional.of(processExecutor),
+            swiftToolChain);
         appleCxxPlatformsBuilder.add(appleCxxPlatform);
       }
     }
@@ -309,6 +341,7 @@ public class KnownBuildRuleTypes {
     }
 
     AppleConfig appleConfig = new AppleConfig(config);
+    SwiftBuckConfig swiftConfig = new SwiftBuckConfig(config);
 
     ImmutableList<AppleCxxPlatform> appleCxxPlatforms = buildAppleCxxPlatforms(
         appleConfig.getAppleDeveloperDirectorySupplier(processExecutor),
@@ -316,6 +349,7 @@ public class KnownBuildRuleTypes {
         appleConfig.getExtraPlatformPaths(),
         config,
         appleConfig,
+        swiftConfig,
         processExecutor);
     FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
         FlavorDomain.from("Apple C++ Platform", appleCxxPlatforms);
