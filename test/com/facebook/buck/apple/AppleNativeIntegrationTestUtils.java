@@ -70,9 +70,9 @@ public class AppleNativeIntegrationTestUtils {
         sdkPaths.get(anySdk),
         buckConfig,
         new AppleConfig(buckConfig),
-        Optional.of(new ProcessExecutor(Console.createNullConsole())));
-    return
-        appleCxxPlatform.getSwiftPlatform().isPresent();
+        Optional.of(new ProcessExecutor(Console.createNullConsole())),
+        Optional.<AppleToolchain>absent());
+    return appleCxxPlatform.getSwiftPlatform().isPresent();
   }
 
 }

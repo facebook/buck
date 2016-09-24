@@ -161,7 +161,9 @@ import com.facebook.buck.zip.ZipDescription;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -249,6 +251,7 @@ public class KnownBuildRuleTypes {
       ImmutableList<Path> extraPlatformPaths,
       BuckConfig buckConfig,
       AppleConfig appleConfig,
+      SwiftBuckConfig swiftBuckConfig,
       ProcessExecutor processExecutor)
       throws IOException {
     Optional<Path> appleDeveloperDirectory = appleDeveloperDirectorySupplier.get();
@@ -272,6 +275,20 @@ public class KnownBuildRuleTypes {
         toolchains,
         appleConfig);
 
+    Optional<String> swiftVersion = swiftBuckConfig.getVersion();
+    Optional<AppleToolchain> swiftToolChain = Optional.absent();
+    if (swiftVersion.isPresent()) {
+      final Optional<String> swiftToolChainName = swiftVersion.transform(
+          AppleCxxPlatform.SWIFT_VERSION_TO_TOOLCHAIN_IDENTIFIER);
+      swiftToolChain = FluentIterable.from(toolchains.values())
+          .firstMatch(new Predicate<AppleToolchain>() {
+            @Override
+            public boolean apply(AppleToolchain input) {
+              return input.getIdentifier().equals(swiftToolChainName.get());
+            }
+          });
+    }
+
     for (Map.Entry<AppleSdk, AppleSdkPaths> entry : sdkPaths.entrySet()) {
       AppleSdk sdk = entry.getKey();
       AppleSdkPaths appleSdkPaths = entry.getValue();
@@ -286,7 +303,8 @@ public class KnownBuildRuleTypes {
             appleSdkPaths,
             buckConfig,
             appleConfig,
-            Optional.of(processExecutor));
+            Optional.of(processExecutor),
+            swiftToolChain);
         appleCxxPlatformsBuilder.add(appleCxxPlatform);
       }
     }
@@ -310,6 +328,7 @@ public class KnownBuildRuleTypes {
     }
 
     AppleConfig appleConfig = new AppleConfig(config);
+    SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
 
     final ImmutableList<AppleCxxPlatform> appleCxxPlatforms = buildAppleCxxPlatforms(
         appleConfig.getAppleDeveloperDirectorySupplier(processExecutor),
@@ -317,6 +336,7 @@ public class KnownBuildRuleTypes {
         appleConfig.getExtraPlatformPaths(),
         config,
         appleConfig,
+        swiftBuckConfig,
         processExecutor);
     final FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
         FlavorDomain.from("Apple C++ Platform", appleCxxPlatforms);
@@ -510,8 +530,6 @@ public class KnownBuildRuleTypes {
     InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
 
     LuaConfig luaConfig = new LuaBuckConfig(config, executableFinder);
-
-    SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
 
     CxxBinaryDescription cxxBinaryDescription =
         new CxxBinaryDescription(
