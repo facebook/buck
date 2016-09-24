@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DependencyAggregation;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
@@ -249,8 +248,8 @@ abstract class AbstractCxxSourceRuleFactory {
             getParams().copyWithChanges(
                 target,
                 Suppliers.ofInstance(
-                  new DepsBuilder()
-                      .addAggregatedPreprocessDeps()
+                  new DepsBuilder(getPathResolver())
+                      .add(requireAggregatedPreprocessDepsRule())
                       .add(preprocessorDelegateValue.getPreprocessorDelegate().getPreprocessor())
                       // We shouldn't really need to depend on the compiler for preprocess-only
                       // rules, but the `CxxPreprocessAndCompile` class adds the entire
@@ -402,7 +401,7 @@ abstract class AbstractCxxSourceRuleFactory {
         getParams().copyWithChanges(
             target,
             Suppliers.ofInstance(
-                new DepsBuilder()
+                new DepsBuilder(getPathResolver())
                     .add(compiler)
                     .add(source)
                     .build()),
@@ -495,8 +494,8 @@ abstract class AbstractCxxSourceRuleFactory {
         getParams().copyWithChanges(
             target,
             Suppliers.ofInstance(
-                new DepsBuilder()
-                    .addAggregatedPreprocessDeps()
+                new DepsBuilder(getPathResolver())
+                    .add(requireAggregatedPreprocessDepsRule())
                     .add(preprocessorDelegateValue.getPreprocessorDelegate().getPreprocessor())
                     .add(source)
                     .build()),
@@ -540,8 +539,8 @@ abstract class AbstractCxxSourceRuleFactory {
     PreprocessorDelegateCacheValue preprocessorDelegateValue = preprocessorDelegates.getUnchecked(
         PreprocessorDelegateCacheKey.of(source.getType(), source.getFlags()));
     PreprocessorDelegate preprocessorDelegate = preprocessorDelegateValue.getPreprocessorDelegate();
-    DepsBuilder depsBuilder = new DepsBuilder()
-        .addAggregatedPreprocessDeps()
+    DepsBuilder depsBuilder = new DepsBuilder(getPathResolver())
+        .add(requireAggregatedPreprocessDepsRule())
         .add(preprocessorDelegate.getPreprocessor())
         .add(compiler)
         .add(source);
@@ -628,8 +627,8 @@ abstract class AbstractCxxSourceRuleFactory {
         getParams().copyWithChanges(
             target,
             Suppliers.ofInstance(
-              new DepsBuilder()
-                  .addAggregatedPreprocessDeps()
+              new DepsBuilder(getPathResolver())
+                  .add(requireAggregatedPreprocessDepsRule())
                   .add(preprocessorDelegate.getPreprocessor())
                   .add(path)
                   .build()),
@@ -849,43 +848,6 @@ abstract class AbstractCxxSourceRuleFactory {
           getIncludes());
       return new PreprocessorDelegateCacheValue(delegate);
     }
-
   }
-
-  /**
-   * Supplier suitable for generating the dependency list of a build rule.
-   */
-  private class DepsBuilder {
-    private final ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
-
-    public ImmutableSortedSet<BuildRule> build() {
-      return builder.build();
-    }
-
-    public DepsBuilder add(Tool tool) {
-      builder.addAll(tool.getDeps(getPathResolver()));
-      return this;
-    }
-
-    public DepsBuilder add(CxxSource source) {
-      return add(source.getPath());
-    }
-
-    public DepsBuilder add(SourcePath sourcePath) {
-      builder.addAll(getPathResolver().filterBuildRuleInputs(sourcePath));
-      return this;
-    }
-
-    public DepsBuilder add(BuildRule buildRule) {
-      builder.add(buildRule);
-      return this;
-    }
-
-    public DepsBuilder addAggregatedPreprocessDeps() {
-      builder.add(requireAggregatedPreprocessDepsRule());
-      return this;
-    }
-  }
-
 
 }
