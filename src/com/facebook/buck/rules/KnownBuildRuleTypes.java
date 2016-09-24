@@ -137,10 +137,10 @@ import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.PythonLibraryDescription;
 import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonTestDescription;
+import com.facebook.buck.rust.PrebuiltRustLibraryDescription;
 import com.facebook.buck.rust.RustBinaryDescription;
 import com.facebook.buck.rust.RustBuckConfig;
 import com.facebook.buck.rust.RustLibraryDescription;
-import com.facebook.buck.rust.PrebuiltRustLibraryDescription;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.ShBinaryDescription;
@@ -148,6 +148,7 @@ import com.facebook.buck.shell.ShTestDescription;
 import com.facebook.buck.shell.WorkerToolDescription;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
+import com.facebook.buck.swift.SwiftPlatform;
 import com.facebook.buck.thrift.ThriftBuckConfig;
 import com.facebook.buck.thrift.ThriftCxxEnhancer;
 import com.facebook.buck.thrift.ThriftJavaEnhancer;
@@ -310,15 +311,25 @@ public class KnownBuildRuleTypes {
 
     AppleConfig appleConfig = new AppleConfig(config);
 
-    ImmutableList<AppleCxxPlatform> appleCxxPlatforms = buildAppleCxxPlatforms(
+    final ImmutableList<AppleCxxPlatform> appleCxxPlatforms = buildAppleCxxPlatforms(
         appleConfig.getAppleDeveloperDirectorySupplier(processExecutor),
         appleConfig.getExtraToolchainPaths(),
         appleConfig.getExtraPlatformPaths(),
         config,
         appleConfig,
         processExecutor);
-    FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
+    final FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
         FlavorDomain.from("Apple C++ Platform", appleCxxPlatforms);
+
+    ImmutableMap.Builder<Flavor, SwiftPlatform> swiftPlatforms = ImmutableMap.builder();
+    for (Flavor flavor: platformFlavorsToAppleCxxPlatforms.getFlavors()) {
+      Optional<SwiftPlatform> swiftPlatformOptional = platformFlavorsToAppleCxxPlatforms
+          .getValue(flavor)
+          .getSwiftPlatform();
+      if (swiftPlatformOptional.isPresent()) {
+        swiftPlatforms.put(flavor, swiftPlatformOptional.get());
+      }
+    }
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
@@ -516,13 +527,15 @@ public class KnownBuildRuleTypes {
             inferBuckConfig,
             cxxPlatforms);
 
+    FlavorDomain<SwiftPlatform> platformFlavorsToSwiftPlatforms = new FlavorDomain<>(
+        "Swift Platform",
+        swiftPlatforms.build());
     SwiftLibraryDescription swiftLibraryDescription =
         new SwiftLibraryDescription(
             cxxBuckConfig,
             swiftBuckConfig,
             cxxPlatforms,
-            platformFlavorsToAppleCxxPlatforms,
-            defaultCxxPlatform);
+            platformFlavorsToSwiftPlatforms);
     builder.register(swiftLibraryDescription);
 
     CodeSignIdentityStore codeSignIdentityStore =

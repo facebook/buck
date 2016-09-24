@@ -19,7 +19,6 @@ package com.facebook.buck.swift;
 import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPANION_FLAVOR;
 import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR;
 
-import com.facebook.buck.apple.AppleCxxPlatform;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxLink;
@@ -76,7 +75,7 @@ class SwiftLibrary
   private final Iterable<? extends BuildRule> exportedDeps;
   private final ImmutableSet<FrameworkPath> frameworks;
   private final ImmutableSet<FrameworkPath> libraries;
-  private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
+  private final FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain;
   private final Optional<Pattern> supportedPlatformsRegex;
   private final Linkage linkage;
 
@@ -85,9 +84,9 @@ class SwiftLibrary
       BuildRuleResolver ruleResolver,
       final SourcePathResolver pathResolver,
       Iterable<? extends BuildRule> exportedDeps,
+      FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
-      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
       Optional<Pattern> supportedPlatformsRegex,
       Linkage linkage) {
     super(params, pathResolver);
@@ -95,7 +94,7 @@ class SwiftLibrary
     this.exportedDeps = exportedDeps;
     this.frameworks = frameworks;
     this.libraries = libraries;
-    this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
+    this.swiftPlatformFlavorDomain = swiftPlatformFlavorDomain;
     this.supportedPlatformsRegex = supportedPlatformsRegex;
     this.linkage = linkage;
   }
@@ -124,8 +123,10 @@ class SwiftLibrary
     }
     return FluentIterable.from(exportedDeps)
         .filter(NativeLinkable.class)
-        .append(new SwiftRuntimeNativeLinkable(
-            appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor())));
+        .append(
+            new SwiftRuntimeNativeLinkable(
+                swiftPlatformFlavorDomain.getValue(
+                    cxxPlatform.getFlavor())));
   }
 
   @Override

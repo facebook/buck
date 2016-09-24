@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 8e4f16f8c543a789c1af1661fa4f3f427d256714 #@#
+#@# GENERATED FILE: DO NOT MODIFY 4b65432866bd8470341a4d6fbe287bbfeeb32ccf #@#
 {
   "action_graph_cache" : {
     "deps" : [
@@ -208,6 +208,7 @@
       "//src/com/facebook/buck/rust:rust",
       "//src/com/facebook/buck/shell:rules",
       "//src/com/facebook/buck/shell:worker",
+      "//src/com/facebook/buck/swift:platform",
       "//src/com/facebook/buck/swift:swift",
       "//src/com/facebook/buck/thrift:thrift",
       "//src/com/facebook/buck/util:exceptions",
