@@ -30,6 +30,7 @@ import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
+import com.facebook.buck.swift.SwiftPlatform;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
@@ -40,6 +41,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
@@ -170,14 +172,23 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_IPHONEOS_I386_PLATFORM,
           DEFAULT_IPHONEOS_X86_64_PLATFORM,
           DEFAULT_MACOSX_X86_64_PLATFORM);
+  public static final FlavorDomain<SwiftPlatform> DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN =
+      new FlavorDomain<>("Fake Swift Platform",
+          ImmutableMap.of(
+              DEFAULT_IPHONEOS_I386_PLATFORM.getFlavor(),
+              DEFAULT_IPHONEOS_I386_PLATFORM.getSwiftPlatform().get(),
+              DEFAULT_IPHONEOS_X86_64_PLATFORM.getFlavor(),
+              DEFAULT_IPHONEOS_X86_64_PLATFORM.getSwiftPlatform().get(),
+              DEFAULT_MACOSX_X86_64_PLATFORM.getFlavor(),
+              DEFAULT_MACOSX_X86_64_PLATFORM.getSwiftPlatform().get()
+          ));
 
   public static final SwiftLibraryDescription SWIFT_LIBRARY_DESCRIPTION =
       new SwiftLibraryDescription(
           CxxPlatformUtils.DEFAULT_CONFIG,
           new SwiftBuckConfig(DEFAULT_BUCK_CONFIG),
           DEFAULT_APPLE_FLAVOR_DOMAIN,
-          DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
-          DEFAULT_IPHONEOS_X86_64_PLATFORM.getCxxPlatform());
+          DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN);
   /**
    * A fake apple_library description with an iOS platform for use in tests.
    */

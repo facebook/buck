@@ -34,6 +34,7 @@ import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -74,7 +75,7 @@ class SwiftLibrary
   private final Iterable<? extends BuildRule> exportedDeps;
   private final ImmutableSet<FrameworkPath> frameworks;
   private final ImmutableSet<FrameworkPath> libraries;
-  private final SwiftPlatform swiftPlatform;
+  private final FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain;
   private final Optional<Pattern> supportedPlatformsRegex;
   private final Linkage linkage;
 
@@ -83,9 +84,9 @@ class SwiftLibrary
       BuildRuleResolver ruleResolver,
       final SourcePathResolver pathResolver,
       Iterable<? extends BuildRule> exportedDeps,
+      FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
-      SwiftPlatform swiftPlatform,
       Optional<Pattern> supportedPlatformsRegex,
       Linkage linkage) {
     super(params, pathResolver);
@@ -93,7 +94,7 @@ class SwiftLibrary
     this.exportedDeps = exportedDeps;
     this.frameworks = frameworks;
     this.libraries = libraries;
-    this.swiftPlatform = swiftPlatform;
+    this.swiftPlatformFlavorDomain = swiftPlatformFlavorDomain;
     this.supportedPlatformsRegex = supportedPlatformsRegex;
     this.linkage = linkage;
   }
@@ -122,7 +123,10 @@ class SwiftLibrary
     }
     return FluentIterable.from(exportedDeps)
         .filter(NativeLinkable.class)
-        .append(new SwiftRuntimeNativeLinkable(swiftPlatform));
+        .append(
+            new SwiftRuntimeNativeLinkable(
+                swiftPlatformFlavorDomain.getValue(
+                    cxxPlatform.getFlavor())));
   }
 
   @Override

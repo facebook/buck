@@ -56,6 +56,7 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.swift.SwiftPlatform;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -142,7 +143,7 @@ public class AppleBundle
   private final Optional<Tool> codesignAllocatePath;
 
   @AddToRuleKey
-  private final Optional<SwiftPlatform> swiftPlatform;
+  private final Optional<Tool> swiftStdlibTool;
 
   // Need to use String here as RuleKeyBuilder requires that paths exist to compute hashes.
   @AddToRuleKey
@@ -225,7 +226,13 @@ public class AppleBundle
           CodeSignIdentityStore.fromIdentities(ImmutableList.<CodeSignIdentity>of());
     }
     this.codesignAllocatePath = appleCxxPlatform.getCodesignAllocate();
-    this.swiftPlatform = appleCxxPlatform.getSwiftPlatform();
+    this.swiftStdlibTool = appleCxxPlatform.getSwiftPlatform()
+        .transform(new Function<SwiftPlatform, Tool>() {
+          @Override
+          public Tool apply(SwiftPlatform input) {
+            return input.getSwiftStdlibTool();
+          }
+        });
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -675,11 +682,9 @@ public class AppleBundle
       ImmutableList.Builder<Step> stepsBuilder) {
     // It's apparently safe to run this even on a non-swift bundle (in that case, no libs
     // are copied over).
-    if (swiftPlatform.isPresent()) {
+    if (swiftStdlibTool.isPresent()) {
       ImmutableList.Builder<String> swiftStdlibCommand = ImmutableList.builder();
-      swiftStdlibCommand.addAll(swiftPlatform.get()
-          .getSwiftStdlibTool()
-          .getCommandPrefix(getResolver()));
+      swiftStdlibCommand.addAll(swiftStdlibTool.get().getCommandPrefix(getResolver()));
       swiftStdlibCommand.add(
           "--scan-executable",
           bundleBinaryPath.toString(),

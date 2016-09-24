@@ -16,8 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import static com.sun.imageio.plugins.jpeg.JPEG.version;
-
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListFormatException;
@@ -403,6 +401,7 @@ public class AppleCxxPlatforms {
         applePlatform.getName(),
         targetArchitecture + "-apple-" +
             applePlatform.getSwiftName().or(applePlatform.getName()) + targetSdk.getVersion(),
+        version,
         sdkPaths,
         toolSearchPaths,
         executableFinder);
@@ -431,6 +430,7 @@ public class AppleCxxPlatforms {
   private static Optional<SwiftPlatform> getSwiftPlatform(
       String platformName,
       String targetArchitectureName,
+      String version,
       AbstractAppleSdkPaths sdkPaths,
       ImmutableList<Path> toolSearchPaths,
       ExecutableFinder executableFinder) {

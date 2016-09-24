@@ -16,9 +16,6 @@
 
 package com.facebook.buck.swift;
 
-import com.facebook.buck.apple.AppleCxxPlatform;
-import com.facebook.buck.apple.ApplePlatforms;
-import com.facebook.buck.apple.MultiarchFileInfo;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -107,20 +104,17 @@ public class SwiftLibraryDescription implements
   private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
-  private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
-  private final CxxPlatform defaultCxxPlatform;
+  private final FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain;
 
   public SwiftLibraryDescription(
       CxxBuckConfig cxxBuckConfig,
       SwiftBuckConfig swiftBuckConfig,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
-      CxxPlatform defaultCxxPlatform) {
+      FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain) {
     this.cxxBuckConfig = cxxBuckConfig;
     this.swiftBuckConfig = swiftBuckConfig;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
-    this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
-    this.defaultCxxPlatform = defaultCxxPlatform;
+    this.swiftPlatformFlavorDomain = swiftPlatformFlavorDomain;
   }
 
   @Override
@@ -150,17 +144,6 @@ public class SwiftLibraryDescription implements
       final BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
     final BuildTarget buildTarget = params.getBuildTarget();
-    AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
-      cxxPlatformFlavorDomain,
-      defaultCxxPlatform,
-      appleCxxPlatformFlavorDomain,
-      buildTarget,
-      Optional.<MultiarchFileInfo>absent());
-    Optional<SwiftPlatform> swiftPlatformOptional = appleCxxPlatform.getSwiftPlatform();
-    if (!swiftPlatformOptional.isPresent()) {
-      throw new HumanReadableException("Platform %s is missing swift compiler", appleCxxPlatform);
-    }
-    SwiftPlatform swiftPlatform = swiftPlatformOptional.get();
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
@@ -170,12 +153,15 @@ public class SwiftLibraryDescription implements
 
     if (!buildFlavors.contains(SWIFT_COMPANION_FLAVOR) && platform.isPresent()) {
       final CxxPlatform cxxPlatform = platform.get().getValue();
+      Optional<SwiftPlatform> swiftPlatform = swiftPlatformFlavorDomain.getValue(buildTarget);
+      if (!swiftPlatform.isPresent()) {
+        throw new HumanReadableException("Platform %s is missing swift compiler", cxxPlatform);
+      }
 
       // See if we're building a particular "type" and "platform" of this library, and if so,
       // extract them from the flavors attached to the build target.
       Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
-      if (!buildFlavors.contains(SWIFT_COMPILE_FLAVOR) &&
-          type.isPresent() && platform.isPresent()) {
+      if (!buildFlavors.contains(SWIFT_COMPILE_FLAVOR) && type.isPresent()) {
         Set<Flavor> flavors = Sets.newHashSet(params.getBuildTarget().getFlavors());
         flavors.remove(type.get().getKey());
         BuildTarget target = BuildTarget
@@ -194,7 +180,7 @@ public class SwiftLibraryDescription implements
                 typeParams,
                 resolver,
                 target,
-                swiftPlatform,
+                swiftPlatform.get(),
                 cxxPlatform,
                 args.soname);
           case STATIC:
@@ -226,7 +212,7 @@ public class SwiftLibraryDescription implements
           swiftBuckConfig,
           params,
           new SourcePathResolver(resolver),
-          swiftPlatform.getSwift(),
+          swiftPlatform.get().getSwift(),
           args.frameworks.get(),
           args.moduleName.or(buildTarget.getShortName()),
           BuildTargets.getGenPath(
@@ -243,9 +229,8 @@ public class SwiftLibraryDescription implements
         resolver,
         new SourcePathResolver(resolver),
         ImmutableSet.<BuildRule>of(),
-        args.frameworks.get(),
+        swiftPlatformFlavorDomain, args.frameworks.get(),
         args.libraries.get(),
-        swiftPlatform,
         args.supportedPlatformsRegex,
         args.preferredLinkage.or(NativeLinkable.Linkage.ANY));
   }
