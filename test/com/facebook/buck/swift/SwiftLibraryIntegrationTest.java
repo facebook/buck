@@ -49,7 +49,7 @@ import org.junit.Test;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class SwiftLibraryTest {
+public class SwiftLibraryIntegrationTest {
   @Rule
   public final TemporaryPaths tmpDir = new TemporaryPaths();
 

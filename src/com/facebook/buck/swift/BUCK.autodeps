@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 888a4d368aaa9a9fab2d6f7278f62be85023fdb4 #@#
+#@# GENERATED FILE: DO NOT MODIFY 5d6eaa2b2b7dc8b09061c6a49714ad07d78ce803 #@#
 {
   "platform" : {
     "deps" : [
@@ -20,7 +20,6 @@
       "//src/com/facebook/buck/util:util"
     ],
     "exported_deps" : [
-      "//src/com/facebook/buck/apple:platform",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",

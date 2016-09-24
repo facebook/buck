@@ -1,6 +1,24 @@
-#@# GENERATED FILE: DO NOT MODIFY 9e147fdd37701cefd9dabdf683e9a3b4d560c466 #@#
+#@# GENERATED FILE: DO NOT MODIFY bb1d8617c9ca0821d8384c5b34a9a4045c5949a5 #@#
 {
-  "swift" : {
+  "rules" : {
+    "deps" : [
+      "//src/com/facebook/buck/cxx:rules",
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/swift:platform",
+      "//src/com/facebook/buck/swift:swift",
+      "//test/com/facebook/buck/apple:testutil",
+      "//test/com/facebook/buck/cli:FakeBuckConfig",
+      "//test/com/facebook/buck/model:testutil",
+      "//test/com/facebook/buck/rules:testutil",
+      "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  },
+  "swift_test_integration" : {
     "deps" : [
       "//src/com/facebook/buck/apple:platform",
       "//src/com/facebook/buck/apple:rules",
@@ -12,7 +30,6 @@
       "//src/com/facebook/buck/swift:swift",
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/apple:testutil",
-      "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/cxx:testutil",
       "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/rules:testutil",

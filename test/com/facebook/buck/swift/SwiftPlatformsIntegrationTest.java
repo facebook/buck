@@ -31,7 +31,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class SwiftPlatformsTest {
+public class SwiftPlatformsIntegrationTest {
 
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
