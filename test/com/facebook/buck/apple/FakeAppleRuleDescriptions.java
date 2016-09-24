@@ -110,7 +110,7 @@ public class FakeAppleRuleDescriptions {
           Paths.get("Tools/otest"),
           Paths.get("usr/bin/xctest")));
 
-  private static final ProcessExecutor PROCESS_EXECUTOR = new FakeProcessExecutor(
+  public static final ProcessExecutor PROCESS_EXECUTOR = new FakeProcessExecutor(
       new Function<ProcessExecutorParams, FakeProcess>() {
         @Override
         public FakeProcess apply(ProcessExecutorParams input) {
@@ -128,7 +128,8 @@ public class FakeAppleRuleDescriptions {
           FakeBuckConfig.builder().build(),
           new FakeAppleConfig(),
           EXECUTABLE_FINDER,
-          Optional.of(PROCESS_EXECUTOR));
+          Optional.of(PROCESS_EXECUTOR),
+          Optional.<AppleToolchain>absent());
 
   public static final AppleCxxPlatform DEFAULT_IPHONEOS_X86_64_PLATFORM =
       AppleCxxPlatforms.buildWithExecutableChecker(
@@ -139,7 +140,8 @@ public class FakeAppleRuleDescriptions {
           FakeBuckConfig.builder().build(),
           new FakeAppleConfig(),
           EXECUTABLE_FINDER,
-          Optional.of(PROCESS_EXECUTOR));
+          Optional.of(PROCESS_EXECUTOR),
+          Optional.<AppleToolchain>absent());
 
 
   public static final AppleCxxPlatform DEFAULT_MACOSX_X86_64_PLATFORM =
@@ -151,7 +153,8 @@ public class FakeAppleRuleDescriptions {
           FakeBuckConfig.builder().build(),
           new FakeAppleConfig(),
           EXECUTABLE_FINDER,
-          Optional.of(PROCESS_EXECUTOR));
+          Optional.of(PROCESS_EXECUTOR),
+          Optional.<AppleToolchain>absent());
 
   public static final BuckConfig DEFAULT_BUCK_CONFIG = FakeBuckConfig.builder().build();
 

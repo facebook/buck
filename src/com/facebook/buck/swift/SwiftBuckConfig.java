@@ -43,4 +43,8 @@ public class SwiftBuckConfig {
       }
     });
   }
+
+  public Optional<String> getVersion() {
+    return delegate.getValue(SECTION_NAME, "version");
+  }
 }
