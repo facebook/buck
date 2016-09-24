@@ -62,7 +62,7 @@ public abstract class AbstractCommand implements Command {
   @Option(
       name = VerbosityParser.VERBOSE_LONG_ARG,
       aliases = { VerbosityParser.VERBOSE_SHORT_ARG },
-      usage = "Specify a number between 1 and 10.")
+      usage = "Specify a number between 0 and 8. '-v 1' is default, '-v 8' is most verbose.")
   @SuppressWarnings("PMD.UnusedPrivateField")
   private int verbosityLevel = -1;
 
