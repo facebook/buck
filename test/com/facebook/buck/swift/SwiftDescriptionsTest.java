@@ -16,7 +16,8 @@
 
 package com.facebook.buck.swift;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 
 import com.facebook.buck.apple.FakeAppleRuleDescriptions;
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -32,10 +33,10 @@ import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class SwiftDescriptionsTest {
+
   @Test
   public void testPopulateSwiftLibraryDescriptionArg() throws Exception {
     BuildRuleResolver resolver =
@@ -57,13 +58,13 @@ public class SwiftDescriptionsTest {
     args.supportedPlatformsRegex = Optional.absent();
 
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(pathResolver, output, args, buildTarget);
-    assertThat(output.moduleName.get(), Matchers.equalTo("bar"));
-    assertThat(output.srcs.get(), Matchers.equalTo(ImmutableSortedSet.<SourcePath>of(swiftSrc)));
+    assertThat(output.moduleName.get(), equalTo("bar"));
+    assertThat(output.srcs.get(), equalTo(ImmutableSortedSet.<SourcePath>of(swiftSrc)));
 
     args.moduleName = Optional.of("baz");
 
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(pathResolver, output, args, buildTarget);
-    assertThat(output.moduleName.get(), Matchers.equalTo("baz"));
+    assertThat(output.moduleName.get(), equalTo("baz"));
   }
 
 }

@@ -16,9 +16,6 @@
 
 package com.facebook.buck.swift;
 
-import com.facebook.buck.apple.AppleCxxPlatform;
-import com.facebook.buck.apple.ApplePlatforms;
-import com.facebook.buck.apple.MultiarchFileInfo;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -44,7 +41,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -108,20 +104,17 @@ public class SwiftLibraryDescription implements
   private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
-  private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
-  private final CxxPlatform defaultCxxPlatform;
+  private final FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain;
 
   public SwiftLibraryDescription(
       CxxBuckConfig cxxBuckConfig,
       SwiftBuckConfig swiftBuckConfig,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
-      CxxPlatform defaultCxxPlatform) {
+      FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain) {
     this.cxxBuckConfig = cxxBuckConfig;
     this.swiftBuckConfig = swiftBuckConfig;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
-    this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
-    this.defaultCxxPlatform = defaultCxxPlatform;
+    this.swiftPlatformFlavorDomain = swiftPlatformFlavorDomain;
   }
 
   @Override
@@ -150,32 +143,25 @@ public class SwiftLibraryDescription implements
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
+    final BuildTarget buildTarget = params.getBuildTarget();
+
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
-    final BuildTarget buildTarget = params.getBuildTarget();
     Optional<Map.Entry<Flavor, CxxPlatform>> platform = cxxPlatformFlavorDomain.getFlavorAndValue(
         buildTarget);
     final ImmutableSortedSet<Flavor> buildFlavors = buildTarget.getFlavors();
 
     if (!buildFlavors.contains(SWIFT_COMPANION_FLAVOR) && platform.isPresent()) {
-      AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
-          cxxPlatformFlavorDomain,
-          defaultCxxPlatform,
-          appleCxxPlatformFlavorDomain,
-          buildTarget,
-          Optional.<MultiarchFileInfo>absent());
-      Optional<Tool> swiftCompiler = appleCxxPlatform.getSwift();
-      if (!swiftCompiler.isPresent()) {
-        throw new HumanReadableException("Platform %s is missing swift compiler", appleCxxPlatform);
-      }
-
       final CxxPlatform cxxPlatform = platform.get().getValue();
+      Optional<SwiftPlatform> swiftPlatform = swiftPlatformFlavorDomain.getValue(buildTarget);
+      if (!swiftPlatform.isPresent()) {
+        throw new HumanReadableException("Platform %s is missing swift compiler", cxxPlatform);
+      }
 
       // See if we're building a particular "type" and "platform" of this library, and if so,
       // extract them from the flavors attached to the build target.
       Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
-      if (!buildFlavors.contains(SWIFT_COMPILE_FLAVOR) &&
-          type.isPresent() && platform.isPresent()) {
+      if (!buildFlavors.contains(SWIFT_COMPILE_FLAVOR) && type.isPresent()) {
         Set<Flavor> flavors = Sets.newHashSet(params.getBuildTarget().getFlavors());
         flavors.remove(type.get().getKey());
         BuildTarget target = BuildTarget
@@ -194,7 +180,7 @@ public class SwiftLibraryDescription implements
                 typeParams,
                 resolver,
                 target,
-                appleCxxPlatform,
+                swiftPlatform.get(),
                 cxxPlatform,
                 args.soname);
           case STATIC:
@@ -226,7 +212,7 @@ public class SwiftLibraryDescription implements
           swiftBuckConfig,
           params,
           new SourcePathResolver(resolver),
-          swiftCompiler.get(),
+          swiftPlatform.get().getSwift(),
           args.frameworks.get(),
           args.moduleName.or(buildTarget.getShortName()),
           BuildTargets.getGenPath(
@@ -243,9 +229,8 @@ public class SwiftLibraryDescription implements
         resolver,
         new SourcePathResolver(resolver),
         ImmutableSet.<BuildRule>of(),
-        args.frameworks.get(),
+        swiftPlatformFlavorDomain, args.frameworks.get(),
         args.libraries.get(),
-        appleCxxPlatformFlavorDomain,
         args.supportedPlatformsRegex,
         args.preferredLinkage.or(NativeLinkable.Linkage.ANY));
   }
@@ -254,7 +239,7 @@ public class SwiftLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       BuildTarget buildTarget,
-      AppleCxxPlatform appleCxxPlatform,
+      SwiftPlatform swiftPlatform,
       CxxPlatform cxxPlatform,
       Optional<String> soname) throws NoSuchBuildTargetException {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
@@ -268,7 +253,7 @@ public class SwiftLibraryDescription implements
         sharedLibrarySoname);
 
     SwiftRuntimeNativeLinkable swiftRuntimeLinkable =
-        new SwiftRuntimeNativeLinkable(appleCxxPlatform);
+        new SwiftRuntimeNativeLinkable(swiftPlatform);
 
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder()
         .from(swiftRuntimeLinkable.getNativeLinkableInput(

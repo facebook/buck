@@ -223,6 +223,27 @@ public class ExecutableFinderTest {
             ImmutableMap.<String, String>of()));
   }
 
+  @Test
+  public void testThatDirectoryWithSwiftExecutableDoesHaveSwiftTool() throws IOException {
+    Path dir = tmp.newFolder("foo");
+    createExecutable("foo/swift");
+
+    assertEquals(
+        Optional.of(dir.resolve("swift")),
+        new ExecutableFinder().getOptionalToolPath(
+            "swift",
+            ImmutableList.of(dir)));
+  }
+
+  @Test
+  public void testThatEmptyDirectoryDoesNotHaveSwift() throws IOException {
+    assertEquals(
+        Optional.absent(),
+        new ExecutableFinder().getOptionalToolPath(
+            "swift",
+            ImmutableList.<Path>of()));
+  }
+
   private Path createExecutable(String executablePath) throws IOException {
     Path file = tmp.newFile(executablePath);
     MoreFiles.makeExecutable(file);
