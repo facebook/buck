@@ -229,7 +229,8 @@ public class SwiftLibraryDescription implements
         resolver,
         new SourcePathResolver(resolver),
         ImmutableSet.<BuildRule>of(),
-        swiftPlatformFlavorDomain, args.frameworks.get(),
+        swiftPlatformFlavorDomain,
+        args.frameworks.get(),
         args.libraries.get(),
         args.supportedPlatformsRegex,
         args.preferredLinkage.or(NativeLinkable.Linkage.ANY));
