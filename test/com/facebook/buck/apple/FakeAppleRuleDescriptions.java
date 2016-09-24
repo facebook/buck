@@ -27,7 +27,6 @@ import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.InferBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.FakeExecutableFinder;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
@@ -100,6 +99,8 @@ public class FakeAppleRuleDescriptions {
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib"),
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"),
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/swift"),
+          Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/swift"),
+          Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-stdlib-tool"),
           Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/nm"),
           Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"),
           Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"),
@@ -175,7 +176,13 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_MACOSX_X86_64_PLATFORM);
 
   public static final FlavorDomain<SwiftPlatform> DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN =
-      new FlavorDomain<>("Fake Swift Platform", ImmutableMap.<Flavor, SwiftPlatform>of());
+      new FlavorDomain<>("Fake Swift Platform", ImmutableMap.of(
+          DEFAULT_IPHONEOS_I386_PLATFORM.getFlavor(),
+          DEFAULT_IPHONEOS_I386_PLATFORM.getSwiftPlatform().get(),
+          DEFAULT_IPHONEOS_X86_64_PLATFORM.getFlavor(),
+          DEFAULT_IPHONEOS_X86_64_PLATFORM.getSwiftPlatform().get(),
+          DEFAULT_MACOSX_X86_64_PLATFORM.getFlavor(),
+          DEFAULT_MACOSX_X86_64_PLATFORM.getSwiftPlatform().get()));
 
   public static final SwiftLibraryDescription SWIFT_LIBRARY_DESCRIPTION =
       new SwiftLibraryDescription(
