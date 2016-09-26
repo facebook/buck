@@ -47,6 +47,26 @@ class SingletonGenerator:
         return GeneratedField(field.value[0], field.deps)
 
 
+class EnumSetGenerator:
+    def __init__(self):
+        self._lengths = collections.Counter()
+        self._values = collections.Counter()
+
+    def add_sample(self, base_path, sample):
+        self._lengths.update([len(sample)])
+        self._values.update(sample)
+
+    def generate(self, base_path):
+        length = weighted_choice(self._lengths)
+        options = collections.Counter(self._values)
+        output = []
+        while len(output) < length:
+            value = weighted_choice(options)
+            output.append(value)
+            del options[value]
+        return GeneratedField(output, [])
+
+
 class StringGenerator:
     def __init__(self, respect_file_extensions=False):
         self._respect_file_extensions = respect_file_extensions

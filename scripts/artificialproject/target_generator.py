@@ -5,6 +5,7 @@ import sys
 
 from artificialproject.field_generators import (
     BuildTargetSetGenerator,
+    EnumSetGenerator,
     NullableGenerator,
     PathSetGenerator,
     SingletonGenerator,
@@ -43,6 +44,9 @@ class TargetDataGenerator:
             return lambda context: SingletonGenerator(
                     set_generator_class(context))
 
+        def enum_set(context):
+            return EnumSetGenerator()
+
         def string(context):
             return StringGenerator()
 
@@ -54,6 +58,7 @@ class TargetDataGenerator:
 
         build_target_set = BuildTargetSetGenerator
         build_target = singleton(build_target_set)
+        enum = singleton(enum_set)
         paths = PathSetGenerator
         path = singleton(paths)
         source_path_set = SourcePathSetGenerator
@@ -62,6 +67,7 @@ class TargetDataGenerator:
 
         FIELDS = {
             '*.deps': build_target_set,
+            '*.licenses': enum_set,
             '*.out': nullable(file_name),
             '*.srcs': source_path_set,
             '*.visibility': visibility,
@@ -73,6 +79,7 @@ class TargetDataGenerator:
             'android_react_native_library.entry_path': source_path,
             'android_react_native_library.package': string,
             'cxx_library.srcs': sources_with_flags,
+            'export_file.mode': enum,
             'export_file.src': source_path,
             'gen_aidl.aidl': source_path,
             'gen_aidl.import_path': string,
