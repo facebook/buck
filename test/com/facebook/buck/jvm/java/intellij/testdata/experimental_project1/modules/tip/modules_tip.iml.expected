@@ -17,6 +17,7 @@
         <option name="PACK_TEST_CODE" value="false" />
         <option name="RUN_PROGUARD" value="false" />
         <option name="PROGUARD_CFG_PATH" value="" />
+        <option name="ENABLE_SOURCES_AUTOGENERATION" value="true" />
         <resOverlayFolders />
         <includeSystemProguardFile>false</includeSystemProguardFile>
         <includeAssetsFromLibraries>true</includeAssetsFromLibraries>

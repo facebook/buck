@@ -26,6 +26,7 @@ import com.facebook.buck.android.AndroidBinaryBuilder;
 import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidResourceDescription;
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -490,6 +491,10 @@ public class IjModuleFactoryTest {
   }
 
   private IjModuleFactory createIjModuleFactory() {
+    return createIjModuleFactory(null);
+  }
+
+  private IjModuleFactory createIjModuleFactory(BuckConfig buckConfig) {
     return new IjModuleFactory(
         new IjModuleFactory.IjModuleFactoryResolver() {
           @Override
@@ -527,6 +532,9 @@ public class IjModuleFactoryTest {
             return Optional.absent();
           }
         },
+        buckConfig == null
+            ? IjProjectConfig.builder().build()
+            : IjProjectBuckConfig.create(buckConfig),
         false);
   }
 

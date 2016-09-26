@@ -204,7 +204,10 @@ public class IjProject {
         buckConfig,
         targetGraphAndTargets.getTargetGraph(),
         libraryFactory,
-        new IjModuleFactory(moduleFactoryResolver, excludeArtifacts),
+        new IjModuleFactory(
+            moduleFactoryResolver,
+            IjProjectBuckConfig.create(buckConfig),
+            excludeArtifacts),
         aggregationMode);
     JavaPackageFinder parsingJavaPackageFinder = ParsingJavaPackageFinder.preparse(
         javaFileParser,

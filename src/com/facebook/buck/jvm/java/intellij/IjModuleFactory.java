@@ -296,14 +296,17 @@ public class IjModuleFactory {
   private final Map<BuildRuleType, IjModuleRule<?>> moduleRuleIndex = new HashMap<>();
   private final IjModuleFactoryResolver moduleFactoryResolver;
   private final boolean excludeShadows;
+  private final boolean autogenerateAndroidFacetSources;
 
   /**
    * @param moduleFactoryResolver see {@link IjModuleFactoryResolver}.
    */
   public IjModuleFactory(
       IjModuleFactoryResolver moduleFactoryResolver,
+      IjProjectConfig projectConfig,
       boolean excludeShadows) {
     this.excludeShadows = excludeShadows;
+    this.autogenerateAndroidFacetSources = projectConfig.isAutogenerateAndroidFacetSourcesEnabled();
 
     addToIndex(new AndroidBinaryModuleRule());
     addToIndex(new AndroidLibraryModuleRule());
@@ -570,6 +573,7 @@ public class IjModuleFactory {
       androidFacetBuilder
           .setManifestPath(moduleFactoryResolver.getAndroidManifestPath(target))
           .setProguardConfigPath(moduleFactoryResolver.getProguardConfigPath(target))
+          .setAutogenerateSources(autogenerateAndroidFacetSources)
           .setAndroidLibrary(false);
     }
   }
@@ -594,7 +598,9 @@ public class IjModuleFactory {
       if (dummyRDotJavaClassPath.isPresent()) {
         context.addExtraClassPathDependency(dummyRDotJavaClassPath.get());
       }
-      context.getOrCreateAndroidFacetBuilder().setAndroidLibrary(true);
+      context.getOrCreateAndroidFacetBuilder()
+          .setAutogenerateSources(autogenerateAndroidFacetSources)
+          .setAndroidLibrary(true);
     }
   }
 
@@ -612,7 +618,9 @@ public class IjModuleFactory {
         ModuleBuildContext context) {
 
       IjModuleAndroidFacet.Builder androidFacetBuilder = context.getOrCreateAndroidFacetBuilder();
-      androidFacetBuilder.setAndroidLibrary(true);
+      androidFacetBuilder
+          .setAutogenerateSources(autogenerateAndroidFacetSources)
+          .setAndroidLibrary(true);
 
       Optional<Path> assets = moduleFactoryResolver.getAssetsPath(target);
       if (assets.isPresent()) {

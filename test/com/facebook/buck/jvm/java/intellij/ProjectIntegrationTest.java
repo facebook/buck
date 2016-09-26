@@ -732,6 +732,21 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testVersion2BuckProjectWithoutAutogeneratingSources() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "experimental_project_without_autogeneration", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project");
+    result.assertSuccess("buck project should exit cleanly");
+
+    workspace.verify();
+  }
+
+  @Test
   public void testVersion2BuckProjectSlice() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
 

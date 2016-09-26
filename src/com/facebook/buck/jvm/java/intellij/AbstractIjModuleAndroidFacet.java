@@ -63,4 +63,6 @@ abstract class AbstractIjModuleAndroidFacet {
    * targets to specify the package their resources should referenced via.
    */
   public abstract Optional<String> getPackageName();
+
+  public abstract boolean autogenerateSources();
 }

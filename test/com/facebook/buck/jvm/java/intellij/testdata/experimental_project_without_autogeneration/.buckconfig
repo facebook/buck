@@ -1,0 +1,8 @@
+[color]
+  ui = false
+[alias]
+  root=//:root_repo
+[project]
+  ignore = buck-out
+  ide = intellij
+  disable_r_java_idea_generator = true

@@ -18,6 +18,7 @@
         <option name="PACK_TEST_CODE" value="false" />
         <option name="RUN_PROGUARD" value="%androidFacet.run_proguard%" />
         <option name="PROGUARD_CFG_PATH" value="%androidFacet.proguard_config%" />
+        <option name="ENABLE_SOURCES_AUTOGENERATION" value="%androidFacet.autogenerate_sources%" />
         <resOverlayFolders />
         <includeSystemProguardFile>false</includeSystemProguardFile>
         <includeAssetsFromLibraries>true</includeAssetsFromLibraries>

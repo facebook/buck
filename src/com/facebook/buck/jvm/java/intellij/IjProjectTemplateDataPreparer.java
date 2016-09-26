@@ -385,6 +385,9 @@ public class IjProjectTemplateDataPreparer {
     IjModuleAndroidFacet androidFacet = androidFacetOptional.get();
 
     androidProperties.put("is_android_library_project", androidFacet.isAndroidLibrary());
+    androidProperties.put(
+        "autogenerate_sources",
+        androidFacet.autogenerateSources());
 
     Path basePath = module.getModuleBasePath();
 
@@ -401,7 +404,6 @@ public class IjProjectTemplateDataPreparer {
   }
 
   private void addAndroidConstants(Map<String, Object> androidProperties) {
-    androidProperties.put("enable_sources_autogeneration", true);
     androidProperties.put("run_proguard", false);
 
     // TODO(alsutton): Fix keystore detection

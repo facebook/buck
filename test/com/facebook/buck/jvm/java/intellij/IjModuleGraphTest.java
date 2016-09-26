@@ -26,6 +26,7 @@ import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidResourceBuilder;
 import com.facebook.buck.android.AndroidResourceDescription;
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
@@ -805,6 +806,7 @@ public class IjModuleGraphTest {
             return Optional.fromNullable(javaLibraryPaths.get(targetNode));
           }
         };
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
     IjModuleFactory moduleFactory = new IjModuleFactory(
         new IjModuleFactory.IjModuleFactoryResolver() {
           @Override
@@ -841,10 +843,11 @@ public class IjModuleGraphTest {
             return Optional.absent();
           }
         },
+        IjProjectBuckConfig.create(buckConfig),
         false);
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(sourceOnlyResolver);
     return IjModuleGraph.from(
-        FakeBuckConfig.builder().build(),
+        buckConfig,
         TargetGraphFactory.newInstance(targets),
         libraryFactory,
         moduleFactory,
