@@ -136,7 +136,7 @@ class SwiftLibrary
     SwiftCompile rule = requireSwiftCompileRule(cxxPlatform.getFlavor());
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
     inputBuilder
-        .addAllArgs(rule.getLinkArgs())
+        .addAllArgs(rule.getAstLinkArgs())
         .addAllFrameworks(frameworks)
         .addAllLibraries(libraries);
     boolean isDynamic;

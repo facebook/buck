@@ -43,7 +43,9 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -105,6 +107,7 @@ public class SwiftLibraryDescription implements
   private final SwiftBuckConfig swiftBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain;
+  private final ObjectMapper objectMapper;
 
   public SwiftLibraryDescription(
       CxxBuckConfig cxxBuckConfig,
@@ -115,6 +118,7 @@ public class SwiftLibraryDescription implements
     this.swiftBuckConfig = swiftBuckConfig;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.swiftPlatformFlavorDomain = swiftPlatformFlavorDomain;
+    this.objectMapper = ObjectMappers.newDefaultInstance();
   }
 
   @Override
@@ -210,6 +214,7 @@ public class SwiftLibraryDescription implements
       return new SwiftCompile(
           cxxPlatform,
           swiftBuckConfig,
+          objectMapper,
           params,
           new SourcePathResolver(resolver),
           swiftPlatform.get().getSwift(),
@@ -219,7 +224,6 @@ public class SwiftLibraryDescription implements
               params.getProjectFilesystem(),
               buildTarget, "%s"),
           args.srcs.get(),
-          Optional.<Boolean>absent(),
           args.bridgingHeader);
     }
 
@@ -256,32 +260,34 @@ public class SwiftLibraryDescription implements
     SwiftRuntimeNativeLinkable swiftRuntimeLinkable =
         new SwiftRuntimeNativeLinkable(swiftPlatform);
 
-    NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder()
-        .from(swiftRuntimeLinkable.getNativeLinkableInput(
-                cxxPlatform, Linker.LinkableDepType.SHARED));
     BuildTarget requiredBuildTarget = buildTarget
         .withoutFlavors(ImmutableSet.of(CxxDescriptionEnhancer.SHARED_FLAVOR))
         .withAppendedFlavors(SWIFT_COMPILE_FLAVOR);
     SwiftCompile rule = (SwiftCompile) resolver.requireRule(requiredBuildTarget);
-    inputBuilder.addAllArgs(rule.getLinkArgs());
-    return resolver.addToIndex(CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        cxxBuckConfig,
-        cxxPlatform,
-        params,
-        resolver,
-        sourcePathResolver,
-        buildTarget,
-        Linker.LinkType.SHARED,
-        Optional.of(sharedLibrarySoname),
-        sharedLibOutput,
-        Linker.LinkableDepType.SHARED,
-        FluentIterable.from(params.getDeps())
-            .filter(NativeLinkable.class)
-            .append(swiftRuntimeLinkable),
-        Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of(),
-        inputBuilder.build()));
+    NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder()
+        .from(swiftRuntimeLinkable.getNativeLinkableInput(
+                cxxPlatform, Linker.LinkableDepType.SHARED))
+        .addAllArgs(rule.getAstLinkArgs())
+        .addAllArgs(rule.getFileListLinkArgs());
+    return resolver.addToIndex(
+        CxxLinkableEnhancer.createCxxLinkableBuildRule(
+            cxxBuckConfig,
+            cxxPlatform,
+            params,
+            resolver,
+            sourcePathResolver,
+            buildTarget,
+            Linker.LinkType.SHARED,
+            Optional.of(sharedLibrarySoname),
+            sharedLibOutput,
+            Linker.LinkableDepType.SHARED,
+            FluentIterable.from(params.getDeps())
+                .filter(NativeLinkable.class)
+                .append(swiftRuntimeLinkable),
+            Optional.<Linker.CxxRuntimeType>absent(),
+            Optional.<SourcePath>absent(),
+            ImmutableSet.<BuildTarget>of(),
+            inputBuilder.build()));
   }
 
   public <A extends CxxLibraryDescription.Arg> Optional<BuildRule> createCompanionBuildRule(
