@@ -272,8 +272,20 @@ public class AppleBundle
     return platformName;
   }
 
+  public Path getFrameworksPath() {
+    return bundleRoot.resolve(this.destinations.getFrameworksPath());
+  }
+
+  public Path getPlugInsPath() {
+    return bundleRoot.resolve(destinations.getPlugInsPath());
+  }
+
   public Optional<BuildRule> getBinary() {
     return binary;
+  }
+
+  public Path getBundleBinaryPath() {
+    return bundleBinaryPath;
   }
 
   public boolean isLegacyWatchApp() {
@@ -403,7 +415,7 @@ public class AppleBundle
     }
 
     if (!frameworks.isEmpty()) {
-      Path frameworksDestinationPath = bundleRoot.resolve(this.destinations.getFrameworksPath());
+      Path frameworksDestinationPath = getFrameworksPath();
       stepsBuilder.add(new MkdirStep(getProjectFilesystem(), frameworksDestinationPath));
       for (SourcePath framework : frameworks) {
         stepsBuilder.add(
@@ -675,9 +687,9 @@ public class AppleBundle
           "--scan-executable",
           bundleBinaryPath.toString(),
           "--scan-folder",
-          bundleRoot.resolve(destinations.getFrameworksPath()).toString(),
+          getFrameworksPath().toString(),
           "--scan-folder",
-          bundleRoot.resolve(destinations.getPlugInsPath()).toString());
+          getPlugInsPath().toString());
 
       stepsBuilder.add(
           new SwiftStdlibStep(
