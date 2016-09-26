@@ -30,7 +30,7 @@ def get_transitive_deps(top_target_name, targets_by_name):
 
 def target_has_output(target):
     type = target['buck.type']
-    if type == 'java_library':
+    if type in ['java_library', 'android_library']:
         srcs = target.get('srcs', [])
         return len(srcs) != 0
     return True
