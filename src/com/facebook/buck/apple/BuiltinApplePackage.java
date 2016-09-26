@@ -123,7 +123,7 @@ public class BuiltinApplePackage extends AbstractBuildRule {
     if (swiftStdlibTool.isPresent() && bundle instanceof AppleBundle) {
       AppleBundle appleBundle = (AppleBundle) bundle;
 
-      Path swiftSupportDir = temp.resolve("SwiftSupport/" + appleBundle.getPlatformName());
+      Path swiftSupportDir = temp.resolve("SwiftSupport").resolve(appleBundle.getPlatformName());
 
       ImmutableList.Builder<String> swiftStdlibCommand = ImmutableList.builder();
       swiftStdlibCommand.addAll(swiftStdlibTool.get().getCommandPrefix(getResolver()));
