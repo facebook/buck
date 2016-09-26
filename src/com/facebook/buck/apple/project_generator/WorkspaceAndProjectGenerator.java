@@ -43,6 +43,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
@@ -112,6 +113,7 @@ public class WorkspaceAndProjectGenerator {
   private final HalideBuckConfig halideBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final AppleConfig appleConfig;
+  private final SwiftBuckConfig swiftBuckConfig;
 
   public WorkspaceAndProjectGenerator(
       Cell cell,
@@ -133,7 +135,8 @@ public class WorkspaceAndProjectGenerator {
       BuckEventBus buckEventBus,
       HalideBuckConfig halideBuckConfig,
       CxxBuckConfig cxxBuckConfig,
-      AppleConfig appleConfig) {
+      AppleConfig appleConfig,
+      SwiftBuckConfig swiftBuckConfig) {
     this.rootCell = cell;
     this.projectGraph = projectGraph;
     this.workspaceArguments = workspaceArguments;
@@ -151,6 +154,7 @@ public class WorkspaceAndProjectGenerator {
     this.buildFileName = buildFileName;
     this.sourcePathResolverForNode = sourcePathResolverForNode;
     this.buckEventBus = buckEventBus;
+    this.swiftBuckConfig = swiftBuckConfig;
     this.combinedProjectGenerator = Optional.absent();
     this.halideBuckConfig = halideBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
@@ -507,7 +511,8 @@ public class WorkspaceAndProjectGenerator {
         buckEventBus,
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig);
+        appleConfig,
+        swiftBuckConfig);
     combinedTestsProjectGenerator
         .setAdditionalCombinedTestTargets(groupedTests)
         .createXcodeProjects();
@@ -573,7 +578,8 @@ public class WorkspaceAndProjectGenerator {
             buckEventBus,
             halideBuckConfig,
             cxxBuckConfig,
-            appleConfig)
+            appleConfig,
+            swiftBuckConfig)
             .setTestsToGenerateAsStaticLibraries(groupableTests);
         projectGenerators.put(projectDirectory, generator);
         shouldGenerateProjects = true;
@@ -623,7 +629,8 @@ public class WorkspaceAndProjectGenerator {
         buckEventBus,
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig)
+        appleConfig,
+        swiftBuckConfig)
         .setAdditionalCombinedTestTargets(groupedTests)
         .setTestsToGenerateAsStaticLibraries(groupableTests);
     combinedProjectGenerator = Optional.of(generator);

@@ -101,6 +101,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.shell.ExportFileDescription;
+import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreIterables;
@@ -318,6 +319,7 @@ public class ProjectGenerator {
   private final HalideBuckConfig halideBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final AppleConfig appleConfig;
+  private final SwiftBuckConfig swiftBuckConfig;
   private final ImmutableList<BuildTarget> focusModules;
 
   public ProjectGenerator(
@@ -339,7 +341,8 @@ public class ProjectGenerator {
       BuckEventBus buckEventBus,
       HalideBuckConfig halideBuckConfig,
       CxxBuckConfig cxxBuckConfig,
-      AppleConfig appleConfig) {
+      AppleConfig appleConfig,
+      SwiftBuckConfig swiftBuckConfig) {
     this.sourcePathResolver = new Function<SourcePath, Path>() {
       @Override
       public Path apply(SourcePath input) {
@@ -392,6 +395,7 @@ public class ProjectGenerator {
     this.halideBuckConfig = halideBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.appleConfig = appleConfig;
+    this.swiftBuckConfig = swiftBuckConfig;
     this.focusModules = focusModules;
 
     for (BuildTarget focusedTarget : focusModules) {
@@ -1330,6 +1334,10 @@ public class ProjectGenerator {
       extraSettingsBuilder.put(
           "SWIFT_OBJC_BRIDGING_HEADER",
           Joiner.on('/').join("$(SRCROOT)", bridgingHeaderPath.toString()));
+    }
+    Optional<String> swiftVersion = swiftBuckConfig.getVersion();
+    if (swiftVersion.isPresent()) {
+      extraSettingsBuilder.put("SWIFT_VERSION", swiftVersion.get());
     }
     Optional<SourcePath> prefixHeaderOptional = targetNode.getConstructorArg().prefixHeader;
     if (prefixHeaderOptional.isPresent()) {

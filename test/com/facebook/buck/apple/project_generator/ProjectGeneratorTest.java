@@ -110,6 +110,7 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.ExportFileDescription;
+import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -171,6 +172,7 @@ public class ProjectGeneratorTest {
   private HalideBuckConfig halideBuckConfig;
   private CxxBuckConfig cxxBuckConfig;
   private AppleConfig appleConfig;
+  private SwiftBuckConfig swiftBuckConfig;
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -203,10 +205,13 @@ public class ProjectGeneratorTest {
             "cflags", "-Wno-deprecated -Wno-conversion",
             "cxxflags", "-Wundeclared-selector -Wno-objc-designated-initializers"),
         "apple", ImmutableMap.of(
-            "force_dsym_mode_in_build_with_buck", "false"));
+            "force_dsym_mode_in_build_with_buck", "false"),
+        "swift", ImmutableMap.of(
+            "version", "1.23"));
     BuckConfig config = FakeBuckConfig.builder().setSections(sections).build();
     cxxBuckConfig = new CxxBuckConfig(config);
     appleConfig = new AppleConfig(config);
+    swiftBuckConfig = new SwiftBuckConfig(config);
   }
 
   @Test
@@ -3519,7 +3524,8 @@ public class ProjectGeneratorTest {
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig)
+        appleConfig,
+        swiftBuckConfig)
         .setTestsToGenerateAsStaticLibraries(ImmutableSet.of(xctest1, xctest2))
         .setAdditionalCombinedTestTargets(
             ImmutableMultimap.of(
@@ -3809,7 +3815,8 @@ public class ProjectGeneratorTest {
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig);
+        appleConfig,
+        swiftBuckConfig);
     projectGenerator.createXcodeProjects();
 
     PBXTarget buildWithBuckTarget = null;
@@ -3914,7 +3921,8 @@ public class ProjectGeneratorTest {
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig);
+        appleConfig,
+        swiftBuckConfig);
     projectGenerator.createXcodeProjects();
 
     PBXTarget buildWithBuckTarget = null;
@@ -3994,7 +4002,8 @@ public class ProjectGeneratorTest {
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig);
+        appleConfig,
+        swiftBuckConfig);
     projectGenerator.createXcodeProjects();
 
     PBXTarget buildWithBuckTarget = null;
@@ -4599,6 +4608,30 @@ public class ProjectGeneratorTest {
         buildSettings.get("SWIFT_OBJC_BRIDGING_HEADER"));
   }
 
+  @Test
+  public void testGeneratedProjectSettingForSwiftVersion() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .setSrcs(Optional.of(ImmutableSortedSet.<SourceWithFlags>of()))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node));
+    projectGenerator.createXcodeProjects();
+    PBXProject project = projectGenerator.getGeneratedProject();
+
+    PBXTarget target =
+        assertTargetExistsAndReturnTarget(project, "//foo:lib");
+    ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target, "Debug");
+    assertThat(buildSettings.get("SWIFT_VERSION"), equalTo("1.23"));
+  }
+
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       Iterable<TargetNode<?>> nodes) {
     return createProjectGeneratorForCombinedProject(
@@ -4646,7 +4679,8 @@ public class ProjectGeneratorTest {
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig);
+        appleConfig,
+        swiftBuckConfig);
   }
 
   private Function<TargetNode<?>, SourcePathResolver> getSourcePathResolverForNodeFunction(
