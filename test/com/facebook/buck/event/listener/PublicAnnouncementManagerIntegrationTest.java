@@ -1,0 +1,165 @@
+/*
+ * Copyright 2016-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.event.listener;
+
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
+import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.distributed.thrift.Announcement;
+import com.facebook.buck.distributed.thrift.AnnouncementResponse;
+import com.facebook.buck.distributed.thrift.FrontendRequest;
+import com.facebook.buck.distributed.thrift.FrontendRequestType;
+import com.facebook.buck.distributed.thrift.FrontendResponse;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.httpserver.WebServer;
+import com.facebook.buck.slb.ThriftProtocol;
+import com.facebook.buck.slb.ThriftUtil;
+import com.facebook.buck.test.TestResultSummaryVerbosity;
+import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.testutil.integration.HttpdForTests;
+import com.facebook.buck.timing.Clock;
+import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
+import com.facebook.buck.util.environment.ExecutionEnvironment;
+import com.facebook.buck.util.network.RemoteLogBuckConfig;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.ByteStreams;
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
+import com.google.common.util.concurrent.MoreExecutors;
+
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Locale;
+import java.util.TimeZone;
+import java.util.concurrent.atomic.AtomicReference;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+public class PublicAnnouncementManagerIntegrationTest {
+
+  private static final String REPOSITORY = "repository-name";
+  private static final String ERROR_MSG = "This is the error message.";
+  private static final String SOLUTION_MSG = "This is the solution message.";
+
+  private Path logPath;
+
+  @Before
+  public void createTestLogFile() {
+      logPath = Jimfs.newFileSystem(Configuration.unix()).getPath("log.txt");
+  }
+
+  @Test
+  public void testAnnouncementsWork() throws Exception {
+    final AtomicReference<byte[]> requestBody = new AtomicReference<>();
+
+    try (HttpdForTests httpd = new HttpdForTests()) {
+      httpd.addHandler(
+          new AbstractHandler() {
+            @Override
+            public void handle(
+                String s,
+                Request request,
+                HttpServletRequest httpServletRequest,
+                HttpServletResponse httpServletResponse) throws IOException, ServletException {
+              httpServletResponse.setStatus(200);
+              if (request.getUri().getPath().equals("/status.php")) {
+                return;
+              }
+
+              requestBody.set(ByteStreams.toByteArray(httpServletRequest.getInputStream()));
+              FrontendRequest thriftRequest = new FrontendRequest();
+              ThriftUtil.deserialize(ThriftProtocol.BINARY, requestBody.get(), thriftRequest);
+              assertTrue(
+                  "Request should contain the repository.",
+                  thriftRequest.getAnnouncementRequest().getRepository().equals(REPOSITORY));
+
+              try (DataOutputStream out =
+                       new DataOutputStream(httpServletResponse.getOutputStream())) {
+                Announcement announcement = new Announcement();
+                announcement.setErrorMessage(ERROR_MSG);
+                announcement.setSolutionMessage(SOLUTION_MSG);
+                AnnouncementResponse announcementResponse = new AnnouncementResponse();
+                announcementResponse.setAnnouncements(ImmutableList.of(announcement));
+                FrontendResponse frontendResponse = new FrontendResponse();
+                frontendResponse.setType(FrontendRequestType.ANNOUNCEMENT);
+                frontendResponse.setAnnouncementResponse(announcementResponse);
+
+                out.write(ThriftUtil.serialize(ThriftProtocol.BINARY, frontendResponse));
+              }
+            }
+          });
+      httpd.start();
+
+      Clock clock = new DefaultClock();
+      BuckEventBus eventBus = BuckEventBusFactory.newInstance(clock);
+      ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment(
+          ImmutableMap.copyOf(System.getenv()),
+          System.getProperties());
+      BuckConfig buckConfig = new FakeBuckConfig.Builder()
+          .setSections(ImmutableMap.of(
+              "log", ImmutableMap.of(
+                  "slb_server_pool",
+                  "http://localhost:" + httpd.getRootUri().getPort()
+              )
+          ))
+          .build();
+
+      SuperConsoleEventBusListener listener = new SuperConsoleEventBusListener(
+          new SuperConsoleConfig(FakeBuckConfig.builder().build()),
+          new TestConsole(),
+          clock,
+        /* verbosity */ TestResultSummaryVerbosity.of(false, false),
+          executionEnvironment,
+          Optional.<WebServer>absent(),
+          Locale.US,
+          logPath,
+          TimeZone.getTimeZone("UTC"));
+      eventBus.register(listener);
+
+      PublicAnnouncementManager manager = new PublicAnnouncementManager(
+          clock,
+          executionEnvironment,
+          eventBus,
+          listener,
+          REPOSITORY,
+          new RemoteLogBuckConfig(buckConfig),
+          MoreExecutors.newDirectExecutorService());
+
+      manager.getAndPostAnnouncements();
+
+      ImmutableList<String> announcements = listener.getPublicAnnouncements();
+      assertSame("Header and 1 message", announcements.size(), 2);
+      assertTrue(announcements.get(0).equals(PublicAnnouncementManager.HEADER_MSG));
+      assertTrue(announcements.get(1).equals(
+          String.format(PublicAnnouncementManager.ANNOUNCEMENT_TEMPLATE, ERROR_MSG, SOLUTION_MSG)));
+    }
+  }
+}

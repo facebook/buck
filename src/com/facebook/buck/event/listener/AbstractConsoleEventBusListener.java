@@ -41,6 +41,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.unit.SizeUnit;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -134,6 +135,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected volatile HttpArtifactCacheEvent.Shutdown httpShutdownEvent;
 
   protected volatile Optional<Integer> ruleCount = Optional.absent();
+  protected ImmutableList<String> publicAnnouncements = ImmutableList.of();
 
   protected final AtomicInteger numRulesCompleted = new AtomicInteger();
 
@@ -184,8 +186,17 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     this.accumulatedTimeTracker = new AccumulatedTimeTracker(executionEnvironment);
   }
 
+  @VisibleForTesting
+  ImmutableList<String> getPublicAnnouncements() {
+    return publicAnnouncements;
+  }
+
   public void setProgressEstimator(ProgressEstimator estimator) {
     progressEstimator = Optional.<ProgressEstimator>of(estimator);
+  }
+
+  public void setPublicAnnouncements(ImmutableList<String> announcements) {
+    this.publicAnnouncements = announcements;
   }
 
   protected String formatElapsedTime(long elapsedTimeMs) {

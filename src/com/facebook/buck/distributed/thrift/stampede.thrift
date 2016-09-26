@@ -91,8 +91,6 @@ struct BuildJob {
 struct Announcement {
   1: optional string errorMessage;
   2: optional string solutionMessage;
-  3: optional list<string> buckVersions;
-  4: optional list<string> repositories;
 }
 
 ##############################################################################

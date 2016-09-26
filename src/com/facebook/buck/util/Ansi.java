@@ -38,10 +38,12 @@ public final class Ansi {
   private static final String RED = "\u001B[31m";
   private static final String YELLOW = "\u001B[33m";
   private static final String GREEN = "\u001B[32m";
+  private static final String CYAN = "\u001B[36m";
 
   private static final String ERROR_SEQUENCE = RED;
   private static final String WARNING_SEQUENCE = YELLOW;
   private static final String SUCCESS_SEQUENCE = GREEN;
+  private static final String INFORMATION_SEQUENCE = CYAN;
   private static final String SUBTLE_SEQUENCE = GREY;
 
   private static final String BACKGROUND_RED = "\u001B[41m";
@@ -106,6 +108,10 @@ public final class Ansi {
 
   public String asSubtleText(String text) {
     return wrapWithColor(SUBTLE_SEQUENCE, text);
+  }
+
+  public String asInformationText(String text) {
+    return wrapWithColor(INFORMATION_SEQUENCE, text);
   }
 
   public String getHighlightedWarningSequence() {

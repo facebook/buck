@@ -577,6 +577,10 @@ public class BuckConfig {
     return getBooleanValue("cache", "action_graph_cache_check_enabled", false);
   }
 
+  public Optional<String> getRepository() {
+    return config.get("cache", "repository");
+  }
+
   public Optional<ImmutableSet<PatternAndMessage>> getUnexpectedFlavorsMessages() {
     ImmutableMap<String, String> entries = config.get("unknown_flavors_messages");
     if (!entries.isEmpty()) {

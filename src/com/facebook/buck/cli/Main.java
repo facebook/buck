@@ -45,6 +45,7 @@ import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.event.listener.LoadBalancerEventsListener;
 import com.facebook.buck.event.listener.LoggingBuildListener;
 import com.facebook.buck.event.listener.ProgressEstimator;
+import com.facebook.buck.event.listener.PublicAnnouncementManager;
 import com.facebook.buck.event.listener.RuleKeyLoggerListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleConfig;
@@ -113,6 +114,7 @@ import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.network.RemoteLogBuckConfig;
 import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.shutdown.NonReentrantSystemExit;
 import com.facebook.buck.util.versioncontrol.DefaultVersionControlCmdLineInterfaceFactory;
@@ -1042,6 +1044,16 @@ public final class Main {
               rootCell.getKnownBuildRuleTypes(),
               clientEnvironment,
               counterRegistry);
+
+          PublicAnnouncementManager announcementManager = new PublicAnnouncementManager(
+              clock,
+              executionEnvironment,
+              buildEventBus,
+              consoleListener,
+              buckConfig.getRepository().or("unknown"),
+              new RemoteLogBuckConfig(buckConfig),
+              executors.get(ExecutorPool.CPU));
+          announcementManager.getAndPostAnnouncements();
 
           // This needs to be after the registration of the event listener so they can pick it up.
           if (watchmanFreshInstanceAction == WatchmanWatcher.FreshInstanceAction.NONE) {
