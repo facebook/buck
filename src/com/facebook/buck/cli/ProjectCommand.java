@@ -1294,6 +1294,9 @@ public class ProjectCommand extends BuildCommand {
           for (TargetNode<?> ourParent : flavoredGraph.getIncomingNodesFor(node)) {
             flavoredGraph.addEdge(ourParent, flavoredNode);
           }
+          for (TargetNode<?> dep : projectGraph.getNodeDepencies(node)) {
+            flavoredGraph.addEdge(flavoredNode, dep);
+          }
           flavoredGraph.removeNode(node);
           updateTargetsToNodes(targetsToNodes, flavoredNode);
 
