@@ -401,15 +401,17 @@ public class AppleCxxPlatforms {
 
     ApplePlatform applePlatform = targetSdk.getApplePlatform();
     ImmutableList.Builder<Path> swiftOverrideSearchPathBuilder = ImmutableList.builder();
+    AppleSdkPaths.Builder swiftSdkPathsBuilder = AppleSdkPaths.builder().from(sdkPaths);
     if (swiftToolChain.isPresent()) {
       swiftOverrideSearchPathBuilder.add(swiftToolChain.get().getPath().resolve(USR_BIN));
+      swiftSdkPathsBuilder.setToolchainPaths(ImmutableList.of(swiftToolChain.get().getPath()));
     }
     Optional<SwiftPlatform> swiftPlatform = getSwiftPlatform(
         applePlatform.getName(),
         targetArchitecture + "-apple-" +
             applePlatform.getSwiftName().or(applePlatform.getName()) + targetSdk.getVersion(),
         version,
-        sdkPaths,
+        swiftSdkPathsBuilder.build(),
         swiftOverrideSearchPathBuilder
             .addAll(toolSearchPaths)
             .build(),
