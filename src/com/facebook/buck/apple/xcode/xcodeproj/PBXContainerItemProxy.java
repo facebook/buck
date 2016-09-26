@@ -17,11 +17,11 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
+import com.google.common.base.Preconditions;
 
 /**
- * Reference to another object used by {@link PBXTargetDependency}. Can reference a remote file
- * by specifying the {@link PBXFileReference} to the remote project file, and the GID of the object
- * within that file.
+ * Reference to another target used by {@link PBXTargetDependency}. Can reference a target
+ * in a remote project file.
  */
 public class PBXContainerItemProxy extends PBXContainerItem {
   public enum ProxyType {
@@ -37,25 +37,24 @@ public class PBXContainerItemProxy extends PBXContainerItem {
     }
   }
 
-  private final PBXFileReference containerPortal;
-  private final String remoteGlobalIDString;
+  private final PBXProject containerPortal;
+  private final PBXTarget target;
   private final ProxyType proxyType;
 
   public PBXContainerItemProxy(
-      PBXFileReference containerPortal,
-      String remoteGlobalIDString,
-      ProxyType proxyType) {
+      PBXProject containerPortal,
+      PBXTarget target) {
     this.containerPortal = containerPortal;
-    this.remoteGlobalIDString = remoteGlobalIDString;
-    this.proxyType = proxyType;
+    this.target = target;
+    this.proxyType = ProxyType.TARGET_REFERENCE;
   }
 
-  public PBXFileReference getContainerPortal() {
+  public PBXProject getContainerPortal() {
     return containerPortal;
   }
 
-  public String getRemoteGlobalIDString() {
-    return remoteGlobalIDString;
+  public PBXTarget getTarget() {
+    return target;
   }
 
   public ProxyType getProxyType() {
@@ -69,15 +68,17 @@ public class PBXContainerItemProxy extends PBXContainerItem {
 
   @Override
   public int stableHash() {
-    return remoteGlobalIDString.hashCode();
+    return containerPortal.hashCode() ^ target.hashCode();
   }
 
   @Override
   public void serializeInto(XcodeprojSerializer s) {
     super.serializeInto(s);
 
-    s.addField("containerPortal", containerPortal);
-    s.addField("remoteGlobalIDString", remoteGlobalIDString);
+    Preconditions.checkNotNull(containerPortal.getGlobalID());
+    s.addField("containerPortal", containerPortal.getGlobalID());
+    s.addField("remoteGlobalIDString", target);
+    s.addField("remoteInfo", target.getName());
     s.addField("proxyType", proxyType.getIntValue());
   }
 }

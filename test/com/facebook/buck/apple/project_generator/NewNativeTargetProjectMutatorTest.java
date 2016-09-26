@@ -47,6 +47,8 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXTargetDependency;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -400,6 +402,25 @@ public class NewNativeTargetProjectMutatorTest {
         startsWith("BASE_DIR=${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\n" +
             "JS_OUT=${BASE_DIR}/Apps/Foo/FooBundle.js\n" +
             "SOURCE_MAP=${TEMP_DIR}/rn_source_map/Apps/Foo/FooBundle.js.map\n"));
+  }
+
+  @Test
+  public void testTargetDepencies() throws NoSuchBuildTargetException {
+    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
+    PBXNativeTarget target1 = new PBXNativeTarget("Target1");
+    PBXNativeTarget target2 = new PBXNativeTarget("Target2");
+    ImmutableSet<PBXTarget> dependentTargets = ImmutableSet.<PBXTarget>of(target1, target2);
+    mutator.setTargetDependenciesFromTargets(dependentTargets, generatedProject);
+
+    NewNativeTargetProjectMutator.Result result =
+        mutator.buildTargetAndAddToProject(generatedProject);
+
+    ImmutableSet.Builder<PBXTarget> targetBuilder = ImmutableSet.builder();
+    for (PBXTargetDependency dependency : result.target.getDependencies()) {
+      targetBuilder.add(dependency.getTargetProxy().getTarget());
+    }
+
+    assertEquals(targetBuilder.build(), dependentTargets);
   }
 
   private NewNativeTargetProjectMutator mutatorWithCommonDefaults() {

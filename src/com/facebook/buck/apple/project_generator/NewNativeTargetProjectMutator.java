@@ -29,6 +29,7 @@ import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.XcodeScriptDescriptionArg;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXContainerItemProxy;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFrameworksBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
@@ -39,6 +40,8 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXTargetDependency;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
@@ -125,6 +128,8 @@ class NewNativeTargetProjectMutator {
   private Iterable<PBXShellScriptBuildPhase> preBuildRunScriptPhases = ImmutableList.of();
   private Iterable<PBXBuildPhase> copyFilesPhases = ImmutableList.of();
   private Iterable<PBXShellScriptBuildPhase> postBuildRunScriptPhases = ImmutableList.of();
+  private Iterable<PBXTargetDependency> targetDependencies = ImmutableList.of();
+
 
   public NewNativeTargetProjectMutator(
       PathRelativizer pathRelativizer,
@@ -250,6 +255,12 @@ class NewNativeTargetProjectMutator {
     return this;
   }
 
+  public NewNativeTargetProjectMutator setTargetDependenciesFromTargets(
+      Iterable<PBXTarget> targets, PBXProject project) {
+    targetDependencies = createTargetDependenciesForTargets(targets, project);
+    return this;
+  }
+
   /**
    * @param recursiveAssetCatalogs List of asset catalog targets of targetNode and dependencies of
    *                               targetNode.
@@ -284,6 +295,7 @@ class NewNativeTargetProjectMutator {
     addResourcesBuildPhase(target, targetGroup);
     target.getBuildPhases().addAll((Collection<? extends PBXBuildPhase>) copyFilesPhases);
     addRunScriptBuildPhases(target, postBuildRunScriptPhases);
+    addTargetDependencies(target, targetDependencies);
 
     // Product
 
@@ -635,6 +647,16 @@ class NewNativeTargetProjectMutator {
     }
   }
 
+  private ImmutableList<PBXTargetDependency> createTargetDependenciesForTargets(
+      Iterable<PBXTarget> targets, PBXProject project) {
+    ImmutableList.Builder<PBXTargetDependency> builder = ImmutableList.builder();
+    for (PBXTarget target : targets) {
+      PBXContainerItemProxy proxy = new PBXContainerItemProxy(project, target);
+      builder.add(new PBXTargetDependency(proxy));
+    }
+    return builder.build();
+  }
+
   private ImmutableList<PBXShellScriptBuildPhase> createScriptsForTargetNodes(
       Iterable<TargetNode<?>> nodes) throws IllegalStateException {
     ImmutableList.Builder<PBXShellScriptBuildPhase> builder =
@@ -670,6 +692,14 @@ class NewNativeTargetProjectMutator {
       Iterable<PBXShellScriptBuildPhase> phases) {
     for (PBXShellScriptBuildPhase phase : phases) {
       target.getBuildPhases().add(phase);
+    }
+  }
+
+  private void addTargetDependencies(
+      PBXNativeTarget target,
+      Iterable<PBXTargetDependency> targetDependencies) {
+    for (PBXTargetDependency dependency : targetDependencies) {
+      target.getDependencies().add(dependency);
     }
   }
 
