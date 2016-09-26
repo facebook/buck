@@ -81,7 +81,7 @@ class StringGenerator:
 
     def add_string_sample(self, sample):
         if self._respect_file_extensions:
-            sample, extension = os.path.split(sample)
+            sample, extension = os.path.splitext(sample)
             self._extensions.update([extension])
         self._lengths.update([len(sample)])
         if sample:
