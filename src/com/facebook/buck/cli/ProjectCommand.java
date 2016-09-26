@@ -76,6 +76,7 @@ import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.ProcessManager;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
@@ -1280,19 +1281,21 @@ public class ProjectCommand extends BuildCommand {
         if (node.getType() == AppleLibraryDescription.TYPE &&
             !prefersStaticLinking(node) &&
             hasFrameworkFlavoredParent(flavoredGraph, node)) {
-          TargetNode<?> flavoredNode = node.withFlavors(
-              ImmutableSet.<Flavor>builder().addAll(node.getBuildTarget().getFlavors())
-                  .add(AppleDescriptions.FRAMEWORK_FLAVOR)
-                  .build());
+          // we may have already flavored this node
+          TargetNode<?> flavoredNode = targetsToNodes.get(node.getBuildTarget());
+          if (flavoredNode == null) {
+            flavoredNode = node.withFlavors(
+                ImmutableSet.<Flavor>builder().addAll(node.getBuildTarget().getFlavors())
+                    .add(AppleDescriptions.FRAMEWORK_FLAVOR)
+                    .build());
+          }
 
           flavoredGraph.addNode(flavoredNode);
           for (TargetNode<?> ourParent : flavoredGraph.getIncomingNodesFor(node)) {
             flavoredGraph.addEdge(ourParent, flavoredNode);
           }
           flavoredGraph.removeNode(node);
-          targetsToNodes.put(BuildTarget.of(
-              flavoredNode.getBuildTarget().getUnflavoredBuildTarget()),
-              flavoredNode);
+          updateTargetsToNodes(targetsToNodes, flavoredNode);
 
           Map<BuildTarget, Iterable<BuildTarget>> replacements = new HashMap<>();
           replacements.put(node.getBuildTarget(), ImmutableList.of(flavoredNode.getBuildTarget()));
@@ -1300,9 +1303,7 @@ public class ProjectCommand extends BuildCommand {
             groups.add(group.withReplacedTargets(replacements));
           }
         } else {
-          targetsToNodes.put(
-              BuildTarget.of(node.getBuildTarget().getUnflavoredBuildTarget()),
-              node);
+          updateTargetsToNodes(targetsToNodes, node);
           groups.addAll(projectGraph.getGroupsContainingTarget(node.getBuildTarget()));
         }
 
@@ -1311,6 +1312,21 @@ public class ProjectCommand extends BuildCommand {
     }.start();
 
     return new TargetGraph(flavoredGraph, ImmutableMap.copyOf(targetsToNodes), groups.build());
+  }
+
+  private void updateTargetsToNodes(
+      Map<BuildTarget, TargetNode<?>> targetsToNodes,
+      TargetNode<?> node) {
+    MoreMaps.putCheckEquals(targetsToNodes, node.getBuildTarget(), node);
+    if (node.getBuildTarget().isFlavored()) {
+      BuildTarget unflavoredBuildTarget = BuildTarget.of(
+          node.getBuildTarget().getUnflavoredBuildTarget());
+      TargetNode<?> unflavoredNode = targetsToNodes.get(unflavoredBuildTarget);
+      MoreMaps.putCheckEquals(
+          targetsToNodes,
+          unflavoredBuildTarget,
+          unflavoredNode != null ? unflavoredNode : node);
+    }
   }
 
   @SuppressWarnings(value = "unchecked")
