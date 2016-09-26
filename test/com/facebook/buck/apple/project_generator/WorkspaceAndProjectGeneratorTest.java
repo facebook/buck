@@ -48,6 +48,7 @@ import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
@@ -75,6 +76,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.GenruleDescription;
+import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.base.Function;
@@ -116,6 +118,7 @@ public class WorkspaceAndProjectGeneratorTest {
   private HalideBuckConfig halideBuckConfig;
   private CxxBuckConfig cxxBuckConfig;
   private AppleConfig appleConfig;
+  private SwiftBuckConfig swiftBuckConfig;
 
   private TargetGraph targetGraph;
   private TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceNode;
@@ -130,7 +133,9 @@ public class WorkspaceAndProjectGeneratorTest {
     ProjectFilesystem projectFilesystem = rootCell.getFilesystem();
     halideBuckConfig = HalideLibraryBuilder.createDefaultHalideConfig(projectFilesystem);
     cxxBuckConfig = CxxLibraryBuilder.createDefaultConfig();
-    appleConfig = new AppleConfig(FakeBuckConfig.builder().build());
+    BuckConfig fakeBuckConfig = FakeBuckConfig.builder().build();
+    appleConfig = new AppleConfig(fakeBuckConfig);
+    swiftBuckConfig = new SwiftBuckConfig(fakeBuckConfig);
     setUpWorkspaceAndProjects();
   }
 
@@ -265,7 +270,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig);
+        appleConfig,
+        swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators,
@@ -340,7 +346,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig);
+        appleConfig,
+        swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators,
@@ -399,7 +406,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig);
+        appleConfig,
+        swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators,
@@ -464,7 +472,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig);
+        appleConfig,
+        swiftBuckConfig);
 
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
@@ -539,7 +548,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig);
+        appleConfig,
+        swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators,
@@ -596,7 +606,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig);
+        appleConfig,
+        swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators,
@@ -634,7 +645,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig);
+        appleConfig,
+        swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators,
@@ -702,7 +714,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig);
+        appleConfig,
+        swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators,
@@ -751,7 +764,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig);
+        appleConfig,
+        swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
 
     try {
@@ -836,7 +850,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig);
+        appleConfig,
+        swiftBuckConfig);
     generator.setGroupableTests(AppleBuildRules.filterGroupableTests(targetGraph.getNodes()));
     Map<Path, ProjectGenerator> projectGenerators = Maps.newHashMap();
     generator.generateWorkspaceAndDependentProjects(
@@ -1200,7 +1215,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig);
+        appleConfig,
+        swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators,
@@ -1358,7 +1374,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig);
+        appleConfig,
+        swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators,
@@ -1454,7 +1471,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig);
+        appleConfig,
+        swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators,
@@ -1516,7 +1534,8 @@ public class WorkspaceAndProjectGeneratorTest {
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
-        appleConfig);
+        appleConfig,
+        swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators,

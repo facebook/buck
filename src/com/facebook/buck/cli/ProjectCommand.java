@@ -66,6 +66,7 @@ import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ProcessManager;
@@ -972,9 +973,11 @@ public class ProjectCommand extends BuildCommand {
             inputNode);
       }
 
-      AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
-      HalideBuckConfig halideBuckConfig = new HalideBuckConfig(params.getBuckConfig());
-      CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(params.getBuckConfig());
+      BuckConfig buckConfig = params.getBuckConfig();
+      AppleConfig appleConfig = new AppleConfig(buckConfig);
+      HalideBuckConfig halideBuckConfig = new HalideBuckConfig(buckConfig);
+      CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
+      SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(buckConfig);
 
       CxxPlatform defaultCxxPlatform = params.getCell().getKnownBuildRuleTypes().
           getDefaultCxxPlatforms();
@@ -1006,7 +1009,8 @@ public class ProjectCommand extends BuildCommand {
           params.getBuckEventBus(),
           halideBuckConfig,
           cxxBuckConfig,
-          appleConfig);
+          appleConfig,
+          swiftBuckConfig);
       generator.setGroupableTests(groupableTests);
       ListeningExecutorService executorService = params.getExecutors().get(
           ExecutorPool.PROJECT);
