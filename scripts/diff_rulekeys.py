@@ -229,6 +229,7 @@ class RuleKeyStructureInfo(object):
 
         return (top_key, structure_map)
 
+
     @staticmethod
     def _parseLogFile(buck_out):
         rule_key_structures = []
