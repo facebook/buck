@@ -99,10 +99,19 @@ public class ApplePackageDescription implements
           applePackageConfigAndPlatformInfo.get(),
           new BuildTargetSourcePath(bundle.getBuildTarget()));
     } else {
+      Set<Flavor> platformFlavors = getPlatformFlavorsOrDefault(params.getBuildTarget());
+      AppleCxxPlatform platform = null;
+
+      for (Flavor flavor : platformFlavors) {
+        AppleCxxPlatform iPlatform = appleCxxPlatformFlavorDomain.getValue(flavor);
+        platform = iPlatform;
+        break;
+      }
       return new BuiltinApplePackage(
           params,
           sourcePathResolver,
-          bundle);
+          bundle,
+          platform);
     }
   }
   @Override

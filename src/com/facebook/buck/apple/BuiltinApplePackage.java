@@ -20,20 +20,25 @@ import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.swift.SwiftPlatform;
 import com.facebook.buck.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSource;
@@ -46,16 +51,27 @@ public class BuiltinApplePackage extends AbstractBuildRule {
   private final Path temp;
   private final BuildRule bundle;
 
+  @AddToRuleKey
+  private final Optional<Tool> swiftStdlibTool;
+
   public BuiltinApplePackage(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      BuildRule bundle) {
+      BuildRule bundle,
+      AppleCxxPlatform appleCxxPlatform) {
     super(params, resolver);
     BuildTarget buildTarget = params.getBuildTarget();
     // TODO(ryu2): This will be different for Mac apps.
     this.pathToOutputFile = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s.ipa");
     this.temp = BuildTargets.getScratchPath(getProjectFilesystem(), buildTarget, "__temp__%s");
     this.bundle = bundle;
+    this.swiftStdlibTool = appleCxxPlatform.getSwiftPlatform()
+        .transform(new Function<SwiftPlatform, Tool>() {
+          @Override
+          public Tool apply(SwiftPlatform input) {
+            return input.getSwiftStdlibTool();
+          }
+        });
   }
 
   @Override
@@ -83,6 +99,8 @@ public class BuiltinApplePackage extends AbstractBuildRule {
             payloadDir,
             CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
 
+    appendAdditionalSwiftSteps(commands);
+
     // do the zipping
     commands.add(new MkdirStep(getProjectFilesystem(), pathToOutputFile.getParent()));
     commands.add(
@@ -97,6 +115,38 @@ public class BuiltinApplePackage extends AbstractBuildRule {
     buildableContext.recordArtifact(getPathToOutput());
 
     return commands.build();
+  }
+
+  private void appendAdditionalSwiftSteps(ImmutableList.Builder<Step> commands) {
+    // For .ipas containing Swift code, Apple requires the following for App Store submissions:
+    // 1. Copy the Swift standard libraries to SwiftSupport/{platform}
+    if (swiftStdlibTool.isPresent() && bundle instanceof AppleBundle) {
+      AppleBundle appleBundle = (AppleBundle) bundle;
+
+      Path swiftSupportDir = temp.resolve("SwiftSupport/" + appleBundle.getPlatformName());
+
+      ImmutableList.Builder<String> swiftStdlibCommand = ImmutableList.builder();
+      swiftStdlibCommand.addAll(swiftStdlibTool.get().getCommandPrefix(getResolver()));
+      swiftStdlibCommand.add(
+          "--scan-executable",
+          appleBundle.getBundleBinaryPath().toString(),
+          "--scan-folder",
+          appleBundle.getFrameworksPath().toString(),
+          "--scan-folder",
+          appleBundle.getPlugInsPath().toString());
+
+      commands.add(
+          new SwiftStdlibStep(
+              getProjectFilesystem().getRootPath(),
+              BuildTargets.getScratchPath(
+                  getProjectFilesystem(),
+                  getBuildTarget(),
+                  "__swiftsupport_temp__%s"),
+              swiftSupportDir,
+              swiftStdlibCommand.build(),
+              Optional.<Supplier<CodeSignIdentity>>absent())
+      );
+    }
   }
 
   private void appendAdditionalAppleWatchSteps(ImmutableList.Builder<Step> commands) {
