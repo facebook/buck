@@ -987,6 +987,8 @@ public class AppleCxxPlatformsTest {
     assertTrue(swiftTool instanceof VersionedTool);
     assertThat(((VersionedTool) swiftTool).getPath(),
         equalTo(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/swift")));
+
+    assertThat(swiftPlatformOptional.get().getSwiftRuntimePaths(), Matchers.<Path>empty());
   }
 
   @Test
@@ -997,6 +999,9 @@ public class AppleCxxPlatformsTest {
     Tool swiftTool = swiftPlatformOptional.get().getSwift();
     assertThat(((VersionedTool) swiftTool).getPath(),
         not(equalTo(Paths.get("Toolchains/Swift_2.3.xctoolchain/usr/bin/swift"))));
+
+    assertThat(swiftPlatformOptional.get().getSwiftRuntimePaths(),
+        equalTo(ImmutableSet.of(temp.getRoot().resolve("usr/lib/swift/iphoneos"))));
   }
 
   private AppleCxxPlatform buildAppleCxxPlatformWithSwiftToolchain(boolean useDefaultSwift)
@@ -1008,6 +1013,8 @@ public class AppleCxxPlatformsTest {
         .setVersion("1")
         .build();
     temp.newFolder("usr", "bin");
+    temp.newFolder("usr", "lib", "swift", "iphoneos");
+    temp.newFolder("usr", "lib", "swift_static", "iphoneos");
     MoreFiles.makeExecutable(temp.newFile("usr/bin/swift"));
     MoreFiles.makeExecutable(temp.newFile("usr/bin/swift-stdlib-tool"));
     Optional<AppleToolchain> selectedSwiftToolChain = useDefaultSwift ?
