@@ -82,6 +82,7 @@ JAVA_CLASSPATHS = [
     "third-party/java/aether/aether-spi-1.0.2.v20150114.jar",
     "third-party/java/aether/aether-transport-http-1.0.2.v20150114.jar",
     "third-party/java/aether/aether-util-1.0.2.v20150114.jar",
+    "third-party/java/commons-codec/commons-codec-1.6.jar",
     "third-party/java/maven/maven-aether-provider-3.2.5.jar",
     "third-party/java/maven/maven-model-3.2.5.jar",
     "third-party/java/maven/maven-model-builder-3.2.5.jar",

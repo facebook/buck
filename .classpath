@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="**/BUCK|**/BUCK.autodeps|com/facebook/buck/android/support/|com/facebook/buck/cli/quickstart/**|com/facebook/buck/event/listener/noos/|com/facebook/buck/intellij/" kind="src" path="src"/>
+	<classpathentry excluding="**/BUCK|**/BUCK.autodeps|com/facebook/buck/android/support/|com/facebook/buck/cli/quickstart/**|com/facebook/buck/intellij/" kind="src" path="src"/>
 	<classpathentry excluding="**/BUCK" kind="src" path="third-party/java/aosp/src"/>
 	<classpathentry kind="src" path="src-gen"/>
 	<classpathentry excluding="**/BUCK|**/testdata/**|com/facebook/buck/event/listener/noos/" kind="src" path="test"/>
