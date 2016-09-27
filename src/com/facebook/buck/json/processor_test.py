@@ -93,9 +93,10 @@ class BuckTest(unittest.TestCase):
         for pfile in pfiles:
             self.write_file(pfile)
 
-    def create_build_file_processor(self, includes=None, **kwargs):
+    def create_build_file_processor(self, cell_roots=None, includes=None, **kwargs):
         return BuildFileProcessor(
             self.project_root,
+            cell_roots or {},
             self.build_file_name,
             self.allow_empty_globs,
             False,              # ignore_buck_autodeps_files
@@ -716,3 +717,15 @@ class BuckTest(unittest.TestCase):
                 level='warning',
                 source='sandboxing')]),
             diagnostics)
+
+    def test_can_resolve_cell_paths(self):
+        build_file_processor = self.create_build_file_processor(
+            cell_roots={
+                'foo': os.path.abspath(os.path.join(self.project_root, '../cell'))
+            })
+        self.assertEqual(
+            os.path.abspath(os.path.join(self.project_root, '../cell/bar/baz')),
+            build_file_processor._get_include_path('foo//bar/baz'))
+        self.assertEqual(
+            os.path.abspath(os.path.join(self.project_root, 'bar/baz')),
+            build_file_processor._get_include_path('//bar/baz'))
