@@ -212,9 +212,12 @@ class TrimUberRDotJava extends AbstractBuildRule {
       // is referenced.  That is a very rare case, though, and not worth the complexity to fix.
       if (m.find()) {
        final String resource = m.group(1);
-       if (!allReferencedResources.contains(packageName + "." + resource) &&
-           (pattern.isPresent() && !pattern.get().matcher(resource).find())) {
-             continue;
+       if (!allReferencedResources.contains(packageName + "." + resource)) {
+         if (pattern.isPresent() && pattern.get().matcher(resource).find()) {
+           output.write(line.getBytes(Charsets.UTF_8));
+           output.write('\n');
+         }
+         continue;
        }
       }
       output.write(line.getBytes(Charsets.UTF_8));
