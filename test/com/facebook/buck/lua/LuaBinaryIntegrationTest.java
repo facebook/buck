@@ -164,11 +164,11 @@ public class LuaBinaryIntegrationTest {
   @Test
   public void stderr() throws Exception {
     workspace.writeContentsToPath("require 'os'; io.stderr:write('hello world')", "simple.lua");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("run", "//:simple").assertSuccess();
+    Path path = workspace.buildAndReturnOutput("//:simple");
+    ProcessExecutor.Result result = workspace.runCommand(path.toString());
     assertThat(
-        result.getStdout() + result.getStderr(),
-        result.getStderr().trim(),
+        result.getStdout().or("") + result.getStderr().or(""),
+        result.getStderr().or("").trim(),
         Matchers.endsWith("hello world"));
   }
 
