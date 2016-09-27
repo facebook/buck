@@ -50,6 +50,7 @@ java_library(
 )
 
 WATCHMAN_SRCS = [
+  'AbstractWatchmanQuery.java',
   'Watchman.java',
   'WatchmanClient.java',
   'WatchmanDiagnosticCache.java',
@@ -61,6 +62,7 @@ java_immutables_library(
   autodeps = True,
   immutable_types = [
     'WatchmanDiagnostic',
+    'WatchmanQuery',
   ],
   visibility = [
     '//src/com/facebook/buck/cli:cli',
