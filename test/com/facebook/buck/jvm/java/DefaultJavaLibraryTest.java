@@ -91,7 +91,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.hash.Hashing;
-import com.google.common.io.ByteSource;
 
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
@@ -100,6 +99,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -1224,8 +1224,9 @@ public class DefaultJavaLibraryTest {
       String fileContents) throws IOException {
     try (HashingDeterministicJarWriter jar = new HashingDeterministicJarWriter(
         new ZipOutputStream(filesystem.newFileOutputStream(abiJarPath)))) {
-      jar
-        .writeEntry(fileName, ByteSource.wrap(fileContents.getBytes(StandardCharsets.UTF_8)));
+      jar.writeEntry(
+          fileName,
+          new ByteArrayInputStream(fileContents.getBytes(StandardCharsets.UTF_8)));
     }
   }
 

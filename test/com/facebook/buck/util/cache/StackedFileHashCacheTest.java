@@ -26,12 +26,12 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.ByteSource;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.NoSuchFileException;
@@ -191,7 +191,7 @@ public class StackedFileHashCacheTest {
       jar
           .writeEntry(
               SOME_FILE_INSIDE_JAR,
-              ByteSource.wrap("fake contents".getBytes(StandardCharsets.UTF_8)));
+              new ByteArrayInputStream("fake contents".getBytes(StandardCharsets.UTF_8)));
     }
   }
 }

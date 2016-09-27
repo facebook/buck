@@ -30,13 +30,13 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Optional;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-import com.google.common.io.ByteSource;
 
 import org.hamcrest.Matchers;
 import org.hamcrest.junit.ExpectedException;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -168,7 +168,7 @@ public class DefaultFileHashCacheTest {
         new JarOutputStream(filesystem.newFileOutputStream(abiJarPath)))) {
       jar.writeEntry(
           memberPath.toString(),
-          ByteSource.wrap(memberContents.getBytes(StandardCharsets.UTF_8)));
+          new ByteArrayInputStream(memberContents.getBytes(StandardCharsets.UTF_8)));
     }
 
     HashCode actual = cache.get(ArchiveMemberPath.of(filesystem.resolve(abiJarPath), memberPath));
@@ -191,10 +191,10 @@ public class DefaultFileHashCacheTest {
       jar
           .writeEntry(
               "SomeClass.class",
-              ByteSource.wrap(memberContents.getBytes(StandardCharsets.UTF_8)))
+              new ByteArrayInputStream(memberContents.getBytes(StandardCharsets.UTF_8)))
           .writeUnhashedEntry(
               memberPath.toString(),
-              ByteSource.wrap(memberContents.getBytes(StandardCharsets.UTF_8)));
+              new ByteArrayInputStream(memberContents.getBytes(StandardCharsets.UTF_8)));
     }
 
     cache.get(ArchiveMemberPath.of(filesystem.resolve(abiJarPath), memberPath));
@@ -230,10 +230,10 @@ public class DefaultFileHashCacheTest {
       jar
           .writeUnhashedEntry(
               JarFile.MANIFEST_NAME,
-              ByteSource.wrap(new byte[0]))
+              new ByteArrayInputStream(new byte[0]))
           .writeUnhashedEntry(
               memberPath.toString(),
-              ByteSource.wrap("Contents".getBytes(StandardCharsets.UTF_8)));
+              new ByteArrayInputStream("Contents".getBytes(StandardCharsets.UTF_8)));
     }
 
     cache.get(ArchiveMemberPath.of(filesystem.resolve(abiJarPath), memberPath));

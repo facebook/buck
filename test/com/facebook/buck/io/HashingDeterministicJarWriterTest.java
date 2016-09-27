@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import com.google.common.hash.Hashing;
-import com.google.common.io.ByteSource;
+import com.google.common.hash.HashingInputStream;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -27,6 +27,7 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -46,8 +47,12 @@ public class HashingDeterministicJarWriterTest {
 
   @Test
   public void entriesAreWrittenAsTheyAreEncounteredWithManifestLast() throws IOException {
-    writer.writeEntry("Z", ByteSource.wrap("Z's contents".getBytes(StandardCharsets.UTF_8)));
-    writer.writeEntry("A", ByteSource.wrap("A's contents".getBytes(StandardCharsets.UTF_8)));
+    writer.writeEntry(
+        "Z",
+        new ByteArrayInputStream("Z's contents".getBytes(StandardCharsets.UTF_8)));
+    writer.writeEntry(
+        "A",
+        new ByteArrayInputStream("A's contents".getBytes(StandardCharsets.UTF_8)));
     writer.close();
 
     try (JarInputStream jar = new JarInputStream(new ByteArrayInputStream(out.toByteArray()))) {
@@ -66,28 +71,32 @@ public class HashingDeterministicJarWriterTest {
   @Test
   public void manifestContainsEntryHashesOfHashedEntries() throws IOException {
     String entryName = "A";
-    ByteSource contents = ByteSource.wrap("contents".getBytes(StandardCharsets.UTF_8));
-    writer.writeEntry(entryName, contents);
-    writer.close();
+    InputStream contents = new ByteArrayInputStream("contents".getBytes(StandardCharsets.UTF_8));
+    try (HashingInputStream hashingContents = new HashingInputStream(
+             Hashing.murmur3_128(),
+             contents)) {
+      writer.writeEntry(entryName, hashingContents);
+      writer.close();
 
-    try (JarInputStream jar = new JarInputStream(new ByteArrayInputStream(out.toByteArray()))) {
-      jar.getNextJarEntry();
-      JarEntry manifestEntry = jar.getNextJarEntry();
-      assertEquals(JarFile.MANIFEST_NAME, manifestEntry.getName());
-      Manifest manifest = new Manifest();
-      manifest.read(jar);
+      try (JarInputStream jar = new JarInputStream(new ByteArrayInputStream(out.toByteArray()))) {
+          jar.getNextJarEntry();
+          JarEntry manifestEntry = jar.getNextJarEntry();
+          assertEquals(JarFile.MANIFEST_NAME, manifestEntry.getName());
+          Manifest manifest = new Manifest();
+          manifest.read(jar);
 
-      String expectedHash = contents.hash(Hashing.murmur3_128()).toString();
-      assertEquals(
-          expectedHash,
-          manifest.getEntries().get(entryName).getValue("Murmur3-128-Digest"));
+          String expectedHash = hashingContents.hash().toString();
+          assertEquals(
+              expectedHash,
+              manifest.getEntries().get(entryName).getValue("Murmur3-128-Digest"));
+      }
     }
   }
 
   @Test
   public void manifestDoesNotContainEntryHashesForUnhashedEntries() throws IOException {
     String entryName = "A";
-    ByteSource contents = ByteSource.wrap("contents".getBytes(StandardCharsets.UTF_8));
+    InputStream contents = new ByteArrayInputStream("contents".getBytes(StandardCharsets.UTF_8));
     writer.writeUnhashedEntry(entryName, contents);
     writer.close();
 

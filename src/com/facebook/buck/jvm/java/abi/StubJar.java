@@ -24,8 +24,6 @@ import com.facebook.buck.io.HashingDeterministicJarWriter;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Preconditions;
-import com.google.common.io.ByteSource;
-import com.google.common.io.ByteStreams;
 
 import org.objectweb.asm.ClassReader;
 
@@ -70,19 +68,20 @@ public class StubJar {
     public void visit(Path relativizedPath, InputStream stream) throws IOException {
       String fileName = MorePaths.pathWithUnixSeparators(relativizedPath);
       if (fileName.endsWith(".class")) {
-        ByteSource stubClassBytes = getStubClassBytes(stream, fileName);
-        writer.writeEntry(fileName, stubClassBytes);
+        try (InputStream stubClassBytes = getStubClassBytes(stream, fileName)) {
+          writer.writeEntry(fileName, stubClassBytes);
+        }
       } else if (!"META-INF/MANIFEST.MF".equals(fileName)) {
-        writer.writeEntry(fileName, ByteSource.wrap(ByteStreams.toByteArray(stream)));
+        writer.writeEntry(fileName, stream);
       }
     }
 
-    private ByteSource getStubClassBytes(InputStream stream,
+    private InputStream getStubClassBytes(InputStream stream,
         String fileName) throws IOException {
       ClassReader classReader = new ClassReader(stream);
       ClassMirror visitor = new ClassMirror(fileName);
       classReader.accept(visitor, SKIP_CODE | SKIP_DEBUG | SKIP_FRAMES);
-      return visitor.getStubClassBytes();
+      return visitor.getStubClassBytes().openStream();
     }
   }
 }

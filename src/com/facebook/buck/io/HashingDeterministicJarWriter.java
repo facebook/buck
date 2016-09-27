@@ -17,8 +17,10 @@ package com.facebook.buck.io;
 
 import com.facebook.buck.zip.ZipConstants;
 import com.google.common.hash.Hashing;
-import com.google.common.io.ByteSource;
+import com.google.common.hash.HashingInputStream;
+import com.google.common.io.ByteStreams;
 
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
@@ -40,19 +42,23 @@ public class HashingDeterministicJarWriter implements AutoCloseable {
 
   public HashingDeterministicJarWriter writeEntry(
       String name,
-      ByteSource contents) throws IOException {
-    writeToJar(name, contents);
-    manifestWriter.setEntryAttribute(
-        name,
-        DIGEST_ATTRIBUTE_NAME,
-        contents.hash(Hashing.murmur3_128()).toString());
+      InputStream contents) throws IOException {
+    try (HashingInputStream hashingContents =
+             new HashingInputStream(Hashing.murmur3_128(), contents)) {
+        writeToJar(name, hashingContents);
+        manifestWriter.setEntryAttribute(
+            name,
+            DIGEST_ATTRIBUTE_NAME,
+            hashingContents.hash().toString());
+    }
     return this;
   }
 
   public HashingDeterministicJarWriter writeUnhashedEntry(
       String name,
-      ByteSource contents) throws IOException {
+      InputStream contents) throws IOException {
     writeToJar(name, contents);
+    contents.close();
     return this;
   }
 
@@ -66,9 +72,9 @@ public class HashingDeterministicJarWriter implements AutoCloseable {
     jar.close();
   }
 
-  private void writeToJar(String fileName, ByteSource stubClassBytes) throws IOException {
+  private void writeToJar(String fileName, InputStream stubClassBytes) throws IOException {
     putEntry(jar, fileName);
-    stubClassBytes.copyTo(jar);
+    ByteStreams.copy(stubClassBytes, jar);
     jar.closeEntry();
   }
 
