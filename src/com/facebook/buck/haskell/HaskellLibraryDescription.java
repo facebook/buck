@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
@@ -49,6 +50,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -196,6 +198,7 @@ public class HaskellLibraryDescription implements
   }
 
   private HaskellPackageRule createPackage(
+      BuildTarget target,
       BuildRuleParams baseParams,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
@@ -203,8 +206,6 @@ public class HaskellLibraryDescription implements
       Arg args,
       Linker.LinkableDepType depType)
       throws NoSuchBuildTargetException {
-
-    BuildTarget target = baseParams.getBuildTarget();
 
     BuildRule library;
     switch (depType) {
@@ -260,6 +261,43 @@ public class HaskellLibraryDescription implements
         compileRule.getModules(),
         ImmutableSortedSet.<SourcePath>of(new BuildTargetSourcePath(library.getBuildTarget())),
         ImmutableSortedSet.of(compileRule.getInterfaces()));
+  }
+
+  private HaskellPackageRule requirePackage(
+      BuildTarget baseTarget,
+      BuildRuleParams baseParams,
+      BuildRuleResolver resolver,
+      SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
+      Arg args,
+      Linker.LinkableDepType depType)
+      throws NoSuchBuildTargetException {
+    Preconditions.checkArgument(
+        Sets.intersection(
+            baseTarget.getFlavors(),
+            Sets.union(Type.FLAVOR_VALUES, cxxPlatforms.getFlavors()))
+            .isEmpty());
+    BuildTarget target = baseTarget.withFlavors(cxxPlatform.getFlavor());
+    switch (depType) {
+      case SHARED:
+        target = target.withFlavors(Type.PACKAGE_SHARED.getFlavor());
+        break;
+      case STATIC:
+        target = target.withFlavors(Type.PACKAGE_STATIC.getFlavor());
+        break;
+      case STATIC_PIC:
+        target = target.withFlavors(Type.PACKAGE_STATIC_PIC.getFlavor());
+        break;
+      default:
+        throw new IllegalStateException();
+    }
+    Optional<HaskellPackageRule> packageRule =
+        resolver.getRuleOptionalWithType(target, HaskellPackageRule.class);
+    if (packageRule.isPresent()) {
+      return packageRule.get();
+    }
+    return resolver.addToIndex(
+        createPackage(target, baseParams, resolver, pathResolver, cxxPlatform, args, depType));
   }
 
   private HaskellLinkRule createSharedLibrary(
@@ -318,13 +356,13 @@ public class HaskellLibraryDescription implements
   @Override
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args)
+      final BuildRuleParams params,
+      final BuildRuleResolver resolver,
+      final A args)
       throws NoSuchBuildTargetException {
 
-    BuildTarget buildTarget = params.getBuildTarget();
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    final BuildTarget buildTarget = params.getBuildTarget();
+    final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
@@ -350,7 +388,14 @@ public class HaskellLibraryDescription implements
           } else {
             depType = Linker.LinkableDepType.STATIC_PIC;
           }
-          return createPackage(params, resolver, pathResolver, cxxPlatform.get(), args, depType);
+          return requirePackage(
+              baseTarget,
+              params,
+              resolver,
+              pathResolver,
+              cxxPlatform.get(),
+              args,
+              depType);
         case SHARED:
           return requireSharedLibrary(
               baseTarget,
@@ -380,7 +425,106 @@ public class HaskellLibraryDescription implements
               type.get().getValue()));
     }
 
-    return new HaskellLibrary(params, pathResolver, resolver);
+    return new HaskellLibrary(params, pathResolver) {
+
+      @Override
+      public HaskellCompileInput getCompileInput(
+          CxxPlatform cxxPlatform,
+          Linker.LinkableDepType depType)
+          throws NoSuchBuildTargetException {
+        HaskellPackageRule rule =
+            requirePackage(
+                getBaseBuildTarget(getBuildTarget()),
+                params,
+                resolver,
+                pathResolver,
+                cxxPlatform,
+                args,
+                depType);
+        return HaskellCompileInput.builder()
+            .addPackages(rule.getPackage())
+            .build();
+      }
+
+      @Override
+      public Iterable<? extends NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+        return ImmutableList.of();
+      }
+
+      @Override
+      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+          CxxPlatform cxxPlatform) {
+        return FluentIterable.from(getDeps())
+            .filter(NativeLinkable.class);
+      }
+
+      @Override
+      public NativeLinkableInput getNativeLinkableInput(
+          CxxPlatform cxxPlatform,
+          Linker.LinkableDepType type)
+          throws NoSuchBuildTargetException {
+        BuildRule rule;
+        switch (type) {
+          case STATIC:
+          case STATIC_PIC:
+            rule =
+                requireStaticLibrary(
+                    getBaseBuildTarget(getBuildTarget()),
+                    params,
+                    resolver,
+                    pathResolver,
+                    cxxPlatform,
+                    args,
+                    type);
+            break;
+          case SHARED:
+            rule =
+                requireSharedLibrary(
+                    getBaseBuildTarget(getBuildTarget()),
+                    params,
+                    resolver,
+                    pathResolver,
+                    cxxPlatform,
+                    args);
+            break;
+          default:
+            throw new IllegalStateException();
+        }
+        return NativeLinkableInput.builder()
+            .addArgs(
+                new SourcePathArg(getResolver(), new BuildTargetSourcePath(rule.getBuildTarget())))
+            .build();
+      }
+
+      @Override
+      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+        return Linkage.ANY;
+      }
+
+      @Override
+      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
+          throws NoSuchBuildTargetException {
+        ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
+        String sharedLibrarySoname =
+            CxxDescriptionEnhancer.getSharedLibrarySoname(
+                Optional.<String>absent(),
+                getBuildTarget(),
+                cxxPlatform);
+        BuildRule sharedLibraryBuildRule =
+            requireSharedLibrary(
+                getBaseBuildTarget(getBuildTarget()),
+                params,
+                resolver,
+                pathResolver,
+                cxxPlatform,
+                args);
+        libs.put(
+            sharedLibrarySoname,
+            new BuildTargetSourcePath(sharedLibraryBuildRule.getBuildTarget()));
+        return libs.build();
+      }
+    };
+
   }
 
   @Override
