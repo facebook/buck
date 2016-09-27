@@ -65,8 +65,8 @@ public class RobolectricTest extends JavaTest {
       ANDROID, LIBRARY, TEST);
 
   private final Optional<DummyRDotJava> optionalDummyRDotJava;
-  private final Optional<SourcePath> manifest;
-  private final Optional<String> runtimeDependency;
+  private final Optional<SourcePath> robolectricManifest;
+  private final Optional<String> robolectricRuntimeDependency;
 
   /**
    * Used by robolectric test runner to get list of resource directories that
@@ -122,8 +122,8 @@ public class RobolectricTest extends JavaTest {
       ForkMode forkMode,
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel,
-      Optional<String> runtimeDependency,
-      Optional<SourcePath> manifest) {
+      Optional<String> robolectricRuntimeDependency,
+      Optional<SourcePath> robolectricManifest) {
     super(
         buildRuleParams,
         resolver,
@@ -142,8 +142,8 @@ public class RobolectricTest extends JavaTest {
         stdOutLogLevel,
         stdErrLogLevel);
     this.optionalDummyRDotJava = optionalDummyRDotJava;
-    this.runtimeDependency = runtimeDependency;
-    this.manifest = manifest;
+    this.robolectricRuntimeDependency = robolectricRuntimeDependency;
+    this.robolectricManifest = robolectricManifest;
   }
 
   @Override
@@ -168,11 +168,11 @@ public class RobolectricTest extends JavaTest {
 
     // Force robolectric to only use local dependency resolution.
     vmArgsBuilder.add("-Drobolectric.offline=true");
-    if (this.manifest.isPresent()) {
-      vmArgsBuilder.add(String.format("-D%s=%s", ROBOLECTRIC_MANIFEST, this.manifest.get()));
+    if (robolectricManifest.isPresent()) {
+      vmArgsBuilder.add(String.format("-D%s=%s", ROBOLECTRIC_MANIFEST, robolectricManifest.get()));
     }
-    if (runtimeDependency.isPresent()) {
-      vmArgsBuilder.add("-Drobolectric.dependency.dir=" + runtimeDependency.get());
+    if (robolectricRuntimeDependency.isPresent()) {
+      vmArgsBuilder.add("-Drobolectric.dependency.dir=" + robolectricRuntimeDependency.get());
     }
   }
 
