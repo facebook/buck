@@ -173,22 +173,11 @@ public class Parser {
 
   @Nullable
   public SortedMap<String, Object> getRawTargetNode(
-      BuckEventBus eventBus,
+      PerBuildState state,
       Cell cell,
-      boolean enableProfiling,
-      ListeningExecutorService executor,
       TargetNode<?> targetNode) throws InterruptedException, BuildFileParseException {
+    try {
 
-    try (
-        PerBuildState state =
-            new PerBuildState(
-                this,
-                eventBus,
-                executor,
-                cell,
-                enableProfiling,
-                SpeculativeParsing.of(false),
-                /* ignoreBuckAutodepsFiles */ false)) {
       Cell owningCell = cell.getCell(targetNode.getBuildTarget());
       ImmutableSet<Map<String, Object>> allRawNodes = getRawTargetNodes(
           state,
@@ -212,6 +201,28 @@ public class Parser {
       throw new RuntimeException("Deeply unlikely to be true: the cell is missing: " + targetNode);
     }
     return null;
+  }
+
+  @Nullable
+  public SortedMap<String, Object> getRawTargetNode(
+      BuckEventBus eventBus,
+      Cell cell,
+      boolean enableProfiling,
+      ListeningExecutorService executor,
+      TargetNode<?> targetNode) throws InterruptedException, BuildFileParseException {
+
+    try (
+        PerBuildState state =
+            new PerBuildState(
+                this,
+                eventBus,
+                executor,
+                cell,
+                enableProfiling,
+                SpeculativeParsing.of(false),
+                /* ignoreBuckAutodepsFiles */ false)) {
+      return getRawTargetNode(state, cell, targetNode);
+    }
   }
 
   private RuntimeException propagateRuntimeCause(RuntimeException e)

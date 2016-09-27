@@ -98,6 +98,10 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     return graph;
   }
 
+  public PerBuildState getParserState() {
+    return parserState;
+  }
+
   public void preloadTargetPatterns(Iterable<String> patterns, ListeningExecutorService executor)
       throws QueryException, InterruptedException {
     try {
