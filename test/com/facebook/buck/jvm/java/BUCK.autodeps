@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY b6467be6bad6384549d8fd8fb052da276b8888f8 #@#
+#@# GENERATED FILE: DO NOT MODIFY 82a7f7f762a1a819ccd2d4d0ccd9181cedba961c #@#
 {
   "fakepackagefinder" : {
     "deps" : [ ],
@@ -11,6 +11,7 @@
     "deps" : [
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/junit:junit"
     ],

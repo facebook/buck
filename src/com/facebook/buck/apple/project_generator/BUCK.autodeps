@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 0a33c4d1f0082a0b8de911ce32fed67428e0d826 #@#
+#@# GENERATED FILE: DO NOT MODIFY 916ce977fb58d3735ff7b01a50fb50dd17bce688 #@#
 {
   "project_generator" : {
     "deps" : [
@@ -29,6 +29,7 @@
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:types",
       "//src/com/facebook/buck/rules/coercer:coercer",
+      "//src/com/facebook/buck/swift:swift",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava"

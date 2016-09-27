@@ -1,10 +1,11 @@
-#@# GENERATED FILE: DO NOT MODIFY 914a147dc781d1ed47d8c150ababcb6733a4ee58 #@#
+#@# GENERATED FILE: DO NOT MODIFY b2a76be9ebc5676f5adec601d9d542a888d5b358 #@#
 {
   "listener" : {
     "deps" : [
       "//src-gen:thrift",
       "//src/com/facebook/buck/android:steps",
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
+      "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cli:events",
       "//src/com/facebook/buck/counters:counters",
       "//src/com/facebook/buck/distributed:distributed",
@@ -25,6 +26,7 @@
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules:rules",
+      "//src/com/facebook/buck/slb:slb",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/test:config",
       "//src/com/facebook/buck/test:test",

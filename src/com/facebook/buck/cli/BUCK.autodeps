@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY ea629f122bb3439b8537663ac75686434030bc58 #@#
+#@# GENERATED FILE: DO NOT MODIFY 1e1cb7dc34635b3c98297254a877b6182b2a8df8 #@#
 {
   "cli" : {
     "deps" : [
@@ -49,6 +49,7 @@
       "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/slb:slb",
       "//src/com/facebook/buck/step/fs:fs",
+      "//src/com/facebook/buck/swift:swift",
       "//src/com/facebook/buck/test:config",
       "//src/com/facebook/buck/test:report-format",
       "//src/com/facebook/buck/test/result/type:type",

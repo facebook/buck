@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 1362edabe614b5b482dde0878d09f1cd85e17dad #@#
+#@# GENERATED FILE: DO NOT MODIFY c10749f6b79459367db22edda98004572330d14c #@#
 {
   "apple" : {
     "deps" : [
@@ -7,6 +7,7 @@
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
+      "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
@@ -19,6 +20,7 @@
       "//src/com/facebook/buck/shell:rules",
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step:step",
+      "//src/com/facebook/buck/swift:platform",
       "//src/com/facebook/buck/test:test",
       "//src/com/facebook/buck/test/result/type:type",
       "//src/com/facebook/buck/test/selectors:selectors",
