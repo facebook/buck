@@ -110,6 +110,26 @@ public class BuiltinApplePackageIntegrationTest {
   }
 
   @Test
+  public void packageHasProperStructureForSwift() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+      this,
+      "simple_application_bundle_swift_no_debug",
+      tmp);
+    workspace.setUp();
+    workspace.enableDirCache();
+
+    BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
+    workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally(packageTarget.getFullyQualifiedName());
+
+    ZipInspector zipInspector = new ZipInspector(
+      workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")));
+    zipInspector.assertFileExists("SwiftSupport/iphonesimulator/libswiftCore.dylib");
+  }
+
+  @Test
   public void packageHasProperStructureForWatch20() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
