@@ -49,8 +49,11 @@ public class Watchman implements AutoCloseable {
     SUPPORTS_PROJECT_WATCH,
     WILDMATCH_GLOB,
     WILDMATCH_MULTISLASH,
-    GLOB_GENERATOR
+    GLOB_GENERATOR,
+    CMD_CLOCK
   }
+
+  public static final String NULL_CLOCK = "c:0:0";
 
   private static final ImmutableSet<String> REQUIRED_CAPABILITIES =
       ImmutableSet.of(
@@ -58,13 +61,14 @@ public class Watchman implements AutoCloseable {
       );
 
   private static final ImmutableMap<String, Capability> ALL_CAPABILITIES =
-      ImmutableMap.of(
-          "term-dirname", Capability.DIRNAME,
-          "cmd-watch-project", Capability.SUPPORTS_PROJECT_WATCH,
-          "wildmatch", Capability.WILDMATCH_GLOB,
-          "wildmatch_multislash", Capability.WILDMATCH_MULTISLASH,
-          "glob_generator", Capability.GLOB_GENERATOR
-      );
+      ImmutableMap.<String, Capability>builder()
+          .put("term-dirname", Capability.DIRNAME)
+          .put("cmd-watch-project", Capability.SUPPORTS_PROJECT_WATCH)
+          .put("wildmatch", Capability.WILDMATCH_GLOB)
+          .put("wildmatch_multislash", Capability.WILDMATCH_MULTISLASH)
+          .put("glob_generator", Capability.GLOB_GENERATOR)
+          .put("cmd-clock", Capability.CMD_CLOCK)
+          .build();
 
   private static final Logger LOG = Logger.get(Watchman.class);
 
@@ -77,6 +81,7 @@ public class Watchman implements AutoCloseable {
       Optional.<String>absent(),
       Optional.<String>absent(),
       ImmutableSet.<Capability>of(),
+      Optional.<String>absent(),
       Optional.<Path>absent(),
       Optional.<WatchmanClient>absent(),
       0);
@@ -87,6 +92,7 @@ public class Watchman implements AutoCloseable {
   private final Optional<Path> socketPath;
   private final Optional<WatchmanClient> watchmanClient;
   private final long commandTimeoutMillis;
+  private final Optional<String> initialClockId;
 
   public static Watchman build(
       Path rootPath,
@@ -224,10 +230,23 @@ public class Watchman implements AutoCloseable {
         return NULL_WATCHMAN;
       }
 
+      Optional<String> initialClock = Optional.absent();
+      if (capabilities.contains(Capability.CMD_CLOCK)) {
+        long clockStartTimeNanos = clock.nanoTime();
+        remainingTimeNanos -= (clockStartTimeNanos - watchStartTimeNanos);
+        result = watchmanClient.get().queryWithTimeout(
+            remainingTimeNanos,
+            "clock",
+            Optional.fromNullable((String) map.get("watch")).or(absoluteRootPath.toString()));
+        Map<String, ? extends Object> clockResult = result.get();
+        initialClock = Optional.fromNullable((String) clockResult.get("clock"));
+      }
+
       return new Watchman(
           Optional.fromNullable((String) map.get("relative_path")),
           Optional.fromNullable((String) map.get("watch")),
           capabilities,
+          initialClock,
           Optional.of(socketPath),
           watchmanClient,
           timeoutMillis);
@@ -382,12 +401,14 @@ public class Watchman implements AutoCloseable {
       Optional<String> projectName,
       Optional<String> watchRoot,
       ImmutableSet<Capability> capabilities,
+      Optional<String> initialClockId,
       Optional<Path> socketPath,
       Optional<WatchmanClient> watchmanClient,
       long commandTimeoutMillis) {
     this.projectName = projectName;
     this.watchRoot = watchRoot;
     this.capabilities = capabilities;
+    this.initialClockId = initialClockId;
     this.socketPath = socketPath;
     this.watchmanClient = watchmanClient;
     this.commandTimeoutMillis = commandTimeoutMillis;
@@ -403,6 +424,10 @@ public class Watchman implements AutoCloseable {
 
   public ImmutableSet<Capability> getCapabilities() {
     return capabilities;
+  }
+
+  public Optional<String> getClockId() {
+    return initialClockId;
   }
 
   public boolean hasWildmatchGlob() {
