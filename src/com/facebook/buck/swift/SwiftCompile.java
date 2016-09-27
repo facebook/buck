@@ -96,6 +96,7 @@ class SwiftCompile
   private final Iterable<CxxPreprocessorInput> cxxPreprocessorInputs;
 
   private final ObjectMapper objectMapper;
+  private final boolean compileAsLibrary;
 
   // Prepend "-I" before the input with no space (this is required by swift).
   private static final Function<String, String> PREPEND_INCLUDE_FLAG =
@@ -117,7 +118,8 @@ class SwiftCompile
       String moduleName,
       final Path outputPath,
       Iterable<SourcePath> srcs,
-      Optional<SourcePath> bridgingHeader) throws NoSuchBuildTargetException {
+      Optional<SourcePath> bridgingHeader,
+      boolean compileAsLibrary) throws NoSuchBuildTargetException {
     super(params, resolver);
     this.cxxPlatform = cxxPlatform;
     this.frameworks = frameworks;
@@ -135,6 +137,7 @@ class SwiftCompile
 
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.bridgingHeader = bridgingHeader;
+    this.compileAsLibrary = compileAsLibrary;
 
     this.outputFileMap = outputPath.resolve(escapedModuleName + "-OutputFileMap.json");
     this.outputMapEntries = FluentIterable.from(srcs)
@@ -160,6 +163,7 @@ class SwiftCompile
         "-incremental", // incremental build
         "-Xfrontend",
         "-serialize-debugging-options",
+        compileAsLibrary ? "-parse-as-library" : "",
         "-j",
         String.valueOf(1), // only one job at a time for now
         "-module-name",

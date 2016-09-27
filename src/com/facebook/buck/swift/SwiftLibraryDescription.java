@@ -224,7 +224,8 @@ public class SwiftLibraryDescription implements
               params.getProjectFilesystem(),
               buildTarget, "%s"),
           args.srcs.get(),
-          args.bridgingHeader);
+          args.bridgingHeader,
+          true);
     }
 
     // Otherwise, we return the generic placeholder of this library.
