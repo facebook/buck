@@ -17,14 +17,14 @@
 package com.facebook.buck.model;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.UnmodifiableIterator;
 
-import java.util.regex.MatchResult;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import javax.annotation.Nullable;
+
+
 
 /**
  * Replace and extracts macros from input strings.
@@ -36,44 +36,19 @@ import java.util.regex.Pattern;
  */
 public class MacroFinder {
 
-  /**
-   * Matches a some macro name wrapped in <tt>$()</tt> followed by an optional argument, unless the
-   * <code>$</code> is preceded by a backslash.
-   * <p>
-   * Given the input: $(exe //foo:bar), capturing groups are
-   * <ol>
-   *     <li> $(exe //foo:bar)
-   *     <li> exe
-   *     <li> //foo:bar
-   * </ol>
-   * <p>
-   * If we match against $(platform), the capturing groups are:
-   * <ol>
-   *     <li> $(platform)
-   *     <li> platform
-   * </ol>
-   **/
-  private static final Pattern MACRO_PATTERN = Pattern.compile("\\$\\(([^)\\s]+)(?: ([^)]*))?\\)");
-
   public Optional<MacroMatchResult> match(ImmutableSet<String> macros, String blob)
       throws MacroException {
-    Matcher matcher = MACRO_PATTERN.matcher(blob);
-    if (matcher.matches()) {
-      if (!macros.contains(matcher.group(1))) {
+
+    MacroMatchResult result = new MacroFinderAutomaton(blob).next();
+    if (result != null &&
+        !result.isEscaped() &&
+        result.getStartIndex() == 0 &&
+        result.getEndIndex() == blob.length()) {
+      if (!macros.contains(result.getMacroType())) {
         throw new MacroException(
-            String.format("expanding %s: no such macro \"%s\"", matcher.group(), matcher.group(1)));
+            String.format("expanding %s: no such macro \"%s\"", blob, result.getMacroType()));
       }
-      MacroMatchResult.Builder result = MacroMatchResult.builder();
-      result.setMacroType(matcher.group(1));
-      if (matcher.group(2) != null) {
-        result.addAllMacroInput(
-            Splitter.on(' ')
-                .trimResults()
-                .split(matcher.group(2)));
-      }
-      result.setStartIndex(0);
-      result.setEndIndex(blob.length());
-      return Optional.of(result.build());
+      return Optional.of(result);
     }
     return Optional.absent();
   }
@@ -85,48 +60,40 @@ public class MacroFinder {
 
     // Iterate over all macros found in the string, expanding each found macro.
     int lastEnd = 0;
-    Matcher matcher = MACRO_PATTERN.matcher(blob);
-    while (matcher.find()) {
+    MacroFinderAutomaton matcher = new MacroFinderAutomaton(blob);
+    while (matcher.hasNext()) {
+      MacroMatchResult matchResult = matcher.next();
+      // Add everything from the original string since the last match to this one.
+      expanded.append(blob.substring(lastEnd, matchResult.getStartIndex()));
 
-      // If the match is preceded by a backslash, skip this match but drop the backslash.
-      if (matcher.start() > 0 && blob.charAt(matcher.start() - 1) == '\\') {
-        expanded.append(blob.substring(lastEnd, matcher.start() - 1));
-        expanded.append(blob.substring(matcher.start(), matcher.end()));
-
-      // Otherwise we need to add the expanded value.
+      // If the macro is escaped, add the macro text (but omit the escaping backslash)
+      if (matchResult.isEscaped()) {
+        expanded.append(blob.substring(matchResult.getStartIndex() + 1, matchResult.getEndIndex()));
       } else {
-
-        // Add everything from the original string since the last match to this one.
-        expanded.append(blob.substring(lastEnd, matcher.start()));
-
         // Call the relevant expander and add the expanded value to the string.
-        String name = matcher.group(1);
-        MacroReplacer replacer = replacers.get(name);
+        MacroReplacer replacer = replacers.get(matchResult.getMacroType());
         if (replacer == null) {
           throw new MacroException(
-              String.format("expanding %s: no such macro \"%s\"", matcher.group(), name));
+              String.format(
+                  "expanding %s: no such macro \"%s\"",
+                  blob.substring(matchResult.getStartIndex(), matchResult.getEndIndex()),
+                  matchResult.getMacroType()));
         }
-
-        ImmutableList<String> args =
-            ImmutableList.copyOf(
-                Splitter.on(' ')
-                    .trimResults()
-                    .split(Optional.fromNullable(matcher.group(2)).or("")));
         try {
-          expanded.append(replacer.replace(args));
+          expanded.append(replacer.replace(matchResult.getMacroInput()));
         } catch (MacroException e) {
           throw new MacroException(
-              String.format("expanding %s: %s", matcher.group(), e.getMessage()),
+              String.format(
+                  "expanding %s: %s",
+                  blob.substring(matchResult.getStartIndex(), matchResult.getEndIndex()),
+                  e.getMessage()),
               e);
         }
       }
-
-      lastEnd = matcher.end();
+      lastEnd = matchResult.getEndIndex();
     }
-
     // Append the remaining part of the original string after the last match.
     expanded.append(blob.substring(lastEnd, blob.length()));
-
     return expanded.toString();
   }
 
@@ -134,32 +101,266 @@ public class MacroFinder {
       throws MacroException {
 
     ImmutableList.Builder<MacroMatchResult> results = ImmutableList.builder();
-
-    // Iterate over all macros found in the string, and return a list of MacroMatchResults.
-    Matcher matcher = MACRO_PATTERN.matcher(blob);
-    while (matcher.find()) {
-      if (matcher.start() > 0 && blob.charAt(matcher.start() - 1) == '\\') {
+    MacroFinderAutomaton matcher = new MacroFinderAutomaton(blob);
+    while (matcher.hasNext()) {
+      MacroMatchResult matchResult = matcher.next();
+      if (matchResult.isEscaped()) {
         continue;
       }
-      String name = matcher.group(1);
-      if (!macros.contains(name)) {
-        throw new MacroException(String.format("no such macro \"%s\"", name));
+      if (!macros.contains(matchResult.getMacroType())) {
+        throw new MacroException(String.format("no such macro \"%s\"", matchResult.getMacroType()));
       }
-      MatchResult matchResult = matcher.toMatchResult();
-      MacroMatchResult.Builder result = MacroMatchResult.builder();
-      result.setMacroType(matcher.group(1));
-      if (matcher.group(2) != null) {
-        result.addAllMacroInput(
-            Splitter.on(' ')
-                .trimResults()
-                .split(matcher.group(2)));
-      }
-      result.setStartIndex(matchResult.start());
-      result.setEndIndex(matchResult.end());
-      results.add(result.build());
+      results.add(matchResult);
     }
 
     return results.build();
+  }
+
+  /**
+   * A push-down automaton that searches for occurrences of a macro in linear time with respect
+   * to the search string. The automaton keeps track of 5 pieces of state:
+   * 1) The current automaton state
+   * 2) The position in the input string
+   * 3) The current nested depth of parentheses
+   * 4) The type of quote (if any) which bounds the current sequence
+   * 5) The return state to go back to after an escape sequence ends
+   *
+   * The automaton accumulates intermediate values in the string builder and the match result
+   * builder. The <code>find()</code> method will advance the automaton along the input string
+   * until it finds a macro, and returns a match, or until it reaches the end of the string and
+   * returns null.
+   *
+   * Examples of valid matching patterns:
+   *   $(macro)
+   *   $(macro argument)
+   *   $(macro nested parens(argument))
+   *   $(macro 'ignored paren )')
+   *
+   * If the macro is preceeded by a '\' the match result will be marked as escaped, and the
+   * capture group will include the escaping backslash. Example:
+   *   \$(macro)
+   *
+   * Here are the state transitions in dot format (with glossing over of saved state):
+   * <pre>
+   *   digraph G {
+   *     "SEARCHING" -> "FOUND_DOLLAR"  [label="'$'"];
+   *     "FOUND_DOLLAR" -> "SEARCHING"  [label="*"];
+   *     "FOUND_DOLLAR" -> "READING_MACRO_NAME"  [label="'('"];
+   *     "READING_MACRO_NAME" -> "FOUND_MACRO"  [label="')'"];
+   *     "READING_MACRO_NAME" -> "READING_ARGS"  [label="\\s"];
+   *     "READING_MACRO_NAME" -> "READING_MACRO_NAME"  [label="\\w"];
+   *     "READING_ARGS" -> "FOUND_MACRO"  [label="Balanced ')'"];
+   *     "READING_ARGS" -> "READING_QUOTED_ARGS"  [label="'|\""];
+   *     "READING_QUOTED_ARGS" -> "READING_ARGS"  [label="Matching '|\""];
+   *     "READING_QUOTED_ARGS" -> "READING_QUOTED_ARGS"  [label="[^'\"]"];
+   *     "READING_ARGS" -> "READING_ARGS"  [label="[^'\")]"];
+   *     "SEARCHING" -> "IN_ESCAPE_SEQUENCE"  [label="\\"];
+   *     "IN_ESCAPE_SEQUENCE" -> "FOUND_DOLLAR"  [label="$"];
+   *     "READING_ARGS" -> "IN_ESCAPE_ARG_SEQUENCE"  [label="\\"];
+   *     "READING_QUOTED_ARGS" -> "IN_ESCAPE_ARG_SEQUENCE"  [label="\\"];
+   *   }
+   * </pre>
+   * Not shown: transitions back from "IN_ESCAPE_SEQUENCE" and "IN_ESCAPE_ARG_SEQUENCE", as they
+   * return to the previous state
+   */
+  private static class MacroFinderAutomaton extends UnmodifiableIterator<MacroMatchResult> {
+
+    private enum State {
+      // Looking for the start of a macro
+      SEARCHING,
+      // The last character was a '\' so we're looking for an escaped macro
+      IN_ESCAPE_SEQUENCE,
+      // The last character was a '$' so we're looking for a '('
+      FOUND_DOLLAR,
+      // We found a '$' followed by a '(' so now we're reading the macro name
+      READING_MACRO_NAME,
+      // We finished the macro name, now we count matching parens until we run out
+      READING_ARGS,
+      // We don't want to count parentheses inside of quotes, so we switch to counting quotes
+      READING_QUOTED_ARGS,
+      // The last character was a '\' so we won't count a ')' or a quote next
+      IN_ESCAPE_ARG_SEQUENCE,
+      // We have found a macro and it is ready to be built
+      FOUND_MACRO,
+      // Then transition back to SEARCHING
+    }
+
+    private String blob;
+
+    private State state;
+    private int index;
+    private int parenthesesDepth;
+    private char startQuote;
+    private State returnState;
+
+    private MacroMatchResult.Builder currentResultBuilder;
+    private StringBuilder buffer;
+
+    @Nullable
+    private MacroMatchResult next;
+
+    MacroFinderAutomaton(String blob) {
+      this.blob = blob;
+      this.parenthesesDepth = 0;
+      this.state = State.SEARCHING;
+      this.index = 0;
+      this.currentResultBuilder = MacroMatchResult.builder();
+      this.buffer = new StringBuilder();
+      this.startQuote = '\0';
+      this.returnState = this.state;
+
+      // Initialize the iterator
+      next = find();
+    }
+
+    @Nullable
+    private MacroMatchResult find() {
+      for (; index < blob.length(); ++index) {
+        state = consumeChar(blob.charAt(index), index);
+        if (state == State.FOUND_MACRO) {
+          state = State.SEARCHING;
+          return currentResultBuilder.build();
+        }
+      }
+      return null;
+    }
+
+    @Override
+    public boolean hasNext() {
+      return next != null;
+    }
+
+    @Override
+    public MacroMatchResult next() {
+      MacroMatchResult toReturn = this.next;
+      next = find();
+      return toReturn;
+    }
+
+    private String takeBuffer() {
+      String result = buffer.toString();
+      buffer.setLength(0);
+      return result;
+    }
+
+    private State consumeChar(char c, int index) {
+      switch (this.state) {
+        case SEARCHING:
+          switch (c) {
+            case '\\':
+              returnState = State.SEARCHING;
+              return State.IN_ESCAPE_SEQUENCE;
+            case '$':
+              currentResultBuilder = MacroMatchResult.builder()
+                  .setStartIndex(index)
+                  .setEscaped(false);
+              return State.FOUND_DOLLAR;
+            default:
+              return State.SEARCHING;
+          }
+        case IN_ESCAPE_SEQUENCE:
+          // We want to capture the escaped macro, but mark it as escaped
+          switch (c) {
+            case '$':
+              currentResultBuilder = MacroMatchResult.builder()
+                  .setStartIndex(index - 1)
+                  .setEscaped(true);
+              return State.FOUND_DOLLAR;
+            default:
+              return returnState;
+          }
+        case FOUND_DOLLAR:
+          switch (c) {
+            case '(':
+              parenthesesDepth += 1;
+              return State.READING_MACRO_NAME;
+            case '\\':
+              returnState = State.SEARCHING;
+              return State.IN_ESCAPE_SEQUENCE;
+            case '$':
+              currentResultBuilder = MacroMatchResult.builder()
+                  .setStartIndex(index)
+                  .setEscaped(false);
+              return State.FOUND_DOLLAR;
+            default:
+              return State.SEARCHING;
+          }
+        case READING_MACRO_NAME:
+          switch (c) {
+            case ')':
+              parenthesesDepth -= 1;
+              currentResultBuilder.setMacroInput(ImmutableList.<String>of())
+                  .setMacroType(takeBuffer())
+                  .setEndIndex(index + 1);
+              return State.FOUND_MACRO;
+            case '\t':
+            case ' ':
+            case '\n':
+            case '\r':
+              currentResultBuilder.setMacroType(takeBuffer());
+              return State.READING_ARGS;
+            default:
+              buffer.append(c);
+              return State.READING_MACRO_NAME;
+          }
+        case READING_ARGS:
+          switch (c) {
+            case ' ':
+              currentResultBuilder.addMacroInput(takeBuffer().trim());
+              return State.READING_ARGS;
+            case '\\':
+              returnState = State.READING_ARGS;
+              return State.IN_ESCAPE_ARG_SEQUENCE;
+            case '\'':
+            case '"':
+              startQuote = c;
+              buffer.append(c);
+              return State.READING_QUOTED_ARGS;
+            case '(':
+              parenthesesDepth += 1;
+              buffer.append(c);
+              return State.READING_ARGS;
+            case ')':
+              parenthesesDepth -= 1;
+              if (parenthesesDepth == 0) {
+                currentResultBuilder.addMacroInput(takeBuffer().trim())
+                    .setEndIndex(index + 1);
+                return State.FOUND_MACRO;
+              } else {
+                buffer.append(c);
+              }
+              return State.READING_ARGS;
+            default:
+              buffer.append(c);
+              return State.READING_ARGS;
+          }
+        case READING_QUOTED_ARGS:
+          switch (c) {
+            case '\\':
+              returnState = State.READING_QUOTED_ARGS;
+              return State.IN_ESCAPE_ARG_SEQUENCE;
+            case '"':
+            case '\'':
+              buffer.append(c);
+              if (c == startQuote) {
+                startQuote = '\0';
+                return State.READING_ARGS;
+              } else {
+                return State.READING_QUOTED_ARGS;
+              }
+            default:
+              buffer.append(c);
+              return State.READING_QUOTED_ARGS;
+          }
+        case IN_ESCAPE_ARG_SEQUENCE:
+          buffer.append(c);
+          return returnState;
+        case FOUND_MACRO:
+          throw new IllegalStateException(
+              "The state must be reset to searching before more input may be consumed");
+      }
+      throw new IllegalStateException("Unknown state " + state);
+    }
   }
 
 }

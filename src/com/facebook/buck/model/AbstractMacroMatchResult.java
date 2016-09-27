@@ -28,4 +28,5 @@ interface AbstractMacroMatchResult {
   ImmutableList<String> getMacroInput();
   int getStartIndex();
   int getEndIndex();
+  boolean isEscaped();
 }
