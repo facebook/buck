@@ -1341,7 +1341,19 @@ def encode_result(values, diagnostics, profile):
         result['diagnostics'] = encoded_diagnostics
     if profile is not None:
         result['profile'] = profile
-    return bser.dumps(result)
+    try:
+        return bser.dumps(result)
+    except Exception as e:
+        # Try again without the values
+        result['values'] = []
+        if 'diagnostics' not in result:
+            result['diagnostics'] = []
+        result['diagnostics'].append({
+            'message': format_traceback_and_exception(),
+            'level': 'fatal',
+            'source': 'parse',
+        })
+        return bser.dumps(result)
 
 
 def filter_tb(entries):

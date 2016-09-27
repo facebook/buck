@@ -4,8 +4,11 @@ import os
 import unittest
 import shutil
 import tempfile
+import StringIO
 
-from .buck import BuildFileProcessor, Diagnostic, add_rule
+from pywatchman import bser
+
+from .buck import BuildFileProcessor, Diagnostic, add_rule, process_with_diagnostics
 
 
 def foo_rule(name, srcs=[], visibility=[], build_env=None):
@@ -729,3 +732,37 @@ class BuckTest(unittest.TestCase):
         self.assertEqual(
             os.path.abspath(os.path.join(self.project_root, 'bar/baz')),
             build_file_processor._get_include_path('//bar/baz'))
+
+    def test_bser_encoding_failure(self):
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        build_file_processor.install_builtins(__builtin__.__dict__)
+        fake_stdout = StringIO.StringIO()
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'foo_rule(',
+                '  name="foo",'
+                '  srcs=[object()],'
+                ')'
+            ))
+        self.write_file(build_file)
+        process_with_diagnostics(
+            {
+                'buildFile': self.build_file_name,
+                'watchRoot': '',
+                'projectPrefix': self.project_root,
+            },
+            build_file_processor,
+            fake_stdout)
+        result = fake_stdout.getvalue()
+        decoded_result = bser.loads(result)
+        self.assertEqual(
+            [],
+            decoded_result['values'])
+        self.assertEqual(
+            'fatal',
+            decoded_result['diagnostics'][0]['level'])
+        self.assertEqual(
+            'parse',
+            decoded_result['diagnostics'][0]['source'])

@@ -57,5 +57,6 @@ python_test(
   deps = [
     ':buck',
     '//third-party/py/pathlib:pathlib',
+    '//third-party/py/pywatchman:pywatchman',
   ],
 )
