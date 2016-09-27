@@ -23,7 +23,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -33,7 +32,6 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
 import java.lang.reflect.Field;
-import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
@@ -79,15 +77,7 @@ public abstract class AbstractNodeBuilder<A> {
     this.target = target;
     this.rawHashCode = hashCode;
 
-    this.cellRoots = new CellPathResolver() {
-      @Override
-      public Path getCellPath(Optional<String> input) {
-        if (input.isPresent()) {
-          throw new HumanReadableException("Can't find the cell");
-        }
-        return factoryParams.getProjectFilesystem().getRootPath();
-      }
-    };
+    this.cellRoots = new FakeCellPathResolver(factoryParams.getProjectFilesystem());
 
     this.arg = description.createUnpopulatedConstructorArg();
     populateWithDefaultValues(this.arg);

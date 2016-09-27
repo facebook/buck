@@ -24,15 +24,15 @@ import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.FakeCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.nio.file.FileSystem;
-import java.nio.file.Path;
 
 public class BuildTargetPatternParserTest {
 
@@ -108,16 +108,8 @@ public class BuildTargetPatternParserTest {
         BuildTargetPatternParser.forVisibilityArgument();
 
     final ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-
-    CellPathResolver cellNames = new CellPathResolver() {
-      @Override
-      public Path getCellPath(Optional<String> input) {
-        if (input.get().equals("other")) {
-          return filesystem.getRootPath();
-        }
-        throw new RuntimeException("We should only be called with 'other'");
-      }
-    };
+    CellPathResolver cellNames = new FakeCellPathResolver(
+        ImmutableMap.of("other", filesystem.getRootPath()));
 
     assertEquals(
         new SingletonBuildTargetPattern(filesystem.getRootPath(), "//:something"),

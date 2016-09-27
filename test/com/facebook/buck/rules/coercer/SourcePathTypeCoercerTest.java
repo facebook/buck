@@ -24,11 +24,12 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.FakeCellPathResolver;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Before;
@@ -52,17 +53,7 @@ public class SourcePathTypeCoercerTest {
   @Before
   public void setUp() {
     projectFilesystem = new FakeProjectFilesystem();
-
-    cellRoots = new CellPathResolver() {
-      @Override
-      public Path getCellPath(Optional<String> cellName) {
-        if (cellName.isPresent()) {
-          throw new HumanReadableException("Boom");
-        }
-        return projectFilesystem.getRootPath();
-      }
-    };
-
+    cellRoots = new FakeCellPathResolver(projectFilesystem);
   }
 
   @Before
@@ -130,22 +121,8 @@ public class SourcePathTypeCoercerTest {
 
   @Test
   public void coerceCrossRepoBuildTarget() throws CoerceFailedException, IOException {
-    final Path helloRoot = Paths.get("/opt/src/hello");
-
-    cellRoots = new CellPathResolver() {
-      @Override
-      public Path getCellPath(Optional<String> input) {
-        if (!input.isPresent()) {
-          return projectFilesystem.getRootPath();
-        }
-
-        if ("hello".equals(input.get())) {
-          return helloRoot;
-        }
-
-        throw new RuntimeException("Boom!");
-      }
-    };
+    Path helloRoot = Paths.get("/opt/src/hello");
+    cellRoots = new FakeCellPathResolver(projectFilesystem, ImmutableMap.of("hello", helloRoot));
 
     SourcePath sourcePath = sourcePathTypeCoercer.coerce(
         cellRoots,

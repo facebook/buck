@@ -31,12 +31,12 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.python.NeededCoverageSpec;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.FakeCellPathResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -48,7 +48,6 @@ import com.google.common.collect.Lists;
 
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -66,24 +65,10 @@ public class TypeCoercerTest {
   private final TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
       ObjectMappers.newDefaultInstance());
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private CellPathResolver cellRoots;
+  private final CellPathResolver cellRoots = new FakeCellPathResolver(filesystem);
 
   @Rule
   public ExpectedException exception = ExpectedException.none();
-
-  @Before
-  public void setUpCellRoots() {
-    cellRoots = new CellPathResolver() {
-      @Override
-      public Path getCellPath(Optional<String> cellName) {
-        if (cellName.isPresent()) {
-          throw new HumanReadableException("Boom");
-        }
-        return filesystem.getRootPath();
-      }
-    };
-  }
-
 
   @Test
   public void coercingStringMapOfIntListsShouldBeIdentity()

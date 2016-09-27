@@ -28,7 +28,8 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.CellPathResolver;
-import com.google.common.base.Optional;
+import com.facebook.buck.rules.FakeCellPathResolver;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -182,17 +183,8 @@ public class BuildTargetParserTest {
   @Test
   public void testParseWithRepoName() {
     final Path localRepoRoot = Paths.get("/opt/local/repo");
-
-    CellPathResolver cellRoots = new CellPathResolver() {
-      @Override
-      public Path getCellPath(Optional<String> cellName) {
-        if (!"localreponame".equals(cellName.orNull())) {
-          throw new RuntimeException("Path should have been present");
-        }
-
-        return localRepoRoot;
-      }
-    };
+    CellPathResolver cellRoots = new FakeCellPathResolver(
+        ImmutableMap.of("localreponame", localRepoRoot));
     String targetStr = "localreponame//foo/bar:baz";
 
     BuildTarget buildTarget = parser.parse(targetStr, fullyQualifiedParser, cellRoots);

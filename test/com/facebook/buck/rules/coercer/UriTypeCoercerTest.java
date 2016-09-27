@@ -21,11 +21,9 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.FakeCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import java.net.URI;
@@ -37,20 +35,7 @@ public class UriTypeCoercerTest {
 
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
   private Path pathFromRoot = Paths.get("third-party/java");
-  private CellPathResolver cellRoots;
-
-  @Before
-  public void setUpCellRoots() {
-    cellRoots = new CellPathResolver() {
-      @Override
-      public Path getCellPath(Optional<String> cellName) {
-        if (cellName.isPresent()) {
-          throw new HumanReadableException("Boom");
-        }
-        return filesystem.getRootPath();
-      }
-    };
-  }
+  private CellPathResolver cellRoots = new FakeCellPathResolver(filesystem);
 
   @Test
   public void canCoerceAValidHttpURI() throws CoerceFailedException, URISyntaxException {
