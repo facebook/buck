@@ -1040,7 +1040,7 @@ public class ProjectCommand extends BuildCommand {
       BuildTarget target = BuildTargetParser.INSTANCE.parse(
           fullyQualifiedName,
           BuildTargetPatternParser.fullyQualified(),
-          params.getCell().getCellRoots());
+          params.getCell().getCellPathResolver());
       builder.add(target);
     }
 

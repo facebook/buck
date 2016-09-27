@@ -108,7 +108,7 @@ public class AuditClasspathCommand extends AbstractCommand {
                        return BuildTargetParser.INSTANCE.parse(
                            input,
                            BuildTargetPatternParser.fullyQualified(),
-                           params.getCell().getCellRoots());
+                           params.getCell().getCellPathResolver());
                      }
                    })
         .toSet();

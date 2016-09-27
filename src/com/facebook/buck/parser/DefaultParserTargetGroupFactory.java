@@ -100,7 +100,7 @@ public class DefaultParserTargetGroupFactory implements ParserTargetNodeFactory<
       try (SimplePerfEvent.Scope scope =
                perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg"))) {
         marshaller.populate(
-            targetCell.getCellRoots(),
+            targetCell.getCellPathResolver(),
             targetCell.getFilesystem(),
             factoryParams,
             constructorArg,

@@ -197,7 +197,7 @@ public class BuckConfig {
     return config.getListWithoutComments(section, field, splitChar);
   }
 
-  public CellPathResolver getCellRoots() {
+  public CellPathResolver getCellPathResolver() {
     return cellPathResolver;
   }
 
@@ -261,7 +261,7 @@ public class BuckConfig {
     return BuildTargetParser.INSTANCE.parse(
         target,
         BuildTargetPatternParser.fullyQualified(),
-        getCellRoots());
+        getCellPathResolver());
   }
 
   public ImmutableList<BuildTarget> getBuildTargetList(String section, String key) {
@@ -424,7 +424,7 @@ public class BuckConfig {
         buildTarget = BuildTargetParser.INSTANCE.parse(
             value,
             BuildTargetPatternParser.fullyQualified(),
-            getCellRoots());
+            getCellPathResolver());
       }
       aliasToBuildTarget.put(alias, buildTarget);
     }

@@ -101,7 +101,7 @@ public class ThriftLibraryIntegrationTest {
         typeCoercerFactory,
         new ConstructorArgMarshaller(typeCoercerFactory));
 
-    Cell cell = Cell.createCell(
+    Cell cell = Cell.createRootCell(
         filesystem,
         new TestConsole(),
         Watchman.NULL_WATCHMAN,

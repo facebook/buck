@@ -869,7 +869,7 @@ public final class Main {
 
         WatchmanDiagnosticCache watchmanDiagnosticCache = new WatchmanDiagnosticCache();
 
-        Cell rootCell = Cell.createCell(
+        Cell rootCell = Cell.createRootCell(
             filesystem,
             console,
             watchman,

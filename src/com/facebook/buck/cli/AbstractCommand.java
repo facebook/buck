@@ -219,7 +219,7 @@ public abstract class AbstractCommand implements Command {
             config,
             new BuildTargetPatternTargetNodeParser());
     for (String arg : targetsAsArgs) {
-      specs.add(parser.parse(config.getCellRoots(), arg));
+      specs.add(parser.parse(config.getCellPathResolver(), arg));
     }
     return specs.build();
   }

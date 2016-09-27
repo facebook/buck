@@ -100,7 +100,7 @@ public class AuditInputCommand extends AbstractCommand {
                        return BuildTargetParser.INSTANCE.parse(
                            input,
                            BuildTargetPatternParser.fullyQualified(),
-                           params.getCell().getCellRoots());
+                           params.getCell().getCellPathResolver());
                      }
                    })
         .toSet();

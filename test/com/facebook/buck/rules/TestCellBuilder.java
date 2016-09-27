@@ -99,7 +99,7 @@ public class TestCellBuilder {
         androidDirectoryResolver);
 
     if (parserFactory == null) {
-      return Cell.createCell(
+      return Cell.createRootCell(
           filesystem,
           new TestConsole(),
           watchman,

@@ -162,7 +162,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
       try (SimplePerfEvent.Scope scope =
                perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg"))) {
         marshaller.populate(
-            targetCell.getCellRoots(),
+            targetCell.getCellPathResolver(),
             targetCell.getFilesystem(),
             factoryParams,
             constructorArg,
@@ -182,7 +182,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
             factoryParams,
             declaredDeps.build(),
             visibilityPatterns.build(),
-            targetCell.getCellRoots());
+            targetCell.getCellPathResolver());
         if (buildFileTrees.isPresent() && cell.isEnforcingBuckPackageBoundaries()) {
           enforceBuckPackageBoundaries(
               target,

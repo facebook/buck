@@ -117,7 +117,7 @@ public class Cell {
     this.watchmanDiagnosticCache = watchmanDiagnosticCache;
   }
 
-  public static Cell createCell(
+  public static Cell createRootCell(
       ProjectFilesystem filesystem,
       final Console console,
       final Watchman watchman,
@@ -467,8 +467,8 @@ public class Cell {
     return tempFilePatterns;
   }
 
-  public CellPathResolver getCellRoots() {
-    return config.getCellRoots();
+  public CellPathResolver getCellPathResolver() {
+    return config.getCellPathResolver();
   }
 
   public ImmutableSet<Path> getKnownRoots() {
