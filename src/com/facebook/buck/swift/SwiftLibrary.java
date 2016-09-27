@@ -44,6 +44,7 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Optional;
@@ -154,9 +155,12 @@ class SwiftLibrary
         throw new IllegalStateException("unhandled linkage type: " + linkage);
     }
     if (isDynamic) {
-      inputBuilder.addArgs(new SourcePathArg(getResolver(),
-          new BuildTargetSourcePath(requireSwiftLinkRule(cxxPlatform.getFlavor())
-              .getBuildTarget())));
+      inputBuilder.addArgs(
+          FileListableLinkerInputArg.withSourcePathArg(
+              new SourcePathArg(
+                  getResolver(),
+                  new BuildTargetSourcePath(requireSwiftLinkRule(cxxPlatform.getFlavor())
+                      .getBuildTarget()))));
     }
     return inputBuilder.build();
   }
