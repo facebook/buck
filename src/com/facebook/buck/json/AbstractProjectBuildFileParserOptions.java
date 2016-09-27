@@ -33,6 +33,7 @@ import java.util.List;
 @BuckStyleImmutable
 abstract class AbstractProjectBuildFileParserOptions {
   abstract Path getProjectRoot();
+  abstract ImmutableMap<String, Path> getCellRoots();
   abstract String getPythonInterpreter();
   abstract boolean getAllowEmptyGlobs();
   abstract ImmutableSet<PathOrGlobMatcher> getIgnorePaths();

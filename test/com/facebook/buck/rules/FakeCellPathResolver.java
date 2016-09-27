@@ -57,4 +57,9 @@ public final class FakeCellPathResolver implements CellPathResolver {
       throw new IllegalArgumentException("Root cell not defined.");
     }
   }
+
+  @Override
+  public ImmutableMap<String, Path> getCellPaths() {
+    return cellPaths;
+  }
 }

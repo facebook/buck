@@ -164,4 +164,9 @@ public class DefaultCellPathResolver implements CellPathResolver {
     }
     return getCellPath(cellName.get());
   }
+
+  @Override
+  public ImmutableMap<String, Path> getCellPaths() {
+    return cellPaths;
+  }
 }

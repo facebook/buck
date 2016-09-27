@@ -16,6 +16,7 @@
 package com.facebook.buck.rules;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 
@@ -25,4 +26,9 @@ public interface CellPathResolver {
    * @return Path to the physical location of the cell.
    */
   Path getCellPath(Optional<String> cellName);
+
+  /**
+   * @return paths to all cells this resolver knows about.
+   */
+  ImmutableMap<String, Path> getCellPaths();
 }

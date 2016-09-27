@@ -411,6 +411,18 @@ public class InterCellIntegrationTest {
     result.assertSuccess();
   }
 
+  @Test
+  public void buildFilesCanIncludeDefsFromOtherCells() throws IOException {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+
+    ProjectWorkspace root = createWorkspace("inter-cell/include-defs/root");
+    ProjectWorkspace other = createWorkspace("inter-cell/include-defs/other");
+    registerCell(root, "other", other);
+    registerCell(other, "root", root);
+
+    root.runBuckBuild("//:rule", "other//:rule").assertSuccess();
+  }
+
   private Pair<ProjectWorkspace, ProjectWorkspace> prepare(
       String primaryPath,
       String secondaryPath) throws IOException {

@@ -420,6 +420,7 @@ public class Cell {
     return new DefaultProjectBuildFileParserFactory(
         ProjectBuildFileParserOptions.builder()
             .setProjectRoot(getFilesystem().getRootPath())
+            .setCellRoots(getCellPathResolver().getCellPaths())
             .setPythonInterpreter(pythonInterpreter)
             .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
             .setIgnorePaths(filesystem.getIgnorePaths())
