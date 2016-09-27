@@ -490,9 +490,13 @@ public class HaskellLibraryDescription implements
           default:
             throw new IllegalStateException();
         }
+        SourcePathArg lib =
+            new SourcePathArg(getResolver(), new BuildTargetSourcePath(rule.getBuildTarget()));
         return NativeLinkableInput.builder()
-            .addArgs(
-                new SourcePathArg(getResolver(), new BuildTargetSourcePath(rule.getBuildTarget())))
+            .addAllArgs(
+                args.linkWhole.or(false) && type != Linker.LinkableDepType.SHARED ?
+                    cxxPlatform.getLd().resolve(resolver).linkWhole(lib) :
+                    ImmutableList.of(lib))
             .build();
       }
 
@@ -591,6 +595,7 @@ public class HaskellLibraryDescription implements
     public Optional<SourceList> srcs;
     public Optional<ImmutableList<String>> compilerFlags;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<Boolean> linkWhole;
   }
 
 }

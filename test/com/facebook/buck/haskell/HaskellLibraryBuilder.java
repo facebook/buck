@@ -63,4 +63,9 @@ public class HaskellLibraryBuilder
     return this;
   }
 
+  public HaskellLibraryBuilder setLinkWhole(boolean linkWhole) {
+    arg.linkWhole = Optional.of(linkWhole);
+    return this;
+  }
+
 }

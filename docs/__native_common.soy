@@ -11,3 +11,16 @@
   {/param}
 {/call}
 {/template}
+
+/***/
+{template .link_whole}
+{call buck.arg}
+  {param name : 'link_whole' /}
+  {param default: 'False' /}
+  {param desc}
+  On some platforms, the linker may choose to drop objects from libraries if it determines
+  they may be unused.  This parameter causes the linker to always include the entire library
+  in top-level executables or shared libraries.
+  {/param}
+{/call}
+{/template}

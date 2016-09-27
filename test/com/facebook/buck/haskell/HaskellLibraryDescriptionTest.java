@@ -16,17 +16,24 @@
 
 package com.facebook.buck.haskell;
 
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -101,6 +108,54 @@ public class HaskellLibraryDescriptionTest {
             staticPicLib.getBuildTarget(),
             sharedLib.getBuildTarget());
     assertThat(targets.size(), Matchers.equalTo(ImmutableSet.copyOf(targets).size()));
+  }
+
+  @Test
+  public void linkWhole() throws Exception {
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    HaskellLibraryBuilder builder =
+        new HaskellLibraryBuilder(target)
+            .setLinkWhole(true);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(builder.build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
+    HaskellLibrary library = (HaskellLibrary) builder.build(resolver);
+
+    // Lookup the link whole flags.
+    Linker linker = CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(resolver);
+    ImmutableList<String> linkWholeFlags =
+        FluentIterable.from(linker.linkWhole(new StringArg("sentinel")))
+            .transformAndConcat(Arg.stringListFunction())
+            .filter(Predicates.not(Predicates.equalTo("sentinel")))
+            .toList();
+
+    // Test static dep type.
+    NativeLinkableInput staticInput =
+        library.getNativeLinkableInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            Linker.LinkableDepType.STATIC);
+    assertThat(
+        Arg.stringify(staticInput.getArgs()),
+        hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()])));
+
+    // Test static-pic dep type.
+    NativeLinkableInput staticPicInput =
+        library.getNativeLinkableInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            Linker.LinkableDepType.STATIC_PIC);
+    assertThat(
+        Arg.stringify(staticPicInput.getArgs()),
+        hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()])));
+
+    // Test shared dep type.
+    NativeLinkableInput sharedInput =
+        library.getNativeLinkableInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            Linker.LinkableDepType.SHARED);
+    assertThat(
+        Arg.stringify(sharedInput.getArgs()),
+        not(hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()]))));
   }
 
 }
