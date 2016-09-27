@@ -72,7 +72,11 @@ public class WorkerShellStep implements Step {
       }
       if (result.getStderr().isPresent() && !result.getStderr().get().isEmpty() &&
           verbosity.shouldPrintStandardInformation()) {
-        context.postEvent(ConsoleEvent.warning("%s", result.getStderr().get()));
+        if (result.getExitCode() == 0) {
+          context.postEvent(ConsoleEvent.warning("%s", result.getStderr().get()));
+        } else {
+          context.postEvent(ConsoleEvent.severe("%s", result.getStderr().get()));
+        }
       }
       return StepExecutionResult.of(result.getExitCode());
     } catch (IOException e) {

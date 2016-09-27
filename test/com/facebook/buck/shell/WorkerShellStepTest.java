@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEvent;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.FakeBuckEventListener;
@@ -28,7 +27,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
@@ -80,6 +78,31 @@ public class WorkerShellStepTest {
         startupArgs,
         startupEnv,
         jobArgs);
+  }
+
+  private ExecutionContext createExecutionContextWith(
+      int exitCode,
+      String stdout,
+      String stderr)
+      throws IOException {
+    WorkerJobResult jobResult = WorkerJobResult.of(
+        exitCode,
+        Optional.of(stdout),
+        Optional.of(stderr));
+    WorkerProcess workerProcess = new FakeWorkerProcess(ImmutableMap.of("myJobArgs", jobResult));
+
+    ConcurrentHashMap<String, WorkerProcess> workerProcessMap = new ConcurrentHashMap<>();
+    workerProcessMap.put("/bin/bash -e -c startupCommand startupArgs", workerProcess);
+
+    ExecutionContext context = TestExecutionContext
+        .newBuilder()
+        .setPlatform(Platform.LINUX)
+        .setWorkerProcesses(workerProcessMap)
+        .setConsole(new TestConsole(Verbosity.ALL))
+        .setBuckEventBus(BuckEventBusFactory.newInstance())
+        .build();
+
+    return context;
   }
 
   @Test
@@ -192,6 +215,9 @@ public class WorkerShellStepTest {
   @Test
   public void testJobIsExecutedAndResultIsReceived()
       throws IOException, InterruptedException {
+    String stdout = "my stdout";
+    String stderr = "my stderr";
+    ExecutionContext context = createExecutionContextWith(0, stdout, stderr);
     WorkerShellStep step = createXargsShellStep(
         createJobParams(
             ImmutableList.of("startupCommand"),
@@ -201,27 +227,8 @@ public class WorkerShellStepTest {
         null,
         null);
 
-    WorkerJobResult jobResult = WorkerJobResult.of(
-        0,
-        Optional.of("my stdout"),
-        Optional.of("my stderr"));
-    WorkerProcess workerProcess = new FakeWorkerProcess(ImmutableMap.of("myJobArgs", jobResult));
-
-    ConcurrentHashMap<String, WorkerProcess> workerProcessMap = new ConcurrentHashMap<>();
-    workerProcessMap.put("/bin/bash -e -c startupCommand startupArgs", workerProcess);
-
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     FakeBuckEventListener listener = new FakeBuckEventListener();
-    eventBus.register(listener);
-
-    Console console = new TestConsole(Verbosity.ALL);
-    ExecutionContext context = TestExecutionContext
-        .newBuilder()
-        .setPlatform(Platform.LINUX)
-        .setWorkerProcesses(workerProcessMap)
-        .setConsole(console)
-        .setBuckEventBus(eventBus)
-        .build();
+    context.getBuckEventBus().register(listener);
 
     int exitCode = step.execute(context).getExitCode();
     assertThat(exitCode, Matchers.equalTo(0));
@@ -230,11 +237,38 @@ public class WorkerShellStepTest {
     BuckEvent firstEvent = listener.getEvents().get(0);
     assertTrue(firstEvent instanceof ConsoleEvent);
     assertThat(((ConsoleEvent) firstEvent).getLevel(), Matchers.is(Level.INFO));
-    assertThat(((ConsoleEvent) firstEvent).getMessage(), Matchers.is("my stdout"));
+    assertThat(((ConsoleEvent) firstEvent).getMessage(), Matchers.is(stdout));
     BuckEvent secondEvent = listener.getEvents().get(1);
     assertTrue(secondEvent instanceof ConsoleEvent);
     assertThat(((ConsoleEvent) secondEvent).getLevel(), Matchers.is(Level.WARNING));
-    assertThat(((ConsoleEvent) secondEvent).getMessage(), Matchers.is("my stderr"));
+    assertThat(((ConsoleEvent) secondEvent).getMessage(), Matchers.is(stderr));
+  }
+
+  @Test
+  public void testStdErrIsPrintedAsErrorIfJobFails()
+      throws IOException, InterruptedException {
+    String stderr = "my stderr";
+    ExecutionContext context = createExecutionContextWith(1, "", stderr);
+    WorkerShellStep step = createXargsShellStep(
+        createJobParams(
+            ImmutableList.of("startupCommand"),
+            "startupArgs",
+            ImmutableMap.<String, String>of(),
+            "myJobArgs"),
+        null,
+        null);
+
+    FakeBuckEventListener listener = new FakeBuckEventListener();
+    context.getBuckEventBus().register(listener);
+
+    int exitCode = step.execute(context).getExitCode();
+    assertThat(exitCode, Matchers.equalTo(1));
+
+    // assert that the job's stderr was written to the console as error, not as warning
+    BuckEvent secondEvent = listener.getEvents().get(0);
+    assertTrue(secondEvent instanceof ConsoleEvent);
+    assertThat(((ConsoleEvent) secondEvent).getLevel(), Matchers.is(Level.SEVERE));
+    assertThat(((ConsoleEvent) secondEvent).getMessage(), Matchers.is(stderr));
   }
 
   @Test
