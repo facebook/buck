@@ -558,6 +558,20 @@ public final class Main {
     return daemon;
   }
 
+  private WatchmanWatcher createWatchmanWatcher(
+      Daemon daemon,
+      String watchRoot,
+      EventBus fileChangeEventBus,
+      ImmutableSet<PathOrGlobMatcher> ignorePaths,
+      Watchman watchman) {
+    return new WatchmanWatcher(
+        watchRoot,
+        fileChangeEventBus,
+        ignorePaths,
+        watchman,
+        daemon.getWatchmanQueryUUID());
+  }
+
   private static BroadcastEventListener getBroadcastEventListener(
       boolean isDaemon,
       Cell rootCell,
@@ -1094,15 +1108,15 @@ public final class Main {
           if (isDaemon) {
             try {
               Daemon daemon = getDaemon(rootCell, objectMapper);
-              WatchmanWatcher watchmanWatcher = new WatchmanWatcher(
+              WatchmanWatcher watchmanWatcher = createWatchmanWatcher(
+                  daemon,
                   watchman.getWatchRoot().or(canonicalRootPath.toString()),
                   daemon.getFileEventBus(),
                   ImmutableSet.<PathOrGlobMatcher>builder()
                       .addAll(filesystem.getIgnorePaths())
                       .addAll(DEFAULT_IGNORE_GLOBS)
                       .build(),
-                  watchman,
-                  daemon.getWatchmanQueryUUID());
+                  watchman);
               parser = getParserFromDaemon(
                   context,
                   rootCell,
