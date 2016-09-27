@@ -16,7 +16,10 @@
 
 package com.facebook.buck.event.listener;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.test.FakeTestResults;
@@ -236,7 +239,24 @@ public class TestResultFormatterTest {
         ImmutableList.<TestResults>of(),
         ImmutableList.<TestStatusMessage>of());
 
-    assertEquals("NO TESTS RAN", toString(builder));
+
+    assertThat(toString(builder), containsString("NO TESTS RAN"));
+  }
+
+  @Test
+  public void shouldIndicateThatNoTestRanIfNoneRanAndUsingFilter() {
+    TestResultFormatter formatter = createSilentFormatter();
+    TestCaseSummary summary = new TestCaseSummary(
+        "com.example.FooTest", ImmutableList.<TestResultSummary>of());
+    TestResults results = FakeTestResults.of(ImmutableList.of(summary));
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    formatter.runComplete(
+        builder,
+        ImmutableList.of(results),
+        ImmutableList.<TestStatusMessage>of());
+
+    assertThat(toString(builder), containsString("NO TESTS RAN"));
   }
 
   @Test

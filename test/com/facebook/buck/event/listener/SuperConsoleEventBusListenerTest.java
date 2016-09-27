@@ -1484,6 +1484,7 @@ public class SuperConsoleEventBusListenerTest {
             null, // stacktrace
             null, // stdOut
             null); // stdErr
+
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             TestSummaryEvent.finished(testUUID, testResultSummary),

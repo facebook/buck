@@ -236,6 +236,7 @@ public class TestResultFormatter {
     ListMultimap<TestResults, TestCaseSummary> failingTests = ArrayListMultimap.create();
 
     int numFailures = 0;
+    int numTestResults = 0;
     ImmutableList.Builder<Path> testLogPathsBuilder = ImmutableList.builder();
 
     for (TestResults summary : completedResults) {
@@ -246,7 +247,12 @@ public class TestResultFormatter {
         failingTests.putAll(summary, summary.getFailures());
       }
       for (TestCaseSummary testCaseSummary : summary.getTestCases()) {
+        numTestResults += testCaseSummary.getFailureCount() + testCaseSummary.getPassedCount();
+
         if (testCaseSummary.hasAssumptionViolations()) {
+          // Only count skipped tests as "run" if there was a dynamic failure,
+          // otherwise, we consider skipped tests as "not run"
+          numTestResults += testCaseSummary.getSkippedCount();
           isAnyAssumptionViolated = true;
           break;
         }
@@ -256,8 +262,8 @@ public class TestResultFormatter {
     ImmutableList<Path> testLogPaths = testLogPathsBuilder.build();
 
     // Print the summary of the test results.
-    if (completedResults.isEmpty()) {
-      addTo.add(ansi.asHighlightedFailureText("NO TESTS RAN"));
+    if (numTestResults == 0) {
+      addTo.add(ansi.asHighlightedFailureText("TESTS PASSED (NO TESTS RAN)"));
     } else if (isAllTestsPassed) {
       if (testLogsPath.isPresent() && verbosity != Verbosity.SILENT) {
         try {
