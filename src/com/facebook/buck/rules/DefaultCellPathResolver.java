@@ -21,12 +21,14 @@ import com.facebook.buck.config.Configs;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -34,24 +36,30 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+
 public class DefaultCellPathResolver implements CellPathResolver {
   private static final Logger LOG = Logger.get(DefaultCellPathResolver.class);
 
   public static final String REPOSITORIES_SECTION = "repositories";
 
   private final Path root;
-  private final ImmutableMap<String, String> repositoriesSection;
+  private final ImmutableMap<String, Path> cellPaths;
 
   public DefaultCellPathResolver(
-      Path root,
+      final Path root,
       ImmutableMap<String, String> repositoriesSection) {
     this.root = root;
-    this.repositoriesSection = repositoriesSection;
+    this.cellPaths = ImmutableMap.copyOf(
+        Maps.transformValues(repositoriesSection, new Function<String, Path>() {
+          @Override
+          public Path apply(String input) {
+            return root.resolve(MorePaths.expandHomeDir(root.getFileSystem().getPath(input)))
+                .normalize();
+          }
+        }));
   }
 
-  public DefaultCellPathResolver(
-      Path root,
-      Config config) {
+  public DefaultCellPathResolver(Path root, Config config) {
     this(root, config.get(REPOSITORIES_SECTION));
   }
 
@@ -85,7 +93,7 @@ public class DefaultCellPathResolver implements CellPathResolver {
 
   private ImmutableMap<String, Path> getPartialMapping() {
     ImmutableSortedSet<String> sortedCellNames =
-        ImmutableSortedSet.<String>naturalOrder().addAll(repositoriesSection.keySet()).build();
+        ImmutableSortedSet.<String>naturalOrder().addAll(cellPaths.keySet()).build();
 
     ImmutableMap.Builder<String, Path> rootsMap = ImmutableMap.builder();
     for (String cellName : sortedCellNames) {
@@ -135,20 +143,18 @@ public class DefaultCellPathResolver implements CellPathResolver {
           result,
           pathStack,
           relativeCellName,
-          new DefaultCellPathResolver(cellRoot, config.get(REPOSITORIES_SECTION)));
+          new DefaultCellPathResolver(cellRoot, config));
       pathStack.remove(cellRoot);
     }
   }
 
   private Path getCellPath(String cellName) {
-    Optional<String> cellPathOptional = Optional.fromNullable(repositoriesSection.get(cellName));
-    if (!cellPathOptional.isPresent()) {
+    Path path = cellPaths.get(cellName);
+    if (path == null) {
       throw new HumanReadableException(
           "Unable to find repository '%s' in cell rooted at: %s", cellName, root);
     }
-    Path cellPath = root.getFileSystem().getPath(cellPathOptional.get());
-    Path path = MorePaths.expandHomeDir(cellPath);
-    return root.resolve(path).normalize();
+    return path;
   }
 
   @Override
