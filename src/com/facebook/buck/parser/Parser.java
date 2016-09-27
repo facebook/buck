@@ -113,27 +113,13 @@ public class Parser {
   }
 
   @VisibleForTesting
-  ImmutableSet<Map<String, Object>> getRawTargetNodes(
-      BuckEventBus eventBus,
+  static ImmutableSet<Map<String, Object>> getRawTargetNodes(
+      PerBuildState state,
       Cell cell,
-      boolean enableProfiling,
-      ListeningExecutorService executor,
       Path buildFile) throws InterruptedException, BuildFileParseException {
     Preconditions.checkState(buildFile.isAbsolute());
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
-
-    try (
-        PerBuildState state =
-            new PerBuildState(
-                this,
-                eventBus,
-                executor,
-                cell,
-                enableProfiling,
-                SpeculativeParsing.of(false),
-                /* ignoreBuckAutodepsFiles */ false)) {
-      return state.getAllRawNodes(cell, buildFile);
-    }
+    return state.getAllRawNodes(cell, buildFile);
   }
 
   public ImmutableSet<TargetNode<?>> getAllTargetNodes(
@@ -193,13 +179,20 @@ public class Parser {
       ListeningExecutorService executor,
       TargetNode<?> targetNode) throws InterruptedException, BuildFileParseException {
 
-    try {
+    try (
+        PerBuildState state =
+            new PerBuildState(
+                this,
+                eventBus,
+                executor,
+                cell,
+                enableProfiling,
+                SpeculativeParsing.of(false),
+                /* ignoreBuckAutodepsFiles */ false)) {
       Cell owningCell = cell.getCell(targetNode.getBuildTarget());
       ImmutableSet<Map<String, Object>> allRawNodes = getRawTargetNodes(
-          eventBus,
+          state,
           owningCell,
-          enableProfiling,
-          executor,
           cell.getAbsolutePathToBuildFile(targetNode.getBuildTarget()));
 
       String shortName = targetNode.getBuildTarget().getShortName();

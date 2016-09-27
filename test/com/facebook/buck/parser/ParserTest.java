@@ -64,6 +64,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -138,6 +139,31 @@ public class ParserTest {
         { 1, true, },
         { 2, true, },
     });
+  }
+
+  /**
+   * Helper to construct a PerBuildState and use it to get nodes.
+   */
+  @VisibleForTesting
+  private static ImmutableSet<Map<String, Object>> getRawTargetNodes(
+      Parser parser,
+      BuckEventBus eventBus,
+      Cell cell,
+      boolean enableProfiling,
+      ListeningExecutorService executor,
+      Path buildFile) throws InterruptedException, BuildFileParseException {
+    try (
+        PerBuildState state =
+            new PerBuildState(
+                parser,
+                eventBus,
+                executor,
+                cell,
+                enableProfiling,
+                SpeculativeParsing.of(false),
+                /* ignoreBuckAutodepsFiles */ false)) {
+      return Parser.getRawTargetNodes(state, cell, buildFile);
+    }
   }
 
   @Before
@@ -659,7 +685,8 @@ public class ParserTest {
   public void whenNotifiedOfBuildFileAddThenCacheRulesAreInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -673,7 +700,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -688,7 +716,8 @@ public class ParserTest {
   public void whenNotifiedOfBuildFileChangeThenCacheRulesAreInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -702,7 +731,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -717,7 +747,8 @@ public class ParserTest {
   public void whenNotifiedOfBuildFileDeleteThenCacheRulesAreInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -731,7 +762,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -746,7 +778,8 @@ public class ParserTest {
   public void whenNotifiedOfIncludeFileAddThenCacheRulesAreInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -760,7 +793,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -775,7 +809,8 @@ public class ParserTest {
   public void whenNotifiedOfIncludeFileChangeThenCacheRulesAreInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -791,7 +826,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -806,7 +842,8 @@ public class ParserTest {
   public void whenNotifiedOfIncludeFileDeleteThenCacheRulesAreInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -820,7 +857,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -835,7 +873,8 @@ public class ParserTest {
   public void whenNotifiedOf2ndOrderIncludeFileAddThenCacheRulesAreInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -849,7 +888,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -864,7 +904,8 @@ public class ParserTest {
   public void whenNotifiedOf2ndOrderIncludeFileChangeThenCacheRulesAreInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -878,7 +919,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -893,7 +935,8 @@ public class ParserTest {
   public void whenNotifiedOf2ndOrderIncludeFileDeleteThenCacheRulesAreInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -907,7 +950,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -922,7 +966,8 @@ public class ParserTest {
   public void whenNotifiedOfDefaultIncludeFileAddThenCacheRulesAreInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -936,7 +981,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -951,7 +997,8 @@ public class ParserTest {
   public void whenNotifiedOfDefaultIncludeFileChangeThenCacheRulesAreInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -965,7 +1012,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -980,7 +1028,8 @@ public class ParserTest {
   public void whenNotifiedOfDefaultIncludeFileDeleteThenCacheRulesAreInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -994,7 +1043,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -1010,7 +1060,8 @@ public class ParserTest {
   public void whenNotifiedOfContainedFileAddThenCacheRulesAreInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -1024,7 +1075,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -1056,7 +1108,8 @@ public class ParserTest {
     Files.write(testAncestorBuildFile, "java_library(name = 'root')\n".getBytes(UTF_8));
 
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -1070,7 +1123,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -1085,7 +1139,8 @@ public class ParserTest {
   public void whenNotifiedOfContainedFileChangeThenCacheRulesAreNotInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -1098,7 +1153,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -1114,7 +1170,8 @@ public class ParserTest {
   public void whenNotifiedOfContainedFileDeleteThenCacheRulesAreInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -1127,7 +1184,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -1142,7 +1200,8 @@ public class ParserTest {
   public void whenNotifiedOfContainedTempFileAddThenCachedRulesAreNotInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -1155,7 +1214,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -1170,7 +1230,8 @@ public class ParserTest {
   public void whenNotifiedOfContainedTempFileChangeThenCachedRulesAreNotInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -1183,7 +1244,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -1198,7 +1260,8 @@ public class ParserTest {
   public void whenNotifiedOfContainedTempFileDeleteThenCachedRulesAreNotInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -1211,7 +1274,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -1226,7 +1290,8 @@ public class ParserTest {
   public void whenNotifiedOfUnrelatedFileAddThenCacheRulesAreNotInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -1239,7 +1304,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -1254,7 +1320,8 @@ public class ParserTest {
   public void whenNotifiedOfUnrelatedFileChangeThenCacheRulesAreNotInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -1267,7 +1334,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -1282,7 +1350,8 @@ public class ParserTest {
   public void whenNotifiedOfUnrelatedFileDeleteThenCacheRulesAreNotInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
@@ -1296,7 +1365,8 @@ public class ParserTest {
     parser.onFileSystemChange(event);
 
     // Call parseBuildFile to request cached rules.
-    parser.getRawTargetNodes(
+    getRawTargetNodes(
+        parser,
         eventBus,
         cell,
         false,
