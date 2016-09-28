@@ -113,6 +113,23 @@ class VisibilityGenerator:
 
 
 class BuildTargetSetGenerator:
+
+    class DynamicFilteredList:
+        def __init__(self, input_list, predicate):
+            self._input_list = input_list
+            self._predicate = predicate
+            self._output_list = []
+            self._processed = 0
+
+        def get_values(self):
+            input_len = len(self._input_list)
+            while self._processed < input_len:
+                value = self._input_list[self._processed]
+                if self._predicate(value):
+                    self._output_list.append(value)
+                self._processed += 1
+            return self._output_list
+
     def __init__(
             self,
             context,
@@ -125,8 +142,8 @@ class BuildTargetSetGenerator:
         self._unique_values_by_type_and_extension = collections.defaultdict(set)
         self._unique_values_dirty = False
         self._choice_probability_by_type_and_extension = dict()
-        self._accepted_targets = set()
-        self._rejected_targets = set()
+        self._accepted_targets_by_type = dict()
+        self._accepted_targets_with_output_by_type = dict()
         if self._process_output_extensions:
             self._output_extensions_by_type = collections.defaultdict(
                     collections.Counter)
@@ -169,10 +186,6 @@ class BuildTargetSetGenerator:
             self._choice_probability_by_type_and_extension[key] = probability
 
     def _is_accepted(self, target_name):
-        if target_name in self._accepted_targets:
-            return True
-        elif target_name in self._rejected_targets:
-            return False
         target_data = self._context.gen_target_data[target_name]
         target_type = target_data['buck.type']
         extension = None
@@ -180,12 +193,7 @@ class BuildTargetSetGenerator:
             extension = self._get_output_extension(target_data)
         probability = self._choice_probability_by_type_and_extension.get(
                 (target_type, extension), 0)
-        chosen = random.uniform(0, 1) < probability
-        if chosen:
-            self._accepted_targets.add(target_name)
-        else:
-            self._rejected_targets.add(target_name)
-        return chosen
+        return random.uniform(0, 1) < probability
 
     def generate(self, base_path, force_length=None):
         if self._unique_values_dirty:
@@ -205,16 +213,24 @@ class BuildTargetSetGenerator:
                 extension = None
             type_extension_counts.update([(type, extension)])
         output = []
+        if self._process_output_extensions:
+            all_targets_dict = self._context.gen_targets_with_output_by_type
+            accepted_targets_dict = self._accepted_targets_with_output_by_type
+        else:
+            all_targets_dict = self._context.gen_targets_by_type
+            accepted_targets_dict = self._accepted_targets_by_type
         for (type, extension), count in type_extension_counts.items():
-            if self._process_output_extensions:
-                options = self._context.gen_targets_with_output_by_type[type]
-            else:
-                options = self._context.gen_targets_by_type[type]
+            options = accepted_targets_dict.get(type)
+            if options is None:
+                options = self.DynamicFilteredList(
+                        all_targets_dict[type],
+                        lambda x: self._is_accepted(x))
+                accepted_targets_dict[type] = options
+            options = options.get_values()
             if extension is not None:
                 options = [x for x in options
                            if self._get_output_extension(
                                self._context.gen_target_data[x]) == extension]
-            options = [x for x in options if self._is_accepted(x)]
             if count > len(options):
                 raise GenerationFailedException()
             output.extend(random.sample(options, count))
