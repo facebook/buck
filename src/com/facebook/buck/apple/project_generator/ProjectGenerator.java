@@ -37,6 +37,7 @@ import com.facebook.buck.apple.AppleResources;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.HasAppleBundleFields;
+import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.clang.HeaderMap;
@@ -1228,6 +1229,13 @@ public class ProjectGenerator {
       ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
       frameworksBuilder.addAll(targetNode.getConstructorArg().frameworks.get());
       frameworksBuilder.addAll(targetNode.getConstructorArg().libraries.get());
+      for (BuildTarget depTarget : targetNode.getConstructorArg().deps.get()) {
+        if (this.targetGraph.get(depTarget).getType().equals(
+            PrebuiltAppleFrameworkDescription.TYPE)) {
+          frameworksBuilder.add(FrameworkPath.ofSourcePath(
+              ((PrebuiltAppleFrameworkDescription.Arg) this.targetGraph.get(depTarget).getConstructorArg()).framework));
+        }
+      }
       frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(ImmutableList.of(targetNode)));
       mutator.setFrameworks(frameworksBuilder.build());
 
