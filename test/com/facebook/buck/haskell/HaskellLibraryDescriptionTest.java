@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -156,6 +157,49 @@ public class HaskellLibraryDescriptionTest {
     assertThat(
         Arg.stringify(sharedInput.getArgs()),
         not(hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()]))));
+  }
+
+  @Test
+  public void preferredLinkage() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(),
+            new DefaultTargetNodeToBuildRuleTransformer());
+
+    // Test default value.
+    HaskellLibrary defaultLib =
+        (HaskellLibrary) new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:default"))
+            .build(resolver);
+    assertThat(
+        defaultLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.is(NativeLinkable.Linkage.ANY));
+
+    // Test `ANY` value.
+    HaskellLibrary anyLib =
+        (HaskellLibrary) new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:any"))
+            .setPreferredLinkage(NativeLinkable.Linkage.ANY)
+            .build(resolver);
+    assertThat(
+        anyLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.is(NativeLinkable.Linkage.ANY));
+
+    // Test `STATIC` value.
+    HaskellLibrary staticLib =
+        (HaskellLibrary) new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:static"))
+            .setPreferredLinkage(NativeLinkable.Linkage.STATIC)
+            .build(resolver);
+    assertThat(
+        staticLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.is(NativeLinkable.Linkage.STATIC));
+
+    // Test `SHARED` value.
+    HaskellLibrary sharedLib =
+        (HaskellLibrary) new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:shared"))
+            .setPreferredLinkage(NativeLinkable.Linkage.SHARED)
+            .build(resolver);
+    assertThat(
+        sharedLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.is(NativeLinkable.Linkage.SHARED));
   }
 
 }

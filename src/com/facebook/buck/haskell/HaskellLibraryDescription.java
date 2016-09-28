@@ -502,7 +502,7 @@ public class HaskellLibraryDescription implements
 
       @Override
       public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-        return Linkage.ANY;
+        return args.preferredLinkage.or(Linkage.ANY);
       }
 
       @Override
@@ -596,6 +596,7 @@ public class HaskellLibraryDescription implements
     public Optional<ImmutableList<String>> compilerFlags;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<Boolean> linkWhole;
+    public Optional<NativeLinkable.Linkage> preferredLinkage;
   }
 
 }

@@ -24,3 +24,26 @@
   {/param}
 {/call}
 {/template}
+
+/***/
+{template .preferred_linkage}
+{call buck.arg}
+  {param name : 'preferred_linkage' /}
+  {param default: 'any' /}
+  {param desc}
+  Controls how a library should be linked.
+
+  <dl>
+    <dt><code>any</code></dt>
+    <dd>The library will be linked based on its dependents <code>link_style</code>.</dd>
+    <dt><code>shared</code></dt>
+    <dd>The library will be always be linked as a shared library.</dd>
+    <dt><code>static</code></dt>
+    <dd>The library will be linked as a static library.</dd>
+  </dl>
+
+  Note: since shared libraries re-export its dependencies, depending on multiple shared libraries
+  which themselves have overlapping static dependencies will cause duplicate symbols.
+  {/param}
+{/call}
+{/template}

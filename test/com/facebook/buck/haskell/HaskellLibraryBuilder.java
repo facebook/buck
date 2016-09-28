@@ -19,6 +19,7 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -65,6 +66,11 @@ public class HaskellLibraryBuilder
 
   public HaskellLibraryBuilder setLinkWhole(boolean linkWhole) {
     arg.linkWhole = Optional.of(linkWhole);
+    return this;
+  }
+
+  public HaskellLibraryBuilder setPreferredLinkage(NativeLinkable.Linkage preferredLinkage) {
+    arg.preferredLinkage = Optional.of(preferredLinkage);
     return this;
   }
 
