@@ -113,13 +113,21 @@ class VisibilityGenerator:
 
 
 class BuildTargetSetGenerator:
-    def __init__(self, context, process_output_extensions=False):
+    def __init__(
+            self,
+            context,
+            process_output_extensions=False,
+            override_types=None):
         self._context = context
         self._process_output_extensions = process_output_extensions
         self._lengths = collections.Counter()
         self._types = collections.Counter()
         if self._process_output_extensions:
             self._output_extensions = collections.Counter()
+        if override_types is None:
+            self._override_types = {}
+        else:
+            self._override_types = dict(override_types)
 
     def add_sample(self, base_path, sample):
         self._lengths.update([len(sample)])
@@ -128,7 +136,9 @@ class BuildTargetSetGenerator:
             if target.startswith(':'):
                 target = '//' + base_path + target
             target_data = self._context.input_target_data[target]
-            self._types.update([target_data['buck.type']])
+            target_type = target_data['buck.type']
+            target_type = self._override_types.get(target_type, target_type)
+            self._types.update([target_type])
             if self._process_output_extensions:
                 extension = self._get_output_extension(target_data)
                 self._output_extensions.update([extension])

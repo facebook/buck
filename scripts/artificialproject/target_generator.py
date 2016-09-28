@@ -56,6 +56,14 @@ class TargetDataGenerator:
         def visibility(context):
             return VisibilityGenerator()
 
+        def annotation_processor_deps(context):
+            # Java binaries can only be used as annotation processors if they
+            # have no native library dependencies, which is difficult to
+            # detect. Instead always use java libraries.
+            return BuildTargetSetGenerator(context, override_types={
+                'java_binary': 'java_library',
+            })
+
         build_target_set = BuildTargetSetGenerator
         build_target = singleton(build_target_set)
         enum = singleton(enum_set)
@@ -66,10 +74,22 @@ class TargetDataGenerator:
         sources_with_flags = SourcesWithFlagsGenerator
 
         FIELDS = {
+            '*.annotation_processor_deps': annotation_processor_deps,
+            '*.annotation_processor_params': enum_set,
+            '*.annotation_processors': enum_set,
+            '*.annotation_processors_only': enum,
             '*.deps': build_target_set,
+            '*.exported_deps': build_target_set,
+            '*.extra_arguments': enum_set,
+            '*.java_version': enum,
             '*.licenses': enum_set,
             '*.out': nullable(file_name),
+            '*.provided_deps': build_target_set,
+            '*.remove_classes': enum_set,
+            '*.resources': source_path_set,
+            '*.source': enum,
             '*.srcs': source_path_set,
+            '*.target': enum,
             '*.visibility': visibility,
             'android_binary.keystore': build_target,
             'android_binary.manifest': source_path,
@@ -87,6 +107,8 @@ class TargetDataGenerator:
             'keystore.store': source_path,
             'prebuilt_jar.binary_jar': source_path,
             'prebuilt_native_library.native_libs': path,
+            'python_library.resources': None,
+            'python_library.srcs': None,
             'sh_binary.main': source_path,
             'worker_tool.exe': build_target,
         }
@@ -94,7 +116,9 @@ class TargetDataGenerator:
         sentinel = object()
 
         generator_class = FIELDS.get(target_type + '.' + field_name, sentinel)
-        if generator_class is not sentinel:
+        if generator_class is None:
+            return None
+        elif generator_class is not sentinel:
             return generator_class(self._context)
 
         generator_class = FIELDS.get('*.' + field_name, sentinel)
