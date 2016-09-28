@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.android.common.annotations.NonNull;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
@@ -32,6 +33,7 @@ import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -54,6 +56,7 @@ import java.util.zip.ZipEntry;
 class TrimUberRDotJava extends AbstractBuildRule {
   private final AaptPackageResources aaptPackageResources;
   private final Collection<DexProducedFromJavaLibrary> allPreDexRules;
+  private final Optional<String> keepResourcePattern;
 
   private static final Pattern R_DOT_JAVA_LINE_PATTERN = Pattern.compile(
       "^ *public static final int(?:\\[\\])? (\\w+)=");
@@ -65,10 +68,12 @@ class TrimUberRDotJava extends AbstractBuildRule {
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       AaptPackageResources aaptPackageResources,
-      Collection<DexProducedFromJavaLibrary> allPreDexRules) {
+      Collection<DexProducedFromJavaLibrary> allPreDexRules,
+      Optional<String> keepResourcePattern) {
     super(buildRuleParams, resolver);
     this.aaptPackageResources = aaptPackageResources;
     this.allPreDexRules = allPreDexRules;
+    this.keepResourcePattern = keepResourcePattern;
   }
 
   @Override
@@ -150,7 +155,8 @@ class TrimUberRDotJava extends AbstractBuildRule {
                     filterRDotJava(
                         projectFilesystem.readLines(file),
                         output,
-                        allReferencedResources);
+                        allReferencedResources,
+                        keepResourcePattern);
                   }
                   return FileVisitResult.CONTINUE;
                 }
@@ -177,10 +183,20 @@ class TrimUberRDotJava extends AbstractBuildRule {
   private static void filterRDotJava(
       List<String> rDotJavaLines,
       OutputStream output,
-      ImmutableSet<String> allReferencedResources)
+      ImmutableSet<String> allReferencedResources,
+      Optional<String> keepResourcePattern)
       throws IOException {
     String packageName = null;
     Matcher m;
+
+    Optional<Pattern> keepPattern = keepResourcePattern.transform(new Function<String, Pattern>() {
+      @NonNull
+      @Override
+      public Pattern apply(@NonNull String input) {
+        return Pattern.compile(input);
+      }
+    });
+
     for (String line : rDotJavaLines) {
       if (packageName == null) {
         m = R_DOT_JAVA_PACKAGE_NAME_PATTERN.matcher(line);
@@ -194,8 +210,13 @@ class TrimUberRDotJava extends AbstractBuildRule {
       // We match on the package name + resource name.
       // This can cause us to keep (for example) R.layout.foo when only R.string.foo
       // is referenced.  That is a very rare case, though, and not worth the complexity to fix.
-      if (m.find() && !allReferencedResources.contains(packageName + "." + m.group(1))) {
-        continue;
+      if (m.find()) {
+        final String resource = m.group(1);
+        boolean shouldWriteLine = allReferencedResources.contains(packageName + "." + resource) ||
+            (keepPattern.isPresent() && keepPattern.get().matcher(resource).find());
+        if (!shouldWriteLine) {
+          continue;
+        }
       }
       output.write(line.getBytes(Charsets.UTF_8));
       output.write('\n');

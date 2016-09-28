@@ -773,6 +773,7 @@ public class AndroidBinaryIntegrationTest {
         containsRegex("The keystore \\[.*\\] key\\.alias \\[.*\\].*does not exist"));
   }
 
+
   @Test
   public void testResourcesTrimming() throws IOException {
     // Enable trimming.
@@ -816,6 +817,32 @@ public class AndroidBinaryIntegrationTest {
     workspace.runBuckCommand("build", SIMPLE_TARGET).assertSuccess();
     buildLog = workspace.getBuildLog();
     buildLog.assertTargetHadMatchingDepsAbi(SIMPLE_TARGET);
+  }
+
+  @Test
+  public void testResourcesTrimmingWithPattern() throws IOException {
+    // Enable trimming.
+    workspace.replaceFileContents(
+        "apps/multidex/BUCK",
+        "# ARGS_FOR_APP",
+        "keep_resource_pattern = '^app_.*', trim_resource_ids = True,  # ARGS_FOR_APP");
+    workspace.runBuckCommand("build", "//apps/multidex:disassemble_app_r_dot_java").assertSuccess();
+    // Make sure we only see what we expect.
+    verifyTrimmedRDotJava(ImmutableSet.of("app_icon", "app_name", "top_layout", "title"));
+
+    // Make a change.
+    workspace.replaceFileContents(
+        "java/com/sample/lib/Sample.java",
+        "R.layout.top_layout",
+        "0 /* NO RESOURCE HERE */");
+
+    // Make sure everything gets rebuilt, and we only see what we expect.
+    workspace.resetBuildLogFile();
+    workspace.runBuckCommand("build", "//apps/multidex:disassemble_app_r_dot_java").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//apps/multidex:app#compile_uber_r_dot_java");
+    buildLog.assertTargetBuiltLocally("//apps/multidex:app#dex_uber_r_dot_java");
+    verifyTrimmedRDotJava(ImmutableSet.of("app_icon", "app_name", "title"));
   }
 
   public static final Pattern SMALI_STATIC_FINAL_INT_PATTERN = Pattern.compile(
