@@ -779,10 +779,10 @@ public class AndroidBinaryIntegrationTest {
     workspace.replaceFileContents(
         "apps/multidex/BUCK",
         "# ARGS_FOR_APP",
-        "trim_resource_ids = True,  # ARGS_FOR_APP");
+        "keep_resource_pattern = '^app_.*', trim_resource_ids = True,  # ARGS_FOR_APP");
     workspace.runBuckCommand("build", "//apps/multidex:disassemble_app_r_dot_java").assertSuccess();
     // Make sure we only see what we expect.
-    verifyTrimmedRDotJava(ImmutableSet.of("top_layout", "title"));
+    verifyTrimmedRDotJava(ImmutableSet.of("app_icon", "app_name", "top_layout", "title"));
 
     // Make a change.
     workspace.replaceFileContents(
@@ -796,7 +796,7 @@ public class AndroidBinaryIntegrationTest {
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//apps/multidex:app#compile_uber_r_dot_java");
     buildLog.assertTargetBuiltLocally("//apps/multidex:app#dex_uber_r_dot_java");
-    verifyTrimmedRDotJava(ImmutableSet.of("title"));
+    verifyTrimmedRDotJava(ImmutableSet.of("app_icon", "app_name", "title"));
 
     // Turn off trimming and turn on exopackage, and rebuilt.
     workspace.replaceFileContents(

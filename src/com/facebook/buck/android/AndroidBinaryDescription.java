@@ -229,6 +229,7 @@ public class AndroidBinaryDescription
         args.buildConfigValuesFile,
         Optional.<Integer>absent(),
         args.trimResourceIds.or(false),
+        args.keepResourcePattern,
         nativePlatforms,
         args.nativeLibraryMergeMap,
         args.nativeLibraryMergeGlue,
@@ -395,6 +396,7 @@ public class AndroidBinaryDescription
     public Optional<List<String>> resourceFilter;
     public Optional<Set<RType>> bannedDuplicateResourceTypes;
     public Optional<Boolean> trimResourceIds;
+    public Optional<String> keepResourcePattern;
     public Optional<String> resourceUnionPackage;
     public Optional<ImmutableSet<String>> locales;
     public Optional<Boolean> buildStringSourceMap;

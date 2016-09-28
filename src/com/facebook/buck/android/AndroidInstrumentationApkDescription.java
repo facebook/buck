@@ -152,6 +152,7 @@ public class AndroidInstrumentationApkDescription
         /* buildConfigValuesFile */ Optional.<SourcePath>absent(),
         /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* trimResourceIds */ false,
+        /* keepResourcePattern */ Optional.<String>absent(),
         nativePlatforms,
         /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
         /* nativeLibraryMergeGlue */ Optional.<BuildTarget>absent(),

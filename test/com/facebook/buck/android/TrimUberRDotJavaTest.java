@@ -37,6 +37,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Rule;
@@ -81,6 +82,7 @@ public class TrimUberRDotJavaTest {
         "  public static class string {\n" +
         "    public static final int my_first_resource=0x7f08005c;\n" +
         "    public static final int my_second_resource=0x7f083bc1;\n" +
+        "    public static final int keep_resource=0x7f083bc2;\n" +
         "  }\n" +
         "}\n";
     Path rDotJavaPath = aaptPackageResources.getPathToGeneratedRDotJavaSrcFiles()
@@ -108,7 +110,8 @@ public class TrimUberRDotJavaTest {
             .build(),
         pathResolver,
         aaptPackageResources,
-        ImmutableList.of(dexProducedFromJavaLibrary));
+        ImmutableList.of(dexProducedFromJavaLibrary),
+        Optional.of("^keep_resource.*"));
 
     BuildContext buildContext = FakeBuildContext.newBuilder()
         .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
@@ -127,6 +130,7 @@ public class TrimUberRDotJavaTest {
             "public class R {\n" +
             "  public static class string {\n" +
             "    public static final int my_first_resource=0x7f08005c;\n" +
+            "    public static final int keep_resource=0x7f083bc2;\n" +
             "  }\n" +
             "}\n";
 
