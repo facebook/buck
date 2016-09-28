@@ -282,6 +282,7 @@ public class AndroidBinaryGraphEnhancer {
           /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of());
       ruleResolver.addToIndex(compileMergedNativeLibMapGenCode);
       additionalJavaLibrariesBuilder.add(compileMergedNativeLibMapGenCode);
+      enhancedDeps.add(compileMergedNativeLibMapGenCode);
     }
 
     ImmutableSortedSet<BuildRule> resourceRules =
