@@ -32,6 +32,8 @@ public class IjProjectBuckConfig {
                 PROJECT_BUCK_CONFIG_SECTION,
                 "disable_r_java_idea_generator",
                 false)
-        ).build();
+        )
+        .setJdkAliases(buckConfig.getEntriesForSection("intellij_jdk_aliases"))
+        .build();
   }
 }

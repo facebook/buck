@@ -19,6 +19,10 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
 import org.immutables.value.Value;
 
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractIjProjectConfig {
@@ -26,6 +30,18 @@ abstract class AbstractIjProjectConfig {
   @Value.Default
   public boolean isAutogenerateAndroidFacetSourcesEnabled() {
     return true;
+  }
+
+  public abstract Map<String, String> getJdkAliases();
+
+  public @Nullable String getJdkAlias(@Nullable String jdkName) {
+    String alias = getJdkAliases().get(jdkName);
+
+    if (alias == null) {
+      return jdkName;
+    } else {
+      return alias;
+    }
   }
 
 }

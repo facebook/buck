@@ -778,4 +778,18 @@ public class ProjectIntegrationTest {
 
     workspace.verify();
   }
+
+  @Test
+  public void testVersion2BuckProjectJdkAlias() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project_with_jdk_alias", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("project");
+    result.assertSuccess("buck project should exit cleanly");
+
+    workspace.verify();
+  }
 }
