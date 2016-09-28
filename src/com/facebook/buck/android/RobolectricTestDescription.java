@@ -38,6 +38,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
@@ -201,7 +202,9 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                 args.getRunTestSeparately(),
                 args.getForkMode(),
                 args.stdOutLogLevel,
-                args.stdErrLogLevel));
+                args.stdErrLogLevel,
+                args.robolectricRuntimeDependency,
+                args.robolectricManifest));
 
     resolver.addToIndex(
         CalculateAbi.of(
@@ -215,5 +218,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
   @SuppressFieldNotInitialized
   public class Arg extends JavaTestDescription.Arg {
+    public Optional<String> robolectricRuntimeDependency;
+    public Optional<SourcePath> robolectricManifest;
   }
 }
