@@ -80,6 +80,7 @@ public abstract class DistBuildFactory {
             .setCacheKeySeed(params.getBuckConfig().getKeySeed())
             .setConsole(params.getConsole())
             .setProvider(FileContentsProviders.createDefaultProvider(service))
+            .setExecutors(params.getExecutors())
             .build());
     return executor;
   }
