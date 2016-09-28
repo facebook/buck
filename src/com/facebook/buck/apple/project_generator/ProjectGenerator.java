@@ -65,6 +65,7 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.ProjectGenerationEvent;
@@ -1129,10 +1130,12 @@ public class ProjectGenerator {
   }
 
   private ProductType getLibraryProductType(TargetNode<?> targetNode) {
-    ImmutableSet<Flavor> flavors = targetNode.getBuildTarget().getFlavors();
-    if (flavors.contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
+    if (isFrameworkTarget(targetNode)) {
       return ProductType.FRAMEWORK;
-    } else if (flavors.contains(CxxDescriptionEnhancer.SHARED_FLAVOR)) {
+    }
+
+    ImmutableSet<Flavor> flavors = targetNode.getBuildTarget().getFlavors();
+    if (flavors.contains(CxxDescriptionEnhancer.SHARED_FLAVOR)) {
       return ProductType.DYNAMIC_LIBRARY;
     } else {
       return ProductType.STATIC_LIBRARY;
@@ -1551,7 +1554,47 @@ public class ProjectGenerator {
   }
 
   private boolean isFrameworkTarget(TargetNode<?> targetNode) {
-    return targetNode.getBuildTarget().getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR);
+    Optional<TargetNode<AppleLibraryDescription.Arg>> libraryNode = targetNode.castArg(
+        AppleLibraryDescription.Arg.class);
+    if (!libraryNode.isPresent()) {
+      // only apple libraries can be frameworks
+      return false;
+    }
+
+    if (prefersStaticLinkage(libraryNode.get())) {
+      // static linkage implies a static library instead of a framework
+      return false;
+    }
+
+    if (targetNode.getBuildTarget().getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
+      return true;
+    }
+
+    // we need to walk up the target graph to see if there is a framework parent
+    return hasFrameworkFlavoredParent(libraryNode.get());
+  }
+
+  private boolean prefersStaticLinkage(TargetNode<?> node) {
+    Optional<TargetNode<AppleLibraryDescription.Arg>> libraryNode = node.castArg(
+        AppleLibraryDescription.Arg.class);
+    if (!libraryNode.isPresent()) {
+      return false;
+    }
+
+    Optional<NativeLinkable.Linkage> preferredLinkage =
+        libraryNode.get().getConstructorArg().preferredLinkage;
+    return preferredLinkage.isPresent() && preferredLinkage.get() == NativeLinkable.Linkage.STATIC;
+  }
+
+  private boolean hasFrameworkFlavoredParent(TargetNode<?> node) {
+    for (TargetNode<?> parent : targetGraph.getIncomingNodesFor(node)) {
+      if (parent.getType() == AppleLibraryDescription.TYPE &&
+          (parent.getBuildTarget().getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR) ||
+          (prefersStaticLinkage(parent) && hasFrameworkFlavoredParent(parent)))) {
+            return true;
+      }
+    }
+    return false;
   }
 
   private boolean shouldIncludeBuildTargetIntoFocusedProject(BuildTarget buildTarget) {
