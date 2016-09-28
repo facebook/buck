@@ -122,8 +122,14 @@ class BuildTargetSetGenerator:
         self._process_output_extensions = process_output_extensions
         self._lengths = collections.Counter()
         self._types = collections.Counter()
+        self._unique_values_by_type_and_extension = collections.defaultdict(set)
+        self._unique_values_dirty = False
+        self._choice_probability_by_type_and_extension = dict()
+        self._accepted_targets = set()
+        self._rejected_targets = set()
         if self._process_output_extensions:
-            self._output_extensions = collections.Counter()
+            self._output_extensions_by_type = collections.defaultdict(
+                    collections.Counter)
         if override_types is None:
             self._override_types = {}
         else:
@@ -139,11 +145,52 @@ class BuildTargetSetGenerator:
             target_type = target_data['buck.type']
             target_type = self._override_types.get(target_type, target_type)
             self._types.update([target_type])
+            extension = None
             if self._process_output_extensions:
                 extension = self._get_output_extension(target_data)
-                self._output_extensions.update([extension])
+                self._output_extensions_by_type[target_type].update([extension])
+            self._unique_values_by_type_and_extension[
+                    (target_type, extension)].add(target)
+            self._unique_values_dirty = True
+
+    def _update_choice_probability(self):
+        self._choice_probability_by_type_and_extension = dict()
+        for (type, extension), used_values in (
+                self._unique_values_by_type_and_extension.items()):
+            all_values = (x for x in self._context.input_target_data.values()
+                          if x['buck.type'] == type)
+            if self._process_output_extensions:
+                all_values = (x for x in all_values
+                              if self._get_output_extension(x) == extension)
+            num = len(used_values)
+            denom = sum(1 for x in all_values)
+            probability = float(num) / denom
+            key = (type, extension)
+            self._choice_probability_by_type_and_extension[key] = probability
+
+    def _is_accepted(self, target_name):
+        if target_name in self._accepted_targets:
+            return True
+        elif target_name in self._rejected_targets:
+            return False
+        target_data = self._context.gen_target_data[target_name]
+        target_type = target_data['buck.type']
+        extension = None
+        if self._process_output_extensions:
+            extension = self._get_output_extension(target_data)
+        probability = self._choice_probability_by_type_and_extension.get(
+                (target_type, extension), 0)
+        chosen = random.uniform(0, 1) < probability
+        if chosen:
+            self._accepted_targets.add(target_name)
+        else:
+            self._rejected_targets.add(target_name)
+        return chosen
 
     def generate(self, base_path, force_length=None):
+        if self._unique_values_dirty:
+            self._update_choice_probability()
+            self._unique_values_dirty = False
         if force_length is not None:
             length = force_length
         else:
@@ -152,7 +199,8 @@ class BuildTargetSetGenerator:
         for i in range(length):
             type = weighted_choice(self._types)
             if self._process_output_extensions:
-                extension = weighted_choice(self._output_extensions)
+                extension = weighted_choice(
+                        self._output_extensions_by_type[type])
             else:
                 extension = None
             type_extension_counts.update([(type, extension)])
@@ -160,11 +208,13 @@ class BuildTargetSetGenerator:
         for (type, extension), count in type_extension_counts.items():
             if self._process_output_extensions:
                 options = self._context.gen_targets_with_output_by_type[type]
+            else:
+                options = self._context.gen_targets_by_type[type]
+            if extension is not None:
                 options = [x for x in options
                            if self._get_output_extension(
                                self._context.gen_target_data[x]) == extension]
-            else:
-                options = self._context.gen_targets_by_type[type]
+            options = [x for x in options if self._is_accepted(x)]
             if count > len(options):
                 raise GenerationFailedException()
             output.extend(random.sample(options, count))
@@ -173,7 +223,10 @@ class BuildTargetSetGenerator:
     def _get_output_extension(self, target_data):
         if 'out' not in target_data or target_data['out'] is None:
             return None
-        return os.path.splitext(target_data['out'])[1]
+        extension = os.path.splitext(target_data['out'])[1]
+        if extension == '':
+            return None
+        return extension
 
 
 class PathSetGenerator:
