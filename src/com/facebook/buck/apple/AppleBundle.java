@@ -489,7 +489,8 @@ public class AppleBundle
       addSwiftStdlibStepIfNeeded(
         bundleRoot.resolve(Paths.get("Frameworks")),
         Optional.of(codeSignIdentitySupplier),
-        stepsBuilder
+        stepsBuilder,
+        false /* is for packaging? */
       );
 
       stepsBuilder.add(
@@ -504,7 +505,8 @@ public class AppleBundle
       addSwiftStdlibStepIfNeeded(
         bundleRoot.resolve(Paths.get("Frameworks")),
         Optional.<Supplier<CodeSignIdentity>>absent(),
-        stepsBuilder
+        stepsBuilder,
+        false /* is for packaging? */
       );
     }
 
@@ -674,7 +676,8 @@ public class AppleBundle
   public void addSwiftStdlibStepIfNeeded(
       Path destinationPath,
       Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier,
-      ImmutableList.Builder<Step> stepsBuilder) {
+      ImmutableList.Builder<Step> stepsBuilder,
+      boolean isForPackaging) {
     // It's apparently safe to run this even on a non-swift bundle (in that case, no libs
     // are copied over).
     if (swiftStdlibTool.isPresent()) {
@@ -688,13 +691,14 @@ public class AppleBundle
           "--scan-folder",
           bundleRoot.resolve(destinations.getPlugInsPath()).toString());
 
+      String tempDirPattern = isForPackaging ? "__swift_packaging_temp__%s" : "__swift_temp__%s";
       stepsBuilder.add(
           new SwiftStdlibStep(
               getProjectFilesystem().getRootPath(),
               BuildTargets.getScratchPath(
                   getProjectFilesystem(),
                   getBuildTarget(),
-                  "__swift_temp__%s"),
+                  tempDirPattern),
               destinationPath,
               swiftStdlibCommand.build(),
               codeSignIdentitySupplier)

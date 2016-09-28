@@ -113,7 +113,8 @@ public class BuiltinApplePackage extends AbstractBuildRule {
       appleBundle.addSwiftStdlibStepIfNeeded(
         swiftSupportDir,
         Optional.<Supplier<CodeSignIdentity>>absent(),
-        commands
+        commands,
+        true /* is for packaging? */
       );
     }
   }
