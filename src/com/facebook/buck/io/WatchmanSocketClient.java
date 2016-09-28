@@ -42,7 +42,6 @@ class WatchmanSocketClient implements WatchmanClient, AutoCloseable {
 
   private static final Logger LOG = Logger.get(WatchmanSocketClient.class);
   private static final long POLL_TIME_NANOS = TimeUnit.SECONDS.toNanos(1);
-  private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(10);
 
   private final ListeningExecutorService listeningExecutorService;
   private final Clock clock;
@@ -132,10 +131,10 @@ class WatchmanSocketClient implements WatchmanClient, AutoCloseable {
       }
       LOG.warn(
           "Watchman did not respond within %d ms, disabling.",
-          TimeUnit.NANOSECONDS.toMillis(TIMEOUT_NANOS));
+          TimeUnit.NANOSECONDS.toMillis(timeoutNanos));
       console.getStdErr().getRawStream().format(
           "Timed out after %d ms waiting for Watchman command [%s]. Disabling Watchman.\n",
-          TimeUnit.NANOSECONDS.toMillis(TIMEOUT_NANOS),
+          TimeUnit.NANOSECONDS.toMillis(timeoutNanos),
           query);
       return Optional.absent();
     }
