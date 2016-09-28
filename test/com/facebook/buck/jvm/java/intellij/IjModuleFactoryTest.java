@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.AndroidBinaryBuilder;
 import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryBuilder;
+import com.facebook.buck.android.AndroidPrebuiltAarBuilder;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -34,9 +35,13 @@ import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -488,6 +493,47 @@ public class IjModuleFactoryTest {
 
     assertThat(moduleWithDefault.getJdkVersion(), equalTo(Optional.<String>absent()));
     assertThat(moduleWithJava8.getJdkVersion(), equalTo(Optional.of("1.8")));
+  }
+
+  @Test
+  public void testAndroidPrebuiltAar() {
+    final Path androidSupportBinaryPath = Paths.get("third_party/java/support/support.aar");
+    final Path androidSupportSourcesPath =
+        Paths.get("third_party/java/support/support-sources.jar");
+    final String androidSupportJavadocUrl = "file:///support/docs";
+    final TargetNode<?> androidPrebuiltAar = AndroidPrebuiltAarBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//third_party/java/support:support"))
+        .setBinaryAar(androidSupportBinaryPath)
+        .setSourcesJar(androidSupportSourcesPath)
+        .setJavadocUrl(androidSupportJavadocUrl)
+        .build();
+
+    final BuildRuleResolver buildRuleResolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new DefaultTargetNodeToBuildRuleTransformer());
+    final SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
+    DefaultIjLibraryFactory.IjLibraryFactoryResolver ijLibraryFactoryResolver =
+        new DefaultIjLibraryFactory.IjLibraryFactoryResolver() {
+          @Override
+          public Path getPath(SourcePath path) {
+            return sourcePathResolver.getRelativePath(path);
+          }
+
+          @Override
+          public Optional<Path> getPathIfJavaLibrary(TargetNode<?> targetNode) {
+            if (targetNode.equals(androidPrebuiltAar)) {
+              return Optional.of(androidSupportBinaryPath);
+            }
+            return Optional.absent();
+          }
+        };
+
+    Optional<IjLibrary> library = new DefaultIjLibraryFactory(ijLibraryFactoryResolver)
+        .getLibrary(androidPrebuiltAar);
+    assertTrue(library.isPresent());
+    assertEquals(library.get().getBinaryJar(), Optional.of(androidSupportBinaryPath));
+    assertEquals(library.get().getSourceJar(), Optional.of(androidSupportSourcesPath));
+    assertEquals(library.get().getJavadocUrl(), Optional.of(androidSupportJavadocUrl));
   }
 
   private IjModuleFactory createIjModuleFactory() {
