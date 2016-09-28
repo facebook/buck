@@ -190,6 +190,8 @@ public class AndroidPrebuiltAarDescription
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public SourcePath aar;
+    public Optional<SourcePath> sourceJar;
+    public Optional<String> javadocUrl;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 
