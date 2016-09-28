@@ -150,7 +150,6 @@ public class BuildFileSpecTest {
                     Watchman.Capability.SUPPORTS_PROJECT_WATCH,
                     Watchman.Capability.DIRNAME,
                     Watchman.Capability.WILDMATCH_GLOB),
-                Optional.<String>absent(),
                 Optional.of(Paths.get(".watchman-sock")),
                 Optional.<WatchmanClient>of(fakeWatchmanClient),
                 TimeUnit.SECONDS.toMillis(45)))
@@ -199,7 +198,6 @@ public class BuildFileSpecTest {
                     Watchman.Capability.SUPPORTS_PROJECT_WATCH,
                     Watchman.Capability.DIRNAME,
                     Watchman.Capability.WILDMATCH_GLOB),
-                Optional.<String>absent(),
                 Optional.of(Paths.get(".watchman-sock")),
                 Optional.<WatchmanClient>of(fakeWatchmanClient),
                 TimeUnit.SECONDS.toMillis(45)))
@@ -257,7 +255,6 @@ public class BuildFileSpecTest {
                     Watchman.Capability.SUPPORTS_PROJECT_WATCH,
                     Watchman.Capability.DIRNAME,
                     Watchman.Capability.WILDMATCH_GLOB),
-                Optional.<String>absent(),
                 Optional.of(Paths.get(".watchman-sock")),
                 Optional.<WatchmanClient>of(timingOutWatchmanClient),
                 TimeUnit.SECONDS.toMillis(45)))
