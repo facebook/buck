@@ -29,6 +29,9 @@ import java.io.Reader;
  */
 class SwiftCompileOutputParsing {
 
+  /** Utility class: do not instantiate. */
+  private SwiftCompileOutputParsing() { }
+
   private static final Logger LOG = Logger.get(SwiftCompileOutputParsing.class);
 
   static void streamOutputFromReader(Reader reader, SwiftOutputHandler handler) {
