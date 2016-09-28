@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -369,6 +370,43 @@ public class NativeLinkablesTest {
     assertThat(
         sharedLibs,
         Matchers.equalTo(ImmutableSortedMap.<String, SourcePath>of("libc.so", path)));
+  }
+
+  @Test
+  public void traversePredicate() throws Exception {
+    FakeNativeLinkable b =
+        new FakeNativeLinkable(
+            "//:b",
+            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.<NativeLinkable>of(),
+            NativeLinkable.Linkage.ANY,
+            NativeLinkableInput.builder().build(),
+            ImmutableMap.<String, SourcePath>of());
+    FakeNativeLinkable a =
+        new FakeNativeLinkable(
+            "//:a",
+            ImmutableList.<NativeLinkable>of(b),
+            ImmutableList.<NativeLinkable>of(),
+            NativeLinkable.Linkage.ANY,
+            NativeLinkableInput.builder().build(),
+            ImmutableMap.<String, SourcePath>of());
+    assertThat(
+        NativeLinkables.getNativeLinkables(
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            ImmutableList.of(a),
+            Linker.LinkableDepType.STATIC,
+            Predicates.<NativeLinkable>alwaysTrue()),
+        Matchers.equalTo(
+            ImmutableMap.<BuildTarget, NativeLinkable>of(
+                a.getBuildTarget(), a,
+                b.getBuildTarget(), b)));
+    assertThat(
+        NativeLinkables.getNativeLinkables(
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            ImmutableList.of(a),
+            Linker.LinkableDepType.STATIC,
+            Predicates.<NativeLinkable>equalTo(a)),
+        Matchers.equalTo(ImmutableMap.<BuildTarget, NativeLinkable>of(a.getBuildTarget(), a)));
   }
 
 }

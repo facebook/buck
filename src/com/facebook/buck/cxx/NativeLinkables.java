@@ -94,7 +94,8 @@ public class NativeLinkables {
   public static ImmutableMap<BuildTarget, NativeLinkable> getNativeLinkables(
       final CxxPlatform cxxPlatform,
       Iterable<? extends NativeLinkable> inputs,
-      final Linker.LinkableDepType linkStyle) {
+      final Linker.LinkableDepType linkStyle,
+      final Predicate<? super NativeLinkable> traverse) {
 
     final Map<BuildTarget, NativeLinkable> nativeLinkables = Maps.newHashMap();
     for (NativeLinkable nativeLinkable : inputs) {
@@ -137,10 +138,12 @@ public class NativeLinkables {
             // Process all the traversable deps.
             ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
             for (NativeLinkable dep : nativeLinkableDeps) {
-              BuildTarget depTarget = dep.getBuildTarget();
-              graph.addEdge(target, depTarget);
-              deps.add(depTarget);
-              nativeLinkables.put(depTarget, dep);
+              if (traverse.apply(dep)) {
+                BuildTarget depTarget = dep.getBuildTarget();
+                graph.addEdge(target, depTarget);
+                deps.add(depTarget);
+                nativeLinkables.put(depTarget, dep);
+              }
             }
             return deps.build();
           }
@@ -157,6 +160,13 @@ public class NativeLinkables {
       result.put(target, nativeLinkables.get(target));
     }
     return result.build();
+  }
+
+  public static ImmutableMap<BuildTarget, NativeLinkable> getNativeLinkables(
+      final CxxPlatform cxxPlatform,
+      Iterable<? extends NativeLinkable> inputs,
+      final Linker.LinkableDepType linkStyle) {
+    return getNativeLinkables(cxxPlatform, inputs, linkStyle, Predicates.alwaysTrue());
   }
 
   public static Linker.LinkableDepType getLinkStyle(
