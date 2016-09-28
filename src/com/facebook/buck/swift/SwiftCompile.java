@@ -165,7 +165,9 @@ class SwiftCompile
         "-serialize-debugging-options",
         compileAsLibrary ? "-parse-as-library" : "",
         "-j",
-        String.valueOf(1), // only one job at a time for now
+        // only one job at a time for now, this will be removed in the next iteration for
+        // incremental build, we will use buck jobs for parallelizing instead of swift builtin jobs.
+        String.valueOf(1),
         "-module-name",
         moduleName,
         "-Onone", // no optimization
