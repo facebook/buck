@@ -95,17 +95,16 @@ public class PublicAnnouncementManager {
                           slb.get(),
                           logConfig.createOkHttpClient(),
                           eventBus)))) {
+                AnnouncementRequest announcementRequest = new AnnouncementRequest();
+                announcementRequest.setBuckVersion(getBuckVersion());
+                announcementRequest.setRepository(repository);
+                FrontendRequest request = new FrontendRequest();
+                request.setType(FrontendRequestType.ANNOUNCEMENT);
+                request.setAnnouncementRequest(announcementRequest);
 
-              AnnouncementRequest announcementRequest = new AnnouncementRequest();
-              announcementRequest.setBuckVersion(getBuckVersion());
-              announcementRequest.setRepository(repository);
-              FrontendRequest request = new FrontendRequest();
-              request.setType(FrontendRequestType.ANNOUNCEMENT);
-              request.setAnnouncementRequest(announcementRequest);
-
-              FrontendResponse response = frontendService.makeRequest(request);
-              return ImmutableList.copyOf(response.announcementResponse.announcements);
-              } catch (IOException e) {
+                FrontendResponse response = frontendService.makeRequest(request);
+                return ImmutableList.copyOf(response.announcementResponse.announcements);
+                } catch (IOException e) {
                 throw new HumanReadableException("Failed to perform request", e);
               }
             } else {
@@ -118,6 +117,7 @@ public class PublicAnnouncementManager {
 
       @Override
       public void onSuccess(ImmutableList<Announcement> announcements) {
+        LOG.info("Public announcements fetched successfully.");
         if (!announcements.isEmpty()) {
           ImmutableList.Builder<String> finalMessages = ImmutableList.builder();
           finalMessages.add(HEADER_MSG);

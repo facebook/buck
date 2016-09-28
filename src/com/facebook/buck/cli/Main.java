@@ -1059,15 +1059,17 @@ public final class Main {
               clientEnvironment,
               counterRegistry);
 
-          PublicAnnouncementManager announcementManager = new PublicAnnouncementManager(
-              clock,
-              executionEnvironment,
-              buildEventBus,
-              consoleListener,
-              buckConfig.getRepository().or("unknown"),
-              new RemoteLogBuckConfig(buckConfig),
-              executors.get(ExecutorPool.CPU));
-          announcementManager.getAndPostAnnouncements();
+          if (buckConfig.isPublicAnnouncementsEnabled()) {
+            PublicAnnouncementManager announcementManager = new PublicAnnouncementManager(
+                clock,
+                executionEnvironment,
+                buildEventBus,
+                consoleListener,
+                buckConfig.getRepository().or("unknown"),
+                new RemoteLogBuckConfig(buckConfig),
+                executors.get(ExecutorPool.CPU));
+            announcementManager.getAndPostAnnouncements();
+          }
 
           // This needs to be after the registration of the event listener so they can pick it up.
           if (watchmanFreshInstanceAction == WatchmanWatcher.FreshInstanceAction.NONE) {

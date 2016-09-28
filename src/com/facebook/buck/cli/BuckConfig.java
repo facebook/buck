@@ -474,6 +474,10 @@ public class BuckConfig {
     return getBooleanValue(LOG_SECTION, "chrome_trace_generation", true);
   }
 
+  public boolean isPublicAnnouncementsEnabled() {
+    return getBooleanValue(LOG_SECTION, "public_announcements", true);
+  }
+
   public boolean isRuleKeyLoggerEnabled() {
     return getBooleanValue(LOG_SECTION, "rule_key_logger_enabled", false);
   }
