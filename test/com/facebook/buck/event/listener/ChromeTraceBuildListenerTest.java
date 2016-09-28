@@ -213,7 +213,10 @@ public class ChromeTraceBuildListenerTest {
         ImmutableList.of("arg1", "arg2"),
         /* isDaemon */ true);
     eventBus.post(commandEventStarted);
-    eventBus.post(new PerfStatsTracking.MemoryPerfStatsEvent(1024 * 1024L, 3 * 1024 * 1024L));
+    eventBus.post(new PerfStatsTracking.MemoryPerfStatsEvent(
+        /* freeMemoryBytes */ 1024 * 1024L,
+        /* totalMemoryBytes */ 3 * 1024 * 1024L,
+        /* timeSpentInGcMs */ -1));
     ArtifactCacheConnectEvent.Started artifactCacheConnectEventStarted =
         ArtifactCacheConnectEvent.started();
     eventBus.post(artifactCacheConnectEventStarted);
@@ -343,7 +346,8 @@ public class ChromeTraceBuildListenerTest {
         ImmutableMap.of(
             "used_memory_mb", "2",
             "free_memory_mb", "1",
-            "total_memory_mb", "3"));
+            "total_memory_mb", "3",
+            "time_spent_in_gc_sec", "0"));
 
     assertNextResult(
         resultListCopy,

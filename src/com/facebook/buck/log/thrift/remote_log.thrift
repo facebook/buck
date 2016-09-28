@@ -22,8 +22,16 @@ struct VersionControlStatsRemoteLogEntry {
   5: optional i32 unsampledPathsChangedCount;
 }
 
+struct MemoryStatsRemoteLogEntry {
+  1: optional i64 timeFromStartOfCommandMs;
+  2: optional i64 freeMemoryBytes;
+  3: optional i64 totalMemoryBytes;
+  4: optional i64 timeSpentInGcMs;
+}
+
 struct RemoteLogEntry {
   1: optional string buildUuid;
 
   2: optional VersionControlStatsRemoteLogEntry versionControlStats;
+  3: optional MemoryStatsRemoteLogEntry memoryStats;
 }

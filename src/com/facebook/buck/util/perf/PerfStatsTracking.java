@@ -26,6 +26,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ServiceManager;
 
+import java.lang.management.GarbageCollectorMXBean;
+import java.lang.management.ManagementFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -49,7 +51,18 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
     long freeMemoryBytes = Runtime.getRuntime().freeMemory();
     long totalMemoryBytes = Runtime.getRuntime().totalMemory();
 
-    eventBus.post(new MemoryPerfStatsEvent(freeMemoryBytes, totalMemoryBytes));
+    long totalGcTimeMs = 0;
+    for (GarbageCollectorMXBean gcMxBean : ManagementFactory.getGarbageCollectorMXBeans()) {
+      long collectionTimeMs = gcMxBean.getCollectionTime();
+      if (collectionTimeMs == -1) {
+        // Gc collection time is not supported on this JVM.
+        totalGcTimeMs = -1;
+        break;
+      }
+      totalGcTimeMs += collectionTimeMs;
+    }
+
+    eventBus.post(new MemoryPerfStatsEvent(freeMemoryBytes, totalMemoryBytes, totalGcTimeMs));
   }
 
   @Override
@@ -98,10 +111,15 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
   public static class MemoryPerfStatsEvent extends PerfStatsEvent {
     private final long freeMemoryBytes;
     private final long totalMemoryBytes;
+    private final long timeSpentInGcMs;
 
-    public MemoryPerfStatsEvent(long freeMemoryBytes, long totalMemoryBytes) {
+    public MemoryPerfStatsEvent(
+        long freeMemoryBytes,
+        long totalMemoryBytes,
+        long timeSpentInGcMs) {
       this.freeMemoryBytes = freeMemoryBytes;
       this.totalMemoryBytes = totalMemoryBytes;
+      this.timeSpentInGcMs = timeSpentInGcMs;
     }
 
     public long getFreeMemoryBytes() {
@@ -110,6 +128,10 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
 
     public long getTotalMemoryBytes() {
       return totalMemoryBytes;
+    }
+
+    public long getTimeSpentInGcMs() {
+      return timeSpentInGcMs;
     }
   }
 }

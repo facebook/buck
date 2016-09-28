@@ -654,15 +654,18 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         "perf",
         "memory",
         ChromeTraceEvent.Phase.COUNTER,
-        ImmutableMap.of(
-            "used_memory_mb", Long.toString(
+        ImmutableMap.<String, String>builder()
+            .put("used_memory_mb", Long.toString(
                 SizeUnit.BYTES.toMegabytes(
-                    memory.getTotalMemoryBytes() - memory.getFreeMemoryBytes())),
-            "free_memory_mb", Long.toString(
-                SizeUnit.BYTES.toMegabytes(memory.getFreeMemoryBytes())),
-            "total_memory_mb", Long.toString(
-                SizeUnit.BYTES.toMegabytes(memory.getTotalMemoryBytes()))
-        ),
+                    memory.getTotalMemoryBytes() - memory.getFreeMemoryBytes())))
+            .put("free_memory_mb", Long.toString(
+                SizeUnit.BYTES.toMegabytes(memory.getFreeMemoryBytes())))
+            .put("total_memory_mb", Long.toString(
+                SizeUnit.BYTES.toMegabytes(memory.getTotalMemoryBytes())))
+            .put("time_spent_in_gc_sec",
+                Long.toString(
+                    TimeUnit.MILLISECONDS.toSeconds(memory.getTimeSpentInGcMs())))
+            .build(),
         memory);
   }
 
