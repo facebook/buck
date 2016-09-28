@@ -361,7 +361,7 @@
           http://help.eclipse.org/kepler/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Freference%2Fapi%2Forg%2Feclipse%2Fjdt%2Fcore%2FJavaCore.html
           Apparently Eclipse refuses to publish traditional Javadoc with manageable URLs.
         -->
-        <compilerarg line="-properties ${eclipse.dir}/org.eclipse.jdt.core.prefs" />
+        <compilerarg line="-properties '${eclipse.dir}/org.eclipse.jdt.core.prefs'" />
         <compilerarg value="-Xlint:rawtypes" />
         <compilerarg value="-Xlint:unchecked" />
         <compilerarg value="-Xlint:serial" />
