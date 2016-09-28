@@ -19,7 +19,6 @@ package com.facebook.buck.log;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.DirectoryCleaner;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import java.io.Closeable;
@@ -77,7 +76,7 @@ public class GlobalStateManager {
       OutputStream consoleHandlerStream,
       final OutputStream consoleHandlerOriginalStream,
       final Verbosity consoleHandlerVerbosity) {
-    ReferenceCountedWriter writer = rotateDefaultLogFileWriter(info.getLogFilePath());
+    ReferenceCountedWriter defaultWriter = rotateDefaultLogFileWriter(info.getLogFilePath());
 
     final long threadId = Thread.currentThread().getId();
     final String commandId = info.getCommandId();
@@ -104,20 +103,15 @@ public class GlobalStateManager {
           logDirectory.toAbsolutePath());
     }
 
-    commandIdToLogFileHandlerWriter.put(
-        commandId,
-        writer.newReference());
+    ReferenceCountedWriter newWriter = defaultWriter.newReference();
+    putReferenceCountedWriter(commandId, newWriter);
 
     return new Closeable() {
       @Override
       public void close() throws IOException {
 
         // Tear down the LogFileHandler state.
-        Writer writer = commandIdToLogFileHandlerWriter.remove(commandId);
-        if (writer != null) {
-          writer.flush();
-          writer.close();
-        }
+        removeReferenceCountedWriter(commandId);
 
         // Tear down the ConsoleHandler state.
         commandIdToConsoleHandlerWriter.put(
@@ -143,27 +137,42 @@ public class GlobalStateManager {
     };
   }
 
-  private ReferenceCountedWriter newReferenceCounterWriter(String filePath)
+  private ReferenceCountedWriter newReferenceCountedWriter(String filePath)
       throws FileNotFoundException {
     return new ReferenceCountedWriter(
         ConsoleHandler.utf8OutputStreamWriter(
             new FileOutputStream(filePath)));
   }
 
-  private ReferenceCountedWriter rotateDefaultLogFileWriter(Path logFilePath) {
-    try {
-      Files.createDirectories(logFilePath.getParent());
-      ReferenceCountedWriter newWriter = newReferenceCounterWriter(logFilePath.toString());
-      Writer oldWriter = commandIdToLogFileHandlerWriter.get(
-          DEFAULT_LOG_FILE_WRITER_KEY);
-      commandIdToLogFileHandlerWriter.put(DEFAULT_LOG_FILE_WRITER_KEY, newWriter);
+  private void removeReferenceCountedWriter(String commandId) {
+    putReferenceCountedWriter(commandId, null);
+  }
 
+  private void putReferenceCountedWriter(
+      String commandId,
+      @Nullable ReferenceCountedWriter newWriter) {
+    try {
+      Writer oldWriter;
+      if (newWriter == null) {
+        oldWriter = commandIdToLogFileHandlerWriter.remove(commandId);
+      } else {
+        oldWriter = commandIdToLogFileHandlerWriter.put(commandId, newWriter);
+      }
       if (oldWriter != null) {
         oldWriter.flush();
         oldWriter.close();
       }
-      return newWriter;
+    } catch (IOException e) {
+      throw new RuntimeException(String.format("Exception closing writer [%s].", commandId), e);
+    }
+  }
 
+  private ReferenceCountedWriter rotateDefaultLogFileWriter(Path logFilePath) {
+    try {
+      Files.createDirectories(logFilePath.getParent());
+      ReferenceCountedWriter newWriter = newReferenceCountedWriter(logFilePath.toString());
+      putReferenceCountedWriter(DEFAULT_LOG_FILE_WRITER_KEY, newWriter);
+      return newWriter;
     } catch (FileNotFoundException e) {
       throw new RuntimeException(String.format("Could not create file [%s].", logFilePath), e);
     } catch (IOException e) {
@@ -218,6 +227,10 @@ public class GlobalStateManager {
     };
   }
 
+  /**
+   * Writers obtained by {@link LogFileHandlerState#getWriters} must not be closed!
+   * This class manages their lifetime.
+   */
   public LogFileHandlerState getLogFileHandlerState() {
     return new LogFileHandlerState() {
       @Override
@@ -248,10 +261,13 @@ public class GlobalStateManager {
    */
   @Override
   protected void finalize() throws IOException {
-    // Close off any writers that may still be hanging about.
-    for (Writer writer : Iterables.concat(
-        commandIdToConsoleHandlerWriter.values(),
-        commandIdToLogFileHandlerWriter.values())) {
+    // Close off any log file writers that may still be hanging about.
+    List<String> allKeys = Lists.newArrayList(commandIdToLogFileHandlerWriter.keySet());
+    for (String commandId : allKeys) {
+      removeReferenceCountedWriter(commandId);
+    }
+    // Close off any console writers that may still be hanging about.
+    for (Writer writer : commandIdToConsoleHandlerWriter.values()) {
       try {
         writer.close();
       } catch (IOException e) {
