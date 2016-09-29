@@ -16,19 +16,20 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.FrameworkDependencies;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -36,9 +37,9 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -49,6 +50,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
+
 
 import java.nio.file.Path;
 import java.util.EnumSet;
@@ -166,14 +168,20 @@ public class CxxLinkableEnhancer {
     Preconditions.checkState(
         !bundleLoader.isPresent() || linkType == Linker.LinkType.MACH_O_BUNDLE);
 
-    nativeLinkableDeps = FluentIterable.from(nativeLinkableDeps).
-        transform(CxxLinkableEnhancer.replaceDylibWithFramework(ruleResolver, target));
+    Optional<FrameworkDependencies> frameworks = Optional.absent();
+    try {
+      frameworks = ruleResolver.requireMetadata(target, FrameworkDependencies.class);
+    } catch (TargetGraph.NoSuchNodeException e) {
 
-    // Collect and topologically sort our deps that contribute to the link.
+    }
+    Predicate<? super NativeLinkable> notLinkedAsFramework =
+        CxxLinkableEnhancer.notAFrameworkDependency(frameworks);
+
+        // Collect and topologically sort our deps that contribute to the link.
     ImmutableList.Builder < NativeLinkableInput > nativeLinkableInputs = ImmutableList.builder();
     nativeLinkableInputs.add(immediateLinkableInput);
     for (NativeLinkable nativeLinkable : Maps.filterKeys(
-        NativeLinkables.getNativeLinkables(cxxPlatform, nativeLinkableDeps, depType),
+        NativeLinkables.getNativeLinkables(cxxPlatform, nativeLinkableDeps, depType, notLinkedAsFramework),
         Predicates.not(Predicates.in(blacklist))).values()) {
       NativeLinkableInput input = NativeLinkables.getNativeLinkableInput(
           cxxPlatform, depType, nativeLinkable);
@@ -368,52 +376,30 @@ public class CxxLinkableEnhancer {
   /*
    * requiremetadata and the noop rules are different
    */
-  private static Function<NativeLinkable, NativeLinkable> replaceDylibWithFramework(
-      final BuildRuleResolver ruleResolver,
-      BuildTarget target)
-  throws NoSuchBuildTargetException{
+  private static Predicate<? super NativeLinkable> notAFrameworkDependency(
+      Optional<FrameworkDependencies> dependencies) {
+    if (dependencies.isPresent()) {
+      final ImmutableSet<UnflavoredBuildTarget> frameworkTargets =
+          FluentIterable.from(SourcePaths.filterBuildTargetSourcePaths(
+              dependencies.get().getSourcePaths()))
+              .transform(new Function<BuildTarget, UnflavoredBuildTarget>() {
+                @Nullable
+                @Override
+                public UnflavoredBuildTarget apply(@Nullable BuildTarget input) {
+                  return input.getUnflavoredBuildTarget();
+                }
+              }).toSet();
 
-    Optional<FrameworkDependencies> frameworks =
-        ruleResolver.requireMetadata(target, FrameworkDependencies.class);
-    if (!frameworks.isPresent()) {
-      return Functions.identity();
+      Predicate<? super NativeLinkable> notIncludedAsFramework = new Predicate<NativeLinkable>() {
+        @Override
+        public boolean apply(@Nullable NativeLinkable input) {
+          return !frameworkTargets.contains(input.getBuildTarget().getUnflavoredBuildTarget());
+        }
+      };
+      return notIncludedAsFramework;
+    } else {
+      return Predicates.alwaysTrue();
     }
-
-    final Function<SourcePath, BuildTarget> sourcePathToBuildTargetFunction = new Function<SourcePath, BuildTarget>() {
-      @Nullable
-      @Override
-      public BuildTarget apply(@Nullable SourcePath input) {
-        if (input instanceof BuildTargetSourcePath) {
-          return ((BuildTargetSourcePath) input).getTarget();
-        }
-        return null;
-      }
-    };
-    final ImmutableSet<BuildTarget> frameworkTargets = FluentIterable.from(frameworks.get().getSourcePaths())
-        .transform(sourcePathToBuildTargetFunction)
-        .filter(Predicates.notNull())
-        .toSet();
-
-    return new Function<NativeLinkable, NativeLinkable>() {
-      @Override
-      public NativeLinkable apply(NativeLinkable input) {
-        for (BuildTarget framework : frameworkTargets) {
-          if (framework.getUnflavoredBuildTarget()
-              .equals(input.getBuildTarget().getUnflavoredBuildTarget())) {
-            try {
-              BuildRule potentialFramework = ruleResolver.requireRule(framework);
-              if (potentialFramework instanceof AppleBundle) {
-                return (AppleBundle) potentialFramework;
-              }
-            } catch (NoSuchBuildTargetException e) {
-              return input;
-            }
-          }
-        }
-        return input;
-      }
-    };
   }
-
 
 }

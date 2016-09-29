@@ -47,6 +47,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
@@ -61,6 +62,7 @@ import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.lang.annotation.Target;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -147,6 +149,7 @@ public class NdkCxxPlatformTest {
   private ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey> constructLinkRuleKeys(
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> cxxPlatforms)
       throws NoSuchBuildTargetException {
+    BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -158,7 +161,6 @@ public class NdkCxxPlatformTest {
                     .put("input.o", Strings.repeat("a", 40))
                     .build()),
             pathResolver);
-    BuildTarget target = BuildTargetFactory.newInstance("//:target");
     ImmutableMap.Builder<NdkCxxPlatforms.TargetCpuType, RuleKey> ruleKeys =
         ImmutableMap.builder();
     for (Map.Entry<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {

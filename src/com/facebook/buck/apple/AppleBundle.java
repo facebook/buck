@@ -399,7 +399,6 @@ public class AppleBundle
       appendCopyHeadersStep(stepsBuilder);
     }
 
-    Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
     if (
         !Iterables.isEmpty(
             Iterables.concat(
