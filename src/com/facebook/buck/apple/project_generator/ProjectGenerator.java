@@ -1507,16 +1507,17 @@ public class ProjectGenerator {
     }
 
     // -- phases
+    boolean headerMapDisabled = options.contains(Option.DISABLE_HEADER_MAPS);
     createHeaderSymlinkTree(
         sourcePathResolver,
         getPublicCxxHeaders(targetNode),
         getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC),
-        arg.xcodePublicHeadersSymlinks.or(true));
+        arg.xcodePublicHeadersSymlinks.or(true) || headerMapDisabled);
     createHeaderSymlinkTree(
         sourcePathResolver,
         getPrivateCxxHeaders(targetNode),
         getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE),
-        arg.xcodePrivateHeadersSymlinks.or(true));
+        arg.xcodePrivateHeadersSymlinks.or(true) || headerMapDisabled);
 
     if (appleTargetNode.isPresent()) {
       // Use Core Data models from immediate dependencies only.
