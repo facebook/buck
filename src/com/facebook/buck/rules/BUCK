@@ -97,6 +97,7 @@ java_immutables_library(
     'ImplicitDepsInferringDescription.java',
     'ImplicitFlavorsInferringDescription.java',
     'ImplicitInputsInferringDescription.java',
+    'LazyDelegatingTool.java',
     'MetadataProvidingDescription.java',
     'NonHashableSourcePathContainer.java',
     'NullRuleKeyLogger.java',

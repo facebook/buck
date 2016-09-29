@@ -21,12 +21,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.LazyDelegatingTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -54,7 +56,7 @@ public class CxxPlatforms {
 
   public static CxxPlatform build(
       Flavor flavor,
-      CxxBuckConfig config,
+      final CxxBuckConfig config,
       CompilerProvider as,
       PreprocessorProvider aspp,
       CompilerProvider cc,
@@ -64,9 +66,9 @@ public class CxxPlatforms {
       LinkerProvider ld,
       Iterable<String> ldFlags,
       Tool strip,
-      Archiver ar,
-      Tool ranlib,
-      SymbolNameTool nm,
+      final Archiver ar,
+      final Tool ranlib,
+      final SymbolNameTool nm,
       ImmutableList<String> asflags,
       ImmutableList<String> asppflags,
       ImmutableList<String> cflags,
@@ -92,8 +94,18 @@ public class CxxPlatforms {
         .setAsmpp(config.getPreprocessorProvider("asmpp"))
         .setLd(config.getLinkerProvider("ld", ld.getType()).or(ld))
         .addAllLdflags(ldFlags)
-        .setAr(getTool("ar", config).transform(getArchiver(ar.getClass(), config)).or(ar))
-        .setRanlib(getTool("ranlib", config).or(ranlib))
+        .setAr(new LazyDelegatingArchiver(new Supplier<Archiver>() {
+          @Override
+          public Archiver get() {
+            return getTool("ar", config).transform(getArchiver(ar.getClass(), config)).or(ar);
+          }
+        }))
+        .setRanlib(new LazyDelegatingTool(new Supplier<Tool>() {
+          @Override
+          public Tool get() {
+            return getTool("ranlib", config).or(ranlib);
+          }
+        }))
         .setStrip(getTool("strip", config).or(strip))
         .setSharedLibraryExtension(sharedLibraryExtension)
         .setSharedLibraryVersionedExtensionFormat(sharedLibraryVersionedExtensionFormat)
@@ -106,11 +118,18 @@ public class CxxPlatforms {
                     ImmutableBiMap.<Path, Path>of())))
         .setFlagMacros(flagMacros);
 
-    Optional<Tool> configNm = getTool("nm", config);
-    if (configNm.isPresent()) {
-      nm = new PosixNmSymbolNameTool(configNm.get());
-    }
-    builder.setSymbolNameTool(nm);
+
+    builder.setSymbolNameTool(new LazyDelegatingSymbolNameTool(new Supplier<SymbolNameTool>() {
+      @Override
+      public SymbolNameTool get() {
+        Optional<Tool> configNm = getTool("nm", config);
+        if (configNm.isPresent()) {
+          return new PosixNmSymbolNameTool(configNm.get());
+        } else {
+          return nm;
+        }
+      }
+    }));
 
     builder.addAllCflags(cflags);
     builder.addAllCxxflags(cflags);

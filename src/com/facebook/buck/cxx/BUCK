@@ -19,6 +19,8 @@ PLATFORM_SRCS = [
   'GccCompiler.java',
   'GnuArchiver.java',
   'GnuLinker.java',
+  'LazyDelegatingArchiver.java',
+  'LazyDelegatingSymbolNameTool.java',
   'Linker.java',
   'LinkerProvider.java',
   'Linkers.java',

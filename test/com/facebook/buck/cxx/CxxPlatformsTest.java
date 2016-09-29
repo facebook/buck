@@ -61,26 +61,26 @@ public class CxxPlatformsTest {
             Paths.get("borland"),
             Optional.of(CxxToolProvider.Type.GCC));
     CxxPlatform borlandCxx452Platform =
-      CxxPlatform.builder()
-          .setFlavor(ImmutableFlavor.of("borland_cxx_452"))
-          .setAs(compiler)
-          .setAspp(preprocessor)
-          .setCc(compiler)
-          .setCpp(preprocessor)
-          .setCxx(compiler)
-          .setCxxpp(preprocessor)
-          .setLd(
-              new DefaultLinkerProvider(
-                  LinkerProvider.Type.GNU,
-                  new ConstantToolProvider(new HashedFileTool(Paths.get("borland")))))
-          .setStrip(new HashedFileTool(Paths.get("borland")))
-          .setSymbolNameTool(new PosixNmSymbolNameTool(new HashedFileTool(Paths.get("borland"))))
-          .setAr(new GnuArchiver(new HashedFileTool(Paths.get("borland"))))
-          .setRanlib(new HashedFileTool(Paths.get("borland")))
-          .setSharedLibraryExtension("so")
-          .setSharedLibraryVersionedExtensionFormat(".so.%s")
-          .setDebugPathSanitizer(CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER)
-          .build();
+        CxxPlatform.builder()
+            .setFlavor(ImmutableFlavor.of("borland_cxx_452"))
+            .setAs(compiler)
+            .setAspp(preprocessor)
+            .setCc(compiler)
+            .setCpp(preprocessor)
+            .setCxx(compiler)
+            .setCxxpp(preprocessor)
+            .setLd(
+                new DefaultLinkerProvider(
+                    LinkerProvider.Type.GNU,
+                    new ConstantToolProvider(new HashedFileTool(Paths.get("borland")))))
+            .setStrip(new HashedFileTool(Paths.get("borland")))
+            .setSymbolNameTool(new PosixNmSymbolNameTool(new HashedFileTool(Paths.get("borland"))))
+            .setAr(new GnuArchiver(new HashedFileTool(Paths.get("borland"))))
+            .setRanlib(new HashedFileTool(Paths.get("borland")))
+            .setSharedLibraryExtension("so")
+            .setSharedLibraryVersionedExtensionFormat(".so.%s")
+            .setDebugPathSanitizer(CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER)
+            .build();
 
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     assertThat(
@@ -194,7 +194,12 @@ public class CxxPlatformsTest {
             .setFilesystem(new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path"))))
             .build());
 
-    return DefaultCxxPlatforms.build(buckConfig).getAr();
+    Archiver archiver = DefaultCxxPlatforms.build(buckConfig).getAr();
+    if (archiver instanceof LazyDelegatingArchiver) {
+      return ((LazyDelegatingArchiver) archiver).getDelegate();
+    } else {
+      return archiver;
+    }
   }
 
   @Test
@@ -210,7 +215,7 @@ public class CxxPlatformsTest {
   @Test
   public void invalidArchiverOverrideFails() {
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
-      "cxx", ImmutableMap.of(
+        "cxx", ImmutableMap.of(
             "ar", Paths.get("fake_path").toString(),
             "archiver_platform", "WRONG_PLATFORM"));
 
@@ -221,7 +226,7 @@ public class CxxPlatformsTest {
             .build());
 
     expectedException.expect(RuntimeException.class);
-    DefaultCxxPlatforms.build(buckConfig);
+    ((LazyDelegatingArchiver) DefaultCxxPlatforms.build(buckConfig).getAr()).getDelegate();
   }
 
 }
