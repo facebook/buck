@@ -48,6 +48,16 @@ public class WatchmanTest {
   private String exe = Paths.get("/opt/bin/watchman").toAbsolutePath().toString();
   private FakeExecutableFinder finder = new FakeExecutableFinder(Paths.get(exe));
   private ImmutableMap<String, String> env = ImmutableMap.of();
+  private static final ImmutableList<Object> VERSION_QUERY = ImmutableList.<Object>of(
+      "version",
+      ImmutableMap.of(
+          "required", ImmutableSet.of("cmd-watch-project"),
+          "optional", ImmutableSet.of(
+              "term-dirname",
+              "cmd-watch-project",
+              "wildmatch",
+              "wildmatch_multislash",
+              "glob_generator")));
   private static final Function<Path, Optional<WatchmanClient>> NULL_WATCHMAN_CONNECTOR =
       new Function<Path, Optional<WatchmanClient>>() {
         @Override
@@ -130,20 +140,7 @@ public class WatchmanTest {
             Paths.get("/path/to/sock"),
             0,
             ImmutableMap.of(
-                ImmutableList.of(
-                    "version",
-                    ImmutableMap.of(
-                        "required",
-                        ImmutableSet.of(
-                            "cmd-watch-project"
-                        ),
-                        "optional",
-                        ImmutableSet.of(
-                            "term-dirname",
-                            "cmd-watch-project",
-                            "wildmatch",
-                            "wildmatch_multislash",
-                            "glob_generator"))),
+                VERSION_QUERY,
                 ImmutableMap.of(
                     "version",
                     "3.7.9"),
@@ -182,20 +179,7 @@ public class WatchmanTest {
             Paths.get("/path/to/sock"),
             0,
             ImmutableMap.of(
-                ImmutableList.of(
-                    "version",
-                    ImmutableMap.of(
-                        "required",
-                        ImmutableSet.of(
-                            "cmd-watch-project"
-                        ),
-                        "optional",
-                        ImmutableSet.of(
-                            "term-dirname",
-                            "cmd-watch-project",
-                            "wildmatch",
-                            "wildmatch_multislash",
-                            "glob_generator"))),
+                VERSION_QUERY,
                 ImmutableMap.of(
                     "version",
                     "3.8.0",
@@ -242,20 +226,7 @@ public class WatchmanTest {
             Paths.get("/path/to/sock"),
             0,
             ImmutableMap.of(
-                ImmutableList.of(
-                    "version",
-                    ImmutableMap.of(
-                        "required",
-                        ImmutableSet.of(
-                            "cmd-watch-project"
-                        ),
-                        "optional",
-                        ImmutableSet.of(
-                            "term-dirname",
-                            "cmd-watch-project",
-                            "wildmatch",
-                            "wildmatch_multislash",
-                            "glob_generator"))),
+                VERSION_QUERY,
                 ImmutableMap.of(
                     "version",
                     "3.8.0",
@@ -299,20 +270,7 @@ public class WatchmanTest {
             Paths.get("/path/to/sock"),
             TimeUnit.SECONDS.toNanos(30),
             ImmutableMap.of(
-                ImmutableList.of(
-                    "version",
-                    ImmutableMap.of(
-                        "required",
-                        ImmutableSet.of(
-                            "cmd-watch-project"
-                        ),
-                        "optional",
-                        ImmutableSet.of(
-                            "term-dirname",
-                            "cmd-watch-project",
-                            "wildmatch",
-                            "wildmatch_multislash",
-                            "glob_generator"))),
+                VERSION_QUERY,
                 ImmutableMap.of(
                     "version",
                     "3.8.0",
@@ -357,20 +315,7 @@ public class WatchmanTest {
             Paths.get("/path/to/sock"),
             0,
             ImmutableMap.of(
-                ImmutableList.of(
-                    "version",
-                    ImmutableMap.of(
-                        "required",
-                        ImmutableSet.of(
-                            "cmd-watch-project"
-                        ),
-                        "optional",
-                        ImmutableSet.of(
-                            "term-dirname",
-                            "cmd-watch-project",
-                            "wildmatch",
-                            "wildmatch_multislash",
-                            "glob_generator"))),
+                VERSION_QUERY,
                 ImmutableMap.of(
                     "version",
                     "3.8.0",
