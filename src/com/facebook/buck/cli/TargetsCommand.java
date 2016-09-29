@@ -54,6 +54,7 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.versions.VersionException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -295,7 +296,7 @@ public class TargetsCommand extends AbstractCommand {
       }
 
       return runWithExecutor(params, executor);
-    } catch (BuildTargetException | BuildFileParseException | CycleException e) {
+    } catch (BuildTargetException | BuildFileParseException | CycleException | VersionException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
@@ -306,7 +307,7 @@ public class TargetsCommand extends AbstractCommand {
       CommandRunnerParams params,
       ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
-      CycleException {
+      CycleException, VersionException {
     Optional<ImmutableSet<BuildRuleType>> buildRuleTypes = getBuildRuleTypesFromParams(params);
     if (!buildRuleTypes.isPresent()) {
       return 1;
@@ -456,7 +457,12 @@ public class TargetsCommand extends AbstractCommand {
   private TargetGraphAndBuildTargets buildTargetGraphAndTargets(
       CommandRunnerParams params,
       ListeningExecutorService executor)
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
+      throws
+          IOException,
+          InterruptedException,
+          BuildFileParseException,
+          BuildTargetException,
+          VersionException {
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     boolean ignoreBuckAutodepsFiles = false;
     // Parse the entire action graph, or (if targets are specified),
@@ -467,36 +473,42 @@ public class TargetsCommand extends AbstractCommand {
     // know which targets can refer to the specified targets or their dependencies in their
     // 'source_under_test'. Once we migrate from 'source_under_test' to 'tests', this should no
     // longer be necessary.
+    TargetGraphAndBuildTargets targetGraphAndBuildTargets;
     if (getArguments().isEmpty() || isDetectTestChanges()) {
-      return TargetGraphAndBuildTargets.builder()
-          .setBuildTargets(ImmutableSet.of())
-          .setTargetGraph(params.getParser()
+      targetGraphAndBuildTargets =
+          TargetGraphAndBuildTargets.builder()
+              .setBuildTargets(ImmutableSet.of())
+              .setTargetGraph(params.getParser()
+                  .buildTargetGraphForTargetNodeSpecs(
+                      params.getBuckEventBus(),
+                      params.getCell(),
+                      getEnableParserProfiling(),
+                      executor,
+                      ImmutableList.of(
+                          TargetNodePredicateSpec.of(
+                              x -> true,
+                              BuildFileSpec.fromRecursivePath(
+                                  Paths.get(""),
+                                  params.getCell().getRoot()))),
+                      ignoreBuckAutodepsFiles,
+                      parserConfig.getDefaultFlavorsMode()).getTargetGraph()).build();
+    } else {
+      targetGraphAndBuildTargets =
+          params.getParser()
               .buildTargetGraphForTargetNodeSpecs(
                   params.getBuckEventBus(),
                   params.getCell(),
                   getEnableParserProfiling(),
                   executor,
-                  ImmutableList.of(
-                      TargetNodePredicateSpec.of(
-                          x -> true,
-                          BuildFileSpec.fromRecursivePath(
-                              Paths.get(""),
-                              params.getCell().getRoot()))),
+                  parseArgumentsAsTargetNodeSpecs(
+                      params.getBuckConfig(),
+                      getArguments()),
                   ignoreBuckAutodepsFiles,
-                  parserConfig.getDefaultFlavorsMode()).getTargetGraph()).build();
-    } else {
-      return params.getParser()
-          .buildTargetGraphForTargetNodeSpecs(
-              params.getBuckEventBus(),
-              params.getCell(),
-              getEnableParserProfiling(),
-              executor,
-              parseArgumentsAsTargetNodeSpecs(
-                  params.getBuckConfig(),
-                  getArguments()),
-              ignoreBuckAutodepsFiles,
-              parserConfig.getDefaultFlavorsMode());
+                  parserConfig.getDefaultFlavorsMode());
     }
+    return params.getBuckConfig().getTargetsVersions() ?
+        toVersionedTargetGraph(params, targetGraphAndBuildTargets) :
+        targetGraphAndBuildTargets;
   }
 
   private Optional<ImmutableSet<BuildRuleType>> getBuildRuleTypesFromParams(

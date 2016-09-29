@@ -26,9 +26,14 @@ import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.RelativeCellName;
+import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
+import com.facebook.buck.versions.VersionBuckConfig;
+import com.facebook.buck.versions.VersionException;
+import com.facebook.buck.versions.VersionUniverseVersionSelector;
+import com.facebook.buck.versions.VersionedTargetGraphBuilder;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -42,6 +47,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ForkJoinPool;
 
 import javax.annotation.Nullable;
 
@@ -305,6 +311,18 @@ public abstract class AbstractCommand implements Command {
   @Override
   public boolean isSourceControlStatsGatheringEnabled() {
     return false;
+  }
+
+  protected TargetGraphAndBuildTargets toVersionedTargetGraph(
+      CommandRunnerParams params,
+      TargetGraphAndBuildTargets targetGraphAndBuildTargets)
+      throws VersionException, InterruptedException {
+    return VersionedTargetGraphBuilder.transform(
+        new VersionUniverseVersionSelector(
+            targetGraphAndBuildTargets.getTargetGraph(),
+            new VersionBuckConfig(params.getBuckConfig()).getVersionUniverses()),
+        targetGraphAndBuildTargets,
+        new ForkJoinPool(params.getBuckConfig().getNumThreads()));
   }
 
 }

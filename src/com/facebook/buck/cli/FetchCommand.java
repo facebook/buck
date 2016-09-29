@@ -36,6 +36,7 @@ import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
@@ -84,13 +85,16 @@ public class FetchCommand extends BuildCommand {
                     getArguments()),
                 /* ignoreBuckAutodepsFiles */ false,
                 parserConfig.getDefaultFlavorsMode());
+        if (params.getBuckConfig().getBuildVersions()) {
+          result = toVersionedTargetGraph(params, result);
+        }
         actionGraphAndResolver = Preconditions.checkNotNull(
             ActionGraphCache.getFreshActionGraph(
                 params.getBuckEventBus(),
                 ruleGenerator,
                 result.getTargetGraph()));
         buildTargets = ruleGenerator.getDownloadableTargets();
-      } catch (BuildTargetException | BuildFileParseException e) {
+      } catch (BuildTargetException | BuildFileParseException | VersionException e) {
         params.getBuckEventBus().post(ConsoleEvent.severe(
             MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
         return 1;

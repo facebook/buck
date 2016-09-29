@@ -75,6 +75,7 @@ import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.versions.VersionException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -581,18 +582,22 @@ public class BuildCommand extends AbstractCommand {
     // Parse the build files to create a ActionGraph.
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     try {
-      return params.getParser()
-          .buildTargetGraphForTargetNodeSpecs(
-              params.getBuckEventBus(),
-              params.getCell(),
-              getEnableParserProfiling(),
-              executor,
-              parseArgumentsAsTargetNodeSpecs(
-                  params.getBuckConfig(),
-                  getArguments()),
-              /* ignoreBuckAutodepsFiles */ false,
-              parserConfig.getDefaultFlavorsMode());
-    } catch (BuildTargetException | BuildFileParseException e) {
+      TargetGraphAndBuildTargets targetGraphAndBuildTargets =
+          params.getParser()
+              .buildTargetGraphForTargetNodeSpecs(
+                  params.getBuckEventBus(),
+                  params.getCell(),
+                  getEnableParserProfiling(),
+                  executor,
+                  parseArgumentsAsTargetNodeSpecs(
+                      params.getBuckConfig(),
+                      getArguments()),
+                      /* ignoreBuckAutodepsFiles */ false,
+                  parserConfig.getDefaultFlavorsMode());
+      return params.getBuckConfig().getBuildVersions() ?
+          toVersionedTargetGraph(params, targetGraphAndBuildTargets) :
+          targetGraphAndBuildTargets;
+    } catch (BuildTargetException | BuildFileParseException | VersionException e) {
       throw new ActionGraphCreationException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
     }
   }

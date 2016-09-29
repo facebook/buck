@@ -1032,4 +1032,19 @@ public class BuckConfig implements ConfigPathGetter {
   public boolean getIncludeAutodepsSignature() {
     return getBooleanValue("autodeps", "include_signature", true);
   }
+
+  /**
+   * @return whether to enabled versions on build/test command.
+   */
+  public boolean getBuildVersions() {
+    return getBooleanValue("build", "versions", false);
+  }
+
+  /**
+   * @return whether to enabled versions on targets command.
+   */
+  public boolean getTargetsVersions() {
+    return getBooleanValue("targets", "versions", false);
+  }
+
 }
