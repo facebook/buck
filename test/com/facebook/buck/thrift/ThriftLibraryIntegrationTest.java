@@ -110,7 +110,6 @@ public class ThriftLibraryIntegrationTest {
         new KnownBuildRuleTypesFactory(
             new ProcessExecutor(new TestConsole()),
             new FakeAndroidDirectoryResolver()),
-        new FakeAndroidDirectoryResolver(),
         new DefaultClock(),
         new WatchmanDiagnosticCache());
     BuildTarget target = BuildTargetFactory.newInstance(filesystem, "//thrift:exe");

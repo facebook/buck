@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.config.Config;
@@ -71,7 +70,6 @@ public class Cell {
   private final BuckConfig config;
   private final KnownBuildRuleTypes knownBuildRuleTypes;
   private final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory;
-  private final AndroidDirectoryResolver directoryResolver;
   private final String pythonInterpreter;
   private final String buildFileName;
   private final boolean enforceBuckPackageBoundaries;
@@ -83,7 +81,7 @@ public class Cell {
       new Supplier<Integer>() {
         @Override
         public Integer get() {
-          return Objects.hash(filesystem, config, directoryResolver);
+          return Objects.hash(filesystem, config);
         }
       });
 
@@ -93,7 +91,6 @@ public class Cell {
       final Watchman watchman,
       final BuckConfig config,
       final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      final AndroidDirectoryResolver directoryResolver,
       final LoadingCache<Path, Cell> cellLoader,
       WatchmanDiagnosticCache watchmanDiagnosticCache) throws IOException, InterruptedException {
 
@@ -101,7 +98,6 @@ public class Cell {
     this.filesystem = filesystem;
     this.watchman = watchman;
     this.config = config;
-    this.directoryResolver = directoryResolver;
 
     ParserConfig parserConfig = new ParserConfig(config);
     this.buildFileName = parserConfig.getBuildFileName();
@@ -124,7 +120,6 @@ public class Cell {
       final BuckConfig rootConfig,
       CellConfig rootCellConfigOverrides,
       final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      final AndroidDirectoryResolver directoryResolver,
       final Clock clock,
       WatchmanDiagnosticCache watchmanDiagnosticCache) throws IOException, InterruptedException {
 
@@ -147,7 +142,6 @@ public class Cell {
         watchman,
         rootConfig,
         knownBuildRuleTypesFactory,
-        directoryResolver,
         clock,
         transitiveCellPathMapping,
         pathToConfigOverrides,
@@ -162,7 +156,6 @@ public class Cell {
         watchman,
         rootConfig,
         knownBuildRuleTypesFactory,
-        directoryResolver,
         cellLoader,
         watchmanDiagnosticCache);
     cellLoader.put(filesystem.getRootPath(), rootCell);
@@ -174,7 +167,6 @@ public class Cell {
       final Watchman watchman,
       final BuckConfig rootConfig,
       final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      final AndroidDirectoryResolver directoryResolver,
       final Clock clock,
       final ImmutableMap<RelativeCellName, Path> transitiveCellPathMapping,
       final ImmutableMap<Path, RawConfig> pathToConfigOverrides,
@@ -229,7 +221,6 @@ public class Cell {
             watchman,
             buckConfig,
             knownBuildRuleTypesFactory,
-            directoryResolver,
             loaderReference.get(),
             watchmanDiagnosticCache);
       }
@@ -259,7 +250,6 @@ public class Cell {
             Watchman.NULL_WATCHMAN,
             buckConfig,
             knownBuildRuleTypesFactory,
-            directoryResolver,
             cacheReference.get(),
             watchmanDiagnosticCache
         );
@@ -445,18 +435,16 @@ public class Cell {
     }
     Cell that = (Cell) o;
     return Objects.equals(filesystem, that.filesystem) &&
-        config.equalsForDaemonRestart(that.config) &&
-        Objects.equals(directoryResolver, that.directoryResolver);
+        config.equalsForDaemonRestart(that.config);
   }
 
   @Override
   public String toString() {
     return String.format(
-        "%s filesystem=%s config=%s directoryResolver=%s",
+        "%s filesystem=%s config=%s",
         super.toString(),
         filesystem,
-        config,
-        directoryResolver);
+        config);
   }
 
   @Override

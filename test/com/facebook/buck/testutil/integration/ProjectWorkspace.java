@@ -626,7 +626,6 @@ public class ProjectWorkspace {
         new KnownBuildRuleTypesFactory(
             new ProcessExecutor(console),
             directoryResolver),
-        directoryResolver,
         new DefaultClock(),
         new WatchmanDiagnosticCache());
   }

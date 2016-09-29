@@ -106,7 +106,6 @@ public class TestCellBuilder {
           config,
           cellConfig,
           typesFactory,
-          androidDirectoryResolver,
           new FakeClock(0),
           new WatchmanDiagnosticCache());
     }

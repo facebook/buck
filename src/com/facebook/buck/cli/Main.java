@@ -890,7 +890,6 @@ public final class Main {
             buckConfig,
             command.getConfigOverrides(),
             factory,
-            androidDirectoryResolver,
             clock,
             watchmanDiagnosticCache);
 
