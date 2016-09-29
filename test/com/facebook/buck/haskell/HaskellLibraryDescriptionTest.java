@@ -20,23 +20,31 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -200,6 +208,45 @@ public class HaskellLibraryDescriptionTest {
     assertThat(
         sharedLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
         Matchers.is(NativeLinkable.Linkage.SHARED));
+  }
+
+  @Test
+  public void thinArchivesPropagatesDepFromObjects() throws Exception {
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    CxxBuckConfig cxxBuckConfig =
+        new CxxBuckConfig(
+            FakeBuckConfig.builder().setSections("[cxx]", "archive_contents=thin").build());
+    HaskellLibraryBuilder builder =
+        new HaskellLibraryBuilder(
+            target,
+            FakeHaskellConfig.DEFAULT,
+            cxxBuckConfig,
+            CxxPlatformUtils.DEFAULT_PLATFORMS)
+            .setSrcs(
+                SourceList.ofUnnamedSources(
+                    ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("Test.hs"))))
+            .setLinkWhole(true);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(builder.build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
+    HaskellLibrary library = (HaskellLibrary) builder.build(resolver);
+
+    // Test static dep type.
+    NativeLinkableInput staticInput =
+        library.getNativeLinkableInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            Linker.LinkableDepType.STATIC);
+    assertThat(
+        FluentIterable.from(staticInput.getArgs())
+            .transformAndConcat(Arg.getDepsFunction(new SourcePathResolver(resolver)))
+            .transform(HasBuildTarget.TO_TARGET)
+            .toList(),
+        Matchers.hasItem(
+            HaskellDescriptionUtils.getCompileBuildTarget(
+                library.getBuildTarget(),
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                Linker.LinkableDepType.STATIC)));
   }
 
 }

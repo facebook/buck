@@ -463,11 +463,11 @@ public class HaskellLibraryDescription implements
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type)
           throws NoSuchBuildTargetException {
-        BuildRule rule;
+        Iterable<com.facebook.buck.rules.args.Arg> linkArgs;
         switch (type) {
           case STATIC:
           case STATIC_PIC:
-            rule =
+            Archive archive =
                 requireStaticLibrary(
                     getBaseBuildTarget(getBuildTarget()),
                     params,
@@ -476,9 +476,13 @@ public class HaskellLibraryDescription implements
                     cxxPlatform,
                     args,
                     type);
+            linkArgs =
+                args.linkWhole.or(false) ?
+                    cxxPlatform.getLd().resolve(resolver).linkWhole(archive.toArg()) :
+                    ImmutableList.of(archive.toArg());
             break;
           case SHARED:
-            rule =
+            BuildRule rule =
                 requireSharedLibrary(
                     getBaseBuildTarget(getBuildTarget()),
                     params,
@@ -486,17 +490,16 @@ public class HaskellLibraryDescription implements
                     pathResolver,
                     cxxPlatform,
                     args);
+            linkArgs =
+                ImmutableList.<com.facebook.buck.rules.args.Arg>of(
+                    new SourcePathArg(getResolver(),
+                        new BuildTargetSourcePath(rule.getBuildTarget())));
             break;
           default:
             throw new IllegalStateException();
         }
-        SourcePathArg lib =
-            new SourcePathArg(getResolver(), new BuildTargetSourcePath(rule.getBuildTarget()));
         return NativeLinkableInput.builder()
-            .addAllArgs(
-                args.linkWhole.or(false) && type != Linker.LinkableDepType.SHARED ?
-                    cxxPlatform.getLd().resolve(resolver).linkWhole(lib) :
-                    ImmutableList.of(lib))
+            .addAllArgs(linkArgs)
             .build();
       }
 
