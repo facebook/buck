@@ -22,6 +22,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -69,10 +71,7 @@ public class MemoryHandler extends Handler {
   }
 
   @VisibleForTesting
-  MemoryHandler(
-      Level logLevel,
-      int bufferSize,
-      Level pushLevel) {
+  MemoryHandler(Level logLevel, int bufferSize, Level pushLevel) {
     Preconditions.checkState(bufferSize >= 0);
     Preconditions.checkNotNull(pushLevel);
 
@@ -125,23 +124,30 @@ public class MemoryHandler extends Handler {
     if (!isLoggable(record)) {
       return;
     }
-    int ix = (start + count) % buffer.length;
-    buffer[ix] = record;
-    if (count < buffer.length) {
-      count++;
-    } else {
-      start++;
-      start %= buffer.length;
-    }
-    if (record.getLevel().intValue() >= pushLevel.intValue()) {
-      push();
+    List<LogRecord> recordsToLog = null;
+    synchronized (buffer) {
+      int ix = (start + count) % buffer.length;
+      buffer[ix] = record;
+      if (count < buffer.length) {
+        count++;
+      } else {
+        start++;
+        start %= buffer.length;
+      }
+      if (record.getLevel().intValue() >= pushLevel.intValue()) {
+        recordsToLog = new ArrayList<>();
+        while (count > 0) {
+          LogRecord oldRecord = buffer[start];
+          recordsToLog.add(oldRecord);
+          buffer[start] = null;
+          start++;
+          start %= buffer.length;
+          count--;
+        }
+      }
     }
   }
 
-  public void push() {
-    start = 0;
-    count = 0;
-  }
 
   @Override
   public void flush() {}
