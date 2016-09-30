@@ -24,7 +24,6 @@ import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateCell;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;
-import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultCellPathResolver;
@@ -201,7 +200,7 @@ public class DistBuildState {
     return DistBuildFileHashes.createFileHashCache(projectFilesystem, remoteFileHashes);
   }
 
-  public FileHashLoader createMaterializingLoader(
+  public DistBuildFileMaterializer createMaterializingLoader(
       ProjectFilesystem projectFilesystem,
       FileContentsProvider provider) {
     BuildJobStateFileHashes remoteFileHashes = Preconditions.checkNotNull(

@@ -47,7 +47,7 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
   public DistBuildCachingEngineDelegate(
       SourcePathResolver sourcePathResolver,
       final DistBuildState remoteState,
-      final FileContentsProvider provider) {
+      final LoadingCache<ProjectFilesystem, ? extends FileHashLoader> fileHashLoaders) {
     this.fileHashCacheLoader = CacheBuilder.newBuilder()
         .build(new CacheLoader<ProjectFilesystem, FileHashCache>() {
           @Override
@@ -65,12 +65,7 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
         });
     ruleKeyFactories = DistBuildFileHashes.createRuleKeyFactories(
         sourcePathResolver,
-        CacheBuilder.newBuilder().build(new CacheLoader<ProjectFilesystem, FileHashLoader>() {
-          @Override
-          public FileHashLoader load(ProjectFilesystem filesystem) throws Exception {
-            return remoteState.createMaterializingLoader(filesystem, provider);
-          }
-        }),
+        fileHashLoaders,
         /* keySeed */ 0);
   }
 

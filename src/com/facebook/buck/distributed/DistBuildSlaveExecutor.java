@@ -19,13 +19,16 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.command.Build;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.CachingBuildEngine;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -40,12 +43,16 @@ import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
 
@@ -60,6 +67,8 @@ public class DistBuildSlaveExecutor {
 
   @Nullable
   private DistBuildCachingEngineDelegate cachingBuildEngineDelegate;
+
+  private static final Logger LOG = Logger.get(DistBuildSlaveExecutor.class);
 
   public DistBuildSlaveExecutor(DistBuildExecutorArgs args) {
     this.args = args;
@@ -166,13 +175,34 @@ public class DistBuildSlaveExecutor {
       return cachingBuildEngineDelegate;
     }
 
+    LoadingCache<ProjectFilesystem, DistBuildFileMaterializer> fileHashLoaders =
+        CacheBuilder.newBuilder().build(
+            new CacheLoader<ProjectFilesystem, DistBuildFileMaterializer>() {
+              @Override
+              public DistBuildFileMaterializer load(ProjectFilesystem filesystem) throws Exception {
+                return args.getState().createMaterializingLoader(filesystem, args.getProvider());
+              }
+            });
+
+    // Load all file up-front. This is needed as right now the action graph directly
+    // accesses the file system.
+    // TODO(alisdair04): remove this once action graph doesn't read from file system.
+    for (Cell cell : args.getState().getCells().values()) {
+      try {
+        fileHashLoaders.get(cell.getFilesystem()).preloadAllFiles();
+      } catch (ExecutionException e) {
+        LOG.error(e);
+        throw new RuntimeException(e);
+      }
+    }
+
     createActionGraphAndResolver();
     cachingBuildEngineDelegate =
         new DistBuildCachingEngineDelegate(
             new SourcePathResolver(
                 Preconditions.checkNotNull(actionGraphAndResolver).getResolver()),
             args.getState(),
-            args.getProvider());
+            fileHashLoaders);
     return cachingBuildEngineDelegate;
   }
 

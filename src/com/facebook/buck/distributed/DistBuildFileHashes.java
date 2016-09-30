@@ -18,7 +18,6 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
-import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.MorePaths;
@@ -28,14 +27,11 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -45,41 +41,24 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-
-import javax.annotation.concurrent.GuardedBy;
 
 /**
  * Responsible for extracting file hash and {@link RuleKey} information from the {@link ActionGraph}
  * and presenting it as a Thrift data structure.
  */
 public class DistBuildFileHashes {
-
-  private static final Function<BuildJobStateFileHashEntry, HashCode>
-      HASH_CODE_FROM_FILE_HASH_ENTRY =
-      new Function<BuildJobStateFileHashEntry, HashCode>() {
-        @Override
-        public HashCode apply(BuildJobStateFileHashEntry input) {
-          return HashCode.fromString(input.getHashCode());
-        }
-      };
-
   private final LoadingCache<ProjectFilesystem, BuildJobStateFileHashes> remoteFileHashes;
   private final LoadingCache<ProjectFilesystem, FileHashLoader> fileHashLoaders;
   private final LoadingCache<ProjectFilesystem, DefaultRuleKeyBuilderFactory> ruleKeyFactories;
@@ -128,7 +107,7 @@ public class DistBuildFileHashes {
   public static LoadingCache<ProjectFilesystem, DefaultRuleKeyBuilderFactory>
   createRuleKeyFactories(
       final SourcePathResolver sourcePathResolver,
-      final LoadingCache<ProjectFilesystem, FileHashLoader> fileHashLoaders,
+      final LoadingCache<ProjectFilesystem, ? extends FileHashLoader> fileHashLoaders,
       final int keySeed) {
     return CacheBuilder.newBuilder().build(
         new CacheLoader<ProjectFilesystem, DefaultRuleKeyBuilderFactory>() {
@@ -238,14 +217,14 @@ public class DistBuildFileHashes {
    * @param provider of the file contents.
    * @return the loader.
    */
-  public static FileHashLoader createMaterializingLoader(
+  public static DistBuildFileMaterializer createMaterializingLoader(
       ProjectFilesystem projectFilesystem,
       BuildJobStateFileHashes remoteFileHashes,
       FileContentsProvider provider) {
-    return new FileMaterializer(projectFilesystem, remoteFileHashes, provider);
+    return new DistBuildFileMaterializer(projectFilesystem, remoteFileHashes, provider);
   }
 
-  private static ImmutableMap<Path, BuildJobStateFileHashEntry> indexEntriesByPath(
+  public static ImmutableMap<Path, BuildJobStateFileHashEntry> indexEntriesByPath(
       final ProjectFilesystem projectFilesystem,
       BuildJobStateFileHashes remoteFileHashes) {
     if (!remoteFileHashes.isSetEntries()) {
@@ -268,7 +247,7 @@ public class DistBuildFileHashes {
             });
   }
 
-  private static ImmutableMap<ArchiveMemberPath, BuildJobStateFileHashEntry>
+  public static ImmutableMap<ArchiveMemberPath, BuildJobStateFileHashEntry>
   indexEntriesByArchivePath(
       final ProjectFilesystem projectFilesystem,
       BuildJobStateFileHashes remoteFileHashes) {
@@ -293,209 +272,5 @@ public class DistBuildFileHashes {
                 );
               }
             });
-  }
-
-  private static class FileMaterializer implements FileHashLoader {
-    private final Map<Path, BuildJobStateFileHashEntry> remoteFileHashes;
-    private final Set<Path> materializedPaths;
-    private final FileContentsProvider provider;
-
-    public FileMaterializer(
-        final ProjectFilesystem projectFilesystem,
-        BuildJobStateFileHashes remoteFileHashes,
-        FileContentsProvider provider) {
-      this.remoteFileHashes = indexEntriesByPath(projectFilesystem, remoteFileHashes);
-      this.materializedPaths = new HashSet<>();
-      this.provider = provider;
-    }
-
-    private void materializeIfNeeded(Path path) throws IOException {
-      if (materializedPaths.contains(path)) {
-        return;
-      }
-      materializedPaths.add(path);
-
-      BuildJobStateFileHashEntry fileHashEntry = remoteFileHashes.get(path);
-      if (fileHashEntry == null ||
-          fileHashEntry.isIsDirectory() ||
-          fileHashEntry.isPathIsAbsolute()) {
-        return;
-      }
-
-      Optional<InputStream> sourceStreamOptional = provider.getFileContents(fileHashEntry);
-      if (!sourceStreamOptional.isPresent()) {
-        throw new HumanReadableException(
-            String.format(
-                "Input source file is missing from stampede. File=[%s]",
-                fileHashEntry.toString()));
-      }
-
-      Files.createDirectories(path.getParent());
-      try (InputStream sourceStream = sourceStreamOptional.get()) {
-        Files.copy(sourceStream, path);
-      }
-    }
-
-    @Override
-    public HashCode get(Path path) throws IOException {
-      materializeIfNeeded(path);
-      return HashCode.fromInt(0);
-    }
-
-    @Override
-    public long getSize(Path path) throws IOException {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-      materializeIfNeeded(archiveMemberPath.getArchivePath());
-      return HashCode.fromInt(0);
-    }
-  }
-
-  private static class RemoteStateBasedFileHashCache implements FileHashCache {
-    private final Map<Path, HashCode> remoteFileHashes;
-    private final Map<ArchiveMemberPath, HashCode> remoteArchiveHashes;
-
-    public RemoteStateBasedFileHashCache(
-        final ProjectFilesystem projectFilesystem,
-        BuildJobStateFileHashes remoteFileHashes) {
-      this.remoteFileHashes =
-          Maps.transformValues(
-              indexEntriesByPath(projectFilesystem, remoteFileHashes),
-              HASH_CODE_FROM_FILE_HASH_ENTRY);
-      this.remoteArchiveHashes =
-          Maps.transformValues(
-              indexEntriesByArchivePath(projectFilesystem, remoteFileHashes),
-              HASH_CODE_FROM_FILE_HASH_ENTRY);
-    }
-
-    @Override
-    public HashCode get(Path path) throws IOException {
-      return Preconditions.checkNotNull(
-          remoteFileHashes.get(path),
-          "Path %s not in remote file hash.",
-          path);
-    }
-
-    @Override
-    public long getSize(Path path) throws IOException {
-      return 0;
-    }
-
-    @Override
-    public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-      return Preconditions.checkNotNull(
-          remoteArchiveHashes.get(archiveMemberPath),
-          "Archive path %s not in remote file hash.",
-          archiveMemberPath);
-    }
-
-    @Override
-    public boolean willGet(Path path) {
-      return remoteFileHashes.containsKey(path);
-    }
-
-    @Override
-    public boolean willGet(ArchiveMemberPath archiveMemberPath) {
-      return remoteArchiveHashes.containsKey(archiveMemberPath);
-    }
-
-    @Override
-    public void invalidate(Path path) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void invalidateAll() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void set(Path path, HashCode hashCode) throws IOException {
-      throw new UnsupportedOperationException();
-    }
-  }
-
-  private static class RecordingFileHashLoader implements FileHashLoader {
-    private final FileHashLoader delegate;
-    private final ProjectFilesystem projectFilesystem;
-    @GuardedBy("this")
-    private final BuildJobStateFileHashes remoteFileHashes;
-    @GuardedBy("this")
-    private final Set<Path> seenPaths;
-    @GuardedBy("this")
-    private final Set<ArchiveMemberPath> seenArchives;
-
-    public RecordingFileHashLoader(
-        FileHashLoader delegate,
-        ProjectFilesystem projectFilesystem,
-        BuildJobStateFileHashes remoteFileHashes) {
-      this.delegate = delegate;
-      this.projectFilesystem = projectFilesystem;
-      this.remoteFileHashes = remoteFileHashes;
-      this.seenPaths = new HashSet<>();
-      this.seenArchives = new HashSet<>();
-    }
-
-    @Override
-    public HashCode get(Path path) throws IOException {
-      HashCode hashCode = delegate.get(path);
-      synchronized (this) {
-        if (!seenPaths.contains(path)) {
-          seenPaths.add(path);
-          record(path, Optional.<String>absent(), hashCode);
-        }
-      }
-      return hashCode;
-    }
-
-    @Override
-    public long getSize(Path path) throws IOException {
-      return delegate.getSize(path);
-    }
-
-    private synchronized void record(Path path, Optional<String> memberPath, HashCode hashCode) {
-      Optional<Path> pathRelativeToProjectRoot =
-          projectFilesystem.getPathRelativeToProjectRoot(path);
-      BuildJobStateFileHashEntry fileHashEntry = new BuildJobStateFileHashEntry();
-      Path entryKey;
-      boolean pathIsAbsolute = !pathRelativeToProjectRoot.isPresent();
-      fileHashEntry.setPathIsAbsolute(pathIsAbsolute);
-      entryKey = pathIsAbsolute ? path : pathRelativeToProjectRoot.get();
-      boolean isDirectory = projectFilesystem.isDirectory(path);
-      fileHashEntry.setIsDirectory(isDirectory);
-      fileHashEntry.setHashCode(hashCode.toString());
-      fileHashEntry.setPath(
-          new PathWithUnixSeparators(MorePaths.pathWithUnixSeparators(entryKey)));
-      if (memberPath.isPresent()) {
-        fileHashEntry.setArchiveMemberPath(memberPath.get().toString());
-      }
-      if (!isDirectory && !pathIsAbsolute) {
-        try {
-          // TODO(shivanker, ruibm): Don't read everything in memory right away.
-          fileHashEntry.setContents(Files.readAllBytes(path));
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
-      }
-      remoteFileHashes.addToEntries(fileHashEntry);
-    }
-
-    @Override
-    public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-      HashCode hashCode = delegate.get(archiveMemberPath);
-      synchronized (this) {
-        if (!seenArchives.contains(archiveMemberPath)) {
-          seenArchives.add(archiveMemberPath);
-          record(
-              archiveMemberPath.getArchivePath(),
-              Optional.of(archiveMemberPath.getMemberPath().toString()),
-              hashCode);
-        }
-      }
-      return hashCode;
-    }
   }
 }

@@ -45,6 +45,9 @@ struct BuildJobStateFileHashEntry {
 
   // Inlined binary contents of this particular input dep file.
   6: optional binary contents;
+
+  7: optional PathWithUnixSeparators rootSymLink;
+  8: optional PathWithUnixSeparators rootSymLinkTarget;
 }
 
 struct BuildJobStateFileHashes {

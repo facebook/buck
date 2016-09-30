@@ -36,6 +36,7 @@ import com.facebook.buck.distributed.thrift.SetBuckVersionRequest;
 import com.facebook.buck.distributed.thrift.StartBuildRequest;
 import com.facebook.buck.distributed.thrift.StoreBuildGraphRequest;
 import com.facebook.buck.distributed.thrift.StoreLocalChangesRequest;
+import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -45,7 +46,6 @@ import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -54,6 +54,7 @@ import java.util.concurrent.Callable;
 
 
 public class DistBuildService implements Closeable {
+  private static final Logger LOG = Logger.get(DistBuildService.class);
   private final FrontendService service;
 
   public DistBuildService(
@@ -101,7 +102,7 @@ public class DistBuildService implements Closeable {
     return executorService.submit(new Callable<Void>() {
       @Override
       public Void call() throws IOException {
-        Map<String, ByteBuffer> sha1ToFileContents = new HashMap<>();
+        Map<String, BuildJobStateFileHashEntry> sha1ToFileEntry = new HashMap<>();
         for (BuildJobStateFileHashes filesystem : fileHashes) {
           if (!filesystem.isSetEntries()) {
             continue;
@@ -109,11 +110,11 @@ public class DistBuildService implements Closeable {
           for (BuildJobStateFileHashEntry file : filesystem.entries) {
             // TODO(shivanker): Eventually, we won't have file contents in BuildJobState.
             // Then change this code to load file contents inline (only for missing files)
-            sha1ToFileContents.put(file.hashCode, file.contents);
+            sha1ToFileEntry.put(file.hashCode, file);
           }
         }
 
-        List<String> contentHashes = ImmutableList.copyOf(sha1ToFileContents.keySet());
+        List<String> contentHashes = ImmutableList.copyOf(sha1ToFileEntry.keySet());
         CASContainsRequest containsReq = new CASContainsRequest();
         containsReq.setContentSha1s(contentHashes);
         FrontendRequest request = new FrontendRequest();
@@ -126,13 +127,27 @@ public class DistBuildService implements Closeable {
         List<Boolean> isPresent = response.getCasContainsResponse().exists;
         List<FileInfo> filesToBeUploaded = new LinkedList<>();
         for (int i = 0; i < isPresent.size(); ++i) {
-          if (!isPresent.get(i)) {
-            FileInfo file = new FileInfo();
-            file.setContentHash(contentHashes.get(i));
-            file.setContent(sha1ToFileContents.get(contentHashes.get(i)));
-            filesToBeUploaded.add(file);
+          BuildJobStateFileHashEntry fileHashEntry = sha1ToFileEntry.get(contentHashes.get(i));
+          if (isPresent.get(i)) {
+            LOG.info(
+                "File with path [%s] has already been uploaded. Skipping..",
+                fileHashEntry.path.getPath());
+            continue;
           }
+          if (fileHashEntry.isSetRootSymLink()) {
+            LOG.info(
+                "File with path [%s] is a symlink. Skipping upload..",
+                fileHashEntry.path.getPath());
+            continue;
+          }
+
+          LOG.info("Uploading file with path [%s]",  fileHashEntry.path.getPath());
+          FileInfo file = new FileInfo();
+          file.setContentHash(fileHashEntry.getHashCode());
+          file.setContent(fileHashEntry.getContents());
+          filesToBeUploaded.add(file);
         }
+
 
         request = new FrontendRequest();
         StoreLocalChangesRequest storeReq = new StoreLocalChangesRequest();

@@ -29,6 +29,7 @@ import com.facebook.buck.distributed.thrift.CreateBuildResponse;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
+import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
 import com.facebook.buck.distributed.thrift.StartBuildResponse;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -138,6 +139,7 @@ public class DistBuildServiceTest {
       files[i] = new BuildJobStateFileHashEntry();
       files[i].setHashCode(Integer.toString(i));
       files[i].setContents(("content" + Integer.toString(i)).getBytes());
+      files[i].setPath(new PathWithUnixSeparators("/tmp/" + i));
     }
 
     List<BuildJobStateFileHashes> fileHashes = new ArrayList<>();
