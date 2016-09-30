@@ -156,8 +156,8 @@ public class JvmLibraryArgInterpreterTest {
   @Test
   public void compilerArgWithPathReturnsExternalJavac() {
     Path externalJavac = Paths.get("/foo/bar/javac.exe").toAbsolutePath();
-    Either<BuiltInJavac, SourcePath> either =
-        Either.ofRight((SourcePath) new FakeSourcePath(externalJavac.toString()));
+    SourcePath sourcePath = new FakeSourcePath(externalJavac.toString());
+    Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
     arg.compiler = Optional.of(either);
     JavacOptions options = createJavacOptions(arg);
@@ -165,7 +165,7 @@ public class JvmLibraryArgInterpreterTest {
     Javac javac = options.getJavac();
 
     assertEquals(Optional.<SourcePath>absent(), options.getJavacJarPath());
-    assertEquals(Optional.of(externalJavac), options.getJavacPath());
+    assertEquals(sourcePath, options.getJavacPath().get().getRight());
     assertTrue(javac.getClass().getName(), javac instanceof ExternalJavac);
   }
 
@@ -182,7 +182,7 @@ public class JvmLibraryArgInterpreterTest {
     Javac javac = options.getJavac();
 
     assertEquals(Optional.<SourcePath>absent(), options.getJavacJarPath());
-    assertEquals(Optional.of(externalJavac), options.getJavacPath());
+    assertEquals(sourcePath, options.getJavacPath().get().getRight());
     assertTrue(javac.getClass().getName(), javac instanceof ExternalJavac);
   }
 

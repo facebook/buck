@@ -23,7 +23,10 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+
+import java.nio.file.Path;
 
 public final class JavacOptionsFactory {
   public static JavacOptions create(
@@ -67,16 +70,10 @@ public final class JavacOptionsFactory {
         SourcePath sourcePath = either.getRight();
 
         Optional<BuildRule> possibleRule = pathResolver.getRule(sourcePath);
-        if (possibleRule.isPresent()) {
-          BuildRule rule = possibleRule.get();
-          if (rule instanceof PrebuiltJar) {
-            builder.setJavacJarPath(
-                new BuildTargetSourcePath(rule.getBuildTarget()));
-          } else {
-            throw new HumanReadableException("Only prebuilt_jar targets can be used as a javac");
-          }
+        if (possibleRule.isPresent() && possibleRule.get() instanceof PrebuiltJar) {
+          builder.setJavacJarPath(new BuildTargetSourcePath(possibleRule.get().getBuildTarget()));
         } else {
-          builder.setJavacPath(pathResolver.getAbsolutePath(sourcePath));
+          builder.setJavacPath(Either.<Path, SourcePath>ofRight(sourcePath));
         }
       }
     } else {
@@ -84,7 +81,14 @@ public final class JavacOptionsFactory {
         if (jvmLibraryArg.javac.isPresent() && jvmLibraryArg.javacJar.isPresent()) {
           throw new HumanReadableException("Cannot set both javac and javacjar");
         }
-        builder.setJavacPath(jvmLibraryArg.javac);
+        builder.setJavacPath(
+            jvmLibraryArg.javac.transform(
+                new Function<Path, Either<Path, SourcePath>>() {
+                  @Override
+                  public Either<Path, SourcePath> apply(Path input) {
+                    return Either.<Path, SourcePath>ofLeft(input);
+                  }
+                }));
         builder.setJavacJarPath(jvmLibraryArg.javacJar);
       }
     }

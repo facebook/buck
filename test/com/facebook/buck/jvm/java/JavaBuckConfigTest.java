@@ -237,10 +237,10 @@ public class JavaBuckConfigTest {
   @Test
   public void whenJavacIsSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithJavacSet()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
-    final Path javac = temporaryFolder.newExecutableFile();
+    final String javac = temporaryFolder.newExecutableFile().toString();
 
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
-        "tools", ImmutableMap.of("javac", javac.toString()));
+        "tools", ImmutableMap.of("javac", javac));
     BuckConfig buckConfig = FakeBuckConfig
         .builder()
         .setFilesystem(defaultFilesystem)
@@ -249,7 +249,7 @@ public class JavaBuckConfigTest {
     JavaBuckConfig javaConfig = new JavaBuckConfig(buckConfig);
     JavacOptions javacOptions = javaConfig.getDefaultJavacOptions();
 
-    assertEquals(javac, ((ExternalJavac) javacOptions.getJavac()).getPath());
+    assertEquals(javac, ((ExternalJavac) javacOptions.getJavac()).getShortName());
   }
 
   @Test

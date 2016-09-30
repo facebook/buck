@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static com.google.common.base.Optional.fromNullable;
 
+import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -79,7 +80,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     JDK,
   }
 
-  protected abstract Optional<Path> getJavacPath();
+  protected abstract Optional<Either<Path, SourcePath>> getJavacPath();
   protected abstract Optional<SourcePath> getJavacJarPath();
 
   @Value.Default

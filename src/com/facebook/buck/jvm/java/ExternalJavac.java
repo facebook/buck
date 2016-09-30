@@ -19,7 +19,10 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -51,18 +54,26 @@ public class ExternalJavac implements Javac {
 
   private static final JavacVersion DEFAULT_VERSION = JavacVersion.of("unknown version");
 
-  private final Path pathToJavac;
+  private final Either<Path, SourcePath> pathToJavac;
   private final Supplier<JavacVersion> version;
 
-  public ExternalJavac(final Path pathToJavac) {
+  public ExternalJavac(final Either<Path, SourcePath> pathToJavac) {
     this.pathToJavac = pathToJavac;
 
     this.version = Suppliers.memoize(
         new Supplier<JavacVersion>() {
           @Override
           public JavacVersion get() {
+            if (pathToJavac.isRight() && pathToJavac.getRight() instanceof BuildTargetSourcePath) {
+              return DEFAULT_VERSION;
+            }
             ProcessExecutorParams params = ProcessExecutorParams.builder()
-                .setCommand(ImmutableList.of(pathToJavac.toString(), "-version"))
+                .setCommand(
+                    ImmutableList.of(
+                        pathToJavac.isLeft() ?
+                            pathToJavac.getLeft().toString() :
+                            ((PathSourcePath) pathToJavac.getRight()).getRelativePath().toString(),
+                        "-version"))
                 .build();
             ProcessExecutor.Result result;
             try {
@@ -83,17 +94,22 @@ public class ExternalJavac implements Javac {
 
   @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-    return ImmutableSortedSet.of();
+    return resolver.filterBuildRuleInputs(getInputs());
   }
 
   @Override
   public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableSortedSet.of();
+    return pathToJavac.isRight() ?
+        ImmutableSortedSet.of(pathToJavac.getRight()) :
+        ImmutableSortedSet.<SourcePath>of();
   }
 
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-    return ImmutableList.<String>builder().add(pathToJavac.toString()).build();
+    return ImmutableList.of(
+        pathToJavac.isRight() ?
+            resolver.getAbsolutePath(pathToJavac.getRight()).toString() :
+            pathToJavac.getLeft().toString());
   }
 
   @Override
@@ -101,7 +117,7 @@ public class ExternalJavac implements Javac {
     return ImmutableMap.of();
   }
 
-  public static Javac createJavac(Path pathToJavac) {
+  public static Javac createJavac(Either<Path, SourcePath> pathToJavac) {
     return new ExternalJavac(pathToJavac);
   }
 
@@ -120,7 +136,7 @@ public class ExternalJavac implements Javac {
       ImmutableList<String> options,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList) {
-    StringBuilder builder = new StringBuilder(pathToJavac.toString());
+    StringBuilder builder = new StringBuilder(prettyPathToJavac());
     builder.append(" ");
     Joiner.on(" ").appendTo(builder, options);
     builder.append(" ");
@@ -131,21 +147,27 @@ public class ExternalJavac implements Javac {
 
   @Override
   public String getShortName() {
-    return pathToJavac.toString();
+    return prettyPathToJavac();
   }
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     if (DEFAULT_VERSION.equals(getVersion())) {
       // What we really want to do here is use a VersionedTool, however, this will suffice for now.
-      sink.setReflectively("javac", pathToJavac.toString());
+      sink.setReflectively("javac", prettyPathToJavac());
     } else {
       sink.setReflectively("javac.version", getVersion().toString());
     }
   }
 
-  public Path getPath() {
-    return pathToJavac;
+  private String prettyPathToJavac() {
+    if (pathToJavac.isLeft()) {
+      return pathToJavac.getLeft().toString();
+    }
+    if (pathToJavac.getRight() instanceof BuildTargetSourcePath) {
+      return ((BuildTargetSourcePath) pathToJavac.getRight()).getTarget().toString();
+    }
+    return ((PathSourcePath) pathToJavac.getRight()).getRelativePath().toString();
   }
 
   @Override
@@ -162,7 +184,10 @@ public class ExternalJavac implements Javac {
       ClassUsageFileWriter usedClassesFileWriter,
       Optional<StandardJavaFileManagerFactory> fileManagerFactory) throws InterruptedException {
     ImmutableList.Builder<String> command = ImmutableList.builder();
-    command.add(pathToJavac.toString());
+    command.add(
+        pathToJavac.isLeft() ?
+            pathToJavac.getLeft().toString() :
+            resolver.getAbsolutePath(pathToJavac.getRight()).toString());
     command.addAll(options);
 
     ImmutableList<Path> expandedSources;

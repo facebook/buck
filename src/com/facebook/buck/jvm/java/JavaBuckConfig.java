@@ -17,9 +17,11 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -76,7 +78,14 @@ public class JavaBuckConfig {
     }
 
     return JavacOptions.builderForUseInJavaBuckConfig()
-        .setJavacPath(getJavacPath())
+        .setJavacPath(
+            getJavacPath().transform(
+                new Function<Path, Either<Path, SourcePath>>() {
+                  @Override
+                  public Either<Path, SourcePath> apply(Path input) {
+                    return Either.ofLeft(input);
+                  }
+                }))
         .setJavacJarPath(getJavacJarPath())
         .setSourceLevel(sourceLevel.or(TARGETED_JAVA_VERSION))
         .setTargetLevel(targetLevel.or(TARGETED_JAVA_VERSION))

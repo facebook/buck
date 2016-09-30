@@ -25,8 +25,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -188,7 +189,7 @@ public class JavacOptionsTest {
     Files.write(tempPath, "echo \"cover-version\" 1>&2".getBytes(UTF_8));
 
     JavacOptions options = createStandardBuilder()
-        .setJavacPath(tempPath)
+        .setJavacPath(Either.<Path, SourcePath>ofLeft(tempPath))
         .build();
 
     Javac javac = options.getJavac();
@@ -204,7 +205,7 @@ public class JavacOptionsTest {
     FakeSourcePath javacJarPath = new FakeSourcePath("javac_jar");
 
     JavacOptions options = createStandardBuilder()
-        .setJavacPath(javacPath)
+        .setJavacPath(Either.<Path, SourcePath>ofLeft(javacPath))
         .setJavacJarPath(javacJarPath)
         .build();
 
