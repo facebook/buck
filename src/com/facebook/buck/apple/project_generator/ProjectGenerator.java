@@ -199,9 +199,6 @@ public class ProjectGenerator {
 
     /** Don't use header maps as header search paths */
     DISABLE_HEADER_MAPS,
-
-    /** Don't create symbolic links to headers when creating header maps */
-    DISABLE_HEADERS_SYMLINKS,
   }
 
   /**

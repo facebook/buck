@@ -543,7 +543,6 @@ public class ProjectGeneratorTest {
         .build();
 
     ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
-    optionsBuilder.add(ProjectGenerator.Option.DISABLE_HEADERS_SYMLINKS);
     ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions = optionsBuilder.build();
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.<TargetNode<?>>of(node),

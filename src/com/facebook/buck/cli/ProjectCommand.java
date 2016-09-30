@@ -361,10 +361,6 @@ public class ProjectCommand extends BuildCommand {
     return testsMode(buckConfig) == ProjectTestsMode.WITH_TESTS;
   }
 
-  public boolean isWithoutHeadersSymLinks(BuckConfig buckConfig) {
-    return buckConfig.xcodeProjectWithoutHeadersSymLinks();
-  }
-
   private boolean getSkipBuildFromConfig(BuckConfig buckConfig) {
     return buckConfig.getBooleanValue("project", "skip_build", false);
   }
@@ -894,8 +890,7 @@ public class ProjectCommand extends BuildCommand {
         isWithTests(params.getBuckConfig()),
         isWithDependenciesTests(params.getBuckConfig()),
         getCombinedProject(),
-        appleConfig.shouldUseHeaderMapsInXcodeProject(),
-        isWithoutHeadersSymLinks(params.getBuckConfig()));
+        appleConfig.shouldUseHeaderMapsInXcodeProject());
 
     ImmutableSet<BuildTarget> requiredBuildTargets = generateWorkspacesForTargets(
         params,
@@ -1052,8 +1047,7 @@ public class ProjectCommand extends BuildCommand {
       boolean isWithTests,
       boolean isWithDependenciesTests,
       boolean isProjectsCombined,
-      boolean shouldUseHeaderMaps,
-      boolean withoutHeadersSymLinks) {
+      boolean shouldUseHeaderMaps) {
     ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
     if (isReadonly) {
       optionsBuilder.add(ProjectGenerator.Option.GENERATE_READ_ONLY_FILES);
@@ -1071,9 +1065,6 @@ public class ProjectCommand extends BuildCommand {
     }
     if (!shouldUseHeaderMaps) {
       optionsBuilder.add(ProjectGenerator.Option.DISABLE_HEADER_MAPS);
-    }
-    if (withoutHeadersSymLinks) {
-      optionsBuilder.add(ProjectGenerator.Option.DISABLE_HEADERS_SYMLINKS);
     }
     return optionsBuilder.build();
   }
