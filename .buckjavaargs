@@ -1,0 +1,3 @@
+-Xmx1256m
+-XX:+HeapDumpOnOutOfMemoryError
+-XX:HeapDumpPath=buck-out/log
