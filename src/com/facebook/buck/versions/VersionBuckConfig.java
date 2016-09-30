@@ -16,15 +16,16 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.util.MoreStrings;
-import com.google.common.base.Optional;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import java.util.Map;
+import java.util.List;
 
 public class VersionBuckConfig implements VersionConfig {
 
-  private static final String UNIVERSE_SECTION_PREFIX = "version_universe#";
+  private static final String UNIVERSES_SECTION = "version_universes";
 
   private final BuckConfig delegate;
 
@@ -34,11 +35,20 @@ public class VersionBuckConfig implements VersionConfig {
 
   private VersionUniverse getVersionUniverse(String name) {
     VersionUniverse.Builder universe = VersionUniverse.builder();
-    for (Map.Entry<String, String> ent :
-         delegate.getEntriesForSection(UNIVERSE_SECTION_PREFIX + name).entrySet()) {
+    ImmutableList<String> vals = delegate.getListWithoutComments(UNIVERSES_SECTION, name);
+    for (String val : vals) {
+      List<String> parts = Splitter.on('=').limit(2).trimResults().splitToList(val);
+      if (parts.size() != 2) {
+        throw new HumanReadableException(
+            "`%s:%s`: must specify version selections as a comma-separated list of " +
+                "`//build:target=<version>` pairs: \"%s\"",
+            UNIVERSES_SECTION,
+            name,
+            val);
+      }
       universe.putVersions(
-          delegate.getBuildTargetForFullyQualifiedTarget(ent.getKey()),
-          Version.of(ent.getValue()));
+          delegate.getBuildTargetForFullyQualifiedTarget(parts.get(0)),
+          Version.of(parts.get(1)));
     }
     return universe.build();
   }
@@ -46,11 +56,8 @@ public class VersionBuckConfig implements VersionConfig {
   @Override
   public ImmutableMap<String, VersionUniverse> getVersionUniverses() {
     ImmutableMap.Builder<String, VersionUniverse> universes = ImmutableMap.builder();
-    for (String section : delegate.getSections()) {
-      Optional<String> name = MoreStrings.stripPrefix(section, UNIVERSE_SECTION_PREFIX);
-      if (name.isPresent()) {
-        universes.put(name.get(), getVersionUniverse(name.get()));
-      }
+    for (String name : delegate.getEntriesForSection(UNIVERSES_SECTION).keySet()) {
+      universes.put(name, getVersionUniverse(name));
     }
     return universes.build();
   }
