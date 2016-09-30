@@ -129,6 +129,8 @@ public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
         new ManifestEntriesTypeCoercer(jacksonObjectMapper),
         patternTypeCoercer,
         neededCoverageSpecTypeCoercer,
+        new ConstraintTypeCoercer(),
+        new VersionTypeCoercer(),
     };
   }
 

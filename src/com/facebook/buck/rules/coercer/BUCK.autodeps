@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY a82b5a51ed72fc681b13e856e4a70196cbb5f04e #@#
+#@# GENERATED FILE: DO NOT MODIFY 27bc350b33c29c66386261bdb32ae408daebd200 #@#
 {
   "coercer" : {
     "deps" : [
@@ -16,6 +16,7 @@
       "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules/coercer:types",
       "//src/com/facebook/buck/util/immutables:immutables",
+      "//src/com/facebook/buck/versions:versions",
       "//third-party/java/guava:guava",
       "//third-party/java/jackson:jackson-databind"
     ]

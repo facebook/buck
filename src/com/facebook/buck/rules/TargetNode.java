@@ -190,6 +190,24 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     return factory.copyNodeWithFlavors(this, flavors);
   }
 
+  public TargetNode<T> withConstructorArgFlavorsAndDeps(
+      T constructorArg,
+      ImmutableSet<Flavor> flavors,
+      ImmutableSet<BuildTarget> declaredDeps,
+      ImmutableSet<BuildTarget> extraDeps) {
+    return new TargetNode<>(
+        factory,
+        getRawInputsHashCode(),
+        getDescription(),
+        constructorArg,
+        getRuleFactoryParams().withFlavors(flavors),
+        declaredDeps,
+        extraDeps,
+        getVisibilityPatterns(),
+        getInputs(),
+        getCellNames());
+  }
+
   public CellPathResolver getCellNames() {
     return cellNames;
   }

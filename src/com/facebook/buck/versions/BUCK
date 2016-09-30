@@ -1,0 +1,13 @@
+standard_java_library(
+  immutable_types = [
+    'AbstractConstraints',
+    'AbstractExactConstraint',
+    'AbstractImplication',
+    'AbstractVersion',
+    'AbstractVersionedAlias',
+    'AbstractVersionInfo',
+  ],
+  tests = [
+    '//test/com/facebook/buck/versions:versions',
+  ],
+)

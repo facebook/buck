@@ -24,6 +24,7 @@ import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -176,6 +177,10 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
         subgraph,
         ImmutableMap.copyOf(index),
         groupsByBuildTarget.inverse().keySet());
+  }
+
+  public ImmutableCollection<TargetGroup> getGroups() {
+    return groupsByBuildTarget.values();
   }
 
   @SuppressWarnings("serial")
