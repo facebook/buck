@@ -15,9 +15,11 @@
  */
 package com.facebook.buck.versions;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.VerifyException;
@@ -34,6 +36,8 @@ import java.util.Map;
  * TODO(andrewjcg): Validate version constraints.
  */
 public class VersionUniverseVersionSelector implements VersionSelector {
+
+  private static final Logger LOG = Logger.get(VersionUniverseVersionSelector.class);
 
   private final TargetGraph targetGraph;
   private final ImmutableMap<String, VersionUniverse> universes;
@@ -55,9 +59,13 @@ public class VersionUniverseVersionSelector implements VersionSelector {
     }
   }
 
-  private Optional<Map.Entry<String, VersionUniverse>> getVersionUniverse(TargetNode<?> root)
+  @VisibleForTesting
+  protected Optional<Map.Entry<String, VersionUniverse>> getVersionUniverse(TargetNode<?> root)
       throws VersionException {
     Optional<String> universeName = getVersionUniverseName(root);
+    if (!universeName.isPresent() && !universes.isEmpty()) {
+      return Optional.of(Iterables.get(universes.entrySet(), 0));
+    }
     if (!universeName.isPresent()) {
       return Optional.absent();
     }
@@ -82,6 +90,7 @@ public class VersionUniverseVersionSelector implements VersionSelector {
     ImmutableMap.Builder<BuildTarget, Version> selectedVersions = ImmutableMap.builder();
 
     Optional<Map.Entry<String, VersionUniverse>> universe = getVersionUniverse(node);
+    LOG.verbose("%s: selected universe: %s", root.getBuildTarget(), universe);
     for (Map.Entry<BuildTarget, ImmutableSet<Version>> ent : domain.entrySet()) {
       Version version;
       if (universe.isPresent() &&

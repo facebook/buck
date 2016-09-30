@@ -88,4 +88,22 @@ public class VersionUniverseVersionSelectorTest {
         Matchers.equalTo(ImmutableMap.of(versioned1, ONE, versioned2, ONE)));
   }
 
+  @Test
+  public void firstConfiguredVersionUniverseUsedByDefault() throws VersionException {
+    TargetNode<?> root =
+        new VersionRootBuilder("//:root")
+            .build();
+    VersionUniverseVersionSelector selector =
+        new VersionUniverseVersionSelector(
+            TargetGraphFactory.newInstance(root),
+            ImmutableMap.of(
+                "universe1",
+                VersionUniverse.of(ImmutableMap.<BuildTarget, Version>of()),
+                "universe2",
+                VersionUniverse.of(ImmutableMap.<BuildTarget, Version>of())));
+    assertThat(
+        selector.getVersionUniverse(root).get().getKey(),
+        Matchers.equalTo("universe1"));
+  }
+
 }
