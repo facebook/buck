@@ -396,7 +396,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     // Add any exported deps.
     for (BuildRule exported : getExportedDeps()) {
       if (exported instanceof JavaLibrary) {
-        builder.addAll(((JavaLibrary) exported).getTransitiveClasspaths());
+        builder.addAll(((JavaLibrary) exported).getImmediateClasspaths());
       }
     }
 
