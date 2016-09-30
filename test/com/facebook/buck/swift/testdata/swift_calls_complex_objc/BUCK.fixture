@@ -1,0 +1,16 @@
+apple_binary(
+  name = 'SwiftCallsComplexObjC',
+  visibility = ['PUBLIC'],
+  bridging_header = 'Foo-Bridging-Header.h',
+  exported_headers = glob([
+    '*.h',
+    '**/*.h',
+  ]),
+  srcs = glob([
+    '**/*.m',
+    '**/*.swift',
+  ]),
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+  ],
+)

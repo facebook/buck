@@ -124,4 +124,21 @@ public class SwiftOSXBinaryIntegrationTest {
         runResult.getStdout(),
         containsString("Hello ObjC\n"));
   }
+
+  @Test
+  public void swiftCallingComplexObjCRunsAndPrintsMessageOnOSX() throws IOException {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX),
+        is(true));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "swift_calls_complex_objc", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand(
+        "run", ":SwiftCallsComplexObjC#macosx-x86_64");
+    runResult.assertSuccess();
+    assertThat(
+        runResult.getStdout(),
+        containsString("Hello, World!"));
+  }
 }
