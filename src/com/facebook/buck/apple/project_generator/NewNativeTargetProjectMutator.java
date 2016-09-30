@@ -27,8 +27,10 @@ import com.facebook.buck.apple.RuleUtils;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.XcodeScriptDescriptionArg;
+import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFrameworksBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
@@ -311,6 +313,7 @@ class NewNativeTargetProjectMutator {
     traverseGroupsTreeAndHandleSources(
         sourcesGroup,
         sourcesBuildPhase,
+        headersBuildPhase,
         RuleUtils.createGroupsFromSourcePaths(
             new Function<SourcePath, Path>() {
               @Override
@@ -358,6 +361,7 @@ class NewNativeTargetProjectMutator {
   private void traverseGroupsTreeAndHandleSources(
       final PBXGroup sourcesGroup,
       final PBXSourcesBuildPhase sourcesBuildPhase,
+      final PBXHeadersBuildPhase headersBuildPhase,
       Iterable<GroupedSource> groupedSources) {
     GroupedSource.Visitor visitor = new GroupedSource.Visitor() {
       @Override
@@ -373,6 +377,7 @@ class NewNativeTargetProjectMutator {
         addSourcePathToHeadersBuildPhase(
             publicHeader,
             sourcesGroup,
+            headersBuildPhase,
             HeaderVisibility.PUBLIC);
       }
 
@@ -381,6 +386,7 @@ class NewNativeTargetProjectMutator {
         addSourcePathToHeadersBuildPhase(
             privateHeader,
             sourcesGroup,
+            headersBuildPhase,
             HeaderVisibility.PRIVATE);
       }
 
@@ -397,6 +403,7 @@ class NewNativeTargetProjectMutator {
         traverseGroupsTreeAndHandleSources(
             newSourceGroup,
             sourcesBuildPhase,
+            headersBuildPhase,
             sourceGroup);
       }
     };
@@ -446,6 +453,7 @@ class NewNativeTargetProjectMutator {
   private void addSourcePathToHeadersBuildPhase(
       SourcePath headerPath,
       PBXGroup headersGroup,
+      PBXHeadersBuildPhase headersBuildPhase,
       HeaderVisibility visibility) {
     PBXFileReference fileReference = headersGroup.getOrCreateFileReferenceBySourceTreePath(
         new SourceTreePath(
@@ -454,6 +462,7 @@ class NewNativeTargetProjectMutator {
             Optional.<String>absent()));
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
     if (visibility != HeaderVisibility.PRIVATE) {
+      headersBuildPhase.getFiles().add(buildFile);
       NSDictionary settings = new NSDictionary();
       settings.put(
           "ATTRIBUTES",
@@ -474,6 +483,14 @@ class NewNativeTargetProjectMutator {
     PBXFrameworksBuildPhase frameworksBuildPhase = new PBXFrameworksBuildPhase();
     target.getBuildPhases().add(frameworksBuildPhase);
 
+    PBXCopyFilesBuildPhase embedFrameworksBuildPhase = new PBXCopyFilesBuildPhase(
+        CopyFilePhaseDestinationSpec.builder()
+            .setDestination(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS)
+            .build());
+    if (targetShouldEmbedFrameworks()) {
+      target.getBuildPhases().add(embedFrameworksBuildPhase);
+    }
+
     for (FrameworkPath framework : frameworks) {
       SourceTreePath sourceTreePath;
       if (framework.getSourceTreePath().isPresent()) {
@@ -493,7 +510,28 @@ class NewNativeTargetProjectMutator {
 
     for (PBXFileReference archive : archives) {
       frameworksBuildPhase.getFiles().add(new PBXBuildFile(archive));
+      if (archive.getExplicitFileType().equals(Optional.of("wrapper.framework"))) {
+        embedFrameworksBuildPhase.getFiles().add(embeddedFrameworkBuildFile(archive));
+      }
     }
+  }
+
+  private PBXBuildFile embeddedFrameworkBuildFile(PBXFileReference fileReference) {
+    PBXBuildFile buildFile = new PBXBuildFile(fileReference);
+    NSDictionary settings = new NSDictionary();
+    settings.put("ATTRIBUTES", new String[] {"CodeSignOnCopy", "RemoveHeadersOnCopy"});
+    buildFile.setSettings(Optional.of(settings));
+
+    return buildFile;
+  }
+
+  private boolean targetShouldEmbedFrameworks() {
+    return productType == ProductType.APPLICATION ||
+        productType == ProductType.APP_EXTENSION ||
+        productType == ProductType.BUNDLE ||
+        productType == ProductType.UI_TEST ||
+        productType == ProductType.UNIT_TEST ||
+        productType == ProductType.WATCH_APPLICATION;
   }
 
   private void addResourcesFileReference(PBXGroup targetGroup) {

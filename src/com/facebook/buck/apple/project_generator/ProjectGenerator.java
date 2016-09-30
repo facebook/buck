@@ -37,6 +37,7 @@ import com.facebook.buck.apple.AppleResources;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.HasAppleBundleFields;
+import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.clang.HeaderMap;
@@ -65,6 +66,7 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.ProjectGenerationEvent;
@@ -1083,12 +1085,21 @@ public class ProjectGenerator {
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       Optional<TargetNode<AppleBundleDescription.Arg>> bundleLoaderNode)
       throws IOException {
-    PBXNativeTarget target = generateCxxLibraryTarget(
-        project,
-        targetNode,
-        AppleResources.collectDirectResources(targetGraph, targetNode),
-        AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
-        bundleLoaderNode);
+    PBXNativeTarget target;
+    if (isFrameworkTarget(targetNode)) {
+      target = generateAppleBundleTarget(
+          project,
+          targetNode.castArg(AppleLibraryDescription.Arg.class).get(),
+          targetNode,
+          bundleLoaderNode);
+    } else {
+      target = generateCxxLibraryTarget(
+          project,
+          targetNode,
+          AppleResources.collectDirectResources(targetGraph, targetNode),
+          AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
+          bundleLoaderNode);
+    }
     LOG.debug("Generated iOS library target %s", target);
     return target;
   }
@@ -1100,21 +1111,15 @@ public class ProjectGenerator {
       ImmutableSet<AppleAssetCatalogDescription.Arg> directAssetCatalogs,
       Optional<TargetNode<AppleBundleDescription.Arg>> bundleLoaderNode)
       throws IOException {
-    boolean isShared = targetNode
-        .getBuildTarget()
-        .getFlavors()
-        .contains(CxxDescriptionEnhancer.SHARED_FLAVOR);
-    ProductType productType = isShared ?
-        ProductType.DYNAMIC_LIBRARY :
-        ProductType.STATIC_LIBRARY;
+    ProductType productType = getLibraryProductType(targetNode);
     PBXNativeTarget target = generateBinaryTarget(
         project,
         Optional.<TargetNode<AppleBundleDescription.Arg>>absent(),
         targetNode,
         productType,
-        AppleBuildRules.getOutputFileNameFormatForLibrary(isShared),
+        AppleBuildRules.getOutputFileNameFormatForLibrary(productType),
         Optional.<Path>absent(),
-        /* includeFrameworks */ isShared,
+        productType != ProductType.STATIC_LIBRARY,
         ImmutableSet.<AppleResourceDescription.Arg>of(),
         directResources,
         ImmutableSet.<AppleAssetCatalogDescription.Arg>of(),
@@ -1123,6 +1128,19 @@ public class ProjectGenerator {
         bundleLoaderNode);
     LOG.debug("Generated Cxx library target %s", target);
     return target;
+  }
+
+  private ProductType getLibraryProductType(TargetNode<?> targetNode) {
+    if (isFrameworkTarget(targetNode)) {
+      return ProductType.FRAMEWORK;
+    }
+
+    ImmutableSet<Flavor> flavors = targetNode.getBuildTarget().getFlavors();
+    if (flavors.contains(CxxDescriptionEnhancer.SHARED_FLAVOR)) {
+      return ProductType.DYNAMIC_LIBRARY;
+    } else {
+      return ProductType.STATIC_LIBRARY;
+    }
   }
 
   private PBXNativeTarget generateBinaryTarget(
@@ -1211,6 +1229,13 @@ public class ProjectGenerator {
       ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
       frameworksBuilder.addAll(targetNode.getConstructorArg().frameworks.get());
       frameworksBuilder.addAll(targetNode.getConstructorArg().libraries.get());
+      for (BuildTarget depTarget : targetNode.getConstructorArg().deps.get()) {
+        if (this.targetGraph.get(depTarget).getType().equals(
+            PrebuiltAppleFrameworkDescription.TYPE)) {
+          frameworksBuilder.add(FrameworkPath.ofSourcePath(
+              ((PrebuiltAppleFrameworkDescription.Arg) this.targetGraph.get(depTarget).getConstructorArg()).framework));
+        }
+      }
       frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(ImmutableList.of(targetNode)));
       mutator.setFrameworks(frameworksBuilder.build());
 
@@ -1260,7 +1285,9 @@ public class ProjectGenerator {
     ImmutableMap.Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
     extraSettingsBuilder
         .put("TARGET_NAME", buildTargetName)
-        .put("SRCROOT", pathRelativizer.outputPathToBuildTargetPath(buildTarget).toString());
+        .put("SRCROOT", pathRelativizer.outputPathToBuildTargetPath(buildTarget).toString())
+        .put("COPY_PHASE_STRIP", "NO");  // this produces warnings on xcode8 and up
+
     if (productType == ProductType.UI_TEST && isFocusedOnTarget) {
       if (bundleLoaderNode.isPresent()) {
         BuildTarget testTarget = bundleLoaderNode.get().getBuildTarget();
@@ -1375,6 +1402,10 @@ public class ProjectGenerator {
       defaultSettingsBuilder.put("EXECUTABLE_PREFIX", "lib");
     }
 
+    // Binaries should always search their embedded Frameworks folder
+    defaultSettingsBuilder
+        .put("LD_RUNPATH_SEARCH_PATHS", "$(inherited) @executable_path/Frameworks");
+
     ImmutableMap.Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
 
     ImmutableSet<Path> recursiveHeaderSearchPaths = collectRecursiveHeaderSearchPaths(targetNode);
@@ -1396,6 +1427,7 @@ public class ProjectGenerator {
             "FRAMEWORK_SEARCH_PATHS",
             Joiner.on(' ').join(
                 collectRecursiveFrameworkSearchPaths(ImmutableList.of(targetNode))));
+
     if (isFocusedOnTarget) {
       appendConfigsBuilder
           .put(
@@ -1529,6 +1561,50 @@ public class ProjectGenerator {
     return target;
   }
 
+  private boolean isFrameworkTarget(TargetNode<?> targetNode) {
+    Optional<TargetNode<AppleLibraryDescription.Arg>> libraryNode = targetNode.castArg(
+        AppleLibraryDescription.Arg.class);
+    if (!libraryNode.isPresent()) {
+      // only apple libraries can be frameworks
+      return false;
+    }
+
+    if (prefersStaticLinkage(libraryNode.get())) {
+      // static linkage implies a static library instead of a framework
+      return false;
+    }
+
+    if (targetNode.getBuildTarget().getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
+      return true;
+    }
+
+    // we need to walk up the target graph to see if there is a framework parent
+    return hasFrameworkFlavoredParent(libraryNode.get());
+  }
+
+  private boolean prefersStaticLinkage(TargetNode<?> node) {
+    Optional<TargetNode<AppleLibraryDescription.Arg>> libraryNode = node.castArg(
+        AppleLibraryDescription.Arg.class);
+    if (!libraryNode.isPresent()) {
+      return false;
+    }
+
+    Optional<NativeLinkable.Linkage> preferredLinkage =
+        libraryNode.get().getConstructorArg().preferredLinkage;
+    return preferredLinkage.isPresent() && preferredLinkage.get() == NativeLinkable.Linkage.STATIC;
+  }
+
+  private boolean hasFrameworkFlavoredParent(TargetNode<?> node) {
+    for (TargetNode<?> parent : targetGraph.getIncomingNodesFor(node)) {
+      if (parent.getType() == AppleLibraryDescription.TYPE &&
+          (parent.getBuildTarget().getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR) ||
+          hasFrameworkFlavoredParent(parent))) {
+            return true;
+      }
+    }
+    return false;
+  }
+
   private boolean shouldIncludeBuildTargetIntoFocusedProject(BuildTarget buildTarget) {
     if (focusModules.isEmpty()) {
       return true;
@@ -1625,10 +1701,24 @@ public class ProjectGenerator {
     if (!configs.isPresent() ||
         (configs.isPresent() && configs.get().isEmpty()) ||
         targetNode.getType().equals(CxxLibraryDescription.TYPE)) {
+      ImmutableMap<String, String> targetConfigs = appendedConfig;
+      if (isFrameworkTarget(targetNode)) {
+        ImmutableMap.Builder<String, String> configBuilder = ImmutableMap.builder();
+        configBuilder.put("DEFINES_MODULE", "YES")
+            .put("DYLIB_INSTALL_NAME_BASE", "@rpath")
+            .put("SKIP_INSTALL", "YES")
+            .put("LD_RUNPATH_SEARCH_PATHS",
+                Joiner.on(' ').join(
+                    "$(inherited)",
+                    "@executable_path/Frameworks",
+                    "@loader_path/Frameworks"));
+        targetConfigs = MoreMaps.merge(targetConfigs, configBuilder.build());
+      }
+
       ImmutableMap<String, ImmutableMap<String, String>> defaultConfig =
           CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
               defaultCxxPlatform,
-              appendedConfig);
+              targetConfigs);
       configs = Optional.of(ImmutableSortedMap.copyOf(defaultConfig));
     }
     return configs;
@@ -2635,10 +2725,7 @@ public class ProjectGenerator {
         targetNode.getType().equals(CxxLibraryDescription.TYPE) ||
         targetNode.getType().equals(HalideLibraryDescription.TYPE)) {
       String productOutputFormat = AppleBuildRules.getOutputFileNameFormatForLibrary(
-          targetNode
-              .getBuildTarget()
-              .getFlavors()
-              .contains(CxxDescriptionEnhancer.SHARED_FLAVOR));
+          getLibraryProductType(targetNode));
       productOutputName = String.format(productOutputFormat, productName);
     } else if (targetNode.getType().equals(AppleBundleDescription.TYPE) ||
         targetNode.getType().equals(AppleTestDescription.TYPE)) {
@@ -2690,7 +2777,7 @@ public class ProjectGenerator {
         PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
         Paths.get(getBuiltProductsRelativeTargetOutputPath(test)).resolve(
             String.format(
-                AppleBuildRules.getOutputFileNameFormatForLibrary(false),
+                AppleBuildRules.getOutputFileNameFormatForLibrary(ProductType.STATIC_LIBRARY),
                 getProductNameForBuildTarget(test.getBuildTarget()))),
         Optional.<String>absent());
     return project.getMainGroup()
@@ -2729,6 +2816,8 @@ public class ProjectGenerator {
           if (productType.isPresent()) {
             return productType.get();
           }
+        } else if (isFrameworkTarget(binaryNode)) {
+          return ProductType.FRAMEWORK;
         } else {
           switch (extension) {
             case FRAMEWORK:

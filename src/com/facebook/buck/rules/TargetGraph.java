@@ -163,8 +163,7 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
               unflavoredBuildTarget,
               targetsToNodes.get(unflavoredBuildTarget));
         }
-        ImmutableSet<TargetNode<?>> dependencies =
-            ImmutableSet.copyOf(getAll(node.getDeps()));
+        ImmutableSet<TargetNode<?>> dependencies = getNodeDepencies(node);
         for (TargetNode<?> dependency : dependencies) {
           subgraph.addEdge(node, dependency);
         }
@@ -176,6 +175,10 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
         subgraph,
         ImmutableMap.copyOf(index),
         groupsByBuildTarget.inverse().keySet());
+  }
+
+  public ImmutableSet<TargetNode<?>> getNodeDepencies(TargetNode<?> node) {
+    return ImmutableSet.copyOf(getAll(node.getDeps()));
   }
 
   @SuppressWarnings("serial")
