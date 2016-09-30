@@ -242,8 +242,8 @@ def memoized(deepcopy=True, keyfunc=None):
     return decorator
 
 
-@provide_for_build
-def glob(includes, excludes=None, include_dotfiles=False, build_env=None, search_base=None):
+def glob(includes, excludes=None, include_dotfiles=False, build_env=None, search_base=None,
+         allow_safe_import=None):
     if excludes is None:
         excludes = []
     assert build_env.type == BuildContextType.BUILD_FILE, (
@@ -320,14 +320,15 @@ def merge_maps(*header_maps):
 
 
 def single_subdir_glob(dirpath, glob_pattern, excludes=None, prefix=None, build_env=None,
-                       search_base=None):
+                       search_base=None, allow_safe_import=None):
     if excludes is None:
         excludes = []
     results = {}
     files = glob([os.path.join(dirpath, glob_pattern)],
                  excludes=excludes,
                  build_env=build_env,
-                 search_base=search_base)
+                 search_base=search_base,
+                 allow_safe_import=allow_safe_import)
     for f in files:
         if dirpath:
             key = f[len(dirpath) + 1:]
@@ -346,8 +347,8 @@ def single_subdir_glob(dirpath, glob_pattern, excludes=None, prefix=None, build_
     return results
 
 
-@provide_for_build
-def subdir_glob(glob_specs, excludes=None, prefix=None, build_env=None, search_base=None):
+def subdir_glob(glob_specs, excludes=None, prefix=None, build_env=None, search_base=None,
+                allow_safe_import=None):
     """
     Given a list of tuples, the form of (relative-sub-directory, glob-pattern),
     return a dict of sub-directory relative paths to full paths.  Useful for
@@ -363,7 +364,8 @@ def subdir_glob(glob_specs, excludes=None, prefix=None, build_env=None, search_b
 
     for dirpath, glob_pattern in glob_specs:
         results.append(
-            single_subdir_glob(dirpath, glob_pattern, excludes, prefix, build_env, search_base))
+            single_subdir_glob(dirpath, glob_pattern, excludes, prefix, build_env, search_base,
+                               allow_safe_import=allow_safe_import))
 
     return merge_maps(*results)
 
@@ -741,6 +743,19 @@ class BuildFileProcessor(object):
             return default
 
         return value
+
+    def _glob(self, includes, excludes=None, include_dotfiles=False, search_base=None):
+        build_env = self._build_env_stack[-1]
+        return glob(
+            includes, excludes=excludes, include_dotfiles=include_dotfiles,
+            search_base=search_base, build_env=build_env,
+            allow_safe_import=self._allow_unsafe_import)
+
+    def _subdir_glob(self, glob_specs, excludes=None, prefix=None, search_base=None):
+        build_env = self._build_env_stack[-1]
+        return subdir_glob(
+            glob_specs, excludes=excludes, prefix=prefix, search_base=search_base,
+            build_env=build_env, allow_safe_import=self._allow_unsafe_import)
 
     def _record_env_var(self, name, value):
         """
@@ -1126,6 +1141,10 @@ class BuildFileProcessor(object):
 
         # Install the 'allow_unsafe_import' function into our global object.
         default_globals['allow_unsafe_import'] = self._allow_unsafe_import
+
+        # Install the 'glob' and 'glob_subdir' functions into our global object.
+        default_globals['glob'] = self._glob
+        default_globals['subdir_glob'] = self._subdir_glob
 
         # If any implicit includes were specified, process them first.
         for include in implicit_includes:
