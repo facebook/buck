@@ -35,7 +35,7 @@ import com.google.common.collect.ImmutableList;
  * Matches either a relative or fully-qualified build target wrapped in <tt>$()</tt>, unless the
  * <code>$</code> is preceded by a backslash.
  */
-public abstract class BuildTargetMacroExpander implements MacroExpander {
+public abstract class BuildTargetMacroExpander extends AbstractMacroExpander<BuildTarget> {
 
   protected abstract String expand(
       SourcePathResolver resolver,
@@ -51,6 +51,7 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
     return rule.get();
   }
 
+  @Override
   protected BuildTarget parse(
       BuildTarget target,
       CellPathResolver cellNames,
@@ -72,25 +73,14 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
     }
   }
 
-  protected BuildRule resolve(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      ImmutableList<String> input)
-      throws MacroException {
-    return resolve(resolver, parse(target, cellNames, input));
-  }
-
   @Override
-  public String expand(
+  public String expandFrom(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      ImmutableList<String> input)
+      BuildTarget input)
       throws MacroException {
-    return expand(
-        new SourcePathResolver(resolver),
-        resolve(target, cellNames, resolver, input));
+    return expand(new SourcePathResolver(resolver), resolve(resolver, input));
   }
 
   protected ImmutableList<BuildRule> extractBuildTimeDeps(
@@ -101,31 +91,32 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
   }
 
   @Override
-  public ImmutableList<BuildRule> extractBuildTimeDeps(
+  public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      ImmutableList<String> input)
+      BuildTarget input)
       throws MacroException {
-    return extractBuildTimeDeps(resolver, resolve(target, cellNames, resolver, input));
+    return extractBuildTimeDeps(resolver, resolve(resolver, input));
   }
 
   @Override
-  public ImmutableList<BuildTarget> extractParseTimeDeps(
+  public ImmutableList<BuildTarget> extractParseTimeDepsFrom(
       BuildTarget target,
       CellPathResolver cellNames,
-      ImmutableList<String> input)
+      BuildTarget input)
       throws MacroException {
-    return ImmutableList.of(parse(target, cellNames, input));
+    return ImmutableList.of(input);
   }
 
   @Override
-  public Object extractRuleKeyAppendables(
+  public Object extractRuleKeyAppendablesFrom(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      ImmutableList<String> input) throws MacroException {
-    return new BuildTargetSourcePath(resolve(target, cellNames, resolver, input).getBuildTarget());
+      BuildTarget input)
+      throws MacroException {
+    return new BuildTargetSourcePath(resolve(resolver, input).getBuildTarget());
   }
 
 }

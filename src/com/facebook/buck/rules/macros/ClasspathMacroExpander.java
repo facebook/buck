@@ -59,19 +59,14 @@ public class ClasspathMacroExpander
   }
 
   @Override
-  public ImmutableList<BuildRule> extractBuildTimeDeps(
+  public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      ImmutableList<String> input)
+      BuildTarget input)
       throws MacroException {
     return ImmutableList.<BuildRule>copyOf(
-        getHasClasspathEntries(
-            resolve(
-                target,
-                cellNames,
-                resolver,
-                input)).getTransitiveClasspathDeps());
+        getHasClasspathEntries(resolve(resolver, input)).getTransitiveClasspathDeps());
   }
 
   @Override
@@ -110,14 +105,14 @@ public class ClasspathMacroExpander
   }
 
   @Override
-  public Object extractRuleKeyAppendables(
+  public Object extractRuleKeyAppendablesFrom(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      ImmutableList<String> input)
+      BuildTarget input)
       throws MacroException {
     return FluentIterable.from(
-            getHasClasspathEntries(resolve(target, cellNames, resolver, input))
+            getHasClasspathEntries(resolve(resolver, input))
                 .getTransitiveClasspathDeps())
         .filter(
             new Predicate<JavaLibrary>() {

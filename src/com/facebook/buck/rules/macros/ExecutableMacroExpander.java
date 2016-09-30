@@ -63,13 +63,13 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander {
   }
 
   @Override
-  public Object extractRuleKeyAppendables(
+  public Object extractRuleKeyAppendablesFrom(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
-      ImmutableList<String> input)
+      BuildTarget input)
       throws MacroException {
-    return getTool(resolve(target, cellNames, resolver, input));
+    return getTool(resolve(resolver, input));
   }
 
 }
