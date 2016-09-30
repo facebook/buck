@@ -1598,7 +1598,7 @@ public class ProjectGenerator {
     for (TargetNode<?> parent : targetGraph.getIncomingNodesFor(node)) {
       if (parent.getType() == AppleLibraryDescription.TYPE &&
           (parent.getBuildTarget().getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR) ||
-          (prefersStaticLinkage(parent) && hasFrameworkFlavoredParent(parent)))) {
+          hasFrameworkFlavoredParent(parent))) {
             return true;
       }
     }
