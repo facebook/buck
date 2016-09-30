@@ -1,4 +1,5 @@
 PLATFORM_SRCS = [
+  'AbstractSwiftOutputEntry.java',
   'AbstractSwiftPlatform.java',
   'SwiftPlatforms.java',
 ]

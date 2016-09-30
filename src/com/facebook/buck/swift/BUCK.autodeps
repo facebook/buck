@@ -1,12 +1,15 @@
-#@# GENERATED FILE: DO NOT MODIFY 5d6eaa2b2b7dc8b09061c6a49714ad07d78ce803 #@#
+#@# GENERATED FILE: DO NOT MODIFY c4126e5c216335e49ee858098d39ab6c1bdedadb #@#
 {
   "platform" : {
     "deps" : [
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/rules:build_rule",
-      "//src/com/facebook/buck/util/immutables:immutables"
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//third-party/java/jackson:jackson-annotations",
+      "//third-party/java/jackson:jackson-databind"
     ]
   },
   "swift" : {
@@ -17,7 +20,9 @@
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
-      "//src/com/facebook/buck/util:util"
+      "//src/com/facebook/buck/util:object_mapper",
+      "//src/com/facebook/buck/util:util",
+      "//third-party/java/gson:gson"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/cli:config",
@@ -32,7 +37,8 @@
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/swift:platform",
       "//third-party/java/guava:guava",
-      "//third-party/java/infer-annotations:infer-annotations"
+      "//third-party/java/infer-annotations:infer-annotations",
+      "//third-party/java/jackson:jackson-databind"
     ]
   }
 }
