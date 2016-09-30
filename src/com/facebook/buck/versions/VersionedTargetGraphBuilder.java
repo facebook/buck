@@ -24,22 +24,23 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Charsets;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -53,6 +54,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.StreamSupport;
 
 /**
  * Takes a regular {@link TargetGraph}, resolves any versioned nodes, and returns a new graph with
@@ -127,6 +129,22 @@ public class VersionedTargetGraphBuilder {
     return unversionedTargetGraphAndBuildTargets.getTargetGraph().get(target);
   }
 
+  private void addNode(TargetNode<?> node) {
+    Preconditions.checkArgument(
+        !TargetGraphVersionTransformations.getVersionedNode(node).isPresent(),
+        "%s",
+        node);
+    graph.addNode(node);
+  }
+
+  private void addEdge(TargetNode<?> src, TargetNode<?> dst) {
+    Preconditions.checkArgument(
+        !TargetGraphVersionTransformations.getVersionedNode(src).isPresent());
+    Preconditions.checkArgument(
+        !TargetGraphVersionTransformations.getVersionedNode(dst).isPresent());
+    graph.addEdge(src, dst);
+  }
+
   /**
    * Get/cache the transitive version info for this node.
    */
@@ -194,59 +212,49 @@ public class VersionedTargetGraphBuilder {
     return ImmutableFlavor.of("v" + hasher.hash().toString().substring(0, 7));
   }
 
-  /**
-   * @return a copy of the given {@link TargetNode} suitable for the resolved target graph, using
-   *         the update dependencies and a version flavor, if necessary.
-   */
-  private <A> TargetNode<A> cloneNode(
-      TargetNode<A> node,
-      ImmutableSet<Flavor> flavors,
-      ImmutableSortedSet<BuildTarget> declaredDeps) {
-
-    // Fast path for avoiding node cloning.
-    ImmutableMap<BuildTarget, Optional<Constraint>> versionedDeps =
-        TargetGraphVersionTransformations.getVersionedDeps(node);
-    if (node.getBuildTarget().getFlavors().equals(flavors) &&
-        node.getDeclaredDeps().equals(declaredDeps) &&
-        versionedDeps.keySet().isEmpty()) {
-      return node;
+  private TargetNode<?> resolveVersions(
+      TargetNode<?> node,
+      ImmutableMap<BuildTarget, Version> selectedVersions) {
+    Optional<TargetNode<VersionedAlias.Arg>> versionedNode =
+        node.castArg(VersionedAlias.Arg.class);
+    if (versionedNode.isPresent()) {
+      node =
+          getNode(
+              Preconditions.checkNotNull(
+                  versionedNode.get().getConstructorArg().versions.get(
+                      selectedVersions.get(node.getBuildTarget()))));
     }
+    return node;
+  }
 
-    // Generate the new constructor arg from the original
-    A constructorArg = node.getConstructorArg();
-    A newConstructorArg = node.getDescription().createUnpopulatedConstructorArg();
-    for (Field field : constructorArg.getClass().getFields()) {
-      try {
-        // Update the `dep` parameter with the new declared deps.
-        if (field.getName().equals("deps")) {
-          field.set(newConstructorArg, declaredDeps);
-        // Clear-out the versioned deps field, as we only use this for generating the resolved
-        // graph and we want to avoid the version alias nodes showing up in the new nodes extra
-        // deps.
-        } else if (
-            field.getName().equals(TargetGraphVersionTransformations.VERSIONED_DEPS_FIELD_NAME)) {
-          field.set(
-              newConstructorArg,
-              ImmutableSortedMap.<BuildTarget, Optional<Constraint>>of());
-        // Use all other fields as-is.
-        } else {
-          field.set(newConstructorArg, field.get(constructorArg));
-        }
-      } catch (IllegalAccessException e) {
-        throw new IllegalStateException(e);
+  /**
+   * @return the {@link BuildTarget} to use in the resolved target graph, formed by adding a
+   *         flavor generated from the given version selections.
+   */
+  private Optional<BuildTarget> getTranslateBuildTarget(
+      TargetNode<?> node,
+      ImmutableMap<BuildTarget, Version> selectedVersions) {
+
+    BuildTarget originalTarget = node.getBuildTarget();
+    node = resolveVersions(node, selectedVersions);
+    BuildTarget newTarget = node.getBuildTarget();
+
+    if (TargetGraphVersionTransformations.isVersionPropagator(node)) {
+      VersionInfo info = getVersionInfo(node);
+      Collection<BuildTarget> versionedDeps = info.getVersionDomain().keySet();
+      TreeMap<BuildTarget, Version> versions = new TreeMap<>();
+      for (BuildTarget depTarget : versionedDeps) {
+        versions.put(depTarget, selectedVersions.get(depTarget));
+      }
+      if (!versions.isEmpty()) {
+        Flavor versionedFlavor = getVersionedFlavor(versions);
+        newTarget = node.getBuildTarget().withAppendedFlavors(versionedFlavor);
       }
     }
 
-    // Generate the new extra deps.
-    ImmutableSet<BuildTarget> newExtraDeps =
-        ImmutableSet.copyOf(Sets.difference(node.getExtraDeps(), versionedDeps.keySet()));
-
-    // Build the new node and return it.
-    return node.withConstructorArgFlavorsAndDeps(
-        newConstructorArg,
-        flavors,
-        declaredDeps,
-        newExtraDeps);
+    return newTarget.equals(originalTarget) ?
+        Optional.empty() :
+        Optional.of(newTarget);
   }
 
   public TargetGraph build() throws VersionException, InterruptedException {
@@ -341,9 +349,9 @@ public class VersionedTargetGraphBuilder {
       if (oldNode != null) {
         node = oldNode;
       } else {
-        graph.addNode(node);
+        addNode(node);
         for (TargetNode<?> dep : process(node.getDeps())) {
-          graph.addEdge(node, dep);
+          addEdge(node, dep);
         }
       }
 
@@ -397,7 +405,9 @@ public class VersionedTargetGraphBuilder {
       }
 
       // Now that everything is ready, return all the results.
-      return Iterables.transform(targets, Functions.forMap(index));
+      return StreamSupport.stream(targets.spliterator(), false)
+          .map(index::get)
+          .collect(MoreCollectors.toImmutableList());
     }
 
     protected Void getChecked() throws VersionException, InterruptedException {
@@ -426,104 +436,60 @@ public class VersionedTargetGraphBuilder {
       this.node = node;
     }
 
-    /**
-     * @return the {@link BuildTarget} to use in the resolved target graph, formed by adding a
-     *         flavor generated from the given version selections.
-     */
-    private BuildTarget getNewTarget(
-        TargetNode<?> node,
-        ImmutableMap<BuildTarget, Version> selectedVersions) {
+    private final Predicate<BuildTarget> isVersionPropagator =
+        target -> TargetGraphVersionTransformations.isVersionPropagator(getNode(target));
 
-      BuildTarget target = node.getBuildTarget();
-      if (!TargetGraphVersionTransformations.isVersionRoot(node)) {
-        VersionInfo info = getVersionInfo(node);
-        Collection<BuildTarget> versionedDeps = info.getVersionDomain().keySet();
-        TreeMap<BuildTarget, Version> versions = new TreeMap<>();
-        for (BuildTarget depTarget : versionedDeps) {
-          versions.put(depTarget, selectedVersions.get(depTarget));
-        }
-        if (!versions.isEmpty()) {
-          // transform build target.
-          Flavor versionedFlavor = getVersionedFlavor(versions);
-          target = target.withAppendedFlavors(versionedFlavor);
-        }
-      }
+    private final Predicate<BuildTarget> isVersioned =
+        target -> TargetGraphVersionTransformations.getVersionedNode(getNode(target)).isPresent();
 
-      return target;
-    }
-
+    @SuppressWarnings("unchecked")
     private TargetNode<?> processVersionSubGraphNode(
         TargetNode<?> node,
-        final ImmutableMap<BuildTarget, Version> selectedVersions)
+        ImmutableMap<BuildTarget, Version> selectedVersions,
+        TargetNodeTranslator targetTranslator)
         throws VersionException {
 
-      BuildTarget newTarget = getNewTarget(node, selectedVersions);
+      BuildTarget newTarget =
+          targetTranslator.translateBuildTarget(node.getBuildTarget())
+              .orElse(node.getBuildTarget());
       TargetNode<?> processed = index.get(newTarget);
       if (processed != null) {
         return processed;
       }
 
-      // Translate the current node's declared deps to the new ones.
-      ImmutableList.Builder<BuildTarget> newInternalDeclaredDepsBuilder = ImmutableList.builder();
-      ImmutableList.Builder<BuildTarget> newExternalDeclaredDepsBuilder = ImmutableList.builder();
-      for (BuildTarget depTarget : node.getDeclaredDeps()) {
-        TargetNode<?> dep = getNode(depTarget);
-        Optional<TargetNode<VersionedAlias.Arg>> versionedDep =
-            TargetGraphVersionTransformations.getVersionedNode(dep);
-        if (versionedDep.isPresent()) {
-          depTarget =
-              Preconditions.checkNotNull(
-                  versionedDep.get().getConstructorArg().versions.get(
-                      selectedVersions.get(depTarget)));
-        }
-        if (TargetGraphVersionTransformations.isVersionPropagator(dep)) {
-          newInternalDeclaredDepsBuilder.add(depTarget);
-        } else {
-          newExternalDeclaredDepsBuilder.add(depTarget);
-        }
-      }
-      for (BuildTarget depTarget :
-           TargetGraphVersionTransformations.getVersionedDeps(node).keySet()) {
-        TargetNode<?> dep = getNode(depTarget);
-        Optional<TargetNode<VersionedAlias.Arg>> versionedDep =
-            TargetGraphVersionTransformations.getVersionedNode(dep);
-        Preconditions.checkState(versionedDep.isPresent());
-        depTarget =
-            versionedDep.get().getConstructorArg().versions.get(
-                selectedVersions.get(depTarget));
-        newInternalDeclaredDepsBuilder.add(depTarget);
-      }
-      ImmutableList<BuildTarget> newInternalDeclaredDeps = newInternalDeclaredDepsBuilder.build();
-      ImmutableList<BuildTarget> newExternalDeclaredDeps = newExternalDeclaredDepsBuilder.build();
-
       // Create the new target node, with the new target and deps.
       TargetNode<?> newNode =
-          cloneNode(
-              node,
-              newTarget.getFlavors(),
-              ImmutableSortedSet.<BuildTarget>naturalOrder()
-                  .addAll(
-                      FluentIterable.from(newInternalDeclaredDeps)
-                          .transform(
-                              depTarget -> getNewTarget(getNode(depTarget), selectedVersions)))
-                  .addAll(newExternalDeclaredDeps)
-                  .build());
+          ((Optional<TargetNode<?>>) (Optional<?>) targetTranslator.translateNode(node))
+              .orElse(node);
+
+      LOG.verbose(
+          "%s: new node declared deps %s, extra deps %s, arg %s",
+          newNode.getBuildTarget(),
+          newNode.getDeclaredDeps(),
+          newNode.getExtraDeps(),
+          newNode.getConstructorArg());
 
       // Add the new node, and it's dep edges, to the new graph.
       TargetNode<?> oldNode = index.putIfAbsent(newTarget, newNode);
       if (oldNode != null) {
         newNode = oldNode;
       } else {
-        graph.addNode(newNode);
-        for (BuildTarget depTarget : newInternalDeclaredDeps) {
-          graph.addEdge(
+        addNode(newNode);
+        for (BuildTarget depTarget :
+             FluentIterable.from(node.getDeps())
+                 .filter(Predicates.or(isVersionPropagator, isVersioned))) {
+          addEdge(
               newNode,
-              processVersionSubGraphNode(getNode(depTarget), selectedVersions));
+              processVersionSubGraphNode(
+                  resolveVersions(getNode(depTarget), selectedVersions),
+                  selectedVersions,
+                  targetTranslator));
         }
         for (TargetNode<?> dep :
-            process(
-                Iterables.concat(newExternalDeclaredDeps, newNode.getExtraDeps()))) {
-          graph.addEdge(newNode, dep);
+             process(
+                 FluentIterable.from(node.getDeps())
+                     .filter(Predicates.not(Predicates.or(isVersionPropagator, isVersioned))))) {
+          addEdge(newNode, dep);
         }
       }
 
@@ -545,12 +511,29 @@ public class VersionedTargetGraphBuilder {
       VersionInfo versionInfo = getVersionInfo(root);
 
       // Select the versions to use for this sub-graph.
-      ImmutableMap<BuildTarget, Version> selectedVersions =
+      final ImmutableMap<BuildTarget, Version> selectedVersions =
           versionSelector.resolve(
               root.getBuildTarget(),
               versionInfo.getVersionDomain());
 
-      return processVersionSubGraphNode(root, selectedVersions);
+      // Build a target translator object to translate build targets.
+      TargetNodeTranslator targetTranslator =
+          new TargetNodeTranslator() {
+
+            private final LoadingCache<BuildTarget, Optional<BuildTarget>> cache =
+                CacheBuilder.newBuilder()
+                    .build(
+                        CacheLoader.from(
+                            target -> getTranslateBuildTarget(getNode(target), selectedVersions)));
+
+            @Override
+            public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
+              return cache.getUnchecked(target);
+            }
+
+          };
+
+      return processVersionSubGraphNode(root, selectedVersions, targetTranslator);
     }
 
     @Override

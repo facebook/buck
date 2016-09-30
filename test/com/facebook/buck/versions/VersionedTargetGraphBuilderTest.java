@@ -320,7 +320,8 @@ public class VersionedTargetGraphBuilderTest {
                 .setDeps("//:v1")
                 .build(),
             new VersionRootBuilder("//:a")
-                .setDeps(getVersionedTarget("//:lib", "//:dep", "1.0"), "//:v1")
+                .setDeps(getVersionedTarget("//:lib", "//:dep", "1.0"))
+                .setVersionedDeps("//:v1", ExactConstraint.of(Version.of("1.0")))
                 .build(),
             new VersionPropagatorBuilder("//:v2")
                 .build(),
@@ -328,7 +329,8 @@ public class VersionedTargetGraphBuilderTest {
                 .setDeps("//:v2")
                 .build(),
             new VersionRootBuilder("//:b")
-                .setDeps(getVersionedTarget("//:lib", "//:dep", "2.0"), "//:v2")
+                .setDeps(getVersionedTarget("//:lib", "//:dep", "2.0"))
+                .setVersionedDeps("//:v2", ExactConstraint.of(Version.of("2.0")))
                 .build());
     assertEquals(expectedTargetGraph, versionedGraph);
   }

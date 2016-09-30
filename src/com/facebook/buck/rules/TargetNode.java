@@ -190,9 +190,9 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     return factory.copyNodeWithFlavors(this, flavors);
   }
 
-  public TargetNode<T> withConstructorArgFlavorsAndDeps(
+  public TargetNode<T> withTargetConstructorArgAndDeps(
+      BuildTarget target,
       T constructorArg,
-      ImmutableSet<Flavor> flavors,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<BuildTarget> extraDeps) {
     return new TargetNode<>(
@@ -200,7 +200,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
         getRawInputsHashCode(),
         getDescription(),
         constructorArg,
-        getRuleFactoryParams().withFlavors(flavors),
+        getRuleFactoryParams().withTarget(target),
         declaredDeps,
         extraDeps,
         getVisibilityPatterns(),

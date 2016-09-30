@@ -36,9 +36,12 @@ public final class BuildRuleFactoryParams {
     return filesystem;
   }
 
-  public BuildRuleFactoryParams withFlavors(Iterable<Flavor> flavors) {
-    return new BuildRuleFactoryParams(
-        filesystem,
-        target.withFlavors(flavors));
+  public BuildRuleFactoryParams withTarget(BuildTarget target) {
+    return new BuildRuleFactoryParams(filesystem, target);
   }
+
+  public BuildRuleFactoryParams withFlavors(Iterable<Flavor> flavors) {
+    return withTarget(target.withFlavors(flavors));
+  }
+
 }
