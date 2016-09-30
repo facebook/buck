@@ -22,15 +22,15 @@ import com.google.common.collect.ImmutableSortedSet;
  * Provides a facility for a rule to list dependencies it'll need at runtime.
  * <p>
  * Consider the case of a Java test.  The {@link com.facebook.buck.jvm.java.JavaTest} rule itself is
- * just a {@link com.facebook.buck.jvm.java.DefaultJavaLibrary} and so only lists it's immediate compile
- * time deps as it's normal first-order dependencies.  However, to actually run a Java test, we need
+ * just a {@link com.facebook.buck.jvm.java.DefaultJavaLibrary} and so only lists its immediate compile
+ * time deps as its normal first-order dependencies.  However, to actually run a Java test, we need
  * it's entire transitive dependency tree locally on disk.  Since this is outside the contract of
  * normal build dependencies (e.g. a top-down build engine may decide not to pull a dependency
- * locally if the top-level target can be pull form cache, and therefore won't need to be built),
+ * locally if the top-level target can be pulled from cache, and therefore won't need to be built),
  * we need some other way to convey to the build engine that a set of rules that need to be on disk
  * by the end of the build.
  * <p>
- * Enter this interface.  While it serves an important purpose, it's long-term semantics aren't
+ * Enter this interface.  While it serves an important purpose, its long-term semantics aren't
  * entirely clear yet, so expect how we model this and how the build engine uses this to change in
  * the future.
  */

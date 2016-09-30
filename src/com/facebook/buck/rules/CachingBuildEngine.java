@@ -310,7 +310,7 @@ public class CachingBuildEngine implements BuildEngine {
         }
 
         // Otherwise, build the rule.  We re-submit via the service so that we schedule
-        // it with the custom weight assigned to this rules steps.
+        // it with the custom weight assigned to this rule's steps.
         return service.submit(
             new Callable<BuildResult>() {
               @Override
@@ -367,7 +367,6 @@ public class CachingBuildEngine implements BuildEngine {
             onDiskBuildInfo,
             buildInfoRecorder,
             ruleKeyFactory);
-
 
         if (inputResult.isPresent()) {
           return Futures.immediateFuture(inputResult);
@@ -953,14 +952,14 @@ public class CachingBuildEngine implements BuildEngine {
     }
   }
 
-  // Provide a future that resolve to the result of executing this rule and its runtime
+  // Provide a future that resolves to the result of executing this rule and its runtime
   // dependencies.
   private ListenableFuture<BuildResult> getBuildRuleResultWithRuntimeDepsUnlocked(
       final BuildRule rule,
       final BuildContext context,
       final ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks) {
 
-    // If the rule is already executing, return it's result future from the cache.
+    // If the rule is already executing, return its result future from the cache.
     ListenableFuture<BuildResult> existingResult = results.get(rule.getBuildTarget());
     if (existingResult != null) {
       return existingResult;

@@ -39,7 +39,6 @@ import com.google.common.primitives.Primitives;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.SortedMap;
@@ -190,27 +189,17 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
     keyStack.push(key);
     try (RuleKeyLogger.Scope keyScope = ruleKeyLogger.pushKey(key)) {
       // Check to see if we're dealing with a collection of some description. Note
-      // java.nio.file.Path implements "Iterable", so we don't check for that.
-      if (val instanceof Collection) {
-        val = ((Collection<?>) val).iterator();
-        // Fall through to the Iterator handling
-      }
-
+      // java.nio.file.Path implements "Iterable", so we explicitly check for Path.
       if (val instanceof Iterable && !(val instanceof Path)) {
-        val = ((Iterable<?>) val).iterator();
-        // Fall through to the Iterator handling
+        return setReflectively(key, ((Iterable<?>) val).iterator());
       }
 
       if (val instanceof Iterator) {
-        Iterator<?> iterator = (Iterator<?>) val;
-        while (iterator.hasNext()) {
-          setReflectively(key, iterator.next());
-        }
-        return this;
+        return setReflectively(key, (Iterator<?>) val);
       }
 
       if (val instanceof Map) {
-        if (!(val instanceof SortedMap | val instanceof ImmutableMap)) {
+        if (!(val instanceof SortedMap || val instanceof ImmutableMap)) {
           logger.info(
               "Adding an unsorted map to the rule key (%s). " +
                   "Expect unstable ordering and caches misses: %s",
@@ -243,6 +232,13 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
         keyStack.pop();
       }
     }
+  }
+
+  private RuleKeyBuilder<T> setReflectively(String key, Iterator<?> iterator) {
+    while (iterator.hasNext()) {
+      setReflectively(key, iterator.next());
+    }
+    return this;
   }
 
   protected RuleKeyBuilder<T> setPath(Path ideallyRelative, HashCode sha1) {
