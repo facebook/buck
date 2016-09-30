@@ -6,6 +6,7 @@ standard_java_library(
     'AbstractVersion',
     'AbstractVersionedAlias',
     'AbstractVersionInfo',
+    'AbstractVersionUniverse',
   ],
   tests = [
     '//test/com/facebook/buck/versions:versions',

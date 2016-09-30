@@ -73,6 +73,11 @@ class VersionRootBuilder extends AbstractNodeBuilder<VersionRootBuilder.Arg> {
     this(BuildTargetFactory.newInstance(target));
   }
 
+  public VersionRootBuilder setVersionUniverse(String name) {
+    arg.versionUniverse = Optional.of(name);
+    return this;
+  }
+
   public VersionRootBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
     arg.deps = Optional.of(deps);
     return this;
@@ -110,6 +115,7 @@ class VersionRootBuilder extends AbstractNodeBuilder<VersionRootBuilder.Arg> {
   }
 
   public static class Arg {
+    public Optional<String> versionUniverse;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<ImmutableSortedMap<BuildTarget, Optional<Constraint>>> versionedDeps;
   }

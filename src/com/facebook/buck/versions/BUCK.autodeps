@@ -1,12 +1,14 @@
-#@# GENERATED FILE: DO NOT MODIFY 9d1f5fe5eb0f94cd5d4faa797d1bbd08cd971be3 #@#
+#@# GENERATED FILE: DO NOT MODIFY be44d85309e5180a7983a4116e147de9bd159f2b #@#
 {
   "versions" : {
     "deps" : [
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/util:util",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/util/immutables:immutables",
