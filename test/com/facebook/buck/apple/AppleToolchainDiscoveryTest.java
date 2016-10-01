@@ -140,7 +140,7 @@ public class AppleToolchainDiscoveryTest {
     MoreFiles.copyRecursively(root, tempRoot);
     Files.delete(tempRoot.resolve("Toolchains/foo.xctoolchain/ToolchainInfo.plist"));
     Files.write(
-        tempRoot.resolve("Toolchains/bar.xctoolchain/ToolchainInfo.plist"),
+        tempRoot.resolve("Toolchains/bar.xctoolchain/Info.plist"),
         ImmutableList.of("Not a valid plist"),
         Charsets.UTF_8);
 
@@ -152,7 +152,7 @@ public class AppleToolchainDiscoveryTest {
     assertThat(
         logSink.getRecords(),
         hasItems(
-            TestLogSink.logRecordWithMessage(matchesPattern("No .* found .* ignoring")),
-            TestLogSink.logRecordWithMessage(matchesPattern("Failed to parse .* ignoring"))));
+            TestLogSink.logRecordWithMessage(
+                matchesPattern("Failed to resolve info about toolchain .* from plist files .*"))));
   }
 }
