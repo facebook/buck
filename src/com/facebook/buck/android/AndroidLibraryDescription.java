@@ -21,8 +21,8 @@ import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaSourceJar;
-import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -40,7 +40,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -93,7 +92,7 @@ public class AndroidLibraryDescription
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
         params.copyWithExtraDeps(
-            Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps.get()))),
+            resolver.getAllRules(args.exportedDeps.get())),
         javacOptions,
         DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
@@ -113,11 +112,11 @@ public class AndroidLibraryDescription
       if (dummyRDotJava.isPresent()) {
         additionalClasspathEntries = ImmutableSet.of(dummyRDotJava.get().getPathToOutput());
         ImmutableSortedSet<BuildRule> newDeclaredDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(params.getDeclaredDeps().get())
+            .addAll(params.getDeclaredDeps())
             .add(dummyRDotJava.get())
             .build();
         params = params.copyWithDeps(
-            Suppliers.ofInstance(newDeclaredDeps),
+            newDeclaredDeps,
             params.getExtraDeps());
       }
 
@@ -131,7 +130,7 @@ public class AndroidLibraryDescription
                       Iterables.concat(
                           BuildRules.getExportedRules(
                               Iterables.concat(
-                                  params.getDeclaredDeps().get(),
+                                  params.getDeclaredDeps(),
                                   exportedDeps,
                                   resolver.getAllRules(args.providedDeps.get()))),
                           pathResolver.filterBuildRuleInputs(

@@ -17,8 +17,8 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -34,14 +34,12 @@ import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -89,33 +87,28 @@ public class ShTestDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     Function<String, com.facebook.buck.rules.args.Arg> toArg =
         MacroArg.toMacroArgFunction(
             MACRO_HANDLER,
             params.getBuildTarget(),
             params.getCellRoots(),
             resolver);
-    final ImmutableList<com.facebook.buck.rules.args.Arg> testArgs =
+    ImmutableList<com.facebook.buck.rules.args.Arg> testArgs =
         FluentIterable.from(args.args.or(ImmutableList.<String>of()))
             .transform(toArg)
             .toList();
-    final ImmutableMap<String, com.facebook.buck.rules.args.Arg> testEnv =
+    ImmutableMap<String, com.facebook.buck.rules.args.Arg> testEnv =
         ImmutableMap.copyOf(
             Maps.transformValues(
                 args.env.or(ImmutableMap.<String, String>of()),
                 toArg));
     return new ShTest(
         params.appendExtraDeps(
-            new Supplier<Iterable<? extends BuildRule>>() {
-              @Override
-              public Iterable<? extends BuildRule> get() {
-                return FluentIterable.from(testArgs)
-                    .append(testEnv.values())
-                    .transformAndConcat(
-                        com.facebook.buck.rules.args.Arg.getDepsFunction(pathResolver));
-              }
-            }),
+            FluentIterable.from(testArgs)
+                .append(testEnv.values())
+                .transformAndConcat(
+                    com.facebook.buck.rules.args.Arg.getDepsFunction(pathResolver))),
         pathResolver,
         args.test,
         testArgs,

@@ -43,7 +43,6 @@ import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -171,7 +170,7 @@ public class AndroidInstrumentationApkDescription
 
     return new AndroidInstrumentationApk(
         params
-            .copyWithExtraDeps(Suppliers.ofInstance(enhancementResult.getFinalDeps()))
+            .copyWithExtraDeps(enhancementResult.getFinalDeps())
             .appendExtraDeps(rulesToExcludeFromDex),
         new SourcePathResolver(resolver),
         proGuardConfig.getProguardJarOverride(),

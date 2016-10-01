@@ -237,7 +237,7 @@ public class HaskellLibraryDescription implements
 
     ImmutableSortedMap.Builder<String, HaskellPackage> depPackagesBuilder =
         ImmutableSortedMap.naturalOrder();
-    for (BuildRule rule : baseParams.getDeclaredDeps().get()) {
+    for (BuildRule rule : baseParams.getDeclaredDeps()) {
       if (rule instanceof HaskellCompileDep) {
         ImmutableList<HaskellPackage> packages =
             ((HaskellCompileDep) rule).getCompileInput(cxxPlatform, depType).getPackages();
@@ -326,7 +326,7 @@ public class HaskellLibraryDescription implements
         Linker.LinkType.SHARED,
         ImmutableList.<String>of(),
         ImmutableList.copyOf(SourcePathArg.from(pathResolver, compileRule.getObjects())),
-        Iterables.filter(baseParams.getDeclaredDeps().get(), NativeLinkable.class),
+        Iterables.filter(baseParams.getDeclaredDeps(), NativeLinkable.class),
         Linker.LinkableDepType.SHARED);
   }
 

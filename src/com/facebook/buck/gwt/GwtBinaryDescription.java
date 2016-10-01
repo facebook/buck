@@ -34,7 +34,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -122,8 +121,8 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
               new GwtModule(
                   params.copyWithChanges(
                       gwtModuleTarget,
-                      Suppliers.ofInstance(deps),
-                      Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                      deps,
+                      ImmutableSortedSet.<BuildRule>of()),
                   new SourcePathResolver(resolver),
                   filesForGwtModule));
           gwtModule = Optional.of(module);
@@ -143,7 +142,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
     }.start();
 
     return new GwtBinary(
-        params.copyWithExtraDeps(Suppliers.ofInstance(extraDeps.build())),
+        params.copyWithExtraDeps(extraDeps.build()),
         new SourcePathResolver(resolver),
         args.modules.get(),
         javaOptions.getJavaRuntimeLauncher(),

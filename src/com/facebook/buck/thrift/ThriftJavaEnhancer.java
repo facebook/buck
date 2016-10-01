@@ -39,7 +39,6 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -129,8 +128,8 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
           new SrcZip(
               params.copyWithChanges(
                   sourceZipTarget,
-                  Suppliers.ofInstance(ImmutableSortedSet.of(compilerRule)),
-                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                  ImmutableSortedSet.of(compilerRule),
+                  ImmutableSortedSet.<BuildRule>of()),
               pathResolver,
               sourceZip,
               sourceDirectory));
@@ -143,14 +142,13 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
         BuildTargets.createFlavoredBuildTarget(
             unflavoredBuildTarget,
             getFlavor()),
-        Suppliers.ofInstance(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(sourceZips)
-                .addAll(deps)
-                .addAll(BuildRules.getExportedRules(deps))
-                .addAll(pathResolver.filterBuildRuleInputs(templateOptions.getInputs(pathResolver)))
-                .build()),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+        ImmutableSortedSet.<BuildRule>naturalOrder()
+            .addAll(sourceZips)
+            .addAll(deps)
+            .addAll(BuildRules.getExportedRules(deps))
+            .addAll(pathResolver.filterBuildRuleInputs(templateOptions.getInputs(pathResolver)))
+            .build(),
+        ImmutableSortedSet.<BuildRule>of());
 
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 

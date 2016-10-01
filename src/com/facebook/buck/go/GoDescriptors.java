@@ -43,7 +43,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -211,7 +210,7 @@ abstract class GoDescriptors {
         compilerFlags,
         assemblerFlags,
         platform,
-        FluentIterable.from(params.getDeclaredDeps().get())
+        FluentIterable.from(params.getDeclaredDeps())
             .transform(HasBuildTarget.TO_TARGET));
     resolver.addToIndex(library);
 
@@ -224,7 +223,7 @@ abstract class GoDescriptors {
             params.getBuildTarget(),
             resolver,
             platform,
-            FluentIterable.from(params.getDeclaredDeps().get()).transform(HasBuildTarget.TO_TARGET),
+            FluentIterable.from(params.getDeclaredDeps()).transform(HasBuildTarget.TO_TARGET),
             /* includeSelf */ false));
     resolver.addToIndex(symlinkTree);
 
@@ -232,13 +231,12 @@ abstract class GoDescriptors {
 
     return new GoBinary(
         params.copyWithDeps(
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(pathResolver.filterBuildRuleInputs(symlinkTree.getLinks().values()))
-                    .add(symlinkTree)
-                    .add(library)
-                    .build()),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(pathResolver.filterBuildRuleInputs(symlinkTree.getLinks().values()))
+                .add(symlinkTree)
+                .add(library)
+                .build(),
+            ImmutableSortedSet.<BuildRule>of()),
         pathResolver,
         platform.getCxxPlatform().transform(
             new Function<CxxPlatform, Linker>() {
@@ -282,8 +280,8 @@ abstract class GoDescriptors {
             new WriteFile(
                 sourceParams.copyWithChanges(
                     generatorSourceTarget,
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                    ImmutableSortedSet.<BuildRule>of(),
+                    ImmutableSortedSet.<BuildRule>of()),
                 new SourcePathResolver(resolver),
                 extractTestMainGenerator(),
                 BuildTargets.getGenPath(
@@ -297,8 +295,8 @@ abstract class GoDescriptors {
             createGoBinaryRule(
                 sourceParams.copyWithChanges(
                     generatorTarget,
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(writeFile))),
+                    ImmutableSortedSet.<BuildRule>of(),
+                    ImmutableSortedSet.<BuildRule>of(writeFile)),
                 resolver,
                 goBuckConfig,
                 ImmutableSet.<SourcePath>of(new BuildTargetSourcePath(generatorSourceTarget)),

@@ -39,7 +39,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -125,12 +124,11 @@ public class JavaBinaryDescription implements
       SourcePath innerJar = new BuildTargetSourcePath(innerJarRule.getBuildTarget());
       rule = new JarFattener(
           params.appendExtraDeps(
-              Suppliers.<Iterable<BuildRule>>ofInstance(
-                  pathResolver.filterBuildRuleInputs(
-                      ImmutableList.<SourcePath>builder()
-                          .add(innerJar)
-                          .addAll(nativeLibraries.values())
-                          .build()))),
+              pathResolver.filterBuildRuleInputs(
+                  ImmutableList.<SourcePath>builder()
+                      .add(innerJar)
+                      .addAll(nativeLibraries.values())
+                      .build())),
           pathResolver,
           javacOptions,
           innerJar,

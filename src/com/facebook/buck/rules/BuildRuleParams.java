@@ -19,8 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -33,68 +31,50 @@ import java.util.Set;
 public class BuildRuleParams {
 
   private final BuildTarget buildTarget;
-  private final Supplier<ImmutableSortedSet<BuildRule>> declaredDeps;
-  private final Supplier<ImmutableSortedSet<BuildRule>> extraDeps;
-  private final Supplier<ImmutableSortedSet<BuildRule>> totalDeps;
+  private final ImmutableSortedSet<BuildRule> declaredDeps;
+  private final ImmutableSortedSet<BuildRule> extraDeps;
+  private final ImmutableSortedSet<BuildRule> totalDeps;
   private final ProjectFilesystem projectFilesystem;
   private final CellPathResolver cellRoots;
 
   public BuildRuleParams(
       BuildTarget buildTarget,
-      final Supplier<ImmutableSortedSet<BuildRule>> declaredDeps,
-      final Supplier<ImmutableSortedSet<BuildRule>> extraDeps,
+      final ImmutableSortedSet<BuildRule> declaredDeps,
+      final ImmutableSortedSet<BuildRule> extraDeps,
       ProjectFilesystem projectFilesystem,
       CellPathResolver cellRoots) {
     this.buildTarget = buildTarget;
-    this.declaredDeps = Suppliers.memoize(declaredDeps);
-    this.extraDeps = Suppliers.memoize(extraDeps);
+    this.declaredDeps = declaredDeps;
+    this.extraDeps = extraDeps;
     this.projectFilesystem = projectFilesystem;
     this.cellRoots = cellRoots;
 
-    this.totalDeps = Suppliers.memoize(
-        new Supplier<ImmutableSortedSet<BuildRule>>() {
-
-          @Override
-          public ImmutableSortedSet<BuildRule> get() {
-            return ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(declaredDeps.get())
-                .addAll(extraDeps.get())
-                .build();
-          }
-        });
+    this.totalDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(declaredDeps)
+        .addAll(extraDeps)
+        .build();
   }
 
-  public BuildRuleParams copyWithExtraDeps(Supplier<ImmutableSortedSet<BuildRule>> extraDeps) {
+  public BuildRuleParams copyWithExtraDeps(ImmutableSortedSet<BuildRule> extraDeps) {
     return copyWithDeps(declaredDeps, extraDeps);
   }
 
-  public BuildRuleParams appendExtraDeps(
-      final Supplier<? extends Iterable<? extends BuildRule>> additional) {
+  public BuildRuleParams appendExtraDeps(Iterable<? extends BuildRule> additional) {
     return copyWithDeps(
         declaredDeps,
-        new Supplier<ImmutableSortedSet<BuildRule>>() {
-
-          @Override
-          public ImmutableSortedSet<BuildRule> get() {
-            return ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(extraDeps.get())
-                .addAll(additional.get())
-                .build();
-          }
-        });
-  }
-
-  public BuildRuleParams appendExtraDeps(Iterable<? extends BuildRule> additional) {
-    return appendExtraDeps(Suppliers.ofInstance(additional));
+        ImmutableSortedSet.<BuildRule>naturalOrder()
+            .addAll(extraDeps)
+            .addAll(additional)
+            .build());
   }
 
   public BuildRuleParams appendExtraDeps(BuildRule... additional) {
-    return appendExtraDeps(Suppliers.ofInstance(ImmutableList.copyOf(additional)));
+    return appendExtraDeps(ImmutableList.copyOf(additional));
   }
 
   public BuildRuleParams copyWithDeps(
-      Supplier<ImmutableSortedSet<BuildRule>> declaredDeps,
-      Supplier<ImmutableSortedSet<BuildRule>> extraDeps) {
+      ImmutableSortedSet<BuildRule> declaredDeps,
+      ImmutableSortedSet<BuildRule> extraDeps) {
     return copyWithChanges(buildTarget, declaredDeps, extraDeps);
   }
 
@@ -104,8 +84,8 @@ public class BuildRuleParams {
 
   public BuildRuleParams copyWithChanges(
       BuildTarget buildTarget,
-      Supplier<ImmutableSortedSet<BuildRule>> declaredDeps,
-      Supplier<ImmutableSortedSet<BuildRule>> extraDeps) {
+      ImmutableSortedSet<BuildRule> declaredDeps,
+      ImmutableSortedSet<BuildRule> extraDeps) {
     return new BuildRuleParams(
         buildTarget,
         declaredDeps,
@@ -151,18 +131,14 @@ public class BuildRuleParams {
   }
 
   public ImmutableSortedSet<BuildRule> getDeps() {
-    return totalDeps.get();
-  }
-
-  public Supplier<ImmutableSortedSet<BuildRule>> getTotalDeps() {
     return totalDeps;
   }
 
-  public Supplier<ImmutableSortedSet<BuildRule>> getDeclaredDeps() {
+  public ImmutableSortedSet<BuildRule> getDeclaredDeps() {
     return declaredDeps;
   }
 
-  public Supplier<ImmutableSortedSet<BuildRule>> getExtraDeps() {
+  public ImmutableSortedSet<BuildRule> getExtraDeps() {
     return extraDeps;
   }
 

@@ -137,7 +137,7 @@ public class GoLibraryDescription implements
           args.compilerFlags.or(ImmutableList.<String>of()),
           args.assemblerFlags.get(),
           platform.get(),
-          FluentIterable.from(params.getDeclaredDeps().get())
+          FluentIterable.from(params.getDeclaredDeps())
               .transform(HasBuildTarget.TO_TARGET)
               .append(args.exportedDeps.or(ImmutableSortedSet.<BuildTarget>of())));
     }

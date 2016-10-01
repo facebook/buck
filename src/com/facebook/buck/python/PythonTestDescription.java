@@ -48,7 +48,6 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -159,8 +158,8 @@ public class PythonTestDescription implements
         BuildTargets.createFlavoredBuildTarget(
             params.getBuildTarget().checkUnflavored(),
             ImmutableFlavor.of("test_module")),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+        ImmutableSortedSet.<BuildRule>of(),
+        ImmutableSortedSet.<BuildRule>of());
 
     String contents = getTestModulesListContents(testModules);
 
@@ -290,8 +289,8 @@ public class PythonTestDescription implements
     // Build the PEX using a python binary rule with the minimum dependencies.
     BuildRuleParams binaryParams = params.copyWithChanges(
         getBinaryBuildTarget(params.getBuildTarget()),
-        Suppliers.ofInstance(PythonUtil.getDepsFromComponents(pathResolver, allComponents)),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+        PythonUtil.getDepsFromComponents(pathResolver, allComponents),
+        ImmutableSortedSet.<BuildRule>of());
     PythonBinary binary =
         binaryDescription.createPackageRule(
             binaryParams,
@@ -361,11 +360,10 @@ public class PythonTestDescription implements
     // Generate and return the python test rule, which depends on the python binary rule above.
     return new PythonTest(
         params.copyWithDeps(
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(params.getDeclaredDeps().get())
-                    .add(binary)
-                    .build()),
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(params.getDeclaredDeps())
+                .add(binary)
+                .build(),
             params.getExtraDeps()),
         pathResolver,
         testEnv,

@@ -70,7 +70,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -535,10 +534,9 @@ public class LuaBinaryDescription implements
         SymlinkTree.from(
             params.copyWithChanges(
                 linkTreeTarget,
-                Suppliers.ofInstance(
-                    ImmutableSortedSet.copyOf(
-                        pathResolver.filterBuildRuleInputs(components.values()))),
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                ImmutableSortedSet.copyOf(
+                    pathResolver.filterBuildRuleInputs(components.values())),
+                ImmutableSortedSet.<BuildRule>of()),
             pathResolver,
             root,
             components));
@@ -716,14 +714,13 @@ public class LuaBinaryDescription implements
             new LuaStandaloneBinary(
                 params.copyWithChanges(
                     params.getBuildTarget().withAppendedFlavors(BINARY_FLAVOR),
-                    Suppliers.ofInstance(
-                        ImmutableSortedSet.<BuildRule>naturalOrder()
-                            .addAll(pathResolver.filterBuildRuleInputs(starter))
-                            .addAll(components.getDeps(pathResolver))
-                            .addAll(lua.getDeps(pathResolver))
-                            .addAll(packager.getDeps(pathResolver))
-                            .build()),
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(pathResolver.filterBuildRuleInputs(starter))
+                        .addAll(components.getDeps(pathResolver))
+                        .addAll(lua.getDeps(pathResolver))
+                        .addAll(packager.getDeps(pathResolver))
+                        .build(),
+                    ImmutableSortedSet.<BuildRule>of()),
                 pathResolver,
                 packager,
                 ImmutableList.<String>of(),
@@ -799,7 +796,7 @@ public class LuaBinaryDescription implements
             args.nativeStarterLibrary.or(luaConfig.getNativeStarterLibrary()),
             args.mainModule,
             args.packageStyle.or(luaConfig.getPackageStyle()),
-            params.getDeclaredDeps().get());
+            params.getDeclaredDeps());
     Tool binary =
         getBinary(
             params,

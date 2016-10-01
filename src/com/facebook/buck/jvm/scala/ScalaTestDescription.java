@@ -19,8 +19,8 @@ package com.facebook.buck.jvm.scala;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.java.CalculateAbi;
-import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
@@ -44,8 +44,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -90,24 +88,18 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
   @Override
   public <A extends Arg> JavaTest createBuildRule(
       TargetGraph targetGraph,
-      final BuildRuleParams rawParams,
-      final BuildRuleResolver resolver,
+      BuildRuleParams rawParams,
+      BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     final BuildRule scalaLibrary = resolver.getRule(config.getScalaLibraryTarget());
     BuildRuleParams params = rawParams.copyWithDeps(
-        new Supplier<ImmutableSortedSet<BuildRule>>() {
-          @Override
-          public ImmutableSortedSet<BuildRule> get() {
-            return ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(rawParams.getDeclaredDeps().get())
-                .add(scalaLibrary)
-                .build();
-          }
-        },
-        rawParams.getExtraDeps()
-    );
+        ImmutableSortedSet.<BuildRule>naturalOrder()
+            .addAll(rawParams.getDeclaredDeps())
+            .add(scalaLibrary)
+            .build(),
+        rawParams.getExtraDeps());
 
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
@@ -130,7 +122,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                     Iterables.concat(
                         BuildRules.getExportedRules(
                             Iterables.concat(
-                                params.getDeclaredDeps().get(),
+                                params.getDeclaredDeps(),
                                 resolver.getAllRules(args.providedDeps.get()))),
                         scalac.getDeps(pathResolver)))
                     .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR),
@@ -165,8 +157,8 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
         resolver.addToIndex(
             new JavaTest(
                 params.copyWithDeps(
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(testsLibrary)),
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                    ImmutableSortedSet.<BuildRule>of(testsLibrary),
+                    ImmutableSortedSet.<BuildRule>of()),
                 pathResolver,
                 testsLibrary,
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),

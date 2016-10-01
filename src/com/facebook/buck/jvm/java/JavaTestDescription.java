@@ -42,7 +42,6 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -116,19 +115,16 @@ public class JavaTestDescription implements
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
     BuildRuleParams testsLibraryParams = params.copyWithDeps(
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(params.getDeclaredDeps().get())
-                    .addAll(BuildRules.getExportedRules(
-                        Iterables.concat(
-                            params.getDeclaredDeps().get(),
-                            resolver.getAllRules(args.providedDeps.get()))))
-                    .addAll(pathResolver.filterBuildRuleInputs(
-                        javacOptions.getInputs(pathResolver)))
-                    .build()
-            ),
-            params.getExtraDeps()
-        )
+        ImmutableSortedSet.<BuildRule>naturalOrder()
+            .addAll(params.getDeclaredDeps())
+            .addAll(BuildRules.getExportedRules(
+                Iterables.concat(
+                    params.getDeclaredDeps(),
+                    resolver.getAllRules(args.providedDeps.get()))))
+            .addAll(pathResolver.filterBuildRuleInputs(
+                javacOptions.getInputs(pathResolver)))
+            .build(),
+        params.getExtraDeps())
         .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     JavaLibrary testsLibrary =
@@ -162,8 +158,8 @@ public class JavaTestDescription implements
       resolver.addToIndex(
           new JavaTest(
               params.copyWithDeps(
-                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(testsLibrary)),
-                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                  ImmutableSortedSet.<BuildRule>of(testsLibrary),
+                  ImmutableSortedSet.<BuildRule>of()),
               pathResolver,
               testsLibrary,
               /* additionalClasspathEntries */ ImmutableSet.<Path>of(),

@@ -61,7 +61,6 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -231,7 +230,7 @@ public class CxxPythonExtensionDescription implements
     ImmutableList.Builder<BuildRule> rules = ImmutableList.builder();
 
     // Add declared deps.
-    rules.addAll(params.getDeclaredDeps().get());
+    rules.addAll(params.getDeclaredDeps());
 
     // Add platform specific deps.
     rules.addAll(
@@ -311,14 +310,13 @@ public class CxxPythonExtensionDescription implements
       Preconditions.checkState(type.get().getValue() == Type.EXTENSION);
       return createExtensionBuildRule(
           params.copyWithDeps(
-              Suppliers.ofInstance(
-                  ImmutableSortedSet.copyOf(
-                      getPlatformDeps(
-                          params,
-                          ruleResolver,
-                          pythonPlatform.get().getValue(),
-                          args))),
-              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+              ImmutableSortedSet.copyOf(
+                  getPlatformDeps(
+                      params,
+                      ruleResolver,
+                      pythonPlatform.get().getValue(),
+                      args)),
+              ImmutableSortedSet.<BuildRule>of()),
           ruleResolver,
           pythonPlatform.get().getValue(),
           platform.get().getValue(),
@@ -395,10 +393,9 @@ public class CxxPythonExtensionDescription implements
                             params.getBuildTarget().withAppendedFlavors(
                                 pythonPlatform.getFlavor(),
                                 CxxDescriptionEnhancer.SHARED_FLAVOR),
-                            Suppliers.ofInstance(
-                                ImmutableSortedSet.copyOf(
-                                    getPlatformDeps(params, ruleResolver, pythonPlatform, args))),
-                            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                            ImmutableSortedSet.copyOf(
+                                getPlatformDeps(params, ruleResolver, pythonPlatform, args)),
+                            ImmutableSortedSet.<BuildRule>of()),
                         ruleResolver,
                         pathResolver,
                         cxxPlatform,

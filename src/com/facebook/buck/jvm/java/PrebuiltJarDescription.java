@@ -39,7 +39,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -91,8 +90,8 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
         prebuiltJarBuildTarget, JavaLibrary.GWT_MODULE_FLAVOR);
     BuildRuleParams gwtParams = params.copyWithChanges(
         flavoredBuildTarget,
-        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(prebuilt)),
-        /* inferredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+        /* declaredDeps */ ImmutableSortedSet.of(prebuilt),
+        /* inferredDeps */ ImmutableSortedSet.<BuildRule>of());
     BuildRule gwtModule = createGwtModule(gwtParams, pathResolver, args);
     resolver.addToIndex(gwtModule);
 

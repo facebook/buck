@@ -43,7 +43,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -111,16 +110,15 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         args.cmdExe.transform(macroArgFunction);
     return createBuildRule(
         params.copyWithExtraDeps(
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(pathResolver.filterBuildRuleInputs(args.srcs.get()))
-                    // Attach any extra dependencies found from macro expansion.
-                    .addAll(
-                        FluentIterable
-                            .from(Optional.presentInstances(ImmutableList.of(cmd, bash, cmdExe)))
-                            .transformAndConcat(
-                                com.facebook.buck.rules.args.Arg.getDepsFunction(pathResolver)))
-                    .build())),
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(pathResolver.filterBuildRuleInputs(args.srcs.get()))
+                // Attach any extra dependencies found from macro expansion.
+                .addAll(
+                    FluentIterable
+                        .from(Optional.presentInstances(ImmutableList.of(cmd, bash, cmdExe)))
+                        .transformAndConcat(
+                            com.facebook.buck.rules.args.Arg.getDepsFunction(pathResolver)))
+                .build()),
         resolver,
         args,
         cmd,

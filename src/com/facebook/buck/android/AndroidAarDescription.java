@@ -36,7 +36,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -106,7 +105,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         originalBuildRuleParams.getBuildTarget().checkUnflavored();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     ImmutableList.Builder<BuildRule> aarExtraDepsBuilder = ImmutableList.<BuildRule>builder()
-        .addAll(originalBuildRuleParams.getExtraDeps().get());
+        .addAll(originalBuildRuleParams.getExtraDeps());
 
     /* android_manifest */
     AndroidManifestDescription.Arg androidManifestArgs =
@@ -142,14 +141,14 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     AndroidPackageableCollection packageableCollection = collector.build();
 
     ImmutableSortedSet<BuildRule> androidResourceDeclaredDeps =
-        AndroidResourceHelper.androidResOnly(originalBuildRuleParams.getDeclaredDeps().get());
+        AndroidResourceHelper.androidResOnly(originalBuildRuleParams.getDeclaredDeps());
     ImmutableSortedSet<BuildRule> androidResourceExtraDeps =
-        AndroidResourceHelper.androidResOnly(originalBuildRuleParams.getExtraDeps().get());
+        AndroidResourceHelper.androidResOnly(originalBuildRuleParams.getExtraDeps());
 
     BuildRuleParams assembleAssetsParams = originalBuildRuleParams.copyWithChanges(
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ASSEMBLE_ASSETS_FLAVOR),
-        Suppliers.ofInstance(androidResourceDeclaredDeps),
-        Suppliers.ofInstance(androidResourceExtraDeps));
+        androidResourceDeclaredDeps,
+        androidResourceExtraDeps);
     ImmutableCollection<SourcePath> assetsDirectories =
         packageableCollection.getAssetsDirectories();
     AssembleDirectories assembleAssetsDirectories = new AssembleDirectories(
@@ -160,8 +159,8 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
 
     BuildRuleParams assembleResourceParams = originalBuildRuleParams.copyWithChanges(
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ASSEMBLE_RESOURCE_FLAVOR),
-        Suppliers.ofInstance(androidResourceDeclaredDeps),
-        Suppliers.ofInstance(androidResourceExtraDeps));
+        androidResourceDeclaredDeps,
+        androidResourceExtraDeps);
     ImmutableCollection<SourcePath> resDirectories =
         packageableCollection.getResourceDetails().getResourceDirectories();
     MergeAndroidResourceSources assembleResourceDirectories = new MergeAndroidResourceSources(
@@ -173,12 +172,11 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     /* android_resource */
     BuildRuleParams androidResourceParams = originalBuildRuleParams.copyWithChanges(
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ANDROID_RESOURCE_FLAVOR),
-        Suppliers.ofInstance(
-            ImmutableSortedSet.<BuildRule>of(
-                manifest,
-                assembleAssetsDirectories,
-                assembleResourceDirectories)),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+        ImmutableSortedSet.<BuildRule>of(
+            manifest,
+            assembleAssetsDirectories,
+            assembleResourceDirectories),
+        ImmutableSortedSet.<BuildRule>of());
 
     AndroidResource androidResource = new AndroidResource(
         androidResourceParams,
@@ -186,7 +184,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         /* deps */ ImmutableSortedSet.<BuildRule>naturalOrder()
         .add(assembleAssetsDirectories)
         .add(assembleResourceDirectories)
-        .addAll(originalBuildRuleParams.getDeclaredDeps().get())
+        .addAll(originalBuildRuleParams.getDeclaredDeps())
         .build(),
         new BuildTargetSourcePath(assembleResourceDirectories.getBuildTarget()),
         /* resSrcs */ ImmutableSortedSet.<SourcePath>of(),
@@ -224,7 +222,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
           }
         });
     BuildRuleParams androidAarParams = originalBuildRuleParams.copyWithExtraDeps(
-        Suppliers.ofInstance(ImmutableSortedSet.copyOf(aarExtraDepsBuilder.build())));
+        ImmutableSortedSet.copyOf(aarExtraDepsBuilder.build()));
     return new AndroidAar(
         androidAarParams,
         pathResolver,

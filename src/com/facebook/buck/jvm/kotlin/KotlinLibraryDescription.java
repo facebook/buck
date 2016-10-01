@@ -81,7 +81,7 @@ public class KotlinLibraryDescription implements Description<KotlinLibraryDescri
                 params.appendExtraDeps(
                     BuildRules.getExportedRules(
                         Iterables.concat(
-                            params.getDeclaredDeps().get(),
+                            params.getDeclaredDeps(),
                             exportedDeps,
                             resolver.getAllRules(args.providedDeps.get())))),
                 pathResolver,

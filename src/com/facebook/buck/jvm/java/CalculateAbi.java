@@ -32,7 +32,6 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -63,9 +62,8 @@ public class CalculateAbi extends AbstractBuildRule implements SupportsInputBase
     return new CalculateAbi(
         libraryParams.copyWithChanges(
             target,
-            Suppliers.ofInstance(
-                ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(library))),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(library)),
+            ImmutableSortedSet.<BuildRule>of()),
         pathResolver,
         library);
   }

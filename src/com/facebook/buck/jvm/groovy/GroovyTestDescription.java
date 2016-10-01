@@ -18,8 +18,8 @@ package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.java.CalculateAbi;
-import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
@@ -41,7 +41,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -110,7 +109,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                     Iterables.concat(
                         BuildRules.getExportedRules(
                             Iterables.concat(
-                                params.getDeclaredDeps().get(),
+                                params.getDeclaredDeps(),
                                 resolver.getAllRules(args.providedDeps.get()))),
                         pathResolver.filterBuildRuleInputs(
                             defaultJavacOptions.getInputs(pathResolver))))
@@ -141,8 +140,8 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
         resolver.addToIndex(
             new JavaTest(
                 params.copyWithDeps(
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(testsLibrary)),
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                    ImmutableSortedSet.<BuildRule>of(testsLibrary),
+                    ImmutableSortedSet.<BuildRule>of()),
                 pathResolver,
                 testsLibrary,
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),

@@ -35,7 +35,6 @@ import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -131,12 +130,11 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
     BuildRuleParams archiveParams =
         baseParams.copyWithChanges(
             target,
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(resolver.filterBuildRuleInputs(inputs))
-                    .addAll(archiver.getDeps(resolver))
-                    .build()));
+            ImmutableSortedSet.<BuildRule>of(),
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(resolver.filterBuildRuleInputs(inputs))
+                .addAll(archiver.getDeps(resolver))
+                .build());
 
     return new Archive(
         archiveParams,

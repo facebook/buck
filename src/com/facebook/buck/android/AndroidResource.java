@@ -34,18 +34,17 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RecordFileSha1Step;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -126,7 +125,7 @@ public class AndroidResource extends AbstractBuildRule
   private final SourcePath manifestFile;
 
   @AddToRuleKey
-  private final Supplier<ImmutableSortedSet<? extends  SourcePath>> symbolsOfDeps;
+  private final ImmutableSortedSet<? extends  SourcePath> symbolsOfDeps;
 
   @AddToRuleKey
   private final boolean hasWhitelistedStrings;
@@ -173,12 +172,12 @@ public class AndroidResource extends AbstractBuildRule
       ImmutableSortedSet<? extends SourcePath> assetsSrcs,
       Optional<SourcePath> additionalAssetsKey,
       @Nullable SourcePath manifestFile,
-      Supplier<ImmutableSortedSet<? extends SourcePath>> symbolFilesFromDeps,
+      ImmutableSortedSet<? extends SourcePath> symbolFilesFromDeps,
       boolean hasWhitelistedStrings,
       boolean resourceUnion) {
     super(
         buildRuleParams.appendExtraDeps(
-            Suppliers.compose(resolver.filterBuildRuleInputsFunction(), symbolFilesFromDeps)),
+            resolver.filterBuildRuleInputs(symbolFilesFromDeps)),
         resolver);
     if (res != null && rDotJavaPackageArgument == null && manifestFile == null) {
       throw new HumanReadableException(
@@ -290,16 +289,11 @@ public class AndroidResource extends AbstractBuildRule
         assetsSrcs,
         additionalAssetsKey,
         manifestFile,
-        new Supplier<ImmutableSortedSet<? extends SourcePath>>() {
-          @Override
-          public ImmutableSortedSet<? extends SourcePath> get() {
-            return FluentIterable.from(buildRuleParams.getDeps())
-                .filter(HasAndroidResourceDeps.class)
-                .filter(NON_EMPTY_RESOURCE)
-                .transform(GET_RES_SYMBOLS_TXT)
-                .toSortedSet(Ordering.natural());
-          }
-        },
+        FluentIterable.from(buildRuleParams.getDeps())
+            .filter(HasAndroidResourceDeps.class)
+            .filter(NON_EMPTY_RESOURCE)
+            .transform(GET_RES_SYMBOLS_TXT)
+            .toSortedSet(Ordering.natural()),
         hasWhitelistedStrings,
         resourceUnion);
   }
@@ -359,7 +353,7 @@ public class AndroidResource extends AbstractBuildRule
     }
 
     ImmutableSet<Path> pathsToSymbolsOfDeps =
-        FluentIterable.from(symbolsOfDeps.get())
+        FluentIterable.from(symbolsOfDeps)
             .transform(getResolver().getAbsolutePathFunction())
             .toSet();
 

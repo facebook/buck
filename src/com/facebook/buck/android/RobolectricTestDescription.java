@@ -45,7 +45,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -104,8 +103,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
-        params.copyWithExtraDeps(
-            Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps.get()))),
+        params.copyWithExtraDeps(resolver.getAllRules(args.exportedDeps.get())),
         javacOptions,
         DependencyMode.TRANSITIVE,
         /* forceFinalResourceIds */ true,
@@ -119,10 +117,10 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
     if (dummyRDotJava.isPresent()) {
       additionalClasspathEntries = ImmutableSet.of(dummyRDotJava.get().getPathToOutput());
       ImmutableSortedSet<BuildRule> newExtraDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
-          .addAll(params.getExtraDeps().get())
+          .addAll(params.getExtraDeps())
           .add(dummyRDotJava.get())
           .build();
-      params = params.copyWithExtraDeps(Suppliers.ofInstance(newExtraDeps));
+      params = params.copyWithExtraDeps(newExtraDeps);
     }
 
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
@@ -139,19 +137,16 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
     // Rewrite dependencies on tests to actually depend on the code which backs the test.
     BuildRuleParams testsLibraryParams = params.copyWithDeps(
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(params.getDeclaredDeps().get())
-                    .addAll(BuildRules.getExportedRules(
-                        Iterables.concat(
-                            params.getDeclaredDeps().get(),
-                            resolver.getAllRules(args.providedDeps.get()))))
-                    .addAll(pathResolver.filterBuildRuleInputs(
-                        javacOptions.getInputs(pathResolver)))
-                    .build()
-            ),
-            params.getExtraDeps()
-        )
+        ImmutableSortedSet.<BuildRule>naturalOrder()
+            .addAll(params.getDeclaredDeps())
+            .addAll(BuildRules.getExportedRules(
+                Iterables.concat(
+                    params.getDeclaredDeps(),
+                    resolver.getAllRules(args.providedDeps.get()))))
+            .addAll(pathResolver.filterBuildRuleInputs(
+                javacOptions.getInputs(pathResolver)))
+            .build(),
+        params.getExtraDeps())
         .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     JavaLibrary testsLibrary =
@@ -185,8 +180,8 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         resolver.addToIndex(
             new RobolectricTest(
                 params.copyWithDeps(
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(testsLibrary)),
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                    ImmutableSortedSet.<BuildRule>of(testsLibrary),
+                    ImmutableSortedSet.<BuildRule>of()),
                 pathResolver,
                 testsLibrary,
                 additionalClasspathEntries,

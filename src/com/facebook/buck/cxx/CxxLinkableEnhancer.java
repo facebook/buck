@@ -36,8 +36,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -68,14 +66,14 @@ public class CxxLinkableEnhancer {
       CxxPlatform cxxPlatform,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      final SourcePathResolver resolver,
+      SourcePathResolver resolver,
       BuildTarget target,
       Path output,
       ImmutableList<Arg> args,
       Linker.LinkableDepType depType,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType) {
 
-    final Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
+    Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
 
     // Build up the arguments to pass to the linker.
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
@@ -100,7 +98,7 @@ public class CxxLinkableEnhancer {
     }
     argsBuilder.addAll(StringArg.from(cxxPlatform.getRuntimeLdflags().get(runtimeDepType)));
 
-    final ImmutableList<Arg> allArgs = argsBuilder.build();
+    ImmutableList<Arg> allArgs = argsBuilder.build();
 
     // Build the C/C++ link step.
     return new CxxLink(
@@ -109,16 +107,11 @@ public class CxxLinkableEnhancer {
         // dependencies.
         params.copyWithChanges(
             target,
-            new Supplier<ImmutableSortedSet<BuildRule>>() {
-              @Override
-              public ImmutableSortedSet<BuildRule> get() {
-                return FluentIterable.from(allArgs)
-                    .transformAndConcat(Arg.getDepsFunction(resolver))
-                    .append(linker.getDeps(resolver))
-                    .toSortedSet(Ordering.natural());
-              }
-            },
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            FluentIterable.from(allArgs)
+                .transformAndConcat(Arg.getDepsFunction(resolver))
+                .append(linker.getDeps(resolver))
+                .toSortedSet(Ordering.natural()),
+            ImmutableSortedSet.<BuildRule>of()),
         resolver,
         linker,
         output,

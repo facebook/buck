@@ -36,8 +36,6 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -102,21 +100,15 @@ public class HaskellPackageRule extends AbstractBuildRule {
     return new HaskellPackageRule(
         baseParams.copyWithChanges(
             target,
-            Suppliers.memoize(
-                new Supplier<ImmutableSortedSet<BuildRule>>() {
-                  @Override
-                  public ImmutableSortedSet<BuildRule> get() {
-                    return ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(ghcPkg.getDeps(resolver))
-                        .addAll(
-                            FluentIterable.from(depPackages.values())
-                                .transformAndConcat(HaskellPackage.getDepsFunction(resolver)))
-                        .addAll(
-                            resolver.filterBuildRuleInputs(Iterables.concat(libraries, interfaces)))
-                        .build();
-                  }
-                }),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(ghcPkg.getDeps(resolver))
+                .addAll(
+                    FluentIterable.from(depPackages.values())
+                        .transformAndConcat(HaskellPackage.getDepsFunction(resolver)))
+                .addAll(
+                    resolver.filterBuildRuleInputs(Iterables.concat(libraries, interfaces)))
+                .build(),
+            ImmutableSortedSet.<BuildRule>of()),
         resolver,
         ghcPkg,
         packageInfo,

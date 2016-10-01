@@ -28,7 +28,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -54,13 +53,12 @@ public class ReactNativeLibraryGraphEnhancer {
     return new ReactNativeBundle(
         baseParams.copyWithChanges(
             target,
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(pathResolver.filterBuildRuleInputs(args.entryPath))
-                    .addAll(pathResolver.filterBuildRuleInputs(args.srcs.get()))
-                    .addAll(jsPackager.getDeps(pathResolver))
-                    .build()),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(pathResolver.filterBuildRuleInputs(args.entryPath))
+                .addAll(pathResolver.filterBuildRuleInputs(args.srcs.get()))
+                .addAll(jsPackager.getDeps(pathResolver))
+                .build(),
+            ImmutableSortedSet.<BuildRule>of()),
         pathResolver,
         args.entryPath,
         args.srcs.get(),
@@ -99,8 +97,7 @@ public class ReactNativeLibraryGraphEnhancer {
               BuildTarget.builder(originalBuildTarget)
                   .addFlavors(REACT_NATIVE_ANDROID_RES_FLAVOR)
                   .build())
-              .copyWithExtraDeps(Suppliers.ofInstance(
-                      ImmutableSortedSet.<BuildRule>of(bundle)));
+              .copyWithExtraDeps(ImmutableSortedSet.<BuildRule>of(bundle));
 
       SourcePath resources = new BuildTargetSourcePath(
           bundle.getBuildTarget(),
