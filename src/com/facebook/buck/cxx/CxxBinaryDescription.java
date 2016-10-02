@@ -88,7 +88,8 @@ public class CxxBinaryDescription implements
             new SourcePathResolver(resolver),
             Optional.of(cxxPlatform),
             args),
-        HeaderVisibility.PRIVATE);
+        HeaderVisibility.PRIVATE,
+        true);
   }
 
   @Override

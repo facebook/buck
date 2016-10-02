@@ -108,7 +108,8 @@ public class CxxDescriptionEnhancer {
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       ImmutableMap<Path, SourcePath> headers,
-      HeaderVisibility headerVisibility) {
+      HeaderVisibility headerVisibility,
+      boolean shouldCreateHeadersSymlinks) {
 
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
@@ -124,14 +125,19 @@ public class CxxDescriptionEnhancer {
     boolean useHeaderMap = (
         cxxPlatform.getCpp().resolve(resolver).supportsHeaderMaps() &&
         cxxPlatform.getCxxpp().resolve(resolver).supportsHeaderMaps());
+    CxxPreprocessables.HeaderMode mode = !useHeaderMap
+      ? CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY
+      : (shouldCreateHeadersSymlinks
+        ? CxxPreprocessables.HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP
+        : CxxPreprocessables.HeaderMode.HEADER_MAP_ONLY);
 
     return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
         pathResolver,
         headerSymlinkTreeTarget,
         params,
         headerSymlinkTreeRoot,
-        useHeaderMap,
-        headers);
+        headers,
+        mode);
   }
 
   public static SymlinkTree createSandboxSymlinkTree(
@@ -167,7 +173,8 @@ public class CxxDescriptionEnhancer {
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       ImmutableMap<Path, SourcePath> headers,
-      HeaderVisibility headerVisibility) {
+      HeaderVisibility headerVisibility,
+      boolean shouldCreateHeadersSymlinks) {
     BuildRuleParams untypedParams = CxxLibraryDescription.getUntypedParams(params);
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
@@ -188,7 +195,8 @@ public class CxxDescriptionEnhancer {
         pathResolver,
         cxxPlatform,
         headers,
-        headerVisibility);
+        headerVisibility,
+        shouldCreateHeadersSymlinks);
 
     ruleResolver.addToIndex(symlinkTree);
 
@@ -663,7 +671,8 @@ public class CxxDescriptionEnhancer {
         args.linkerFlags,
         args.platformLinkerFlags,
         args.cxxRuntimeType,
-        args.includeDirs);
+        args.includeDirs,
+        Optional.empty());
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinary(
@@ -688,7 +697,8 @@ public class CxxDescriptionEnhancer {
       ImmutableList<String> linkerFlags,
       PatternMatchedCollection<ImmutableList<String>> platformLinkerFlags,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
-      ImmutableList<String> includeDirs)
+      ImmutableList<String> includeDirs,
+      Optional<Boolean> xcodePrivateHeadersSymlinks)
       throws NoSuchBuildTargetException {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
 //    TODO(beefon): should be:
@@ -706,13 +716,15 @@ public class CxxDescriptionEnhancer {
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
+    boolean shouldCreatePrivateHeadersSymlinks = xcodePrivateHeadersSymlinks.orElse(true);
     HeaderSymlinkTree headerSymlinkTree = requireHeaderSymlinkTree(
         params,
         resolver,
         sourcePathResolver,
         cxxPlatform,
         headers,
-        HeaderVisibility.PRIVATE);
+        HeaderVisibility.PRIVATE,
+        shouldCreatePrivateHeadersSymlinks);
     Optional<SymlinkTree> sandboxTree = Optional.empty();
     if (cxxBuckConfig.sandboxSources()) {
       sandboxTree =
@@ -973,7 +985,8 @@ public class CxxDescriptionEnhancer {
                 pathResolver,
                 Optional.of(cxxPlatform),
                 arg),
-            HeaderVisibility.PRIVATE));
+            HeaderVisibility.PRIVATE,
+            true));
 
     if (arg instanceof CxxLibraryDescription.Arg) {
       CxxLibraryDescription.Arg libArg = (CxxLibraryDescription.Arg) arg;
@@ -988,7 +1001,8 @@ public class CxxDescriptionEnhancer {
                 pathResolver,
                 Optional.of(cxxPlatform),
                 libArg),
-            HeaderVisibility.PUBLIC));
+            HeaderVisibility.PUBLIC,
+            true));
     }
 
     // Walk the transitive deps and add any exported headers present as
@@ -1124,6 +1138,8 @@ public class CxxDescriptionEnhancer {
       CxxConstructorArg args) throws NoSuchBuildTargetException {
     ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags;
     ImmutableMap<Path, SourcePath> exportedHeaders;
+    boolean shouldCreatePrivateHeadersSymlinks = true;
+    boolean shouldCreatePublicHeadersSymlinks = true;
     if (args instanceof CxxLibraryDescription.Arg) {
       CxxLibraryDescription.Arg hasExportedArgs = (CxxLibraryDescription.Arg) args;
       exportedPreprocessorFlags = CxxFlags.getLanguageFlags(
@@ -1136,6 +1152,8 @@ public class CxxDescriptionEnhancer {
           sourcePathResolver,
           Optional.of(cxxPlatform),
           hasExportedArgs);
+      shouldCreatePrivateHeadersSymlinks = hasExportedArgs.xcodePrivateHeadersSymlinks.orElse(true);
+      shouldCreatePublicHeadersSymlinks = hasExportedArgs.xcodePublicHeadersSymlinks.orElse(true);
     } else {
       exportedPreprocessorFlags = ImmutableMultimap.of();
       exportedHeaders = ImmutableMap.of();
@@ -1152,7 +1170,8 @@ public class CxxDescriptionEnhancer {
                 sourcePathResolver,
                 Optional.of(cxxPlatform),
                 args),
-            HeaderVisibility.PRIVATE);
+            HeaderVisibility.PRIVATE,
+            shouldCreatePrivateHeadersSymlinks);
 
     Optional<SymlinkTree> sandboxTree = Optional.empty();
     if (cxxBuckConfig.sandboxSources()) {
@@ -1181,7 +1200,8 @@ public class CxxDescriptionEnhancer {
                 cxxPlatform,
                 exportedPreprocessorFlags,
                 exportedHeaders,
-                args.frameworks),
+                args.frameworks,
+                shouldCreatePublicHeadersSymlinks),
             args.includeDirs,
             sandboxTree);
 

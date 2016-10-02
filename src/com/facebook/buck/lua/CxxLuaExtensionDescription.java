@@ -138,7 +138,8 @@ public class CxxLuaExtensionDescription implements
             new SourcePathResolver(ruleResolver),
             cxxPlatform,
             headers,
-            HeaderVisibility.PRIVATE);
+            HeaderVisibility.PRIVATE,
+            true);
     Optional<SymlinkTree> sandboxTree = Optional.empty();
     if (cxxBuckConfig.sandboxSources()) {
       sandboxTree =

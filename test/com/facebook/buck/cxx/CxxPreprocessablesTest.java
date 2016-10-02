@@ -248,8 +248,8 @@ public class CxxPreprocessablesTest {
         target,
         params,
         root,
-        /* useHeaderMap */ false,
-        links);
+        links,
+        CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY);
 
     // Verify that the symlink tree has no deps.  This is by design, since setting symlinks can
     // be done completely independently from building the source that the links point to and

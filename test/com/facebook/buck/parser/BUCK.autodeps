@@ -36,10 +36,10 @@
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/event:testutil",
       "//test/com/facebook/buck/rules:testutil",
+      "//test/com/facebook/buck/testutil/integration:util",
       "//third-party/java/guava:guava"
     ],
     "exported_deps" : [
-      "//test/com/facebook/buck/testutil/integration:util",
       "//third-party/java/caliper:caliper",
       "//third-party/java/junit:junit"
     ]

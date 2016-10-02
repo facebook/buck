@@ -144,7 +144,8 @@ public class CxxLibraryDescription implements
       CxxPlatform cxxPlatform,
       ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
       ImmutableMap<Path, SourcePath> exportedHeaders,
-      ImmutableSet<FrameworkPath> frameworks) throws NoSuchBuildTargetException {
+      ImmutableSet<FrameworkPath> frameworks,
+      boolean shouldCreatePublicHeadersSymlinks) throws NoSuchBuildTargetException {
 
     // Check if there is a target node representative for the library in the action graph and,
     // if so, grab the cached transitive C/C++ preprocessor input from that.  We===
@@ -171,7 +172,8 @@ public class CxxLibraryDescription implements
             pathResolver,
             cxxPlatform,
             exportedHeaders,
-            HeaderVisibility.PUBLIC);
+            HeaderVisibility.PUBLIC,
+            shouldCreatePublicHeadersSymlinks);
     Map<BuildTarget, CxxPreprocessorInput> input = Maps.newLinkedHashMap();
 
     input.put(
@@ -376,6 +378,7 @@ public class CxxLibraryDescription implements
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       A args) {
+    boolean shouldCreatePrivateHeaderSymlinks = args.xcodePrivateHeadersSymlinks.orElse(true);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
         resolver,
@@ -386,7 +389,8 @@ public class CxxLibraryDescription implements
             new SourcePathResolver(resolver),
             Optional.of(cxxPlatform),
             args),
-        HeaderVisibility.PRIVATE);
+        HeaderVisibility.PRIVATE,
+        shouldCreatePrivateHeaderSymlinks);
   }
 
   /**
@@ -397,6 +401,7 @@ public class CxxLibraryDescription implements
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       A args) {
+    boolean shouldCreatePublicHeaderSymlinks = args.xcodePublicHeadersSymlinks.orElse(true);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
         resolver,
@@ -407,7 +412,8 @@ public class CxxLibraryDescription implements
             new SourcePathResolver(resolver),
             Optional.of(cxxPlatform),
             args),
-        HeaderVisibility.PUBLIC);
+        HeaderVisibility.PUBLIC,
+        shouldCreatePublicHeaderSymlinks);
   }
 
   /**

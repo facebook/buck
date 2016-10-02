@@ -207,16 +207,16 @@ public class CxxCompilationDatabaseTest {
         testSourcePathResolver,
         CxxPlatformUtils.DEFAULT_PLATFORM,
         ImmutableMap.of(),
-        HeaderVisibility.PRIVATE
-    );
+        HeaderVisibility.PRIVATE,
+        true);
     HeaderSymlinkTree exportedSymlinkTree = CxxDescriptionEnhancer.createHeaderSymlinkTree(
         testBuildRuleParams,
         testBuildRuleResolver,
         testSourcePathResolver,
         CxxPlatformUtils.DEFAULT_PLATFORM,
         ImmutableMap.of(),
-        HeaderVisibility.PUBLIC
-    );
+        HeaderVisibility.PUBLIC,
+        true);
     CxxCompilationDatabase compilationDatabase = CxxCompilationDatabase.createCompilationDatabase(
         testBuildRuleParams,
         testSourcePathResolver,

@@ -317,6 +317,8 @@ public class AppleDescriptions {
     output.supportedPlatformsRegex = arg.supportedPlatformsRegex;
     output.canBeAsset = arg.canBeAsset;
     output.exportedDeps = arg.exportedDeps;
+    output.xcodePublicHeadersSymlinks = arg.xcodePublicHeadersSymlinks;
+    output.xcodePrivateHeadersSymlinks = arg.xcodePrivateHeadersSymlinks;
   }
 
   public static Optional<AppleAssetCatalog> createBuildRuleForTransitiveAssetCatalogDependencies(

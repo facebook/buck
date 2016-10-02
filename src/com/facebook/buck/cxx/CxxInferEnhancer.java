@@ -350,6 +350,7 @@ public final class CxxInferEnhancer {
       HeaderSymlinkTree headerSymlinkTree,
       ImmutableList<String> includeDirs,
       Optional<SymlinkTree> sandboxTree) throws NoSuchBuildTargetException {
+    boolean shouldCreatePublicHeadersSymlinks = args.xcodePublicHeadersSymlinks.orElse(true);
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
         params,
         cxxPlatform,
@@ -375,7 +376,8 @@ public final class CxxInferEnhancer {
                 pathResolver,
                 Optional.of(cxxPlatform),
                 args),
-            args.frameworks),
+            args.frameworks,
+            shouldCreatePublicHeadersSymlinks),
         includeDirs,
         sandboxTree);
   }
@@ -402,13 +404,20 @@ public final class CxxInferEnhancer {
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
+
+    boolean shouldCreateHeadersSymlinks = true;
+    if (args instanceof CxxLibraryDescription.Arg) {
+      shouldCreateHeadersSymlinks =
+          ((CxxLibraryDescription.Arg) args).xcodePrivateHeadersSymlinks.orElse(true);
+    }
     HeaderSymlinkTree headerSymlinkTree = CxxDescriptionEnhancer.requireHeaderSymlinkTree(
         params,
         resolver,
         pathResolver,
         cxxPlatform,
         headers,
-        HeaderVisibility.PRIVATE);
+        HeaderVisibility.PRIVATE,
+        shouldCreateHeadersSymlinks);
     Optional<SymlinkTree> sandboxTree = Optional.empty();
     if (cxxBuckConfig.sandboxSources()) {
       sandboxTree =

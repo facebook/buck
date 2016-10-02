@@ -171,7 +171,8 @@ public class HalideLibraryDescription
             linkerFlags,
             platformLinkerFlags,
             cxxRuntimeType,
-            includeDirs);
+            includeDirs,
+            Optional.empty());
 
     params = CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle);
     params = LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
@@ -290,7 +291,8 @@ public class HalideLibraryDescription
           new SourcePathResolver(resolver),
           cxxPlatform,
           headersBuilder.build(),
-          HeaderVisibility.PUBLIC);
+          HeaderVisibility.PUBLIC,
+          true);
     } else if (flavors.contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
       CxxPlatform hostCxxPlatform = cxxPlatforms.getValue(CxxPlatforms.getHostFlavor());
       return CxxDescriptionEnhancer.createSandboxTreeBuildRule(

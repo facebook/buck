@@ -52,6 +52,22 @@ public class CxxPreprocessables {
 
   private CxxPreprocessables() {}
 
+  public enum HeaderMode {
+    /**
+     * Creates the tree of symbolic links of headers.
+     */
+    SYMLINK_TREE_ONLY,
+    /**
+     * Creates the header map that references the headers directly in the source tree.
+     */
+    HEADER_MAP_ONLY,
+    /**
+     * Creates the tree of symbolic links of headers and creates the header map that
+     * references the symbolic links to the headers.
+     */
+    SYMLINK_TREE_WITH_HEADER_MAP,
+  }
+
   public enum IncludeType {
 
     /**
@@ -152,8 +168,8 @@ public class CxxPreprocessables {
       BuildTarget target,
       BuildRuleParams params,
       Path root,
-      boolean useHeaderMap,
-      ImmutableMap<Path, SourcePath> links) {
+      ImmutableMap<Path, SourcePath> links,
+      HeaderMode headerMode) {
     // Symlink trees never need to depend on anything.
     BuildRuleParams paramsWithoutDeps =
         params.copyWithChanges(
@@ -161,18 +177,26 @@ public class CxxPreprocessables {
             Suppliers.ofInstance(ImmutableSortedSet.of()),
             Suppliers.ofInstance(ImmutableSortedSet.of()));
 
-    if (useHeaderMap) {
-      return new HeaderSymlinkTreeWithHeaderMap(
-          paramsWithoutDeps,
-          resolver,
-          root,
-          links);
-    } else {
-      return new HeaderSymlinkTree(
-          paramsWithoutDeps,
-          resolver,
-          root,
-          links);
+    switch (headerMode) {
+      case SYMLINK_TREE_WITH_HEADER_MAP:
+        return new HeaderSymlinkTreeWithHeaderMap(
+            paramsWithoutDeps,
+            resolver,
+            root,
+            links);
+      case HEADER_MAP_ONLY:
+        return new DirectHeaderMap(
+            paramsWithoutDeps,
+            resolver,
+            root,
+            links);
+      default:
+      case SYMLINK_TREE_ONLY:
+        return new HeaderSymlinkTree(
+            paramsWithoutDeps,
+            resolver,
+            root,
+            links);
     }
   }
 

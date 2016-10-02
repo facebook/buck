@@ -306,7 +306,8 @@ public class PrebuiltCxxLibraryDescription implements
         new SourcePathResolver(resolver),
         cxxPlatform,
         parseExportedHeaders(params, resolver, cxxPlatform, args),
-        HeaderVisibility.PUBLIC);
+        HeaderVisibility.PUBLIC,
+        true);
   }
 
   private static <A extends Arg> ImmutableMap<Path, SourcePath> parseExportedHeaders(

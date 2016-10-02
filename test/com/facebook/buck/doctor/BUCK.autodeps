@@ -4,6 +4,7 @@
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/doctor:doctor",
       "//src/com/facebook/buck/doctor/config:config",
+      "//src/com/facebook/buck/rage:config",
       "//src/com/facebook/buck/rage:rage",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:object_mapper",
