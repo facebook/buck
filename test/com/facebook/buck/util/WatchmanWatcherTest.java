@@ -38,6 +38,7 @@ import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanDiagnostic;
 import com.facebook.buck.io.WatchmanDiagnosticCache;
+import com.facebook.buck.io.WatchmanQuery;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.timing.FakeClock;
 import com.google.common.base.Optional;
@@ -66,7 +67,9 @@ import java.util.Set;
 @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
 public class WatchmanWatcherTest {
 
-  private static final List<Object> FAKE_QUERY = ImmutableList.<Object>of("fake-query");
+  private static final WatchmanQuery FAKE_QUERY =
+      WatchmanQuery.of("/fake/root", ImmutableMap.<String, Object>of());
+  private static final List<Object> FAKE_UUID_QUERY = FAKE_QUERY.toList("n:buckduuid");
 
   @After
   public void cleanUp() {
@@ -238,7 +241,7 @@ public class WatchmanWatcherTest {
         eventBus,
         new FakeWatchmanClient(
             0 /* queryElapsedTimeNanos */,
-            ImmutableMap.of(FAKE_QUERY, watchmanOutput)),
+            ImmutableMap.of(FAKE_UUID_QUERY, watchmanOutput)),
         -1 /* overflow */,
         10000 /* timeout */);
     watcher.postEvents(
@@ -262,7 +265,7 @@ public class WatchmanWatcherTest {
         eventBus,
         new FakeWatchmanClient(
             0 /* queryElapsedTimeNanos */,
-            ImmutableMap.of(FAKE_QUERY, ImmutableMap.<String, Object>of()),
+            ImmutableMap.of(FAKE_UUID_QUERY, ImmutableMap.<String, Object>of()),
             new IOException("oops")),
         200 /* overflow */,
         10000 /* timeout */);
@@ -293,7 +296,7 @@ public class WatchmanWatcherTest {
         eventBus,
         new FakeWatchmanClient(
             0 /* queryElapsedTimeNanos */,
-            ImmutableMap.of(FAKE_QUERY, ImmutableMap.<String, Object>of()),
+            ImmutableMap.of(FAKE_UUID_QUERY, ImmutableMap.<String, Object>of()),
             new InterruptedException(message)),
         200 /* overflow */,
         10000 /* timeout */);
@@ -451,7 +454,7 @@ public class WatchmanWatcherTest {
         bus,
         new FakeWatchmanClient(
             10000000000L /* queryElapsedTimeNanos */,
-            ImmutableMap.of(FAKE_QUERY, watchmanOutput)),
+            ImmutableMap.of(FAKE_UUID_QUERY, watchmanOutput)),
         200 /* overflow */,
         -1 /* timeout */);
     watcher.postEvents(
@@ -468,34 +471,30 @@ public class WatchmanWatcherTest {
 
   @Test
   public void watchmanQueryWithRepoRelativePrefix() {
-    List<Object> query = WatchmanWatcher.createQuery(
+    WatchmanQuery query = WatchmanWatcher.createQuery(
         "path/to/repo",
         Optional.of("project"),
-        "uuid",
         ImmutableSet.<PathOrGlobMatcher>of(),
         ImmutableSet.of(Watchman.Capability.DIRNAME));
 
     assertThat(
-        query,
+        query.toList(""),
         hasItem(hasEntry("relative_root", "project")));
   }
 
   @Test
   public void watchmanQueryWithExcludePathsAddsExpressionToQuery() {
-    List<Object> query = WatchmanWatcher.createQuery(
+    WatchmanQuery query = WatchmanWatcher.createQuery(
         "/path/to/repo",
         Optional.<String>absent(),
-        "uuid",
         ImmutableSet.<PathOrGlobMatcher>of(
             new PathOrGlobMatcher(Paths.get("foo")),
             new PathOrGlobMatcher(Paths.get("bar/baz"))),
         ImmutableSet.of(Watchman.Capability.DIRNAME));
     assertEquals(
-        ImmutableList.of(
-            "query",
+        WatchmanQuery.of(
             "/path/to/repo",
             ImmutableMap.of(
-                "since", "n:buckduuid",
                 "expression", ImmutableList.of(
                     "not",
                     ImmutableList.of(
@@ -512,20 +511,17 @@ public class WatchmanWatcherTest {
 
   @Test
   public void watchmanQueryWithExcludePathsAddsMatchExpressionToQueryIfDirnameNotAvailable() {
-    List<Object> query = WatchmanWatcher.createQuery(
+    WatchmanQuery query = WatchmanWatcher.createQuery(
         "/path/to/repo",
         Optional.<String>absent(),
-        "uuid",
         ImmutableSet.<PathOrGlobMatcher>of(
             new PathOrGlobMatcher(Paths.get("foo")),
             new PathOrGlobMatcher(Paths.get("bar/baz"))),
         ImmutableSet.<Watchman.Capability>of());
     assertEquals(
-        ImmutableList.of(
-            "query",
+        WatchmanQuery.of(
             "/path/to/repo",
             ImmutableMap.of(
-                "since", "n:buckduuid",
                 "expression", ImmutableList.of(
                     "not",
                     ImmutableList.of(
@@ -547,20 +543,17 @@ public class WatchmanWatcherTest {
   @Test
   public void watchmanQueryRelativizesExcludePaths() {
     String watchRoot = Paths.get("/path/to/repo").toAbsolutePath().toString();
-    List<Object> query = WatchmanWatcher.createQuery(
+    WatchmanQuery query = WatchmanWatcher.createQuery(
         watchRoot,
         Optional.<String>absent(),
-        "uuid",
         ImmutableSet.<PathOrGlobMatcher>of(
             new PathOrGlobMatcher(Paths.get("/path/to/repo/foo").toAbsolutePath()),
             new PathOrGlobMatcher(Paths.get("/path/to/repo/bar/baz").toAbsolutePath())),
         ImmutableSet.of(Watchman.Capability.DIRNAME));
     assertEquals(
-        ImmutableList.of(
-            "query",
+        WatchmanQuery.of(
             watchRoot,
             ImmutableMap.of(
-                "since", "n:buckduuid",
                 "expression", ImmutableList.of(
                     "not",
                     ImmutableList.of(
@@ -577,19 +570,16 @@ public class WatchmanWatcherTest {
 
   @Test
   public void watchmanQueryWithExcludeGlobsAddsExpressionToQuery() {
-    List<Object> query = WatchmanWatcher.createQuery(
+    WatchmanQuery query = WatchmanWatcher.createQuery(
         "/path/to/repo",
         Optional.<String>absent(),
-        "uuid",
         ImmutableSet.<PathOrGlobMatcher>of(
             new PathOrGlobMatcher("*.pbxproj")),
         ImmutableSet.of(Watchman.Capability.DIRNAME));
     assertEquals(
-        ImmutableList.of(
-            "query",
+        WatchmanQuery.of(
             "/path/to/repo",
             ImmutableMap.of(
-                "since", "n:buckduuid",
                 "expression", ImmutableList.of(
                     "not",
                     ImmutableList.of(
@@ -622,6 +612,7 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.FreshInstanceAction.NONE);
     verify(eventBus);
   }
+
   @Test
   public void whenWatchmanProducesAWarningThenConsoleEventGenerated()
       throws IOException, InterruptedException {
@@ -677,7 +668,7 @@ public class WatchmanWatcherTest {
         eventBus,
         new FakeWatchmanClient(
             0 /* queryElapsedTimeNanos */,
-            ImmutableMap.of(FAKE_QUERY, response)),
+            ImmutableMap.of(FAKE_UUID_QUERY, response)),
         200 /* overflow */,
         10000 /* timeout */);
   }
@@ -686,11 +677,25 @@ public class WatchmanWatcherTest {
                                         FakeWatchmanClient watchmanClient,
                                         int overflow,
                                         long timeoutMillis) {
+    return createWatcher(
+        eventBus,
+        watchmanClient,
+        overflow,
+        timeoutMillis,
+        "n:buckduuid" /* sinceCursor */);
+  }
+
+  private WatchmanWatcher createWatcher(EventBus eventBus,
+                                        FakeWatchmanClient watchmanClient,
+                                        int overflow,
+                                        long timeoutMillis,
+                                        String sinceCursor) {
     return new WatchmanWatcher(
         eventBus,
         watchmanClient,
         overflow,
         timeoutMillis,
-        FAKE_QUERY);
+        FAKE_QUERY,
+        sinceCursor);
   }
 }

@@ -26,10 +26,12 @@ import com.facebook.buck.io.Watchman.Capability;
 import com.facebook.buck.io.WatchmanClient;
 import com.facebook.buck.io.WatchmanDiagnostic;
 import com.facebook.buck.io.WatchmanDiagnosticCache;
+import com.facebook.buck.io.WatchmanQuery;
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -41,7 +43,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,8 +71,9 @@ public class WatchmanWatcher {
   private static final long DEFAULT_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(10);
 
   private final EventBus fileChangeEventBus;
-  private final List<Object> query;
   private final WatchmanClient watchmanClient;
+  private final WatchmanQuery query;
+  private String mSinceCursor;
 
   /**
    * The maximum number of watchman changes to process in each call to postEvents before
@@ -85,12 +87,27 @@ public class WatchmanWatcher {
 
   private final long timeoutMillis;
 
+  /* Legacy interface to help switch to clockId */
   public WatchmanWatcher(
       String watchRoot,
       EventBus fileChangeEventBus,
       ImmutableSet<PathOrGlobMatcher> ignorePaths,
       Watchman watchman,
       UUID queryUUID) {
+    this(
+        watchRoot,
+        fileChangeEventBus,
+        ignorePaths,
+        watchman,
+        new StringBuilder("n:buckd").append(queryUUID).toString());
+  }
+
+  public WatchmanWatcher(
+      String watchRoot,
+      EventBus fileChangeEventBus,
+      ImmutableSet<PathOrGlobMatcher> ignorePaths,
+      Watchman watchman,
+      String sinceCursor) {
     this(
         fileChangeEventBus,
         watchman.getWatchmanClient().get(),
@@ -99,9 +116,9 @@ public class WatchmanWatcher {
         createQuery(
             watchRoot,
             watchman.getProjectPrefix(),
-            queryUUID.toString(),
             ignorePaths,
-            watchman.getCapabilities()));
+            watchman.getCapabilities()),
+        sinceCursor);
   }
 
   @VisibleForTesting
@@ -109,30 +126,22 @@ public class WatchmanWatcher {
                   WatchmanClient watchmanClient,
                   int overflow,
                   long timeoutMillis,
-                  List<Object> query) {
+                  WatchmanQuery query,
+                  String sinceCursor) {
     this.fileChangeEventBus = fileChangeEventBus;
     this.watchmanClient = watchmanClient;
     this.overflow = overflow;
     this.timeoutMillis = timeoutMillis;
     this.query = query;
+    this.mSinceCursor = sinceCursor;
   }
 
   @VisibleForTesting
-  static List<Object> createQuery(
+  static WatchmanQuery createQuery(
       String watchRoot,
       Optional<String> watchPrefix,
-      String uuid,
       ImmutableSet<PathOrGlobMatcher> ignorePaths,
       Set<Capability> watchmanCapabilities) {
-    List<Object> queryParams = new ArrayList<>();
-    queryParams.add("query");
-    queryParams.add(watchRoot);
-    // Note that we use LinkedHashMap so insertion order is preserved. That
-    // helps us write tests that don't depend on the undefined order of HashMap.
-    Map<String, Object> sinceParams = new LinkedHashMap<>();
-    sinceParams.put(
-        "since",
-        new StringBuilder("n:buckd").append(uuid).toString());
 
     // Exclude any expressions added to this list.
     List<Object> excludeAnyOf = Lists.<Object>newArrayList("anyof");
@@ -186,6 +195,9 @@ public class WatchmanWatcher {
       }
     }
 
+    // Note that we use LinkedHashMap so insertion order is preserved. That
+    // helps us write tests that don't depend on the undefined order of HashMap.
+    Map<String, Object> sinceParams = new LinkedHashMap<>();
     sinceParams.put(
         "expression",
         Lists.newArrayList(
@@ -196,8 +208,14 @@ public class WatchmanWatcher {
     if (watchPrefix.isPresent()) {
       sinceParams.put("relative_root", watchPrefix.get());
     }
-    queryParams.add(sinceParams);
-    return queryParams;
+    return WatchmanQuery.of(
+        watchRoot,
+        sinceParams);
+  }
+
+  @VisibleForTesting
+  ImmutableList<Object> getWatchmanQuery() {
+    return query.toList(mSinceCursor);
   }
 
   /**
@@ -219,10 +237,10 @@ public class WatchmanWatcher {
       Optional<? extends Map<String, ? extends Object>> queryResponse =
           watchmanClient.queryWithTimeout(
               TimeUnit.MILLISECONDS.toNanos(timeoutMillis),
-              query.toArray());
+              getWatchmanQuery().toArray());
       if (!queryResponse.isPresent()) {
         LOG.warn(
-            "Could get response from Watchman for query %s within %d ms",
+            "Could not get response from Watchman for query %s %s within %d ms",
             query,
             timeoutMillis);
         postWatchEvent(
