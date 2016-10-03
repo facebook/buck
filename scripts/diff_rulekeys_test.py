@@ -83,22 +83,128 @@ class TestRuleKeyDiff(unittest.TestCase):
         info = RuleKeyStructureInfo(MockFile([line]))
         self.assertEqual(info.getNameForKey("00aa"), "//:rule")
 
+    def test_structure_info_list(self):
+        line = ("[v] RuleKey 00aa=string(\"//:rule\"):key(name):" +
+                "number(1):key(version):string(\"Rule\"):key(buck.type):" +
+                "number(1):key(num):number(2):key(num):")
+        info = RuleKeyStructureInfo(MockFile([line]))
+        self.assertEqual(
+                info.getByKey("00aa")['num'],
+                ["number(2)", "number(1)"])
+
     def test_simple_diff(self):
-        line = ("[v] RuleKey {key}=string(\"//:lib\"):key(name):" +
-                "path(JavaLib1.java:{hash}):key(srcs):" +
-                "string(\"t\"):key(buck.type):")
-        left_line = line.format(key="aabb", hash="aabb")
-        right_line = line.format(key="cabb", hash="cabb")
-        result = diff("//:lib",
-                      RuleKeyStructureInfo(MockFile([left_line])),
-                      RuleKeyStructureInfo(MockFile([right_line])),
-                      False)
+        name = "//:lib"
+        result = diff(name,
+                      RuleKeyStructureInfo(MockFile([
+                          makeRuleKeyLine(
+                              name=name,
+                              key="aabb",
+                              srcs={'JavaLib1.java': 'aabb'}
+                          ),
+                      ])),
+                      RuleKeyStructureInfo(MockFile([
+                          makeRuleKeyLine(
+                              name=name,
+                              key="cabb",
+                              srcs={'JavaLib1.java': 'cabb'}
+                          ),
+                      ])),
+                      verbose=False)
+
         expected = [
                 'Change details for [//:lib]',
                 '  (srcs):',
                 '    -[path(JavaLib1.java:aabb)]',
                 '    +[path(JavaLib1.java:cabb)]']
         self.assertEqual(result, expected)
+
+    def test_diff_deps_order(self):
+        result = diff("//:top",
+                      RuleKeyStructureInfo(MockFile([
+                          makeRuleKeyLine(
+                              name="//:top",
+                              key="aa",
+                              deps=["00", "10"],
+                          ),
+                          makeRuleKeyLine(
+                              name="//:Zero",
+                              key="00",
+                              srcs={"Zero": "0"}
+                          ),
+                          makeRuleKeyLine(
+                              name="//:One",
+                              key="10",
+                              srcs={"One": "0"}
+                          ),
+                      ])),
+                      RuleKeyStructureInfo(MockFile([
+                          makeRuleKeyLine(
+                              name="//:top",
+                              key="bb",
+                              deps=["11", "01"],
+                          ),
+                          makeRuleKeyLine(
+                              name="//:Zero",
+                              key="01",
+                              srcs={"Zero": "0"}
+                          ),
+                          makeRuleKeyLine(
+                              name="//:One",
+                              key="11",
+                              srcs={"One": "1"}
+                          ),
+                      ])),
+                      verbose=False)
+        expected = [
+                'Change details for [//:top]',
+                '  (deps): order of deps was name-aligned.',
+                'Change details for [//:One]',
+                '  (srcs):',
+                '    -[path(One:0)]',
+                '    +[path(One:1)]',
+        ]
+        self.assertEqual(result, expected)
+
+    def test_diff_deps_count(self):
+        result = diff("//:top",
+                      RuleKeyStructureInfo(MockFile([
+                          makeRuleKeyLine(
+                              name="//:top",
+                              key="aa",
+                              deps=["00"],
+                          ),
+                          makeRuleKeyLine(
+                              name="//:Zero",
+                              key="00",
+                              srcs={"Zero": "0"}
+                          ),
+                      ])),
+                      RuleKeyStructureInfo(MockFile([
+                          makeRuleKeyLine(
+                              name="//:top",
+                              key="bb",
+                              deps=["11", "01"],
+                          ),
+                          makeRuleKeyLine(
+                              name="//:Zero",
+                              key="01",
+                              srcs={"Zero": "0"}
+                          ),
+                          makeRuleKeyLine(
+                              name="//:One",
+                              key="11",
+                              srcs={"One": "1"}
+                          ),
+                      ])),
+                      verbose=False)
+        expected = [
+                'Change details for [//:top]',
+                '  (deps):',
+                '    -[<missing>]',
+                '    +["//:One"@ruleKey(sha1=11)]',
+        ]
+        self.assertEqual(result, expected)
+
 
     def test_simple_diff_with_custom_names(self):
         line = ("[v] RuleKey {key}=string(\"//:lib\"):key(name):" +
@@ -109,7 +215,7 @@ class TestRuleKeyDiff(unittest.TestCase):
         result = diff("//:lib",
                       RuleKeyStructureInfo(MockFile([left_line])),
                       RuleKeyStructureInfo(MockFile([right_line])),
-                      False,
+                      verbose=False,
                       format_tuple=('l(%s)', 'r{%s}'),
                       check_paths=True)
         expected = [
@@ -132,7 +238,7 @@ class TestRuleKeyDiff(unittest.TestCase):
         result = diff("//:lib",
                       RuleKeyStructureInfo(MockFile([left_line])),
                       RuleKeyStructureInfo(MockFile([right_line])),
-                      False)
+                      verbose=False)
         expected = [
                 'Change details for [//:lib]',
                 '  (srcs):',
@@ -164,6 +270,21 @@ class TestRuleKeyDiff(unittest.TestCase):
             if temp_file is not None:
                 os.unlink(temp_file.name)
 
+
+def makeRuleKeyLine(key="aabb", name="//:name", srcs=None,
+                    ruleType="java_library", deps=None):
+    srcs = srcs or {'JavaLib1.java': 'aabb'}
+    deps = deps or []
+    srcs_t = ":".join(['path({p}:{h}):key(srcs)'.format(p=p, h=h)
+                       for p, h in srcs.iteritems()])
+    deps_t = ":".join(['ruleKey(sha1={h}):key(deps)'.format(h=h)
+                       for h in deps])
+    template = ("[v] RuleKey {key}=string(\"{name}\"):key(name):" +
+                "{srcs_t}:"
+                "string(\"{ruleType}\"):key(buck.type):" +
+                "{deps_t}:")
+    return template.format(key=key, name=name, srcs_t=srcs_t,
+                           ruleType=ruleType, deps_t=deps_t)
 
 if __name__ == '__main__':
     unittest.main()

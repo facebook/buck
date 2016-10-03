@@ -7,6 +7,7 @@ import argparse
 import codecs
 import collections
 import hashlib
+import itertools
 import os
 import re
 
@@ -212,11 +213,11 @@ class RuleKeyStructureInfo(object):
         structure_map = collections.OrderedDict()
         last_key = None
 
-        def appendValue(map, key, val):
-            if key in map:
-                map[key].append(val)
+        def appendValue(m, key, val):
+            if key in m:
+                m[key].append(val)
             else:
-                map[key] = [val]
+                m[key] = [val]
 
         for e in reversed(structure_entries):
             if len(e) == 0:
@@ -314,15 +315,41 @@ def diffInternal(
         left_with_keys = extractRuleKeyRefs(left_values, left_info)
         right_with_keys = extractRuleKeyRefs(right_values, right_info)
 
+        did_align_for_deps = False
+        if key in set(['deps', 'declaredDeps', 'providedDeps']):
+            for left_idx, (left_v, left_key) in enumerate(left_with_keys):
+                left_name = left_info.getNameForKey(left_key)
+                if left_name is None:
+                    continue
+                right_idx = None
+                for j, (right_v, right_key) in enumerate(right_with_keys):
+                    if right_info.getNameForKey(right_key) == left_name:
+                        right_idx = j
+                        break
+                if right_idx is None:
+                    continue
+                if right_idx != left_idx:
+                    swap_entries_in_list(right_with_keys, right_idx, left_idx)
+                    did_align_for_deps = True
+
+        if did_align_for_deps:
+            report.append('  (' + key + '): order of deps was name-aligned.')
+
         both_with_keys = map(None, left_with_keys, right_with_keys)
         for l, r in both_with_keys:
             (left_v, left_key) = l or ('<missing>', None)
             (right_v, right_key) = r or ('<missing>', None)
             if left_v == right_v:
                 continue
-            if left_key is not None and right_key is not None:
+
+            left_name = None
+            right_name = None
+            if left_key is not None:
                 left_name = left_info.getNameForKey(left_key)
+            if right_key is not None:
                 right_name = right_info.getNameForKey(right_key)
+
+            if left_key is not None and right_key is not None:
                 if left_name == right_name and left_name is not None:
                     changed_key_pairs_with_labels_for_key.add(
                         (left_name, (left_key, right_key)))
@@ -335,7 +362,10 @@ def diffInternal(
                     changed_key_pairs_with_labels_for_key.add(
                         (q_label, (left_key, right_key)))
                     continue
-
+            if left_name:
+                left_v = '"%s"@%s' % (left_name, left_v)
+            if right_name:
+                right_v = '"%s"@%s' % (right_name, right_v)
             changed_key_pairs_with_values[key].append(left_v, right_v)
 
     for key in sorted(changed_key_pairs_with_values.keys()):
@@ -402,6 +432,10 @@ def diff(name,
 
         result += report
     return result
+
+
+def swap_entries_in_list(l, i, j):
+    (l[i], l[j]) = (l[j], l[i])
 
 
 def main():
