@@ -58,6 +58,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -267,7 +268,7 @@ public class AndroidBinaryDescription
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     return new AndroidBinary(
         params
-            .copyWithExtraDeps(result.getFinalDeps())
+            .copyWithExtraDeps(Suppliers.ofInstance(result.getFinalDeps()))
             .appendExtraDeps(
                 pathResolver.filterBuildRuleInputs(
                     result.getPackageableCollection().getProguardConfigs()))

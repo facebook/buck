@@ -40,6 +40,7 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -146,8 +147,9 @@ public class GnuLinker implements Linker {
         new UndefinedSymbolsLinkerScript(
             baseParams.copyWithChanges(
                 target,
-                ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(symbolFiles)),
-                ImmutableSortedSet.<BuildRule>of()),
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(symbolFiles))),
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
             pathResolver,
             symbolFiles));
     return ImmutableList.<Arg>of(

@@ -44,6 +44,7 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -182,8 +183,8 @@ abstract class DDescriptionUtils {
     return new SymlinkTree(
         baseParams.copyWithChanges(
             target,
-            ImmutableSortedSet.<BuildRule>of(),
-            ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
         baseParams.getProjectFilesystem().resolve(
             BuildTargets.getGenPath(
@@ -261,8 +262,8 @@ abstract class DDescriptionUtils {
           new DCompileBuildRule(
               baseParams.copyWithChanges(
                   compileTarget,
-                  deps,
-                  ImmutableSortedSet.<BuildRule>of()),
+                  Suppliers.ofInstance(deps),
+                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
               sourcePathResolver,
               compiler,
               ImmutableList.<String>builder()

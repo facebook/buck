@@ -188,7 +188,7 @@ public class CxxLibraryTest {
         params,
         ruleResolver,
         pathResolver,
-        FluentIterable.from(params.getDeclaredDeps()),
+        FluentIterable.from(params.getDeclaredDeps().get()),
         /* hasExportedHeaders */ Predicates.<CxxPlatform>alwaysTrue(),
         /* headerOnly */ Predicates.<CxxPlatform>alwaysTrue(),
         Functions.constant(ImmutableMultimap.<CxxSource.Type, String>of()),

@@ -53,6 +53,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -449,8 +450,8 @@ public class CxxLibraryDescription implements
       return new NoopBuildRule(
           new BuildRuleParams(
               staticTarget,
-              ImmutableSortedSet.<BuildRule>of(),
-              ImmutableSortedSet.<BuildRule>of(),
+              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
               params.getProjectFilesystem(),
               params.getCellRoots()),
           sourcePathResolver);

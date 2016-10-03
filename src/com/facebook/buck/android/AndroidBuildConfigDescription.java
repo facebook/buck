@@ -36,6 +36,7 @@ import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class AndroidBuildConfigDescription
@@ -125,10 +126,11 @@ public class AndroidBuildConfigDescription
     BuildRuleParams buildConfigParams = params.copyWithChanges(
         buildConfigBuildTarget,
         params.getDeclaredDeps(),
-        /* extraDeps */ ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(params.getExtraDeps())
-            .addAll(pathResolver.filterBuildRuleInputs(valuesFile.asSet()))
-            .build());
+        /* extraDeps */ Suppliers.ofInstance(
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(params.getExtraDeps().get())
+                .addAll(pathResolver.filterBuildRuleInputs(valuesFile.asSet()))
+                .build()));
     AndroidBuildConfig androidBuildConfig = new AndroidBuildConfig(
         buildConfigParams,
         pathResolver,
@@ -143,8 +145,9 @@ public class AndroidBuildConfigDescription
     // Create a second build rule to compile BuildConfig.java and expose it as a JavaLibrary.
     BuildRuleParams javaLibraryParams = params.copyWithChanges(
         params.getBuildTarget(),
-        /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(androidBuildConfig),
-        /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
+        /* declaredDeps */ Suppliers.ofInstance(
+            ImmutableSortedSet.<BuildRule>of(androidBuildConfig)),
+        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
     AndroidBuildConfigJavaLibrary library =
         ruleResolver.addToIndex(
             new AndroidBuildConfigJavaLibrary(

@@ -31,6 +31,7 @@ import com.facebook.buck.util.DependencyMode;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -124,8 +125,8 @@ public class AndroidLibraryGraphEnhancer {
 
     BuildRuleParams dummyRDotJavaParams = originalBuildRuleParams.copyWithChanges(
         dummyRDotJavaBuildTarget,
-        actualDeps.build(),
-        /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
+        Suppliers.ofInstance(actualDeps.build()),
+        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
     BuildTarget abiJarTarget =
         dummyRDotJavaParams.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);

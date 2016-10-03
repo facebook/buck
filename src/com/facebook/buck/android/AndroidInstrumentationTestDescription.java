@@ -78,7 +78,7 @@ public class AndroidInstrumentationTestDescription
     return new AndroidInstrumentationTest(
         params.appendExtraDeps(
                 BuildRules.getExportedRules(
-                        params.getDeclaredDeps())),
+                        params.getDeclaredDeps().get())),
         new SourcePathResolver(resolver),
         (InstallableApk) apk,
         args.labels.get(),

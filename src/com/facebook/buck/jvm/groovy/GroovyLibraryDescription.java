@@ -86,7 +86,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
                 params.appendExtraDeps(
                         BuildRules.getExportedRules(
                             Iterables.concat(
-                                params.getDeclaredDeps(),
+                                params.getDeclaredDeps().get(),
                                 exportedDeps,
                                 resolver.getAllRules(args.providedDeps.get())))),
                 pathResolver,

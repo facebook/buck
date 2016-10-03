@@ -31,12 +31,13 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -237,8 +238,8 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
 
     // Create language specific build params by using the deps we formed above.
     BuildRuleParams langParams = params.copyWithDeps(
-        ImmutableSortedSet.<BuildRule>of(),
-        allDeps);
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+        Suppliers.ofInstance(allDeps));
 
     // Merge the thrift generated headers with the ones passed in via the description.
     ImmutableSortedMap.Builder<String, SourcePath> headersBuilder =

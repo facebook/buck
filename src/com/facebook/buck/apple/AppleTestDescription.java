@@ -61,6 +61,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -254,10 +255,11 @@ public class AppleTestDescription implements
                 AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             // We have to add back the original deps here, since they're likely
             // stripped from the library link above (it doesn't actually depend on them).
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .add(library)
-                .addAll(params.getDeclaredDeps())
-                .build(),
+            Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .add(library)
+                    .addAll(params.getDeclaredDeps().get())
+                    .build()),
             params.getExtraDeps()),
         resolver,
         codeSignIdentityStore,
@@ -282,8 +284,8 @@ public class AppleTestDescription implements
         appleConfig.getXctoolDefaultDestinationSpecifier(),
         args.destinationSpecifier,
         params.copyWithDeps(
-            ImmutableSortedSet.of(bundle),
-            ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(bundle)),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         sourcePathResolver,
         bundle,
         testHostInfo.transform(TestHostInfo.GET_TEST_HOST_APP_FUNCTION),
@@ -317,8 +319,8 @@ public class AppleTestDescription implements
         BuildRuleParams unzipXctoolParams =
             params.copyWithChanges(
                 unzipXctoolTarget,
-                ImmutableSortedSet.of(xctoolZipBuildRule),
-                ImmutableSortedSet.<BuildRule>of());
+                Suppliers.ofInstance(ImmutableSortedSet.of(xctoolZipBuildRule)),
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
         resolver.addToIndex(
             new AbstractBuildRule(unzipXctoolParams, sourcePathResolver) {
               @Override

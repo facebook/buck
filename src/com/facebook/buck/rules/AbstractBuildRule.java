@@ -34,9 +34,9 @@ import java.util.Objects;
 public abstract class AbstractBuildRule implements BuildRule {
 
   private final BuildTarget buildTarget;
-  private final ImmutableSortedSet<BuildRule> declaredDeps;
-  private final ImmutableSortedSet<BuildRule> extraDeps;
-  private final ImmutableSortedSet<BuildRule> deps;
+  private final Supplier<ImmutableSortedSet<BuildRule>> declaredDeps;
+  private final Supplier<ImmutableSortedSet<BuildRule>> extraDeps;
+  private final Supplier<ImmutableSortedSet<BuildRule>> deps;
   private final SourcePathResolver resolver;
   private final ProjectFilesystem projectFilesystem;
 
@@ -52,7 +52,7 @@ public abstract class AbstractBuildRule implements BuildRule {
     this.buildTarget = buildRuleParams.getBuildTarget();
     this.declaredDeps = buildRuleParams.getDeclaredDeps();
     this.extraDeps = buildRuleParams.getExtraDeps();
-    this.deps = buildRuleParams.getDeps();
+    this.deps = buildRuleParams.getTotalDeps();
     this.resolver = resolver;
     this.projectFilesystem = buildRuleParams.getProjectFilesystem();
   }
@@ -74,15 +74,15 @@ public abstract class AbstractBuildRule implements BuildRule {
 
   @Override
   public final ImmutableSortedSet<BuildRule> getDeps() {
-    return deps;
+    return deps.get();
   }
 
   public final ImmutableSortedSet<BuildRule> getDeclaredDeps() {
-    return declaredDeps;
+    return declaredDeps.get();
   }
 
   public final ImmutableSortedSet<BuildRule> deprecatedGetExtraDeps() {
-    return extraDeps;
+    return extraDeps.get();
   }
 
   @Override

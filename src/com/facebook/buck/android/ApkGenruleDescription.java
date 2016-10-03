@@ -28,6 +28,8 @@ import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenruleDescription.Arg> {
@@ -53,7 +55,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
       Optional<com.facebook.buck.rules.args.Arg> bash,
       Optional<com.facebook.buck.rules.args.Arg> cmdExe) {
 
-    BuildRule installableApk = resolver.getRule(args.apk);
+    final BuildRule installableApk = resolver.getRule(args.apk);
     if (!(installableApk instanceof InstallableApk)) {
       throw new HumanReadableException("The 'apk' argument of %s, %s, must correspond to an " +
           "installable rule, such as android_binary() or apk_genrule().",
@@ -61,12 +63,20 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
           args.apk.getFullyQualifiedName());
     }
 
+    final Supplier<ImmutableSortedSet<BuildRule>> originalExtraDeps = params.getExtraDeps();
+
     return new ApkGenrule(
         params.copyWithExtraDeps(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(params.getExtraDeps())
-                .add(installableApk)
-                .build()),
+            Suppliers.memoize(
+                new Supplier<ImmutableSortedSet<BuildRule>>() {
+                  @Override
+                  public ImmutableSortedSet<BuildRule> get() {
+                    return ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(originalExtraDeps.get())
+                        .add(installableApk)
+                        .build();
+                  }
+                })),
         new SourcePathResolver(resolver),
         args.srcs.get(),
         cmd,

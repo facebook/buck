@@ -49,6 +49,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -319,16 +320,17 @@ public class HaskellDescriptionUtils {
         new HaskellLinkRule(
             baseParams.copyWithChanges(
                 target,
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(linker.getDeps(pathResolver))
-                    .addAll(
-                        FluentIterable.from(args)
-                            .transformAndConcat(Arg.getDepsFunction(pathResolver)))
-                    .addAll(
-                        FluentIterable.from(linkerArgs)
-                            .transformAndConcat(Arg.getDepsFunction(pathResolver)))
-                    .build(),
-                ImmutableSortedSet.<BuildRule>of()),
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(linker.getDeps(pathResolver))
+                        .addAll(
+                            FluentIterable.from(args)
+                                .transformAndConcat(Arg.getDepsFunction(pathResolver)))
+                        .addAll(
+                            FluentIterable.from(linkerArgs)
+                                .transformAndConcat(Arg.getDepsFunction(pathResolver)))
+                        .build()),
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
             pathResolver,
             linker,
             name,

@@ -26,6 +26,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.StringTemplateStep;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -114,8 +115,9 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
     return new WriteStringTemplateRule(
         baseParams.copyWithChanges(
             target,
-            ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(template)),
-            ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(
+                ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(template))),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
         output,
         template,

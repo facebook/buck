@@ -244,7 +244,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
 
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
-        return FluentIterable.from(params.getDeclaredDeps())
+        return FluentIterable.from(params.getDeclaredDeps().get())
             .filter(NativeLinkable.class);
       }
 

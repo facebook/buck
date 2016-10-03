@@ -52,6 +52,7 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -113,8 +114,8 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
           new WriteFile(
               getBaseParams().copyWithChanges(
                   templateTarget,
-                  ImmutableSortedSet.<BuildRule>of(),
-                  ImmutableSortedSet.<BuildRule>of()),
+                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
               getPathResolver(),
               getNativeStarterCxxSourceTemplate(),
               BuildTargets.getGenPath(

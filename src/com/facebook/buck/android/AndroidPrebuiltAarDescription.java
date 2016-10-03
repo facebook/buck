@@ -37,6 +37,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
@@ -120,8 +121,8 @@ public class AndroidPrebuiltAarDescription
 
     return buildRuleResolver.addToIndex(new AndroidPrebuiltAar(
         /* androidLibraryParams */ params.copyWithDeps(
-            /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(prebuiltJar),
-            /* extraDeps */ ImmutableSortedSet.<BuildRule>of(unzipAar)),
+            /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(prebuiltJar)),
+            /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(unzipAar))),
         /* resolver */ pathResolver,
         /* proguardConfig */ new BuildTargetSourcePath(
             unzipAar.getBuildTarget(),
@@ -151,9 +152,9 @@ public class AndroidPrebuiltAarDescription
 
     BuildRuleParams unzipAarParams = originalBuildRuleParams.copyWithChanges(
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_UNZIP_FLAVOR),
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSortedSet.copyOf(
-            resolver.filterBuildRuleInputs(aarFile)));
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+        Suppliers.ofInstance(ImmutableSortedSet.copyOf(
+            resolver.filterBuildRuleInputs(aarFile))));
     UnzipAar unzipAar = new UnzipAar(unzipAarParams, resolver, aarFile);
     return ruleResolver.addToIndex(unzipAar);
   }
@@ -169,8 +170,8 @@ public class AndroidPrebuiltAarDescription
         /* buildTarget */ BuildTargets.createFlavoredBuildTarget(
             params.getBuildTarget().checkUnflavored(),
             AAR_PREBUILT_JAR_FLAVOR),
-        /* declaredDeps */ deps,
-        /* extraDeps */ ImmutableSortedSet.<BuildRule>of(unzipAar));
+        /* declaredDeps */ Suppliers.ofInstance(deps),
+        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(unzipAar)));
     return new PrebuiltJar(
         /* params */ buildRuleParams,
         /* resolver */ resolver,

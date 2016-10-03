@@ -30,6 +30,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -66,9 +67,10 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
 
   private static BuildRuleParams adjustParams(BuildRuleParams params, TraversedDeps traversedDeps) {
     return params.copyWithDeps(
-        FluentIterable.from(traversedDeps.packagedDeps)
-            .toSortedSet(Ordering.<BuildRule>natural()),
-        ImmutableSortedSet.<BuildRule>of());
+        Suppliers.ofInstance(
+            FluentIterable.from(traversedDeps.packagedDeps)
+                .toSortedSet(Ordering.<BuildRule>natural())),
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
   }
 
   /**

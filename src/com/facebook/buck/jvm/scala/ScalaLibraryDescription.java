@@ -39,6 +39,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -72,8 +73,8 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
   @Override
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
-      BuildRuleParams rawParams,
-      BuildRuleResolver resolver,
+      final BuildRuleParams rawParams,
+      final BuildRuleResolver resolver,
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
@@ -81,11 +82,17 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
 
     final BuildRule scalaLibrary = resolver.getRule(scalaBuckConfig.getScalaLibraryTarget());
     BuildRuleParams params = rawParams.copyWithDeps(
-        ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(rawParams.getDeclaredDeps())
-            .add(scalaLibrary)
-            .build(),
-        rawParams.getExtraDeps());
+        new Supplier<ImmutableSortedSet<BuildRule>>() {
+          @Override
+          public ImmutableSortedSet<BuildRule> get() {
+            return ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(rawParams.getDeclaredDeps().get())
+                .add(scalaLibrary)
+                .build();
+          }
+        },
+        rawParams.getExtraDeps()
+    );
 
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
@@ -96,7 +103,7 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
                     Iterables.concat(
                         BuildRules.getExportedRules(
                             Iterables.concat(
-                                params.getDeclaredDeps(),
+                                params.getDeclaredDeps().get(),
                                 resolver.getAllRules(args.providedDeps.get()))),
                         scalac.getDeps(pathResolver))),
                 pathResolver,
@@ -108,7 +115,7 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
                 /* generatedSourceFolder */ Optional.<Path>absent(),
                 /* proguardConfig */ Optional.<SourcePath>absent(),
                 /* postprocessClassesCommands */ ImmutableList.<String>of(),
-                params.getDeclaredDeps(),
+                params.getDeclaredDeps().get(),
                 resolver.getAllRules(args.providedDeps.get()),
                 new BuildTargetSourcePath(abiJarTarget),
                 /* trackClassUsage */ false,

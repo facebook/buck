@@ -242,7 +242,12 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSortedSet<BuildTarget> tests,
       ImmutableSet<Pattern> classesToRemoveFromJar) {
     super(
-        params.appendExtraDeps(resolver.filterBuildRuleInputs(abiClasspath.get())),
+        params.appendExtraDeps(new Supplier<Iterable<? extends BuildRule>>() {
+              @Override
+              public Iterable<? extends BuildRule> get() {
+                return resolver.filterBuildRuleInputs(abiClasspath.get());
+              }
+            }),
         resolver);
     this.compileStepFactory = compileStepFactory;
 

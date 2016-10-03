@@ -36,6 +36,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -80,7 +81,7 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
       A args) {
 
     // Only allow android resource and library rules as dependencies.
-    Optional<BuildRule> invalidDep = FluentIterable.from(params.getDeclaredDeps())
+    Optional<BuildRule> invalidDep = FluentIterable.from(params.getDeclaredDeps().get())
         .filter(
             Predicates.not(
                 Predicates.or(
@@ -110,7 +111,8 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
         // the only deps which should control whether we need to re-run the aapt_package
         // step.
         params.copyWithDeps(
-            AndroidResourceHelper.androidResOnly(params.getDeclaredDeps()),
+            Suppliers.ofInstance(
+                AndroidResourceHelper.androidResOnly(params.getDeclaredDeps().get())),
             params.getExtraDeps()),
         pathResolver,
         resolver.getAllRules(args.deps.get()),

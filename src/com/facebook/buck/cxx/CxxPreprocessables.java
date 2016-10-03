@@ -29,6 +29,7 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -157,8 +158,8 @@ public class CxxPreprocessables {
     BuildRuleParams paramsWithoutDeps =
         params.copyWithChanges(
             target,
-            ImmutableSortedSet.<BuildRule>of(),
-            ImmutableSortedSet.<BuildRule>of());
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
     if (useHeaderMap) {
       return new HeaderSymlinkTreeWithHeaderMap(

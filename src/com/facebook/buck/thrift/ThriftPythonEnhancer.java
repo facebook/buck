@@ -33,6 +33,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -152,8 +153,8 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
     // Create params which only use the language specific deps.
     BuildRuleParams langParams = params.copyWithChanges(
         params.getBuildTarget(),
-        deps,
-        ImmutableSortedSet.<BuildRule>of());
+        Suppliers.ofInstance(deps),
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
     // Construct a python library and return it as our language specific build rule.  Dependents
     // will use this to pull the generated sources into packages/PEXs.

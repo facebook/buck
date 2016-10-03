@@ -47,6 +47,7 @@ import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -114,8 +115,8 @@ public class PythonBinaryDescription implements
         new WriteFile(
             params.copyWithChanges(
                 emptyInitTarget,
-                ImmutableSortedSet.<BuildRule>of(),
-                ImmutableSortedSet.<BuildRule>of()),
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
             pathResolver,
             "",
             emptyInitPath,
@@ -180,8 +181,8 @@ public class PythonBinaryDescription implements
             new SymlinkTree(
                 params.copyWithChanges(
                     linkTreeTarget,
-                    ImmutableSortedSet.<BuildRule>of(),
-                    ImmutableSortedSet.<BuildRule>of()),
+                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
                 pathResolver,
                 linkTreeRoot,
                 ImmutableMap.<Path, SourcePath>builder()
@@ -237,11 +238,12 @@ public class PythonBinaryDescription implements
         Tool pexTool = pythonBuckConfig.getPexTool(resolver);
         return new PythonPackagedBinary(
             params.copyWithDeps(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(componentDeps)
-                    .addAll(pexTool.getDeps(pathResolver))
-                    .build(),
-                ImmutableSortedSet.<BuildRule>of()),
+                Suppliers.ofInstance(
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(componentDeps)
+                        .addAll(pexTool.getDeps(pathResolver))
+                        .build()),
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
             pathResolver,
             pythonPlatform,
             pexTool,
@@ -256,7 +258,7 @@ public class PythonBinaryDescription implements
             // as runtime deps, so that we make to include other things we depend on in
             // the build.
             ImmutableSortedSet.copyOf(
-                Sets.difference(params.getDeclaredDeps(), componentDeps)),
+                Sets.difference(params.getDeclaredDeps().get(), componentDeps)),
             pythonBuckConfig.shouldCacheBinaries());
 
       default:

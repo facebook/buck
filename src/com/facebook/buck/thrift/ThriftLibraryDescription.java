@@ -43,6 +43,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -196,17 +197,18 @@ public class ThriftLibraryDescription
           new ThriftCompiler(
               params.copyWithChanges(
                   target,
-                  ImmutableSortedSet.<BuildRule>naturalOrder()
-                      .addAll(compiler.getDeps(pathResolver))
-                      .addAll(
-                          new SourcePathResolver(resolver).filterBuildRuleInputs(
-                              ImmutableList.<SourcePath>builder()
-                                  .add(source)
-                                  .addAll(includes.values())
-                                  .build()))
-                      .addAll(includeTreeRules)
-                      .build(),
-                  ImmutableSortedSet.<BuildRule>of()),
+                  Suppliers.ofInstance(
+                      ImmutableSortedSet.<BuildRule>naturalOrder()
+                          .addAll(compiler.getDeps(pathResolver))
+                          .addAll(
+                              new SourcePathResolver(resolver).filterBuildRuleInputs(
+                                  ImmutableList.<SourcePath>builder()
+                                      .add(source)
+                                      .addAll(includes.values())
+                                      .build()))
+                          .addAll(includeTreeRules)
+                          .build()),
+                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
               pathResolver,
               compiler,
               flags,
@@ -290,8 +292,8 @@ public class ThriftLibraryDescription
         new HeaderSymlinkTree(
             params.copyWithChanges(
                 symlinkTreeTarget,
-                ImmutableSortedSet.<BuildRule>of(),
-                ImmutableSortedSet.<BuildRule>of()),
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
             pathResolver,
             includeRoot,
             includes);

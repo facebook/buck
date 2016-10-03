@@ -59,6 +59,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -817,8 +818,8 @@ public class CxxDescriptionEnhancer {
         .copyWithChanges(
             params.getBuildTarget().withAppendedFlavors(
                 CxxStrip.RULE_FLAVOR, stripStyle.getFlavor()),
-            ImmutableSortedSet.of(unstrippedBinaryRule),
-            ImmutableSortedSet.<BuildRule>of());
+            Suppliers.ofInstance(ImmutableSortedSet.of(unstrippedBinaryRule)),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
     Optional<BuildRule> exisitingRule = resolver.getRuleOptional(stripRuleParams.getBuildTarget());
     if (exisitingRule.isPresent()) {
       Preconditions.checkArgument(exisitingRule.get() instanceof CxxStrip);
@@ -955,10 +956,11 @@ public class CxxDescriptionEnhancer {
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     return new JsonConcatenate(
         params.copyWithDeps(
-            ImmutableSortedSet.copyOf(
-                pathResolver.filterBuildRuleInputs(
-                    compilationDatabases.get().getSourcePaths())),
-            ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(
+                ImmutableSortedSet.copyOf(
+                    pathResolver.filterBuildRuleInputs(
+                        compilationDatabases.get().getSourcePaths()))),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
         ImmutableSortedSet.copyOf(
             pathResolver.getAllAbsolutePaths(compilationDatabases.get().getSourcePaths())),
@@ -1145,8 +1147,8 @@ public class CxxDescriptionEnhancer {
     return new SymlinkTree(
         params.copyWithChanges(
             symlinkTreeTarget,
-            ImmutableSortedSet.<BuildRule>of(),
-            ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
         symlinkTreeRoot,
         links.build());

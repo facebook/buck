@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.google.common.base.Suppliers;
 
 /**
  * Takes in an {@link TargetNode} from the target graph and builds a {@link BuildRule}.
@@ -39,8 +40,8 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
     // via a SourcePath.
     BuildRuleParams params = new BuildRuleParams(
         targetNode.getBuildTarget(),
-        ruleResolver.requireAllRules(targetNode.getDeclaredDeps()),
-        ruleResolver.requireAllRules(targetNode.getExtraDeps()),
+        Suppliers.ofInstance(ruleResolver.requireAllRules(targetNode.getDeclaredDeps())),
+        Suppliers.ofInstance(ruleResolver.requireAllRules(targetNode.getExtraDeps())),
         ruleFactoryParams.getProjectFilesystem(),
         targetNode.getCellNames());
 

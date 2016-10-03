@@ -41,6 +41,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -89,13 +90,17 @@ public class ApplePackageDescription implements
                 resolver));
     if (applePackageConfigAndPlatformInfo.isPresent()) {
       return new ExternallyBuiltApplePackage(
-          params.copyWithExtraDeps(
-              ImmutableSortedSet.<BuildRule>naturalOrder()
+          params.copyWithExtraDeps(new Supplier<ImmutableSortedSet<BuildRule>>() {
+            @Override
+            public ImmutableSortedSet<BuildRule> get() {
+              return ImmutableSortedSet.<BuildRule>naturalOrder()
                   .add(bundle)
                   .addAll(
                       applePackageConfigAndPlatformInfo.get().getExpandedArg()
                           .getDeps(sourcePathResolver))
-                  .build()),
+                  .build();
+            }
+          }),
           sourcePathResolver,
           applePackageConfigAndPlatformInfo.get(),
           new BuildTargetSourcePath(bundle.getBuildTarget()));

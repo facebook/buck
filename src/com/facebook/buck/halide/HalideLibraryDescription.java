@@ -37,6 +37,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -46,15 +47,15 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -256,7 +257,7 @@ public class HalideLibraryDescription
 
     return new HalideCompile(
         params.copyWithExtraDeps(
-            ImmutableSortedSet.<BuildRule>of(halideCompiler)),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(halideCompiler))),
         pathResolver,
         halideCompiler.getExecutableCommand(),
         halideBuckConfig.getHalideTargetForPlatform(platform),
@@ -304,8 +305,8 @@ public class HalideLibraryDescription
       return createHalideCompiler(
           params.copyWithChanges(
               params.getBuildTarget().withFlavors(HALIDE_COMPILER_FLAVOR),
-              resolver.getAllRules(compilerDeps),
-              ImmutableSortedSet.<BuildRule>of()),
+              Suppliers.ofInstance(resolver.getAllRules(compilerDeps)),
+              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
           resolver,
           new SourcePathResolver(resolver),
           hostCxxPlatform,
@@ -333,8 +334,10 @@ public class HalideLibraryDescription
     } else if (flavors.contains(HALIDE_COMPILE_FLAVOR)) {
       return createHalideCompile(
           params.copyWithDeps(
-              ImmutableSortedSet.<BuildRule>of(),
-              ImmutableSortedSet.<BuildRule>of()),
+              Suppliers.ofInstance(
+                  ImmutableSortedSet.<BuildRule>of()),
+              Suppliers.ofInstance(
+                  ImmutableSortedSet.<BuildRule>of())),
           resolver,
           new SourcePathResolver(resolver),
           cxxPlatform,

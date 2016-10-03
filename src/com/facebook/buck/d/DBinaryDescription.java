@@ -40,6 +40,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -121,7 +122,8 @@ public class DBinaryDescription implements
     // Return a BinaryBuildRule implementation, so that this works
     // with buck run etc.
     return new DBinary(
-        params.copyWithExtraDeps(ImmutableSortedSet.<BuildRule>of(nativeLinkable)),
+        params.copyWithExtraDeps(
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(nativeLinkable))),
         new SourcePathResolver(buildRuleResolver),
         executableBuilder.build(),
         nativeLinkable.getPathToOutput());

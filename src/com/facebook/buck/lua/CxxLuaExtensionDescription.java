@@ -285,7 +285,7 @@ public class CxxLuaExtensionDescription implements
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
           CxxPlatform cxxPlatform) {
-        return FluentIterable.from(params.getDeclaredDeps())
+        return FluentIterable.from(params.getDeclaredDeps().get())
             .filter(NativeLinkable.class);
       }
 
