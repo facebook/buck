@@ -1696,33 +1696,52 @@ public class ProjectGenerator {
         targetNode.castArg(HalideLibraryDescription.Arg.class);
     if (appleTargetNode.isPresent()) {
       configs = appleTargetNode.get().getConstructorArg().configs;
+
+      if (isFrameworkTarget(targetNode)) {
+        configs = appendFrameworkBuildConfigs(configs);
+      }
     } else if (halideTargetNode.isPresent()) {
       configs = halideTargetNode.get().getConstructorArg().configs;
     }
+
     if (!configs.isPresent() ||
         (configs.isPresent() && configs.get().isEmpty()) ||
         targetNode.getType().equals(CxxLibraryDescription.TYPE)) {
-      ImmutableMap<String, String> targetConfigs = appendedConfig;
-      if (isFrameworkTarget(targetNode)) {
-        ImmutableMap.Builder<String, String> configBuilder = ImmutableMap.builder();
-        configBuilder.put("DEFINES_MODULE", "YES")
-            .put("DYLIB_INSTALL_NAME_BASE", "@rpath")
-            .put("SKIP_INSTALL", "YES")
-            .put("LD_RUNPATH_SEARCH_PATHS",
-                Joiner.on(' ').join(
-                    "$(inherited)",
-                    "@executable_path/Frameworks",
-                    "@loader_path/Frameworks"));
-        targetConfigs = MoreMaps.merge(targetConfigs, configBuilder.build());
-      }
-
       ImmutableMap<String, ImmutableMap<String, String>> defaultConfig =
           CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
               defaultCxxPlatform,
-              targetConfigs);
+              appendedConfig);
       configs = Optional.of(ImmutableSortedMap.copyOf(defaultConfig));
     }
     return configs;
+  }
+
+  private Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>>
+    appendFrameworkBuildConfigs(
+      Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configsOpt) {
+    if (!configsOpt.isPresent()) {
+      return configsOpt;
+    }
+    ImmutableSortedMap<String, ImmutableMap<String, String>> configs = configsOpt.get();
+
+    ImmutableMap.Builder<String, String> frameworkConfigBuilder = ImmutableMap.builder();
+    frameworkConfigBuilder
+        .put("DEFINES_MODULE", "YES")
+        .put("DYLIB_INSTALL_NAME_BASE", "@rpath")
+        .put("SKIP_INSTALL", "YES")
+        .put("LD_RUNPATH_SEARCH_PATHS",
+            Joiner.on(' ').join(
+                "$(inherited)",
+                "@executable_path/Frameworks",
+                "@loader_path/Frameworks"));
+    ImmutableMap<String, String> frameworkConfigs = frameworkConfigBuilder.build();
+
+    ImmutableSortedMap.Builder<String, ImmutableMap<String, String>> configBuilder =
+        ImmutableSortedMap.naturalOrder();
+    for (String configName : configs.keySet()) {
+      configBuilder.put(configName, MoreMaps.merge(configs.get(configName), frameworkConfigs));
+    }
+    return Optional.of(configBuilder.build());
   }
 
   private void addCoreDataModelsIntoTarget(
