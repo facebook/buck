@@ -792,4 +792,34 @@ public class ProjectIntegrationTest {
 
     workspace.verify();
   }
+
+  @Test
+  public void testVersion2BuckProjectWithArtifacts() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "experimental_project_with_artifacts", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project");
+    result.assertSuccess("buck project should exit cleanly");
+
+    workspace.verify();
+  }
+
+  @Test
+  public void testVersion2BuckProjectWithoutArtifacts() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "experimental_project_without_artifacts", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project");
+    result.assertSuccess("buck project should exit cleanly");
+
+    workspace.verify();
+  }
 }

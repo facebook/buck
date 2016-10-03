@@ -365,6 +365,10 @@ public class ProjectCommand extends BuildCommand {
     return buckConfig.getBooleanValue("project", "skip_build", false);
   }
 
+  private boolean getExcludeArtifactsFromConfig(BuckConfig buckConfig) {
+    return buckConfig.getBooleanValue("project", "exclude_artifacts", false);
+  }
+
   private List<String> getInitialTargets(BuckConfig buckConfig) {
     Optional<String> initialTargets = buckConfig.getValue("project", "initial_targets");
     return initialTargets.isPresent()
@@ -639,23 +643,26 @@ public class ProjectCommand extends BuildCommand {
             params.getBuckEventBus(),
             targetGraphAndTargets.getTargetGraph()));
 
+    BuckConfig buckConfig = params.getBuckConfig();
     BuildRuleResolver ruleResolver = result.getResolver();
     SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleResolver);
 
-    JavacOptions javacOptions = new JavaBuckConfig(params.getBuckConfig())
+    JavacOptions javacOptions = new JavaBuckConfig(buckConfig)
         .getDefaultJavacOptions();
 
     IjProject project = new IjProject(
         targetGraphAndTargets,
-        getJavaPackageFinder(params.getBuckConfig()),
+        getJavaPackageFinder(buckConfig),
         JavaFileParser.createJavaFileParser(javacOptions),
         ruleResolver,
         sourcePathResolver,
         params.getCell().getFilesystem(),
-        getIntellijAggregationMode(params.getBuckConfig()),
-        params.getBuckConfig());
+        getIntellijAggregationMode(buckConfig),
+        buckConfig);
 
-    return project.write(runIjCleaner, excludeArtifacts);
+    return project.write(
+        runIjCleaner,
+        excludeArtifacts || getExcludeArtifactsFromConfig(buckConfig));
   }
 
   private int buildRequiredTargetsWithoutUsingCacheForAnnotatedTargets(
