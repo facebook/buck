@@ -419,7 +419,7 @@
           <exclude name="com/facebook/buck/cli/bootstrapper/**" />
           <exclude name="com/facebook/buck/cli/quickstart/**" />
           <exclude name="com/facebook/buck/event/api/**" />
-          <exclude name="com/facebook/buck/intellij/ideabuck/**" />
+          <exclude name="com/facebook/buck/intellij/**" />
           <exclude name="com/facebook/buck/testrunner/**" />
         </patternset>
         <or>
@@ -868,7 +868,7 @@
           <include name="**/*.java" />
           <exclude name="com/facebook/buck/cli/quickstart/**" />
           <exclude name="com/facebook/buck/android/support/exopackage/**" />
-          <exclude name="com/facebook/buck/intellij/ideabuck/**" />
+          <exclude name="com/facebook/buck/intellij/**" />
         </fileset>
         <fileset dir="${gensrc.dir}" />
         <link href="http://docs.oracle.com/javase/7/docs/api/"
