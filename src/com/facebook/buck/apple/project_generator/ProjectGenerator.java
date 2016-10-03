@@ -1286,6 +1286,7 @@ public class ProjectGenerator {
     extraSettingsBuilder
         .put("TARGET_NAME", buildTargetName)
         .put("SRCROOT", pathRelativizer.outputPathToBuildTargetPath(buildTarget).toString())
+        .put("ALWAYS_SEARCH_USER_PATHS", "NO")  // http://www.openradar.me/radar?id=6082318405992448
         .put("COPY_PHASE_STRIP", "NO");  // this produces warnings on xcode8 and up
 
     if (productType == ProductType.UI_TEST && isFocusedOnTarget) {
