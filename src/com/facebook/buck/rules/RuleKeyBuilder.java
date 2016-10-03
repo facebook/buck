@@ -127,14 +127,14 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
       // deprecated method returned an absolute path, which is obviously less than ideal. If we can,
       // grab the relative path to the output. We also need to hash the contents of the absolute
       // path no matter what.
+      Path absolutePath = resolver.getAbsolutePath(sourcePath);
       Path ideallyRelative;
       try {
         ideallyRelative = resolver.getRelativePath(sourcePath);
       } catch (IllegalStateException e) {
         // Expected relative path was absolute. Yay.
-        ideallyRelative = resolver.getAbsolutePath(sourcePath);
+        ideallyRelative = absolutePath;
       }
-      Path absolutePath = resolver.getAbsolutePath(sourcePath);
       try {
         return setPath(absolutePath, ideallyRelative);
       } catch (IOException e) {
