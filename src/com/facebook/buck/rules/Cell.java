@@ -37,7 +37,6 @@ import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -379,18 +378,7 @@ public class Cell {
       Console console,
       BuckEventBus eventBus,
       boolean ignoreBuckAutodepsFiles) {
-    ParserConfig parserConfig = new ParserConfig(getBuckConfig());
-    boolean useWatchmanGlob =
-        parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN &&
-        watchman.hasWildmatchGlob();
-    boolean watchmanGlobStatResults =
-        parserConfig.getWatchmanGlobSanityCheck() == ParserConfig.WatchmanGlobSanityCheck.STAT;
-    boolean watchmanUseGlobGenerator = watchman.getCapabilities().contains(
-        Watchman.Capability.GLOB_GENERATOR);
-    ProjectBuildFileParserFactory factory = createBuildFileParserFactory(
-        useWatchmanGlob,
-        watchmanGlobStatResults,
-        watchmanUseGlobGenerator);
+    ProjectBuildFileParserFactory factory = createBuildFileParserFactory();
     return factory.createParser(
         marshaller,
         console,
@@ -400,12 +388,16 @@ public class Cell {
         watchmanDiagnosticCache);
   }
 
-  @VisibleForTesting
-  protected ProjectBuildFileParserFactory createBuildFileParserFactory(
-      boolean useWatchmanGlob,
-      boolean watchmanGlobStatResults,
-      boolean watchmanUseGlobGenerator) {
+  private ProjectBuildFileParserFactory createBuildFileParserFactory() {
     ParserConfig parserConfig = new ParserConfig(getBuckConfig());
+
+    boolean useWatchmanGlob =
+        parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN &&
+            watchman.hasWildmatchGlob();
+    boolean watchmanGlobStatResults =
+        parserConfig.getWatchmanGlobSanityCheck() == ParserConfig.WatchmanGlobSanityCheck.STAT;
+    boolean watchmanUseGlobGenerator = watchman.getCapabilities().contains(
+        Watchman.Capability.GLOB_GENERATOR);
 
     return new DefaultProjectBuildFileParserFactory(
         ProjectBuildFileParserOptions.builder()
