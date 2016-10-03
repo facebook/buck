@@ -38,7 +38,7 @@ public class TemporaryPaths extends ExternalResource {
   private Path root;
 
   public TemporaryPaths() {
-    this(false);
+    this("1".equals(System.getenv("BUCK_TEST_KEEP_TEMPORARY_PATHS")));
   }
 
   public TemporaryPaths(boolean keepContents) {
