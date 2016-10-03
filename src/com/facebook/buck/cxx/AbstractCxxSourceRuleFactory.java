@@ -740,13 +740,23 @@ abstract class AbstractCxxSourceRuleFactory {
         });
   }
 
-  private boolean shouldUsePrecompiledHeaders(
-      PreprocessorDelegate preprocessorDelegate,
+  private static boolean shouldUsePrecompiledHeaders(
+      Optional<SourcePath> prefixHeaderSourcePath,
+      Preprocessor preprocessor,
       CxxPreprocessMode mode) {
     return
-        preprocessorDelegate.getPrefixHeader().isPresent() &&
-            preprocessorDelegate.getPreprocessor().supportsPrecompiledHeaders() &&
-            mode == CxxPreprocessMode.COMBINED;
+        prefixHeaderSourcePath.isPresent() &&
+        preprocessor.supportsPrecompiledHeaders() &&
+        mode == CxxPreprocessMode.COMBINED;
+  }
+
+  private static boolean shouldUsePrecompiledHeaders(
+      PreprocessorDelegate preprocessorDelegate,
+      CxxPreprocessMode mode) {
+    return shouldUsePrecompiledHeaders(
+        preprocessorDelegate.getPrefixHeader(),
+        preprocessorDelegate.getPreprocessor(),
+        mode);
   }
 
   public static ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
@@ -831,15 +841,19 @@ abstract class AbstractCxxSourceRuleFactory {
     @Override
     public PreprocessorDelegateCacheValue load(@Nonnull PreprocessorDelegateCacheKey key)
         throws Exception {
+      Preprocessor preprocessor =
+          CxxSourceTypes.getPreprocessor(getCxxPlatform(), key.getSourceType())
+              .resolve(getResolver());
       PreprocessorDelegate delegate = new PreprocessorDelegate(
           getPathResolver(),
           getCxxPlatform().getDebugPathSanitizer(),
           getCxxBuckConfig().getHeaderVerification(),
           getParams().getProjectFilesystem().getRootPath(),
-          CxxSourceTypes.getPreprocessor(getCxxPlatform(), key.getSourceType())
-              .resolve(getResolver()),
+          preprocessor,
           PreprocessorFlags.of(
               getPrefixHeader(),
+              shouldUsePrecompiledHeaders(
+                  getPrefixHeader(), preprocessor, getCxxBuckConfig().getPreprocessMode()),
               computePreprocessorFlags(key.getSourceType(), key.getSourceFlags()),
               getIncludes(),
               getFrameworks(),
