@@ -1,9 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY 5149103d6fcc8d99d8565d9e07c05e348ca2502b #@#
+#@# GENERATED FILE: DO NOT MODIFY b964d39448c95788bdb56c967c67c632baea85f9 #@#
 {
   "versions" : {
     "deps" : [
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/util:exceptions",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
