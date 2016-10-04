@@ -18,6 +18,8 @@ package com.facebook.buck.util;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 
 import java.util.function.Function;
 import java.util.stream.Collector;
@@ -59,6 +61,25 @@ public final class MoreCollectors {
         ImmutableSet.Builder::add,
         (left, right) -> left.addAll(right.build()),
         ImmutableSet.Builder::build);
+  }
+
+  /**
+   * Returns a {@code Collector} that builds an {@code ImmutableSortedSet}.
+   *
+   * This {@code Collector} behaves similar to
+   * {@code Collectors.collectingAndThen(Collectors.toList(), ImmutableSortedSet::copyOf)} but
+   * without building the intermediate list.
+   *
+   * @param <T> the type of the input elements
+   * @return a {@code Collector} that builds an {@code ImmutableSortedSet}.
+   */
+  public static <T> Collector<T, ?, ImmutableSortedSet<T>> toImmutableSortedSet(
+      Ordering<T> ordering) {
+    return Collector.<T, ImmutableSortedSet.Builder<T>, ImmutableSortedSet<T>>of(
+        () -> ImmutableSortedSet.orderedBy(ordering),
+        ImmutableSet.Builder::add,
+        (left, right) -> left.addAll(right.build()),
+        ImmutableSortedSet.Builder::build);
   }
 
   /**

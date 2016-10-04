@@ -414,4 +414,9 @@ public class Genrule extends AbstractBuildRule
     return out;
   }
 
+  @VisibleForTesting
+  public Optional<Arg> getCmd() {
+    return cmd;
+  }
+
 }
