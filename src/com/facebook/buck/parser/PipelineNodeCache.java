@@ -21,20 +21,17 @@ import com.google.common.base.Optional;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.annotation.concurrent.GuardedBy;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 class PipelineNodeCache<K, T> {
   private final Cache<K, T> cache;
-  @GuardedBy("lock")
-  protected final Map<K, ListenableFuture<T>> jobsCache;
-  private final Object lock = new Object();
+  protected final ConcurrentMap<K, ListenableFuture<T>> jobsCache;
 
   public PipelineNodeCache(Cache<K, T> cache) {
-    this.jobsCache = new HashMap<>();
+    this.jobsCache = new ConcurrentHashMap<>();
     this.cache = cache;
   }
 
@@ -54,10 +51,24 @@ class PipelineNodeCache<K, T> {
       return Futures.immediateFuture(cacheLookupResult.get());
     }
 
-    synchronized (lock) {
-      if (jobsCache.containsKey(key)) {
-        return jobsCache.get(key);
-      }
+    ListenableFuture<T> speculativeCacheLookupResult = jobsCache.get(key);
+    if (speculativeCacheLookupResult != null) {
+      return speculativeCacheLookupResult;
+    }
+
+    // We use a SettableFuture to resolve any races between threads that are trying to create the
+    // job for the given key. The SettableFuture is cheap to throw away in case we didn't "win" and
+    // can be easily "connected" to a future that actually does work in case we did.
+    SettableFuture<T> resultFutureCandidate = SettableFuture.create();
+    ListenableFuture<T> resultFutureInCache = jobsCache.putIfAbsent(key, resultFutureCandidate);
+    if (resultFutureInCache != null) {
+      // Another thread succeeded in putting the new value into the cache.
+      return resultFutureInCache;
+    }
+    // Ok, "our" candidate future went into the jobsCache, schedule the job and 'chain' the result
+    // to the SettableFuture, so that anyone else waiting on it will get the same result.
+    final SettableFuture<T> resultFuture = resultFutureCandidate;
+    try {
       ListenableFuture<T> nodeJob = Futures.transformAsync(
           jobSupplier.get(),
           new AsyncFunction<T, T>() {
@@ -66,9 +77,12 @@ class PipelineNodeCache<K, T> {
               return Futures.immediateFuture(cache.putComputedNodeIfNotPresent(cell, key, input));
             }
           });
-      jobsCache.put(key, nodeJob);
-      return nodeJob;
+      resultFuture.setFuture(nodeJob);
+    } catch (Throwable t) {
+      resultFuture.setException(t);
+      throw t;
     }
+    return resultFuture;
   }
 
   protected interface JobSupplier<V> {
