@@ -45,6 +45,7 @@ import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.StringExpander;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.Escaper;
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -64,26 +65,6 @@ public class CxxGenruleDescription
     implements Flavored {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("cxx_genrule");
-
-  private static final MacroHandler MACRO_HANDLER_FOR_PARSE_TIME_DEPS =
-      new MacroHandler(
-          ImmutableMap.<String, MacroExpander>builder()
-              .put("exe", new ExecutableMacroExpander())
-              .put("location", new LocationMacroExpander())
-              .put("location-platform", new LocationMacroExpander())
-              .put("cc", new StringExpander(""))
-              .put("cxx", new StringExpander(""))
-              .put("cflags", new StringExpander(""))
-              .put("cxxflags", new StringExpander(""))
-              .put("cppflags", new ParseTimeDepsExpander())
-              .put("cxxppflags", new ParseTimeDepsExpander())
-              .put("solibs", new ParseTimeDepsExpander())
-              .put("ld", new StringExpander(""))
-              .put("ldflags-shared", new ParseTimeDepsExpander())
-              .put("ldflags-static", new ParseTimeDepsExpander())
-              .put("ldflags-static-pic", new ParseTimeDepsExpander())
-              .put("platform-name", new StringExpander(""))
-              .build());
 
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
@@ -133,7 +114,27 @@ public class CxxGenruleDescription
 
   @Override
   protected MacroHandler getMacroHandlerForParseTimeDeps() {
-    return MACRO_HANDLER_FOR_PARSE_TIME_DEPS;
+    ImmutableMap.Builder<String, MacroExpander> macros = ImmutableMap.builder();
+    macros.put("exe", new ExecutableMacroExpander());
+    macros.put("location", new LocationMacroExpander());
+    macros.put("location-platform", new LocationMacroExpander());
+    macros.put("platform-name", new StringExpander(""));
+    macros.put("cc", new CxxPlatformParseTimeDepsExpander(cxxPlatforms));
+    macros.put("cxx", new CxxPlatformParseTimeDepsExpander(cxxPlatforms));
+    macros.put("cflags", new StringExpander(""));
+    macros.put("cxxflags", new StringExpander(""));
+    macros.put("cppflags", new ParseTimeDepsExpander());
+    macros.put("cxxppflags", new ParseTimeDepsExpander());
+    macros.put("solibs", new ParseTimeDepsExpander());
+    macros.put("ld", new CxxPlatformParseTimeDepsExpander(cxxPlatforms));
+    for (Linker.LinkableDepType style : Linker.LinkableDepType.values()) {
+      macros.put(
+          String.format(
+              "ldflags-%s",
+              CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, style.toString())),
+          new ParseTimeDepsExpander());
+    }
+    return new MacroHandler(macros.build());
   }
 
   @Override
@@ -581,6 +582,28 @@ public class CxxGenruleDescription
         final BuildRuleResolver resolver,
         final ImmutableList<BuildTarget> input) throws MacroException {
       return getLinkerArgs(resolver, resolve(resolver, input));
+    }
+
+  }
+
+  private static class CxxPlatformParseTimeDepsExpander extends StringExpander {
+
+    private final FlavorDomain<CxxPlatform> cxxPlatforms;
+
+    public CxxPlatformParseTimeDepsExpander(FlavorDomain<CxxPlatform> cxxPlatforms) {
+      super("");
+      this.cxxPlatforms = cxxPlatforms;
+    }
+
+    @Override
+    public ImmutableList<BuildTarget> extractParseTimeDeps(
+        BuildTarget target,
+        CellPathResolver cellNames,
+        ImmutableList<String> input) throws MacroException {
+      Optional<CxxPlatform> platform = cxxPlatforms.getValue(target.getFlavors());
+      return platform.isPresent() ?
+          ImmutableList.copyOf(CxxPlatforms.getParseTimeDeps(platform.get())) :
+          ImmutableList.<BuildTarget>of();
     }
 
   }
