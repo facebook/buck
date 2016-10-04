@@ -16,16 +16,9 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
-import com.facebook.buck.json.ProjectBuildFileParserFactory;
-import com.facebook.buck.json.ProjectBuildFileParserOptions;
-import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -104,34 +97,12 @@ public class AuditRulesCommand extends AbstractCommand {
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
-
-    ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
-    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
-        params.getBuckConfig(),
-        new ExecutableFinder());
-    ProjectBuildFileParserFactory factory = new DefaultProjectBuildFileParserFactory(
-        ProjectBuildFileParserOptions.builder()
-            .setProjectRoot(projectFilesystem.getRootPath())
-            .setPythonInterpreter(pythonBuckConfig.getPythonInterpreter())
-            .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
-            .setIgnorePaths(projectFilesystem.getIgnorePaths())
-            .setBuildFileName(parserConfig.getBuildFileName())
-            .setDefaultIncludes(parserConfig.getDefaultIncludes())
-            .setDescriptions(
-              // TODO(shs96c): When we land dynamic loading, this MUST change.
-              params.getCell().getAllDescriptions())
-            .setEnableBuildFileSandboxing(parserConfig.getEnableBuildFileSandboxing())
-            .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
-            .setRawConfig(params.getBuckConfig().getRawConfigForParser())
-            .build());
-    try (ProjectBuildFileParser parser = factory.createParser(
+    try (ProjectBuildFileParser parser = params.getCell().createBuildFileParser(
         new ConstructorArgMarshaller(new DefaultTypeCoercerFactory(
             params.getObjectMapper())),
         params.getConsole(),
-        params.getEnvironment(),
         params.getBuckEventBus(),
-        /* ignoreBuckAutodepsFiles */ false,
-        new WatchmanDiagnosticCache())) {
+        /* ignoreBuckAutodepsFiles */ false)) {
       PrintStream out = params.getConsole().getStdOut();
       for (String pathToBuildFile : getArguments()) {
         if (!json) {
