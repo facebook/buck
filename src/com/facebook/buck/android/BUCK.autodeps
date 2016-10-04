@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 626d22b2e1bf4b128ea34ed5da022b42d9a8c128 #@#
+#@# GENERATED FILE: DO NOT MODIFY 22d4bf52d5d19135c5ac505f7e23799feb4efea6 #@#
 {
   "apkmodule" : {
     "deps" : [
@@ -85,7 +85,6 @@
       "//src/com/facebook/buck/zip:constants",
       "//src/com/facebook/buck/zip:steps",
       "//src/com/facebook/buck/zip:stream",
-      "//third-party/java/aosp:aosp",
       "//third-party/java/ddmlib:ddmlib",
       "//third-party/java/immutables:processor",
       "//third-party/java/jackson:jackson-core",
@@ -120,6 +119,7 @@
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//src/com/facebook/buck/util/sha1:sha1",
+      "//third-party/java/aosp:aosp",
       "//third-party/java/guava:guava",
       "//third-party/java/infer-annotations:infer-annotations",
       "//third-party/java/jsr:jsr305"

@@ -1,9 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY 5d0b157e833c1bce014c0e066eab6ac5cb82832c #@#
+#@# GENERATED FILE: DO NOT MODIFY 606da7477d16f3d3551059326d2096f50ad22065 #@#
 {
   "network" : {
     "deps" : [
-      "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/util/concurrent:concurrent"
+      "//src/com/facebook/buck/log:api"
     ],
     "exported_deps" : [
       "//src-gen:thrift",

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 8fcf1545ca684951eb458f7249006ee60a15704d #@#
+#@# GENERATED FILE: DO NOT MODIFY 230165188865b595d2b2bd3c8968eb25a98cd920 #@#
 {
   "event" : {
     "deps" : [
@@ -16,8 +16,7 @@
       "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
-      "//third-party/java/jackson:jackson-annotations",
-      "//third-party/java/jackson:jackson-databind"
+      "//third-party/java/jackson:jackson-annotations"
     ]
   }
 }

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 38700c78a9f5913ec6a9f5150e4c758c5d3a7739 #@#
+#@# GENERATED FILE: DO NOT MODIFY eab1684a82bcdcdd982fd12c889b503371cc3439 #@#
 {
   "testutil" : {
     "deps" : [
@@ -17,6 +17,7 @@
     "deps" : [
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/versions:versions",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/model:testutil",
