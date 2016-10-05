@@ -24,7 +24,7 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 
 import java.nio.charset.Charset;
-import java.util.LinkedList;
+import java.util.List;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -48,8 +48,7 @@ import javax.annotation.concurrent.NotThreadSafe;
 @NotThreadSafe
 public class AppendingHasher implements Hasher {
 
-  @SuppressWarnings("PMD.LooseCoupling")
-  private final LinkedList<Hasher> hashers;
+  private final List<Hasher> hashers;
 
   /**
    * Creates a new {@link AppendingHasher} backed by a sequence of {@code numHasher}
@@ -57,7 +56,7 @@ public class AppendingHasher implements Hasher {
    */
   public AppendingHasher(HashFunction hashFunction, int numHashers) {
     Preconditions.checkArgument(numHashers > 0);
-    LinkedList<Hasher> hashers = Lists.newLinkedList();
+    List<Hasher> hashers = Lists.newArrayListWithCapacity(numHashers);
     for (int i = 0; i < numHashers; ++i) {
       hashers.add(hashFunction.newHasher());
     }
@@ -170,6 +169,6 @@ public class AppendingHasher implements Hasher {
 
   @Override
   public HashCode hash() {
-    return hashers.removeFirst().hash();
+    return hashers.remove(0).hash();
   }
 }
