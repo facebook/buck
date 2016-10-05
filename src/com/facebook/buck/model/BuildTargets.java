@@ -117,14 +117,6 @@ public class BuildTargets {
         .build();
   }
 
-  /**
-   * Takes the {@link BuildTarget} and derives a new {@link BuildTarget}
-   * from it with no flavors at all.
-   */
-  public static BuildTarget unflavored(BuildTarget buildTarget) {
-    return BuildTarget.builder(buildTarget.getUnflavoredBuildTarget()).build();
-  }
-
   public static Predicate<BuildTarget> containsFlavors(final FlavorDomain<?> domain) {
     return input -> {
       ImmutableSet<Flavor> flavorSet =
