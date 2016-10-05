@@ -807,6 +807,7 @@ public class IjModuleGraphTest {
           }
         };
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    IjProjectConfig projectConfig = IjProjectBuckConfig.create(buckConfig);
     IjModuleFactory moduleFactory = new IjModuleFactory(
         new IjModuleFactory.IjModuleFactoryResolver() {
           @Override
@@ -843,11 +844,11 @@ public class IjModuleGraphTest {
             return Optional.absent();
           }
         },
-        IjProjectBuckConfig.create(buckConfig),
+        projectConfig,
         false);
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(sourceOnlyResolver);
     return IjModuleGraph.from(
-        buckConfig,
+        projectConfig,
         TargetGraphFactory.newInstance(targets),
         libraryFactory,
         moduleFactory,

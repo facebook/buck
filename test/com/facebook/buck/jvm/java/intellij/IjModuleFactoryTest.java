@@ -72,7 +72,7 @@ public class IjModuleFactoryTest {
         .build();
 
     IjModule module = factory.createModule(
-        FakeBuckConfig.builder().build(),
+        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(javaLibBase));
 
@@ -102,7 +102,7 @@ public class IjModuleFactoryTest {
         .build();
 
     IjModule module = factory.createModule(
-        FakeBuckConfig.builder().build(),
+        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.of(javaLibBase, javaLibExtra));
 
@@ -126,7 +126,7 @@ public class IjModuleFactoryTest {
         .build();
 
     IjModule module = factory.createModule(
-        FakeBuckConfig.builder().build(),
+        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(javaTestExtra));
 
@@ -156,7 +156,7 @@ public class IjModuleFactoryTest {
         .build();
 
     IjModule module = factory.createModule(
-        FakeBuckConfig.builder().build(),
+        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.of(javaLibBase, javaTestBase));
 
@@ -200,7 +200,7 @@ public class IjModuleFactoryTest {
         .build();
 
     IjModule module = factory.createModule(
-        FakeBuckConfig.builder().build(),
+        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.of(javaLibBase, javaTestBase, javaTest));
 
@@ -234,12 +234,12 @@ public class IjModuleFactoryTest {
         .build();
 
     IjModule moduleJavaLib = factory.createModule(
-        FakeBuckConfig.builder().build(),
+        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(javaLibBase));
 
     IjModule moduleFromBinary = factory.createModule(
-        FakeBuckConfig.builder().build(),
+        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(androidBinary));
 
@@ -273,12 +273,12 @@ public class IjModuleFactoryTest {
 
 
     IjModule moduleJavaLibWithGenrule = factory.createModule(
-        FakeBuckConfig.builder().build(),
+        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(javaLibWithGenrule));
 
     IjModule moduleJavaLibWithAnnotationProcessor = factory.createModule(
-        FakeBuckConfig.builder().build(),
+        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(javaLibWithAnnotationProcessor));
 
@@ -304,7 +304,7 @@ public class IjModuleFactoryTest {
 
     Path moduleBasePath = Paths.get("java/com/example/base");
     IjModule module = factory.createModule(
-        FakeBuckConfig.builder().build(),
+        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(javaLib));
 
@@ -330,7 +330,7 @@ public class IjModuleFactoryTest {
 
     Path moduleBasePath = Paths.get("");
     IjModule module = factory.createModule(
-        FakeBuckConfig.builder().build(),
+        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(javaLib));
 
@@ -368,7 +368,7 @@ public class IjModuleFactoryTest {
         .build();
 
     IjModule module = factory.createModule(
-        FakeBuckConfig.builder().build(),
+        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         Paths.get("java/com/example"),
         ImmutableSet.of(javaLib1, javaLib2));
 
@@ -397,7 +397,7 @@ public class IjModuleFactoryTest {
         .build();
 
     IjModule module = factory.createModule(
-        FakeBuckConfig.builder().build(),
+        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         Paths.get("third-party/example"),
         ImmutableSet.of(javaLib, javaTest));
 
@@ -416,7 +416,7 @@ public class IjModuleFactoryTest {
 
     Path moduleBasePath = Paths.get("java/com/example/base");
     IjModule module = factory.createModule(
-        FakeBuckConfig.builder().build(),
+        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(androidLib));
 
@@ -438,7 +438,7 @@ public class IjModuleFactoryTest {
 
     Path moduleBasePath = Paths.get("java/com/example/base");
     IjModule module = factory.createModule(
-        FakeBuckConfig.builder().build(),
+        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.of(androidLib, javaLib));
 
@@ -458,7 +458,7 @@ public class IjModuleFactoryTest {
 
     Path moduleBasePath = Paths.get("java/com/example");
     IjModule module = factory.createModule(
-        FakeBuckConfig.builder().build(),
+        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(androidBinary));
 
@@ -483,11 +483,11 @@ public class IjModuleFactoryTest {
         .build();
 
     IjModule moduleWithDefault = factory.createModule(
-        FakeBuckConfig.builder().build(),
+        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(defaultJavaNode));
     IjModule moduleWithJava8 = factory.createModule(
-        FakeBuckConfig.builder().build(),
+        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(java8Node));
 
@@ -579,7 +579,7 @@ public class IjModuleFactoryTest {
           }
         },
         buckConfig == null
-            ? IjProjectConfig.builder().build()
+            ? IjProjectBuckConfig.create(FakeBuckConfig.builder().build())
             : IjProjectBuckConfig.create(buckConfig),
         false);
   }
@@ -596,7 +596,7 @@ public class IjModuleFactoryTest {
 
     Path moduleBasePath = Paths.get("java/com/example/base");
     IjModule module = factory.createModule(
-        FakeBuckConfig.builder().build(),
+        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(cxxLibrary));
 

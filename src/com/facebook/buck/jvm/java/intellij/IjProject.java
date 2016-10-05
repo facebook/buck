@@ -200,13 +200,14 @@ public class IjProject {
             return sourcePathResolver.getRelativePath(sourcePath);
           }
         };
+    IjProjectConfig projectConfig = IjProjectBuckConfig.create(buckConfig);
     IjModuleGraph moduleGraph = IjModuleGraph.from(
-        buckConfig,
+        projectConfig,
         targetGraphAndTargets.getTargetGraph(),
         libraryFactory,
         new IjModuleFactory(
             moduleFactoryResolver,
-            IjProjectBuckConfig.create(buckConfig),
+            projectConfig,
             excludeArtifacts),
         aggregationMode);
     JavaPackageFinder parsingJavaPackageFinder = ParsingJavaPackageFinder.preparse(

@@ -17,8 +17,6 @@
 package com.facebook.buck.jvm.java.intellij;
 
 import com.facebook.buck.android.AndroidResourceDescription;
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
@@ -162,12 +160,12 @@ public class IjModuleGraph {
    * can't be prepresented in IntelliJ are missing from this mapping.
    */
   private static ImmutableMap<BuildTarget, IjModule> createModules(
-      BuckConfig buckConfig,
+      IjProjectConfig projectConfig,
       TargetGraph targetGraph,
       IjModuleFactory moduleFactory,
       final int minimumPathDepth) {
 
-    final BlockedPathNode blockedPathTree = createAggregationHaltPoints(buckConfig, targetGraph);
+    final BlockedPathNode blockedPathTree = createAggregationHaltPoints(projectConfig, targetGraph);
 
     ImmutableListMultimap<Path, TargetNode<?>> baseTargetPathMultimap =
         FluentIterable
@@ -193,7 +191,7 @@ public class IjModuleGraph {
       ImmutableSet<TargetNode<?>> targets =
           FluentIterable.from(baseTargetPathMultimap.get(baseTargetPath)).toSet();
 
-      IjModule module = moduleFactory.createModule(buckConfig, baseTargetPath, targets);
+      IjModule module = moduleFactory.createModule(projectConfig, baseTargetPath, targets);
 
       for (TargetNode<?> target : targets) {
         moduleMapBuilder.put(target.getBuildTarget(), module);
@@ -230,14 +228,13 @@ public class IjModuleGraph {
    * Create the set of paths which should terminate aggregation.
    */
   private static BlockedPathNode createAggregationHaltPoints(
-      BuckConfig buckConfig,
+      IjProjectConfig projectConfig,
       TargetGraph targetGraph) {
     BlockedPathNode blockRoot = new BlockedPathNode();
-    JavaBuckConfig javaBuckConfig = new JavaBuckConfig(buckConfig);
 
     for (TargetNode<?> node : targetGraph.getNodes()) {
       if (node.getConstructorArg() instanceof AndroidResourceDescription.Arg ||
-          isNonDefaultJava(node, javaBuckConfig.getDefaultJavacOptions())) {
+          isNonDefaultJava(node, projectConfig.getJavaBuckConfig().getDefaultJavacOptions())) {
         Path blockedPath = node.getBuildTarget().getBasePath();
         blockRoot.markAsBlocked(blockedPath, 0, blockedPath.getNameCount());
       }
@@ -260,7 +257,7 @@ public class IjModuleGraph {
   }
 
   /**
-   * @param buckConfig the buck config used
+   * @param projectConfig the project config used
    * @param targetGraph input graph.
    * @param libraryFactory library factory.
    * @param moduleFactory module factory.
@@ -271,14 +268,14 @@ public class IjModuleGraph {
    * nodes (Ta, Tb) and Ma contains Ta and Mb contains Tb.
    */
   public static IjModuleGraph from(
-      final BuckConfig buckConfig,
+      final IjProjectConfig projectConfig,
       final TargetGraph targetGraph,
       final IjLibraryFactory libraryFactory,
       final IjModuleFactory moduleFactory,
       AggregationMode aggregationMode) {
     final ImmutableMap<BuildTarget, IjModule> rulesToModules =
         createModules(
-            buckConfig,
+            projectConfig,
             targetGraph,
             moduleFactory,
             aggregationMode.getGraphMinimumDepth(targetGraph.getNodes().size()));

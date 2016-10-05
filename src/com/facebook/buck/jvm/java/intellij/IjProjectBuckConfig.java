@@ -17,6 +17,7 @@ package com.facebook.buck.jvm.java.intellij;
 
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 
 public class IjProjectBuckConfig {
 
@@ -32,6 +33,8 @@ public class IjProjectBuckConfig {
                 PROJECT_BUCK_CONFIG_SECTION,
                 "disable_r_java_idea_generator",
                 false)
-        ).build();
+        )
+        .setJavaBuckConfig(new JavaBuckConfig(buckConfig))
+        .build();
   }
 }

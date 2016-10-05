@@ -20,9 +20,7 @@ import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.RobolectricTestDescription;
-import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -337,7 +335,7 @@ public class IjModuleFactory {
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
   public IjModule createModule(
-      BuckConfig buckConfig,
+      IjProjectConfig projectConfig,
       Path moduleBasePath,
       ImmutableSet<TargetNode<?>> targetNodes) {
     Preconditions.checkArgument(!targetNodes.isEmpty());
@@ -362,11 +360,13 @@ public class IjModuleFactory {
         .setAndroidFacet(context.getAndroidFacet())
         .addAllExtraClassPathDependencies(context.getExtraClassPathDependencies())
         .addAllGeneratedSourceCodeFolders(context.getGeneratedSourceCodeFolders())
-        .setJdkVersion(getJdk(buckConfig, targetNodes))
+        .setJdkVersion(getJdk(projectConfig, targetNodes))
         .build();
   }
 
-  private Optional<String> getJdk(BuckConfig buckConfig, Iterable<TargetNode<?>> targetNodes) {
+  private Optional<String> getJdk(
+      IjProjectConfig projectConfig,
+      Iterable<TargetNode<?>> targetNodes) {
     Optional<String> result = Optional.absent();
     for (TargetNode<?> targetNode : targetNodes) {
       BuildRuleType type = targetNode.getType();
@@ -374,8 +374,7 @@ public class IjModuleFactory {
         continue;
       }
 
-      JavaBuckConfig javaBuckConfig = new JavaBuckConfig(buckConfig);
-      JavacOptions defaultJavacOptions = javaBuckConfig.getDefaultJavacOptions();
+      JavacOptions defaultJavacOptions = projectConfig.getJavaBuckConfig().getDefaultJavacOptions();
       String defaultSourceLevel = defaultJavacOptions.getSourceLevel();
       String defaultTargetLevel = defaultJavacOptions.getTargetLevel();
       JavaLibraryDescription.Arg arg = (JavaLibraryDescription.Arg) targetNode.getConstructorArg();

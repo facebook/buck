@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.jvm.java.intellij;
 
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
 import org.immutables.value.Value;
@@ -22,6 +23,8 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractIjProjectConfig {
+
+  public abstract JavaBuckConfig getJavaBuckConfig();
 
   @Value.Default
   public boolean isAutogenerateAndroidFacetSourcesEnabled() {
