@@ -36,7 +36,7 @@ public abstract class LazyPath {
   /**
    * Creates an instance with given path.
    * @param path The path that get()/getUnchecked() methods should return.
-   * @return Inctance that always returns the given path. It means there is no laziness.
+   * @return Instance that always returns the given path. It means there is no laziness.
    */
   public static LazyPath ofInstance(final Path path) {
     LazyPath instance = new LazyPath() {
