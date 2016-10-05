@@ -44,8 +44,6 @@ public class BuildTargetParser {
   private static final Splitter BUILD_RULE_SEPARATOR_SPLITTER = Splitter.on(BUILD_RULE_SEPARATOR);
   private static final Set<String> INVALID_BASE_NAME_PARTS = ImmutableSet.of("", ".", "..");
 
-
-  private final Interner<UnflavoredBuildTarget> unflavoredTargetCache = Interners.newWeakInterner();
   private final Interner<BuildTarget> flavoredTargetCache = Interners.newWeakInterner();
 
   private final FlavorParser flavorParser = new FlavorParser();
@@ -120,8 +118,7 @@ public class BuildTargetParser {
             // We are setting the cell name so we can print it later
             .setCell(givenCellName);
 
-    UnflavoredBuildTarget unflavoredBuildTarget =
-        unflavoredTargetCache.intern(unflavoredBuilder.build());
+    UnflavoredBuildTarget unflavoredBuildTarget = unflavoredBuilder.build();
 
     BuildTarget.Builder builder = BuildTarget.builder(unflavoredBuildTarget);
     for (String flavor : flavorNames) {

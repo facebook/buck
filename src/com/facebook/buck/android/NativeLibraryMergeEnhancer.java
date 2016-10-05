@@ -568,8 +568,12 @@ class NativeLibraryMergeEnhancer {
         // have a chance to share the target.
         BuildTarget baseBuildTarget = baseBuildRuleParams.getBuildTarget();
         UnflavoredBuildTarget baseUnflavored = baseBuildTarget.getUnflavoredBuildTarget();
-        UnflavoredBuildTarget unflavored = baseUnflavored.withShortName(
-            "merged_lib_" + Flavor.replaceInvalidCharacters(constituents.getSoname().get()));
+        UnflavoredBuildTarget unflavored =
+            UnflavoredBuildTarget.builder()
+                .from(baseUnflavored)
+                .setShortName(
+                    "merged_lib_" + Flavor.replaceInvalidCharacters(constituents.getSoname().get()))
+                .build();
         initialTarget = BuildTarget.of(unflavored);
       }
 

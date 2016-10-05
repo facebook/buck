@@ -19,6 +19,7 @@ package com.facebook.buck.model;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -180,4 +181,18 @@ public class BuildTargetTest {
     assertThat(appendedFlavor.getFlavors(), Matchers.equalTo(expectedFlavors));
   }
 
+  @Test
+  public void unflavoredBuildTargetsAreInterned() {
+    UnflavoredBuildTarget target1 = UnflavoredBuildTarget.builder()
+        .setCellPath(ROOT)
+        .setBaseName("//foo")
+        .setShortName("bar")
+        .build();
+    UnflavoredBuildTarget target2 = UnflavoredBuildTarget.builder()
+        .setCellPath(ROOT)
+        .setBaseName("//foo")
+        .setShortName("bar")
+        .build();
+    assertSame(target1, target2);
+  }
 }
