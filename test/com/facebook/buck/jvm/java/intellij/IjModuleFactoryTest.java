@@ -72,7 +72,6 @@ public class IjModuleFactoryTest {
         .build();
 
     IjModule module = factory.createModule(
-        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(javaLibBase));
 
@@ -102,7 +101,6 @@ public class IjModuleFactoryTest {
         .build();
 
     IjModule module = factory.createModule(
-        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.of(javaLibBase, javaLibExtra));
 
@@ -126,7 +124,6 @@ public class IjModuleFactoryTest {
         .build();
 
     IjModule module = factory.createModule(
-        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(javaTestExtra));
 
@@ -156,7 +153,6 @@ public class IjModuleFactoryTest {
         .build();
 
     IjModule module = factory.createModule(
-        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.of(javaLibBase, javaTestBase));
 
@@ -200,7 +196,6 @@ public class IjModuleFactoryTest {
         .build();
 
     IjModule module = factory.createModule(
-        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.of(javaLibBase, javaTestBase, javaTest));
 
@@ -234,12 +229,10 @@ public class IjModuleFactoryTest {
         .build();
 
     IjModule moduleJavaLib = factory.createModule(
-        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(javaLibBase));
 
     IjModule moduleFromBinary = factory.createModule(
-        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(androidBinary));
 
@@ -273,12 +266,10 @@ public class IjModuleFactoryTest {
 
 
     IjModule moduleJavaLibWithGenrule = factory.createModule(
-        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(javaLibWithGenrule));
 
     IjModule moduleJavaLibWithAnnotationProcessor = factory.createModule(
-        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(javaLibWithAnnotationProcessor));
 
@@ -304,7 +295,6 @@ public class IjModuleFactoryTest {
 
     Path moduleBasePath = Paths.get("java/com/example/base");
     IjModule module = factory.createModule(
-        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(javaLib));
 
@@ -330,7 +320,6 @@ public class IjModuleFactoryTest {
 
     Path moduleBasePath = Paths.get("");
     IjModule module = factory.createModule(
-        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(javaLib));
 
@@ -368,7 +357,6 @@ public class IjModuleFactoryTest {
         .build();
 
     IjModule module = factory.createModule(
-        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         Paths.get("java/com/example"),
         ImmutableSet.of(javaLib1, javaLib2));
 
@@ -397,7 +385,6 @@ public class IjModuleFactoryTest {
         .build();
 
     IjModule module = factory.createModule(
-        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         Paths.get("third-party/example"),
         ImmutableSet.of(javaLib, javaTest));
 
@@ -416,7 +403,6 @@ public class IjModuleFactoryTest {
 
     Path moduleBasePath = Paths.get("java/com/example/base");
     IjModule module = factory.createModule(
-        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(androidLib));
 
@@ -438,7 +424,6 @@ public class IjModuleFactoryTest {
 
     Path moduleBasePath = Paths.get("java/com/example/base");
     IjModule module = factory.createModule(
-        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.of(androidLib, javaLib));
 
@@ -458,7 +443,6 @@ public class IjModuleFactoryTest {
 
     Path moduleBasePath = Paths.get("java/com/example");
     IjModule module = factory.createModule(
-        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(androidBinary));
 
@@ -467,7 +451,7 @@ public class IjModuleFactoryTest {
   }
 
   @Test
-  public void testOverrideJdk() throws Exception {
+  public void testOverrideSdk() throws Exception {
     IjModuleFactory factory = createIjModuleFactory();
 
     Path moduleBasePath = Paths.get("java/com/example");
@@ -483,16 +467,46 @@ public class IjModuleFactoryTest {
         .build();
 
     IjModule moduleWithDefault = factory.createModule(
-        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(defaultJavaNode));
     IjModule moduleWithJava8 = factory.createModule(
-        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(java8Node));
 
-    assertThat(moduleWithDefault.getJdkVersion(), equalTo(Optional.<String>absent()));
-    assertThat(moduleWithJava8.getJdkVersion(), equalTo(Optional.of("1.8")));
+    assertThat(moduleWithDefault.getSdkName(), equalTo(Optional.<String>absent()));
+    assertThat(moduleWithJava8.getSdkName(), equalTo(Optional.of("1.8")));
+    assertThat(moduleWithJava8.getLanguageLevel(), equalTo(Optional.of("1.8")));
+  }
+
+  @Test
+  public void testOverrideSdkFromBuckConfig() throws Exception {
+    IjModuleFactory factory = createIjModuleFactory(
+        FakeBuckConfig.builder().setSections(
+            "[intellij]",
+            "java_library_sdk_names = 1.8 => TestSDK").build());
+
+    Path moduleBasePath = Paths.get("java/com/example");
+    TargetNode<?> defaultJavaNode = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
+        .addSrc(Paths.get("java/com/example/base/Base.java"))
+        .build();
+
+    TargetNode<?> java8Node = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base2:base2"))
+        .addSrc(Paths.get("java/com/example/base2/Base2.java"))
+        .setSourceLevel("1.8")
+        .build();
+
+    IjModule moduleWithDefault = factory.createModule(
+        moduleBasePath,
+        ImmutableSet.<TargetNode<?>>of(defaultJavaNode));
+    IjModule moduleWithJava8 = factory.createModule(
+        moduleBasePath,
+        ImmutableSet.<TargetNode<?>>of(java8Node));
+
+    assertThat(moduleWithDefault.getSdkName(), equalTo(Optional.<String>absent()));
+    assertThat(moduleWithJava8.getSdkName(), equalTo(Optional.of("TestSDK")));
+    assertThat(moduleWithJava8.getLanguageLevel(), equalTo(Optional.of("1.8")));
   }
 
   @Test
@@ -596,7 +610,6 @@ public class IjModuleFactoryTest {
 
     Path moduleBasePath = Paths.get("java/com/example/base");
     IjModule module = factory.createModule(
-        IjProjectBuckConfig.create(FakeBuckConfig.builder().build()),
         moduleBasePath,
         ImmutableSet.<TargetNode<?>>of(cxxLibrary));
 

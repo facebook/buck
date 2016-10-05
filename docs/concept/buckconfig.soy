@@ -111,6 +111,7 @@ The following sections are recognized by Buck:
     'go',
     'groovy',
     'halide',
+    'intellij',
     'java',
     'httpserver',
     'log',
@@ -1389,6 +1390,23 @@ $ buck targets --resolve-alias app#src_jar
   {param description}
     The optional path to a shell script which should be used for invoking the Halide AOT "compiler"
     when building projects that include Halide targets in Xcode.
+  {/param}
+{/call}
+
+{call buckconfig.section}
+  {param name: 'intellij' /}
+  {param description}
+    This section configures a project generated for IntelliJ IDEA by `buck project` command.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'intellij' /}
+  {param name: 'java_library_sdk_names' /}
+  {param example_value: '1.6 => Java SDK 1.6, 1.8 => Java SDK 1.8' /}
+  {param description}
+    SDK names which should be used in IntelliJ modules generated
+    from <code>java_library</code> rules with non-default <code>source</code> option.
   {/param}
 {/call}
 

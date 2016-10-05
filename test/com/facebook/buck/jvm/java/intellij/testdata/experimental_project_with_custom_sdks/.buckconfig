@@ -1,0 +1,11 @@
+[color]
+  ui = false
+[alias]
+  root=//:root_repo
+[project]
+  ignore = buck-out
+  ide = intellij
+  disable_r_java_idea_generator = true
+[intellij]
+  java_library_sdk_names = 1.6 => Java SDK 1.6, \
+                           1.8 => Java SDK 1.8

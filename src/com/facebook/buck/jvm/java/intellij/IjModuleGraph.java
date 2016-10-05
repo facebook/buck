@@ -191,7 +191,7 @@ public class IjModuleGraph {
       ImmutableSet<TargetNode<?>> targets =
           FluentIterable.from(baseTargetPathMultimap.get(baseTargetPath)).toSet();
 
-      IjModule module = moduleFactory.createModule(projectConfig, baseTargetPath, targets);
+      IjModule module = moduleFactory.createModule(baseTargetPath, targets);
 
       for (TargetNode<?> target : targets) {
         moduleMapBuilder.put(target.getBuildTarget(), module);

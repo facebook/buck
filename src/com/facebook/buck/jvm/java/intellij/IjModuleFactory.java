@@ -291,8 +291,11 @@ public class IjModuleFactory {
     void apply(TargetNode<T> targetNode, ModuleBuildContext context);
   }
 
+  private static final String SDK_TYPE_JAVA = "JavaSDK";
+
   private final Map<BuildRuleType, IjModuleRule<?>> moduleRuleIndex = new HashMap<>();
   private final IjModuleFactoryResolver moduleFactoryResolver;
+  private final IjProjectConfig projectConfig;
   private final boolean excludeShadows;
   private final boolean autogenerateAndroidFacetSources;
 
@@ -304,6 +307,7 @@ public class IjModuleFactory {
       IjProjectConfig projectConfig,
       boolean excludeShadows) {
     this.excludeShadows = excludeShadows;
+    this.projectConfig = projectConfig;
     this.autogenerateAndroidFacetSources = projectConfig.isAutogenerateAndroidFacetSourcesEnabled();
 
     addToIndex(new AndroidBinaryModuleRule());
@@ -335,7 +339,6 @@ public class IjModuleFactory {
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
   public IjModule createModule(
-      IjProjectConfig projectConfig,
       Path moduleBasePath,
       ImmutableSet<TargetNode<?>> targetNodes) {
     Preconditions.checkArgument(!targetNodes.isEmpty());
@@ -352,6 +355,18 @@ public class IjModuleFactory {
       rule.apply((TargetNode) targetNode, context);
     }
 
+    Optional<String> sourceLevel = getSourceLevel(targetNodes);
+    // The only JDK type that is supported right now. If we ever add support for Android libraries
+    // to have different language levels we need to add logic to detect correct JDK type.
+    String sdkType = SDK_TYPE_JAVA;
+
+    Optional<String> sdkName;
+    if (sourceLevel.isPresent()) {
+      sdkName = getSdkName(sourceLevel.get(), sdkType);
+    } else {
+      sdkName = Optional.absent();
+    }
+
     return IjModule.builder()
         .setModuleBasePath(moduleBasePath)
         .setTargets(targetNodes)
@@ -360,12 +375,13 @@ public class IjModuleFactory {
         .setAndroidFacet(context.getAndroidFacet())
         .addAllExtraClassPathDependencies(context.getExtraClassPathDependencies())
         .addAllGeneratedSourceCodeFolders(context.getGeneratedSourceCodeFolders())
-        .setJdkVersion(getJdk(projectConfig, targetNodes))
+        .setSdkName(sdkName)
+        .setSdkType(sdkType)
+        .setLanguageLevel(sourceLevel)
         .build();
   }
 
-  private Optional<String> getJdk(
-      IjProjectConfig projectConfig,
+  private Optional<String> getSourceLevel(
       Iterable<TargetNode<?>> targetNodes) {
     Optional<String> result = Optional.absent();
     for (TargetNode<?> targetNode : targetNodes) {
@@ -383,7 +399,31 @@ public class IjModuleFactory {
         result = arg.source;
       }
     }
+
+    if (result.isPresent()) {
+      result = Optional.of(normalizeSourceLevel(result.get()));
+    }
+
     return result;
+  }
+
+  /**
+   * Ensures that source level has format "majorVersion.minorVersion".
+   */
+  private static String normalizeSourceLevel(String jdkVersion) {
+    if (jdkVersion.length() == 1) {
+      return "1." + jdkVersion;
+    } else {
+      return jdkVersion;
+    }
+  }
+
+  private Optional<String> getSdkName(String sourceLevel, String sdkType) {
+    Optional<String> sdkName = Optional.absent();
+    if (SDK_TYPE_JAVA.equals(sdkType)) {
+      sdkName = projectConfig.getJavaLibrarySdkNameForSourceLevel(sourceLevel);
+    }
+    return sdkName.isPresent() ? sdkName : Optional.of(sourceLevel);
   }
 
   /**

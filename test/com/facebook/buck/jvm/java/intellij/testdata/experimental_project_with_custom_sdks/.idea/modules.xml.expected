@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/modules/dep1/modules_dep1.iml" filepath="$PROJECT_DIR$/modules/dep1/modules_dep1.iml"  group="modules"  />
+      <module fileurl="file://$PROJECT_DIR$/modules/dep2/modules_dep2.iml" filepath="$PROJECT_DIR$/modules/dep2/modules_dep2.iml"  group="modules"  />
+      <module fileurl="file://$PROJECT_DIR$/modules/dep3/modules_dep3.iml" filepath="$PROJECT_DIR$/modules/dep3/modules_dep3.iml"  group="modules"  />
+      <module fileurl="file://$PROJECT_DIR$/modules/dep4/modules_dep4.iml" filepath="$PROJECT_DIR$/modules/dep4/modules_dep4.iml"  group="modules"  />
+      <module fileurl="file://$PROJECT_DIR$/modules/dep5/modules_dep5.iml" filepath="$PROJECT_DIR$/modules/dep5/modules_dep5.iml"  group="modules"  />
+      <module fileurl="file://$PROJECT_DIR$/project_root.iml" filepath="$PROJECT_DIR$/project_root.iml"  />
+
+   </modules>
+  </component>
+</project>
