@@ -27,17 +27,18 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Base class for gathering logs and other interesting information from buck.
@@ -111,7 +112,7 @@ public abstract class AbstractReport {
               }
             })
         .append(extraInfoPaths)
-        .append(userLocalConfiguration.getLocalConfigs())
+        .append(userLocalConfiguration.getLocalConfigsContents().keySet())
         .append(getTracePathsOfBuilds(highlightedBuilds))
         .toSet();
 
@@ -143,7 +144,7 @@ public abstract class AbstractReport {
     String getUserIssueDescription();
   }
 
-  private ImmutableSet<Path> getLocalConfigs() {
+  private ImmutableMap<Path, String> getLocalConfigs() {
     Path rootPath = filesystem.getRootPath();
     ImmutableSet<Path> knownUserLocalConfigs = ImmutableSet.of(
         Paths.get(BuckConfig.BUCK_CONFIG_OVERRIDE_FILE_NAME),
@@ -151,15 +152,21 @@ public abstract class AbstractReport {
         Paths.get(".watchman.local"),
         Paths.get(".buckjavaargs.local"),
         Paths.get(".bucklogging.local.properties"));
-    Set<Path> foundUserlocalConfigs = new HashSet<>();
 
+    ImmutableMap.Builder<Path, String> localConfigs = ImmutableMap.builder();
     for (Path localConfig : knownUserLocalConfigs) {
-      if (Files.exists(rootPath.resolve(localConfig))) {
-        foundUserlocalConfigs.add(localConfig);
+      try {
+        localConfigs.put(
+            localConfig,
+            new String(Files.readAllBytes(rootPath.resolve(localConfig)), StandardCharsets.UTF_8));
+      } catch (FileNotFoundException e) {
+        LOG.debug("%s was not found.", localConfig);
+      } catch (IOException e) {
+        LOG.warn("Failed to read contents of %s.", rootPath.resolve(localConfig).toString());
       }
     }
 
-    return ImmutableSet.copyOf(foundUserlocalConfigs);
+    return localConfigs.build();
   }
 
   /**

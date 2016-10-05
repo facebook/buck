@@ -17,7 +17,7 @@
 package com.facebook.buck.rage;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
 
@@ -31,5 +31,5 @@ abstract class AbstractUserLocalConfiguration {
   abstract boolean isNoBuckCheckPresent();
 
   @Value.Parameter
-  abstract ImmutableSet<Path> getLocalConfigs();
+  abstract ImmutableMap<Path, String> getLocalConfigsContents();
 }

@@ -29,7 +29,7 @@ import com.facebook.buck.util.TriState;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -56,7 +56,7 @@ public class DefectReporterTest {
           .build();
 
   private static final UserLocalConfiguration TEST_USER_LOCAL_CONFIGURATION =
-      UserLocalConfiguration.of(true, ImmutableSet.of(Paths.get(".buckconfig.local")));
+      UserLocalConfiguration.of(true, ImmutableMap.of(Paths.get(".buckconfig.local"), "data"));
 
   @Rule
   public TemporaryPaths temporaryFolder = new TemporaryPaths();
