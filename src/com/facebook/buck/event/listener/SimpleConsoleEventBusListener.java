@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.event.listener;
 
+import static com.facebook.buck.rules.BuildRuleSuccessType.BUILT_LOCALLY;
+
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
@@ -231,7 +233,10 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         formatElapsedTime(timeToRender),
         finished.getBuildRule().getFullyQualifiedName());
 
-    console.getStdErr().println(line);
+    if (BUILT_LOCALLY.equals(finished.getSuccessType().orNull()) ||
+        console.getVerbosity().shouldPrintBinaryRunInformation()) {
+      console.getStdErr().println(line);
+    }
   }
 
   @Override
