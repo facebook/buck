@@ -444,7 +444,7 @@ def is_java8_or_9():
         return _java8_or_9
     try:
         cmd = ['java', '-Xms64m', '-version']
-        output = check_output(cmd, stderr=subprocess.STDOUT)
+        output = check_output(cmd, stderr=subprocess.STDOUT, shell=sys.platform == "win32")
         for version_line in output.strip().splitlines():
             m = re.compile('(openjdk|java) version "(1\.(8|9)\.|9).*').match(version_line)
             if bool(m):
