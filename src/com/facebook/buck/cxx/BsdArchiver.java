@@ -138,6 +138,22 @@ public class BsdArchiver implements Archiver {
   }
 
   @Override
+  public ImmutableList<String> getArchiveOptions(boolean isThinArchive) {
+    String options = isThinArchive ? "qcT" : "qc";
+    return ImmutableList.<String>of(options);
+  }
+
+  @Override
+  public ImmutableList<String> outputArgs(String outputPath) {
+    return ImmutableList.of(outputPath);
+  }
+
+  @Override
+  public boolean isRanLibStepRequired() {
+    return true;
+  }
+
+  @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
     return tool.getDeps(resolver);
   }

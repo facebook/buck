@@ -464,7 +464,8 @@ public class CxxLibraryDescription implements
             params.getProjectFilesystem(),
             params.getBuildTarget(),
             cxxPlatform.getFlavor(),
-            pic);
+            pic,
+            cxxPlatform.getStaticLibraryExtension());
     return Archive.from(
         staticTarget,
         params,

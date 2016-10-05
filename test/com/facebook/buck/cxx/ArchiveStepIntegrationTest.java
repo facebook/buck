@@ -20,13 +20,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.FileScrubberStep;
@@ -68,7 +67,7 @@ public class ArchiveStepIntegrationTest {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
-    Tool archiver = platform.getAr();
+    Archiver archiver = platform.getAr();
     Path output = filesystem.getRootPath().getFileSystem().getPath("output.a");
     Path input = filesystem.getRootPath().getFileSystem().getPath("input.dat");
     filesystem.writeContentsToPath("blah", input);
@@ -80,9 +79,10 @@ public class ArchiveStepIntegrationTest {
         archiver.getEnvironment(sourcePathResolver),
         archiver.getCommandPrefix(sourcePathResolver),
         ImmutableList.<String>of(),
-        Archive.Contents.NORMAL,
+        getArchiveOptions(false),
         output,
-        ImmutableList.of(input));
+        ImmutableList.of(input),
+        archiver);
     FileScrubberStep fileScrubberStep = new FileScrubberStep(
         filesystem,
         output,
@@ -120,7 +120,7 @@ public class ArchiveStepIntegrationTest {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
-    Tool archiver = platform.getAr();
+    Archiver archiver = platform.getAr();
     Path output = filesystem.getRootPath().getFileSystem().getPath("output.a");
 
     // Build an archive step.
@@ -130,9 +130,9 @@ public class ArchiveStepIntegrationTest {
             archiver.getEnvironment(sourcePathResolver),
             archiver.getCommandPrefix(sourcePathResolver),
             ImmutableList.<String>of(),
-            Archive.Contents.NORMAL,
+            getArchiveOptions(false),
             output,
-            ImmutableList.<Path>of());
+            ImmutableList.<Path>of(), archiver);
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstance();
@@ -161,7 +161,7 @@ public class ArchiveStepIntegrationTest {
             new BuildRuleResolver(
                 TargetGraph.EMPTY,
                 new DefaultTargetNodeToBuildRuleTransformer()));
-    Tool archiver = platform.getAr();
+    Archiver archiver = platform.getAr();
     Path output = filesystem.getRootPath().getFileSystem().getPath("output.a");
     Path input = filesystem.getRootPath().getFileSystem().getPath("foo/blah.dat");
     filesystem.mkdirs(input.getParent());
@@ -174,9 +174,10 @@ public class ArchiveStepIntegrationTest {
             archiver.getEnvironment(sourcePathResolver),
             archiver.getCommandPrefix(sourcePathResolver),
             ImmutableList.<String>of(),
-            Archive.Contents.NORMAL,
+            getArchiveOptions(false),
             output,
-            ImmutableList.of(input.getParent()));
+            ImmutableList.of(input.getParent()),
+            archiver);
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstance();
@@ -207,7 +208,7 @@ public class ArchiveStepIntegrationTest {
             new BuildRuleResolver(
                 TargetGraph.EMPTY,
                 new DefaultTargetNodeToBuildRuleTransformer()));
-    Tool archiver = platform.getAr();
+    Archiver archiver = platform.getAr();
 
     Path output = filesystem.getRootPath().getFileSystem().getPath("foo/libthin.a");
     filesystem.mkdirs(output.getParent());
@@ -229,9 +230,10 @@ public class ArchiveStepIntegrationTest {
             archiver.getEnvironment(sourcePathResolver),
             archiver.getCommandPrefix(sourcePathResolver),
             ImmutableList.<String>of(),
-            Archive.Contents.THIN,
+            getArchiveOptions(true),
             output,
-            ImmutableList.of(input));
+            ImmutableList.of(input),
+            archiver);
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstance();
@@ -263,6 +265,11 @@ public class ArchiveStepIntegrationTest {
           entry.getName(),
           Matchers.equalTo(output.getParent().relativize(input).toString()));
     }
+  }
+
+  private static ImmutableList<String> getArchiveOptions(boolean isThinArchive) {
+    String options = isThinArchive ? "qcT" : "qc";
+    return ImmutableList.<String>of(options);
   }
 
 }

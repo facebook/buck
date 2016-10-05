@@ -50,6 +50,21 @@ public class LazyDelegatingArchiver implements Archiver {
   }
 
   @Override
+  public ImmutableList<String> getArchiveOptions(boolean isThinArchive) {
+    return delegate.get().getArchiveOptions(isThinArchive);
+  }
+
+  @Override
+  public ImmutableList<String> outputArgs(String outputPath) {
+    return delegate.get().outputArgs(outputPath);
+  }
+
+  @Override
+  public boolean isRanLibStepRequired() {
+    return delegate.get().isRanLibStepRequired();
+  }
+
+  @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
     return delegate.get().getDeps(resolver);
   }

@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.CxxToolFlags;
+import com.facebook.buck.cxx.Preprocessor;
 import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -101,6 +102,9 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
   @AddToRuleKey
   private final HaskellSources sources;
 
+  @AddToRuleKey
+  private final Preprocessor preprocessor;
+
   private HaskellCompileRule(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
@@ -114,7 +118,8 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
       ImmutableList<SourcePath> includes,
       ImmutableSortedMap<String, HaskellPackage> exposedPackages,
       ImmutableSortedMap<String, HaskellPackage> packages,
-      HaskellSources sources) {
+      HaskellSources sources,
+      Preprocessor preprocessor) {
     super(buildRuleParams, resolver);
     this.compiler = compiler;
     this.flags = flags;
@@ -127,6 +132,7 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
     this.exposedPackages = exposedPackages;
     this.packages = packages;
     this.sources = sources;
+    this.preprocessor = preprocessor;
   }
 
   public static HaskellCompileRule from(
@@ -143,7 +149,8 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
       final ImmutableList<SourcePath> includes,
       final ImmutableSortedMap<String, HaskellPackage> exposedPackages,
       final ImmutableSortedMap<String, HaskellPackage> packages,
-      final HaskellSources sources) {
+      final HaskellSources sources,
+      Preprocessor preprocessor) {
     return new HaskellCompileRule(
         baseParams.copyWithChanges(
             target,
@@ -177,7 +184,8 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
         includes,
         exposedPackages,
         packages,
-        sources);
+        sources,
+        preprocessor);
   }
 
   @Override
@@ -261,7 +269,8 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
         ppFlags.toToolFlags(
             getResolver(),
             Functions.<Path>identity(),
-            CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, getResolver()));
+            CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, getResolver()),
+            preprocessor);
     return MoreIterables.zipAndConcat(
         Iterables.cycle("-optP"),
         cxxToolFlags.getAllFlags());

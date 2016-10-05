@@ -37,4 +37,9 @@ public class ClangCompiler extends DefaultCompiler {
     return Optional.of(ImmutableList.of("-fcolor-diagnostics"));
   }
 
+  @Override
+  public boolean isArgFileSupported() {
+    return true;
+  }
+
 }

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.swift;
 
-import static com.facebook.buck.cxx.CxxPreprocessables.IncludeType.LOCAL;
 import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_MAIN_FILENAME;
 import static com.facebook.buck.swift.SwiftUtil.normalizeSwiftModuleName;
 import static com.facebook.buck.swift.SwiftUtil.toSwiftHeaderName;
@@ -65,6 +64,8 @@ import java.util.LinkedHashSet;
 class SwiftCompile
     extends AbstractBuildRule {
 
+  private static final String INCLUDE_FLAG = "-I";
+
   @AddToRuleKey
   private final Tool swiftCompiler;
 
@@ -96,7 +97,7 @@ class SwiftCompile
       new Function<String, String>() {
         @Override
         public String apply(String input) {
-          return LOCAL.getFlag().concat(input);
+          return INCLUDE_FLAG.concat(input);
         }
       };
 
@@ -166,7 +167,7 @@ class SwiftCompile
         MoreIterables.zipAndConcat(Iterables.cycle("-Xcc"),
             getSwiftIncludeArgs()));
     compilerCommand.addAll(MoreIterables.zipAndConcat(
-        Iterables.cycle(LOCAL.getFlag()),
+        Iterables.cycle(INCLUDE_FLAG),
         FluentIterable.from(getDeps())
             .filter(SwiftCompile.class)
             .transform(SourcePaths.getToBuildTargetSourcePath())

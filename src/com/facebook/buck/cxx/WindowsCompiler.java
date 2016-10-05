@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,26 +13,39 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.Tool;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
-public interface Compiler extends Tool {
+public class WindowsCompiler extends DefaultCompiler {
 
-  Optional<ImmutableList<String>> debugCompilationDirFlags(String debugCompilationDir);
+  public WindowsCompiler(Tool tool) {
+    super(tool);
+  }
 
-  Optional<ImmutableList<String>> getFlagsForColorDiagnostics();
+  @Override
+  public boolean isDependencyFileSupported() {
+    return false;
+  }
 
-  ImmutableList<String> languageArgs(String language);
+  @Override
+  public ImmutableList<String> outputArgs(String outputPath) {
+    return ImmutableList.of("/Fo" + outputPath);
+  }
 
-  boolean isArgFileSupported();
+  @Override
+  public boolean isArgFileSupported() {
+    return false;
+  }
 
-  boolean isDependencyFileSupported();
+  @Override
+  public ImmutableList<String> outputDependenciesArgs(String outputPath) {
+    return ImmutableList.of();
+  }
 
-  ImmutableList<String> outputArgs(String outputPath);
-
-  ImmutableList<String> outputDependenciesArgs(String outputPath);
+  @Override
+  public ImmutableList<String> languageArgs(String inputLanguage) {
+    return ImmutableList.of();
+  }
 }

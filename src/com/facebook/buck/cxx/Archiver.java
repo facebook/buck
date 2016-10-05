@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-
 import com.facebook.buck.io.FileScrubber;
 import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableList;
@@ -27,4 +26,9 @@ public interface Archiver extends Tool {
 
   boolean supportsThinArchives();
 
+  ImmutableList<String> getArchiveOptions(boolean isThinArchive);
+
+  ImmutableList<String> outputArgs(String outputPath);
+
+  boolean isRanLibStepRequired();
 }

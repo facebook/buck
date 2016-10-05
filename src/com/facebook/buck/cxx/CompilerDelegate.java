@@ -100,4 +100,15 @@ class CompilerDelegate implements RuleKeyAppendable {
     return compiler.getFlagsForColorDiagnostics();
   }
 
+  public boolean isArgFileSupported() {
+    return compiler.isArgFileSupported();
+  }
+
+  public boolean isDependencyFileSupported() {
+    return compiler.isDependencyFileSupported();
+  }
+
+  public Compiler getCompiler() {
+    return compiler;
+  }
 }

@@ -20,6 +20,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.LineProcessorRunnable;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -81,15 +82,17 @@ class CxxErrorTransformerFactory {
   }
 
   private static final ImmutableList<Pattern> PATH_PATTERNS =
-      ImmutableList.of(
-          Pattern.compile(
-              "(?<prefix>^(?:In file included |\\s+)from )" +
-              "(?<path>[^:]+)" +
-              "(?<suffix>[:,](?:\\d+[:,](?:\\d+[:,])?)?$)"),
-          Pattern.compile(
-              "(?<prefix>^(?:\u001B\\[[;\\d]*m)?)" +
-              "(?<path>[^:]+)" +
-              "(?<suffix>:(?:\\d+:(?:\\d+:)?)?)"));
+      Platform.detect() == Platform.WINDOWS ?
+          ImmutableList.<Pattern>of() :
+          ImmutableList.of(
+              Pattern.compile(
+                  "(?<prefix>^(?:In file included |\\s+)from )" +
+                      "(?<path>[^:]+)" +
+                      "(?<suffix>[:,](?:\\d+[:,](?:\\d+[:,])?)?$)"),
+              Pattern.compile(
+                  "(?<prefix>^(?:\u001B\\[[;\\d]*m)?)" +
+                      "(?<path>[^:]+)" +
+                      "(?<suffix>:(?:\\d+:(?:\\d+:)?)?)"));
 
   @VisibleForTesting
   String transformLine(String line) {

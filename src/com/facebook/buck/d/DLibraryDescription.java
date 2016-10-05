@@ -153,7 +153,8 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
             params.getProjectFilesystem(),
             params.getBuildTarget(),
             cxxPlatform.getFlavor(),
-            pic);
+            pic,
+            cxxPlatform.getStaticLibraryExtension());
 
     return Archive.from(
         staticTarget,

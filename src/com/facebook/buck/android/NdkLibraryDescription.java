@@ -20,9 +20,11 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
+import com.facebook.buck.cxx.CxxSourceTypes;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.NativeLinkables;
+import com.facebook.buck.cxx.Preprocessor;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -186,11 +188,14 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       // NDK build.
       ImmutableList.Builder<String> ppFlags = ImmutableList.builder();
       ppFlags.addAll(cxxPreprocessorInput.getPreprocessorFlags().get(CxxSource.Type.C));
+      Preprocessor preprocessor =
+          CxxSourceTypes.getPreprocessor(cxxPlatform, CxxSource.Type.C).resolve(resolver);
       ppFlags.addAll(
           CxxHeaders.getArgs(
               cxxPreprocessorInput.getIncludes(),
               pathResolver,
-              Optional.<Function<Path, Path>>absent()));
+              Optional.<Function<Path, Path>>absent(),
+              preprocessor));
       String localCflags =
           Joiner.on(' ').join(escapeForMakefile(params.getProjectFilesystem(), ppFlags.build()));
 

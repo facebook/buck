@@ -161,7 +161,8 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     return preprocessorFlags.toToolFlags(
         resolver,
         minLengthPathRepresentation,
-        frameworkPathSearchPathFunction);
+        frameworkPathSearchPathFunction,
+        preprocessor);
   }
 
   public void checkForConflictingHeaders() throws ConflictingHeadersException {

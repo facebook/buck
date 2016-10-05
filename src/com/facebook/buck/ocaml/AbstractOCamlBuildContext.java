@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.NativeLinkableInput;
+import com.facebook.buck.cxx.Preprocessor;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -104,6 +105,7 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
   protected abstract List<String> getCFlags();
   protected abstract Optional<String> getOCamlInteropIncludesDir();
   protected abstract List<String> getLdFlags();
+  protected abstract Preprocessor getCPreprocessor();
 
   public ImmutableList<SourcePath> getCInput() {
     return FluentIterable.from(getInput())
@@ -342,7 +344,8 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
             CxxHeaders.getArgs(
                 cxxPreprocessorInput.getIncludes(),
                 getSourcePathResolver(),
-                Optional.<Function<Path, Path>>absent())));
+                Optional.<Function<Path, Path>>absent(),
+                getCPreprocessor())));
 
     for (Path includes : cxxPreprocessorInput.getSystemIncludeRoots()) {
       compileFlags.add("-ccopt", "-isystem" + includes.toString());

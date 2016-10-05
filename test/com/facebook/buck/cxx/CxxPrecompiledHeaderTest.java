@@ -53,6 +53,8 @@ public class CxxPrecompiledHeaderTest {
             return true;
           }
         };
+    Compiler compiler =
+        CxxPlatformUtils.DEFAULT_PLATFORM.getCxx().resolve(resolver);
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     CxxPrecompiledHeader precompiledHeader = new CxxPrecompiledHeader(
         params,
@@ -69,6 +71,12 @@ public class CxxPrecompiledHeaderTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 sourcePathResolver),
             ImmutableList.<CxxHeaders>of()),
+        new CompilerDelegate(
+            sourcePathResolver,
+            CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER,
+            compiler,
+            CxxToolFlags.of()
+        ),
         CxxToolFlags.of(),
         new FakeSourcePath("foo.h"),
         CxxSource.Type.C,

@@ -28,4 +28,8 @@ public interface Preprocessor extends Tool {
 
   boolean supportsPrecompiledHeaders();
 
+  Iterable<String> localIncludeArgs(Iterable<String> includeRoots);
+
+  Iterable<String> systemIncludeArgs(Iterable<String> includeRoots);
+
 }

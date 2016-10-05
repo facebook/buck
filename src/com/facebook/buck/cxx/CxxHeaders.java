@@ -20,14 +20,12 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 
@@ -82,7 +80,8 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
   public static Iterable<String> getArgs(
       Iterable<CxxHeaders> cxxHeaderses,
       SourcePathResolver resolver,
-      Optional<Function<Path, Path>> pathShortener) {
+      Optional<Function<Path, Path>> pathShortener,
+      Preprocessor preprocessor) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
 
     // Collect the header maps and roots into buckets organized by include type, so that we can:
@@ -113,19 +112,13 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
     // stat'ing files in the normal include roots.
     Preconditions.checkState(includeTypes.containsAll(headerMaps.keySet()));
     for (CxxPreprocessables.IncludeType includeType : includeTypes) {
-      args.addAll(
-          MoreIterables.zipAndConcat(
-              Iterables.cycle(includeType.getFlag()),
-              headerMaps.get(includeType)));
+      args.addAll(includeType.includeArgs(preprocessor, headerMaps.get(includeType)));
     }
 
     // Apply the regular includes last.
     Preconditions.checkState(includeTypes.containsAll(roots.keySet()));
     for (CxxPreprocessables.IncludeType includeType : includeTypes) {
-      args.addAll(
-          MoreIterables.zipAndConcat(
-              Iterables.cycle(includeType.getFlag()),
-              roots.get(includeType)));
+      args.addAll(includeType.includeArgs(preprocessor, roots.get(includeType)));
     }
 
     return args.build();

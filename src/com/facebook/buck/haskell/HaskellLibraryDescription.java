@@ -158,7 +158,8 @@ public class HaskellLibraryDescription implements
             cxxPlatform.getFlavor(),
             depType == Linker.LinkableDepType.STATIC ?
                 CxxSourceRuleFactory.PicType.PDC :
-                CxxSourceRuleFactory.PicType.PIC),
+                CxxSourceRuleFactory.PicType.PIC,
+            cxxPlatform.getStaticLibraryExtension()),
         compileRule.getObjects());
   }
 

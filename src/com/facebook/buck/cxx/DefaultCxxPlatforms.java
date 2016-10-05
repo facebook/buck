@@ -58,6 +58,8 @@ public class DefaultCxxPlatforms {
       CxxBuckConfig config) {
     String sharedLibraryExtension;
     String sharedLibraryVersionedExtensionFormat;
+    String staticLibraryExtension;
+    String objectFileExtension;
     Path defaultCFrontend;
     Path defaultCxxFrontend;
     LinkerProvider.Type linkerType;
@@ -66,6 +68,8 @@ public class DefaultCxxPlatforms {
       case LINUX:
         sharedLibraryExtension = "so";
         sharedLibraryVersionedExtensionFormat = "so.%s";
+        staticLibraryExtension = "a";
+        objectFileExtension = "o";
         defaultCFrontend = DEFAULT_C_FRONTEND;
         defaultCxxFrontend = DEFAULT_CXX_FRONTEND;
         linkerType = LinkerProvider.Type.GNU;
@@ -74,6 +78,8 @@ public class DefaultCxxPlatforms {
       case MACOS:
         sharedLibraryExtension = "dylib";
         sharedLibraryVersionedExtensionFormat = ".%s.dylib";
+        staticLibraryExtension = "a";
+        objectFileExtension = "o";
         defaultCFrontend = DEFAULT_OSX_C_FRONTEND;
         defaultCxxFrontend = DEFAULT_OSX_CXX_FRONTEND;
         linkerType = LinkerProvider.Type.DARWIN;
@@ -82,14 +88,18 @@ public class DefaultCxxPlatforms {
       case WINDOWS:
         sharedLibraryExtension = "dll";
         sharedLibraryVersionedExtensionFormat = "dll";
+        staticLibraryExtension = "lib";
+        objectFileExtension = "obj";
         defaultCFrontend = DEFAULT_C_FRONTEND;
         defaultCxxFrontend = DEFAULT_CXX_FRONTEND;
         linkerType = LinkerProvider.Type.GNU;
-        archiver = new GnuArchiver(new HashedFileTool(DEFAULT_AR));
+        archiver = new WindowsArchiver(new HashedFileTool(DEFAULT_AR));
         break;
       case FREEBSD:
         sharedLibraryExtension = "so";
         sharedLibraryVersionedExtensionFormat = "so.%s";
+        staticLibraryExtension = "a";
+        objectFileExtension = "o";
         defaultCFrontend = DEFAULT_C_FRONTEND;
         defaultCxxFrontend = DEFAULT_CXX_FRONTEND;
         linkerType = LinkerProvider.Type.GNU;
@@ -149,6 +159,8 @@ public class DefaultCxxPlatforms {
         ImmutableList.<String>of(),
         sharedLibraryExtension,
         sharedLibraryVersionedExtensionFormat,
+        staticLibraryExtension,
+        objectFileExtension,
         Optional.<DebugPathSanitizer>absent(),
         ImmutableMap.<String, String>of());
   }

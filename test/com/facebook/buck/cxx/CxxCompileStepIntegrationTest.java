@@ -62,8 +62,8 @@ public class CxxCompileStepIntegrationTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    ImmutableList<String> compiler =
-        platform.getCc().resolve(resolver).getCommandPrefix(pathResolver);
+    Compiler compiler = platform.getCc().resolve(resolver);
+    ImmutableList<String> compilerCommandPrefix = compiler.getCommandPrefix(pathResolver);
     Path output = filesystem.resolve(Paths.get("output.o"));
     Path depFile = filesystem.resolve(Paths.get("output.dep"));
     Path relativeInput = Paths.get("input.c");
@@ -94,13 +94,13 @@ public class CxxCompileStepIntegrationTest {
             CxxSource.Type.C,
             Optional.of(
                 new CxxPreprocessAndCompileStep.ToolCommand(
-                    compiler,
+                    compilerCommandPrefix,
                     preprocessorArguments.build(),
                     ImmutableMap.<String, String>of(),
                     Optional.<ImmutableList<String>>absent())),
             Optional.of(
                 new CxxPreprocessAndCompileStep.ToolCommand(
-                    compiler,
+                    compilerCommandPrefix,
                     compilerArguments.build(),
                     ImmutableMap.<String, String>of(),
                     Optional.<ImmutableList<String>>absent())),
@@ -108,7 +108,8 @@ public class CxxCompileStepIntegrationTest {
             sanitizer,
             CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
             scratchDir,
-            true);
+            true,
+            compiler);
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstance();
@@ -150,8 +151,8 @@ public class CxxCompileStepIntegrationTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    ImmutableList<String> compiler =
-        platform.getCc().resolve(resolver).getCommandPrefix(pathResolver);
+    Compiler compiler = platform.getCc().resolve(resolver);
+    ImmutableList<String> compilerCommandPrefix = compiler.getCommandPrefix(pathResolver);
     Path output = filesystem.resolve(Paths.get("output.o"));
     Path depFile = filesystem.resolve(Paths.get("output.dep"));
     Path relativeInput = Paths.get("input.c");
@@ -176,13 +177,13 @@ public class CxxCompileStepIntegrationTest {
             CxxSource.Type.C,
             Optional.of(
                 new CxxPreprocessAndCompileStep.ToolCommand(
-                    compiler,
+                    compilerCommandPrefix,
                     preprocessorArguments.build(),
                     ImmutableMap.<String, String>of(),
                     Optional.<ImmutableList<String>>absent())),
             Optional.of(
                 new CxxPreprocessAndCompileStep.ToolCommand(
-                    compiler,
+                    compilerCommandPrefix,
                     compilerArguments.build(),
                     ImmutableMap.<String, String>of(),
                     Optional.<ImmutableList<String>>absent())),
@@ -190,7 +191,8 @@ public class CxxCompileStepIntegrationTest {
             CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER,
             CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
             scratchDir,
-            true);
+            true,
+            compiler);
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstance();

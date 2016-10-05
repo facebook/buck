@@ -21,10 +21,12 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
 public class DefaultPreprocessor implements Preprocessor {
 
@@ -47,6 +49,16 @@ public class DefaultPreprocessor implements Preprocessor {
   @Override
   public boolean supportsPrecompiledHeaders() {
     return false;
+  }
+
+  @Override
+  public Iterable<String> localIncludeArgs(Iterable<String> includeRoots) {
+    return MoreIterables.zipAndConcat(Iterables.cycle("-I"), includeRoots);
+  }
+
+  @Override
+  public Iterable<String> systemIncludeArgs(Iterable<String> includeRoots) {
+    return MoreIterables.zipAndConcat(Iterables.cycle("-isystem"), includeRoots);
   }
 
   @Override

@@ -289,7 +289,7 @@ abstract class AbstractCxxSourceRuleFactory {
    * @return the object file name for the given source name.
    */
   private String getCompileOutputName(String name) {
-    return getOutputName(name) + ".o";
+    return getOutputName(name) + "." + getCxxPlatform().getObjectFileExtension();
   }
 
   /**
@@ -622,6 +622,17 @@ abstract class AbstractCxxSourceRuleFactory {
     Path output = BuildTargets.getGenPath(getParams().getProjectFilesystem(), target, "%s.gch");
     PreprocessorDelegate preprocessorDelegate =
         preprocessorDelegateCacheValue.getPreprocessorDelegate();
+    Compiler compiler =
+        CxxSourceTypes.getCompiler(
+            getCxxPlatform(),
+            CxxSourceTypes.getPreprocessorOutputType(source.getType()))
+            .resolve(getResolver());
+    CompilerDelegate compilerDelegate =
+        new CompilerDelegate(
+            getPathResolver(),
+            getCxxPlatform().getDebugPathSanitizer(),
+            compiler,
+            computeCompilerFlags(source.getType(), source.getFlags()));
     SourcePath path = Preconditions.checkNotNull(preprocessorDelegate.getPrefixHeader().get());
     CxxPrecompiledHeader rule = new CxxPrecompiledHeader(
         getParams().copyWithChanges(
@@ -636,6 +647,7 @@ abstract class AbstractCxxSourceRuleFactory {
         getPathResolver(),
         output,
         preprocessorDelegate,
+        compilerDelegate,
         compilerFlags,
         path,
         source.getType(),

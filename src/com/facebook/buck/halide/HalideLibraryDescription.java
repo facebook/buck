@@ -219,7 +219,8 @@ public class HalideLibraryDescription
             params.getProjectFilesystem(),
             params.getBuildTarget(),
             platform.getFlavor(),
-            CxxSourceRuleFactory.PicType.PIC),
+            CxxSourceRuleFactory.PicType.PIC,
+            platform.getStaticLibraryExtension()),
         ImmutableList.<SourcePath>of(
             new BuildTargetSourcePath(
                 buildTarget,

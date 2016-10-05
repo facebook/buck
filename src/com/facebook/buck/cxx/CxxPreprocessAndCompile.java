@@ -260,7 +260,8 @@ public class CxxPreprocessAndCompile
             preprocessDelegate.get().getHeaderVerification() :
             HeaderVerification.of(HeaderVerification.Mode.IGNORE),
         scratchDir,
-        useArgfile);
+        useArgfile,
+        compilerDelegate.getCompiler());
   }
 
   @Override
@@ -284,7 +285,7 @@ public class CxxPreprocessAndCompile
     return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
         new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),
-        makeMainStep(scratchDir, true));
+        makeMainStep(scratchDir, compilerDelegate.isArgFileSupported()));
   }
 
   @VisibleForTesting
@@ -334,7 +335,7 @@ public class CxxPreprocessAndCompile
 
   @Override
   public boolean useDependencyFileRuleKeys() {
-    return operation.isPreprocess();
+    return compilerDelegate.isDependencyFileSupported() && operation.isPreprocess();
   }
 
   @Override

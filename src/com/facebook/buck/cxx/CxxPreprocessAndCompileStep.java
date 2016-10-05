@@ -68,6 +68,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   private final HeaderPathNormalizer headerPathNormalizer;
   private final DebugPathSanitizer sanitizer;
   private final HeaderVerification headerVerification;
+  private final Compiler compiler;
 
   /**
    * Directory to use to store intermediate/temp files used for compilation.
@@ -90,7 +91,9 @@ public class CxxPreprocessAndCompileStep implements Step {
       DebugPathSanitizer sanitizer,
       HeaderVerification headerVerification,
       Path scratchDir,
-      boolean useArgfile) {
+      boolean useArgfile,
+      Compiler compiler) {
+
     Preconditions.checkState(operation.isPreprocess() == preprocessorCommand.isPresent());
     Preconditions.checkState(operation.isCompile() == compilerCommand.isPresent());
 
@@ -107,6 +110,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     this.headerVerification = headerVerification;
     this.scratchDir = scratchDir;
     this.useArgfile = useArgfile;
+    this.compiler = compiler;
   }
 
   @Override
@@ -168,7 +172,11 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   private ImmutableList<String> getDepFileArgs(Path depFile) {
-    return ImmutableList.of("-MD", "-MF", depFile.toString());
+    return compiler.outputDependenciesArgs(depFile.toString());
+  }
+
+  private ImmutableList<String> getLanguageArgs(String inputLanguage) {
+    return compiler.languageArgs(inputLanguage);
   }
 
   private Path getArgfile() {
@@ -179,7 +187,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   ImmutableList<String> makePreprocessArguments(boolean allowColorsInDiagnostics) {
     return ImmutableList.<String>builder()
         .addAll(preprocessorCommand.get().getArguments(allowColorsInDiagnostics))
-        .add("-x", inputType.getLanguage())
+        .addAll(getLanguageArgs(inputType.getLanguage()))
         .add("-E")
         .addAll(getDepFileArgs(getDepTemp()))
         .add(input.toString())
@@ -194,15 +202,14 @@ public class CxxPreprocessAndCompileStep implements Step {
       boolean allowColorsInDiagnostics) {
     return ImmutableList.<String>builder()
         .addAll(compilerCommand.get().getArguments(allowColorsInDiagnostics))
-        .add("-x", inputLanguage)
+        .addAll(getLanguageArgs(inputLanguage))
         .add("-c")
         .addAll(
             preprocessable ?
                 getDepFileArgs(getDepTemp()) :
                 ImmutableList.<String>of())
         .add(inputFileName)
-        .add("-o")
-        .add(output.toString())
+        .addAll(compiler.outputArgs(output.toString()))
         .build();
   }
 
@@ -210,7 +217,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     return ImmutableList.<String>builder()
         .addAll(preprocessorCommand.get().getArguments(allowColorInDiagnostics))
         // Using x-header language type directs the compiler to generate a PCH file.
-        .add("-x", inputType.getPrecompiledHeaderLanguage().get())
+        .addAll(getLanguageArgs(inputType.getPrecompiledHeaderLanguage().get()))
         // PCH file generation can also output dep files.
         .addAll(getDepFileArgs(getDepTemp()))
         .add(input.toString())
@@ -499,7 +506,7 @@ public class CxxPreprocessAndCompileStep implements Step {
         exitCode = executeOther(context);
       }
 
-      if (operation.isPreprocess() && exitCode == 0) {
+      if (operation.isPreprocess() && exitCode == 0 && compiler.isDependencyFileSupported()) {
         exitCode =
             Depfiles.parseAndWriteBuckCompatibleDepfile(
                 context,

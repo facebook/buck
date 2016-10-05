@@ -21,27 +21,51 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
-public abstract class DefaultCompiler implements Compiler {
+public class WindowsPreprocessor implements Preprocessor {
+
+  private static Function<String, String> prependIncludeFlag = new Function<String, String>() {
+    @Override
+    public String apply(String input) {
+      return "/I".concat(input);
+    }
+  };
 
   private final Tool tool;
 
-  public DefaultCompiler(Tool tool) {
+  public WindowsPreprocessor(Tool tool) {
     this.tool = tool;
-  }
-
-  @Override
-  public Optional<ImmutableList<String>> debugCompilationDirFlags(String debugCompilationDir) {
-    return Optional.absent();
   }
 
   @Override
   public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
     return Optional.absent();
+  }
+
+  @Override
+  public boolean supportsHeaderMaps() {
+    return false;
+  }
+
+  @Override
+  public boolean supportsPrecompiledHeaders() {
+    return false;
+  }
+
+  @Override
+  public Iterable<String> localIncludeArgs(Iterable<String> includeRoots) {
+    return Iterables.transform(includeRoots, prependIncludeFlag);
+  }
+
+  @Override
+  public Iterable<String> systemIncludeArgs(Iterable<String> includeRoots) {
+    return Iterables.transform(includeRoots, prependIncludeFlag);
   }
 
   @Override
@@ -71,28 +95,4 @@ public abstract class DefaultCompiler implements Compiler {
         .setReflectively("type", getClass().getSimpleName());
   }
 
-  @Override
-  public boolean isArgFileSupported() {
-    return true;
-  }
-
-  @Override
-  public boolean isDependencyFileSupported() {
-    return true;
-  }
-
-  @Override
-  public ImmutableList<String> outputArgs(String outputPath) {
-    return ImmutableList.of("-o", outputPath);
-  }
-
-  @Override
-  public ImmutableList<String> outputDependenciesArgs(String outputPath) {
-    return ImmutableList.of("-MD", "-MF", outputPath);
-  }
-
-  @Override
-  public ImmutableList<String> languageArgs(String inputLanguage) {
-    return ImmutableList.of("-x", inputLanguage);
-  }
 }

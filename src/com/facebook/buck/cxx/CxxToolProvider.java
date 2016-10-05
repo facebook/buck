@@ -166,6 +166,7 @@ public abstract class CxxToolProvider<T> {
     CLANG,
     DEFAULT,
     GCC,
+    WINDOWS
   }
 
 }

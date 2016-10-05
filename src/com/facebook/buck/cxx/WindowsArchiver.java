@@ -16,32 +16,47 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.FileScrubber;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public abstract class DefaultCompiler implements Compiler {
+public class WindowsArchiver implements Archiver {
 
   private final Tool tool;
 
-  public DefaultCompiler(Tool tool) {
+  public WindowsArchiver(Tool tool) {
     this.tool = tool;
   }
 
   @Override
-  public Optional<ImmutableList<String>> debugCompilationDirFlags(String debugCompilationDir) {
-    return Optional.absent();
+  public ImmutableList<FileScrubber> getScrubbers() {
+    return ImmutableList.<FileScrubber>of();
   }
 
   @Override
-  public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
-    return Optional.absent();
+  public boolean supportsThinArchives() {
+    return false;
+  }
+
+  @Override
+  public ImmutableList<String> getArchiveOptions(boolean isThinArchive) {
+    return ImmutableList.<String>of();
+  }
+
+  @Override
+  public ImmutableList<String> outputArgs(String outputPath) {
+    return ImmutableList.of("/OUT:" + outputPath);
+  }
+
+  @Override
+  public boolean isRanLibStepRequired() {
+    return false;
   }
 
   @Override
@@ -71,28 +86,4 @@ public abstract class DefaultCompiler implements Compiler {
         .setReflectively("type", getClass().getSimpleName());
   }
 
-  @Override
-  public boolean isArgFileSupported() {
-    return true;
-  }
-
-  @Override
-  public boolean isDependencyFileSupported() {
-    return true;
-  }
-
-  @Override
-  public ImmutableList<String> outputArgs(String outputPath) {
-    return ImmutableList.of("-o", outputPath);
-  }
-
-  @Override
-  public ImmutableList<String> outputDependenciesArgs(String outputPath) {
-    return ImmutableList.of("-MD", "-MF", outputPath);
-  }
-
-  @Override
-  public ImmutableList<String> languageArgs(String inputLanguage) {
-    return ImmutableList.of("-x", inputLanguage);
-  }
 }

@@ -396,6 +396,8 @@ public class AppleCxxPlatforms {
         ImmutableList.<String>of(),
         "dylib",
         "%s.dylib",
+        "a",
+        "o",
         Optional.of(debugPathSanitizer),
         macros);
 

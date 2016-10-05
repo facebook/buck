@@ -71,6 +71,8 @@ public class CxxPrecompiledHeader
 
   @AddToRuleKey
   private final PreprocessorDelegate preprocessorDelegate;
+  @AddToRuleKey
+  private final CompilerDelegate compilerDelegate;
   private final CxxToolFlags compilerFlags;
   @AddToRuleKey
   private final SourcePath input;
@@ -84,12 +86,14 @@ public class CxxPrecompiledHeader
       SourcePathResolver resolver,
       Path output,
       PreprocessorDelegate preprocessorDelegate,
+      CompilerDelegate compilerDelegate,
       CxxToolFlags compilerFlags,
       SourcePath input,
       CxxSource.Type inputType,
       DebugPathSanitizer sanitizer) {
     super(buildRuleParams, resolver);
     this.preprocessorDelegate = preprocessorDelegate;
+    this.compilerDelegate = compilerDelegate;
     this.compilerFlags = compilerFlags;
     this.output = output;
     this.input = input;
@@ -182,6 +186,7 @@ public class CxxPrecompiledHeader
         sanitizer,
         preprocessorDelegate.getHeaderVerification(),
         scratchDir,
-        true);
+        true,
+        compilerDelegate.getCompiler());
   }
 }

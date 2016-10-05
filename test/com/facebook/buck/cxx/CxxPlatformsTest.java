@@ -61,26 +61,28 @@ public class CxxPlatformsTest {
             Paths.get("borland"),
             Optional.of(CxxToolProvider.Type.GCC));
     CxxPlatform borlandCxx452Platform =
-        CxxPlatform.builder()
-            .setFlavor(ImmutableFlavor.of("borland_cxx_452"))
-            .setAs(compiler)
-            .setAspp(preprocessor)
-            .setCc(compiler)
-            .setCpp(preprocessor)
-            .setCxx(compiler)
-            .setCxxpp(preprocessor)
-            .setLd(
-                new DefaultLinkerProvider(
-                    LinkerProvider.Type.GNU,
-                    new ConstantToolProvider(new HashedFileTool(Paths.get("borland")))))
-            .setStrip(new HashedFileTool(Paths.get("borland")))
-            .setSymbolNameTool(new PosixNmSymbolNameTool(new HashedFileTool(Paths.get("borland"))))
-            .setAr(new GnuArchiver(new HashedFileTool(Paths.get("borland"))))
-            .setRanlib(new HashedFileTool(Paths.get("borland")))
-            .setSharedLibraryExtension("so")
-            .setSharedLibraryVersionedExtensionFormat(".so.%s")
-            .setDebugPathSanitizer(CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER)
-            .build();
+      CxxPlatform.builder()
+          .setFlavor(ImmutableFlavor.of("borland_cxx_452"))
+          .setAs(compiler)
+          .setAspp(preprocessor)
+          .setCc(compiler)
+          .setCpp(preprocessor)
+          .setCxx(compiler)
+          .setCxxpp(preprocessor)
+          .setLd(
+              new DefaultLinkerProvider(
+                  LinkerProvider.Type.GNU,
+                  new ConstantToolProvider(new HashedFileTool(Paths.get("borland")))))
+          .setStrip(new HashedFileTool(Paths.get("borland")))
+          .setSymbolNameTool(new PosixNmSymbolNameTool(new HashedFileTool(Paths.get("borland"))))
+          .setAr(new GnuArchiver(new HashedFileTool(Paths.get("borland"))))
+          .setRanlib(new HashedFileTool(Paths.get("borland")))
+          .setSharedLibraryExtension("so")
+          .setSharedLibraryVersionedExtensionFormat(".so.%s")
+          .setStaticLibraryExtension("a")
+          .setObjectFileExtension("so")
+          .setDebugPathSanitizer(CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER)
+          .build();
 
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     assertThat(
@@ -209,7 +211,7 @@ public class CxxPlatformsTest {
     assertThat("LINUX archiver was not a GnuArchiver instance",
         getPlatformArchiver(Platform.LINUX), instanceOf(GnuArchiver.class));
     assertThat("WINDOWS archiver was not a GnuArchiver instance",
-        getPlatformArchiver(Platform.WINDOWS), instanceOf(GnuArchiver.class));
+        getPlatformArchiver(Platform.WINDOWS), instanceOf(WindowsArchiver.class));
   }
 
   @Test

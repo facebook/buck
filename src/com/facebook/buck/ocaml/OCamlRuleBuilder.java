@@ -295,6 +295,7 @@ public class OCamlRuleBuilder {
             .setNativeCompileDeps(nativeCompileDepsBuilder.build())
             .setBytecodeCompileDeps(bytecodeCompileDepsBuilder.build())
             .setBytecodeLinkDeps(bytecodeLinkDepsBuilder.build())
+            .setCPreprocessor(ocamlBuckConfig.getCPreprocessor().resolve(resolver))
             .build();
 
     final OCamlBuild ocamlLibraryBuild = new OCamlBuild(
@@ -438,6 +439,7 @@ public class OCamlRuleBuilder {
             .setNativeCompileDeps(nativeCompileDepsBuilder.build())
             .setBytecodeCompileDeps(bytecodeCompileDepsBuilder.build())
             .setBytecodeLinkDeps(bytecodeLinkDepsBuilder.build())
+            .setCPreprocessor(ocamlBuckConfig.getCPreprocessor().resolve(resolver))
             .build();
 
     Path baseDir = params.getProjectFilesystem().getRootPath().toAbsolutePath();

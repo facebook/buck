@@ -86,6 +86,7 @@ public class CxxPreprocessAndCompileTest {
     public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
       return Optional.of(ImmutableList.of(COLOR_FLAG));
     }
+
   }
 
   private static final Preprocessor DEFAULT_PREPROCESSOR =

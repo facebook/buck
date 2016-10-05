@@ -75,10 +75,15 @@ public class CxxPlatforms {
       ImmutableList<String> cppflags,
       String sharedLibraryExtension,
       String sharedLibraryVersionedExtensionFormat,
+      String staticLibraryExtension,
+      String objectFileExtension,
       Optional<DebugPathSanitizer> debugPathSanitizer,
       ImmutableMap<String, String> flagMacros) {
     // TODO(bhamiltoncx, andrewjcg): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
+
+    final Archiver arDelegate = ar instanceof LazyDelegatingArchiver ?
+        ((LazyDelegatingArchiver) ar).getDelegate() : ar;
 
     builder
         .setFlavor(flavor)
@@ -97,7 +102,8 @@ public class CxxPlatforms {
         .setAr(new LazyDelegatingArchiver(new Supplier<Archiver>() {
           @Override
           public Archiver get() {
-            return getTool("ar", config).transform(getArchiver(ar.getClass(), config)).or(ar);
+            return getTool("ar", config)
+                .transform(getArchiver(arDelegate.getClass(), config)).or(arDelegate);
           }
         }))
         .setRanlib(new LazyDelegatingTool(new Supplier<Tool>() {
@@ -109,6 +115,8 @@ public class CxxPlatforms {
         .setStrip(getTool("strip", config).or(strip))
         .setSharedLibraryExtension(sharedLibraryExtension)
         .setSharedLibraryVersionedExtensionFormat(sharedLibraryVersionedExtensionFormat)
+        .setStaticLibraryExtension(staticLibraryExtension)
+        .setObjectFileExtension(objectFileExtension)
         .setDebugPathSanitizer(
             debugPathSanitizer.or(
                 new DebugPathSanitizer(
@@ -170,6 +178,8 @@ public class CxxPlatforms {
       defaultPlatform.getCppflags(),
       defaultPlatform.getSharedLibraryExtension(),
       defaultPlatform.getSharedLibraryVersionedExtensionFormat(),
+      defaultPlatform.getStaticLibraryExtension(),
+      defaultPlatform.getObjectFileExtension(),
       Optional.of(defaultPlatform.getDebugPathSanitizer()),
       defaultPlatform.getFlagMacros());
   }

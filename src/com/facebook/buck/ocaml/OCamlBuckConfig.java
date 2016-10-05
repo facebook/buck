@@ -22,6 +22,7 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.LinkerProvider;
+import com.facebook.buck.cxx.PreprocessorProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
@@ -57,6 +58,10 @@ public class OCamlBuckConfig {
 
   public CompilerProvider getCCompiler() {
     return cxxPlatform.getCc();
+  }
+
+  public PreprocessorProvider getCPreprocessor() {
+    return cxxPlatform.getCpp();
   }
 
   public Optional<Tool> getOCamlDepTool() {

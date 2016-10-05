@@ -34,7 +34,10 @@ PLATFORM_SRCS = [
   'Preprocessor.java',
   'PreprocessorProvider.java',
   'SymbolNameTool.java',
+  'WindowsArchiver.java',
+  'WindowsCompiler.java',
   'WindowsLinker.java',
+  'WindowsPreprocessor.java',
 ]
 java_immutables_library(
   name = 'platform',

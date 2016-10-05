@@ -161,7 +161,8 @@ public class HaskellDescriptionUtils {
         includes,
         exposedPackages,
         packages,
-        sources);
+        sources,
+        CxxSourceTypes.getPreprocessor(cxxPlatform, CxxSource.Type.C).resolve(resolver));
   }
 
   protected static BuildTarget getCompileBuildTarget(

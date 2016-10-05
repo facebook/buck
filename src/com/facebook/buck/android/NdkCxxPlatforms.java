@@ -495,6 +495,8 @@ public class NdkCxxPlatforms {
                 sanitizePaths.build()))
         .setSharedLibraryExtension("so")
         .setSharedLibraryVersionedExtensionFormat("so.%s")
+        .setStaticLibraryExtension("a")
+        .setObjectFileExtension("o")
     ;
 
     if (cxxRuntime != CxxRuntime.SYSTEM) {

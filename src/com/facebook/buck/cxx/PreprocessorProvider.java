@@ -44,6 +44,8 @@ public class PreprocessorProvider extends CxxToolProvider<Preprocessor> {
       case DEFAULT:
       case GCC:
         return new DefaultPreprocessor(tool);
+      case WINDOWS:
+        return new WindowsPreprocessor(tool);
     }
     throw new IllegalStateException();
   }

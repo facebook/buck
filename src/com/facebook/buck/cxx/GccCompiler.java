@@ -23,4 +23,8 @@ public class GccCompiler extends DefaultCompiler {
     super(tool);
   }
 
+  @Override
+  public boolean isArgFileSupported() {
+    return true;
+  }
 }

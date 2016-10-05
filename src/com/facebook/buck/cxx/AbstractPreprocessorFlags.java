@@ -113,7 +113,8 @@ abstract class AbstractPreprocessorFlags {
   public CxxToolFlags toToolFlags(
       SourcePathResolver resolver,
       Function<Path, Path> pathShortener,
-      Function<FrameworkPath, Path> frameworkPathTransformer) {
+      Function<FrameworkPath, Path> frameworkPathTransformer,
+      Preprocessor preprocessor) {
     ExplicitCxxToolFlags.Builder builder = CxxToolFlags.explicitBuilder();
     ExplicitCxxToolFlags.addCxxToolFlags(builder, getOtherFlags());
     if (getPrefixHeader().isPresent() && !getShouldUsePrecompiledHeaders()) {
@@ -130,10 +131,10 @@ abstract class AbstractPreprocessorFlags {
                   .transform(Functions.toStringFunction())));
     }
     builder.addAllRuleFlags(
-        CxxHeaders.getArgs(getIncludes(), resolver, Optional.of(pathShortener)));
+        CxxHeaders.getArgs(getIncludes(), resolver, Optional.of(pathShortener), preprocessor));
     builder.addAllRuleFlags(
-        MoreIterables.zipAndConcat(
-            Iterables.cycle(CxxPreprocessables.IncludeType.SYSTEM.getFlag()),
+        CxxPreprocessables.IncludeType.SYSTEM.includeArgs(
+            preprocessor,
             Iterables.transform(
                 getSystemIncludePaths(),
                 Functions.compose(Functions.toStringFunction(), pathShortener))));

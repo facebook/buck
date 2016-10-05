@@ -86,6 +86,9 @@ interface AbstractCxxPlatform extends FlavorConvertible {
   String getSharedLibraryExtension();
   String getSharedLibraryVersionedExtensionFormat();
 
+  String getStaticLibraryExtension();
+  String getObjectFileExtension();
+
   DebugPathSanitizer getDebugPathSanitizer();
 
   /**

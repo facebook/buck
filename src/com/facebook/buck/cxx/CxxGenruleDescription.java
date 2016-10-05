@@ -372,11 +372,14 @@ public class CxxGenruleDescription
         throws MacroException {
       SourcePathResolver pathResolver = new SourcePathResolver(resolver);
       PreprocessorFlags ppFlags = getPreprocessorFlags(getCxxPreprocessorInput(rules));
+      Preprocessor preprocessor =
+          CxxSourceTypes.getPreprocessor(cxxPlatform, sourceType).resolve(resolver);
       CxxToolFlags flags =
           ppFlags.toToolFlags(
               pathResolver,
               Functions.<Path>identity(),
-              CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver));
+              CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
+              preprocessor);
       return Joiner.on(' ').join(Iterables.transform(flags.getAllFlags(), Escaper.SHELL_ESCAPER));
     }
 

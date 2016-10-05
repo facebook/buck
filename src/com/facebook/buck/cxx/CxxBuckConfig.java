@@ -166,8 +166,10 @@ public class CxxBuckConfig {
         result = new BsdArchiver(ar);
         break;
       case LINUX:
-      case WINDOWS:
         result = new GnuArchiver(ar);
+        break;
+      case WINDOWS:
+        result = new WindowsArchiver(ar);
         break;
       case UNKNOWN:
       default:

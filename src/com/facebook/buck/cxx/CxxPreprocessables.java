@@ -58,24 +58,25 @@ public class CxxPreprocessables {
     /**
      * Headers should be included with `-I`.
      */
-    LOCAL("-I"),
+    LOCAL {
+      @Override
+      public Iterable<String> includeArgs(Preprocessor pp, Iterable<String> includeRoots) {
+        return pp.localIncludeArgs(includeRoots);
+      }
+    },
 
     /**
      * Headers should be included with `-isystem`.
      */
-    SYSTEM("-isystem"),
-
+    SYSTEM {
+      @Override
+      public Iterable<String> includeArgs(Preprocessor pp, Iterable<String> includeRoots) {
+        return pp.systemIncludeArgs(includeRoots);
+      }
+    },
     ;
 
-    private String flag;
-
-    IncludeType(String flag) {
-      this.flag = flag;
-    }
-
-    public String getFlag() {
-      return flag;
-    }
+    public abstract Iterable<String> includeArgs(Preprocessor pp, Iterable<String> includeRoots);
 
   }
 

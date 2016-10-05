@@ -79,6 +79,8 @@ public class CxxPlatformUtils {
           .setSymbolNameTool(new PosixNmSymbolNameTool(DEFAULT_TOOL))
           .setSharedLibraryExtension("so")
           .setSharedLibraryVersionedExtensionFormat("so.%s")
+          .setStaticLibraryExtension("a")
+          .setObjectFileExtension("o")
           .setDebugPathSanitizer(DEFAULT_DEBUG_PATH_SANITIZER)
           .build();
 
