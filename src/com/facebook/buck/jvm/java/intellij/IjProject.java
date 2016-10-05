@@ -200,14 +200,13 @@ public class IjProject {
             return sourcePathResolver.getRelativePath(sourcePath);
           }
         };
-    IjProjectConfig projectConfig = IjProjectBuckConfig.create(buckConfig);
     IjModuleGraph moduleGraph = IjModuleGraph.from(
         buckConfig,
         targetGraphAndTargets.getTargetGraph(),
         libraryFactory,
         new IjModuleFactory(
             moduleFactoryResolver,
-            projectConfig,
+            IjProjectBuckConfig.create(buckConfig),
             excludeArtifacts),
         aggregationMode);
     JavaPackageFinder parsingJavaPackageFinder = ParsingJavaPackageFinder.preparse(
@@ -217,8 +216,7 @@ public class IjProject {
         javaPackageFinder);
     IjProjectWriter writer = new IjProjectWriter(
         new IjProjectTemplateDataPreparer(parsingJavaPackageFinder, moduleGraph, projectFilesystem),
-        projectFilesystem,
-        projectConfig);
+        projectFilesystem);
     writer.write(buckConfig, runPostGenerationCleaner);
     return requiredBuildTargets.build();
   }

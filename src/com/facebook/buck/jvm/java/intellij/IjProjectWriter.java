@@ -62,17 +62,14 @@ public class IjProjectWriter {
     }
   }
 
-  private final IjProjectTemplateDataPreparer projectDataPreparer;
-  private final ProjectFilesystem projectFilesystem;
-  private final IjProjectConfig projectConfig;
+  private IjProjectTemplateDataPreparer projectDataPreparer;
+  private ProjectFilesystem projectFilesystem;
 
   public IjProjectWriter(
       IjProjectTemplateDataPreparer projectDataPreparer,
-      ProjectFilesystem projectFilesystem,
-      IjProjectConfig projectConfig) {
+      ProjectFilesystem projectFilesystem) {
     this.projectDataPreparer = projectDataPreparer;
     this.projectFilesystem = projectFilesystem;
-    this.projectConfig = projectConfig;
   }
 
   public void write(BuckConfig buckConfig, boolean runPostGenerationCleaner) throws IOException {
@@ -114,7 +111,7 @@ public class IjProjectWriter {
         projectDataPreparer.getAndroidProperties(module));
     moduleContents.add(
         "jdk",
-        projectConfig.getJdkAlias(module.getJdkVersion().orNull()));
+        module.getJdkVersion().orNull());
 
     writeToFile(moduleContents, path);
     return path;
