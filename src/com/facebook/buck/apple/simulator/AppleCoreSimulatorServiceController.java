@@ -195,7 +195,7 @@ public class AppleCoreSimulatorServiceController {
         // we told it to die, so we have to treat "no such process" as success.
         return true;
       default:
-        LOG.error("Error %d running %s", result.getExitCode(), launchctlRemoveCommand);
+        LOG.error(result.getMessageForUnexpectedResult(launchctlRemoveCommand.toString()));
         return false;
     }
   }

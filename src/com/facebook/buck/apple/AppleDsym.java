@@ -164,7 +164,7 @@ public class AppleDsym
                         getResolver().getAbsolutePath(unstrippedBinarySourcePath),
                         dsymOutputPath)),
                 Optional.<Long>absent(),
-                Optional.<Function<Process, Void>>absent()).getExitCode());
+                Optional.<Function<Process, Void>>absent()));
           }
 
           @Override

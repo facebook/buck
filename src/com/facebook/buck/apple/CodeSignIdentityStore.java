@@ -98,7 +98,7 @@ public class CodeSignIdentityStore implements RuleKeyAppendable {
 
             if (result.getExitCode() != 0) {
               throw new RuntimeException(
-                  "security -v -p codesigning failed: " + result.getStderr());
+                  result.getMessageForUnexpectedResult("security -v -p codesigning"));
             }
 
             Matcher matcher = CODE_SIGN_IDENTITY_PATTERN.matcher(result.getStdout().get());

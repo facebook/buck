@@ -139,7 +139,7 @@ public class AppleSimulatorController {
             .build();
     ProcessExecutor.Result result = processExecutor.launchAndExecute(processExecutorParams);
     if (result.getExitCode() != 0) {
-      LOG.error("Error %d running %s", result.getExitCode(), command);
+      LOG.error(result.getMessageForUnexpectedResult(command.toString()));
       return false;
     }
     return true;
@@ -255,7 +255,7 @@ public class AppleSimulatorController {
             .build();
     ProcessExecutor.Result result = processExecutor.launchAndExecute(processExecutorParams);
     if (result.getExitCode() != 0) {
-      LOG.error("Error %d running %s", result.getExitCode(), command);
+      LOG.error(result.getMessageForUnexpectedResult(command.toString()));
       return false;
     }
     return true;
@@ -285,8 +285,12 @@ public class AppleSimulatorController {
             .setCommand(command)
             .build();
     Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
-    LOG.debug(
-        "Launching bundle ID %s in simulator %s via command %s", bundleID, simulatorUdid, command);
+    String message = String.format(
+        "Launching bundle ID %s in simulator %s via command %s",
+        bundleID,
+        simulatorUdid,
+        command);
+    LOG.debug(message);
     ProcessExecutor.Result result = processExecutor.launchAndExecute(
         processExecutorParams,
         options,
@@ -294,12 +298,7 @@ public class AppleSimulatorController {
         /* timeOutMs */ Optional.<Long>absent(),
         /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
     if (result.getExitCode() != 0) {
-      LOG.error(
-          "Error %d launching bundle %s in simulator %s (command %s)",
-          result.getExitCode(),
-          bundleID,
-          simulatorUdid,
-          command);
+      LOG.error(result.getMessageForResult(message));
       return Optional.<Long>absent();
     }
     Preconditions.checkState(result.getStdout().isPresent());

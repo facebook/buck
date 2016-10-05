@@ -295,12 +295,8 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     }
 
     if (result.getExitCode() != 0) {
-      Optional<String> stderr = result.getStderr();
-      String stdErrString = stderr.isPresent() ? stderr.get() : "";
       throw new VersionControlCommandFailedException(
-          "Received non-zero exit for for command:" + commandString +
-          "\nStdErr: " + stdErrString
-      );
+          result.getMessageForUnexpectedResult(commandString));
     }
 
     return cleanResultString(resultString.get());

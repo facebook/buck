@@ -92,7 +92,7 @@ public class InferBuckConfig implements RuleKeyAppendable {
             try  {
               result = new ProcessExecutor(Console.createNullConsole()).launchAndExecute(params);
               if (result.getExitCode() != 0) {
-                throw new RuntimeException("Failed getting infer version: " + result.getStderr());
+                throw new RuntimeException(result.getMessageForUnexpectedResult("infer version"));
               }
             } catch (InterruptedException | IOException e) {
               throw new RuntimeException(e);

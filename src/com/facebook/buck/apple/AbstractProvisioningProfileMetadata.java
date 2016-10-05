@@ -130,8 +130,8 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
             /* timeOutMs */ Optional.<Long>absent(),
             /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
     if (result.getExitCode() != 0) {
-      throw new IOException("Invalid provisioning profile: " + profilePath +
-          ": " + result.getStderr());
+      throw new IOException(
+          result.getMessageForResult("Invalid provisioning profile: " + profilePath));
     }
 
     try {

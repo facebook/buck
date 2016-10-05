@@ -87,7 +87,7 @@ public class AppleDeviceHelper {
     }
 
     if (result.getExitCode() != 0) {
-      throw new RuntimeException("Device helper failed: " + result.getStderr());
+      throw new RuntimeException(result.getMessageForUnexpectedResult("Device helper"));
     }
 
     Matcher matcher = DEVICE_DESCRIPTION_PATTERN.matcher(result.getStdout().get());

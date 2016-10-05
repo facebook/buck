@@ -582,11 +582,11 @@ public class ProjectBuildFileParser implements AutoCloseable {
         }
 
         LOG.debug("Waiting for process %s to exit...", buckPyProcess);
-        int exitCode = processExecutor.waitForLaunchedProcess(buckPyProcess).getExitCode();
-        if (exitCode != 0) {
-          LOG.warn("Process %s exited with error code %d", buckPyProcess, exitCode);
+        ProcessExecutor.Result result = processExecutor.waitForLaunchedProcess(buckPyProcess);
+        if (result.getExitCode() != 0) {
+          LOG.warn(result.getMessageForUnexpectedResult(buckPyProcess.toString()));
           throw BuildFileParseException.createForUnknownParseError(
-              String.format("Parser did not exit cleanly (exit code: %d)", exitCode));
+              result.getMessageForResult("Parser did not exit cleanly"));
         }
         LOG.debug("Process %s exited cleanly.", buckPyProcess);
 

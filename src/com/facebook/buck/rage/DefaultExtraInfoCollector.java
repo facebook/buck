@@ -93,10 +93,8 @@ public class DefaultExtraInfoCollector implements ExtraInfoCollector {
 
     if (extraInfoResult.getExitCode() != 0) {
       throw new ExtraInfoExecutionException(
-          String.format(
-              "Could not get extra info for report from %s, exit code %s",
-              extraInfoCommand,
-              extraInfoResult.getExitCode()));
+          extraInfoResult.getMessageForResult(
+              "Could not get extra info for report from " + extraInfoCommand));
     }
 
     ImmutableSet<Path> rageExtraFiles = projectFilesystem.getFilesUnderPath(rageExtraFilesDir);

@@ -129,10 +129,8 @@ public abstract class CxxToolProvider<T> {
     }
 
     if (result.getExitCode() != 0) {
-      String message = String.format(
-          "%s exited with unexpected return code %s",
-          params.getCommand(),
-          result.getExitCode());
+      String commandString = params.getCommand().toString();
+      String message = result.getMessageForUnexpectedResult(commandString);
       LOG.error(message);
       throw new RuntimeException(message);
     }

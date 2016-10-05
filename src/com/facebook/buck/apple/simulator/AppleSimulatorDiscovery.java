@@ -64,9 +64,9 @@ public class AppleSimulatorDiscovery {
       SimctlListOutputParsing.parseOutputFromReader(stdoutReader, simulatorsBuilder);
     }
 
-    int processExitCode = processExecutor.waitForLaunchedProcess(simctlListProcess).getExitCode();
-    if (processExitCode != 0) {
-      throw new IOException(String.format("simctl list failed with error %d", processExitCode));
+    ProcessExecutor.Result result = processExecutor.waitForLaunchedProcess(simctlListProcess);
+    if (result.getExitCode() != 0) {
+      throw new IOException(result.getMessageForUnexpectedResult("simctl list"));
     }
     ImmutableSet<AppleSimulator> simulators = simulatorsBuilder.build();
     LOG.debug("Discovered simulators: %s", simulators);

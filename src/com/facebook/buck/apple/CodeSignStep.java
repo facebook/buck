@@ -97,7 +97,7 @@ class CodeSignStep implements Step {
     }
 
     if (result.getExitCode() != 0) {
-      return StepExecutionResult.ERROR;
+      return StepExecutionResult.of(result);
     }
     return StepExecutionResult.SUCCESS;
   }

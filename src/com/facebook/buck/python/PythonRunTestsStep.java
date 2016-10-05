@@ -118,7 +118,7 @@ public class PythonRunTestsStep implements Step {
     if (timedOut) {
       return StepExecutionResult.ERROR;
     } else if (result.getExitCode() != 0) {
-      return StepExecutionResult.of(result.getExitCode());
+      return StepExecutionResult.of(result);
     }
 
     Preconditions.checkState(result.getStdout().isPresent());

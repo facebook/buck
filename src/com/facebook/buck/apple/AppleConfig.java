@@ -174,7 +174,8 @@ public class AppleConfig {
         }
 
         if (result.getExitCode() != 0) {
-          throw new RuntimeException("xcode-select --print-path failed: " + result.getStderr());
+          throw new RuntimeException(
+              result.getMessageForUnexpectedResult("xcode-select --print-path"));
         }
 
         return Optional.of(Paths.get(result.getStdout().get().trim()));
@@ -225,7 +226,7 @@ public class AppleConfig {
 
             if (result.getExitCode() != 0) {
               throw new RuntimeException(
-                  "xcodebuild -version failed: " + result.getStderr());
+                  result.getMessageForUnexpectedResult("xcodebuild -version"));
             }
 
             Matcher matcher = XCODE_BUILD_NUMBER_PATTERN.matcher(result.getStdout().get());

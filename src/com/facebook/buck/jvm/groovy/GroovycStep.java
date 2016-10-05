@@ -78,7 +78,6 @@ class GroovycStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    int exitCode = -1;
     try {
       ProcessExecutorParams params = ProcessExecutorParams.builder()
           .setCommand(createCommand())
@@ -87,12 +86,11 @@ class GroovycStep implements Step {
           .build();
       writePathToSourcesList(sourceFilePaths);
       ProcessExecutor processExecutor = context.getProcessExecutor();
-      exitCode = processExecutor.launchAndExecute(params).getExitCode();
+      return StepExecutionResult.of(processExecutor.launchAndExecute(params));
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
+      return StepExecutionResult.of(-1);
     }
-
-    return StepExecutionResult.of(exitCode);
   }
 
   @Override

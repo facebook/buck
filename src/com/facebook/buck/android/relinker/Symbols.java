@@ -171,10 +171,10 @@ public class Symbols {
     ProcessExecutor.LaunchedProcess p = executor.launchProcess(params);
     BufferedReader output = new BufferedReader(new InputStreamReader(p.getInputStream()));
     CharStreams.readLines(output, lineProcessor);
-    int exitCode = executor.waitForLaunchedProcess(p).getExitCode();
+    ProcessExecutor.Result result = executor.waitForLaunchedProcess(p);
 
-    if (exitCode != 0) {
-      throw new RuntimeException("Objdump exited with value: " + exitCode);
+    if (result.getExitCode() != 0) {
+      throw new RuntimeException(result.getMessageForUnexpectedResult("Objdump"));
     }
   }
 }

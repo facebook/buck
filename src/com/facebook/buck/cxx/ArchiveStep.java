@@ -106,7 +106,7 @@ public class ArchiveStep implements Step {
     return allInputs.build();
   }
 
-  private int runArchiver(
+  private ProcessExecutor.Result runArchiver(
       ExecutionContext context,
       final ImmutableList<String> command)
       throws IOException, InterruptedException {
@@ -121,7 +121,7 @@ public class ArchiveStep implements Step {
     if (result.getExitCode() != 0 && result.getStderr().isPresent()) {
       context.getBuckEventBus().post(ConsoleEvent.create(Level.SEVERE, result.getStderr().get()));
     }
-    return result.getExitCode();
+    return result;
   }
 
   private String getArchiveOptions() {
@@ -150,9 +150,9 @@ public class ArchiveStep implements Step {
               .build();
       CommandSplitter commandSplitter = new CommandSplitter(archiveCommandPrefix);
       for (ImmutableList<String> command : commandSplitter.getCommandsForArguments(allInputs)) {
-        int exitCode = runArchiver(context, command);
-        if (exitCode != 0) {
-          return StepExecutionResult.of(exitCode);
+        ProcessExecutor.Result result = runArchiver(context, command);
+        if (result.getExitCode() != 0) {
+          return StepExecutionResult.of(result);
         }
       }
       return StepExecutionResult.SUCCESS;

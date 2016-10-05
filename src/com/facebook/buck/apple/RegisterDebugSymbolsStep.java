@@ -65,7 +65,7 @@ class RegisterDebugSymbolsStep implements Step {
                 binaryBuildRule.getPathToOutput(),
                 location)),
         Optional.<Long>absent(),
-        Optional.<Function<Process, Void>>absent()).getExitCode());
+        Optional.<Function<Process, Void>>absent()));
   }
 
   @Override
