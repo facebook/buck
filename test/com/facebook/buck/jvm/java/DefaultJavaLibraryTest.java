@@ -1249,8 +1249,7 @@ public class DefaultJavaLibraryTest {
         .setObjectMapper(ObjectMappers.newDefaultInstance())
         .setArtifactCache(new NoopArtifactCache())
         .setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class))
-        .setAndroidBootclasspathSupplier(
-            BuildContext.createBootclasspathSupplier(Suppliers.ofInstance(platformTarget)))
+        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(platformTarget))
         .setEventBus(BuckEventBusFactory.newInstance())
         .build();
   }

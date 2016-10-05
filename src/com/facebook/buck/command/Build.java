@@ -248,9 +248,7 @@ public class Build implements Closeable {
         .setArtifactCache(artifactCache)
         .setJavaPackageFinder(javaPackageFinder)
         .setEventBus(executionContext.getBuckEventBus())
-        .setAndroidBootclasspathSupplier(
-            BuildContext.createBootclasspathSupplier(
-                executionContext.getAndroidPlatformTargetSupplier()))
+        .setAndroidPlatformTargetSupplier(executionContext.getAndroidPlatformTargetSupplier())
         .setBuildId(buildId)
         .setObjectMapper(objectMapper)
         .putAllEnvironment(executionContext.getEnvironment())

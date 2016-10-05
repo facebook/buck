@@ -20,9 +20,23 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 
+import java.io.File;
+import java.nio.file.Path;
+import java.util.List;
 
 class BootClasspathAppender implements JavacOptionsAmender {
+
+  private static String androidBootclasspath(AndroidPlatformTarget platform) {
+    List<Path> bootclasspathEntries = platform.getBootclasspathEntries();
+    Preconditions.checkState(
+        !bootclasspathEntries.isEmpty(),
+        "There should be entries for the bootclasspath");
+    return Joiner.on(File.pathSeparator).join(bootclasspathEntries);
+  }
+
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("bootclasspath", "android");
@@ -31,7 +45,7 @@ class BootClasspathAppender implements JavacOptionsAmender {
   @Override
   public JavacOptions amend(JavacOptions original, BuildContext context) {
     return JavacOptions.builder(original)
-        .setBootclasspath(context.getAndroidBootclasspathSupplier().get())
+        .setBootclasspath(androidBootclasspath(context.getAndroidPlatformTargetSupplier().get()))
         .build();
   }
 }

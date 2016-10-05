@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -30,44 +29,17 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.immutables.DeprecatedBuckStyleImmutable;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
 
-import java.io.File;
-import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 
 @Value.Immutable
 @DeprecatedBuckStyleImmutable
 @SuppressWarnings("deprecation")
 public abstract class BuildContext {
-
-  private static final Function<AndroidPlatformTarget, String>
-      BOOTCLASSPATH_FOR_ANDROID_PLATFORM_TARGET = new Function<AndroidPlatformTarget, String>() {
-    @Override
-    public String apply(AndroidPlatformTarget androidPlatformTarget) {
-      List<Path> bootclasspathEntries = androidPlatformTarget.getBootclasspathEntries();
-      Preconditions.checkState(
-          !bootclasspathEntries.isEmpty(),
-          "There should be entries for the bootclasspath");
-      return Joiner.on(File.pathSeparator).join(bootclasspathEntries);
-    }
-  };
-
-  private static final Supplier<String> DEFAULT_ANDROID_BOOTCLASSPATH_SUPPLIER =
-      new Supplier<String>() {
-        @Override
-        public String get() {
-          throw new NoAndroidSdkException();
-        }
-      };
 
   public abstract ActionGraph getActionGraph();
   public abstract StepRunner getStepRunner();
@@ -78,8 +50,8 @@ public abstract class BuildContext {
   public abstract BuckEventBus getEventBus();
 
   @Value.Default
-  public Supplier<String> getAndroidBootclasspathSupplier() {
-    return DEFAULT_ANDROID_BOOTCLASSPATH_SUPPLIER;
+  public Supplier<AndroidPlatformTarget> getAndroidPlatformTargetSupplier() {
+    return AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
   }
 
   protected abstract BuildId getBuildId();
@@ -132,11 +104,5 @@ public abstract class BuildContext {
 
   public void logError(String msg, Object... formatArgs) {
     getEventBus().post(ConsoleEvent.severe(msg, formatArgs));
-  }
-
-  public static Supplier<String> createBootclasspathSupplier(
-      Supplier<AndroidPlatformTarget> androidPlatformTarget) {
-    return Suppliers.memoize(
-        Suppliers.compose(BOOTCLASSPATH_FOR_ANDROID_PLATFORM_TARGET, androidPlatformTarget));
   }
 }
