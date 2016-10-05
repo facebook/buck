@@ -144,11 +144,7 @@ class BuckTool(object):
                         "::: Select a Java home version 1.8 or higher by setting the JAVA_HOME " +
                         "environment variable to point to one" + ENDC,
                         file=sys.stderr)
-
-                print(
-                    WARNING + "::: Continuing anyway in 30 seconds, but Buck might crash." + ENDC,
-                    file=sys.stderr)
-                time.sleep(30)
+                return 1
 
             if self._command_line.command == "clean" and not self._command_line.is_help():
                 self.kill_buckd()
