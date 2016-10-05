@@ -192,7 +192,7 @@ public class CxxLibrary
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-    return FluentIterable.from(getDeclaredDeps())
+    return FluentIterable.from(getDeps())
         .filter(NativeLinkable.class);
   }
 

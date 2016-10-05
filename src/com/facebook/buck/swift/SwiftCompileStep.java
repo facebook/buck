@@ -20,16 +20,22 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.ListeningProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.SimpleProcessListener;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.CharStreams;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A step that compiles Swift sources to a single module.
@@ -57,26 +63,50 @@ class SwiftCompileStep implements Step {
   }
 
   private ProcessExecutorParams makeProcessExecutorParams() {
-    ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
-    builder.setDirectory(compilerCwd.toAbsolutePath());
-    builder.setEnvironment(compilerEnvironment);
-    builder.setCommand(compilerCommand);
-    return builder.build();
+    return ProcessExecutorParams.builder()
+        .setDirectory(compilerCwd.toAbsolutePath())
+        .setEnvironment(compilerEnvironment)
+        .setCommand(compilerCommand)
+        .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
+        .setRedirectError(ProcessBuilder.Redirect.PIPE)
+        .build();
   }
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
-    ListeningProcessExecutor executor = new ListeningProcessExecutor();
+    ProcessExecutor executor = context.getProcessExecutor();
     ProcessExecutorParams params = makeProcessExecutorParams();
-    SimpleProcessListener listener = new SimpleProcessListener();
 
-    // TODO(ryu2): parse the output, print build failure errors, etc.
     try {
       LOG.debug("%s", compilerCommand);
-      ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);
-      int result = executor.waitForProcess(process);
-      if (result != 0) {
-        LOG.error("Error running %s: %s", getDescription(context), listener.getStderr());
+      ProcessExecutor.LaunchedProcess launchedProcess = executor.launchProcess(params);
+      SwiftCompileOutputHandler swiftCompileHandler = new SwiftCompileOutputHandler();
+      int result;
+      String stdout;
+      try (InputStreamReader isr =
+               new InputStreamReader(
+                   launchedProcess.getInputStream(),
+                   StandardCharsets.UTF_8);
+           BufferedReader br = new BufferedReader(isr);
+           InputStreamReader esr =
+               new InputStreamReader(
+                   launchedProcess.getErrorStream(),
+                   StandardCharsets.UTF_8);
+           BufferedReader ebr = new BufferedReader(esr)) {
+        SwiftCompileOutputParsing.streamOutputFromReader(ebr, swiftCompileHandler);
+        stdout = CharStreams.toString(br).trim();
+        result = executor.waitForLaunchedProcess(launchedProcess).getExitCode();
+      }
+
+      String accumulatedError = swiftCompileHandler.getAllErrors();
+      if (!accumulatedError.isEmpty()) {
+        context.getConsole().printErrorText(
+            String.format(
+                Locale.US,
+                "Swift failed compiling with following error %d: %s.\nOutput: %s",
+                result,
+                accumulatedError,
+                stdout));
       }
       return StepExecutionResult.of(result);
     } catch (IOException e) {
@@ -88,5 +118,19 @@ class SwiftCompileStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     return Joiner.on(" ").join(compilerCommand);
+  }
+
+  private class SwiftCompileOutputHandler
+      implements SwiftCompileOutputParsing.SwiftOutputHandler {
+    Set<String> errors = new HashSet<>();
+
+    @Override
+    public void recordError(String error) {
+      errors.add(error);
+    }
+
+    private String getAllErrors() {
+      return Joiner.on("\n").join(errors);
+    }
   }
 }

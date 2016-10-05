@@ -446,7 +446,6 @@ public class AppleCxxPlatforms {
       ImmutableList<Path> toolSearchPaths,
       ExecutableFinder executableFinder) {
     ImmutableList<String> swiftParams = ImmutableList.of(
-        "-frontend",
         "-sdk",
         sdkPaths.getSdkPath().toString(),
         "-target",
@@ -460,7 +459,7 @@ public class AppleCxxPlatforms {
         platformName);
 
     Optional<Tool> swift = getOptionalToolWithParams(
-        "swift",
+        "swiftc",
         toolSearchPaths,
         executableFinder,
         version,

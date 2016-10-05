@@ -44,6 +44,7 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Optional;
@@ -136,11 +137,12 @@ class SwiftLibrary
     SwiftCompile rule = requireSwiftCompileRule(cxxPlatform.getFlavor());
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
     inputBuilder
-        .addAllArgs(rule.getLinkArgs())
+        .addAllArgs(rule.getAstLinkArgs())
         .addAllFrameworks(frameworks)
         .addAllLibraries(libraries);
     boolean isDynamic;
-    switch (linkage) {
+    Linkage preferredLinkage = getPreferredLinkage(cxxPlatform);
+    switch (preferredLinkage) {
       case STATIC:
         isDynamic = false;
         break;
@@ -151,12 +153,18 @@ class SwiftLibrary
         isDynamic = type == Linker.LinkableDepType.SHARED;
         break;
       default:
-        throw new IllegalStateException("unhandled linkage type: " + linkage);
+        throw new IllegalStateException("unhandled linkage type: " + preferredLinkage);
     }
     if (isDynamic) {
-      inputBuilder.addArgs(new SourcePathArg(getResolver(),
-          new BuildTargetSourcePath(requireSwiftLinkRule(cxxPlatform.getFlavor())
-              .getBuildTarget())));
+      inputBuilder.addArgs(
+          FileListableLinkerInputArg.withSourcePathArg(
+              new SourcePathArg(
+                  getResolver(),
+                  new BuildTargetSourcePath(
+                      requireSwiftLinkRule(cxxPlatform.getFlavor())
+                          .getBuildTarget()))));
+    } else {
+      inputBuilder.addAllArgs(rule.getFileListLinkArgs());
     }
     return inputBuilder.build();
   }
