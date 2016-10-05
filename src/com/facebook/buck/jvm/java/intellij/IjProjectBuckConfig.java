@@ -58,6 +58,12 @@ public class IjProjectBuckConfig {
         .setJavaBuckConfig(new JavaBuckConfig(buckConfig))
         .setBuckConfig(buckConfig)
         .setJavaLibrarySdkNamesBySourceLevel(javaLibrarySdkNames)
+        .setProjectJdkName(
+            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "jdk_name"))
+        .setProjectJdkType(
+            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "jdk_type"))
+        .setProjectLanguageLevel(
+            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "language_level"))
         .build();
   }
 }

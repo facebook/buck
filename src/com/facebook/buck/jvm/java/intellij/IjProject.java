@@ -55,7 +55,7 @@ public class IjProject {
   private final SourcePathResolver sourcePathResolver;
   private final ProjectFilesystem projectFilesystem;
   private final IjModuleGraph.AggregationMode aggregationMode;
-  private final BuckConfig buckConfig;
+  private final IjProjectConfig projectConfig;
 
   public IjProject(
       TargetGraphAndTargets targetGraphAndTargets,
@@ -73,7 +73,7 @@ public class IjProject {
     this.sourcePathResolver = sourcePathResolver;
     this.projectFilesystem = projectFilesystem;
     this.aggregationMode = aggregationMode;
-    this.buckConfig = buckConfig;
+    this.projectConfig = IjProjectBuckConfig.create(buckConfig);
   }
 
   /**
@@ -200,7 +200,6 @@ public class IjProject {
             return sourcePathResolver.getRelativePath(sourcePath);
           }
         };
-    IjProjectConfig projectConfig = IjProjectBuckConfig.create(buckConfig);
     IjModuleGraph moduleGraph = IjModuleGraph.from(
         projectConfig,
         targetGraphAndTargets.getTargetGraph(),
@@ -217,8 +216,9 @@ public class IjProject {
         javaPackageFinder);
     IjProjectWriter writer = new IjProjectWriter(
         new IjProjectTemplateDataPreparer(parsingJavaPackageFinder, moduleGraph, projectFilesystem),
+        projectConfig,
         projectFilesystem);
-    writer.write(buckConfig, runPostGenerationCleaner);
+    writer.write(runPostGenerationCleaner);
     return requiredBuildTargets.build();
   }
 }

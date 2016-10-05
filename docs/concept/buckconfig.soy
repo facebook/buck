@@ -1410,6 +1410,33 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'intellij' /}
+  {param name: 'jdk_name' /}
+  {param example_value: 'Java SDK 1.6' /}
+  {param description}
+    IntelliJ project SDK name.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'intellij' /}
+  {param name: 'jdk_type' /}
+  {param example_value: 'Android SDK or JavaSDK' /}
+  {param description}
+    IntelliJ project SDK type.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'intellij' /}
+  {param name: 'language_level' /}
+  {param example_value: 'JDK_1_7' /}
+  {param description}
+    Default Java language level for the IntelliJ project.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'java' /}
   {param description}

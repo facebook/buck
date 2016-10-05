@@ -16,11 +16,11 @@
 
 package com.facebook.buck.jvm.java.intellij;
 
-import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Resources;
@@ -50,6 +50,7 @@ public class IjProjectWriter {
   private enum StringTemplateFile {
     MODULE_TEMPLATE("ij-module.st"),
     MODULE_INDEX_TEMPLATE("ij-module-index.st"),
+    MISC_TEMPLATE("ij-misc.st"),
     LIBRARY_TEMPLATE("ij-library.st");
 
     private final String fileName;
@@ -63,17 +64,22 @@ public class IjProjectWriter {
   }
 
   private IjProjectTemplateDataPreparer projectDataPreparer;
+  private IjProjectConfig projectConfig;
   private ProjectFilesystem projectFilesystem;
 
   public IjProjectWriter(
       IjProjectTemplateDataPreparer projectDataPreparer,
+      IjProjectConfig projectConfig,
       ProjectFilesystem projectFilesystem) {
     this.projectDataPreparer = projectDataPreparer;
+    this.projectConfig = projectConfig;
     this.projectFilesystem = projectFilesystem;
   }
 
-  public void write(BuckConfig buckConfig, boolean runPostGenerationCleaner) throws IOException {
+  public void write(boolean runPostGenerationCleaner) throws IOException {
     IJProjectCleaner cleaner = new IJProjectCleaner(projectFilesystem);
+
+    writeProjectSettings(cleaner, projectConfig);
 
     for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
       Path generatedModuleFile = writeModule(module);
@@ -87,7 +93,7 @@ public class IjProjectWriter {
     cleaner.doNotDelete(indexFile);
 
     if (runPostGenerationCleaner) {
-      cleaner.clean(buckConfig, LIBRARIES_PREFIX);
+      cleaner.clean(projectConfig.getBuckConfig(), LIBRARIES_PREFIX);
     }
   }
 
@@ -121,6 +127,38 @@ public class IjProjectWriter {
 
     writeToFile(moduleContents, path);
     return path;
+  }
+
+  private void writeProjectSettings(
+      IJProjectCleaner cleaner,
+      IjProjectConfig projectConfig) throws IOException {
+    Optional<String> languageLevel = projectConfig.getProjectLanguageLevel();
+    Optional<String> sdkName = projectConfig.getProjectJdkName();
+    Optional<String> sdkType = projectConfig.getProjectJdkType();
+
+    if (!languageLevel.isPresent() || !sdkName.isPresent() || !sdkType.isPresent()) {
+      return;
+    }
+
+    projectFilesystem.mkdirs(IDEA_CONFIG_DIR_PREFIX);
+
+    Path path = IDEA_CONFIG_DIR_PREFIX.resolve("misc.xml");
+
+    ST contents = getST(StringTemplateFile.MISC_TEMPLATE);
+
+    contents.add("languageLevel", languageLevel.get());
+    contents.add("jdk15", getJdk15FromLanguageLevel(languageLevel.get()));
+    contents.add("jdkName", sdkName.get());
+    contents.add("jdkType", sdkType.get());
+
+    writeToFile(contents, path);
+
+    cleaner.doNotDelete(path);
+  }
+
+  private static boolean getJdk15FromLanguageLevel(String languageLevel) {
+    boolean jdkUnder15 = "JDK_1_3".equals(languageLevel) || "JDK_1_4".equals(languageLevel);
+    return !jdkUnder15;
   }
 
   private Path writeLibrary(IjLibrary library) throws IOException {

@@ -1,0 +1,12 @@
+[color]
+  ui = false
+[alias]
+  root=//:root_repo
+[project]
+  ignore = buck-out
+  ide = intellij
+  disable_r_java_idea_generator = true
+[intellij]
+  jdk_name = Android SDK Version 23
+  jdk_type = Android SDK
+  language_level = JDK_1_7

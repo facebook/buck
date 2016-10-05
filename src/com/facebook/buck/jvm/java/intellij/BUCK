@@ -6,6 +6,7 @@ standard_java_library(
   ],
   resources = [
     'ij-library.st',
+    'ij-misc.st',
     'ij-module.st',
     'ij-module-index.st',
   ],

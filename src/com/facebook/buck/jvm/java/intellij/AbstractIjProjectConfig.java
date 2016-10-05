@@ -41,4 +41,10 @@ abstract class AbstractIjProjectConfig {
   public Optional<String> getJavaLibrarySdkNameForSourceLevel(String sourceLevel) {
     return Optional.fromNullable(getJavaLibrarySdkNamesBySourceLevel().get(sourceLevel));
   }
+
+  public abstract Optional<String> getProjectJdkName();
+
+  public abstract Optional<String> getProjectJdkType();
+
+  public abstract Optional<String> getProjectLanguageLevel();
 }
