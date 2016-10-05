@@ -124,6 +124,10 @@ public class DependenciesOptimizer {
         return -1;
       } else if (c2 == ':') {
         return 1;
+      } else if (c1 == '/') {
+        return -1;
+      } else if (c2 == '/') {
+        return 1;
       } else if (c1 < c2) {
         return -1;
       } else {
