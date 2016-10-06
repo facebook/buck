@@ -25,7 +25,27 @@ import java.nio.file.Path;
  * of directories with its dependencies.
  */
 interface RustLinkable {
+  /**
+   * Return the crate name for this linkable (ie, the name used in an "extern crate X;" line,
+   * and in an --extern option to rustc).
+   *
+   * @return Crate name
+   */
   String getLinkTarget();
+
+  /**
+   * Return full path to the rlib, used as a direct dependency (ie, passed to rustc as
+   * "--extern [crate_name]=path/to/libcrate_name.rlib"
+   *
+   * @return path to rlib file
+   */
   Path getLinkPath();
+
+  /**
+   * Return the set of paths to find the transitive dependencies for this linkable thing,
+   * passed to rustc as "-L dependency=path/to/dependency".
+   *
+   * @return set of paths
+   */
   ImmutableSortedSet<Path> getDependencyPaths();
 }

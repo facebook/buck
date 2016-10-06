@@ -69,7 +69,7 @@ public class RustLibrary extends RustCompile implements RustLinkable {
 
   @Override
   public ImmutableSortedSet<Path> getDependencyPaths() {
-    return ImmutableSortedSet.of();
+    return RustLinkables.getDependencyPaths(this);
   }
 
   @Override

@@ -1,0 +1,12 @@
+rust_library(
+  name = 'messenger',
+  srcs = [
+    'lib.rs',
+  ],
+  deps = [
+    "//messenger/messengerdep:messengerdep",
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

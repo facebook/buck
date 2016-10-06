@@ -20,10 +20,9 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -71,10 +70,6 @@ public class PrebuiltRustLibrary extends AbstractBuildRule
     return crate;
   }
 
-  private Path getLibDirPath() {
-    return getLinkPath().getParent();
-  }
-
   @Override
   public Path getLinkPath() {
     return getResolver().getRelativePath(rlib);
@@ -82,17 +77,7 @@ public class PrebuiltRustLibrary extends AbstractBuildRule
 
   @Override
   public ImmutableSortedSet<Path> getDependencyPaths() {
-    ImmutableSortedSet.Builder<Path> builder = ImmutableSortedSet.<Path>naturalOrder();
-
-    builder.add(getLibDirPath());
-
-    for (BuildRule rule: getDeps()) {
-      if (rule instanceof RustLinkable) {
-        builder.addAll(((RustLinkable) rule).getDependencyPaths());
-      }
-    }
-
-    return builder.build();
+    return RustLinkables.getDependencyPaths(this);
   }
 
   @Override
