@@ -61,7 +61,6 @@ public class BuildTargetParserTest {
     assertEquals("fb4a", buildTarget.getShortNameAndFlavorPostfix());
     assertEquals("//", buildTarget.getBaseName());
     assertEquals(Paths.get(""), buildTarget.getBasePath());
-    assertEquals("", buildTarget.getBasePathWithSlash());
     assertEquals("//:fb4a", buildTarget.getFullyQualifiedName());
   }
 
@@ -73,7 +72,6 @@ public class BuildTargetParserTest {
     assertEquals("lib#bar,foo", buildTarget.getShortNameAndFlavorPostfix());
     assertEquals("//", buildTarget.getBaseName());
     assertEquals(Paths.get(""), buildTarget.getBasePath());
-    assertEquals("", buildTarget.getBasePathWithSlash());
     // Note the sort order.
     assertEquals("//:lib#bar,foo", buildTarget.getFullyQualifiedName());
     assertThat(
@@ -88,7 +86,6 @@ public class BuildTargetParserTest {
     assertEquals("assets", buildTarget.getShortNameAndFlavorPostfix());
     assertEquals("//..a/b../a...b", buildTarget.getBaseName());
     assertEquals(Paths.get("..a", "b..", "a...b"), buildTarget.getBasePath());
-    assertEquals("..a/b../a...b/", buildTarget.getBasePathWithSlash());
     assertEquals("//..a/b../a...b:assets", buildTarget.getFullyQualifiedName());
   }
 

@@ -460,7 +460,7 @@ public class Cell {
   public static class MissingBuildFileException extends BuildTargetException {
     public MissingBuildFileException(BuildTarget buildTarget, BuckConfig buckConfig) {
       super(String.format("No build file at %s when resolving target %s.",
-          buildTarget.getBasePathWithSlash() + new ParserConfig(buckConfig).getBuildFileName(),
+          buildTarget.getBasePath().resolve(new ParserConfig(buckConfig).getBuildFileName()),
           buildTarget.getFullyQualifiedName()));
     }
 

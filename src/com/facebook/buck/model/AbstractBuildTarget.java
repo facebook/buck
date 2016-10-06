@@ -80,8 +80,9 @@ abstract class AbstractBuildTarget
     return getUnflavoredBuildTarget().getBasePath();
   }
 
-  public String getBasePathWithSlash() {
-    return getUnflavoredBuildTarget().getBasePathWithSlash();
+  @JsonIgnore
+  public boolean isInCellRoot() {
+    return getUnflavoredBuildTarget().isInCellRoot();
   }
 
   @JsonProperty("shortName")

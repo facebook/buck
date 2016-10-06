@@ -34,7 +34,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class ExportFileDescription implements
     Description<ExportFileDescription.Arg>,
@@ -104,8 +103,7 @@ public class ExportFileDescription implements
       ExportFileDescription.Arg constructorArg) {
     ImmutableList.Builder<Path> inputs = ImmutableList.builder();
     if (!constructorArg.src.isPresent()) {
-      String name = buildTarget.getBasePathWithSlash() + buildTarget.getShortName();
-      inputs.add(Paths.get(name));
+      inputs.add(buildTarget.getBasePath().resolve(buildTarget.getShortName()));
     }
     return inputs.build();
   }

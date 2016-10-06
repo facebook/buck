@@ -688,7 +688,7 @@ public class Project {
       @Nullable BuildRule buildRule,
       ProjectFilesystem projectFilesystem) {
     // If in the root of the project, specify ignored paths.
-    if (buildRule != null && buildRule.getBuildTarget().getBasePathWithSlash().isEmpty()) {
+    if (buildRule != null && buildRule.getBuildTarget().isInCellRoot()) {
       for (Path path : FluentIterable.from(projectFilesystem.getIgnorePaths())
           .filter(PathOrGlobMatcher.isPath())
           .transform(PathOrGlobMatcher.toPath())) {

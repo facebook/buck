@@ -16,7 +16,6 @@
 
 package com.facebook.buck.model;
 
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -107,14 +106,8 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
         getBaseName().substring(BUILD_TARGET_PREFIX.length()));
   }
 
-  /**
-   * @return the value of {@link #getBasePath()} with a trailing slash, unless
-   *     {@link #getBasePath()} returns the empty string, in which case this also returns the empty
-   *     string
-   */
-  public String getBasePathWithSlash() {
-    String basePath = MorePaths.pathWithUnixSeparators(getBasePath());
-    return basePath.isEmpty() ? "" : basePath + "/";
+  public boolean isInCellRoot() {
+    return getBaseName().equals("//");
   }
 
   public static Builder builder(UnflavoredBuildTarget buildTarget) {

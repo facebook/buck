@@ -597,8 +597,7 @@ public class ProjectCommand extends BuildCommand {
 
               @Override
               public boolean apply(TargetNode<?> input) {
-                return input.getBuildTarget() != null &&
-                    input.getBuildTarget().getBasePathWithSlash().isEmpty();
+                return input.getBuildTarget() != null && input.getBuildTarget().isInCellRoot();
               }
             },
             projectPredicates.getProjectRootsPredicate()

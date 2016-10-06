@@ -392,27 +392,26 @@ public class Genrule extends AbstractBuildRule
 
   @VisibleForTesting
   void addSymlinkCommands(ImmutableList.Builder<Step> commands) {
-    String basePath = getBuildTarget().getBasePathWithSlash();
-    int basePathLength = basePath.length();
+    Path basePath = getBuildTarget().getBasePath();
 
     // Symlink all sources into the temp directory so that they can be used in the genrule.
     for (SourcePath src : srcs) {
       Path relativePath = getResolver().getRelativePath(src);
       Path absolutePath = getResolver().getAbsolutePath(src);
-      String localPath = MorePaths.pathWithUnixSeparators(relativePath);
-
-      Path canonicalPath;
-      canonicalPath = absolutePath.normalize();
+      Path canonicalPath = absolutePath.normalize();
 
       // By the time we get this far, all source paths (the keys in the map) have been converted
       // to paths relative to the project root. We want the path relative to the build target, so
       // strip the base path.
+      Path localPath;
       if (absolutePath.equals(canonicalPath)) {
-        if (localPath.startsWith(basePath)) {
-          localPath = localPath.substring(basePathLength);
+        if (relativePath.startsWith(basePath) || getBuildTarget().isInCellRoot()) {
+          localPath = MorePaths.relativize(basePath, relativePath);
         } else {
-          localPath = canonicalPath.getFileName().toString();
+          localPath = canonicalPath.getFileName();
         }
+      } else {
+        localPath = relativePath;
       }
 
       Path destination = pathToSrcDirectory.resolve(localPath);

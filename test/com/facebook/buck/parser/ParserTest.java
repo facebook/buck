@@ -314,8 +314,9 @@ public class ParserTest {
 
     thrown.expect(Cell.MissingBuildFileException.class);
     thrown.expectMessage(
-        "No build file at path/to/nowhere/BUCK when resolving target " +
-            "//path/to/nowhere:nowhere");
+        String.format(
+            "No build file at %s when resolving target //path/to/nowhere:nowhere",
+            Paths.get("path", "to", "nowhere", "BUCK").toString()));
 
     parser.buildTargetGraph(
         eventBus,

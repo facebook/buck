@@ -43,7 +43,6 @@ public class BuildTargetTest {
     assertEquals("fb4a", rootTarget.getShortNameAndFlavorPostfix());
     assertEquals("//", rootTarget.getBaseName());
     assertEquals(Paths.get(""), rootTarget.getBasePath());
-    assertEquals("", rootTarget.getBasePathWithSlash());
     assertEquals("//:fb4a", rootTarget.getFullyQualifiedName());
     assertEquals("//:fb4a", rootTarget.toString());
   }
@@ -54,7 +53,6 @@ public class BuildTargetTest {
     assertEquals("fb4a", rootTarget.getShortNameAndFlavorPostfix());
     assertEquals("//java/com/facebook", rootTarget.getBaseName());
     assertEquals(Paths.get("java/com/facebook"), rootTarget.getBasePath());
-    assertEquals("java/com/facebook/", rootTarget.getBasePathWithSlash());
     assertEquals("//java/com/facebook:fb4a", rootTarget.getFullyQualifiedName());
     assertEquals("//java/com/facebook:fb4a", rootTarget.toString());
   }
