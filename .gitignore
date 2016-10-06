@@ -67,9 +67,7 @@ src/com/facebook/buck/intellij/ideabuck/.idea/copyright/profiles_settings.xml
 .DS_Store
 
 # vim swp files
-.*.swp
-.*.swo
-
+.*.sw[a-p]
 
 # Emacs backup files
 *~
@@ -78,3 +76,4 @@ src/com/facebook/buck/intellij/ideabuck/.idea/copyright/profiles_settings.xml
 # IntelliJ plugin generated syntax source files
 src/com/facebook/buck/intellij/ideabuck/src/com/facebook/buck/intellij/ideabuck/lang/_BuckLexer.java
 src/com/facebook/buck/intellij/ideabuck/gen
+
