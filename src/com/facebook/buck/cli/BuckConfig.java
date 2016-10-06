@@ -738,6 +738,10 @@ public class BuckConfig {
     return required(section, field, path);
   }
 
+  public String getClientId() {
+    return getValue("client", "id").or("buck");
+  }
+
   /**
    * @return the number of threads Buck should use.
    */
