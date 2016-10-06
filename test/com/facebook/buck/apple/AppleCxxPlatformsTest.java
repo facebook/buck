@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
@@ -1007,8 +1008,12 @@ public class AppleCxxPlatformsTest {
 
   @Test
   public void checkSwiftPlatformUsesCorrectMinTargetSdk() throws IOException {
-    AppleCxxPlatform platformWithConfiguredSwift = buildAppleCxxPlatformWithSwiftToolchain(false);
-    assertThat(platformWithConfiguredSwift.getSwiftPlatform().get().getSwift(), notNullValue());
+    AppleCxxPlatform platformWithConfiguredSwift = buildAppleCxxPlatformWithSwiftToolchain(true);
+    Tool swift = platformWithConfiguredSwift.getSwiftPlatform().get().getSwift();
+    assertThat(swift, notNullValue());
+    assertThat(swift, instanceOf(VersionedTool.class));
+    VersionedTool versionedSwift = (VersionedTool) swift;
+    assertThat(versionedSwift.getExtraArgs(), hasItem("i386-apple-ios7.0"));
   }
 
   private AppleCxxPlatform buildAppleCxxPlatformWithSwiftToolchain(boolean useDefaultSwift)
@@ -1035,7 +1040,7 @@ public class AppleCxxPlatformsTest {
         .build();
     return AppleCxxPlatforms.buildWithExecutableChecker(
         FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_SDK,
-        "8.0",
+        "7.0",
         "i386",
         FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_SDK_PATHS,
         FakeBuckConfig.builder().build(),
