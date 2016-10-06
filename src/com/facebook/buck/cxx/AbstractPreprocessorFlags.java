@@ -47,17 +47,6 @@ abstract class AbstractPreprocessorFlags {
   public abstract Optional<SourcePath> getPrefixHeader();
 
   /**
-   * Whether the intention is to use the above prefix header as a precompiled header --
-   * in which case, don't pass the original header file to the preprocessor, use the precompiled
-   * one instead.
-   */
-  @Value.Parameter
-  @Value.Default
-  public boolean getShouldUsePrecompiledHeaders() {
-    return true;
-  }
-
-  /**
    * Other flags included as is.
    */
   @Value.Parameter
@@ -117,19 +106,12 @@ abstract class AbstractPreprocessorFlags {
       Preprocessor preprocessor) {
     ExplicitCxxToolFlags.Builder builder = CxxToolFlags.explicitBuilder();
     ExplicitCxxToolFlags.addCxxToolFlags(builder, getOtherFlags());
-    if (getPrefixHeader().isPresent() && !getShouldUsePrecompiledHeaders()) {
-      // Not using a precompiled version of this header; so "-include" it here for preprocessing.
-      // Precompiled prefix headers handled separately (in CxxPreprocessAndCompile, the only
-      // place they would make sense).  We don't want to "-include" and have to parse the
-      // whole prefix header, and then subsequently try to use the PCH; that will negate
-      // the performance benefit of precompiling.
-      builder.addAllRuleFlags(
-          MoreIterables.zipAndConcat(
-              Iterables.cycle("-include"),
-              FluentIterable.from(getPrefixHeader().asSet())
-                  .transform(resolver.getAbsolutePathFunction())
-                  .transform(Functions.toStringFunction())));
-    }
+    builder.addAllRuleFlags(
+        MoreIterables.zipAndConcat(
+            Iterables.cycle("-include"),
+            FluentIterable.from(getPrefixHeader().asSet())
+                .transform(resolver.getAbsolutePathFunction())
+                .transform(Functions.toStringFunction())));
     builder.addAllRuleFlags(
         CxxHeaders.getArgs(getIncludes(), resolver, Optional.of(pathShortener), preprocessor));
     builder.addAllRuleFlags(

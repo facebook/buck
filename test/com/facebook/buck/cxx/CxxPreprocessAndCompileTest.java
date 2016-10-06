@@ -363,7 +363,7 @@ public class CxxPreprocessAndCompileTest {
   }
 
   @Test
-  public void usesCorrectCommandForPreprocessWithNonPCHPrefixHeader() {
+  public void usesCorrectCommandForPreprocess() {
 
     // Setup some dummy values for inputs to the CxxPreprocessAndCompile.
     SourcePathResolver pathResolver = new SourcePathResolver(
@@ -394,7 +394,6 @@ public class CxxPreprocessAndCompileTest {
                 PreprocessorFlags.builder()
                     .setOtherFlags(preprocessorFlags)
                     .setPrefixHeader(new FakeSourcePath(filesystem, prefixHeader.toString()))
-                    .setShouldUsePrecompiledHeaders(false)
                     .build(),
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 ImmutableList.<CxxHeaders>of()),
@@ -409,79 +408,12 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_SANITIZER);
 
     // Verify it uses the expected command.
-    // Note: uses "-include headerfilename.h" to include that prefix header;
-    // does not try to use a precompiled header, because of ".setShouldUsePrecompiledHeaders(false)"
     ImmutableList<String> expectedPreprocessCommand = ImmutableList.<String>builder()
         .add("preprocessor")
         .add("-Dtest=blah")
         .add("-Dfoo=bar")
         .add("-include")
         .add(filesystem.resolve(prefixHeader).toString())
-        .add("-x", "c++")
-        .add("-E")
-        .add("-MD")
-        .add("-MF")
-        .add(filesystem.resolve(scratchDir).resolve("dep.tmp").toString())
-        .add(input.toString())
-        .build();
-    ImmutableList<String> actualPreprocessCommand =
-        buildRule.makeMainStep(scratchDir, false).getCommand();
-    assertEquals(expectedPreprocessCommand, actualPreprocessCommand);
-  }
-
-  @Test
-  public void usesCorrectCommandForPreprocessWithPCHPrefixHeader() {
-
-    // Setup some dummy values for inputs to the CxxPreprocessAndCompile.
-    SourcePathResolver pathResolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    CxxToolFlags preprocessorFlags = CxxToolFlags.explicitBuilder()
-        .addPlatformFlags("-Dtest=blah")
-        .addRuleFlags("-Dfoo=bar")
-        .build();
-    Path output = Paths.get("test.ii");
-    Path input = Paths.get("test.cpp");
-    Path prefixHeader = Paths.get("prefix.pch");
-    Path scratchDir = Paths.get("scratch");
-
-    CxxPreprocessAndCompile buildRule =
-        CxxPreprocessAndCompile.preprocess(
-            params,
-            pathResolver,
-            new PreprocessorDelegate(
-                pathResolver,
-                DEFAULT_SANITIZER,
-                CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
-                DEFAULT_WORKING_DIR,
-                DEFAULT_PREPROCESSOR,
-                PreprocessorFlags.builder()
-                    .setOtherFlags(preprocessorFlags)
-                    .setPrefixHeader(new FakeSourcePath(filesystem, prefixHeader.toString()))
-                    .build(),
-                DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
-                ImmutableList.<CxxHeaders>of()),
-            new CompilerDelegate(
-                pathResolver,
-                DEFAULT_SANITIZER,
-                DEFAULT_COMPILER,
-                CxxToolFlags.of()),
-            output,
-            new FakeSourcePath(input.toString()),
-            DEFAULT_INPUT_TYPE,
-            DEFAULT_SANITIZER);
-
-    // Verify it uses the expected command.
-    // Note: no use of "-include headerfilename.h" to include that prefix header.
-    // The compile step should try to use the PCH instead.  (Not covered here, this is only
-    // the preprocess step.)
-    ImmutableList<String> expectedPreprocessCommand = ImmutableList.<String>builder()
-        .add("preprocessor")
-        .add("-Dtest=blah")
-        .add("-Dfoo=bar")
         .add("-x", "c++")
         .add("-E")
         .add("-MD")
