@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 45f626d18dac22dd77f93c2bc61a819b4bb8db5e #@#
+#@# GENERATED FILE: DO NOT MODIFY 07b5f5fcd5484cc6e529833ce9813fe7650287e1 #@#
 {
   "intellij" : {
     "deps" : [
@@ -6,7 +6,6 @@
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/io:MorePaths.java",
-      "//src/com/facebook/buck/jvm/java:config",
       "//src/com/facebook/buck/jvm/java:packagefinder",
       "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/jvm/java:support",
@@ -24,6 +23,7 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/core:packagefinder",
       "//src/com/facebook/buck/jvm/java:autodeps",
+      "//src/com/facebook/buck/jvm/java:config",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rules",

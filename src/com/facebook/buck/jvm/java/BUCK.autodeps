@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY edc59d9bbba7d41076fbc9028464a89957334557 #@#
+#@# GENERATED FILE: DO NOT MODIFY 672134547675cfa3ffacd23222f513fa19af334a #@#
 {
   "autodeps" : {
     "deps" : [
@@ -30,6 +30,7 @@
     "exported_deps" : [
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/jvm/java:support",
+      "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//third-party/java/guava:guava"
     ]

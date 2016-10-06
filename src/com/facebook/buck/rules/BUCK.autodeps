@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 615a149467aaa6c031510490a714a01b44c4ca31 #@#
+#@# GENERATED FILE: DO NOT MODIFY eeaed7949d8b5188d23a0bf44aa7d3ffdaa266a9 #@#
 {
   "action_graph_cache" : {
     "deps" : [
@@ -28,7 +28,6 @@
   },
   "build_rule" : {
     "deps" : [
-      "//src/com/facebook/buck/android:exceptions",
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util/hash:hash",

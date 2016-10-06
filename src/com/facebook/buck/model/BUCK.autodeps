@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 09b8e0a46e470e31cbee8fdaa6fa0ed1e8fe9ec4 #@#
+#@# GENERATED FILE: DO NOT MODIFY fabcc4c5ba00d0780ea195c10244d4fe97e667af #@#
 {
   "build_id" : {
     "deps" : [ ],
@@ -10,7 +10,8 @@
   },
   "macros" : {
     "deps" : [
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:processor",
+      "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/util/immutables:immutables",
