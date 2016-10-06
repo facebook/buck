@@ -67,10 +67,6 @@ com.facebook.buck.log.LogFileHandler.max_size_bytes=<default_max_size_bytes>
 # Max number of logs preserved in disk.
 com.facebook.buck.log.LogFileHandler.count=25
 
-# TODO(t4624433): Temporarily disable logging for Guava's CombinedFuture
-# class until we can figure out what's going on.
-com.google.common.util.concurrent.level=OFF
-
 # Put any per-package/class logging configuration here.
 #
 # Note: Log levels are applied in the order they appear in this file,

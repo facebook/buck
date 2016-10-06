@@ -68,7 +68,9 @@ public class ConsoleHandler extends Handler {
   @Override
   public void publish(LogRecord record) {
     synchronized (this) {
-      if (closed || !(isLoggable(record) || isLoggableWithRegisteredLogLevel(record))) {
+      if (closed ||
+          !(isLoggable(record) || isLoggableWithRegisteredLogLevel(record)) ||
+          isBlacklisted(record)) {
         return;
       }
     }
@@ -158,6 +160,13 @@ public class ConsoleHandler extends Handler {
     // Level.ALL.intValue() is Integer.MIN_VALUE, so have to compare it explicitly.
     return commandIdLogLevel.equals(Level.ALL) ||
       commandIdLogLevel.intValue() >= record.getLevel().intValue();
+  }
+
+  private boolean isBlacklisted(LogRecord record) {
+    // Guava futures internals are not very actionable to the user but we still want to have
+    // them in the log.
+    return record.getLoggerName() != null &&
+        record.getLoggerName().startsWith("com.google.common.util.concurrent");
   }
 
   private Iterable<OutputStreamWriter> getOutputStreamWritersForRecord(LogRecord record) {
