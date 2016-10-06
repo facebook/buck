@@ -84,6 +84,17 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
     hasher.putUnencodedChars(string);
   }
 
+  /**
+   * Feed an object to the hash being built.
+   *
+   * This method will use the object's {@link Object#toString()} method to serialize it so it might
+   * be unsuitable for some classes of objects, in particular passing objects that use the default
+   * implementation of {@link Object#toString()} might result in an unstable rule key. The string
+   * representation also might be missing some of the object's information or use ambiguous
+   * serialization which would make the rule key incomplete.
+   * @param object the object to feed to the rule key hash.
+   * @return This builder.
+   */
   private RuleKeyBuilder<T> feed(Object object) {
     return feed(object.toString());
   }
