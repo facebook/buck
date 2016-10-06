@@ -58,6 +58,15 @@
 {/call}
 
 {call buck.arg}
+  {param name: 'max_workers' /}
+  {param default: '1' /}
+  {param desc}
+    The maximum number of workers of this type that Buck will start. Use <code>-1</code> to allow
+    the creation of as many workers as necessary.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'env' /}
   {param default: 'None' /}
   {param desc}

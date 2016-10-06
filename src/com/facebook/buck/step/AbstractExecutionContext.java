@@ -23,7 +23,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.shell.WorkerProcess;
+import com.facebook.buck.shell.WorkerProcessPool;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.Console;
@@ -114,7 +114,7 @@ abstract class AbstractExecutionContext implements Closeable {
   }
 
   @Value.Default
-  public ConcurrentMap<String, WorkerProcess> getWorkerProcesses() {
+  public ConcurrentMap<String, WorkerProcessPool> getWorkerProcessPools() {
     return new ConcurrentHashMap<>();
   }
 
@@ -212,7 +212,7 @@ abstract class AbstractExecutionContext implements Closeable {
         .setConsole(console)
         .setProcessExecutor(new ProcessExecutor(console))
         .setClassLoaderCache(getClassLoaderCache().addRef())
-        .setWorkerProcesses(new ConcurrentHashMap<String, WorkerProcess>())
+        .setWorkerProcessPools(new ConcurrentHashMap<String, WorkerProcessPool>())
         .build();
   }
 
@@ -220,11 +220,11 @@ abstract class AbstractExecutionContext implements Closeable {
   public void close() throws IOException {
     getClassLoaderCache().close();
     try {
-      for (WorkerProcess process : getWorkerProcesses().values()) {
-        process.close();
+      for (WorkerProcessPool pool : getWorkerProcessPools().values()) {
+        pool.close();
       }
     } finally {
-      getWorkerProcesses().clear();
+      getWorkerProcessPools().clear();
     }
   }
 }

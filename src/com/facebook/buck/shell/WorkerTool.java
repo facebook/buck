@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.rules.Tool;
+import com.google.common.base.Optional;
 
 import java.nio.file.Path;
 
@@ -24,4 +25,5 @@ public interface WorkerTool {
   Tool getTool();
   String getArgs();
   Path getTempDir();
+  Optional<Integer> getMaxWorkers();
 }

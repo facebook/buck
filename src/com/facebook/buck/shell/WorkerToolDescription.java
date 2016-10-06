@@ -114,12 +114,22 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
               }
             }));
 
+    Optional<Integer> maxWorkers;
+    if (args.maxWorkers.isPresent()) {
+      // negative or zero: unlimited number of worker processes
+      maxWorkers = args.maxWorkers.get() < 1 ? Optional.<Integer>absent() : args.maxWorkers;
+    } else {
+      // default is 1 worker process (for backwards compatibility)
+      maxWorkers = Optional.of(1);
+    }
+
     return new DefaultWorkerTool(
         params,
         new SourcePathResolver(resolver),
         (BinaryBuildRule) rule,
         expandedStartupArgs,
-        expandedEnv);
+        expandedEnv,
+        maxWorkers);
   }
 
   @Override
@@ -151,5 +161,6 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
     public Optional<ImmutableMap<String, String>> env;
     public Optional<String> args;
     public BuildTarget exe;
+    public Optional<Integer> maxWorkers;
   }
 }

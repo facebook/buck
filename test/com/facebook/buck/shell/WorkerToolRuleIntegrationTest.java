@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
@@ -26,7 +27,9 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -81,5 +84,30 @@ public class WorkerToolRuleIntegrationTest {
     workspace.verify(
         Paths.get("test3_output.expected"),
         BuildTargets.getGenPath(filesystem, target3, "%s"));
+  }
+
+  /**
+   * This test builds two genrules simultaneously. //:test4 and //:test5 both reference the same
+   * worker_tool, with `max_workers` set to unlimited. They will both communicate with their own
+   * separate external process, started up with the same command line.
+   *
+   * @throws IOException
+   * @throws InterruptedException
+   */
+  @Test
+  public void testGenrulesThatUseWorkerMacrosWithConcurrency() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildTarget target1 = workspace.newBuildTarget("//:test4");
+    BuildTarget target2 = workspace.newBuildTarget("//:test5");
+
+    workspace
+        .runBuckBuild(target1.getFullyQualifiedName(), target2.getFullyQualifiedName())
+        .assertSuccess();
+
+    String contents =
+        workspace.getFileContents(BuildTargets.getGenPath(filesystem, target1, "%s/output.txt")) +
+        workspace.getFileContents(BuildTargets.getGenPath(filesystem, target2, "%s/output.txt"));
+    ImmutableSet<String> processIDs = ImmutableSet.copyOf(contents.trim().split("\\s+"));
+    assertThat(processIDs.size(), Matchers.equalTo(2));
   }
 }

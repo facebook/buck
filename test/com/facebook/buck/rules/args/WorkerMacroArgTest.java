@@ -37,6 +37,7 @@ import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.shell.ShBinaryBuilder;
 import com.facebook.buck.shell.WorkerToolBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
@@ -54,10 +55,12 @@ public class WorkerMacroArgTest {
         .build(resolver);
 
     String startupArgs = "startupargs";
+    Optional<Integer> maxWorkers = Optional.of(5);
     WorkerToolBuilder
         .newWorkerToolBuilder(BuildTargetFactory.newInstance("//:worker_rule"))
         .setExe(shBinaryRule.getBuildTarget())
         .setArgs(startupArgs)
+        .setMaxWorkers(maxWorkers)
         .build(resolver);
 
     MacroHandler macroHandler =
@@ -76,6 +79,7 @@ public class WorkerMacroArgTest {
             "$(worker //:worker_rule) " + jobArgs);
     assertThat(arg.getJobArgs(), Matchers.equalTo(jobArgs));
     assertThat(arg.getStartupArgs(), Matchers.equalTo(startupArgs));
+    assertThat(arg.getMaxWorkers(), Matchers.equalTo(maxWorkers));
   }
 
   @Test

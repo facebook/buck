@@ -46,7 +46,13 @@ public class FakeWorkerProcess extends WorkerProcess {
 
   @Override
   public synchronized WorkerJobResult submitAndWaitForJob(String jobArgs) throws IOException {
-    return this.jobArgsToJobResultMap.get(jobArgs);
+    WorkerJobResult result = this.jobArgsToJobResultMap.get(jobArgs);
+    if (result == null) {
+      throw new IllegalArgumentException(String.format(
+          "No fake WorkerJobResult found for job arguments '%s'",
+          jobArgs));
+    }
+    return result;
   }
 
   @Override

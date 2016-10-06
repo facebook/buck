@@ -26,6 +26,7 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.Tool;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -38,17 +39,20 @@ public class DefaultWorkerTool extends NoopBuildRule implements HasRuntimeDeps, 
   private final BinaryBuildRule exe;
   private final String args;
   private final ImmutableMap<String, String> env;
+  private final Optional<Integer> maxWorkers;
 
   protected DefaultWorkerTool(
       BuildRuleParams ruleParams,
       SourcePathResolver resolver,
       BinaryBuildRule exe,
       String args,
-      ImmutableMap<String, String> env) {
+      ImmutableMap<String, String> env,
+      Optional<Integer> maxWorkers) {
     super(ruleParams, resolver);
     this.exe = exe;
     this.args = args;
     this.env = env;
+    this.maxWorkers = maxWorkers;
   }
 
   @Override
@@ -74,6 +78,11 @@ public class DefaultWorkerTool extends NoopBuildRule implements HasRuntimeDeps, 
   public Path getTempDir() {
     return BuildTargets.getScratchPath(
         getProjectFilesystem(), getBuildTarget(), "%s__worker");
+  }
+
+  @Override
+  public Optional<Integer> getMaxWorkers() {
+    return maxWorkers;
   }
 
   @Override

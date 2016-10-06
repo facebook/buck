@@ -50,7 +50,8 @@ public class ReactNativeDepsWorkerStep extends WorkerShellStep {
                     "--command dependencies --platform %s --entry-file %s --output %s",
                     platform.toString(),
                     entryFile.toString(),
-                    outputFile.toString()))),
+                    outputFile.toString()),
+                Optional.of(1))),
         Optional.<WorkerJobParams>absent(),
         Optional.<WorkerJobParams>absent());
   }

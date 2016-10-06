@@ -346,7 +346,8 @@ public class Genrule extends AbstractBuildRule
                     workerMacroArg.getStartupCommand(),
                     workerMacroArg.getStartupArgs(),
                     workerMacroArg.getEnvironment(),
-                    workerMacroArg.getJobArgs());
+                    workerMacroArg.getJobArgs(),
+                    workerMacroArg.getMaxWorkers());
               }
             });
   }

@@ -74,6 +74,7 @@ java_immutables_library(
   srcs = [
     'AbstractWorkerJobResult.java',
     'WorkerProcess.java',
+    'WorkerProcessPool.java',
     'WorkerProcessProtocol.java',
     'WorkerProcessProtocolZero.java',
   ],

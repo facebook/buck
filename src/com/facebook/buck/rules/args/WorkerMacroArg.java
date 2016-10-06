@@ -27,6 +27,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.shell.WorkerTool;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -97,6 +98,10 @@ public class WorkerMacroArg extends MacroArg {
 
   public String getStartupArgs() {
     return workerTool.getArgs();
+  }
+
+  public Optional<Integer> getMaxWorkers() {
+    return workerTool.getMaxWorkers();
   }
 
   public String getJobArgs() {

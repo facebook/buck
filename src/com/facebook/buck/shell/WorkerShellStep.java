@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class WorkerShellStep implements Step {
 
@@ -59,11 +60,13 @@ public class WorkerShellStep implements Step {
 
   @Override
   public StepExecutionResult execute(final ExecutionContext context) throws InterruptedException {
+    WorkerProcessPool pool = null;
+    WorkerProcess process = null;
     try {
       // Use the process's startup command as the key.
       String key = Joiner.on(' ').join(getCommand(context.getPlatform()));
-      WorkerProcess process = getWorkerProcessForKey(key, context);
-      process.ensureLaunchAndHandshake();
+      pool = getWorkerProcessPoolForKey(key, context);
+      process = pool.borrowWorkerProcess(); // blocks until a WorkerProcess becomes available
       WorkerJobResult result = process.submitAndWaitForJob(getExpandedJobArgs(context));
       Verbosity verbosity = context.getVerbosity();
       if (result.getStdout().isPresent() && !result.getStdout().get().isEmpty() &&
@@ -81,40 +84,63 @@ public class WorkerShellStep implements Step {
       return StepExecutionResult.of(result.getExitCode());
     } catch (IOException e) {
       throw new HumanReadableException(e, "Error communicating with external process.");
+    } finally {
+      if (pool != null && process != null) {
+        pool.returnWorkerProcess(process);
+      }
     }
   }
 
   /**
-   * Returns an existing WorkerProcess for the given key if one exists, else creates a new one.
+   * Returns an existing WorkerProcessPool for the given key if one exists, else creates a new one.
    */
-  private WorkerProcess getWorkerProcessForKey(
-      String key,
-      ExecutionContext context) throws IOException {
-    ConcurrentMap<String, WorkerProcess> processMap = context.getWorkerProcesses();
-    WorkerProcess process = processMap.get(key);
-    if (process != null) {
-      return process;
+  private WorkerProcessPool getWorkerProcessPoolForKey(String key, final ExecutionContext context)
+      throws IOException, InterruptedException {
+
+    WorkerJobParams paramsToUse = getWorkerJobParamsToUse(context.getPlatform());
+    ConcurrentMap<String, WorkerProcessPool> processPoolMap = context.getWorkerProcessPools();
+    WorkerProcessPool pool = processPoolMap.get(key);
+
+    if (pool == null) {
+      final ProcessExecutorParams processParams = ProcessExecutorParams.builder()
+          .setCommand(getCommand(context.getPlatform()))
+          .setEnvironment(getEnvironmentForProcess(context))
+          .setDirectory(filesystem.getRootPath())
+          .build();
+
+      final Path workerTmpDir = paramsToUse.getTempDir();
+      final AtomicInteger workerNumber = new AtomicInteger(0);
+
+      WorkerProcessPool newPool = new WorkerProcessPool(paramsToUse.getMaxWorkers()) {
+        @Override
+        protected WorkerProcess startWorkerProcess() throws IOException {
+          Path tmpDir = workerTmpDir.resolve(Integer.toString(workerNumber.getAndIncrement()));
+          filesystem.mkdirs(tmpDir);
+
+          WorkerProcess process = createWorkerProcess(processParams, context, tmpDir);
+          process.ensureLaunchAndHandshake();
+          return process;
+        }
+      };
+      WorkerProcessPool previousPool = processPoolMap.putIfAbsent(key, newPool);
+      // If putIfAbsent does not return null, then that means another thread beat this thread
+      // into putting an WorkerProcessPool in the map for this key. If that's the case, then we
+      // should ignore newPool and return the existing one.
+      pool = previousPool == null ? newPool : previousPool;
     }
 
-    Path tmpDir = getWorkerJobParamsToUse(context.getPlatform()).getTempDir();
-    filesystem.mkdirs(tmpDir);
+    int poolCapacity = pool.getCapacity();
+    if (poolCapacity != paramsToUse.getMaxWorkers().or(WorkerProcessPool.UNLIMITED_CAPACITY)) {
+      context.postEvent(ConsoleEvent.warning(
+          "There are two 'worker_tool' targets declared with the same command (%s), but " +
+              "different 'max_worker' settings (%d and %d). Only the first capacity is applied. " +
+              "Consolidate these workers to avoid this warning.",
+          key,
+          poolCapacity,
+          paramsToUse.getMaxWorkers().or(WorkerProcessPool.UNLIMITED_CAPACITY)));
+    }
 
-    ProcessExecutorParams processParams = ProcessExecutorParams.builder()
-        .setCommand(getCommand(context.getPlatform()))
-        .setEnvironment(getEnvironmentForProcess(context))
-        .setDirectory(filesystem.getRootPath())
-        .build();
-    WorkerProcess newProcess = new WorkerProcess(
-        context.getProcessExecutor(),
-        processParams,
-        filesystem,
-        tmpDir);
-
-    WorkerProcess previousValue = processMap.putIfAbsent(key, newProcess);
-    // If putIfAbsent does not return null, then that means another thread beat this thread
-    // into putting an WorkerProcess in the map for this key. If that's the case, then we should
-    // ignore newProcess and return the existing one.
-    return previousValue == null ? newProcess : previousValue;
+    return pool;
   }
 
   @VisibleForTesting
@@ -194,6 +220,18 @@ public class WorkerShellStep implements Step {
     envVars.put("TMP", filesystem.resolve(tmpDir).toString());
     envVars.putAll(getWorkerJobParamsToUse(context.getPlatform()).getStartupEnvironment());
     return ImmutableMap.copyOf(envVars);
+  }
+
+  @VisibleForTesting
+  WorkerProcess createWorkerProcess(
+      ProcessExecutorParams processParams,
+      ExecutionContext context,
+      Path tmpDir) throws IOException {
+    return new WorkerProcess(
+        context.getProcessExecutor(),
+        processParams,
+        filesystem,
+        tmpDir);
   }
 
   @Override

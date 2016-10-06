@@ -59,7 +59,8 @@ public class ReactNativeBundleWorkerStep extends WorkerShellStep {
                     isDevMode ? "true" : "false",
                     outputFile.toString(),
                     resourcePath.toString(),
-                    sourceMapFile.toString()))),
+                    sourceMapFile.toString()),
+                Optional.of(1))),
         Optional.<WorkerJobParams>absent(),
         Optional.<WorkerJobParams>absent());
   }

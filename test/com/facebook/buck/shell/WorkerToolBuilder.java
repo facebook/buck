@@ -40,4 +40,9 @@ public class WorkerToolBuilder extends AbstractNodeBuilder<WorkerToolDescription
     arg.args = Optional.fromNullable(args);
     return this;
   }
+
+  public WorkerToolBuilder setMaxWorkers(Optional<Integer> maxWorkers) {
+    arg.maxWorkers = maxWorkers;
+    return this;
+  }
 }

@@ -35,3 +35,28 @@ genrule(
   out = 'output.txt',
   cmd = '$(worker :worker2) $OUT',
 )
+
+sh_binary(
+  name = 'concurrent_tool',
+  main = 'concurrent_tool.sh',
+)
+
+worker_tool(
+  name = 'concurrent_worker',
+  exe = ':concurrent_tool',
+  max_workers = -1,
+)
+
+genrule(
+  name = 'test4',
+  srcs = [],
+  out = 'output.txt',
+  cmd = '$(worker :concurrent_worker) $OUT',
+)
+
+genrule(
+  name = 'test5',
+  srcs = [],
+  out = 'output.txt',
+  cmd = '$(worker :concurrent_worker) $OUT',
+)
