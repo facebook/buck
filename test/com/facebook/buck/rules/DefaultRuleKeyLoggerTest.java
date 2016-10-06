@@ -157,6 +157,7 @@ public class DefaultRuleKeyLoggerTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void appendable() {
     Fixture fixture = new Fixture();
 
@@ -172,8 +173,8 @@ public class DefaultRuleKeyLoggerTest {
     assertThat(
         fixture.getLogger().getCurrentLogElements(),
         Matchers.hasItems(
-            "ruleKey(sha1=c2f62bbb5efd77b2a8b2b086824d16d03c17251d):",
-            "key(appendableField.appendableSubKey):"));
+            Matchers.startsWith("ruleKey("),
+            Matchers.equalTo("key(appendableField.appendableSubKey):")));
   }
 
   private class Fixture {

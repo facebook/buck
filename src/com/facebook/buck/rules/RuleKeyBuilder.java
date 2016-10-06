@@ -37,7 +37,6 @@ import com.google.common.hash.Hashing;
 import com.google.common.primitives.Primitives;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Map;
@@ -74,7 +73,8 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
   public RuleKeyBuilder(
       SourcePathResolver resolver,
       FileHashLoader hashLoader) {
-    this(resolver,
+    this(
+        resolver,
         hashLoader,
         logger.isVerboseEnabled() ?
             new DefaultRuleKeyLogger() :
@@ -82,7 +82,7 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
   }
 
   private void putBytes(String string) {
-    hasher.putBytes(string.getBytes(StandardCharsets.UTF_8));
+    hasher.putUnencodedChars(string);
   }
 
   private RuleKeyBuilder<T> feed(Object object) {
