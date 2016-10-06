@@ -81,10 +81,28 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
             new NullRuleKeyLogger());
   }
 
+  private void putBytes(String string) {
+    hasher.putBytes(string.getBytes(StandardCharsets.UTF_8));
+  }
+
+  private RuleKeyBuilder<T> feed(Object object) {
+    return feed(object.toString());
+  }
+
+  private RuleKeyBuilder<T> feed(String key) {
+    while (!keyStack.isEmpty()) {
+      putBytes(keyStack.pop());
+      hasher.putByte(SEPARATOR);
+    }
+
+    putBytes(key);
+    hasher.putByte(SEPARATOR);
+    return this;
+  }
+
   private RuleKeyBuilder<T> feed(byte[] bytes) {
     while (!keyStack.isEmpty()) {
-      String key = keyStack.pop();
-      hasher.putBytes(key.getBytes(StandardCharsets.UTF_8));
+      putBytes(keyStack.pop());
       hasher.putByte(SEPARATOR);
     }
 
@@ -95,8 +113,7 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
 
   private RuleKeyBuilder<T> feed(Sha1HashCode sha1) {
     while (!keyStack.isEmpty()) {
-      String key = keyStack.pop();
-      hasher.putBytes(key.getBytes(StandardCharsets.UTF_8));
+      putBytes(keyStack.pop());
       hasher.putByte(SEPARATOR);
     }
 
@@ -120,7 +137,7 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
     // And now we need to figure out what this thing is.
     Optional<BuildRule> buildRule = resolver.getRule(sourcePath);
     if (buildRule.isPresent()) {
-      feed(sourcePath.toString().getBytes(StandardCharsets.UTF_8));
+      feed(sourcePath);
       return setSingleValue(buildRule.get());
     } else {
       // The original version of this expected the path to be relative, however, sometimes the
@@ -152,7 +169,7 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
     }
 
     ruleKeyLogger.addNonHashingPath(pathForKey);
-    feed(pathForKey.getBytes(StandardCharsets.UTF_8));
+    feed(pathForKey);
     return this;
   }
 
@@ -207,18 +224,18 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
               val);
         }
         try (RuleKeyLogger.Scope mapScope = ruleKeyLogger.pushMap()) {
-          feed("{".getBytes(StandardCharsets.UTF_8));
+          feed("{");
           for (Map.Entry<?, ?> entry : ((Map<?, ?>) val).entrySet()) {
             try (RuleKeyLogger.Scope mapKeyScope = ruleKeyLogger.pushMapKey()) {
               setReflectively(key, entry.getKey());
             }
-            feed(" -> ".getBytes(StandardCharsets.UTF_8));
+            feed(" -> ");
             try (RuleKeyLogger.Scope mapValueScope = ruleKeyLogger.pushMapValue()) {
               setReflectively(key, entry.getValue());
             }
           }
         }
-        return feed("}".getBytes(StandardCharsets.UTF_8));
+        return feed("}");
       }
 
       if (val instanceof Supplier) {
@@ -253,8 +270,8 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
 
     ruleKeyLogger.addPath(addToKey, sha1);
 
-    feed(addToKey.toString().getBytes(StandardCharsets.UTF_8));
-    feed(sha1.toString().getBytes(StandardCharsets.UTF_8));
+    feed(addToKey);
+    feed(sha1);
     return this;
   }
 
@@ -290,8 +307,8 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
     ArchiveMemberPath addToKey = relativeArchiveMemberPath;
     ruleKeyLogger.addArchiveMemberPath(addToKey, hash);
 
-    feed(addToKey.toString().getBytes(StandardCharsets.UTF_8));
-    feed(hash.toString().getBytes(StandardCharsets.UTF_8));
+    feed(addToKey);
+    feed(hash);
     return this;
   }
 
@@ -302,10 +319,10 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
       return feed(new byte[0]);
     } else if (val instanceof Boolean) {           // JRE types
       ruleKeyLogger.addValue((boolean) val);
-      feed(((boolean) val ? "t" : "f").getBytes(StandardCharsets.UTF_8));
+      feed((boolean) val ? "t" : "f");
     } else if (val instanceof Enum) {
       ruleKeyLogger.addValue((Enum<?>) val);
-      feed(String.valueOf(val).getBytes(StandardCharsets.UTF_8));
+      feed(String.valueOf(val));
     } else if (val instanceof Number) {
       Class<?> wrapped = Primitives.wrap(val.getClass());
       if (Double.class.equals(wrapped)) {
@@ -331,22 +348,22 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
           "It's not possible to reliably disambiguate Paths. They are disallowed from rule keys");
     } else if (val instanceof String) {
       ruleKeyLogger.addValue((String) val);
-      feed(((String) val).getBytes(StandardCharsets.UTF_8));
+      feed((String) val);
     } else if (val instanceof Pattern) {
       ruleKeyLogger.addValue((Pattern) val);
-      feed(val.toString().getBytes(StandardCharsets.UTF_8));
+      feed(val);
     } else if (val instanceof BuildRule) {                       // Buck types
       return setBuildRule((BuildRule) val);
     } else if (val instanceof BuildRuleType) {
       ruleKeyLogger.addValue((BuildRuleType) val);
-      feed(val.toString().getBytes(StandardCharsets.UTF_8));
+      feed(val);
     } else if (val instanceof RuleKey) {
       ruleKeyLogger.addValue((RuleKey) val);
-      feed(val.toString().getBytes(StandardCharsets.UTF_8));
+      feed(val);
     } else if (val instanceof BuildTarget || val instanceof UnflavoredBuildTarget) {
       BuildTarget buildTarget = ((HasBuildTarget) val).getBuildTarget();
       ruleKeyLogger.addValue(buildTarget);
-      feed(buildTarget.getFullyQualifiedName().getBytes(StandardCharsets.UTF_8));
+      feed(buildTarget.getFullyQualifiedName());
     } else if (val instanceof Either) {
       Either<?, ?> either = (Either<?, ?>) val;
       if (either.isLeft()) {
@@ -363,18 +380,18 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
     } else if (val instanceof SourceRoot) {
       SourceRoot sourceRoot = ((SourceRoot) val);
       ruleKeyLogger.addValue(sourceRoot);
-      feed(sourceRoot.getName().getBytes(StandardCharsets.UTF_8));
+      feed(sourceRoot.getName());
     } else if (val instanceof SourceWithFlags) {
       SourceWithFlags source = (SourceWithFlags) val;
       try (RuleKeyLogger.Scope scope = ruleKeyLogger.pushSourceWithFlags()) {
         setSourcePath(source.getSourcePath());
-        feed("[".getBytes(StandardCharsets.UTF_8));
+        feed("[");
         for (String flag : source.getFlags()) {
           ruleKeyLogger.addValue(flag);
-          feed(flag.getBytes(StandardCharsets.UTF_8));
-          feed(",".getBytes(StandardCharsets.UTF_8));
+          feed(flag);
+          feed(",");
         }
-        feed("]".getBytes(StandardCharsets.UTF_8));
+        feed("]");
       }
     } else if (val instanceof Sha1HashCode) {
       Sha1HashCode hashCode = (Sha1HashCode) val;
