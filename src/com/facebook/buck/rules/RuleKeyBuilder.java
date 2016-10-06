@@ -24,7 +24,6 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.hash.AppendingHasher;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -64,7 +63,7 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
       FileHashLoader hashLoader,
       RuleKeyLogger ruleKeyLogger) {
     this.resolver = resolver;
-    this.hasher = new AppendingHasher(Hashing.sha1(), /* numHashers */ 2);
+    this.hasher = Hashing.sha1().newHasher();
     this.hashLoader = hashLoader;
     this.keyStack = new Stack<>();
     this.ruleKeyLogger = ruleKeyLogger;
