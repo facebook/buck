@@ -93,7 +93,7 @@ class TrimUberRDotJava extends AbstractBuildRule {
     return BuildTargets.getGenPath(
         getProjectFilesystem(),
         getBuildTarget(),
-        "/%s/_trimmed_r_dot_java.src.zip");
+        "%s/_trimmed_r_dot_java.src.zip");
   }
 
   private class PerformTrimStep implements Step {

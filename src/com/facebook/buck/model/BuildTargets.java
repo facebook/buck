@@ -19,6 +19,7 @@ package com.facebook.buck.model;
 import com.facebook.buck.io.BuckPaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -52,12 +53,12 @@ public class BuildTargets {
       ProjectFilesystem filesystem,
       BuildTarget target,
       String format) {
-    return filesystem.getRootPath().getFileSystem().getPath(
-        String.format(
-            "%s/%s" + format,
-            filesystem.getBuckPaths().getScratchDir(),
-            target.getBasePathWithSlash(),
-            target.getShortNameAndFlavorPostfix()));
+    Preconditions.checkArgument(
+        !format.startsWith("/"),
+        "format string should not start with a slash");
+    return filesystem.getBuckPaths().getScratchDir()
+        .resolve(target.getBasePath())
+        .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
   }
 
   /**
@@ -75,12 +76,12 @@ public class BuildTargets {
       ProjectFilesystem filesystem,
       BuildTarget target,
       String format) {
-    return filesystem.getRootPath().getFileSystem().getPath(
-        String.format(
-            "%s/%s" + format,
-            filesystem.getBuckPaths().getAnnotationDir(),
-            target.getBasePathWithSlash(),
-            target.getShortNameAndFlavorPostfix()));
+    Preconditions.checkArgument(
+        !format.startsWith("/"),
+        "format string should not start with a slash");
+    return filesystem.getBuckPaths().getAnnotationDir()
+        .resolve(target.getBasePath())
+        .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
   }
 
   /**
@@ -95,12 +96,12 @@ public class BuildTargets {
    * {@code target}.
    */
   public static Path getGenPath(ProjectFilesystem filesystem, BuildTarget target, String format) {
-    return filesystem.getRootPath().getFileSystem().getPath(
-        String.format(
-            "%s/%s" + format,
-            filesystem.getBuckPaths().getGenDir(),
-            target.getBasePathWithSlash(),
-            target.getShortNameAndFlavorPostfix()));
+    Preconditions.checkArgument(
+        !format.startsWith("/"),
+        "format string should not start with a slash");
+    return filesystem.getBuckPaths().getGenDir()
+        .resolve(target.getBasePath())
+        .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
   }
 
   /**

@@ -91,14 +91,14 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRule {
     return BuildTargets.getGenPath(
         getProjectFilesystem(),
         getBuildTarget(),
-        "/%s/MergedLibraryMapping.java");
+        "%s/MergedLibraryMapping.java");
   }
 
   private Path getMappingPath() {
     return BuildTargets.getGenPath(
         getProjectFilesystem(),
         getBuildTarget(),
-        "/%s/merged_library_map.txt");
+        "%s/merged_library_map.txt");
   }
 
   private class WriteMapDataStep implements Step {

@@ -64,7 +64,7 @@ public class JavaSourceJar extends AbstractBuildRule implements HasMavenCoordina
         BuildTargets.getGenPath(
             getProjectFilesystem(),
             target,
-            String.format("%%s%s", Javac.SRC_JAR));
+            "%s" + Javac.SRC_JAR);
     this.temp = BuildTargets.getScratchPath(getProjectFilesystem(), target, "%s-srcs");
     this.mavenCoords = mavenCoords;
   }

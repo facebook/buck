@@ -62,7 +62,7 @@ public class RemoteFile extends AbstractBuildRule {
     output = BuildTargets.getGenPath(
         getProjectFilesystem(),
         params.getBuildTarget(),
-        String.format("%%s/%s", out));
+        "%s/" + out);
   }
 
   @Override
@@ -73,7 +73,7 @@ public class RemoteFile extends AbstractBuildRule {
     Path tempFile = BuildTargets.getScratchPath(
         getProjectFilesystem(),
         getBuildTarget(),
-        String.format("%%s/%s", output.getFileName()));
+        "%s/" + output.getFileName());
 
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), tempFile.getParent()));
     steps.add(new DownloadStep(getProjectFilesystem(), downloader, uri, sha1, tempFile));

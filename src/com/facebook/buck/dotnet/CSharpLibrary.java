@@ -73,7 +73,7 @@ public class CSharpLibrary extends AbstractBuildRule {
     this.output = BuildTargets.getGenPath(
         getProjectFilesystem(),
         params.getBuildTarget(),
-        String.format("%%s/%s", dllName));
+        "%s/" + dllName);
   }
 
   @Override
