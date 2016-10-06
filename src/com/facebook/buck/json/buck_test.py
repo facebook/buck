@@ -1,6 +1,12 @@
-from buck import format_watchman_query_params, glob_internal, LazyBuildEnvPartial, \
-    path_component_contains_dot
-from buck import subdir_glob, flatten_dicts, BuildFileContext
+from buck import (
+    BuildFileContext,
+    LazyBuildEnvPartial,
+    flatten_dicts,
+    format_watchman_query_params,
+    glob_internal,
+    path_component_contains_dot,
+    subdir_glob,
+)
 from pathlib import Path, PurePosixPath, PureWindowsPath
 import itertools
 import os
@@ -38,7 +44,29 @@ def fake_path(fake_path_class, path, glob_results={}):
     return result
 
 
-class TestBuckPlatformBase(object):
+class TestBuckPlatform(unittest.TestCase):
+    def test_lazy_build_env_partial(self):
+        def cobol_binary(
+                name,
+                deps=[],
+                build_env=None):
+            return (name, deps, build_env)
+
+        testLazy = LazyBuildEnvPartial(cobol_binary)
+        testLazy.build_env = {}
+        self.assertEqual(
+            ('HAL', [1, 2, 3], {}),
+            testLazy.invoke(name='HAL', deps=[1, 2, 3]))
+        testLazy.build_env = {'abc': 789}
+        self.assertEqual(
+            ('HAL', [1, 2, 3], {'abc': 789}),
+            testLazy.invoke(name='HAL', deps=[1, 2, 3]))
+
+
+class TestBuckGlobMixin(object):
+    def do_glob(self, *args, **kwargs):
+        # subclasses can override this to test a different glob implementation
+        return glob_internal(*args, **kwargs)
 
     def test_glob_includes_simple(self):
         search_base = self.fake_path(
@@ -46,7 +74,7 @@ class TestBuckPlatformBase(object):
             glob_results={'*.java': ['A.java', 'B.java']})
         self.assertGlobMatches(
             ['A.java', 'B.java'],
-            glob_internal(
+            self.do_glob(
                 includes=['*.java'],
                 excludes=[],
                 project_root_relative_excludes=[],
@@ -60,7 +88,7 @@ class TestBuckPlatformBase(object):
             glob_results={'*.java': ['A.java', 'E.java', 'D.java', 'C.java', 'B.java']})
         self.assertGlobMatches(
             ['A.java', 'B.java', 'C.java', 'D.java', 'E.java'],
-            glob_internal(
+            self.do_glob(
                 includes=['*.java'],
                 excludes=[],
                 project_root_relative_excludes=[],
@@ -77,7 +105,7 @@ class TestBuckPlatformBase(object):
             })
         self.assertGlobMatches(
             ['bar/A.java', 'bar/B.java', 'baz/C.java', 'baz/D.java'],
-            glob_internal(
+            self.do_glob(
                 includes=['bar/*.java', 'baz/*.java'],
                 excludes=[],
                 project_root_relative_excludes=[],
@@ -93,7 +121,7 @@ class TestBuckPlatformBase(object):
             })
         self.assertGlobMatches(
             ['A.java', 'B.java'],
-            glob_internal(
+            self.do_glob(
                 includes=['**/*.java'],
                 excludes=['**/*Test.java'],
                 project_root_relative_excludes=[],
@@ -110,13 +138,107 @@ class TestBuckPlatformBase(object):
             })
         self.assertGlobMatches(
             ['bar/B.java', 'baz/D.java'],
-            glob_internal(
+            self.do_glob(
                 includes=['bar/*.java', 'baz/*.java'],
                 excludes=['*/[AC].java'],
                 project_root_relative_excludes=[],
                 include_dotfiles=False,
                 search_base=search_base,
                 project_root='.'))
+
+    def test_glob_excludes_relative(self):
+        search_base = self.fake_path(
+            'foo',
+            glob_results={
+                '**/*.java': ['foo/A.java', 'foo/bar/B.java', 'bar/C.java'],
+            })
+        self.assertGlobMatches(
+            ['foo/A.java', 'foo/bar/B.java'],
+            self.do_glob(
+                includes=['**/*.java'],
+                excludes=['bar/*.java'],
+                project_root_relative_excludes=[],
+                include_dotfiles=False,
+                search_base=search_base,
+                project_root='.'))
+
+    def test_glob_project_root_relative_excludes_relative(self):
+        search_base = self.fake_path(
+            'foo',
+            glob_results={
+                '**/*.java': ['foo/A.java', 'foo/bar/B.java', 'bar/C.java'],
+            })
+        self.assertGlobMatches(
+            ['bar/C.java'],
+            self.do_glob(
+                includes=['**/*.java'],
+                excludes=[],
+                project_root_relative_excludes=['foo/foo/**'],
+                include_dotfiles=False,
+                search_base=search_base,
+                project_root='.'))
+
+    def test_glob_includes_skips_dotfiles(self):
+        search_base = self.fake_path(
+            'foo',
+            glob_results={'*.java': ['A.java', '.B.java']})
+        self.assertGlobMatches(
+            ['A.java'],
+            self.do_glob(
+                includes=['*.java'],
+                excludes=[],
+                project_root_relative_excludes=[],
+                include_dotfiles=False,
+                search_base=search_base,
+                project_root='.'))
+
+    def test_glob_includes_skips_dot_directories(self):
+        search_base = self.fake_path(
+            'foo',
+            glob_results={'*.java': ['A.java', '.test/B.java']})
+        self.assertGlobMatches(
+            ['A.java'],
+            self.do_glob(
+                includes=['*.java'],
+                excludes=[],
+                project_root_relative_excludes=[],
+                include_dotfiles=False,
+                search_base=search_base,
+                project_root='.'))
+
+    def test_glob_includes_does_not_skip_dotfiles_if_include_dotfiles(self):
+        search_base = self.fake_path(
+            'foo',
+            glob_results={'*.java': ['A.java', '.B.java']})
+        self.assertGlobMatches(
+            ['.B.java', 'A.java'],
+            self.do_glob(
+                includes=['*.java'],
+                excludes=[],
+                project_root_relative_excludes=[],
+                include_dotfiles=True,
+                search_base=search_base,
+                project_root='.'))
+
+    def test_explicit_exclude_with_file_separator_excludes(self):
+        search_base = self.fake_path(
+            'foo',
+            glob_results={'java/**/*.java': ['java/Include.java', 'java/Exclude.java']})
+        self.assertGlobMatches(
+            ['java/Include.java'],
+            self.do_glob(
+                includes=['java/**/*.java'],
+                excludes=['java/Exclude.java'],
+                project_root_relative_excludes=[],
+                include_dotfiles=False,
+                search_base=search_base,
+                project_root='.'))
+
+
+class TestBuckSubdirGlobMixin(object):
+    def do_subdir_glob(self, *args, **kwargs):
+        # subclasses can override this to test a different glob implementation
+        return subdir_glob(*args, **kwargs)
 
     def test_subdir_glob(self):
         build_env = BuildFileContext(
@@ -135,7 +257,7 @@ class TestBuckPlatformBase(object):
                 'baz/D.h': 'lib/baz/D.h',
                 'baz/C.h': 'lib/baz/C.h',
             },
-            subdir_glob([
+            self.do_subdir_glob([
                 ('lib', 'bar/*.h'),
                 ('lib', 'baz/*.h')],
                 build_env=build_env,
@@ -155,118 +277,13 @@ class TestBuckPlatformBase(object):
                 'Prefix/bar/B.h': 'lib/bar/B.h',
                 'Prefix/bar/A.h': 'lib/bar/A.h',
             },
-            subdir_glob([('lib', 'bar/*.h')],
+            self.do_subdir_glob([('lib', 'bar/*.h')],
                         prefix='Prefix',
                         build_env=build_env,
                         search_base=search_base))
 
-    def test_glob_excludes_relative(self):
-        search_base = self.fake_path(
-            'foo',
-            glob_results={
-                '**/*.java': ['foo/A.java', 'foo/bar/B.java', 'bar/C.java'],
-            })
-        self.assertGlobMatches(
-            ['foo/A.java', 'foo/bar/B.java'],
-            glob_internal(
-                includes=['**/*.java'],
-                excludes=['bar/*.java'],
-                project_root_relative_excludes=[],
-                include_dotfiles=False,
-                search_base=search_base,
-                project_root='.'))
 
-    def test_glob_project_root_relative_excludes_relative(self):
-        search_base = self.fake_path(
-            'foo',
-            glob_results={
-                '**/*.java': ['foo/A.java', 'foo/bar/B.java', 'bar/C.java'],
-            })
-        self.assertGlobMatches(
-            ['bar/C.java'],
-            glob_internal(
-                includes=['**/*.java'],
-                excludes=[],
-                project_root_relative_excludes=['foo/foo/**'],
-                include_dotfiles=False,
-                search_base=search_base,
-                project_root='.'))
-
-    def test_glob_includes_skips_dotfiles(self):
-        search_base = self.fake_path(
-            'foo',
-            glob_results={'*.java': ['A.java', '.B.java']})
-        self.assertGlobMatches(
-            ['A.java'],
-            glob_internal(
-                includes=['*.java'],
-                excludes=[],
-                project_root_relative_excludes=[],
-                include_dotfiles=False,
-                search_base=search_base,
-                project_root='.'))
-
-    def test_glob_includes_skips_dot_directories(self):
-        search_base = self.fake_path(
-            'foo',
-            glob_results={'*.java': ['A.java', '.test/B.java']})
-        self.assertGlobMatches(
-            ['A.java'],
-            glob_internal(
-                includes=['*.java'],
-                excludes=[],
-                project_root_relative_excludes=[],
-                include_dotfiles=False,
-                search_base=search_base,
-                project_root='.'))
-
-    def test_glob_includes_does_not_skip_dotfiles_if_include_dotfiles(self):
-        search_base = self.fake_path(
-            'foo',
-            glob_results={'*.java': ['A.java', '.B.java']})
-        self.assertGlobMatches(
-            ['.B.java', 'A.java'],
-            glob_internal(
-                includes=['*.java'],
-                excludes=[],
-                project_root_relative_excludes=[],
-                include_dotfiles=True,
-                search_base=search_base,
-                project_root='.'))
-
-    def test_lazy_build_env_partial(self):
-        def cobol_binary(
-                name,
-                deps=[],
-                build_env=None):
-            return (name, deps, build_env)
-
-        testLazy = LazyBuildEnvPartial(cobol_binary)
-        testLazy.build_env = {}
-        self.assertEqual(
-            ('HAL', [1, 2, 3], {}),
-            testLazy.invoke(name='HAL', deps=[1, 2, 3]))
-        testLazy.build_env = {'abc': 789}
-        self.assertEqual(
-            ('HAL', [1, 2, 3], {'abc': 789}),
-            testLazy.invoke(name='HAL', deps=[1, 2, 3]))
-
-    def test_explicit_exclude_with_file_separator_excludes(self):
-        search_base = self.fake_path(
-            'foo',
-            glob_results={'java/**/*.java': ['java/Include.java', 'java/Exclude.java']})
-        self.assertGlobMatches(
-            ['java/Include.java'],
-            glob_internal(
-                includes=['java/**/*.java'],
-                excludes=['java/Exclude.java'],
-                project_root_relative_excludes=[],
-                include_dotfiles=False,
-                search_base=search_base,
-                project_root='.'))
-
-
-class TestBuckPosix(TestBuckPlatformBase, unittest.TestCase):
+class TestBuckPosix(TestBuckGlobMixin, TestBuckSubdirGlobMixin, unittest.TestCase):
     @staticmethod
     def fake_path(*args, **kwargs):
         return fake_path(FakePosixPath, *args, **kwargs)
@@ -275,7 +292,7 @@ class TestBuckPosix(TestBuckPlatformBase, unittest.TestCase):
         self.assertEqual(expected, actual)
 
 
-class TestBuckWindows(TestBuckPlatformBase, unittest.TestCase):
+class TestBuckWindows(TestBuckGlobMixin, TestBuckSubdirGlobMixin, unittest.TestCase):
     @staticmethod
     def fake_path(*args, **kwargs):
         return fake_path(FakeWindowsPath, *args, **kwargs)
