@@ -276,6 +276,7 @@ public class AndroidBinaryDescription
         pathResolver,
         proGuardConfig.getProguardJarOverride(),
         proGuardConfig.getProguardMaxHeapSize(),
+        args.proguardJvmArgs,
         proGuardConfig.getProguardAgentPath(),
         (Keystore) keystore,
         packageType,
@@ -381,6 +382,7 @@ public class AndroidBinaryDescription
     public Optional<ProGuardObfuscateStep.SdkProguardType> androidSdkProguardConfig;
     public Optional<Boolean> useAndroidProguardConfigWithOptimizations;
     public Optional<Integer> optimizationPasses;
+    public Optional<List<String>> proguardJvmArgs;
     public Optional<SourcePath> proguardConfig;
     public Optional<String> resourceCompression;
     public Optional<Boolean> skipCrunchPngs;

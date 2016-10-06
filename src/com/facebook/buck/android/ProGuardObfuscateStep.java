@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -58,6 +59,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
   private final Path pathToProGuardCommandLineArgsFile;
   private final Optional<Path> proguardJarOverride;
   private final String proguardMaxHeapSize;
+  private final Optional<List<String>> proguardJvmArgs;
   private final Optional<String> proguardAgentPath;
 
   /**
@@ -77,6 +79,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       Set<Path> customProguardConfigs,
       SdkProguardType sdkProguardConfig,
       Optional<Integer> optimizationPasses,
+      Optional<List<String>> proguardJvmArgs,
       Map<Path, Path> inputAndOutputEntries,
       Set<Path> additionalLibraryJarsForProguard,
       Path proguardDirectory,
@@ -103,6 +106,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
         pathToProGuardCommandLineArgsFile,
         proguardJarOverride,
         proguardMaxHeapSize,
+        proguardJvmArgs,
         proguardAgentPath);
 
     buildableContext.recordArtifact(commandLineHelperStep.getConfigurationTxt());
@@ -130,6 +134,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       Path pathToProGuardCommandLineArgsFile,
       Optional<Path> proguardJarOverride,
       String proguardMaxHeapSize,
+      Optional<List<String>> proguardJvmArgs,
       Optional<String> proguardAgentPath) {
     super(filesystem.getRootPath());
     this.javaRuntimeLauncher = javaRuntimeLauncher;
@@ -138,6 +143,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     this.pathToProGuardCommandLineArgsFile = pathToProGuardCommandLineArgsFile;
     this.proguardJarOverride = proguardJarOverride;
     this.proguardMaxHeapSize = proguardMaxHeapSize;
+    this.proguardJvmArgs = proguardJvmArgs;
     this.proguardAgentPath = proguardAgentPath;
   }
 
@@ -161,6 +167,9 @@ public final class ProGuardObfuscateStep extends ShellStep {
     args.add(javaRuntimeLauncher.getCommand());
     if (proguardAgentPath.isPresent()) {
        args.add("-agentpath:" + proguardAgentPath.get());
+    }
+    if (proguardJvmArgs.isPresent()) {
+      args.addAll(proguardJvmArgs.get());
     }
     args.add("-Xmx" + proguardMaxHeapSize)
         .add("-jar").add(proguardJar.toString())

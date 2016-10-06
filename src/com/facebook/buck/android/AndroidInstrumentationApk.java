@@ -59,6 +59,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         resolver,
         proGuardJarOverride,
         proGuardMaxHeapSize,
+        apkUnderTest.getProguardJvmArgs(),
         proguardAgentPath,
         apkUnderTest.getKeystore(),
         PackageType.INSTRUMENTED,

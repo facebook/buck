@@ -88,6 +88,7 @@ import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -197,6 +198,8 @@ public class AndroidBinary
   @AddToRuleKey
   private final Optional<SourcePath> proguardJarOverride;
   private final String proguardMaxHeapSize;
+  @AddToRuleKey
+  private final Optional<List<String>> proguardJvmArgs;
   private final Optional<String> proguardAgentPath;
   @AddToRuleKey
   private final ResourceCompressionMode resourceCompressionMode;
@@ -232,6 +235,7 @@ public class AndroidBinary
       SourcePathResolver resolver,
       Optional<SourcePath> proguardJarOverride,
       String proguardMaxHeapSize,
+      Optional<List<String>> proguardJvmArgs,
       Optional<String> proguardAgentPath,
       Keystore keystore,
       PackageType packageType,
@@ -260,6 +264,7 @@ public class AndroidBinary
     super(params, resolver);
     this.proguardJarOverride = proguardJarOverride;
     this.proguardMaxHeapSize = proguardMaxHeapSize;
+    this.proguardJvmArgs = proguardJvmArgs;
     this.proguardAgentPath = proguardAgentPath;
     this.keystore = keystore;
     this.packageType = packageType;
@@ -347,6 +352,10 @@ public class AndroidBinary
 
   public Optional<Integer> getOptimizationPasses() {
     return optimizationPasses;
+  }
+
+  public Optional<List<String>> getProguardJvmArgs() {
+    return proguardJvmArgs;
   }
 
   public Optional<Boolean> getPackageAssetLibraries() {
@@ -926,6 +935,7 @@ public class AndroidBinary
         proguardConfigsBuilder.build(),
         sdkProguardConfig,
         optimizationPasses,
+        proguardJvmArgs,
         inputOutputEntries,
         additionalLibraryJarsForProguardBuilder.build(),
         proguardConfigDir,

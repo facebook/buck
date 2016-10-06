@@ -141,13 +141,14 @@ public class AndroidBinaryTest {
     ProGuardObfuscateStep.create(
         JavaCompilationConstants.DEFAULT_JAVA_OPTIONS.getJavaRuntimeLauncher(),
         new FakeProjectFilesystem(),
-        Optional.<Path>absent(),
-        "1024M",
-        Optional.<String>absent(),
+        /* proguardJarOverride */ Optional.<Path>absent(),
+        /* proguardMaxHeapSize */ "1024M",
+        /* proguardAgentPath */ Optional.<String>absent(),
         proguardOutputDir.resolve("proguard.txt"),
-        ImmutableSet.<Path>of(),
+        /* customProguardConfigs */ ImmutableSet.<Path>of(),
         ProGuardObfuscateStep.SdkProguardType.DEFAULT,
-        Optional.<Integer>absent(),
+        /* optimizationPasses */ Optional.<Integer>absent(),
+        /* proguardJvmArgs */ Optional.<List<String>>absent(),
         ImmutableMap.of(
             BuildTargets
                 .getGenPath(
