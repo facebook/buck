@@ -1,1 +1,1 @@
-#import "objc/Foo.h"
+#import "SwiftCallsComplexObjC/Foo.h"

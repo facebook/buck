@@ -135,10 +135,7 @@ public class SwiftOSXBinaryIntegrationTest {
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand(
-        "run", ":SwiftCallsComplexObjC#macosx-x86_64");
+        "test", ":SwiftCallsComplexObjC#macosx-x86_64");
     runResult.assertSuccess();
-    assertThat(
-        runResult.getStdout(),
-        containsString("Hello, World!"));
   }
 }

@@ -21,12 +21,19 @@ import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_EXTENSION;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.coercer.SourceList;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.nio.file.Path;
 
 class SwiftDescriptions {
   /**
@@ -53,7 +60,29 @@ class SwiftDescriptions {
       final A args,
       BuildTarget buildTarget) {
     output.srcs = args.srcs.transform(
-        input -> filterSwiftSources(sourcePathResolver, args.srcs.get()));
+        new Function<ImmutableSortedSet<SourceWithFlags>, ImmutableSortedSet<SourcePath>>() {
+          @Override
+          public ImmutableSortedSet<SourcePath> apply(ImmutableSortedSet<SourceWithFlags> input) {
+            return filterSwiftSources(sourcePathResolver, args.srcs.get());
+          }
+        });
+    output.exportedHeaders = args.exportedHeaders.transform(
+        new Function<SourceList, ImmutableMap<Path, SourcePath>>() {
+          @Override
+          public ImmutableMap<Path, SourcePath> apply(SourceList input) {
+            return FluentIterable.from(input.getPaths())
+                .uniqueIndex(new Function<SourcePath, Path>() {
+                  @Override
+                  public Path apply(SourcePath input) {
+                    if (input instanceof PathSourcePath) {
+                      return ((PathSourcePath)input).getRelativePath();
+                    }
+                    return null;
+                  }
+                });
+          }
+        }
+    );
     output.compilerFlags = args.compilerFlags;
     output.frameworks = args.frameworks;
     output.libraries = args.libraries;

@@ -27,7 +27,7 @@ import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -142,13 +142,15 @@ class SwiftCompile
           getResolver().getRelativePath(bridgingHeader.get()).toString());
 
       // bridging header needs exported headers for imports
-      Path headerPath = CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
-          getProjectFilesystem(),
-          BuildTargets.unflavored(getBuildTarget()),
-          cxxPlatform.getFlavor(),
-          HeaderVisibility.PRIVATE);
+      for (HeaderVisibility headerVisibility : HeaderVisibility.values()) {
+        Path headerPath = CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+            getProjectFilesystem(),
+            BuildTarget.builder(getBuildTarget().getUnflavoredBuildTarget()).build(),
+            cxxPlatform.getFlavor(),
+            headerVisibility);
 
-      compilerCommand.add(LOCAL.getFlag(), headerPath.toString());
+        compilerCommand.add(LOCAL.getFlag(), headerPath.toString());
+      }
     }
 
     final Function<FrameworkPath, Path> frameworkPathToSearchPath =
