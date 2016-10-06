@@ -29,9 +29,21 @@ struct MemoryStatsRemoteLogEntry {
   4: optional i64 timeSpentInGcMs;
 }
 
+struct ProcessStatsRemoteLogEntry {
+  1: optional string executable;
+  2: optional i64 memSizeBytes;
+  3: optional i64 memResidentBytes;
+  4: optional i64 cpuRealMs;
+  5: optional i64 cpuUserMs;
+  6: optional i64 cpuSysMs;
+  7: optional i64 ioBytesRead;
+  8: optional i64 ioBytesWritten;
+}
+
 struct RemoteLogEntry {
   1: optional string buildUuid;
 
   2: optional VersionControlStatsRemoteLogEntry versionControlStats;
   3: optional MemoryStatsRemoteLogEntry memoryStats;
+  4: optional ProcessStatsRemoteLogEntry processStats;
 }
