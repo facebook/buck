@@ -52,7 +52,7 @@ class TestBuckPlatformBase(object):
                 project_root_relative_excludes=[],
                 include_dotfiles=False,
                 search_base=search_base,
-                project_root=self.fake_path('')))
+                project_root='.'))
 
     def test_glob_includes_sort(self):
         search_base = self.fake_path(
@@ -66,7 +66,7 @@ class TestBuckPlatformBase(object):
                 project_root_relative_excludes=[],
                 include_dotfiles=False,
                 search_base=search_base,
-                project_root=self.fake_path('')))
+                project_root='.'))
 
     def test_glob_includes_multi(self):
         search_base = self.fake_path(
@@ -83,7 +83,7 @@ class TestBuckPlatformBase(object):
                 project_root_relative_excludes=[],
                 include_dotfiles=False,
                 search_base=search_base,
-                project_root=self.fake_path('')))
+                project_root='.'))
 
     def test_glob_excludes_double_star(self):
         search_base = self.fake_path(
@@ -99,7 +99,7 @@ class TestBuckPlatformBase(object):
                 project_root_relative_excludes=[],
                 include_dotfiles=False,
                 search_base=search_base,
-                project_root=self.fake_path('')))
+                project_root='.'))
 
     def test_glob_excludes_multi(self):
         search_base = self.fake_path(
@@ -116,7 +116,7 @@ class TestBuckPlatformBase(object):
                 project_root_relative_excludes=[],
                 include_dotfiles=False,
                 search_base=search_base,
-                project_root=self.fake_path('')))
+                project_root='.'))
 
     def test_subdir_glob(self):
         build_env = BuildFileContext(
@@ -174,7 +174,7 @@ class TestBuckPlatformBase(object):
                 project_root_relative_excludes=[],
                 include_dotfiles=False,
                 search_base=search_base,
-                project_root=self.fake_path('')))
+                project_root='.'))
 
     def test_glob_project_root_relative_excludes_relative(self):
         search_base = self.fake_path(
@@ -190,7 +190,7 @@ class TestBuckPlatformBase(object):
                 project_root_relative_excludes=['foo/foo/**'],
                 include_dotfiles=False,
                 search_base=search_base,
-                project_root=self.fake_path('')))
+                project_root='.'))
 
     def test_glob_includes_skips_dotfiles(self):
         search_base = self.fake_path(
@@ -204,7 +204,7 @@ class TestBuckPlatformBase(object):
                 project_root_relative_excludes=[],
                 include_dotfiles=False,
                 search_base=search_base,
-                project_root=self.fake_path('')))
+                project_root='.'))
 
     def test_glob_includes_skips_dot_directories(self):
         search_base = self.fake_path(
@@ -218,7 +218,7 @@ class TestBuckPlatformBase(object):
                 project_root_relative_excludes=[],
                 include_dotfiles=False,
                 search_base=search_base,
-                project_root=self.fake_path('')))
+                project_root='.'))
 
     def test_glob_includes_does_not_skip_dotfiles_if_include_dotfiles(self):
         search_base = self.fake_path(
@@ -232,7 +232,7 @@ class TestBuckPlatformBase(object):
                 project_root_relative_excludes=[],
                 include_dotfiles=True,
                 search_base=search_base,
-                project_root=self.fake_path('')))
+                project_root='.'))
 
     def test_lazy_build_env_partial(self):
         def cobol_binary(
@@ -263,7 +263,7 @@ class TestBuckPlatformBase(object):
                 project_root_relative_excludes=[],
                 include_dotfiles=False,
                 search_base=search_base,
-                project_root=self.fake_path('')))
+                project_root='.'))
 
 
 class TestBuckPosix(TestBuckPlatformBase, unittest.TestCase):
