@@ -327,19 +327,19 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
       Class<?> wrapped = Primitives.wrap(val.getClass());
       if (Double.class.equals(wrapped)) {
         ruleKeyLogger.addValue((Double) val);
-        hasher.putDouble(((Double) val).doubleValue());
+        hasher.putDouble((Double) val);
       } else if (Float.class.equals(wrapped)) {
         ruleKeyLogger.addValue((Float) val);
-        hasher.putFloat(((Float) val).floatValue());
+        hasher.putFloat((Float) val);
       } else if (Integer.class.equals(wrapped)) {
         ruleKeyLogger.addValue((Integer) val);
-        hasher.putInt(((Integer) val).intValue());
+        hasher.putInt((Integer) val);
       } else if (Long.class.equals(wrapped)) {
         ruleKeyLogger.addValue((Long) val);
-        hasher.putLong(((Long) val).longValue());
+        hasher.putLong((Long) val);
       } else if (Short.class.equals(wrapped)) {
         ruleKeyLogger.addValue((Short) val);
-        hasher.putShort(((Short) val).shortValue());
+        hasher.putShort((Short) val);
       } else {
         throw new RuntimeException(("Unhandled number type: " + val.getClass()));
       }
