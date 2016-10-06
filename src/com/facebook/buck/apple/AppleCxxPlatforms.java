@@ -411,7 +411,7 @@ public class AppleCxxPlatforms {
     Optional<SwiftPlatform> swiftPlatform = getSwiftPlatform(
         applePlatform.getName(),
         targetArchitecture + "-apple-" +
-            applePlatform.getSwiftName().or(applePlatform.getName()) + targetSdk.getVersion(),
+            applePlatform.getSwiftName().or(applePlatform.getName()) + minVersion,
         version,
         swiftSdkPathsBuilder.build(),
         swiftOverrideSearchPathBuilder
