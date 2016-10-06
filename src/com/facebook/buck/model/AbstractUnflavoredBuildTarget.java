@@ -98,17 +98,6 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
   }
 
   /**
-   * Helper function for getting BuildTarget base names with a trailing slash if needed.
-   *
-   * If this build target were //third_party/java/guava:guava-latest, then this would return
-   * "//third_party/java/guava/".
-   */
-  public String getBaseNameWithSlash() {
-    String baseName = getBaseName();
-    return baseName.equals(BUILD_TARGET_PREFIX) ? baseName : baseName + "/";
-  }
-
-  /**
    * If this build target were //third_party/java/guava:guava-latest, then this would return the
    * {@link Path} "third_party/java/guava". This does not contain the "//" prefix so that it can be
    * appended to a file path.

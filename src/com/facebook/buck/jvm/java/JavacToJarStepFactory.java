@@ -119,7 +119,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
             javacOptions.getJavac() instanceof Jsr199Javac;
 
     LOG.info("Target: %s SpoolMode: %s Expected SpoolMode: %s Postprocessing steps: %s",
-        invokingRule.getBaseNameWithSlash(),
+        invokingRule.getBaseName(),
         (isSpoolingToJarEnabled) ? (SpoolMode.DIRECT_TO_JAR) : (SpoolMode.INTERMEDIATE_TO_DISK),
         spoolMode,
         postprocessClassesCommands.toString());
