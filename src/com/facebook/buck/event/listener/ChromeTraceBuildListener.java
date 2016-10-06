@@ -19,7 +19,6 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.cli.CommandEvent;
-import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEvent;
@@ -50,7 +49,10 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.BestCompressionGZIPOutputStream;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
+import com.facebook.buck.util.ProcessResourceConsumption;
+import com.facebook.buck.util.perf.ProcessTracker;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -667,6 +669,37 @@ public class ChromeTraceBuildListener implements BuckEventListener {
                     TimeUnit.MILLISECONDS.toSeconds(memory.getTimeSpentInGcMs())))
             .build(),
         memory);
+  }
+
+  @Subscribe
+  public void processResourceConsumption(ProcessTracker.ProcessResourceConsumptionEvent event) {
+    ProcessResourceConsumption res = event.getResourceConsumption();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    if (res != null) {
+      builder.put("executable", event.getParams().getCommand().get(0));
+      builder.put(
+          "mem_size_mb",
+          Long.toString(SizeUnit.BYTES.toMegabytes(res.getMemSize())));
+      builder.put(
+          "mem_resident_mb",
+          Long.toString(SizeUnit.BYTES.toMegabytes(res.getMemResident())));
+      builder.put("cpu_real_ms", Long.toString(res.getCpuReal()));
+      builder.put("cpu_user_ms", Long.toString(res.getCpuUser()));
+      builder.put("cpu_sys_ms", Long.toString(res.getCpuSys()));
+      builder.put(
+          "bytes_read_mb",
+          Long.toString(SizeUnit.BYTES.toMegabytes(res.getIoBytesRead())));
+      builder.put(
+          "bytes_written_mb",
+          Long.toString(SizeUnit.BYTES.toMegabytes(res.getIoBytesWritten())));
+    }
+    writeChromeTraceEvent(
+        "perf",
+        "process",
+        ChromeTraceEvent.Phase.COUNTER,
+        builder.build(),
+        event
+    );
   }
 
   @Subscribe

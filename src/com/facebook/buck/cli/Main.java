@@ -116,6 +116,7 @@ import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.network.RemoteLogBuckConfig;
 import com.facebook.buck.util.perf.PerfStatsTracking;
+import com.facebook.buck.util.perf.ProcessTracker;
 import com.facebook.buck.util.shutdown.NonReentrantSystemExit;
 import com.facebook.buck.util.versioncontrol.DefaultVersionControlCmdLineInterfaceFactory;
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
@@ -990,35 +991,38 @@ public final class Main {
             buildId,
             command.getSubCommandNameForLogging(),
             filesystem.getBuckPaths().getLogDir());
-        try (Closeable loggersSetup = GlobalStateManager.singleton().setupLoggers(
-            invocationInfo,
-            console.getStdErr(),
-            stdErr,
-            verbosity);
-             AbstractConsoleEventBusListener consoleListener =
-                 createConsoleEventListener(
-                     clock,
-                     new SuperConsoleConfig(buckConfig),
-                     console,
-                     testConfig.getResultSummaryVerbosity(),
-                     executionEnvironment,
-                     webServer,
-                     locale,
-                     filesystem.getBuckPaths().getLogDir().resolve("test.log"));
-             AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
-             BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
-             BroadcastEventListener.BroadcastEventBusClosable broadcastEventBusClosable =
-                 broadcastEventListener.addEventBus(buildEventBus);
+        try (
+            Closeable loggersSetup = GlobalStateManager.singleton().setupLoggers(
+                invocationInfo,
+                console.getStdErr(),
+                stdErr,
+                verbosity);
+            AbstractConsoleEventBusListener consoleListener =
+                createConsoleEventListener(
+                    clock,
+                    new SuperConsoleConfig(buckConfig),
+                    console,
+                    testConfig.getResultSummaryVerbosity(),
+                    executionEnvironment,
+                    webServer,
+                    locale,
+                    filesystem.getBuckPaths().getLogDir().resolve("test.log"));
+            AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
+            BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
+            BroadcastEventListener.BroadcastEventBusClosable broadcastEventBusClosable =
+                broadcastEventListener.addEventBus(buildEventBus);
 
-             // NOTE: This will only run during the lifetime of the process and will flush on close.
-             CounterRegistry counterRegistry = new CounterRegistryImpl(
-                 counterAggregatorExecutor,
-                 buildEventBus,
-                 buckConfig.getCountersFirstFlushIntervalMillis(),
-                 buckConfig.getCountersFlushIntervalMillis());
-             PerfStatsTracking perfStatsTracking = new PerfStatsTracking(
-                 buildEventBus,
-                 invocationInfo)) {
+            // NOTE: This will only run during the lifetime of the process and will flush on close.
+            CounterRegistry counterRegistry = new CounterRegistryImpl(
+                counterAggregatorExecutor,
+                buildEventBus,
+                buckConfig.getCountersFirstFlushIntervalMillis(),
+                buckConfig.getCountersFlushIntervalMillis());
+            PerfStatsTracking perfStatsTracking = new PerfStatsTracking(
+                buildEventBus,
+                invocationInfo);
+            ProcessTracker processTracker = new ProcessTracker(buildEventBus, invocationInfo);
+        ) {
 
           LOG.debug(invocationInfo.toLogLine(args));
 

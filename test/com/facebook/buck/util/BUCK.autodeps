@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 674b4038c55923f069cede7ba7943ffc8228f56a #@#
+#@# GENERATED FILE: DO NOT MODIFY db0448da2bbc5c40503ec989b590f68173eef504 #@#
 {
   "testutil" : {
     "deps" : [
@@ -13,7 +13,8 @@
       "//src/com/facebook/buck/util/immutables:immutables",
       "//test/com/facebook/buck/timing:testutil",
       "//third-party/java/guava:guava",
-      "//third-party/java/hamcrest:java-hamcrest"
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/nuprocess:nuprocess"
     ]
   },
   "util" : {
@@ -42,7 +43,8 @@
       "//third-party/java/hamcrest:hamcrest-junit",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/ini4j:ini4j",
-      "//third-party/java/junit:junit"
+      "//third-party/java/junit:junit",
+      "//third-party/java/nuprocess:nuprocess"
     ],
     "exported_deps" : [ ]
   }

@@ -97,6 +97,9 @@ public class FakeProcess extends Process {
 
   @Override
   public int exitValue() {
+    if (!isWaitedFor) {
+      throw new IllegalThreadStateException();
+    }
     return exitValue;
   }
 

@@ -184,8 +184,9 @@ public class ProcessExecutor {
     if (params.getRedirectErrorStream().isPresent()) {
       pb.redirectErrorStream(params.getRedirectErrorStream().get());
     }
-
-    return new LaunchedProcessImpl(BgProcessKiller.startProcess(pb));
+    Process process = BgProcessKiller.startProcess(pb);
+    ProcessRegistry.registerProcess(process, params);
+    return new LaunchedProcessImpl(process);
   }
 
   /**
@@ -232,18 +233,6 @@ public class ProcessExecutor {
         Optional.<String>absent(),
         Optional.<String>absent()
     );
-  }
-
-  /**
-   * @return whether the process has finished executing or not.
-   */
-  private static boolean finished(Process process) {
-    try {
-      process.exitValue();
-      return true;
-    } catch (IllegalThreadStateException e) {
-      return false;
-    }
   }
 
   /**
@@ -356,7 +345,7 @@ public class ProcessExecutor {
       // the regular `waitFor` method.
       if (timeOutMs.isPresent()) {
         timedOut = waitForTimeoutInternal(process, timeOutMs.get(), timeOutHandler);
-        if (!finished(process)) {
+        if (!ProcessHelper.hasProcessFinished(process)) {
           process.destroy();
         }
       } else {
@@ -485,5 +474,4 @@ public class ProcessExecutor {
           data.substring(data.length() - keepLastChars);
     }
   }
-
 }
