@@ -32,9 +32,12 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -57,10 +60,14 @@ import javax.annotation.Nullable;
 
 public class WorkerShellStepTest {
 
-  private static String startupCommand = "startupCommand";
-  private static String startupArgs = "startupArgs";
+  private static final String startupCommand = "startupCommand";
+  private static final String startupArgs = "startupArgs";
+  private static final String persistentStartupArgs = "persistentStartupArgs";
+  private static final String persistentWorkerKey = "//:my-persistent-worker";
   private static final String fakeWorkerStartupCommand =
       String.format("/bin/bash -e -c %s %s", startupCommand, startupArgs);
+  private static final String fakePersistentWorkerStartupCommand =
+      String.format("/bin/bash -e -c %s %s", startupCommand, persistentStartupArgs);
 
   private WorkerShellStep createWorkerShellStep(
       @Nullable WorkerJobParams cmdParams,
@@ -95,13 +102,33 @@ public class WorkerShellStepTest {
       ImmutableMap<String, String> startupEnv,
       String jobArgs,
       int maxWorkers) {
+    return createJobParams(
+        startupCommand,
+        startupArgs,
+        startupEnv,
+        jobArgs,
+        maxWorkers,
+        null,
+        null);
+  }
+
+  private WorkerJobParams createJobParams(
+      ImmutableList<String> startupCommand,
+      String startupArgs,
+      ImmutableMap<String, String> startupEnv,
+      String jobArgs,
+      int maxWorkers,
+      @Nullable String persistentWorkerKey,
+      @Nullable HashCode workerHash) {
     return WorkerJobParams.of(
         Paths.get("tmp").toAbsolutePath().normalize(),
         startupCommand,
         startupArgs,
         startupEnv,
         jobArgs,
-        maxWorkers);
+        maxWorkers,
+        Optional.ofNullable(persistentWorkerKey),
+        Optional.ofNullable(workerHash));
   }
 
   private ExecutionContext createExecutionContextWith(
@@ -124,19 +151,34 @@ public class WorkerShellStepTest {
   private ExecutionContext createExecutionContextWith(
       final ImmutableMap<String, WorkerJobResult> jobArgs,
       final int poolCapacity) {
-    ConcurrentHashMap<String, WorkerProcessPool> workerProcessMap = new ConcurrentHashMap<>();
-    WorkerProcessPool workerProcessPool = new WorkerProcessPool(poolCapacity) {
+    WorkerProcessPool workerProcessPool = new WorkerProcessPool(
+        poolCapacity, Hashing.sha1().hashString(fakeWorkerStartupCommand, Charsets.UTF_8)) {
       @Override
       protected WorkerProcess startWorkerProcess() throws IOException {
         return new FakeWorkerProcess(jobArgs);
       }
     };
+
+    ConcurrentHashMap<String, WorkerProcessPool> workerProcessMap = new ConcurrentHashMap<>();
     workerProcessMap.put(fakeWorkerStartupCommand, workerProcessPool);
+
+    WorkerProcessPool persistentWorkerProcessPool = new WorkerProcessPool(
+        poolCapacity, Hashing.sha1().hashString(
+            fakePersistentWorkerStartupCommand, Charsets.UTF_8)) {
+      @Override
+      protected WorkerProcess startWorkerProcess() throws IOException {
+        return new FakeWorkerProcess(jobArgs);
+      }
+    };
+    ConcurrentHashMap<String, WorkerProcessPool> persistentWorkerProcessMap =
+        new ConcurrentHashMap<>();
+    persistentWorkerProcessMap.put(persistentWorkerKey, persistentWorkerProcessPool);
 
     ExecutionContext context = TestExecutionContext
         .newBuilder()
         .setPlatform(Platform.LINUX)
         .setWorkerProcessPools(workerProcessMap)
+        .setPersistentWorkerPools(persistentWorkerProcessMap)
         .setConsole(new TestConsole(Verbosity.ALL))
         .setBuckEventBus(BuckEventBusFactory.newInstance())
         .build();
@@ -281,6 +323,28 @@ public class WorkerShellStepTest {
     assertTrue(secondEvent instanceof ConsoleEvent);
     assertThat(((ConsoleEvent) secondEvent).getLevel(), Matchers.is(Level.WARNING));
     assertThat(((ConsoleEvent) secondEvent).getMessage(), Matchers.is(stderr));
+  }
+
+
+  @Test
+  public void testPersistentJobIsExecutedAndResultIsReceived()
+      throws IOException, InterruptedException {
+    ExecutionContext context = createExecutionContextWith(0, "", "");
+    WorkerShellStep step = createWorkerShellStep(
+        createJobParams(
+            ImmutableList.of(startupCommand),
+            persistentStartupArgs,
+            ImmutableMap.of(),
+            "myJobArgs",
+            1,
+            persistentWorkerKey,
+            Hashing.sha1().hashString(
+                fakePersistentWorkerStartupCommand, Charsets.UTF_8)),
+        null,
+        null);
+
+    int exitCode = step.execute(context).getExitCode();
+    assertThat(exitCode, Matchers.equalTo(0));
   }
 
   @Test

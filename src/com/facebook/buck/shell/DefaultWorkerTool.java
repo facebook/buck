@@ -17,28 +17,43 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
+import com.facebook.buck.rules.BuildInfo;
+import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
+import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.OnDiskBuildInfo;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.HashCode;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 
-public class DefaultWorkerTool extends NoopBuildRule implements HasRuntimeDeps, WorkerTool {
+public class DefaultWorkerTool extends NoopBuildRule implements
+    HasRuntimeDeps, WorkerTool, InitializableFromDisk<DefaultWorkerTool.Data> {
+
+  @AddToRuleKey
+  private final String args;
+  @AddToRuleKey
+  private final ImmutableMap<String, String> env;
 
   private final BinaryBuildRule exe;
-  private final String args;
-  private final ImmutableMap<String, String> env;
   private final int maxWorkers;
+  private final boolean isPersistent;
+  private final BuildOutputInitializer<Data> buildOutputInitializer;
 
   protected DefaultWorkerTool(
       BuildRuleParams ruleParams,
@@ -46,12 +61,15 @@ public class DefaultWorkerTool extends NoopBuildRule implements HasRuntimeDeps, 
       BinaryBuildRule exe,
       String args,
       ImmutableMap<String, String> env,
-      int maxWorkers) {
+      int maxWorkers,
+      boolean isPersistent) {
     super(ruleParams, resolver);
     this.exe = exe;
     this.args = args;
     this.env = env;
     this.maxWorkers = maxWorkers;
+    this.isPersistent = isPersistent;
+    this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
   }
 
   @Override
@@ -85,7 +103,47 @@ public class DefaultWorkerTool extends NoopBuildRule implements HasRuntimeDeps, 
   }
 
   @Override
+  public boolean isPersistent() {
+    return isPersistent;
+  }
+
+  @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     return getDeps();
+  }
+
+  @Override
+  public HashCode getInstanceKey() {
+    return buildOutputInitializer.getBuildOutput().getRuleKey().getHashCode();
+  }
+
+  @Override
+  public Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+    Optional<RuleKey> ruleKey =
+        onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY);
+    if (!ruleKey.isPresent()) {
+      throw new IllegalStateException(String.format(
+          "Should not be initializing %s from disk if the rule key is not written.",
+          getBuildTarget()));
+    }
+
+    return new Data(ruleKey.get());
+  }
+
+  @Override
+  public BuildOutputInitializer<Data> getBuildOutputInitializer() {
+    return buildOutputInitializer;
+  }
+
+  public static class Data {
+    private final RuleKey ruleKey;
+
+    public Data(RuleKey ruleKey) {
+      this.ruleKey = ruleKey;
+    }
+
+    public RuleKey getRuleKey() {
+      return ruleKey;
+    }
   }
 }

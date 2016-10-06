@@ -47,7 +47,7 @@ public class BuildInfo {
   /**
    * Key for {@link OnDiskBuildInfo} to identify the RuleKey for a build rule.
    */
-  static final String METADATA_KEY_FOR_RULE_KEY = "RULE_KEY";
+  public static final String METADATA_KEY_FOR_RULE_KEY = "RULE_KEY";
 
   /**
    * Key for {@link OnDiskBuildInfo} to identify the input RuleKey for a build rule.

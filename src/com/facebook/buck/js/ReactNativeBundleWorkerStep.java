@@ -60,7 +60,9 @@ public class ReactNativeBundleWorkerStep extends WorkerShellStep {
                     outputFile.toString(),
                     resourcePath.toString(),
                     sourceMapFile.toString()),
-                1)),
+                1,
+                Optional.empty(),
+                Optional.empty())),
         Optional.empty(),
         Optional.empty());
   }

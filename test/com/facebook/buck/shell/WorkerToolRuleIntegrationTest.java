@@ -23,8 +23,8 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
@@ -103,6 +103,63 @@ public class WorkerToolRuleIntegrationTest {
     workspace
         .runBuckBuild(target1.getFullyQualifiedName(), target2.getFullyQualifiedName())
         .assertSuccess();
+
+    String contents =
+        workspace.getFileContents(BuildTargets.getGenPath(filesystem, target1, "%s/output.txt")) +
+        workspace.getFileContents(BuildTargets.getGenPath(filesystem, target2, "%s/output.txt"));
+    ImmutableSet<String> processIDs = ImmutableSet.copyOf(contents.trim().split("\\s+"));
+    assertThat(processIDs.size(), Matchers.equalTo(2));
+  }
+
+  @Test
+  public void testPersistentWorkerToolRules() throws Exception {
+    BuildTarget target1 = workspace.newBuildTarget("//:test6");
+    BuildTarget target2 = workspace.newBuildTarget("//:test7");
+
+    workspace
+        .runBuckBuild(target1.getFullyQualifiedName(), target2.getFullyQualifiedName())
+        .assertSuccess();
+  }
+
+  @Test
+  public void testPersistentWorkerToolReusesProcess() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildTarget target1 = workspace.newBuildTarget("//:test6");
+    BuildTarget target2 = workspace.newBuildTarget("//:test7");
+
+    workspace
+        .runBuckdCommand("build", target1.getFullyQualifiedName())
+        .assertSuccess();
+
+    workspace
+        .runBuckdCommand("build", target2.getFullyQualifiedName())
+        .assertSuccess();
+
+    String contents =
+        workspace.getFileContents(BuildTargets.getGenPath(filesystem, target1, "%s/output.txt")) +
+        workspace.getFileContents(BuildTargets.getGenPath(filesystem, target2, "%s/output.txt"));
+    ImmutableSet<String> processIDs = ImmutableSet.copyOf(contents.trim().split("\\s+"));
+    assertThat(processIDs.size(), Matchers.equalTo(1));
+  }
+
+  @Test
+  public void testPersistentWorkerToolReusesProcessOnlyIfUnchanged() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildTarget target1 = workspace.newBuildTarget("//:test6");
+    BuildTarget target2 = workspace.newBuildTarget("//:test7");
+
+    ProjectWorkspace.ProcessResult result = workspace
+        .runBuckdCommand("build", target1.getFullyQualifiedName());
+    result.assertSuccess();
+
+    workspace.replaceFileContents(
+        "concurrent_tool.sh",
+        "sleep 1",
+        "sleep 2");
+
+    result = workspace
+        .runBuckdCommand("build", target2.getFullyQualifiedName());
+    result.assertSuccess();
 
     String contents =
         workspace.getFileContents(BuildTargets.getGenPath(filesystem, target1, "%s/output.txt")) +

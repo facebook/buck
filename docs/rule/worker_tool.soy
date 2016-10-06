@@ -75,6 +75,17 @@
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'persistent' /}
+  {param default: 'False' /}
+  {param desc}
+    If set to true, buck will not restart the tool unless the tool itself changes. This means the
+    tool will persist across multiple buck commands without being shut down and may see the same
+    rule being built more than once. Be careful when using this with tools that don't expect
+    to process the same input (with different contents) twice!
+  {/param}
+{/call}
+
 {/param}
 
 {param examples}

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.shell;
 
+import com.google.common.hash.HashCode;
+
 import java.io.IOException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
@@ -25,11 +27,13 @@ public abstract class WorkerProcessPool {
   private final Semaphore available;
   private final int capacity;
   private final LinkedBlockingQueue<WorkerProcess> workerProcesses;
+  private final HashCode poolHash;
 
-  public WorkerProcessPool(int maxWorkers) {
+  public WorkerProcessPool(int maxWorkers, HashCode poolHash) {
     capacity = maxWorkers;
     available = new Semaphore(capacity, true);
     workerProcesses = new LinkedBlockingQueue<>();
+    this.poolHash = poolHash;
   }
 
   public WorkerProcess borrowWorkerProcess()
@@ -55,4 +59,8 @@ public abstract class WorkerProcessPool {
   }
 
   protected abstract WorkerProcess startWorkerProcess() throws IOException;
+
+  public HashCode getPoolHash() {
+    return poolHash;
+  }
 }

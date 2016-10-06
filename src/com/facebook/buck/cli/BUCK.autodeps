@@ -103,6 +103,7 @@
       "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules:types",
+      "//src/com/facebook/buck/shell:worker_process",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/test:test",
       "//src/com/facebook/buck/test/selectors:selectors",

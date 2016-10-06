@@ -83,6 +83,7 @@ import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.shell.WorkerProcessPool;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.test.TestConfig;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
@@ -172,6 +173,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -324,6 +327,7 @@ public final class Main {
     private final FileHashCache buckOutHashCache;
     private final EventBus fileEventBus;
     private final Optional<WebServer> webServer;
+    private final ConcurrentMap<String, WorkerProcessPool> persistentWorkerPools;
     private final ActionGraphCache actionGraphCache;
     private final BroadcastEventListener broadcastEventListener;
 
@@ -376,6 +380,7 @@ public final class Main {
             new StringBuilder("n:buckd").append(UUID.randomUUID()).toString());
         LOG.debug("Using a named Watchman Cursor: %s", cursor.get());
       }
+      persistentWorkerPools = new ConcurrentHashMap<>();
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(cell.getFilesystem());
     }
 
@@ -448,6 +453,10 @@ public final class Main {
 
     private FileHashCache getBuckOutHashCache() {
       return buckOutHashCache;
+    }
+
+    private ConcurrentMap<String, WorkerProcessPool> getPersistentWorkerPools() {
+      return persistentWorkerPools;
     }
 
     private void watchClient(final NGContext context) {
@@ -523,7 +532,18 @@ public final class Main {
 
     @Override
     public void close() throws IOException {
+      shutdownPersistentWorkerPools();
       shutdownWebServer();
+    }
+
+    private void shutdownPersistentWorkerPools() {
+      for (WorkerProcessPool pool : persistentWorkerPools.values()) {
+        try {
+          pool.close();
+        } catch (Exception e) {
+          LOG.error(e);
+        }
+      }
     }
 
     private void shutdownWebServer() {
@@ -973,6 +993,8 @@ public final class Main {
         FileHashCache fileHashCache = new StackedFileHashCache(allCaches.build());
 
         Optional<WebServer> webServer = getWebServerIfDaemon(context, rootCell);
+        Optional<ConcurrentMap<String, WorkerProcessPool>> persistentWorkerPools =
+            getPersistentWorkerPoolsIfDaemon(context, rootCell);
 
         TestConfig testConfig = new TestConfig(buckConfig);
         ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig);
@@ -1232,6 +1254,7 @@ public final class Main {
                   .setObjectMapper(objectMapper)
                   .setClock(clock)
                   .setProcessManager(processManager)
+                  .setPersistentWorkerPools(persistentWorkerPools)
                   .setWebServer(webServer)
                   .setBuckConfig(buckConfig)
                   .setFileHashCache(fileHashCache)
@@ -1557,6 +1580,17 @@ public final class Main {
     if (context.isPresent()) {
       Daemon daemon = getDaemon(cell, objectMapper);
       return daemon.getWebServer();
+    }
+    return Optional.empty();
+  }
+
+  private Optional<ConcurrentMap<String, WorkerProcessPool>> getPersistentWorkerPoolsIfDaemon(
+      Optional<NGContext> context,
+      Cell cell)
+      throws IOException {
+    if (context.isPresent()) {
+      Daemon daemon = getDaemon(cell, objectMapper);
+      return Optional.of(daemon.getPersistentWorkerPools());
     }
     return Optional.empty();
   }

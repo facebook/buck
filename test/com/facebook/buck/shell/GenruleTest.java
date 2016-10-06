@@ -38,6 +38,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -64,6 +65,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.Hashing;
 
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
@@ -257,7 +259,7 @@ public class GenruleTest {
   }
 
   private GenruleBuilder createGenruleBuilderThatUsesWorkerMacro(
-      BuildRuleResolver resolver) throws NoSuchBuildTargetException {
+      BuildRuleResolver resolver) throws NoSuchBuildTargetException, IOException {
     /*
      * Produces a GenruleBuilder that when built produces a Genrule that uses a $(worker) macro
      * that corresponds to:
@@ -284,10 +286,14 @@ public class GenruleTest {
         .setMain(new FakeSourcePath("bin/exe"))
         .build(resolver);
 
-    WorkerToolBuilder
+    DefaultWorkerTool workerTool = (DefaultWorkerTool) WorkerToolBuilder
         .newWorkerToolBuilder(BuildTargetFactory.newInstance("//:worker_rule"))
         .setExe(shBinaryRule.getBuildTarget())
         .build(resolver);
+    workerTool.getBuildOutputInitializer().setBuildOutput(
+        workerTool.initializeFromDisk(
+            new FakeOnDiskBuildInfo().setRuleKey(
+                new RuleKey(Hashing.sha1().hashLong(0).toString()))));
 
     return GenruleBuilder
         .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule_with_worker"))
@@ -296,7 +302,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void testGenruleWithWorkerMacroUsesSpecialShellStep() throws NoSuchBuildTargetException {
+  public void testGenruleWithWorkerMacroUsesSpecialShellStep() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule genrule = createGenruleBuilderThatUsesWorkerMacro(ruleResolver).build(ruleResolver);
@@ -324,7 +330,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void testIsWorkerGenruleReturnsTrue() throws NoSuchBuildTargetException {
+  public void testIsWorkerGenruleReturnsTrue() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule genrule = createGenruleBuilderThatUsesWorkerMacro(ruleResolver).build(ruleResolver);
@@ -345,7 +351,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void testConstructingGenruleWithBadWorkerMacroThrows() throws NoSuchBuildTargetException {
+  public void testConstructingGenruleWithBadWorkerMacroThrows() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     GenruleBuilder genruleBuilder = createGenruleBuilderThatUsesWorkerMacro(ruleResolver);

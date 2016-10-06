@@ -29,8 +29,10 @@ import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.shell.WorkerTool;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class WorkerMacroArg extends MacroArg {
 
@@ -38,6 +40,7 @@ public class WorkerMacroArg extends MacroArg {
   private final ImmutableList<String> startupCommand;
   private final ImmutableMap<String, String> startupEnvironment;
   private final String jobArgs;
+  private final BuildTarget buildTarget;
 
   public WorkerMacroArg(
       MacroHandler macroHandler,
@@ -67,11 +70,12 @@ public class WorkerMacroArg extends MacroArg {
           unexpanded,
           target));
     }
-    BuildRule workerTool = resolver.getRule(targets.get(0));
+    this.buildTarget = targets.get(0);
+    BuildRule workerTool = resolver.getRule(buildTarget);
     if (!(workerTool instanceof WorkerTool)) {
       throw new MacroException(String.format("%s used in worker macro, \"%s\", of target %s does " +
           "not correspond to a worker_tool",
-          targets.get(0),
+          buildTarget,
           unexpanded,
           target));
     }
@@ -97,6 +101,18 @@ public class WorkerMacroArg extends MacroArg {
 
   public String getStartupArgs() {
     return workerTool.getArgs();
+  }
+
+  public Optional<String> getPersistentWorkerKey() {
+    if (workerTool.isPersistent()) {
+      return Optional.of(buildTarget.getCellPath().toString() + buildTarget.toString());
+    } else {
+      return Optional.empty();
+    }
+  }
+
+  public HashCode getWorkerHash() {
+    return workerTool.getInstanceKey();
   }
 
   public int getMaxWorkers() {

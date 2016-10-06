@@ -85,6 +85,9 @@ abstract class AbstractExecutionContext implements Closeable {
   @Value.Parameter
   abstract Optional<AdbOptions> getAdbOptions();
 
+  @Value.Parameter
+  abstract Optional<ConcurrentMap<String, WorkerProcessPool>> getPersistentWorkerPools();
+
   /**
    * Returns an {@link AndroidPlatformTarget} if the user specified one. If the user failed to
    * specify one, an exception will be thrown.

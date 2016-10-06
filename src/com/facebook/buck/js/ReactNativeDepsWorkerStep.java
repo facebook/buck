@@ -51,7 +51,9 @@ public class ReactNativeDepsWorkerStep extends WorkerShellStep {
                     platform.toString(),
                     entryFile.toString(),
                     outputFile.toString()),
-                1)),
+                1,
+                Optional.empty(),
+                Optional.empty())),
         Optional.empty(),
         Optional.empty());
   }
