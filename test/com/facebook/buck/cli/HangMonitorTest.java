@@ -28,9 +28,6 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
-
-import javax.annotation.Nullable;
 
 public class HangMonitorTest {
 
@@ -78,13 +75,9 @@ public class HangMonitorTest {
 
       final SettableFuture<String> result = SettableFuture.create();
       HangMonitor hangMonitor = new HangMonitor(
-          new Function<String, Void>() {
-            @Nullable
-            @Override
-            public Void apply(String input) {
-              result.set(input);
-              return null;
-            }
+          (input) -> {
+            result.set(input);
+            return null;
           },
           new TimeSpan(10, TimeUnit.MILLISECONDS));
       hangMonitor.runOneIteration();
@@ -100,13 +93,9 @@ public class HangMonitorTest {
   public void workAdvanceEventsSuppressReport() throws Exception {
     final AtomicBoolean didGetReport = new AtomicBoolean(false);
     HangMonitor hangMonitor = new HangMonitor(
-        new Function<String, Void>() {
-          @Nullable
-          @Override
-          public Void apply(String input) {
-            didGetReport.set(true);
-            return null;
-          }
+        (input) -> {
+          didGetReport.set(true);
+          return null;
         },
         new TimeSpan(10, TimeUnit.MILLISECONDS));
     hangMonitor.onWorkAdvance(new WorkEvent());

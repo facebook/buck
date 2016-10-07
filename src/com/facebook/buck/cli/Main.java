@@ -171,7 +171,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
@@ -281,15 +280,11 @@ public final class Main {
 
   private static final HangMonitor.AutoStartInstance HANG_MONITOR =
       new HangMonitor.AutoStartInstance(
-          new Function<String, Void>() {
-            @Nullable
-            @Override
-            public Void apply(String input) {
-              LOG.info(
-                  "No recent activity, dumping thread stacks (`tr , '\\n'` to decode): %s",
-                  input);
-              return null;
-            }
+          (input) -> {
+            LOG.info(
+                "No recent activity, dumping thread stacks (`tr , '\\n'` to decode): %s",
+                input);
+            return null;
           },
           HANG_DETECTOR_TIMEOUT);
 
