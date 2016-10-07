@@ -125,7 +125,8 @@ public class CxxLink
             fileListPath,
             linker.fileList(fileListPath),
             output,
-            args),
+            args,
+            linker),
         new CxxLinkStep(
             getProjectFilesystem().getRootPath(),
             linker.getEnvironment(getResolver()),

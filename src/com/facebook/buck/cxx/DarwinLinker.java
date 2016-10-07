@@ -155,6 +155,16 @@ public class DarwinLinker implements Linker, HasLinkerMap {
   }
 
   @Override
+  public Iterable<Arg> getSharedLibFlag() {
+    return ImmutableList.<Arg>of(new StringArg("-shared"));
+  }
+
+  @Override
+  public Iterable<String> outputArgs(String path) {
+    return ImmutableList.of("-o", path);
+  }
+
+  @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink
         .setReflectively("tool", tool)

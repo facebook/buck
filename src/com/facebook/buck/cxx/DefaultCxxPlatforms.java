@@ -92,7 +92,7 @@ public class DefaultCxxPlatforms {
         objectFileExtension = "obj";
         defaultCFrontend = DEFAULT_C_FRONTEND;
         defaultCxxFrontend = DEFAULT_CXX_FRONTEND;
-        linkerType = LinkerProvider.Type.GNU;
+        linkerType = LinkerProvider.Type.WINDOWS;
         archiver = new WindowsArchiver(new HashedFileTool(DEFAULT_AR));
         break;
       case FREEBSD:

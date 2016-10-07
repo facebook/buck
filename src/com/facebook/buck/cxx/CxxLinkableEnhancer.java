@@ -179,7 +179,7 @@ public class CxxLinkableEnhancer {
     // If we're doing a shared build, pass the necessary flags to the linker, including setting
     // the soname.
     if (linkType == Linker.LinkType.SHARED) {
-      argsBuilder.add(new StringArg("-shared"));
+      argsBuilder.addAll(cxxPlatform.getLd().resolve(ruleResolver).getSharedLibFlag());
     } else if (linkType == Linker.LinkType.MACH_O_BUNDLE) {
       argsBuilder.add(new StringArg("-bundle"));
       // It's possible to build a Mach-O bundle without a bundle loader (logic tests, for example).
@@ -336,7 +336,7 @@ public class CxxLinkableEnhancer {
       Optional<String> soname,
       ImmutableList<? extends Arg> args) {
     ImmutableList.Builder<Arg> linkArgsBuilder = ImmutableList.builder();
-    linkArgsBuilder.add(new StringArg("-shared"));
+    linkArgsBuilder.addAll(cxxPlatform.getLd().resolve(ruleResolver).getSharedLibFlag());
     if (soname.isPresent()) {
       linkArgsBuilder.addAll(
           StringArg.from(cxxPlatform.getLd().resolve(ruleResolver).soname(soname.get())));

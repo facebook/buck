@@ -45,6 +45,7 @@ public class CxxPrepareForLinkStep implements Step {
   private final ImmutableList<Arg> linkerArgsToSupportFileList;
   private final Path output;
   private final ImmutableList<Arg> args;
+  private final Linker linker;
 
   private static final Logger LOG = Logger.get(CxxPrepareForLinkStep.class);
 
@@ -53,12 +54,14 @@ public class CxxPrepareForLinkStep implements Step {
       Path fileListPath,
       Iterable<Arg> linkerArgsToSupportFileList,
       Path output,
-      ImmutableList<Arg> args) {
+      ImmutableList<Arg> args,
+      Linker linker) {
     this.argFilePath = argFilePath;
     this.fileListPath = fileListPath;
     this.linkerArgsToSupportFileList = ImmutableList.copyOf(linkerArgsToSupportFileList);
     this.output = output;
     this.args = args;
+    this.linker = linker;
   }
 
   private void prepareFileContents() throws IOException {
@@ -133,7 +136,7 @@ public class CxxPrepareForLinkStep implements Step {
 
   private ImmutableList<String> getLinkerOptions() {
     return ImmutableList.<String>builder()
-        .add("-o", output.toString())
+        .addAll(linker.outputArgs(output.toString()))
         .addAll(Arg.stringify(getLinkerArgsWithoutFileListArgs()))
         .addAll(Arg.stringify(linkerArgsToSupportFileList))
         .build();

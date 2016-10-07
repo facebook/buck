@@ -95,4 +95,14 @@ public abstract class DefaultCompiler implements Compiler {
   public ImmutableList<String> languageArgs(String inputLanguage) {
     return ImmutableList.of("-x", inputLanguage);
   }
+
+  @Override
+  public ImmutableList<String> getPdcFlags() {
+    return ImmutableList.of();
+  }
+
+  @Override
+  public ImmutableList<String> getPicFlags() {
+    return ImmutableList.of("-fPIC");
+  }
 }

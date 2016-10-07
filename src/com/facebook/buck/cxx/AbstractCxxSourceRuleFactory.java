@@ -387,7 +387,7 @@ abstract class AbstractCxxSourceRuleFactory {
     // Build up the list of compiler flags.
     CxxToolFlags flags = CxxToolFlags.explicitBuilder()
         // If we're using pic, add in the appropriate flag.
-        .addAllPlatformFlags(getPicType().getFlags())
+        .addAllPlatformFlags(getPicType().getFlags(compiler))
         // Add in the platform specific compiler flags.
         .addAllPlatformFlags(getPlatformCompileFlags(source.getType()))
         // Add custom compiler flags.
@@ -441,8 +441,11 @@ abstract class AbstractCxxSourceRuleFactory {
   private CxxToolFlags computePreprocessorFlags(
       CxxSource.Type type,
       ImmutableList<String> sourceFlags) {
+    Compiler compiler = CxxSourceTypes.getCompiler(
+        getCxxPlatform(),
+        CxxSourceTypes.getPreprocessorOutputType(type)).resolve(getResolver());
     return CxxToolFlags.explicitBuilder()
-        .addAllPlatformFlags(getPicType().getFlags())
+        .addAllPlatformFlags(getPicType().getFlags(compiler))
         .addAllPlatformFlags(CxxSourceTypes.getPlatformPreprocessFlags(getCxxPlatform(), type))
         .addAllRuleFlags(preprocessorFlags.getUnchecked(type))
         // Add custom per-file flags.
@@ -453,13 +456,16 @@ abstract class AbstractCxxSourceRuleFactory {
   private CxxToolFlags computeCompilerFlags(
       CxxSource.Type type,
       ImmutableList<String> sourceFlags) {
+    AbstractCxxSource.Type outputType = CxxSourceTypes.getPreprocessorOutputType(type);
     return CxxToolFlags.explicitBuilder()
         // If we're using pic, add in the appropriate flag.
-        .addAllPlatformFlags(getPicType().getFlags())
+        .addAllPlatformFlags(
+            getPicType().getFlags(CxxSourceTypes.getCompiler(getCxxPlatform(), outputType)
+                .resolve(getResolver())))
         // Add in the platform specific compiler flags.
         .addAllPlatformFlags(
-            getPlatformCompileFlags(CxxSourceTypes.getPreprocessorOutputType(type)))
-        .addAllRuleFlags(getRuleCompileFlags(CxxSourceTypes.getPreprocessorOutputType(type)))
+            getPlatformCompileFlags(outputType))
+        .addAllRuleFlags(getRuleCompileFlags(outputType))
         .addAllRuleFlags(sourceFlags)
         .build();
   }
@@ -789,21 +795,22 @@ abstract class AbstractCxxSourceRuleFactory {
   public enum PicType {
 
     // Generate position-independent code (e.g. for use in shared libraries).
-    PIC("-fPIC"),
+    PIC {
+      @Override
+      public ImmutableList<String> getFlags(Compiler compiler) {
+        return compiler.getPicFlags();
+      }
+    },
 
     // Generate position-dependent code.
-    PDC;
+    PDC {
+      @Override
+      public ImmutableList<String> getFlags(Compiler compiler) {
+        return compiler.getPdcFlags();
+      }
+    };
 
-    private final ImmutableList<String> flags;
-
-    PicType(String... flags) {
-      this.flags = ImmutableList.copyOf(flags);
-    }
-
-    public ImmutableList<String> getFlags() {
-      return flags;
-    }
-
+    abstract ImmutableList<String> getFlags(Compiler compiler);
   }
 
   @Value.Immutable

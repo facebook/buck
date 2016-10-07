@@ -85,8 +85,11 @@ public class CxxPrepareForLinkStepTest {
       Path output) throws IOException, InterruptedException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
+    BuildRuleResolver buildRuleResolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+        buildRuleResolver);
 
     // Setup some dummy values for inputs to the CxxLinkStep
     ImmutableList<Arg> args = ImmutableList.of(
@@ -109,7 +112,8 @@ public class CxxPrepareForLinkStepTest {
             new StringArg("-filelist"),
             new StringArg(fileListPath.toString())),
         output,
-        args);
+        args,
+        CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver));
 
     step.execute(context);
 

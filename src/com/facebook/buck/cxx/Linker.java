@@ -114,6 +114,10 @@ public interface Linker extends Tool {
       BuildTarget target,
       Iterable<? extends SourcePath> symbolFiles);
 
+  Iterable<Arg> getSharedLibFlag();
+
+  Iterable<String> outputArgs(String path);
+
   /**
    * The various ways to link an output file.
    */

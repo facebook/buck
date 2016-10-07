@@ -26,6 +26,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -74,7 +75,7 @@ public class WindowsLinker implements Linker {
 
   @Override
   public Iterable<String> soname(String arg) {
-    return ImmutableList.of(arg);
+    return ImmutableList.of();
   }
 
   @Override
@@ -120,6 +121,16 @@ public class WindowsLinker implements Linker {
   @Override
   public Iterable<String> getIgnoreUndefinedSymbolsFlags() {
     return ImmutableList.of();
+  }
+
+  @Override
+  public Iterable<Arg> getSharedLibFlag() {
+    return ImmutableList.<Arg>of(new StringArg("/DLL"));
+  }
+
+  @Override
+  public Iterable<String> outputArgs(String path) {
+    return ImmutableList.of("/OUT:" + path);
   }
 
   @Override

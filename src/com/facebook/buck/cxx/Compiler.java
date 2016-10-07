@@ -35,4 +35,8 @@ public interface Compiler extends Tool {
   ImmutableList<String> outputArgs(String outputPath);
 
   ImmutableList<String> outputDependenciesArgs(String outputPath);
+
+  ImmutableList<String> getPicFlags();
+
+  ImmutableList<String> getPdcFlags();
 }
