@@ -21,7 +21,6 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.util.concurrent.TimeSpan;
-import com.google.common.base.Function;
 import com.google.common.util.concurrent.SettableFuture;
 
 import org.hamcrest.Matchers;
@@ -29,6 +28,7 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
 import javax.annotation.Nullable;
 

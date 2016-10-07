@@ -123,7 +123,6 @@ import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
@@ -172,6 +171,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
