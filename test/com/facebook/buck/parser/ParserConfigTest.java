@@ -53,22 +53,21 @@ public class ParserConfigTest {
 
   @Test
   public void testGetAllowEmptyGlobs() throws IOException {
-    assertTrue(new ParserConfig(FakeBuckConfig.builder().build()).getAllowEmptyGlobs());
+    assertTrue(FakeBuckConfig.builder().build().getView(ParserConfig.class).getAllowEmptyGlobs());
     Reader reader = new StringReader(
         Joiner.on('\n').join(
             "[build]",
             "allow_empty_globs = false"));
-    ParserConfig config = new ParserConfig(
-        BuckConfigTestUtils.createWithDefaultFilesystem(
-            temporaryFolder,
-            reader));
+    ParserConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
+        temporaryFolder,
+        reader).getView(ParserConfig.class);
     assertFalse(config.getAllowEmptyGlobs());
   }
 
   @Test
   public void testGetGlobHandler() throws IOException {
     assertThat(
-        new ParserConfig(FakeBuckConfig.builder().build()).getGlobHandler(),
+        FakeBuckConfig.builder().build().getView(ParserConfig.class).getGlobHandler(),
         Matchers.equalTo(ParserConfig.GlobHandler.PYTHON));
 
     for (ParserConfig.GlobHandler handler : ParserConfig.GlobHandler.values()) {
@@ -76,10 +75,9 @@ public class ParserConfigTest {
           Joiner.on('\n').join(
               "[project]",
               "glob_handler = " + handler.toString()));
-      ParserConfig config = new ParserConfig(
-          BuckConfigTestUtils.createWithDefaultFilesystem(
-              temporaryFolder,
-              reader));
+      ParserConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
+          temporaryFolder,
+          reader).getView(ParserConfig.class);
       assertThat(config.getGlobHandler(), Matchers.equalTo(handler));
     }
   }
@@ -93,7 +91,7 @@ public class ParserConfigTest {
             "parallel_parsing = true")
         .build();
 
-    ParserConfig parserConfig = new ParserConfig(config);
+    ParserConfig parserConfig = config.getView(ParserConfig.class);
 
     assertTrue(parserConfig.getEnableParallelParsing());
     assertEquals(2, parserConfig.getNumParsingThreads());
@@ -108,7 +106,7 @@ public class ParserConfigTest {
             "parallel_parsing = false")
         .build();
 
-    ParserConfig parserConfig = new ParserConfig(config);
+    ParserConfig parserConfig = config.getView(ParserConfig.class);
 
     assertFalse(parserConfig.getEnableParallelParsing());
     assertEquals(1, parserConfig.getNumParsingThreads());
@@ -123,12 +121,12 @@ public class ParserConfigTest {
         Paths.get(existingPath2));
     ProjectFilesystem filesystem = new FakeProjectFilesystem(readOnlyPaths);
 
-    ParserConfig parserConfig = new ParserConfig(FakeBuckConfig.builder()
+    ParserConfig parserConfig = FakeBuckConfig.builder()
         .setSections(
             "[project]",
             "read_only_paths = " + existingPath1 + "," + existingPath2)
         .setFilesystem(filesystem)
-        .build());
+        .build().getView(ParserConfig.class);
 
     assertTrue(parserConfig.getReadOnlyPaths().isPresent());
     assertEquals(
@@ -138,10 +136,10 @@ public class ParserConfigTest {
             filesystem.resolve(Paths.get(existingPath2))));
 
     String notExistingDir = "not/existing/path";
-    parserConfig = new ParserConfig(FakeBuckConfig.builder()
+    parserConfig = FakeBuckConfig.builder()
         .setSections("[project]", "read_only_paths = " + notExistingDir)
         .setFilesystem(filesystem)
-        .build());
+        .build().getView(ParserConfig.class);
 
     thrown.expect(HumanReadableException.class);
     parserConfig.getReadOnlyPaths();
@@ -149,33 +147,33 @@ public class ParserConfigTest {
 
   @Test
   public void testGetEnableBuildFileSandboxing() throws IOException {
-    assertFalse(new ParserConfig(FakeBuckConfig.builder().build()).getEnableBuildFileSandboxing());
+    assertFalse(
+        FakeBuckConfig.builder().build().getView(ParserConfig.class)
+            .getEnableBuildFileSandboxing());
 
     Reader reader = new StringReader(
         Joiner.on('\n').join(
             "[project]",
             "enable_build_file_sandboxing = true"));
-    ParserConfig config = new ParserConfig(
-        BuckConfigTestUtils.createWithDefaultFilesystem(
-            temporaryFolder,
-            reader));
+    ParserConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
+        temporaryFolder,
+        reader).getView(ParserConfig.class);
     assertTrue(config.getEnableBuildFileSandboxing());
 
     reader = new StringReader(
         Joiner.on('\n').join(
             "[project]",
             "enable_build_file_sandboxing = false"));
-    config = new ParserConfig(
-        BuckConfigTestUtils.createWithDefaultFilesystem(
-            temporaryFolder,
-            reader));
+    config = BuckConfigTestUtils.createWithDefaultFilesystem(
+        temporaryFolder,
+        reader).getView(ParserConfig.class);
     assertFalse(config.getEnableBuildFileSandboxing());
   }
 
   @Test
   public void testGetBuildFileImportWhitelist() throws IOException {
     assertTrue(
-        new ParserConfig(FakeBuckConfig.builder().build())
+        FakeBuckConfig.builder().build().getView(ParserConfig.class)
             .getBuildFileImportWhitelist()
             .isEmpty());
 
@@ -183,10 +181,9 @@ public class ParserConfigTest {
         Joiner.on('\n').join(
             "[project]",
             "build_file_import_whitelist = os, foo"));
-    ParserConfig config = new ParserConfig(
-        BuckConfigTestUtils.createWithDefaultFilesystem(
-            temporaryFolder,
-            reader));
+    ParserConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
+        temporaryFolder,
+        reader).getView(ParserConfig.class);
     assertEquals(ImmutableList.<String>of("os", "foo"), config.getBuildFileImportWhitelist());
   }
 }

@@ -19,6 +19,8 @@ package com.facebook.buck.cli;
 import static java.lang.Integer.parseInt;
 
 import com.facebook.buck.config.Config;
+import com.facebook.buck.config.ConfigView;
+import com.facebook.buck.config.ConfigViewCache;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
@@ -120,6 +122,8 @@ public class BuckConfig {
   private final ImmutableMap<String, String> environment;
   private final ImmutableMap<String, String> filteredEnvironment;
 
+  private final ConfigViewCache<BuckConfig> viewCache = new ConfigViewCache<>(this);
+
   public BuckConfig(
       Config config,
       ProjectFilesystem projectFilesystem,
@@ -141,6 +145,16 @@ public class BuckConfig {
     this.environment = environment;
     this.filteredEnvironment = ImmutableMap.copyOf(
         Maps.filterKeys(environment, EnvironmentFilter.NOT_IGNORED_ENV_PREDICATE));
+  }
+
+  /**
+   * Get a {@link ConfigView} of this config.
+   *
+   * @param cls Class of the config view.
+   * @param <T> Type of the config view.
+   */
+  public <T extends ConfigView<BuckConfig>> T getView(final Class<T> cls) {
+    return viewCache.getView(cls);
   }
 
   /**

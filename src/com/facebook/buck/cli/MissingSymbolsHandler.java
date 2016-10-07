@@ -77,7 +77,7 @@ public class MissingSymbolsHandler {
       JavacOptions javacOptions,
       ImmutableMap<String, String> environment) {
     SrcRootsFinder srcRootsFinder = new SrcRootsFinder(projectFilesystem);
-    ParserConfig parserConfig = new ParserConfig(config);
+    ParserConfig parserConfig = config.getView(ParserConfig.class);
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
         config,
         new ExecutableFinder());

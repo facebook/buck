@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,10 +13,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.parser;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.ConfigView;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
@@ -26,13 +27,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import org.immutables.value.Value;
+
 import java.nio.file.Path;
-import java.util.List;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
-public class ParserConfig {
+@Value.Immutable(builder = false, copy = false)
+@BuckStyleImmutable
+abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
+
   public static final boolean DEFAULT_ALLOW_EMPTY_GLOBS = true;
   public static final String DEFAULT_BUILD_FILE_NAME = "BUCK";
   public static final String BUILDFILE_SECTION_NAME = "buildfile";
@@ -73,14 +78,9 @@ public class ParserConfig {
     DISABLED
   }
 
-  private final BuckConfig delegate;
-
-  public ParserConfig(BuckConfig delegate) {
-    this.delegate = delegate;
-  }
-
+  @Value.Lazy
   public boolean getAllowEmptyGlobs() {
-    return delegate
+    return getDelegate()
         .getValue("build", "allow_empty_globs")
         .transform(
             new Function<String, Boolean>() {
@@ -92,27 +92,32 @@ public class ParserConfig {
         .or(DEFAULT_ALLOW_EMPTY_GLOBS);
   }
 
+  @Value.Lazy
   public String getBuildFileName() {
-    return delegate.getValue(BUILDFILE_SECTION_NAME, "name").or(DEFAULT_BUILD_FILE_NAME);
+    return getDelegate().getValue(BUILDFILE_SECTION_NAME, "name").or(DEFAULT_BUILD_FILE_NAME);
   }
 
   /**
    * A (possibly empty) sequence of paths to files that should be included by default when
    * evaluating a build file.
    */
+  @Value.Lazy
   public Iterable<String> getDefaultIncludes() {
-    ImmutableMap<String, String> entries = delegate.getEntriesForSection(BUILDFILE_SECTION_NAME);
+    ImmutableMap<String, String> entries =
+        getDelegate().getEntriesForSection(BUILDFILE_SECTION_NAME);
     String includes = Strings.nullToEmpty(entries.get("includes"));
     return Splitter.on(' ').trimResults().omitEmptyStrings().split(includes);
   }
 
+  @Value.Lazy
   public boolean getEnforceBuckPackageBoundary() {
-    return delegate.getBooleanValue("project", "check_package_boundary", true);
+    return getDelegate().getBooleanValue("project", "check_package_boundary", true);
   }
 
+  @Value.Lazy
   public ImmutableSet<Pattern> getTempFilePatterns() {
     return FluentIterable
-        .from(delegate.getListWithoutComments("project", "temp_files"))
+        .from(getDelegate().getListWithoutComments("project", "temp_files"))
         .transform(
             new Function<String, Pattern>() {
               @Nullable
@@ -124,60 +129,73 @@ public class ParserConfig {
         .toSet();
   }
 
+  @Value.Lazy
   public Optional<ImmutableList<Path>> getReadOnlyPaths() {
-    return delegate.getOptionalPathList("project", "read_only_paths");
+    return getDelegate().getOptionalPathList("project", "read_only_paths");
   }
 
+  @Value.Lazy
   public AllowSymlinks getAllowSymlinks() {
-    return delegate.getEnum("project", "allow_symlinks", AllowSymlinks.class)
+    return getDelegate().getEnum("project", "allow_symlinks", AllowSymlinks.class)
         .or(AllowSymlinks.WARN);
   }
 
+  @Value.Lazy
   public Optional<BuildFileSearchMethod> getBuildFileSearchMethod() {
-    return delegate.getEnum("project", "build_file_search_method", BuildFileSearchMethod.class);
+    return
+        getDelegate().getEnum("project", "build_file_search_method", BuildFileSearchMethod.class);
   }
 
+  @Value.Lazy
   public GlobHandler getGlobHandler() {
-    return delegate.getEnum("project", "glob_handler", GlobHandler.class).or(GlobHandler.PYTHON);
+    return
+        getDelegate().getEnum("project", "glob_handler", GlobHandler.class).or(GlobHandler.PYTHON);
   }
 
+  @Value.Lazy
   public WatchmanGlobSanityCheck getWatchmanGlobSanityCheck() {
-    return delegate.getEnum("project", "watchman_glob_sanity_check", WatchmanGlobSanityCheck.class)
+    return getDelegate()
+        .getEnum("project", "watchman_glob_sanity_check", WatchmanGlobSanityCheck.class)
         .or(WatchmanGlobSanityCheck.STAT);
   }
 
+  @Value.Lazy
   public Optional<Long> getWatchmanQueryTimeoutMs() {
-    return delegate.getLong("project", "watchman_query_timeout_ms");
+    return getDelegate().getLong("project", "watchman_query_timeout_ms");
   }
 
+  @Value.Lazy
   public boolean getEnableParallelParsing() {
-    return delegate.getBooleanValue("project", "parallel_parsing", true);
+    return getDelegate().getBooleanValue("project", "parallel_parsing", true);
   }
 
+  @Value.Lazy
   public int getNumParsingThreads() {
     if (!getEnableParallelParsing()) {
       return 1;
     }
 
-    int value = delegate
+    int value = getDelegate()
         .getLong("project", "parsing_threads")
         .or(NUM_PARSING_THREADS_DEFAULT)
         .intValue();
 
-    return Math.min(value, delegate.getNumThreads());
+    return Math.min(value, getDelegate().getNumThreads());
   }
 
+  @Value.Lazy
   public ApplyDefaultFlavorsMode getDefaultFlavorsMode() {
-    return delegate.getEnum("project", "default_flavors_mode", ApplyDefaultFlavorsMode.class)
+    return getDelegate().getEnum("project", "default_flavors_mode", ApplyDefaultFlavorsMode.class)
         .or(ApplyDefaultFlavorsMode.ENABLED);
   }
 
+  @Value.Lazy
   public boolean getEnableBuildFileSandboxing() {
-    return delegate.getBooleanValue("project", "enable_build_file_sandboxing", false);
+    return getDelegate().getBooleanValue("project", "enable_build_file_sandboxing", false);
   }
 
-  public List<String> getBuildFileImportWhitelist() {
-    return delegate.getListWithoutComments("project", "build_file_import_whitelist");
+  @Value.Lazy
+  public ImmutableList<String> getBuildFileImportWhitelist() {
+    return getDelegate().getListWithoutComments("project", "build_file_import_whitelist");
   }
-
 }

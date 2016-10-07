@@ -332,7 +332,7 @@ public class InterCellIntegrationTest {
         ObjectMappers.newDefaultInstance());
     Parser parser = new Parser(
         new BroadcastEventListener(),
-        new ParserConfig(primary.asCell().getBuckConfig()),
+        primary.asCell().getBuckConfig().getView(ParserConfig.class),
         coercerFactory,
         new ConstructorArgMarshaller(coercerFactory));
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();

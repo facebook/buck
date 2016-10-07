@@ -146,7 +146,7 @@ public class DistributedBuildStateTest {
         new ConstructorArgMarshaller(typeCoercerFactory);
     Parser parser = new Parser(
         new BroadcastEventListener(),
-        new ParserConfig(buckConfig),
+        buckConfig.getView(ParserConfig.class),
         typeCoercerFactory,
         constructorArgMarshaller);
     TargetGraph targetGraph = parser.buildTargetGraph(

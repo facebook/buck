@@ -225,7 +225,7 @@ public class JavaSymbolFinder {
   private ImmutableList<Path> possibleBuckFilesForSourceFile(Path sourceFilePath) {
     ImmutableList.Builder<Path> possibleBuckFiles = ImmutableList.builder();
     Path dir = sourceFilePath.getParent();
-    ParserConfig parserConfig = new ParserConfig(config);
+    ParserConfig parserConfig = config.getView(ParserConfig.class);
 
     // For a source file like foo/bar/example.java, add paths like foo/bar/BUCK and foo/BUCK.
     while (dir != null) {

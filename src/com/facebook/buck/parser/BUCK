@@ -1,7 +1,10 @@
-java_library(
+java_immutables_library(
   name = 'config',
   srcs = [
-    'ParserConfig.java',
+    'AbstractParserConfig.java',
+  ],
+  immutable_types = [
+    'ParserConfig',
   ],
   autodeps = True,
   visibility = [

@@ -78,7 +78,7 @@ public class JavaSymbolFinderIntegrationTest {
         environment,
         new DefaultCellPathResolver(projectFilesystem.getRootPath(), rawConfig));
 
-    ParserConfig parserConfig = new ParserConfig(config);
+    ParserConfig parserConfig = config.getView(ParserConfig.class);
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
         config,
         new ExecutableFinder());

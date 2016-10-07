@@ -332,7 +332,7 @@ public final class Main {
       TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(objectMapper);
       this.parser = new Parser(
           this.broadcastEventListener,
-          new ParserConfig(cell.getBuckConfig()),
+          cell.getBuckConfig().getView(ParserConfig.class),
           typeCoercerFactory,
           new ConstructorArgMarshaller(typeCoercerFactory));
       fileEventBus.register(parser);
@@ -859,7 +859,7 @@ public final class Main {
         clock = new DefaultClock();
       }
 
-      ParserConfig parserConfig = new ParserConfig(buckConfig);
+      ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
       try (Watchman watchman =
                buildWatchman(
                    context,
@@ -1147,7 +1147,7 @@ public final class Main {
             TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(objectMapper);
             parser = new Parser(
                 broadcastEventListener,
-                new ParserConfig(rootCell.getBuckConfig()),
+                rootCell.getBuckConfig().getView(ParserConfig.class),
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory));
           }

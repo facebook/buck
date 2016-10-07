@@ -508,7 +508,7 @@ public class Parser {
       final ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
 
-    ParserConfig parserConfig = new ParserConfig(rootCell.getBuckConfig());
+    ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
 
     ParserConfig.BuildFileSearchMethod buildFileSearchMethod;
     if (parserConfig.getBuildFileSearchMethod().isPresent()) {

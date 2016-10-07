@@ -73,7 +73,7 @@ public class FetchCommand extends BuildCommand {
       ActionGraphAndResolver actionGraphAndResolver;
       ImmutableSet<BuildTarget> buildTargets;
       try {
-        ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
+        ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
         TargetGraphAndBuildTargets result = params.getParser()
             .buildTargetGraphForTargetNodeSpecs(
                 params.getBuckEventBus(),

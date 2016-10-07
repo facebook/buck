@@ -73,7 +73,7 @@ public class IntraCellIntegrationTest {
         ObjectMappers.newDefaultInstance());
     Parser parser = new Parser(
         new BroadcastEventListener(),
-        new ParserConfig(cell.getBuckConfig()),
+        cell.getBuckConfig().getView(ParserConfig.class),
         coercerFactory,
         new ConstructorArgMarshaller(coercerFactory));
 

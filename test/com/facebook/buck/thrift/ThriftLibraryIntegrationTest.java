@@ -97,7 +97,7 @@ public class ThriftLibraryIntegrationTest {
         ObjectMappers.newDefaultInstance());
     Parser parser = new Parser(
         new BroadcastEventListener(),
-        new ParserConfig(config),
+        config.getView(ParserConfig.class),
         typeCoercerFactory,
         new ConstructorArgMarshaller(typeCoercerFactory));
 

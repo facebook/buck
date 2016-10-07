@@ -234,7 +234,7 @@ public class ParserTest {
     broadcastEventListener.addEventBus(eventBus);
     parser = new Parser(
         broadcastEventListener,
-        new ParserConfig(cell.getBuckConfig()),
+        cell.getBuckConfig().getView(ParserConfig.class),
         typeCoercerFactory,
         new ConstructorArgMarshaller(typeCoercerFactory));
 
@@ -1555,7 +1555,7 @@ public class ParserTest {
         ObjectMappers.newDefaultInstance());
     parser = new Parser(
         new BroadcastEventListener(),
-        new ParserConfig(cell.getBuckConfig()),
+        cell.getBuckConfig().getView(ParserConfig.class),
         typeCoercerFactory,
         new ConstructorArgMarshaller(typeCoercerFactory));
     Path testFooJavaFile = tempDir.newFile("foo/Foo.java");
@@ -1675,7 +1675,7 @@ public class ParserTest {
         ObjectMappers.newDefaultInstance());
     parser = new Parser(
         new BroadcastEventListener(),
-        new ParserConfig(cell.getBuckConfig()),
+        cell.getBuckConfig().getView(ParserConfig.class),
         typeCoercerFactory,
         new ConstructorArgMarshaller(typeCoercerFactory));
     Files.write(

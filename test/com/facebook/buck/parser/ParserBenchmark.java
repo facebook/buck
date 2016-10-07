@@ -122,7 +122,7 @@ public class ParserBenchmark {
     ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller(typeCoercerFactory);
     parser = new Parser(
         new BroadcastEventListener(),
-        new ParserConfig(config),
+        config.getView(ParserConfig.class),
         typeCoercerFactory,
         marshaller);
   }

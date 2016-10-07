@@ -237,7 +237,8 @@ class DaemonicParserState {
       // We also know that the rules all depend on the default includes for the
       // cell.
       BuckConfig buckConfig = cell.getBuckConfig();
-      Iterable<String> defaultIncludes = new ParserConfig(buckConfig).getDefaultIncludes();
+      Iterable<String> defaultIncludes =
+          buckConfig.getView(ParserConfig.class).getDefaultIncludes();
       for (String include : defaultIncludes) {
         // Default includes are given as "//path/to/file". They look like targets
         // but they are not. However, I bet someone will try and treat it like a
@@ -570,7 +571,8 @@ class DaemonicParserState {
 
   private void invalidateIfProjectBuildFileParserStateChanged(Cell cell) {
     ImmutableMap<String, String> cellEnv = cell.getBuckConfig().getFilteredEnvironment();
-    Iterable<String> defaultIncludes = new ParserConfig(cell.getBuckConfig()).getDefaultIncludes();
+    Iterable<String> defaultIncludes = cell.getBuckConfig().getView(ParserConfig.class)
+        .getDefaultIncludes();
 
     boolean invalidatedByEnvironmentVariableChange = false;
     boolean invalidatedByDefaultIncludesChange = false;

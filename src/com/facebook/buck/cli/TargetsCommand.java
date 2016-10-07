@@ -365,7 +365,7 @@ public class TargetsCommand extends AbstractCommand {
       Optional<ImmutableSet<BuildRuleType>> buildRuleTypes)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
     if (getArguments().isEmpty()) {
-      ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
+      ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
       TargetGraphAndBuildTargets completeTargetGraphAndBuildTargets = params.getParser()
           .buildTargetGraphForTargetNodeSpecs(
               params.getBuckEventBus(),
@@ -444,7 +444,7 @@ public class TargetsCommand extends AbstractCommand {
         referencedFiles.relativePathsUnderProjectRoot.isEmpty()) {
       matchingNodes = ImmutableSortedMap.of();
     } else {
-      ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
+      ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
 
       ImmutableSet<BuildTarget> matchingBuildTargets = targetGraphAndBuildTargets.getBuildTargets();
       matchingNodes = getMatchingNodes(
@@ -468,7 +468,7 @@ public class TargetsCommand extends AbstractCommand {
       CommandRunnerParams params,
       ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
-    ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
+    ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     boolean ignoreBuckAutodepsFiles = false;
     // Parse the entire action graph, or (if targets are specified),
     // only the specified targets and their dependencies..

@@ -433,7 +433,7 @@ public class ProjectCommand extends BuildCommand {
       }
 
       try {
-        ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
+        ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
         passedInTargetsSet =
             ImmutableSet.copyOf(
                 Iterables.concat(
@@ -785,7 +785,7 @@ public class ProjectCommand extends BuildCommand {
           executionContext,
           new FilesystemBackedBuildFileTree(
               params.getCell().getFilesystem(),
-              new ParserConfig(params.getBuckConfig()).getBuildFileName()),
+              params.getBuckConfig().getView(ParserConfig.class).getBuildFileName()),
           params.getCell().getFilesystem(),
           getPathToDefaultAndroidManifest(params.getBuckConfig()),
           new IntellijConfig(params.getBuckConfig()),
@@ -997,7 +997,7 @@ public class ProjectCommand extends BuildCommand {
           params.getEnvironment(),
           params.getCell().getKnownBuildRuleTypes().getCxxPlatforms(),
           defaultCxxPlatform,
-          new ParserConfig(params.getBuckConfig()).getBuildFileName(),
+          params.getBuckConfig().getView(ParserConfig.class).getBuildFileName(),
           new Function<TargetNode<?>, SourcePathResolver>() {
             @Override
             public SourcePathResolver apply(TargetNode<?> input) {

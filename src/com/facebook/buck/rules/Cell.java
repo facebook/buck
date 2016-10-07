@@ -98,7 +98,7 @@ public class Cell {
     this.watchman = watchman;
     this.config = config;
 
-    ParserConfig parserConfig = new ParserConfig(config);
+    ParserConfig parserConfig = config.getView(ParserConfig.class);
     this.buildFileName = parserConfig.getBuildFileName();
     this.enforceBuckPackageBoundaries = parserConfig.getEnforceBuckPackageBoundary();
     this.tempFilePatterns = parserConfig.getTempFilePatterns();
@@ -204,7 +204,7 @@ public class Cell {
             rootConfig.getEnvironment(),
             cellPathResolver);
 
-        ParserConfig parserConfig = new ParserConfig(buckConfig);
+        ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
 
         Watchman.build(
             cellPath,
@@ -389,7 +389,7 @@ public class Cell {
   }
 
   private ProjectBuildFileParserFactory createBuildFileParserFactory() {
-    ParserConfig parserConfig = new ParserConfig(getBuckConfig());
+    ParserConfig parserConfig = getBuckConfig().getView(ParserConfig.class);
 
     boolean useWatchmanGlob =
         parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN &&
@@ -460,7 +460,8 @@ public class Cell {
   public static class MissingBuildFileException extends BuildTargetException {
     public MissingBuildFileException(BuildTarget buildTarget, BuckConfig buckConfig) {
       super(String.format("No build file at %s when resolving target %s.",
-          buildTarget.getBasePath().resolve(new ParserConfig(buckConfig).getBuildFileName()),
+          buildTarget.getBasePath().resolve(
+              buckConfig.getView(ParserConfig.class).getBuildFileName()),
           buildTarget.getFullyQualifiedName()));
     }
 

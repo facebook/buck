@@ -120,7 +120,7 @@ public class PerBuildState implements AutoCloseable {
         registerInputsUnderSymlinks(buildFile, node);
       }
     };
-    ParserConfig parserConfig = new ParserConfig(rootCell.getBuckConfig());
+    ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
     int numParsingThreads = parserConfig.getNumParsingThreads();
     this.projectBuildFileParserPool = new ProjectBuildFileParserPool(
         numParsingThreads, // Max parsers to create per cell.
@@ -218,7 +218,8 @@ public class PerBuildState implements AutoCloseable {
     Path root = cell.getFilesystem().getRootPath();
     if (!cells.containsKey(root)) {
       cells.put(root, cell);
-      cellSymlinkAllowability.put(root, new ParserConfig(cell.getBuckConfig()).getAllowSymlinks());
+      cellSymlinkAllowability.put(root,
+          cell.getBuckConfig().getView(ParserConfig.class).getAllowSymlinks());
     }
   }
 
@@ -262,7 +263,8 @@ public class PerBuildState implements AutoCloseable {
       }
 
       Optional<ImmutableList<Path>> readOnlyPaths =
-          new ParserConfig(getCell(node.getBuildTarget()).getBuckConfig()).getReadOnlyPaths();
+          getCell(node.getBuildTarget()).getBuckConfig().getView(ParserConfig.class)
+              .getReadOnlyPaths();
       Cell currentCell = cells.get(node.getBuildTarget().getCellPath());
 
       if (readOnlyPaths.isPresent() && currentCell != null) {

@@ -1,9 +1,13 @@
-#@# GENERATED FILE: DO NOT MODIFY fffa6dd093b1c854a39814ee9230321623825fb5 #@#
+#@# GENERATED FILE: DO NOT MODIFY 73c393281db64eb0c2b8a2bbeb0c52732dc8637c #@#
 {
   "config" : {
-    "deps" : [ ],
+    "deps" : [
+      "//third-party/java/immutables:processor"
+    ],
     "exported_deps" : [
       "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/config:config",
+      "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
       "//third-party/java/jsr:jsr305"
     ]

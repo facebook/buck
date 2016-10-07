@@ -106,7 +106,7 @@ public class ResolverIntegrationTest {
   public static void createParser() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
-    ParserConfig parserConfig = new ParserConfig(buckConfig);
+    ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
         buckConfig,
         new ExecutableFinder());

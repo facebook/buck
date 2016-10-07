@@ -396,7 +396,7 @@ public class TestCommand extends BuildCommand {
       // all of the test rules.
       TargetGraph targetGraph;
       ImmutableSet<BuildTarget> explicitBuildTargets;
-      ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
+      ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
 
       try {
 

@@ -282,7 +282,7 @@ public class InstallCommand extends BuildCommand {
       ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildTargetException, BuildFileParseException{
 
-    ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
+    ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ImmutableSet.Builder<String> installHelperTargets = ImmutableSet.builder();
     for (int index = 0; index < getArguments().size(); index++) {
 
