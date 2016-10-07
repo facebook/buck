@@ -556,4 +556,27 @@ public class OCamlIntegrationTest {
     buildLog.assertTargetBuiltLocally(target.toString());
     buildLog.assertTargetBuiltLocally(binary.toString());
   }
+
+  @Test
+  public void testGenruleDependency() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "ocaml", tmp);
+    workspace.setUp();
+
+    BuildTarget binary = BuildTargetFactory.newInstance(
+        workspace.getDestPath(),
+        "//generated:binary");
+    BuildTarget generated = BuildTargetFactory.newInstance(
+        workspace.getDestPath(),
+        "//generated:generated");
+    ImmutableSet<BuildTarget> targets = ImmutableSet.of(binary, generated);
+
+    // Build the binary.
+    workspace.runBuckCommand("build", binary.toString()).assertSuccess();
+
+    // Make sure the generated target is built as well.
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    assertTrue(buildLog.getAllTargets().containsAll(targets));
+    buildLog.assertTargetBuiltLocally(binary.toString());
+  }
 }

@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
@@ -130,7 +131,10 @@ public class OCamlRuleBuilder {
                   OCamlCompilables.OCAML_MLL,
                   OCamlCompilables.OCAML_MLY))
         .isEmpty();
-    if (noYaccOrLexSources) {
+    boolean noGeneratedSources = FluentIterable.from(srcs).transform(OCamlSource.TO_SOURCE_PATH)
+        .filter(BuildTargetSourcePath.class)
+        .isEmpty();
+    if (noYaccOrLexSources && noGeneratedSources) {
       return createFineGrainedBuildRule(
           ocamlBuckConfig,
           params,
