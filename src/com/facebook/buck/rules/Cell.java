@@ -70,9 +70,6 @@ public class Cell {
   private final KnownBuildRuleTypes knownBuildRuleTypes;
   private final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory;
   private final String pythonInterpreter;
-  private final String buildFileName;
-  private final boolean enforceBuckPackageBoundaries;
-  private final ImmutableSet<Pattern> tempFilePatterns;
   private final LoadingCache<Path, Cell> cellLoader;
   private final WatchmanDiagnosticCache watchmanDiagnosticCache;
 
@@ -97,11 +94,6 @@ public class Cell {
     this.filesystem = filesystem;
     this.watchman = watchman;
     this.config = config;
-
-    ParserConfig parserConfig = config.getView(ParserConfig.class);
-    this.buildFileName = parserConfig.getBuildFileName();
-    this.enforceBuckPackageBoundaries = parserConfig.getEnforceBuckPackageBoundary();
-    this.tempFilePatterns = parserConfig.getTempFilePatterns();
 
     PythonBuckConfig pythonConfig = new PythonBuckConfig(config, new ExecutableFinder());
     this.pythonInterpreter = pythonConfig.getPythonInterpreter();
@@ -277,11 +269,11 @@ public class Cell {
   }
 
   public String getBuildFileName() {
-    return buildFileName;
+    return config.getView(ParserConfig.class).getBuildFileName();
   }
 
   public boolean isEnforcingBuckPackageBoundaries() {
-    return enforceBuckPackageBoundaries;
+    return config.getView(ParserConfig.class).getEnforceBuckPackageBoundary();
   }
 
   public Cell getCellIgnoringVisibilityCheck(Path cellPath) {
@@ -445,7 +437,7 @@ public class Cell {
   }
 
   public Iterable<Pattern> getTempFilePatterns() {
-    return tempFilePatterns;
+    return config.getView(ParserConfig.class).getTempFilePatterns();
   }
 
   public CellPathResolver getCellPathResolver() {
