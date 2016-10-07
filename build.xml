@@ -201,9 +201,9 @@
   <target name="default" depends="clear-successful-build, compile, dx, javac-tracing, report-generator-jar, mark-successful-build" />
 
   <target name="checkversion">
-    <!-- The nio Files class was only introduced in Java 7. -->
-    <available property="jdk7" classname="java.nio.file.Files"/>
-    <fail message="Require JDK 7 or higher" unless="jdk7"/>
+    <!-- The function Function class was only introduced in Java 8. -->
+    <available property="jdk8" classname="java.util.function.Function"/>
+    <fail message="Require JDK 8 or higher" unless="jdk8"/>
   </target>
 
   <target name="python-get-prefix">
