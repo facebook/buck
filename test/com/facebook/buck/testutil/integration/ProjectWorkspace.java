@@ -48,7 +48,6 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.MoreStrings;
@@ -613,7 +612,6 @@ public class ProjectWorkspace {
         Optional.<String>absent());
     return Cell.createRootCell(
         filesystem,
-        console,
         Watchman.NULL_WATCHMAN,
         new BuckConfig(
             config,
@@ -626,7 +624,6 @@ public class ProjectWorkspace {
         new KnownBuildRuleTypesFactory(
             new ProcessExecutor(console),
             directoryResolver),
-        new DefaultClock(),
         new WatchmanDiagnosticCache());
   }
 

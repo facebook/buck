@@ -49,7 +49,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Predicate;
@@ -103,14 +102,12 @@ public class ThriftLibraryIntegrationTest {
 
     Cell cell = Cell.createRootCell(
         filesystem,
-        new TestConsole(),
         Watchman.NULL_WATCHMAN,
         config,
         CellConfig.of(),
         new KnownBuildRuleTypesFactory(
             new ProcessExecutor(new TestConsole()),
             new FakeAndroidDirectoryResolver()),
-        new DefaultClock(),
         new WatchmanDiagnosticCache());
     BuildTarget target = BuildTargetFactory.newInstance(filesystem, "//thrift:exe");
     TargetGraph targetGraph = parser.buildTargetGraph(

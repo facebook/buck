@@ -34,7 +34,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
-import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
@@ -106,12 +105,10 @@ public class Cell {
 
   public static Cell createRootCell(
       ProjectFilesystem filesystem,
-      final Console console,
       final Watchman watchman,
       final BuckConfig rootConfig,
       CellConfig rootCellConfigOverrides,
       final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      final Clock clock,
       WatchmanDiagnosticCache watchmanDiagnosticCache) throws IOException, InterruptedException {
 
     DefaultCellPathResolver rootCellCellPathResolver = new DefaultCellPathResolver(
@@ -129,11 +126,9 @@ public class Cell {
     }
 
     LoadingCache<Path, Cell> cellLoader = createCellLoader(
-        console,
         watchman,
         rootConfig,
         knownBuildRuleTypesFactory,
-        clock,
         transitiveCellPathMapping,
         pathToConfigOverrides,
         watchmanDiagnosticCache);
@@ -154,11 +149,9 @@ public class Cell {
   }
 
   private static LoadingCache<Path, Cell> createCellLoader(
-      final Console console,
       final Watchman watchman,
       final BuckConfig rootConfig,
       final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      final Clock clock,
       final ImmutableMap<RelativeCellName, Path> transitiveCellPathMapping,
       final ImmutableMap<Path, RawConfig> pathToConfigOverrides,
       final WatchmanDiagnosticCache watchmanDiagnosticCache) {
@@ -196,15 +189,7 @@ public class Cell {
             rootConfig.getEnvironment(),
             cellPathResolver);
 
-        ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
-
-        Watchman.build(
-            cellPath,
-            rootConfig.getEnvironment(),
-            console,
-            clock,
-            parserConfig.getWatchmanQueryTimeoutMs()
-        ).close();
+        // TODO(13777679): cells in other watchman roots do not work correctly.
 
         return new Cell(
             cellPathResolver.getKnownRoots(),

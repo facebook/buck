@@ -886,12 +886,10 @@ public final class Main {
 
         Cell rootCell = Cell.createRootCell(
             filesystem,
-            console,
             watchman,
             buckConfig,
             command.getConfigOverrides(),
             factory,
-            clock,
             watchmanDiagnosticCache);
 
         int exitCode;

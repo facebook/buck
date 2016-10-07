@@ -29,7 +29,6 @@ import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.ProcessExecutor;
 
 import java.io.IOException;
@@ -101,12 +100,10 @@ public class TestCellBuilder {
     if (parserFactory == null) {
       return Cell.createRootCell(
           filesystem,
-          new TestConsole(),
           watchman,
           config,
           cellConfig,
           typesFactory,
-          new FakeClock(0),
           new WatchmanDiagnosticCache());
     }
 
