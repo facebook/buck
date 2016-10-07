@@ -16,7 +16,7 @@ java_test(
 )
 
 java_test(
-    name = 'swift_test_integration',
+    name = 'integration',
     run_test_separately = True,
     srcs = glob(STANDARD_INTEGRATION_TEST_SRCS),
     autodeps = True,

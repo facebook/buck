@@ -1,6 +1,6 @@
-#@# GENERATED FILE: DO NOT MODIFY dc7638d63bceee50c55dcb727f78577eee716756 #@#
+#@# GENERATED FILE: DO NOT MODIFY 034712cc7fd58f58f1434afe8bf0fefc38424641 #@#
 {
-  "swift_test_integration" : {
+  "integration" : {
     "deps" : [
       "//src/com/facebook/buck/apple:platform",
       "//src/com/facebook/buck/apple:rules",
