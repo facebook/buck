@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.android.ddmlib.AdbCommandRejectedException;
-import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.agent.util.AgentUtil;
@@ -49,9 +48,6 @@ import com.google.common.collect.Sets;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -560,7 +556,7 @@ public class ExopackageInstaller {
 
             try (TraceEventLogger ignored2 =
                      TraceEventLogger.start(eventBus, "install_" + filesType)) {
-              installFile(device, agentPort, destination, source);
+              installFile(device, destination, source);
             }
           }
           try (TraceEventLogger ignored3 =
@@ -571,7 +567,6 @@ public class ExopackageInstaller {
                   temp.get().toFile());
               installFile(
                   device,
-                  agentPort,
                   destinationDirRelativeToDataRoot.resolve("metadata.txt"),
                   temp.get());
             }
@@ -594,76 +589,13 @@ public class ExopackageInstaller {
 
     private void installFile(
         IDevice device,
-        final int port,
         Path pathRelativeToDataRoot,
-        final Path relativeSource) throws Exception {
-      final Path source = projectFilesystem.resolve(relativeSource);
-      CollectingOutputReceiver receiver = new CollectingOutputReceiver() {
+        Path relativeSource) throws Exception {
 
-        private boolean sentPayload = false;
-
-        @Override
-        public void addOutput(byte[] data, int offset, int length) {
-          super.addOutput(data, offset, length);
-          if (!sentPayload && getOutput().length() >= AgentUtil.TEXT_SECRET_KEY_SIZE) {
-            LOG.verbose("Got key: %s", getOutput().trim());
-
-            sentPayload = true;
-            try (Socket clientSocket = new Socket("localhost", port)) {
-              LOG.verbose("Connected");
-              OutputStream outToDevice = clientSocket.getOutputStream();
-              outToDevice.write(
-                  getOutput().substring(
-                      0,
-                      AgentUtil.TEXT_SECRET_KEY_SIZE).getBytes());
-              LOG.verbose("Wrote key");
-              com.google.common.io.Files.asByteSource(source.toFile()).copyTo(outToDevice);
-              LOG.verbose("Wrote file");
-            } catch (IOException e) {
-              throw new RuntimeException(e);
-            }
-          }
-        }
-      };
-
-      String targetFileName = projectFilesystem.resolve(
-          dataRoot.resolve(pathRelativeToDataRoot)).toString();
-      String command =
-          "umask 022 && " +
-              getAgentCommand() +
-              "receive-file " + port + " " + Files.size(source) + " " +
-              targetFileName +
-              " ; echo -n :$?";
-      LOG.debug("Executing %s", command);
-
-      // If we fail to execute the command, stash the exception.  My experience during development
-      // has been that the exception from checkReceiverOutput is more actionable.
-      Exception shellException = null;
-      try {
-        device.executeShellCommand(command, receiver);
-      } catch (Exception e) {
-        shellException = e;
-      }
-
-      try {
-        AdbHelper.checkReceiverOutput(command, receiver);
-      } catch (Exception e) {
-        if (shellException != null) {
-          e.addSuppressed(shellException);
-        }
-        throw e;
-      }
-
-      if (shellException != null) {
-        throw shellException;
-      }
-
-      // The standard Java libraries on Android always create new files un-readable by other users.
-      // We use the shell user or root to create these files, so we need to explicitly set the mode
-      // to allow the app to read them.  Ideally, the agent would do this automatically, but
-      // there's no easy way to do this in Java.  We can drop this if we drop support for the
-      // Java agent.
-      AdbHelper.executeCommandWithErrorChecking(device, "chmod 644 " + targetFileName);
+      device.pushFile(
+          projectFilesystem.resolve(relativeSource).toFile().getAbsolutePath(),
+          projectFilesystem.resolve(dataRoot.resolve(pathRelativeToDataRoot)).toString()
+      );
     }
 
     private String getProperty(String property) throws Exception {
